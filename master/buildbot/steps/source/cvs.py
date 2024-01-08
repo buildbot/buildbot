@@ -31,15 +31,22 @@ from buildbot.steps.source.base import Source
 
 
 class CVS(Source):
-
     name = "cvs"
 
     renderables = ["cvsroot"]
 
-    def __init__(self, cvsroot=None, cvsmodule='', mode='incremental',
-                 method=None, branch=None, global_options=None, extra_options=None,
-                 login=None, **kwargs):
-
+    def __init__(
+        self,
+        cvsroot=None,
+        cvsmodule='',
+        mode='incremental',
+        method=None,
+        branch=None,
+        global_options=None,
+        extra_options=None,
+        login=None,
+        **kwargs,
+    ):
         self.cvsroot = cvsroot
         self.cvsmodule = cvsmodule
         self.branch = branch
@@ -116,9 +123,9 @@ class CVS(Source):
 
     @defer.inlineCallbacks
     def _clobber(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout})
+        cmd = remotecommand.RemoteCommand(
+            'rmdir', {'dir': self.workdir, 'logEnviron': self.logEnviron, 'timeout': self.timeout}
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -132,33 +139,41 @@ class CVS(Source):
         return res
 
     @defer.inlineCallbacks
-    def fresh(self, ):
+    def fresh(
+        self,
+    ):
         yield self.purge(True)
         res = yield self.doUpdate()
         return res
 
     @defer.inlineCallbacks
-    def clean(self, ):
+    def clean(
+        self,
+    ):
         yield self.purge(False)
         res = yield self.doUpdate()
         return res
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout})
+        cmd = remotecommand.RemoteCommand(
+            'rmdir', {'dir': self.workdir, 'logEnviron': self.logEnviron, 'timeout': self.timeout}
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         old_workdir = self.workdir
         self.workdir = self.srcdir
         yield self.mode_incremental()
 
-        cmd = remotecommand.RemoteCommand('cpdir', {
-            'fromdir': self.srcdir,
-            'todir': old_workdir,
-            'logEnviron': self.logEnviron,
-            'timeout': self.timeout})
+        cmd = remotecommand.RemoteCommand(
+            'cpdir',
+            {
+                'fromdir': self.srcdir,
+                'todir': old_workdir,
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -171,10 +186,9 @@ class CVS(Source):
         command = ['cvsdiscard']
         if ignore_ignores:
             command += ['--ignore']
-        cmd = remotecommand.RemoteShellCommand(self.workdir, command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir, command, env=self.env, logEnviron=self.logEnviron, timeout=self.timeout
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -227,22 +241,22 @@ class CVS(Source):
     @defer.inlineCallbacks
     def checkLogin(self):
         if self.login:
-            yield self._dovccmd(['-d', self.cvsroot, 'login'],
-                                initialStdin=self.login + "\n")
+            yield self._dovccmd(['-d', self.cvsroot, 'login'], initialStdin=self.login + "\n")
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, workdir=None, abandonOnFailure=True,
-                 initialStdin=None):
+    def _dovccmd(self, command, workdir=None, abandonOnFailure=True, initialStdin=None):
         if workdir is None:
             workdir = self.workdir
         if not command:
             raise ValueError("No command specified")
-        cmd = remotecommand.RemoteShellCommand(workdir,
-                                               ['cvs'] + command,
-                                               env=self.env,
-                                               timeout=self.timeout,
-                                               logEnviron=self.logEnviron,
-                                               initialStdin=initialStdin)
+        cmd = remotecommand.RemoteShellCommand(
+            workdir,
+            ['cvs'] + command,
+            env=self.env,
+            timeout=self.timeout,
+            logEnviron=self.logEnviron,
+            initialStdin=initialStdin,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -279,25 +293,21 @@ class CVS(Source):
                 full_args['workersrc'] = source
             return full_args
 
-        cmd = remotecommand.RemoteCommand('uploadFile',
-                                          uploadFileArgs('Root'),
-                                          ignore_updates=True)
+        cmd = remotecommand.RemoteCommand('uploadFile', uploadFileArgs('Root'), ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
             return False
 
         # on Windows, the cvsroot may not contain the password, so compare to
         # both
-        cvsroot_without_pw = re.sub("(:pserver:[^:]*):[^@]*(@.*)",
-                                    r"\1\2", self.cvsroot)
-        if myFileWriter.buffer.strip() not in (self.cvsroot,
-                                               cvsroot_without_pw):
+        cvsroot_without_pw = re.sub("(:pserver:[^:]*):[^@]*(@.*)", r"\1\2", self.cvsroot)
+        if myFileWriter.buffer.strip() not in (self.cvsroot, cvsroot_without_pw):
             return False
 
         myFileWriter.buffer = ""
-        cmd = remotecommand.RemoteCommand('uploadFile',
-                                          uploadFileArgs('Repository'),
-                                          ignore_updates=True)
+        cmd = remotecommand.RemoteCommand(
+            'uploadFile', uploadFileArgs('Repository'), ignore_updates=True
+        )
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
             return False
@@ -307,9 +317,9 @@ class CVS(Source):
         # if there are sticky dates (from an earlier build with revision),
         # we can't update (unless we remove those tags with cvs update -A)
         myFileWriter.buffer = ""
-        cmd = remotecommand.RemoteCommand('uploadFile',
-                                          uploadFileArgs('Entries'),
-                                          ignore_updates=True)
+        cmd = remotecommand.RemoteCommand(
+            'uploadFile', uploadFileArgs('Entries'), ignore_updates=True
+        )
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
             return False

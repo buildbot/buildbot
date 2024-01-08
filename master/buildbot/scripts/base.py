@@ -44,9 +44,9 @@ class BusyError(RuntimeError):
 
 
 def checkPidFile(pidfile):
-    """ mostly comes from _twistd_unix.py which is not twisted public API :-/
+    """mostly comes from _twistd_unix.py which is not twisted public API :-/
 
-        except it returns an exception instead of exiting
+    except it returns an exception instead of exiting
     """
     if os.path.exists(pidfile):
         try:
@@ -63,7 +63,8 @@ def checkPidFile(pidfile):
                 os.remove(pidfile)
             else:
                 raise OSError(
-                    f"Can't check status of PID {pid} from pidfile {pidfile}: {why}") from why
+                    f"Can't check status of PID {pid} from pidfile {pidfile}: {why}"
+                ) from why
         else:
             raise BusyError(f"'{pidfile}' exists - is this master still running?")
 
@@ -91,14 +92,12 @@ def checkBasedir(config):
         if isinstance(tac.get('rotateLength', 0), str):
             print("ERROR: rotateLength is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
-            print(
-                "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
         if isinstance(tac.get('maxRotatedFiles', 0), str):
             print("ERROR: maxRotatedFiles is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
-            print(
-                "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
 
     return True
@@ -194,8 +193,7 @@ class SubcommandOptions(usage.Options):
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i, val in enumerate(op):
-                        if (val[0] == option_name and
-                                optfile_name in optfile):
+                        if val[0] == option_name and optfile_name in optfile:
                             op[i] = list(val)
                             op[i][2] = optfile[optfile_name]
         super().__init__(*args)
@@ -219,6 +217,7 @@ class SubcommandOptions(usage.Options):
             # never trust env-vars, use the proper API
             from win32com.shell import shell
             from win32com.shell import shellcon
+
             appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
             home = os.path.join(appdata, "buildbot")
         else:
@@ -234,8 +233,7 @@ class SubcommandOptions(usage.Options):
             here = next
             toomany -= 1  # just in case
             if toomany == 0:
-                print("I seem to have wandered up into the infinite glories "
-                      "of the heavens. Oops.")
+                print("I seem to have wandered up into the infinite glories of the heavens. Oops.")
                 break
 
         searchpath.append(home)
@@ -275,7 +273,6 @@ class SubcommandOptions(usage.Options):
 
 
 class BasedirMixin:
-
     """SubcommandOptions Mixin to handle subcommands that take a basedir
     argument"""
 
@@ -284,7 +281,8 @@ class BasedirMixin:
         # only set completion suggestion if running with
         # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(
-            extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
+            extraActions=[usage.CompleteDirs(descr="buildbot base directory")]
+        )
 
     def parseArgs(self, *args):
         if args:

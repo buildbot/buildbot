@@ -25,9 +25,7 @@ from buildbot.warnings import warn_deprecated
 
 
 class ShellArg(results.ResultComputingConfigMixin):
-    publicAttributes = (
-        results.ResultComputingConfigMixin.resultConfig +
-        ["command", "logname"])
+    publicAttributes = results.ResultComputingConfigMixin.resultConfig + ["command", "logname"]
 
     def __init__(self, command=None, logname=None, logfile=None, **kwargs):
         name = self.__class__.__name__
@@ -39,8 +37,12 @@ class ShellArg(results.ResultComputingConfigMixin):
         if logfile is not None:
             warn_deprecated('2.10.0', "{}: logfile is deprecated, use logname")
             if self.logname is not None:
-                config.error(("{}: the 'logfile' parameter must not be specified when 'logname' " +
-                              "is set").format(name))
+                config.error(
+                    (
+                        "{}: the 'logfile' parameter must not be specified when 'logname' "
+                        + "is set"
+                    ).format(name)
+                )
             self.logname = logfile
 
         for k, v in kwargs.items():
@@ -56,10 +58,10 @@ class ShellArg(results.ResultComputingConfigMixin):
         if isinstance(self.command, list):
             if not all(isinstance(x, str) for x in self.command):
                 config.error(f"{self.command} must only have strings in it")
-        runConfParams = [(p_attr, getattr(self, p_attr))
-                         for p_attr in self.resultConfig]
-        not_bool = [(p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val,
-                                                                                           bool)]
+        runConfParams = [(p_attr, getattr(self, p_attr)) for p_attr in self.resultConfig]
+        not_bool = [
+            (p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val, bool)
+        ]
         if not_bool:
             config.error(f"{repr(not_bool)} must be booleans")
 
@@ -96,8 +98,10 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
         overall_result = results.SUCCESS
         for arg in commands:
             if not isinstance(arg, ShellArg):
-                log.msg("After rendering, ShellSequence `commands` list "
-                        "contains something that is not a ShellArg")
+                log.msg(
+                    "After rendering, ShellSequence `commands` list "
+                    "contains something that is not a ShellArg"
+                )
                 return results.EXCEPTION
             try:
                 arg.validateAttributes()
@@ -113,11 +117,11 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             # keep the command around so we can describe it
             self.last_command = command
 
-            cmd = yield self.makeRemoteShellCommand(command=command,
-                                                    stdioLogName=arg.logname)
+            cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName=arg.logname)
             yield self.runCommand(cmd)
             overall_result, terminate = results.computeResultAndTermination(
-                arg, cmd.results(), overall_result)
+                arg, cmd.results(), overall_result
+            )
             if terminate:
                 break
         return overall_result

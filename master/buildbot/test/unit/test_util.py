@@ -27,7 +27,6 @@ from buildbot import util
 
 
 class formatInterval(unittest.TestCase):
-
     def test_zero(self):
         self.assertEqual(util.formatInterval(0), "0 secs")
 
@@ -63,7 +62,6 @@ class formatInterval(unittest.TestCase):
 
 
 class TestHumanReadableDelta(unittest.TestCase):
-
     def test_timeDeltaToHumanReadable(self):
         """
         It will return a human readable time difference.
@@ -97,7 +95,6 @@ class TestHumanReadableDelta(unittest.TestCase):
 
 
 class TestFuzzyInterval(unittest.TestCase):
-
     def test_moment(self):
         self.assertEqual(util.fuzzyInterval(1), "a moment")
 
@@ -142,42 +139,40 @@ class TestFuzzyInterval(unittest.TestCase):
 
 
 class safeTranslate(unittest.TestCase):
-
     def test_str_good(self):
         self.assertEqual(util.safeTranslate(str("full")), b"full")
 
     def test_str_bad(self):
-        self.assertEqual(util.safeTranslate(str("speed=slow;quality=high")),
-                         b"speed_slow_quality_high")
+        self.assertEqual(
+            util.safeTranslate(str("speed=slow;quality=high")), b"speed_slow_quality_high"
+        )
 
     def test_str_pathological(self):
         # if you needed proof this wasn't for use with sensitive data
-        self.assertEqual(util.safeTranslate(str("p\ath\x01ogy")),
-                         b"p\ath\x01ogy")  # bad chars still here!
+        self.assertEqual(
+            util.safeTranslate(str("p\ath\x01ogy")), b"p\ath\x01ogy"
+        )  # bad chars still here!
 
     def test_unicode_good(self):
         self.assertEqual(util.safeTranslate("full"), b"full")
 
     def test_unicode_bad(self):
-        self.assertEqual(util.safeTranslate(str("speed=slow;quality=high")),
-                         b"speed_slow_quality_high")
+        self.assertEqual(
+            util.safeTranslate(str("speed=slow;quality=high")), b"speed_slow_quality_high"
+        )
 
     def test_unicode_pathological(self):
-        self.assertEqual(util.safeTranslate("\u0109"),
-                         b"\xc4\x89")  # yuck!
+        self.assertEqual(util.safeTranslate("\u0109"), b"\xc4\x89")  # yuck!
 
 
 class naturalSort(unittest.TestCase):
-
     def test_alpha(self):
-        self.assertEqual(
-            util.naturalSort(['x', 'aa', 'ab']),
-            ['aa', 'ab', 'x'])
+        self.assertEqual(util.naturalSort(['x', 'aa', 'ab']), ['aa', 'ab', 'x'])
 
     def test_numeric(self):
         self.assertEqual(
-            util.naturalSort(['1', '10', '11', '2', '20']),
-            ['1', '2', '10', '11', '20'])
+            util.naturalSort(['1', '10', '11', '2', '20']), ['1', '2', '10', '11', '20']
+        )
 
     def test_alphanum(self):
         l1 = 'aa10ab aa1ab aa10aa f a aa3 aa30 aa3a aa30a'.split()
@@ -186,7 +181,6 @@ class naturalSort(unittest.TestCase):
 
 
 class none_or_str(unittest.TestCase):
-
     def test_none(self):
         self.assertEqual(util.none_or_str(None), None)
 
@@ -198,19 +192,19 @@ class none_or_str(unittest.TestCase):
 
 
 class TimeFunctions(unittest.TestCase):
-
     def test_UTC(self):
-        self.assertEqual(util.UTC.utcoffset(datetime.datetime.now()),
-                         datetime.timedelta(0))
-        self.assertEqual(util.UTC.dst(datetime.datetime.now()),
-                         datetime.timedelta(0))
+        self.assertEqual(util.UTC.utcoffset(datetime.datetime.now()), datetime.timedelta(0))
+        self.assertEqual(util.UTC.dst(datetime.datetime.now()), datetime.timedelta(0))
         self.assertEqual(util.UTC.tzname(datetime.datetime.now(datetime.timezone.utc)), "UTC")
 
     def test_epoch2datetime(self):
-        self.assertEqual(util.epoch2datetime(0),
-                         datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=util.UTC))
-        self.assertEqual(util.epoch2datetime(1300000000),
-                         datetime.datetime(2011, 3, 13, 7, 6, 40, tzinfo=util.UTC))
+        self.assertEqual(
+            util.epoch2datetime(0), datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=util.UTC)
+        )
+        self.assertEqual(
+            util.epoch2datetime(1300000000),
+            datetime.datetime(2011, 3, 13, 7, 6, 40, tzinfo=util.UTC),
+        )
 
     def test_datetime2epoch(self):
         dt = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=util.UTC)
@@ -220,7 +214,6 @@ class TimeFunctions(unittest.TestCase):
 
 
 class DiffSets(unittest.TestCase):
-
     def test_empty(self):
         removed, added = util.diffSets(set([]), set([]))
         self.assertEqual((removed, added), (set([]), set([])))
@@ -247,7 +240,6 @@ class DiffSets(unittest.TestCase):
 
 
 class MakeList(unittest.TestCase):
-
     def test_empty_string(self):
         self.assertEqual(util.makeList(''), [''])
 
@@ -274,13 +266,11 @@ class MakeList(unittest.TestCase):
 
 
 class Flatten(unittest.TestCase):
-
     def test_simple(self):
         self.assertEqual(util.flatten([1, 2, 3]), [1, 2, 3])
 
     def test_deep(self):
-        self.assertEqual(util.flatten([[1, 2], 3, [[4]]]),
-                         [1, 2, 3, 4])
+        self.assertEqual(util.flatten([[1, 2], 3, [[4]]]), [1, 2, 3, 4])
 
     # def test_deeply_nested(self):
     #     self.assertEqual(util.flatten([5, [6, (7, 8)]]),
@@ -298,7 +288,6 @@ class Flatten(unittest.TestCase):
 
 
 class Ascii2Unicode(unittest.TestCase):
-
     def test_unicode(self):
         rv = util.bytes2unicode('\N{SNOWMAN}', encoding='ascii')
         self.assertEqual((rv, type(rv)), ('\N{SNOWMAN}', str))
@@ -323,7 +312,6 @@ class Ascii2Unicode(unittest.TestCase):
 
 
 class StringToBoolean(unittest.TestCase):
-
     def test_it(self):
         stringValues = [
             (b'on', True),
@@ -357,7 +345,6 @@ class StringToBoolean(unittest.TestCase):
 
 
 class AsyncSleep(unittest.TestCase):
-
     def test_sleep(self):
         clock = task.Clock()
         self.patch(reactor, 'callLater', clock.callLater)
@@ -370,7 +357,6 @@ class AsyncSleep(unittest.TestCase):
 
 
 class FunctionalEnvironment(unittest.TestCase):
-
     def test_working_locale(self):
         environ = {'LANG': 'en_GB.UTF-8'}
         self.patch(os, 'environ', environ)
@@ -381,6 +367,7 @@ class FunctionalEnvironment(unittest.TestCase):
     def test_broken_locale(self):
         def err():
             raise KeyError
+
         if sys.version_info >= (3, 11, 0):
             self.patch(locale, 'getencoding', err)
         else:
@@ -391,31 +378,30 @@ class FunctionalEnvironment(unittest.TestCase):
 
 
 class StripUrlPassword(unittest.TestCase):
-
     def test_simple_url(self):
-        self.assertEqual(util.stripUrlPassword('http://foo.com/bar'),
-                         'http://foo.com/bar')
+        self.assertEqual(util.stripUrlPassword('http://foo.com/bar'), 'http://foo.com/bar')
 
     def test_username(self):
-        self.assertEqual(util.stripUrlPassword('http://d@foo.com/bar'),
-                         'http://d@foo.com/bar')
+        self.assertEqual(util.stripUrlPassword('http://d@foo.com/bar'), 'http://d@foo.com/bar')
 
     def test_username_with_at(self):
-        self.assertEqual(util.stripUrlPassword('http://d@bb.net@foo.com/bar'),
-                         'http://d@bb.net@foo.com/bar')
+        self.assertEqual(
+            util.stripUrlPassword('http://d@bb.net@foo.com/bar'), 'http://d@bb.net@foo.com/bar'
+        )
 
     def test_username_pass(self):
-        self.assertEqual(util.stripUrlPassword('http://d:secret@foo.com/bar'),
-                         'http://d:xxxx@foo.com/bar')
+        self.assertEqual(
+            util.stripUrlPassword('http://d:secret@foo.com/bar'), 'http://d:xxxx@foo.com/bar'
+        )
 
     def test_username_pass_with_at(self):
         self.assertEqual(
             util.stripUrlPassword('http://d@bb.net:scrt@foo.com/bar'),
-            'http://d@bb.net:xxxx@foo.com/bar')
+            'http://d@bb.net:xxxx@foo.com/bar',
+        )
 
 
 class JoinList(unittest.TestCase):
-
     def test_list(self):
         self.assertEqual(util.join_list(['aa', 'bb']), 'aa bb')
 
@@ -434,7 +420,6 @@ class JoinList(unittest.TestCase):
 
 
 class CommandToString(unittest.TestCase):
-
     def test_short_string(self):
         self.assertEqual(util.command_to_string("ab cd"), "'ab cd'")
 
@@ -442,12 +427,10 @@ class CommandToString(unittest.TestCase):
         self.assertEqual(util.command_to_string("ab cd ef"), "'ab cd ...'")
 
     def test_list(self):
-        self.assertEqual(util.command_to_string(['ab', 'cd', 'ef']),
-                         "'ab cd ...'")
+        self.assertEqual(util.command_to_string(['ab', 'cd', 'ef']), "'ab cd ...'")
 
     def test_nested_list(self):
-        self.assertEqual(util.command_to_string(['ab', ['cd', ['ef']]]),
-                         "'ab cd ...'")
+        self.assertEqual(util.command_to_string(['ab', ['cd', ['ef']]]), "'ab cd ...'")
 
     def test_object(self):
         # this looks like a renderable
@@ -455,15 +438,13 @@ class CommandToString(unittest.TestCase):
 
     def test_list_with_objects(self):
         # the object looks like a renderable, and is skipped
-        self.assertEqual(util.command_to_string(['ab', object(), 'cd']),
-                         "'ab cd'")
+        self.assertEqual(util.command_to_string(['ab', object(), 'cd']), "'ab cd'")
 
     def test_invalid_ascii(self):
         self.assertEqual(util.command_to_string(b'a\xffc'), "'a\ufffdc'")
 
 
 class TestRewrap(unittest.TestCase):
-
     def test_main(self):
         tests = [
             ("", "", None),
@@ -471,30 +452,37 @@ class TestRewrap(unittest.TestCase):
             ("\n  ", "\n", None),
             ("  \n", "\n", None),
             ("  \n  ", "\n", None),
-            ("""
+            (
+                """
                 multiline
                 with
                 indent
                 """,
-             "\nmultiline with indent",
-             None),
-            ("""\
+                "\nmultiline with indent",
+                None,
+            ),
+            (
+                """\
                 multiline
                 with
                 indent
 
                 """,
-             "multiline with indent\n",
-             None),
-            ("""\
+                "multiline with indent\n",
+                None,
+            ),
+            (
+                """\
                  multiline
                  with
                  indent
 
                  """,
-             "multiline with indent\n",
-             None),
-            ("""\
+                "multiline with indent\n",
+                None,
+            ),
+            (
+                """\
                 multiline
                 with
                 indent
@@ -502,9 +490,11 @@ class TestRewrap(unittest.TestCase):
                   and
                    formatting
                 """,
-             "multiline with indent\n  and\n   formatting\n",
-             None),
-            ("""\
+                "multiline with indent\n  and\n   formatting\n",
+                None,
+            ),
+            (
+                """\
                 multiline
                 with
                 indent
@@ -513,8 +503,9 @@ class TestRewrap(unittest.TestCase):
                   and
                    formatting
                 """,
-             "multiline with\nindent and\nwrapping\n  and\n   formatting\n",
-             15),
+                "multiline with\nindent and\nwrapping\n  and\n   formatting\n",
+                15,
+            ),
         ]
 
         for text, expected, width in tests:
@@ -522,42 +513,16 @@ class TestRewrap(unittest.TestCase):
 
 
 class TestMerge(unittest.TestCase):
-
     def test_merge(self):
         self.assertEqual(
-            util.dictionary_merge(
-                {
-                    'a': {'b': 1}
-                },
-                {
-                    'a': {'c': 2}
-                }),
-            {
-                'a': {'b': 1, 'c': 2}
-            })
+            util.dictionary_merge({'a': {'b': 1}}, {'a': {'c': 2}}), {'a': {'b': 1, 'c': 2}}
+        )
 
     def test_overwrite(self):
-        self.assertEqual(
-            util.dictionary_merge(
-                {
-                    'a': {'b': 1}
-                },
-                {
-                    'a': 1
-                }),
-            {
-                'a': 1
-            })
+        self.assertEqual(util.dictionary_merge({'a': {'b': 1}}, {'a': 1}), {'a': 1})
 
     def test_overwrite2(self):
         self.assertEqual(
-            util.dictionary_merge(
-                {
-                    'a': {'b': 1, 'c': 2}
-                },
-                {
-                    'a': {'b': [1, 2, 3]}
-                }),
-            {
-                'a': {'b': [1, 2, 3], 'c': 2}
-            })
+            util.dictionary_merge({'a': {'b': 1, 'c': 2}}, {'a': {'b': [1, 2, 3]}}),
+            {'a': {'b': [1, 2, 3], 'c': 2}},
+        )

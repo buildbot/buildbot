@@ -24,7 +24,6 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class SimpleMQ(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

@@ -24,7 +24,6 @@ from buildbot.util import in_reactor
 @in_reactor
 @defer.inlineCallbacks
 def user(config):
-
     master = config.get('master')
     op = config.get('op')
     username = config.get('username')

@@ -39,21 +39,18 @@ except ImportError:
 
 @implementer(IBuildStepFactory)
 class StepController:
-
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.steps = []
 
     def buildStep(self):
         step_deferred = defer.Deferred()
-        step = create_step_from_step_or_factory(
-            ControllableStep(step_deferred, **self.kwargs))
+        step = create_step_from_step_or_factory(ControllableStep(step_deferred, **self.kwargs))
         self.steps.append((step, step_deferred))
         return step
 
 
 class ControllableStep(BuildStep):
-
     def run(self):
         return self._step_deferred
 
@@ -66,7 +63,6 @@ class ControllableStep(BuildStep):
 
 
 class Tests(RunFakeMasterTestCase):
-
     @defer.inlineCallbacks
     def test_latent_max_builds(self):
         """
@@ -77,14 +73,16 @@ class Tests(RunFakeMasterTestCase):
         step_controller = StepController()
         config_dict = {
             'builders': [
-                BuilderConfig(name="testy-1",
-                              workernames=["local"],
-                              factory=BuildFactory([step_controller]),
-                              ),
-                BuilderConfig(name="testy-2",
-                              workernames=["local"],
-                              factory=BuildFactory([step_controller]),
-                              ),
+                BuilderConfig(
+                    name="testy-1",
+                    workernames=["local"],
+                    factory=BuildFactory([step_controller]),
+                ),
+                BuilderConfig(
+                    name="testy-2",
+                    workernames=["local"],
+                    factory=BuildFactory([step_controller]),
+                ),
             ],
             'workers': [controller.worker],
             'protocols': {'null': {}},
@@ -98,19 +96,15 @@ class Tests(RunFakeMasterTestCase):
 
         started_builds = []
         yield self.master.mq.startConsuming(
-            lambda key, build: started_builds.append(build),
-            ('builds', None, 'new'))
+            lambda key, build: started_builds.append(build), ('builds', None, 'new')
+        )
 
         # Trigger a buildrequest
         yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
-                {'codebase': '',
-                 'repository': '',
-                 'branch': None,
-                 'revision': None,
-                 'project': ''},
+                {'codebase': '', 'repository': '', 'branch': None, 'revision': None, 'project': ''},
             ],
         )
 
@@ -131,14 +125,16 @@ class Tests(RunFakeMasterTestCase):
         step_controller = StepController()
         config_dict = {
             'builders': [
-                BuilderConfig(name="testy-1",
-                              workernames=["local"],
-                              factory=BuildFactory([step_controller]),
-                              ),
-                BuilderConfig(name="testy-2",
-                              workernames=["local"],
-                              factory=BuildFactory([step_controller]),
-                              ),
+                BuilderConfig(
+                    name="testy-1",
+                    workernames=["local"],
+                    factory=BuildFactory([step_controller]),
+                ),
+                BuilderConfig(
+                    name="testy-2",
+                    workernames=["local"],
+                    factory=BuildFactory([step_controller]),
+                ),
             ],
             'workers': [self.createLocalWorker('local', max_builds=1)],
             'protocols': {'null': {}},
@@ -152,19 +148,15 @@ class Tests(RunFakeMasterTestCase):
 
         started_builds = []
         yield self.master.mq.startConsuming(
-            lambda key, build: started_builds.append(build),
-            ('builds', None, 'new'))
+            lambda key, build: started_builds.append(build), ('builds', None, 'new')
+        )
 
         # Trigger a buildrequest
         yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
-                {'codebase': '',
-                 'repository': '',
-                 'branch': None,
-                 'revision': None,
-                 'project': ''},
+                {'codebase': '', 'repository': '', 'branch': None, 'revision': None, 'project': ''},
             ],
         )
 
@@ -177,10 +169,11 @@ class Tests(RunFakeMasterTestCase):
 
         config_dict = {
             'builders': [
-                BuilderConfig(name="builder1",
-                              workernames=["worker1"],
-                              factory=BuildFactory(),
-                              ),
+                BuilderConfig(
+                    name="builder1",
+                    workernames=["worker1"],
+                    factory=BuildFactory(),
+                ),
             ],
             'workers': [worker],
             'machines': [machine],
@@ -199,9 +192,7 @@ class Tests(RunFakeMasterTestCase):
         """
         config_dict = {
             'builders': [
-                BuilderConfig(name="builder1",
-                              workernames=['local1'],
-                              factory=BuildFactory()),
+                BuilderConfig(name="builder1", workernames=['local1'], factory=BuildFactory()),
             ],
             'workers': [self.createLocalWorker('local1', max_builds=1)],
             'protocols': {'null': {}},
@@ -211,12 +202,9 @@ class Tests(RunFakeMasterTestCase):
         yield self.setup_master(config_dict)
 
         config_dict['builders'] += [
-            BuilderConfig(name="builder2",
-                          workernames=['local1'],
-                          factory=BuildFactory()),
+            BuilderConfig(name="builder2", workernames=['local1'], factory=BuildFactory()),
         ]
-        config_dict['workers'] = [
-            self.createLocalWorker('local1', max_builds=2)]
+        config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
 
         # reconfig should succeed
         yield self.reconfig_master(config_dict)
@@ -232,10 +220,12 @@ class Tests(RunFakeMasterTestCase):
 
         config_dict = {
             'builders': [
-                BuilderConfig(name="builder", workernames=['local'],
-                              properties={'worker': Interpolate(
-                                  "%(worker:numcpus)s")},
-                              factory=BuildFactory([stepcontroller.step])),
+                BuilderConfig(
+                    name="builder",
+                    workernames=['local'],
+                    properties={'worker': Interpolate("%(worker:numcpus)s")},
+                    factory=BuildFactory([stepcontroller.step]),
+                ),
             ],
             'workers': [controller.worker],
             'protocols': {'null': {}},
@@ -264,9 +254,7 @@ class Tests(RunFakeMasterTestCase):
 
         config_dict = {
             'builders': [
-                BuilderConfig(name="builder1",
-                              workernames=['local1'],
-                              factory=BuildFactory()),
+                BuilderConfig(name="builder1", workernames=['local1'], factory=BuildFactory()),
             ],
             'workers': [worker],
             'protocols': {'null': {}},

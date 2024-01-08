@@ -41,7 +41,6 @@ class MockStateObserver(logobserver.LogLineObserver):
 
 
 class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
-
     """Add the mock logfiles and clean them if they already exist. Add support
     for the root and resultdir parameter of mock."""
 
@@ -57,10 +56,7 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
     root = None
     resultdir = None
 
-    def __init__(self,
-                 root=None,
-                 resultdir=None,
-                 **kwargs):
+    def __init__(self, root=None, resultdir=None, **kwargs):
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
         if root:
@@ -86,8 +82,9 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        yield self.runRmdir([self.build.path_module.join('build', self.logfiles[l])
-                             for l in self.mock_logfiles])
+        yield self.runRmdir([
+            self.build.path_module.join('build', self.logfiles[l]) for l in self.mock_logfiles
+        ])
 
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
@@ -100,7 +97,6 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
 
 
 class MockBuildSRPM(Mock):
-
     """Build a srpm within a mock. Requires a spec file and a sources dir."""
 
     name = "mockbuildsrpm"
@@ -111,10 +107,7 @@ class MockBuildSRPM(Mock):
     spec = None
     sources = '.'
 
-    def __init__(self,
-                 spec=None,
-                 sources=None,
-                 **kwargs):
+    def __init__(self, spec=None, sources=None, **kwargs):
         """
         Creates the MockBuildSRPM object.
 
@@ -136,10 +129,8 @@ class MockBuildSRPM(Mock):
         if not self.sources:
             config.error("You must specify a sources dir")
 
-        self.command += ['--buildsrpm', '--spec', self.spec,
-                         '--sources', self.sources]
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.command += ['--buildsrpm', '--spec', self.spec, '--sources', self.sources]
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     def logConsumer(self):
         r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
@@ -151,7 +142,6 @@ class MockBuildSRPM(Mock):
 
 
 class MockRebuild(Mock):
-
     """Rebuild a srpm within a mock. Requires a srpm file."""
 
     name = "mock"

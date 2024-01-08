@@ -19,9 +19,12 @@ try:
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
-    print('Please install buildbot_pkg module in order to install that '
-          'package, or use the pre-build .whl modules available on pypi',
-          file=sys.stderr)
+
+    print(
+        'Please install buildbot_pkg module in order to install that '
+        'package, or use the pre-build .whl modules available on pypi',
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 setup_www_plugin(
@@ -31,18 +34,10 @@ setup_www_plugin(
     author_email='tardyp@gmail.com',
     url='http://buildbot.net/',
     packages=['buildbot_react_waterfall_view'],
-    package_data={
-        '': [
-            'VERSION',
-            'static/*',
-            'static/assets/*'
-        ]
-    },
+    package_data={'': ['VERSION', 'static/*', 'static/assets/*']},
     entry_points="""
         [buildbot.www]
         react_waterfall_view = buildbot_react_waterfall_view:ep
     """,
-    classifiers=[
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
-    ],
+    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
 )

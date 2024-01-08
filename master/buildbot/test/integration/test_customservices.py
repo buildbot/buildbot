@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class CustomServiceMaster(RunFakeMasterTestCase):
-
     def setUp(self):
         super().setUp()
         self.num_reconfig = 0
@@ -38,7 +37,6 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         from buildbot.util.service import BuildbotService
 
         class MyShellCommand(ShellCommand):
-
             def getResultSummary(self):
                 service = self.master.service_manager.namedServices['myService']
                 return {"step": f'num reconfig: {service.num_reconfig}'}
@@ -52,20 +50,24 @@ class CustomServiceMaster(RunFakeMasterTestCase):
 
         config_dict = {
             'builders': [
-                BuilderConfig(name="builder", workernames=["worker1"],
-                              factory=BuildFactory([MyShellCommand(command='echo hei')])),
+                BuilderConfig(
+                    name="builder",
+                    workernames=["worker1"],
+                    factory=BuildFactory([MyShellCommand(command='echo hei')]),
+                ),
             ],
             'workers': [self.createLocalWorker('worker1')],
             'protocols': {'null': {}},
             # Disable checks about missing scheduler.
             'multiMaster': True,
             'db_url': 'sqlite://',  # we need to make sure reconfiguration uses the same URL
-            'services': [MyService(num_reconfig=self.num_reconfig)]
+            'services': [MyService(num_reconfig=self.num_reconfig)],
         }
 
         if self.num_reconfig == 3:
-            config_dict['services'].append(MyService(name="myService2",
-                                                     num_reconfig=self.num_reconfig))
+            config_dict['services'].append(
+                MyService(name="myService2", num_reconfig=self.num_reconfig)
+            )
         return config_dict
 
     @defer.inlineCallbacks

@@ -19,7 +19,6 @@ from twisted.internet import defer
 
 
 class CompatibleLatentWorkerMixin:
-
     builds_may_be_incompatible = True
     _actual_build_props = None
 

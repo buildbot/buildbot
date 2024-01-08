@@ -20,14 +20,17 @@ from twisted.python import util
 
 
 def onlyOnce(fn):
-    'Set up FN to only run once within an interpreter instance'
+    "Set up FN to only run once within an interpreter instance"
+
     def wrap(*args, **kwargs):
         if hasattr(fn, 'called'):
             return None
         fn.called = 1
         return fn(*args, **kwargs)
+
     util.mergeFunctionMetadata(fn, wrap)
     return wrap
+
 
 # NOTE: all of these patches test for applicability *before* importing the
 # patch module.  This will help cut down on unnecessary imports where the
@@ -49,12 +52,14 @@ def patch_testcase_timeout():
 @onlyOnce
 def patch_servicechecks():
     from buildbot.monkeypatches import servicechecks
+
     servicechecks.patch()
 
 
 @onlyOnce
 def patch_decorators():
     from buildbot.monkeypatches import decorators
+
     decorators.patch()
 
 

@@ -18,7 +18,6 @@ from buildbot_worker.commands import base
 
 
 class WorkerShellCommand(base.Command):
-
     requiredArgs = ['workdir', 'command']
 
     def start(self):

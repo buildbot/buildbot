@@ -20,7 +20,6 @@ from buildbot.util import service
 
 
 class FakeWorkerManager(service.AsyncMultiService):
-
     def __init__(self):
         super().__init__()
         self.setName('workers')
@@ -58,7 +57,6 @@ class FakeWorkerManager(service.AsyncMultiService):
 
 
 class FakeWorkerRegistration:
-
     def __init__(self, worker):
         self.updates = []
         self.unregistered = False

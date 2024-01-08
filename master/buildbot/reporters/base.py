@@ -67,8 +67,9 @@ class ReporterBase(service.BuildbotService):
         # Add consumers for new keys
         for key in sorted(list(wanted_event_keys)):
             if key not in self._event_consumers:
-                self._event_consumers[key] = \
-                    yield self.master.mq.startConsuming(self._got_event, key)
+                self._event_consumers[key] = yield self.master.mq.startConsuming(
+                    self._got_event, key
+                )
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -114,8 +115,11 @@ class ReporterBase(service.BuildbotService):
                         if report is not None:
                             reports.append(report)
                     except Exception as e:
-                        log.err(e, "Got exception when handling reporter events: "
-                                f"key: {key} generator: {g}")
+                        log.err(
+                            e,
+                            "Got exception when handling reporter events: "
+                            f"key: {key} generator: {g}",
+                        )
 
             if reports:
                 yield self.sendMessage(reports)

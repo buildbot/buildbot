@@ -29,14 +29,13 @@ def forceScheduler2Data(sched):
         "button_name": str(sched.buttonName),
         "label": str(sched.label),
         "builder_names": [str(name) for name in sched.builderNames],
-        "enabled": sched.enabled
+        "enabled": sched.enabled,
     }
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
 
 class ForceSchedulerEndpoint(base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /forceschedulers/i:schedulername
@@ -71,7 +70,6 @@ class ForceSchedulerEndpoint(base.Endpoint):
 
 
 class ForceSchedulersEndpoint(base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /forceschedulers
@@ -94,7 +92,6 @@ class ForceSchedulersEndpoint(base.Endpoint):
 
 
 class ForceScheduler(base.ResourceType):
-
     name = "forcescheduler"
     plural = "forceschedulers"
     endpoints = [ForceSchedulerEndpoint, ForceSchedulersEndpoint]
@@ -107,4 +104,5 @@ class ForceScheduler(base.ResourceType):
         builder_names = types.List(of=types.Identifier(50))
         enabled = types.Boolean()
         all_fields = types.List(of=types.JsonObject())
+
     entityType = EntityType(name, 'Forcescheduler')

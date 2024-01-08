@@ -21,7 +21,6 @@ from buildbot.util import service
 
 
 class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
-
     def __init__(self):
         super().__init__()
         self.setName("fake-botmaster")

@@ -24,7 +24,7 @@ from twisted.web.error import Error
 
 from buildbot.util import unicode2bytes
 
-_CR_LF_RE = re.compile(br"[\r\n]+.*")
+_CR_LF_RE = re.compile(rb"[\r\n]+.*")
 
 
 def protect_redirect_url(url):
@@ -38,7 +38,6 @@ class Redirect(Error):
 
 
 class Resource(resource.Resource):
-
     # if this is true for a class, then instances will have their
     # reconfigResource(new_config) methods called on reconfig.
     needsReconfig = False
@@ -66,6 +65,7 @@ class Resource(resource.Resource):
             request.setHeader(b'content-type', b'text/plain; charset=utf-8')
             request.write(msg)
             request.finish()
+
         if writeError is None:
             writeError = writeErrorDefault
         try:
@@ -113,7 +113,6 @@ class Resource(resource.Resource):
 
 
 class RedirectResource(Resource):
-
     def __init__(self, master, basepath):
         super().__init__(master)
         self.basepath = basepath

@@ -22,7 +22,6 @@ from twisted.spread import pb
 
 
 class UsersClient:
-
     """
     Client set up in buildbot.scripts.runner to send `buildbot user` args
     over a PB connection to perspective_commandline that will execute the
@@ -42,12 +41,13 @@ class UsersClient:
 
         @d.addCallback
         def call_commandline(remote):
-            d = remote.callRemote("commandline", op, bb_username,
-                                  bb_password, ids, info)
+            d = remote.callRemote("commandline", op, bb_username, bb_password, ids, info)
 
             @d.addCallback
             def returnAndLose(res):
                 remote.broker.transport.loseConnection()
                 return res
+
             return d
+
         return d

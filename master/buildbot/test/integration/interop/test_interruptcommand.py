@@ -45,17 +45,11 @@ class InterruptCommand(RunMasterBase):
                 res = yield d
                 return res
 
-        c['schedulers'] = [
-            schedulers.ForceScheduler(
-                name="force",
-                builderNames=["testy"])]
+        c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
         f = util.BuildFactory()
         f.addStep(SleepAndInterrupt())
-        c['builders'] = [
-            util.BuilderConfig(name="testy",
-                               workernames=["local1"],
-                               factory=f)]
+        c['builders'] = [util.BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
         yield self.setup_master(c)
 

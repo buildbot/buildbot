@@ -37,19 +37,17 @@ LEVELS = {
     EXCEPTION: 'exception',
     FAILURE: 'failing',
     SUCCESS: 'passing',
-    WARNINGS: 'warnings'
+    WARNINGS: 'warnings',
 }
 
-DEFAULT_MSG_TEMPLATE = \
-    ('The Buildbot has detected a <a href="{{ build_url }}">{{ status_detected }}</a>' +
-     'of <i>{{ buildername }}</i> while building {{ projects }} on {{ workername }}.')
+DEFAULT_MSG_TEMPLATE = (
+    'The Buildbot has detected a <a href="{{ build_url }}">{{ status_detected }}</a>'
+    + 'of <i>{{ buildername }}</i> while building {{ projects }} on {{ workername }}.'
+)
 
 
 class PushjetNotifier(ReporterBase):
-
-    def checkConfig(self, secret, levels=None, base_url='https://api.pushjet.io',
-                    generators=None):
-
+    def checkConfig(self, secret, levels=None, base_url='https://api.pushjet.io', generators=None):
         if generators is None:
             generators = self._create_default_generators()
 
@@ -58,8 +56,9 @@ class PushjetNotifier(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, secret, levels=None, base_url='https://api.pushjet.io',
-                        generators=None):
+    def reconfigService(
+        self, secret, levels=None, base_url='https://api.pushjet.io', generators=None
+    ):
         secret = yield self.renderSecrets(secret)
 
         if generators is None:
@@ -71,8 +70,7 @@ class PushjetNotifier(ReporterBase):
             self.levels = {}
         else:
             self.levels = levels
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url)
+        self._http = yield httpclientservice.HTTPClientService.getService(self.master, base_url)
 
     def _create_default_generators(self):
         formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
@@ -84,10 +82,7 @@ class PushjetNotifier(ReporterBase):
         results = merge_reports_prop(reports, 'results')
         worker = merge_reports_prop_take_first(reports, 'worker')
 
-        msg = {
-            'message': body,
-            'title': subject
-        }
+        msg = {'message': body, 'title': subject}
 
         level = self.levels.get(LEVELS[results] if worker is None else 'worker_missing')
         if level is not None:

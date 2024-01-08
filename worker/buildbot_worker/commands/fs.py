@@ -29,7 +29,6 @@ from buildbot_worker.commands import utils
 
 
 class MakeDirectory(base.Command):
-
     header = "mkdir"
 
     # args['paths'] specifies the absolute paths of directories to create
@@ -46,14 +45,13 @@ class MakeDirectory(base.Command):
                 self.log_msg("MakeDirectory {0} failed: {1}".format(dirname, e))
                 self.sendStatus([
                     ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
-                    ('rc', e.errno)
+                    ('rc', e.errno),
                 ])
                 return
         self.sendStatus([('rc', 0)])
 
 
 class RemoveDirectory(base.Command):
-
     header = "rmdir"
 
     # args['paths'] specifies the absolute paths of directories or files to remove
@@ -90,10 +88,9 @@ class RemoveDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus([
-                    ('header', 'exception from rmdirRecursive\n' + f.getTraceback())
-                ])
+                self.sendStatus([('header', 'exception from rmdirRecursive\n' + f.getTraceback())])
                 return -1  # rc=-1
+
             d.addCallbacks(cb, eb)
         else:
             d = self._clobber(None, path)
@@ -104,11 +101,18 @@ class RemoveDirectory(base.Command):
     def _clobber(self, dummy, path, chmodDone=False):
         command = ["rm", "-rf", path]
 
-        c = runprocess.RunProcess(self.command_id, command, self.protocol_command.worker_basedir,
-                                  self.protocol_command.unicode_encoding,
-                                  self.protocol_command.send_update,
-                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                                  logEnviron=self.logEnviron, usePTY=False)
+        c = runprocess.RunProcess(
+            self.command_id,
+            command,
+            self.protocol_command.worker_basedir,
+            self.protocol_command.unicode_encoding,
+            self.protocol_command.send_update,
+            sendRC=0,
+            timeout=self.timeout,
+            maxTime=self.maxTime,
+            logEnviron=self.logEnviron,
+            usePTY=False,
+        )
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -137,11 +141,18 @@ class RemoveDirectory(base.Command):
             # permission) by running 'find' instead
             command = ["find", path, '-exec', 'chmod', 'u+rwx', '{}', ';']
 
-        c = runprocess.RunProcess(self.command_id, command, self.protocol_command.worker_basedir,
-                                  self.protocol_command.unicode_encoding,
-                                  self.protocol_command.send_update,
-                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                                  logEnviron=self.logEnviron, usePTY=False)
+        c = runprocess.RunProcess(
+            self.command_id,
+            command,
+            self.protocol_command.worker_basedir,
+            self.protocol_command.unicode_encoding,
+            self.protocol_command.send_update,
+            sendRC=0,
+            timeout=self.timeout,
+            maxTime=self.maxTime,
+            logEnviron=self.logEnviron,
+            usePTY=False,
+        )
 
         self.command = c
         rc = yield c.start()
@@ -150,7 +161,6 @@ class RemoveDirectory(base.Command):
 
 
 class CopyDirectory(base.Command):
-
     header = "cpdir"
 
     # args['to_path'] and args['from_path'] are relative to Builder directory, and
@@ -178,6 +188,7 @@ class CopyDirectory(base.Command):
             def eb(f):
                 self.sendStatus([('header', 'exception from copytree\n' + f.getTraceback())])
                 return -1  # rc=-1
+
             d.addCallbacks(cb, eb)
 
             @d.addCallback
@@ -188,21 +199,29 @@ class CopyDirectory(base.Command):
                 os.makedirs(os.path.dirname(to_path))
             if os.path.exists(to_path):
                 # I don't think this happens, but just in case..
-                self.log_msg(("cp target '{0}' already exists -- cp will not do what you think!"
-                              ).format(to_path))
+                self.log_msg(
+                    ("cp target '{0}' already exists -- cp will not do what you think!").format(
+                        to_path
+                    )
+                )
 
             if platform.system().lower().find('solaris') >= 0:
                 command = ['cp', '-R', '-P', '-p', from_path, to_path]
             else:
                 command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
 
-            c = runprocess.RunProcess(self.command_id, command,
-                                      self.protocol_command.worker_basedir,
-                                      self.protocol_command.unicode_encoding,
-                                      self.protocol_command.send_update,
-                                      sendRC=False, timeout=self.timeout,
-                                      maxTime=self.maxTime, logEnviron=self.logEnviron,
-                                      usePTY=False)
+            c = runprocess.RunProcess(
+                self.command_id,
+                command,
+                self.protocol_command.worker_basedir,
+                self.protocol_command.unicode_encoding,
+                self.protocol_command.send_update,
+                sendRC=False,
+                timeout=self.timeout,
+                maxTime=self.maxTime,
+                logEnviron=self.logEnviron,
+                usePTY=False,
+            )
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)
@@ -212,7 +231,6 @@ class CopyDirectory(base.Command):
 
 
 class StatFile(base.Command):
-
     header = "stat"
 
     # args['path'] absolute path of a file
@@ -228,12 +246,11 @@ class StatFile(base.Command):
             self.log_msg("StatFile {0} failed: {1}".format(filename, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, filename)),
-                ('rc', e.errno)
+                ('rc', e.errno),
             ])
 
 
 class GlobPath(base.Command):
-
     header = "glob"
 
     # args['path'] shell-style path specification of a pattern
@@ -253,12 +270,11 @@ class GlobPath(base.Command):
             self.log_msg("GlobPath {0} failed: {1}".format(pathname, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
-                ('rc', e.errno)
+                ('rc', e.errno),
             ])
 
 
 class ListDir(base.Command):
-
     header = "listdir"
 
     # args['path'] absolute path of the directory to list
@@ -274,12 +290,11 @@ class ListDir(base.Command):
             self.log_msg("ListDir {0} failed: {1}".format(dirname, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
-                ('rc', e.errno)
+                ('rc', e.errno),
             ])
 
 
 class RemoveFile(base.Command):
-
     header = "rmfile"
 
     # args['path'] absolute path of a file to delete
@@ -295,5 +310,5 @@ class RemoveFile(base.Command):
             self.log_msg("remove file {0} failed: {1}".format(pathname, e))
             self.sendStatus([
                 ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
-                ('rc', e.errno)
+                ('rc', e.errno),
             ])

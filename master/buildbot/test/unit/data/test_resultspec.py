@@ -31,60 +31,52 @@ def mklist(fld, *values):
 
 
 class Filter(unittest.TestCase):
-
     def test_eq(self):
         f = resultspec.Filter('num', 'eq', [10])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10))),
-                         mklist('num', 10))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10))), mklist('num', 10))
 
     def test_eq_plural(self):
         f = resultspec.Filter('num', 'eq', [10, 15, 20])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
-                         mklist('num', 10, 15))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))), mklist('num', 10, 15))
 
     def test_ne(self):
         f = resultspec.Filter('num', 'ne', [10])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10))),
-                         mklist('num', 5))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10))), mklist('num', 5))
 
     def test_ne_plural(self):
         f = resultspec.Filter('num', 'ne', [10, 15, 20])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
-                         mklist('num', 5))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))), mklist('num', 5))
 
     def test_lt(self):
         f = resultspec.Filter('num', 'lt', [10])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
-                         mklist('num', 5))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))), mklist('num', 5))
 
     def test_le(self):
         f = resultspec.Filter('num', 'le', [10])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
-                         mklist('num', 5, 10))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))), mklist('num', 5, 10))
 
     def test_gt(self):
         f = resultspec.Filter('num', 'gt', [10])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
-                         mklist('num', 15))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))), mklist('num', 15))
 
     def test_ge(self):
         f = resultspec.Filter('num', 'ge', [10])
-        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
-                         mklist('num', 10, 15))
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))), mklist('num', 10, 15))
 
     def test_contains(self):
         f = resultspec.Filter('num', 'contains', [10])
-        self.assertEqual(list(f.apply(mklist('num', [5, 1], [10, 1], [15, 1]))),
-                         mklist('num', [10, 1]))
+        self.assertEqual(
+            list(f.apply(mklist('num', [5, 1], [10, 1], [15, 1]))), mklist('num', [10, 1])
+        )
 
     def test_contains_plural(self):
         f = resultspec.Filter('num', 'contains', [10, 5])
-        self.assertEqual(list(f.apply(mklist('num', [5, 1], [10, 1], [15, 1]))),
-                         mklist('num', [5, 1], [10, 1]))
+        self.assertEqual(
+            list(f.apply(mklist('num', [5, 1], [10, 1], [15, 1]))), mklist('num', [5, 1], [10, 1])
+        )
 
 
 class ResultSpec(unittest.TestCase):
-
     def assertListResultEqual(self, a, b):
         self.assertIsInstance(a, base.ListResult)
         self.assertIsInstance(b, base.ListResult)
@@ -95,92 +87,91 @@ class ResultSpec(unittest.TestCase):
 
     def test_apply_details_fields(self):
         data = {"name": 'clyde', "id": 14, "favcolor": 'red'}
+        self.assertEqual(resultspec.ResultSpec(fields=['name']).apply(data), {"name": 'clyde'})
         self.assertEqual(
-            resultspec.ResultSpec(fields=['name']).apply(data),
-            {"name": 'clyde'})
-        self.assertEqual(
-            resultspec.ResultSpec(fields=['name', 'id']).apply(data),
-            {"name": 'clyde', "id": 14})
+            resultspec.ResultSpec(fields=['name', 'id']).apply(data), {"name": 'clyde', "id": 14}
+        )
 
     def test_apply_collection_fields(self):
-        data = mklist(('a', 'b', 'c'),
-                      (1, 11, 111),
-                      (2, 22, 222))
-        self.assertEqual(
-            resultspec.ResultSpec(fields=['a']).apply(data),
-            mklist('a', 1, 2))
+        data = mklist(('a', 'b', 'c'), (1, 11, 111), (2, 22, 222))
+        self.assertEqual(resultspec.ResultSpec(fields=['a']).apply(data), mklist('a', 1, 2))
         self.assertEqual(
             resultspec.ResultSpec(fields=['a', 'c']).apply(data),
-            mklist(('a', 'c'), (1, 111), (2, 222)))
+            mklist(('a', 'c'), (1, 111), (2, 222)),
+        )
 
     def test_apply_ordering(self):
         data = mklist('name', 'albert', 'bruce', 'cedric', 'dwayne')
         exp = mklist('name', 'albert', 'bruce', 'cedric', 'dwayne')
         random.shuffle(data)
-        self.assertEqual(
-            resultspec.ResultSpec(order=['name']).apply(data),
-            exp)
-        self.assertEqual(
-            resultspec.ResultSpec(order=['-name']).apply(data),
-            list(reversed(exp)))
+        self.assertEqual(resultspec.ResultSpec(order=['name']).apply(data), exp)
+        self.assertEqual(resultspec.ResultSpec(order=['-name']).apply(data), list(reversed(exp)))
 
     def test_apply_ordering_multi(self):
-        data = mklist(('fn', 'ln'),
-                      ('cedric', 'willis'),
-                      ('albert', 'engelbert'),
-                      ('bruce', 'willis'),
-                      ('dwayne', 'montague'))
-        exp = base.ListResult(mklist(('fn', 'ln'),
-                                     ('albert', 'engelbert'),
-                                     ('dwayne', 'montague'),
-                                     ('bruce', 'willis'),
-                                     ('cedric', 'willis')), total=4)
+        data = mklist(
+            ('fn', 'ln'),
+            ('cedric', 'willis'),
+            ('albert', 'engelbert'),
+            ('bruce', 'willis'),
+            ('dwayne', 'montague'),
+        )
+        exp = base.ListResult(
+            mklist(
+                ('fn', 'ln'),
+                ('albert', 'engelbert'),
+                ('dwayne', 'montague'),
+                ('bruce', 'willis'),
+                ('cedric', 'willis'),
+            ),
+            total=4,
+        )
         random.shuffle(data)
-        self.assertListResultEqual(
-            resultspec.ResultSpec(order=['ln', 'fn']).apply(data),
-            exp)
-        exp = base.ListResult(mklist(('fn', 'ln'),
-                                     ('cedric', 'willis'),
-                                     ('bruce', 'willis'),
-                                     ('dwayne', 'montague'),
-                                     ('albert', 'engelbert')), total=4)
-        self.assertListResultEqual(
-            resultspec.ResultSpec(order=['-ln', '-fn']).apply(data),
-            exp)
+        self.assertListResultEqual(resultspec.ResultSpec(order=['ln', 'fn']).apply(data), exp)
+        exp = base.ListResult(
+            mklist(
+                ('fn', 'ln'),
+                ('cedric', 'willis'),
+                ('bruce', 'willis'),
+                ('dwayne', 'montague'),
+                ('albert', 'engelbert'),
+            ),
+            total=4,
+        )
+        self.assertListResultEqual(resultspec.ResultSpec(order=['-ln', '-fn']).apply(data), exp)
 
     def test_apply_filter(self):
         data = mklist('name', 'albert', 'bruce', 'cedric', 'dwayne')
         f = resultspec.Filter(field='name', op='gt', values=['bruce'])
         self.assertListResultEqual(
             resultspec.ResultSpec(filters=[f]).apply(data),
-            base.ListResult(mklist('name', 'cedric', 'dwayne'), total=2))
+            base.ListResult(mklist('name', 'cedric', 'dwayne'), total=2),
+        )
         f2 = resultspec.Filter(field='name', op='le', values=['cedric'])
         self.assertListResultEqual(
             resultspec.ResultSpec(filters=[f, f2]).apply(data),
-            base.ListResult(mklist('name', 'cedric'), total=1))
+            base.ListResult(mklist('name', 'cedric'), total=1),
+        )
 
     def test_apply_missing_fields(self):
-        data = mklist(('fn', 'ln'),
-                      ('cedric', 'willis'),
-                      ('albert', 'engelbert'),
-                      ('bruce', 'willis'),
-                      ('dwayne', 'montague'))
+        data = mklist(
+            ('fn', 'ln'),
+            ('cedric', 'willis'),
+            ('albert', 'engelbert'),
+            ('bruce', 'willis'),
+            ('dwayne', 'montague'),
+        )
         # note that the REST interface catches this with a nicer error message
         with self.assertRaises(KeyError):
             resultspec.ResultSpec(fields=['fn'], order=['ln']).apply(data)
 
     def test_sort_null_datetimefields(self):
-        data = mklist(('fn', 'ln'),
-                      ('albert', datetime.datetime(1, 1, 1)),
-                      ('cedric', None))
+        data = mklist(('fn', 'ln'), ('albert', datetime.datetime(1, 1, 1)), ('cedric', None))
 
-        exp = mklist(('fn', 'ln'),
-                     ('cedric', None),
-                     ('albert', datetime.datetime(1, 1, 1)))
+        exp = mklist(('fn', 'ln'), ('cedric', None), ('albert', datetime.datetime(1, 1, 1)))
 
         self.assertListResultEqual(
-            resultspec.ResultSpec(order=['ln']).apply(data),
-            base.ListResult(exp, total=2))
+            resultspec.ResultSpec(order=['ln']).apply(data), base.ListResult(exp, total=2)
+        )
 
     def do_test_pagination(self, bareList):
         data = mklist('x', *list(range(101, 131)))
@@ -191,20 +182,20 @@ class ResultSpec(unittest.TestCase):
             data.limit = None
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=0).apply(data),
-            base.ListResult(mklist('x', *list(range(101, 131))),
-                            offset=0, total=30))
+            base.ListResult(mklist('x', *list(range(101, 131))), offset=0, total=30),
+        )
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=10).apply(data),
-            base.ListResult(mklist('x', *list(range(111, 131))),
-                            offset=10, total=30))
+            base.ListResult(mklist('x', *list(range(111, 131))), offset=10, total=30),
+        )
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=10, limit=10).apply(data),
-            base.ListResult(mklist('x', *list(range(111, 121))),
-                            offset=10, total=30, limit=10))
+            base.ListResult(mklist('x', *list(range(111, 121))), offset=10, total=30, limit=10),
+        )
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=20, limit=15).apply(data),
-            base.ListResult(mklist('x', *list(range(121, 131))),
-                            offset=20, total=30, limit=15))  # off the end
+            base.ListResult(mklist('x', *list(range(121, 131))), offset=20, total=30, limit=15),
+        )  # off the end
 
     def test_pagination_bare_list(self):
         return self.do_test_pagination(bareList=True)
@@ -220,8 +211,8 @@ class ResultSpec(unittest.TestCase):
         self.assertListResultEqual(
             # ResultSpec has its offset/limit fields cleared
             resultspec.ResultSpec().apply(data),
-            base.ListResult(mklist('x', *list(range(10, 20))),
-                            offset=10, total=30, limit=10))
+            base.ListResult(mklist('x', *list(range(10, 20))), offset=10, total=30, limit=10),
+        )
 
     def test_pagination_prepaginated_without_clearing_resultspec(self):
         data = base.ListResult(mklist('x', *list(range(10, 20))))
@@ -242,60 +233,72 @@ class ResultSpec(unittest.TestCase):
 
     def test_popProperties(self):
         expected = ['prop1', 'prop2']
-        rs = resultspec.ResultSpec(properties=[
-            resultspec.Property(b'property', 'eq', expected)
-        ])
+        rs = resultspec.ResultSpec(properties=[resultspec.Property(b'property', 'eq', expected)])
         self.assertEqual(len(rs.properties), 1)
         self.assertEqual(rs.popProperties(), expected)
         self.assertEqual(len(rs.properties), 0)
 
     def test_popFilter(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', [10]),
-            resultspec.Filter('foo', 'gt', [5]),
-            resultspec.Filter('base', 'ne', [20]),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', [10]),
+                resultspec.Filter('foo', 'gt', [5]),
+                resultspec.Filter('base', 'ne', [20]),
+            ]
+        )
         self.assertEqual(rs.popFilter('baz', 'lt'), None)  # no match
         self.assertEqual(rs.popFilter('foo', 'eq'), [10])
         self.assertEqual(len(rs.filters), 2)
 
     def test_popBooleanFilter(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', [True]),
-            resultspec.Filter('bar', 'ne', [False]),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', [True]),
+                resultspec.Filter('bar', 'ne', [False]),
+            ]
+        )
         self.assertEqual(rs.popBooleanFilter('foo'), True)
         self.assertEqual(rs.popBooleanFilter('bar'), True)
         self.assertEqual(len(rs.filters), 0)
 
     def test_popStringFilter(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', ['foo']),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', ['foo']),
+            ]
+        )
         self.assertEqual(rs.popStringFilter('foo'), 'foo')
 
     def test_popStringFilterSeveral(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', ['foo', 'bar']),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', ['foo', 'bar']),
+            ]
+        )
         self.assertEqual(rs.popStringFilter('foo'), None)
 
     def test_popIntegerFilter(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', ['12']),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', ['12']),
+            ]
+        )
         self.assertEqual(rs.popIntegerFilter('foo'), 12)
 
     def test_popIntegerFilterSeveral(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', ['12', '13']),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', ['12', '13']),
+            ]
+        )
         self.assertEqual(rs.popIntegerFilter('foo'), None)
 
     def test_popIntegerFilterNotInt(self):
-        rs = resultspec.ResultSpec(filters=[
-            resultspec.Filter('foo', 'eq', ['bar']),
-        ])
+        rs = resultspec.ResultSpec(
+            filters=[
+                resultspec.Filter('foo', 'eq', ['bar']),
+            ]
+        )
         with self.assertRaises(ValueError):
             rs.popIntegerFilter('foo')
 
@@ -317,22 +320,20 @@ class ResultSpec(unittest.TestCase):
 
 class Comparator(unittest.TestCase):
     def test_noneComparator(self):
-        self.assertNotEqual(NoneComparator(None),
-                            NoneComparator(datetime.datetime(1, 1, 1)))
-        self.assertNotEqual(NoneComparator(datetime.datetime(1, 1, 1)),
-                            NoneComparator(None))
-        self.assertLess(NoneComparator(None),
-                        NoneComparator(datetime.datetime(1, 1, 1)))
-        self.assertGreater(NoneComparator(datetime.datetime(1, 1, 1)),
-                           NoneComparator(None))
-        self.assertLess(NoneComparator(datetime.datetime(1, 1, 1)),
-                        NoneComparator(datetime.datetime(1, 1, 2)))
-        self.assertEqual(NoneComparator(datetime.datetime(1, 1, 1)),
-                         NoneComparator(datetime.datetime(1, 1, 1)))
-        self.assertGreater(NoneComparator(datetime.datetime(1, 1, 2)),
-                           NoneComparator(datetime.datetime(1, 1, 1)))
-        self.assertEqual(NoneComparator(None),
-                         NoneComparator(None))
+        self.assertNotEqual(NoneComparator(None), NoneComparator(datetime.datetime(1, 1, 1)))
+        self.assertNotEqual(NoneComparator(datetime.datetime(1, 1, 1)), NoneComparator(None))
+        self.assertLess(NoneComparator(None), NoneComparator(datetime.datetime(1, 1, 1)))
+        self.assertGreater(NoneComparator(datetime.datetime(1, 1, 1)), NoneComparator(None))
+        self.assertLess(
+            NoneComparator(datetime.datetime(1, 1, 1)), NoneComparator(datetime.datetime(1, 1, 2))
+        )
+        self.assertEqual(
+            NoneComparator(datetime.datetime(1, 1, 1)), NoneComparator(datetime.datetime(1, 1, 1))
+        )
+        self.assertGreater(
+            NoneComparator(datetime.datetime(1, 1, 2)), NoneComparator(datetime.datetime(1, 1, 1))
+        )
+        self.assertEqual(NoneComparator(None), NoneComparator(None))
 
     def test_noneComparison(self):
         noneInList = ["z", None, None, "q", "a", None, "v"]

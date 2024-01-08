@@ -426,18 +426,17 @@ gitJsonPayloadCommit = {
         "author": {
             "name": "defunkt",
             "email": "fred@flinstone.org",
-            "date": "2017-02-12T14:39:33Z"
+            "date": "2017-02-12T14:39:33Z",
         },
         "committer": {
             "name": "defunkt",
             "email": "fred@flinstone.org",
-            "date": "2017-02-12T14:51:05Z"
+            "date": "2017-02-12T14:51:05Z",
         },
         "message": "black magic",
-        "tree": {
-        },
+        "tree": {},
         "url": "...",
-        "comment_count": 0
+        "comment_count": 0,
     },
     "url": "...",
     "html_url": "...",
@@ -446,15 +445,10 @@ gitJsonPayloadCommit = {
     "committer": {},
     "parents": [],
     "stats": {},
-    "files": []
+    "files": [],
 }
 
-gitJsonPayloadFiles = [
-    {
-        "filename": "README.md",
-        "previous_filename": "old_README.md"
-    }
-]
+gitJsonPayloadFiles = [{"filename": "README.md", "previous_filename": "old_README.md"}]
 
 gitPRproperties = {
     'pullrequesturl': 'https://github.com/defunkt/github/pull/50',
@@ -469,7 +463,7 @@ gitPRproperties = {
     'github.head.ref': 'changes',
     'github.closed_at': None,
     'github.title': 'Update the README with new information',
-    'event': 'pull_request'
+    'event': 'pull_request',
 }
 
 gitJsonPayloadEmpty = b"""
@@ -575,9 +569,7 @@ _CT_JSON = b'application/json'
 
 
 def _prepare_github_change_hook(testcase, **params):
-    return ChangeHookResource(dialects={
-        'github': params
-    }, master=fakeMasterForHooks(testcase))
+    return ChangeHookResource(dialects={'github': params}, master=fakeMasterForHooks(testcase))
 
 
 def _prepare_request(event, payload, _secret=None, headers=None):
@@ -588,21 +580,18 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 
     request.uri = b"/change_hook/github"
     request.method = b"GET"
-    request.received_headers = {
-        _HEADER_EVENT: event
-    }
+    request.received_headers = {_HEADER_EVENT: event}
 
-    assert isinstance(payload, (bytes, list)), \
-        f"payload can only be bytes or list, not {type(payload)}"
+    assert isinstance(
+        payload, (bytes, list)
+    ), f"payload can only be bytes or list, not {type(payload)}"
 
     if isinstance(payload, bytes):
         request.content = BytesIO(payload)
         request.received_headers[_HEADER_CT] = _CT_JSON
 
         if _secret is not None:
-            signature = hmac.new(unicode2bytes(_secret),
-                                 msg=unicode2bytes(payload),
-                                 digestmod=sha1)
+            signature = hmac.new(unicode2bytes(_secret), msg=unicode2bytes(payload), digestmod=sha1)
             request.received_headers[_HEADER_SIGNATURE] = f'sha1={signature.hexdigest()}'
     else:
         request.args[b'payload'] = payload
@@ -615,19 +604,23 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
-                                            TestReactorMixin):
-
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, github_property_whitelist=["github.*"])
+            self, strict=False, github_property_whitelist=["github.*"]
+        )
         self.master = self.changeHook.master
         fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://api.github.com', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -653,9 +646,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     @defer.inlineCallbacks
     def test_unknown_content_type(self):
         bad_content_type = b'application/x-useful'
-        self.request = _prepare_request(b'push', gitJsonPayload, headers={
-            _HEADER_CT: bad_content_type
-        })
+        self.request = _prepare_request(
+            b'push', gitJsonPayload, headers={_HEADER_CT: bad_content_type}
+        )
         yield self.request.test_render(self.changeHook)
         expected = b'Unknown content type: '
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
@@ -680,10 +673,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
 
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
         change = self.changeHook.master.data.updates.changesAdded[0]
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["branch"], "v1.0.0")
         self.assertEqual(change["category"], "tag")
 
@@ -694,8 +685,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
 
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
-        self.assertEqual(change["author"],
-                         "User <userid@example.com>")
+        self.assertEqual(change["author"], "User <userid@example.com>")
         self.assertEqual(change["branch"], "v0.9.15.post1")
         self.assertEqual(change["category"], "tag")
 
@@ -709,41 +699,32 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
         change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change['files'], ['filepath.rb'])
-        self.assertEqual(change["repository"],
-                         "http://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1203116237)
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
-        self.assertEqual(change["revision"],
-                         '41a212ee83ca127e3c8cf465891ab7216a705f59')
-        self.assertEqual(change["comments"],
-                         "okay i give in")
+        self.assertEqual(change["repository"], "http://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1203116237)
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
+        self.assertEqual(change["comments"], "okay i give in")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change["revlink"],
-                         "http://github.com/defunkt/github/commit/"
-                         "41a212ee83ca127e3c8cf465891ab7216a705f59")
+        self.assertEqual(
+            change["revlink"],
+            "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
+        )
 
         change = self.changeHook.master.data.updates.changesAdded[1]
         self.assertEqual(change['files'], ['modfile', 'removedFile'])
-        self.assertEqual(change["repository"],
-                         "http://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1203114994)
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["repository"], "http://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1203114994)
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["src"], "git")
-        self.assertEqual(change["revision"],
-                         'de8251ff97ee194a289832576287d6f8ad74e3d0')
+        self.assertEqual(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
         self.assertEqual(change["comments"], "update pricing a tad")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change["revlink"],
-                         "http://github.com/defunkt/github/commit/"
-                         "de8251ff97ee194a289832576287d6f8ad74e3d0")
+        self.assertEqual(
+            change["revlink"],
+            "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+        )
         self.assertEqual(change["properties"]["event"], "push")
 
     def test_git_with_change_encoded(self):
@@ -764,51 +745,42 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
     # the commit before.
     @defer.inlineCallbacks
     def testGitWithDistinctFalse(self):
-        self.request = _prepare_request(b'push', [gitJsonPayload.replace(b'"distinct": true,',
-                                                                        b'"distinct": false,')])
+        self.request = _prepare_request(
+            b'push', [gitJsonPayload.replace(b'"distinct": true,', b'"distinct": false,')]
+        )
 
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
 
         change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change['files'], ['filepath.rb'])
-        self.assertEqual(change["repository"],
-                         "http://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1203116237)
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
-        self.assertEqual(change["revision"],
-                         '41a212ee83ca127e3c8cf465891ab7216a705f59')
-        self.assertEqual(change["comments"],
-                         "okay i give in")
+        self.assertEqual(change["repository"], "http://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1203116237)
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
+        self.assertEqual(change["comments"], "okay i give in")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change["revlink"],
-                         "http://github.com/defunkt/github/commit/"
-                         "41a212ee83ca127e3c8cf465891ab7216a705f59")
-        self.assertEqual(change["properties"]["github_distinct"],
-                         False)
+        self.assertEqual(
+            change["revlink"],
+            "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
+        )
+        self.assertEqual(change["properties"]["github_distinct"], False)
 
         change = self.changeHook.master.data.updates.changesAdded[1]
         self.assertEqual(change['files'], ['modfile', 'removedFile'])
-        self.assertEqual(change["repository"],
-                         "http://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1203114994)
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["repository"], "http://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1203114994)
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["src"], "git")
-        self.assertEqual(change["revision"],
-                         'de8251ff97ee194a289832576287d6f8ad74e3d0')
+        self.assertEqual(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
         self.assertEqual(change["comments"], "update pricing a tad")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change["revlink"],
-                         "http://github.com/defunkt/github/commit/"
-                         "de8251ff97ee194a289832576287d6f8ad74e3d0")
+        self.assertEqual(
+            change["revlink"],
+            "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+        )
 
     @defer.inlineCallbacks
     def testGitWithNoJson(self):
@@ -854,22 +826,19 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
-        self.assertEqual(change["repository"],
-                         "https://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1412899790)
-        self.assertEqual(change["author"],
-                         "defunkt")
-        self.assertEqual(change["revision"],
-                         '05c588ba8cd510ecbe112d020f215facb17817a7')
-        self.assertEqual(change["comments"],
-                         "GitHub Pull Request #50 (1 commit)\n"
-                         "Update the README with new information\n"
-                         "This is a pretty simple change that we need to pull into master.")
+        self.assertEqual(change["repository"], "https://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1412899790)
+        self.assertEqual(change["author"], "defunkt")
+        self.assertEqual(change["revision"], '05c588ba8cd510ecbe112d020f215facb17817a7')
+        self.assertEqual(
+            change["comments"],
+            "GitHub Pull Request #50 (1 commit)\n"
+            "Update the README with new information\n"
+            "This is a pretty simple change that we need to pull into master.",
+        )
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change['files'], [])
-        self.assertEqual(change["revlink"],
-                         "https://github.com/defunkt/github/pull/50")
+        self.assertEqual(change["revlink"], "https://github.com/defunkt/github/pull/50")
         self.assertEqual(change['properties']['basename'], "master")
         self.assertDictSubset(gitPRproperties, change["properties"])
 
@@ -907,19 +876,24 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
 
 
 class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
-        unittest.TestCase, TestReactorMixin):
-
+    unittest.TestCase, TestReactorMixin
+):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, github_property_whitelist=["github.*"],
-            pullrequest_ref="head")
+            self, strict=False, github_property_whitelist=["github.*"], pullrequest_ref="head"
+        )
         self.master = self.changeHook.master
         fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://api.github.com', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -943,23 +917,32 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
 
 
 class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
-        unittest.TestCase, TestReactorMixin):
-
+    unittest.TestCase, TestReactorMixin
+):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, github_property_whitelist=["github.*"],
-            pullrequest_ref="head", token=_token)
+            self,
+            strict=False,
+            github_property_whitelist=["github.*"],
+            pullrequest_ref="head",
+            token=_token,
+        )
         self.master = self.changeHook.master
         fake_headers = {
             'User-Agent': 'Buildbot',
             'Authorization': 'token ' + _token,
         }
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://api.github.com', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -983,7 +966,6 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
 
 
 class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
-
     secret_name = 'secretkey'
     secret_value = 'githubtoken'
 
@@ -991,9 +973,12 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
 
-        self.changeHook = \
-            _prepare_github_change_hook(self, strict=False, github_property_whitelist=["github.*"],
-                                        token=util.Secret(self.secret_name))
+        self.changeHook = _prepare_github_change_hook(
+            self,
+            strict=False,
+            github_property_whitelist=["github.*"],
+            token=util.Secret(self.secret_name),
+        )
 
         self.master = self.changeHook.master
         fake_headers = {
@@ -1001,8 +986,13 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
             'Authorization': 'token ' + self.secret_value,
         }
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://api.github.com', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
 
         fake_storage = FakeSecretStorage()
         secret_service = SecretManager()
@@ -1031,23 +1021,27 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
         self.assertEqual(change["branch"], "refs/pull/50/merge")
 
 
-class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase,
-                                                     TestReactorMixin):
-
+class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, skips=[r'\[ *bb *skip *\]'], token=_token)
+            self, strict=False, skips=[r'\[ *bb *skip *\]'], token=_token
+        )
         self.master = self.changeHook.master
         fake_headers = {
             'User-Agent': 'Buildbot',
             'Authorization': 'token ' + _token,
         }
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://api.github.com', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -1098,8 +1092,7 @@ class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase,
         for msg in msgs:
             commit['commit']['message'] = msg
             self._http.expect('get', api_endpoint, content_json=commit)
-            self._check_pull_request_with_skip_message(
-                gitJsonPayloadPullRequest)
+            self._check_pull_request_with_skip_message(gitJsonPayloadPullRequest)
 
     @defer.inlineCallbacks
     def _check_pull_request_no_skip(self, payload):
@@ -1120,22 +1113,27 @@ class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase,
 
 
 class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
 
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, token=_token, github_property_whitelist=["github.*"])
+            self, strict=False, token=_token, github_property_whitelist=["github.*"]
+        )
         self.master = self.changeHook.master
         fake_headers = {
             'User-Agent': 'Buildbot',
             'Authorization': 'token ' + _token,
         }
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://api.github.com', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -1169,25 +1167,22 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
-        self.assertEqual(change["repository"],
-                         "https://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1412899790)
-        self.assertEqual(change["author"],
-                         "defunkt")
-        self.assertEqual(change["revision"],
-                         '05c588ba8cd510ecbe112d020f215facb17817a7')
-        self.assertEqual(change["comments"],
-                         "GitHub Pull Request #50 (1 commit)\n"
-                         "Update the README with new information\n"
-                         "This is a pretty simple change that we need to pull into master.")
+        self.assertEqual(change["repository"], "https://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1412899790)
+        self.assertEqual(change["author"], "defunkt")
+        self.assertEqual(change["revision"], '05c588ba8cd510ecbe112d020f215facb17817a7')
+        self.assertEqual(
+            change["comments"],
+            "GitHub Pull Request #50 (1 commit)\n"
+            "Update the README with new information\n"
+            "This is a pretty simple change that we need to pull into master.",
+        )
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         if valid_token:
             self.assertEqual(change['files'], ['README.md', 'old_README.md'])
         else:
             self.assertEqual(change['files'], [])
-        self.assertEqual(change["revlink"],
-                         "https://github.com/defunkt/github/pull/50")
+        self.assertEqual(change["revlink"], "https://github.com/defunkt/github/pull/50")
         self.assertEqual(change['properties']['basename'], "master")
         self.assertDictSubset(gitPRproperties, change["properties"])
 
@@ -1236,23 +1231,26 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
         for msg in msgs:
             commit['commit']['message'] = msg
             self._http.expect('get', api_endpoint, content_json=commit)
-            self._check_git_pull_request_with_skip_message(
-                gitJsonPayloadPullRequest)
+            self._check_git_pull_request_with_skip_message(gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase,
-                                                TestReactorMixin):
-
+class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, github_api_endpoint='https://black.magic.io')
+            self, strict=False, github_api_endpoint='https://black.magic.io'
+        )
         self.master = self.changeHook.master
         fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://black.magic.io', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://black.magic.io',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -1274,25 +1272,28 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase,
         self._check_pull_request(gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase,
-                                                        TestReactorMixin):
-
+class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
 
         _token = '7e076f41-b73a-4045-a817'
         self.changeHook = _prepare_github_change_hook(
-            self, strict=False, github_api_endpoint='https://black.magic.io',
-            token=_token)
+            self, strict=False, github_api_endpoint='https://black.magic.io', token=_token
+        )
         self.master = self.changeHook.master
         fake_headers = {
             'User-Agent': 'Buildbot',
             'Authorization': 'token ' + _token,
         }
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, 'https://black.magic.io', headers=fake_headers,
-            debug=False, verify=False)
+            self.master,
+            self,
+            'https://black.magic.io',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -1315,7 +1316,6 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase,
 
 
 class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
-
     _SECRET = 'somethingreallysecret'
 
     def setUp(self):
@@ -1327,62 +1327,53 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
         secretService = SecretManager()
         secretService.services = [fakeStorageService]
 
-        self.changeHook = _prepare_github_change_hook(self, strict=True,
-                                                      secret=util.Secret("secret_key"))
+        self.changeHook = _prepare_github_change_hook(
+            self, strict=True, secret=util.Secret("secret_key")
+        )
         self.changeHook.master.addService(secretService)
 
     @defer.inlineCallbacks
     def test_signature_ok(self):
-        self.request = _prepare_request(b'push', gitJsonPayload,
-                                        _secret=self._SECRET)
+        self.request = _prepare_request(b'push', gitJsonPayload, _secret=self._SECRET)
         yield self.request.test_render(self.changeHook)
         # Can it somehow be merged w/ the same code above in a different class?
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
         change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change['files'], ['filepath.rb'])
-        self.assertEqual(change["repository"],
-                         "http://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1203116237)
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
-        self.assertEqual(change["revision"],
-                         '41a212ee83ca127e3c8cf465891ab7216a705f59')
-        self.assertEqual(change["comments"],
-                         "okay i give in")
+        self.assertEqual(change["repository"], "http://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1203116237)
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
+        self.assertEqual(change["comments"], "okay i give in")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change["revlink"],
-                         "http://github.com/defunkt/github/commit/"
-                         "41a212ee83ca127e3c8cf465891ab7216a705f59")
+        self.assertEqual(
+            change["revlink"],
+            "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
+        )
 
         change = self.changeHook.master.data.updates.changesAdded[1]
         self.assertEqual(change['files'], ['modfile', 'removedFile'])
-        self.assertEqual(change["repository"],
-                         "http://github.com/defunkt/github")
-        self.assertEqual(change["when_timestamp"],
-                         1203114994)
-        self.assertEqual(change["author"],
-                         "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["committer"],
-                         "Freddy Flinstone <freddy@flinstone.org>")
+        self.assertEqual(change["repository"], "http://github.com/defunkt/github")
+        self.assertEqual(change["when_timestamp"], 1203114994)
+        self.assertEqual(change["author"], "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["committer"], "Freddy Flinstone <freddy@flinstone.org>")
         self.assertEqual(change["src"], "git")
-        self.assertEqual(change["revision"],
-                         'de8251ff97ee194a289832576287d6f8ad74e3d0')
+        self.assertEqual(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
         self.assertEqual(change["comments"], "update pricing a tad")
         self.assertEqual(change["branch"], "master")
-        self.assertEqual(change["revlink"],
-                         "http://github.com/defunkt/github/commit/"
-                         "de8251ff97ee194a289832576287d6f8ad74e3d0")
+        self.assertEqual(
+            change["revlink"],
+            "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+        )
 
     @defer.inlineCallbacks
     def test_unknown_hash(self):
         bad_hash_type = b'blah'
-        self.request = _prepare_request(b'push', gitJsonPayload, headers={
-            _HEADER_SIGNATURE: bad_hash_type + b'=doesnotmatter'
-        })
+        self.request = _prepare_request(
+            b'push', gitJsonPayload, headers={_HEADER_SIGNATURE: bad_hash_type + b'=doesnotmatter'}
+        )
         yield self.request.test_render(self.changeHook)
         expected = b'Unknown hash type: ' + bad_hash_type
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
@@ -1391,9 +1382,9 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_signature_nok(self):
         bad_signature = b'sha1=wrongstuff'
-        self.request = _prepare_request(b'push', gitJsonPayload, headers={
-            _HEADER_SIGNATURE: bad_signature
-        })
+        self.request = _prepare_request(
+            b'push', gitJsonPayload, headers={_HEADER_SIGNATURE: bad_signature}
+        )
         yield self.request.test_render(self.changeHook)
         expected = b'Hash mismatch'
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
@@ -1412,9 +1403,9 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_wrong_signature_format(self):
         bad_signature = b'hash=value=something'
-        self.request = _prepare_request(b'push', gitJsonPayload, headers={
-            _HEADER_SIGNATURE: bad_signature
-        })
+        self.request = _prepare_request(
+            b'push', gitJsonPayload, headers={_HEADER_SIGNATURE: bad_signature}
+        )
         yield self.request.test_render(self.changeHook)
         expected = b'Wrong signature format: ' + bad_signature
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
@@ -1429,9 +1420,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
         self.assertEqual(self.request.written, expected)
 
 
-class TestChangeHookConfiguredWithCodebaseValue(unittest.TestCase,
-                                                TestReactorMixin):
-
+class TestChangeHookConfiguredWithCodebaseValue(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
         self.changeHook = _prepare_github_change_hook(self, codebase='foobar')
@@ -1455,13 +1444,10 @@ def _codebase_function(payload):
     return 'foobar-' + payload['repository']['name']
 
 
-class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase,
-                                                   TestReactorMixin):
-
+class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
-        self.changeHook = _prepare_github_change_hook(
-            self, codebase=_codebase_function)
+        self.changeHook = _prepare_github_change_hook(self, codebase=_codebase_function)
 
     @defer.inlineCallbacks
     def _check_git_with_change(self, payload):
@@ -1478,9 +1464,7 @@ class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase,
         return self._check_git_with_change(gitJsonPayload)
 
 
-class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase,
-                                                     TestReactorMixin):
-
+class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
 
@@ -1489,8 +1473,7 @@ class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase,
                 self.master.hook_called = True
                 return [], None
 
-        self.changeHook = _prepare_github_change_hook(
-            self, **{'class': CustomGitHubEventHandler})
+        self.changeHook = _prepare_github_change_hook(self, **{'class': CustomGitHubEventHandler})
 
     @defer.inlineCallbacks
     def test_ping(self):

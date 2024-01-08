@@ -32,13 +32,13 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     def produce(self, routingKey, data):
         d = self._produce(routingKey, data)
-        d.addErrback(
-            log.err, "Problem while producing message on topic " + repr(routingKey))
+        d.addErrback(log.err, "Problem while producing message on topic " + repr(routingKey))
 
     @classmethod
     def messageTopic(cls, routingKey):
         def ifNone(v, default):
             return default if v is None else v
+
         # replace None values by "" in routing key
         routingKey = [ifNone(key, "") for key in routingKey]
         # then join them with "dot", and add the prefix
@@ -47,7 +47,7 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     @classmethod
     def routingKeyFromMessageTopic(cls, topic):
         # just split the topic, and remove the NAMESPACE prefix
-        return tuple(topic[len(WampMQ.NAMESPACE) + 1:].split("."))
+        return tuple(topic[len(WampMQ.NAMESPACE) + 1 :].split("."))
 
     def _produce(self, routingKey, data):
         _data = json.loads(json.dumps(data, default=toJson))
@@ -68,7 +68,6 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 
 class QueueRef(base.QueueRef):
-
     def __init__(self, mq, callback):
         super().__init__(callback)
         self.unreg = None

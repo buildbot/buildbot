@@ -31,31 +31,53 @@ class Buildset(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, external_idstring='extid', reason='because',
-                 submitted_at=12345678, complete=0, complete_at=None, results=-1,
-                 rebuilt_buildid=None, parent_buildid=None, parent_relationship=None):
-        super().__init__(id=id, external_idstring=external_idstring, reason=reason,
-                         submitted_at=submitted_at, complete=complete, complete_at=complete_at,
-                         results=results, rebuilt_buildid=rebuilt_buildid,
-                         parent_buildid=parent_buildid, parent_relationship=parent_relationship)
+    def __init__(
+        self,
+        id=None,
+        external_idstring='extid',
+        reason='because',
+        submitted_at=12345678,
+        complete=0,
+        complete_at=None,
+        results=-1,
+        rebuilt_buildid=None,
+        parent_buildid=None,
+        parent_relationship=None,
+    ):
+        super().__init__(
+            id=id,
+            external_idstring=external_idstring,
+            reason=reason,
+            submitted_at=submitted_at,
+            complete=complete,
+            complete_at=complete_at,
+            results=results,
+            rebuilt_buildid=rebuilt_buildid,
+            parent_buildid=parent_buildid,
+            parent_relationship=parent_relationship,
+        )
 
 
 class BuildsetProperty(Row):
     table = "buildset_properties"
 
     foreignKeys = ('buildsetid',)
-    required_columns = ('buildsetid', )
+    required_columns = ('buildsetid',)
 
     def __init__(self, buildsetid=None, property_name='prop', property_value='[22, "fakedb"]'):
-        super().__init__(buildsetid=buildsetid, property_name=property_name,
-                         property_value=property_value)
+        super().__init__(
+            buildsetid=buildsetid, property_name=property_name, property_value=property_value
+        )
 
 
 class BuildsetSourceStamp(Row):
     table = "buildset_sourcestamps"
 
     foreignKeys = ('buildsetid', 'sourcestampid')
-    required_columns = ('buildsetid', 'sourcestampid', )
+    required_columns = (
+        'buildsetid',
+        'sourcestampid',
+    )
     id_column = 'id'
 
     def __init__(self, id=None, buildsetid=None, sourcestampid=None):
@@ -63,7 +85,6 @@ class BuildsetSourceStamp(Row):
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
-
     def setUp(self):
         self.buildsets = {}
         self.completed_bsids = set()
@@ -85,8 +106,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, BuildsetSourceStamp):
                 assert row.buildsetid in self.buildsets
-                self.buildset_sourcestamps.setdefault(row.buildsetid,
-                                                      []).append(row.sourcestampid)
+                self.buildset_sourcestamps.setdefault(row.buildsetid, []).append(row.sourcestampid)
 
     # component methods
 
@@ -97,12 +117,22 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return bsid
 
     @defer.inlineCallbacks
-    def addBuildset(self, sourcestamps, reason, properties, builderids, waited_for,
-                    external_idstring=None, submitted_at=None, rebuilt_buildid=None,
-                    parent_buildid=None, parent_relationship=None, priority=0):
+    def addBuildset(
+        self,
+        sourcestamps,
+        reason,
+        properties,
+        builderids,
+        waited_for,
+        external_idstring=None,
+        submitted_at=None,
+        rebuilt_buildid=None,
+        parent_buildid=None,
+        parent_relationship=None,
+        priority=0,
+    ):
         # We've gotten this wrong a couple times.
-        assert isinstance(
-            waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
+        assert isinstance(waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
 
         # calculate submitted at
         if submitted_at is not None:
@@ -114,16 +144,26 @@ class FakeBuildsetsComponent(FakeDBComponent):
         br_rows = []
         for builderid in builderids:
             br_rows.append(
-                BuildRequest(buildsetid=bsid, builderid=builderid, waited_for=waited_for,
-                             submitted_at=submitted_at))
+                BuildRequest(
+                    buildsetid=bsid,
+                    builderid=builderid,
+                    waited_for=waited_for,
+                    submitted_at=submitted_at,
+                )
+            )
 
         self.db.buildrequests.insert_test_data(br_rows)
 
         # make up a row and keep its dictionary, with the properties tacked on
-        bsrow = Buildset(id=bsid, reason=reason,
-                         external_idstring=external_idstring,
-                         submitted_at=submitted_at, rebuilt_buildid=rebuilt_buildid,
-                         parent_buildid=parent_buildid, parent_relationship=parent_relationship)
+        bsrow = Buildset(
+            id=bsid,
+            reason=reason,
+            external_idstring=external_idstring,
+            submitted_at=submitted_at,
+            rebuilt_buildid=rebuilt_buildid,
+            parent_buildid=parent_buildid,
+            parent_relationship=parent_relationship,
+        )
 
         self.buildsets[bsid] = bsrow.values.copy()
         self.buildsets[bsid]['properties'] = properties
@@ -175,8 +215,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return defer.succeed(rv)
 
     @defer.inlineCallbacks
-    def getRecentBuildsets(self, count=None, branch=None, repository=None,
-                           complete=None):
+    def getRecentBuildsets(self, count=None, branch=None, repository=None, complete=None):
         if not count:
             return []
         rv = []
@@ -215,8 +254,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
     def getBuildsetProperties(self, key, no_cache=False):
         if key in self.buildsets:
-            return defer.succeed(
-                self.buildsets[key]['properties'])
+            return defer.succeed(self.buildsets[key]['properties'])
         return defer.succeed({})
 
     # fake methods
@@ -231,8 +269,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildsetCompletion(self, bsid, complete):
         """Assert that the completion state of buildset BSID is COMPLETE"""
         actual = self.buildsets[bsid]['complete']
-        self.t.assertTrue(
-            (actual and complete) or (not actual and not complete))
+        self.t.assertTrue((actual and complete) or (not actual and not complete))
 
     def assertBuildset(self, bsid=None, expected_buildset=None):
         """Assert that the given buildset looks as expected; the ssid parameter
@@ -245,8 +282,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         # clear out some columns if the caller doesn't care
         columns = [
-            'complete', 'complete_at', 'submitted_at', 'results', 'parent_buildid',
-            'parent_relationship'
+            'complete',
+            'complete_at',
+            'submitted_at',
+            'results',
+            'parent_buildid',
+            'parent_relationship',
         ]
         for col in columns:
             if col not in expected_buildset:

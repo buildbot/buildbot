@@ -45,7 +45,6 @@ def _db2data(ss):
 
 
 class SourceStampEndpoint(base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /sourcestamps/n:ssid
@@ -53,13 +52,11 @@ class SourceStampEndpoint(base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        ssdict = yield self.master.db.sourcestamps.getSourceStamp(
-            kwargs['ssid'])
+        ssdict = yield self.master.db.sourcestamps.getSourceStamp(kwargs['ssid'])
         return _db2data(ssdict) if ssdict else None
 
 
 class SourceStampsEndpoint(base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /sourcestamps
@@ -71,8 +68,9 @@ class SourceStampsEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         buildsetid = kwargs.get("buildsetid")
         if buildsetid is not None:
-            sourcestamps = \
-                yield self.master.db.sourcestamps.get_sourcestamps_for_buildset(buildsetid)
+            sourcestamps = yield self.master.db.sourcestamps.get_sourcestamps_for_buildset(
+                buildsetid
+            )
         else:
             sourcestamps = yield self.master.db.sourcestamps.getSourceStamps()
 
@@ -80,7 +78,6 @@ class SourceStampsEndpoint(base.Endpoint):
 
 
 class SourceStamp(base.ResourceType):
-
     name = "sourcestamp"
     plural = "sourcestamps"
     endpoints = [SourceStampEndpoint, SourceStampsEndpoint]
@@ -96,4 +93,5 @@ class SourceStamp(base.ResourceType):
         codebase = types.String()
         patch = types.NoneOk(patches.Patch.entityType)
         created_at = types.DateTime()
+
     entityType = EntityType(name, 'Sourcestamp')

@@ -43,16 +43,14 @@ class FakeDBComponent:
             if field.startswith('-'):
                 field = field[1:]
             return field in rs.fieldMapping
-        filters = [self.mapFilter(f, rs.fieldMapping)
-                   for f in rs.filters if applicable(f.field)]
+
+        filters = [self.mapFilter(f, rs.fieldMapping) for f in rs.filters if applicable(f.field)]
         order = []
         offset = limit = None
         if rs.order:
-            order = [self.mapOrder(o, rs.fieldMapping)
-                     for o in rs.order if applicable(o)]
+            order = [self.mapOrder(o, rs.fieldMapping) for o in rs.order if applicable(o)]
         if len(filters) == len(rs.filters) and rs.order is not None and len(order) == len(rs.order):
             offset = rs.offset
             limit = rs.limit
-        rs = resultspec.ResultSpec(
-            filters=filters, order=order, limit=limit, offset=offset)
+        rs = resultspec.ResultSpec(filters=filters, order=order, limit=limit, offset=offset)
         return rs.apply(data)

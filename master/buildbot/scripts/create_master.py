@@ -68,8 +68,7 @@ def makeSampleConfig(config):
     with open(source, "rt", encoding='utf-8') as f:
         config_sample = f.read()
     if config['db']:
-        config_sample = config_sample.replace('sqlite:///state.sqlite',
-                                              config['db'])
+        config_sample = config_sample.replace('sqlite:///state.sqlite', config['db'])
     with open(target, "wt", encoding='utf-8') as f:
         f.write(config_sample)
     os.chmod(target, 0o600)

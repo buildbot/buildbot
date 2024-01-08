@@ -39,7 +39,6 @@ from buildbot.util import sautils
 
 
 class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
-
     @defer.inlineCallbacks
     def setUpMigrateTest(self):
         self.setup_test_reactor()
@@ -58,18 +57,18 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
         return self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
-    def do_test_migration(self, base_revision, target_revision,
-                          setup_thd_cb, verify_thd_cb):
-
+    def do_test_migration(self, base_revision, target_revision, setup_thd_cb, verify_thd_cb):
         def setup_thd(conn):
             metadata = sa.MetaData()
             table = sautils.Table(
-                'alembic_version', metadata,
+                'alembic_version',
+                metadata,
                 sa.Column("version_num", sa.String(32), nullable=False),
             )
             table.create(bind=conn)
             conn.execute(table.insert(), version_num=base_revision)
             setup_thd_cb(conn)
+
         yield self.db.pool.do(setup_thd)
 
         alembic_scripts = self.db.model.alembic_get_scripts()
@@ -99,8 +98,12 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
             for tbl in dbs:
                 r = engine.execute(f"show create table {tbl}")
                 create_table = r.fetchone()[1]
-                self.assertIn('DEFAULT CHARSET=utf8', create_table,
-                              f"table {tbl} does not have the utf8 charset")
+                self.assertIn(
+                    'DEFAULT CHARSET=utf8',
+                    create_table,
+                    f"table {tbl} does not have the utf8 charset",
+                )
+
         yield self.db.pool.do(check_table_charsets_thd)
 
         def verify_thd(engine):

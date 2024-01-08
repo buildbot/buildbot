@@ -39,7 +39,6 @@ class States(enum.Enum):
 
 
 class LatentController(SeverWorkerConnectionMixin):
-
     """
     A controller for ``ControllableLatentWorker``.
 
@@ -52,8 +51,15 @@ class LatentController(SeverWorkerConnectionMixin):
     stop_instance() is executed.
     """
 
-    def __init__(self, case, name, kind=None, build_wait_timeout=600,
-                 starts_without_substantiate=None, **kwargs):
+    def __init__(
+        self,
+        case,
+        name,
+        kind=None,
+        build_wait_timeout=600,
+        starts_without_substantiate=None,
+        **kwargs,
+    ):
         self.case = case
         self.build_wait_timeout = build_wait_timeout
         self.has_crashed = False
@@ -61,8 +67,7 @@ class LatentController(SeverWorkerConnectionMixin):
         self.remote_worker = None
 
         if starts_without_substantiate is not None:
-            self.worker.starts_without_substantiate = \
-                starts_without_substantiate
+            self.worker.starts_without_substantiate = starts_without_substantiate
 
         self.state = States.STOPPED
         self.auto_stop_flag = False
@@ -174,10 +179,10 @@ class LatentController(SeverWorkerConnectionMixin):
 
 
 class ControllableLatentWorker(AbstractLatentWorker):
-
     """
     A latent worker that can be controlled by tests.
     """
+
     builds_may_be_incompatible = True
 
     def __init__(self, name, controller, **kwargs):
@@ -187,14 +192,16 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def checkConfig(self, name, _, **kwargs):
         AbstractLatentWorker.checkConfig(
-            self, name, None,
-            build_wait_timeout=self._controller.build_wait_timeout,
-            **kwargs)
+            self, name, None, build_wait_timeout=self._controller.build_wait_timeout, **kwargs
+        )
 
     def reconfigService(self, name, _, **kwargs):
-        return super().reconfigService(name, self.getRandomPass(),
-                                       build_wait_timeout=self._controller.build_wait_timeout,
-                                       **kwargs)
+        return super().reconfigService(
+            name,
+            self.getRandomPass(),
+            build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs,
+        )
 
     def _generate_random_password(self):
         self._random_password_id += 1

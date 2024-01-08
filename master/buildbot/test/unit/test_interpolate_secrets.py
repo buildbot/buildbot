@@ -13,22 +13,18 @@ from buildbot.test.util.config import ConfigErrorsMixin
 
 
 class FakeBuildWithMaster(FakeBuild):
-
     def __init__(self, master):
         super().__init__()
         self.master = master
 
 
-class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase,
-                             ConfigErrorsMixin):
-
+class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
-        fakeStorageService.reconfigService(secretdict={"foo": "bar",
-                                                       "other": "value"})
+        fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
         self.secretsrv = SecretManager()
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)
@@ -49,9 +45,7 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase,
         self.flushLoggedErrors(KeyError)
 
 
-class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase,
-                                      ConfigErrorsMixin):
-
+class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
@@ -67,7 +61,6 @@ class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase,
 
 
 class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -75,7 +68,8 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
         fakeStorageService = FakeSecretStorage()
         password = "bar"
         fakeStorageService.reconfigService(
-            secretdict={"foo": password, "other": password + "random", "empty": ""})
+            secretdict={"foo": password, "other": password + "random", "empty": ""}
+        )
         self.secretsrv = SecretManager()
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)

@@ -72,9 +72,4 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     return str(x, encoding, errors)
 
 
-__all__ = [
-    "NativeStringIO",
-    "bytes2NativeString",
-    "bytes2unicode",
-    "unicode2bytes"
-]
+__all__ = ["NativeStringIO", "bytes2NativeString", "bytes2unicode", "unicode2bytes"]

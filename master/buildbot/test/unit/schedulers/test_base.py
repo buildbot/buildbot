@@ -34,9 +34,7 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.warnings import DeprecatedApiWarning
 
 
-class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
-                    unittest.TestCase):
-
+class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 19
     SCHEDULERID = 9
     exp_bsid_brids = (123, {'b': 456})
@@ -48,8 +46,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
     def tearDown(self):
         self.tearDownScheduler()
 
-    def makeScheduler(self, name='testsched', builderNames=None,
-                      properties=None, codebases=None):
+    def makeScheduler(self, name='testsched', builderNames=None, properties=None, codebases=None):
         if builderNames is None:
             builderNames = ['a', 'b']
         if properties is None:
@@ -67,13 +64,16 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             self.master.db.insert_test_data(dbBuilder)
 
         sched = self.attachScheduler(
-            base.BaseScheduler(name=name, builderNames=builderNames,
-                               properties=properties, codebases=codebases),
-            self.OBJECTID, self.SCHEDULERID)
+            base.BaseScheduler(
+                name=name, builderNames=builderNames, properties=properties, codebases=codebases
+            ),
+            self.OBJECTID,
+            self.SCHEDULERID,
+        )
         self.master.data.updates.addBuildset = mock.Mock(
             name='data.addBuildset',
-            side_effect=lambda *args, **kwargs:
-            defer.succeed(self.exp_bsid_brids))
+            side_effect=lambda *args, **kwargs: defer.succeed(self.exp_bsid_brids),
+        )
 
         return sched
 
@@ -90,11 +90,11 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         @properties.renderer
         def names(props):
             return ['a']
+
         self.makeScheduler(builderNames=names)
 
     def test_constructor_codebases_valid(self):
-        codebases = {"codebase1":
-                     {"repository": "", "branch": "", "revision": ""}}
+        codebases = {"codebase1": {"repository": "", "branch": "", "revision": ""}}
         self.makeScheduler(codebases=codebases)
 
     def test_constructor_codebases_valid_list(self):
@@ -109,8 +109,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
-        sched = self.makeScheduler(
-            codebases={'lib': {'repository': 'librepo'}})
+        sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
         cbd = yield sched.getCodebaseDict('lib')
         self.assertEqual(cbd, {'repository': 'librepo'})
 
@@ -121,8 +120,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         self.assertEqual(cbd, {})
 
     def test_getCodebaseDict_not_found(self):
-        sched = self.makeScheduler(
-            codebases={'lib': {'repository': 'librepo'}})
+        sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
         return self.assertFailure(sched.getCodebaseDict('app'), KeyError)
 
     def test_listBuilderNames(self):
@@ -169,6 +167,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         def getChange(changeid):
             assert changeid == 12934
             return defer.succeed(chdict)
+
         self.db.changes.getChange = getChange
 
         change = self.makeFakeChange(**change_kwargs)
@@ -177,6 +176,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         def fromChdict(cls, master, chdict):
             assert chdict['changeid'] == 12934 and chdict['is_chdict']
             return defer.succeed(change)
+
         self.patch(changes.Change, 'fromChdict', classmethod(fromChdict))
 
         change_received = [None]
@@ -186,6 +186,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             self.assertIdentical(got_change, change)
             change_received[0] = got_important
             return defer.succeed(None)
+
         sched.gotChange = gotChange
 
         yield sched.startConsumingChanges(**kwargs)
@@ -202,41 +203,29 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
     def test_change_consumption_defaults(self):
         # all changes are important by default
-        return self.do_test_change_consumption(
-            {},
-            True)
+        return self.do_test_change_consumption({}, True)
 
     def test_change_consumption_fileIsImportant_True(self):
-        return self.do_test_change_consumption(
-            {"fileIsImportant": lambda c: True},
-            True)
+        return self.do_test_change_consumption({"fileIsImportant": lambda c: True}, True)
 
     def test_change_consumption_fileIsImportant_False(self):
-        return self.do_test_change_consumption(
-            {"fileIsImportant": lambda c: False},
-            False)
+        return self.do_test_change_consumption({"fileIsImportant": lambda c: False}, False)
 
     @defer.inlineCallbacks
     def test_change_consumption_fileIsImportant_exception(self):
-        yield self.do_test_change_consumption(
-            {"fileIsImportant": lambda c: 1 / 0},
-            None)
+        yield self.do_test_change_consumption({"fileIsImportant": lambda c: 1 / 0}, None)
 
         self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
 
     def test_change_consumption_change_filter_True(self):
         cf = mock.Mock()
         cf.filter_change = lambda c: True
-        return self.do_test_change_consumption(
-            {"change_filter": cf},
-            True)
+        return self.do_test_change_consumption({"change_filter": cf}, True)
 
     def test_change_consumption_change_filter_False(self):
         cf = mock.Mock()
         cf.filter_change = lambda c: False
-        return self.do_test_change_consumption(
-            {"change_filter": cf},
-            None)
+        return self.do_test_change_consumption({"change_filter": cf}, None)
 
     def test_change_consumption_change_filter_gerrit_ref_updates(self):
         cf = mock.Mock()
@@ -244,7 +233,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         return self.do_test_change_consumption(
             {'change_filter': cf},
             None,
-            change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+            change_kwargs={'category': 'ref-updated', 'branch': 'master'},
+        )
 
     def test_change_consumption_change_filter_gerrit_ref_updates_with_refs(self):
         cf = mock.Mock()
@@ -252,34 +242,22 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         return self.do_test_change_consumption(
             {'change_filter': cf},
             None,
-            change_kwargs={'category': 'ref-updated', 'branch': 'refs/changes/123'})
+            change_kwargs={'category': 'ref-updated', 'branch': 'refs/changes/123'},
+        )
 
-    @parameterized.expand(
-        [
-            (
-                "branch",
-                filter.ChangeFilter(branch='refs/heads/master'),
-                True
-            ),
-            (
-                "branch_re",
-                filter.ChangeFilter(branch_re='refs/heads/master'),
-                True
-            ),
-            (
-                "branch_re_no_match",
-                filter.ChangeFilter(branch_re='(refs/heads/other|master)'),
-                None
-            )
-        ]
-    )
+    @parameterized.expand([
+        ("branch", filter.ChangeFilter(branch='refs/heads/master'), True),
+        ("branch_re", filter.ChangeFilter(branch_re='refs/heads/master'), True),
+        ("branch_re_no_match", filter.ChangeFilter(branch_re='(refs/heads/other|master)'), None),
+    ])
     def test_change_consumption_refs_heads_branch_deprecated(self, name, cf, expected_result):
-        with assertProducesWarning(DeprecatedApiWarning,
-                                   "Change filters must not expect ref-updated events"):
+        with assertProducesWarning(
+            DeprecatedApiWarning, "Change filters must not expect ref-updated events"
+        ):
             return self.do_test_change_consumption(
                 {'change_filter': cf},
                 expected_result,
-                change_kwargs={'category': 'ref-updated', 'branch': 'master'}
+                change_kwargs={'category': 'ref-updated', 'branch': 'master'},
             )
 
     def test_change_consumption_change_filter_gerrit_filters_branch_new(self):
@@ -287,24 +265,26 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         return self.do_test_change_consumption(
             {'change_filter': cf},
             True,
-            change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+            change_kwargs={'category': 'ref-updated', 'branch': 'master'},
+        )
 
     def test_change_consumption_change_filter_gerrit_filters_branch_new_not_match(self):
         cf = filter.ChangeFilter(branch='other')
         return self.do_test_change_consumption(
             {'change_filter': cf},
             None,
-            change_kwargs={'category': 'ref-updated', 'branch': 'master'})
+            change_kwargs={'category': 'ref-updated', 'branch': 'master'},
+        )
 
     def test_change_consumption_fileIsImportant_False_onlyImportant(self):
         return self.do_test_change_consumption(
-            {"fileIsImportant": lambda c: False, "onlyImportant": True},
-            None)
+            {"fileIsImportant": lambda c: False, "onlyImportant": True}, None
+        )
 
     def test_change_consumption_fileIsImportant_True_onlyImportant(self):
         return self.do_test_change_consumption(
-            {"fileIsImportant": lambda c: True, "onlyImportant": True},
-            True)
+            {"fileIsImportant": lambda c: True, "onlyImportant": True}, True
+        )
 
     @defer.inlineCallbacks
     def test_activation(self):
@@ -358,19 +338,18 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
         def activate():
             raise RuntimeError('oh noes')
+
         sched.activate = activate
 
         sched.startService()
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     @defer.inlineCallbacks
-    def do_addBuildsetForSourceStampsWithDefaults(self, codebases,
-                                                  sourcestamps,
-                                                  exp_sourcestamps):
-        sched = self.makeScheduler(name='n', builderNames=['b'],
-                                   codebases=codebases)
+    def do_addBuildsetForSourceStampsWithDefaults(self, codebases, sourcestamps, exp_sourcestamps):
+        sched = self.makeScheduler(name='n', builderNames=['b'], codebases=codebases)
         bsid, brids = yield sched.addBuildsetForSourceStampsWithDefaults(
-            reason='power', sourcestamps=sourcestamps, waited_for=False)
+            reason='power', sourcestamps=sourcestamps, waited_for=False
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         call = self.master.data.updates.addBuildset.mock_calls[0]
 
@@ -383,51 +362,73 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 branch = ''
             return (repository, branch)
 
-        self.assertEqual(sorted(call[2]['sourcestamps'], key=sourceStampKey),
-                         sorted(exp_sourcestamps, key=sourceStampKey))
+        self.assertEqual(
+            sorted(call[2]['sourcestamps'], key=sourceStampKey),
+            sorted(exp_sourcestamps, key=sourceStampKey),
+        )
 
     def test_addBuildsetForSourceStampsWithDefaults(self):
         codebases = {
             'cbA': {"repository": 'svn://A..', "branch": 'stable', "revision": '13579'},
-            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'}
+            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'},
         }
         sourcestamps = [
             {'codebase': 'cbA', 'branch': 'AA'},
             {'codebase': 'cbB', 'revision': 'BB'},
         ]
         exp_sourcestamps = [
-            {'repository': 'svn://B..', 'branch': 'stable',
-             'revision': 'BB', 'codebase': 'cbB', 'project': ''},
-            {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
-             'revision': '13579', 'codebase': 'cbA'},
+            {
+                'repository': 'svn://B..',
+                'branch': 'stable',
+                'revision': 'BB',
+                'codebase': 'cbB',
+                'project': '',
+            },
+            {
+                'repository': 'svn://A..',
+                'branch': 'AA',
+                'project': '',
+                'revision': '13579',
+                'codebase': 'cbA',
+            },
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
-            codebases, sourcestamps, exp_sourcestamps)
+            codebases, sourcestamps, exp_sourcestamps
+        )
 
     def test_addBuildsetForSourceStampsWithDefaults_fill_in_codebases(self):
         codebases = {
             'cbA': {"repository": 'svn://A..', "branch": 'stable', "revision": '13579'},
-            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'}
+            'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'},
         }
         sourcestamps = [
             {'codebase': 'cbA', 'branch': 'AA'},
         ]
         exp_sourcestamps = [
-            {'repository': 'svn://B..', 'branch': 'stable',
-             'revision': '24680', 'codebase': 'cbB', 'project': ''},
-            {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
-             'revision': '13579', 'codebase': 'cbA'},
+            {
+                'repository': 'svn://B..',
+                'branch': 'stable',
+                'revision': '24680',
+                'codebase': 'cbB',
+                'project': '',
+            },
+            {
+                'repository': 'svn://A..',
+                'branch': 'AA',
+                'project': '',
+                'revision': '13579',
+                'codebase': 'cbA',
+            },
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
-            codebases, sourcestamps, exp_sourcestamps)
+            codebases, sourcestamps, exp_sourcestamps
+        )
 
     def test_addBuildsetForSourceStampsWithDefaults_no_repository(self):
         exp_sourcestamps = [
-            {'repository': '', 'branch': None,
-             'revision': None, 'codebase': '', 'project': ''},
+            {'repository': '', 'branch': None, 'revision': None, 'codebase': '', 'project': ''},
         ]
-        return self.do_addBuildsetForSourceStampsWithDefaults(
-            {'': {}}, [], exp_sourcestamps)
+        return self.do_addBuildsetForSourceStampsWithDefaults({'': {}}, [], exp_sourcestamps)
 
     def test_addBuildsetForSourceStamps_unknown_codbases(self):
         codebases = {}
@@ -436,13 +437,12 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             {'codebase': 'cbB', 'revision': 'BB'},
         ]
         exp_sourcestamps = [
-            {'branch': None, 'revision': 'BB', 'codebase': 'cbB',
-             'project': '', 'repository': ''},
-            {'branch': 'AA', 'revision': None, 'codebase': 'cbA',
-             'project': '', 'repository': ''},
+            {'branch': None, 'revision': 'BB', 'codebase': 'cbB', 'project': '', 'repository': ''},
+            {'branch': 'AA', 'revision': None, 'codebase': 'cbA', 'project': '', 'repository': ''},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
-            codebases, sourcestamps, exp_sourcestamps)
+            codebases, sourcestamps, exp_sourcestamps
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
@@ -450,8 +450,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         self.db.insert_test_data([
             fakedb.Change(changeid=13, sourcestampid=234),
         ])
-        bsid, brids = yield sched.addBuildsetForChanges(reason='power',
-                                                        waited_for=False, changeids=[13])
+        bsid, brids = yield sched.addBuildsetForChanges(
+            reason='power', waited_for=False, changeids=[13]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
@@ -463,7 +464,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             reason='power',
             scheduler='n',
             sourcestamps=[234],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties(self):
@@ -471,8 +473,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         self.db.insert_test_data([
             fakedb.Change(changeid=14, sourcestampid=234),
         ])
-        bsid, brids = yield sched.addBuildsetForChanges(reason='downstream',
-                                                        waited_for=False, changeids=[14])
+        bsid, brids = yield sched.addBuildsetForChanges(
+            reason='downstream', waited_for=False, changeids=[14]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
@@ -484,19 +487,23 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             reason='downstream',
             scheduler='n',
             sourcestamps=[234],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties_with_virtual_builders(self):
-        sched = self.makeScheduler(name='n', builderNames=['c'], properties={
-            'virtual_builder_name': Interpolate("myproject-%(src::branch)s")
-        })
+        sched = self.makeScheduler(
+            name='n',
+            builderNames=['c'],
+            properties={'virtual_builder_name': Interpolate("myproject-%(src::branch)s")},
+        )
         self.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
             fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
         ])
-        bsid, brids = yield sched.addBuildsetForChanges(reason='downstream',
-                                                        waited_for=False, changeids=[14])
+        bsid, brids = yield sched.addBuildsetForChanges(
+            reason='downstream', waited_for=False, changeids=[14]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
@@ -509,14 +516,16 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             reason='downstream',
             scheduler='n',
             sourcestamps=[234],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_multiple_changes_same_codebase(self):
         # This is a test for backwards compatibility
         # Changes from different repositories come together in one build
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
-                                   codebases={'cb': {'repository': 'http://repo'}})
+        sched = self.makeScheduler(
+            name='n', builderNames=['b', 'c'], codebases={'cb': {'repository': 'http://repo'}}
+        )
         # No codebaseGenerator means all changes have codebase == ''
         self.db.insert_test_data([
             fakedb.Change(changeid=13, codebase='cb', sourcestampid=12),
@@ -526,8 +535,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
         # note that the changeids are given out of order here; it should still
         # use the most recent
-        bsid, brids = yield sched.addBuildsetForChanges(reason='power',
-                                                        waited_for=False, changeids=[14, 15, 13])
+        bsid, brids = yield sched.addBuildsetForChanges(
+            reason='power', waited_for=False, changeids=[14, 15, 13]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
@@ -539,7 +549,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             reason='power',
             scheduler='n',
             sourcestamps=[10],  # sourcestampid from greatest changeid
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_codebases_set_multiple_codebases(self):
@@ -547,12 +558,11 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             'cbA': {"repository": 'svn://A..', "branch": 'stable', "revision": '13579'},
             'cbB': {"repository": 'svn://B..', "branch": 'stable', "revision": '24680'},
             'cbC': {"repository": 'svn://C..', "branch": 'stable', "revision": '12345'},
-            'cbD': {"repository": 'svn://D..'}
+            'cbD': {"repository": 'svn://D..'},
         }
         # Scheduler gets codebases that can be used to create extra sourcestamps
         # for repositories that have no changes
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
-                                   codebases=codebases)
+        sched = self.makeScheduler(name='n', builderNames=['b', 'c'], codebases=codebases)
         self.db.insert_test_data([
             fakedb.Change(changeid=12, codebase='cbA', sourcestampid=912),
             fakedb.Change(changeid=13, codebase='cbA', sourcestampid=913),
@@ -565,8 +575,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
 
         # note that the changeids are given out of order here; it should still
         # use the most recent for each codebase
-        bsid, brids = yield sched.addBuildsetForChanges(reason='power', waited_for=True,
-                                                        changeids=[14, 12, 17, 16, 13, 15])
+        bsid, brids = yield sched.addBuildsetForChanges(
+            reason='power', waited_for=True, changeids=[14, 12, 17, 16, 13, 15]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
 
         self.master.data.updates.addBuildset.assert_called_with(
@@ -578,31 +589,34 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             properties={
                 'scheduler': ('n', 'Scheduler'),
             },
-
-            sourcestamps=[914, 917,
+            sourcestamps=[
+                914,
+                917,
                 {
                     "branch": 'stable',
                     "repository": 'svn://C..',
                     "codebase": 'cbC',
                     "project": '',
-                    "revision": '12345'
-                }, {
+                    "revision": '12345',
+                },
+                {
                     "branch": None,
                     "repository": 'svn://D..',
                     "codebase": 'cbD',
                     "project": '',
-                    "revision": None
-                }
+                    "revision": None,
+                },
             ],
-            priority=0
+            priority=0,
         )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp(self):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         sourcestamps = [91, {'sourcestamp': True}]
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot', waited_for=False,
-                                                             sourcestamps=sourcestamps)
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='whynot', waited_for=False, sourcestamps=sourcestamps
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
@@ -614,16 +628,18 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'scheduler': ('n', 'Scheduler'),
             },
             sourcestamps=[91, {'sourcestamp': True}],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_explicit_builderNames(self):
         sched = self.makeScheduler(name='n', builderNames=['b', 'x', 'y'])
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot',
-                                                             waited_for=True,
-                                                             sourcestamps=[
-                                                                 91, {'sourcestamp': True}],
-                                                             builderNames=['x', 'y'])
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='whynot',
+            waited_for=True,
+            sourcestamps=[91, {'sourcestamp': True}],
+            builderNames=['x', 'y'],
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=True,
@@ -635,27 +651,27 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
                 'scheduler': ('n', 'Scheduler'),
             },
             sourcestamps=[91, {'sourcestamp': True}],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_properties(self):
         props = properties.Properties(xxx="yyy")
         sched = self.makeScheduler(name='n', builderNames=['b'])
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot',
-                                                             waited_for=False,
-                                                             sourcestamps=[91], properties=props)
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='whynot', waited_for=False, sourcestamps=[91], properties=props
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
             builderids=[1],
             external_idstring=None,
-            properties={
-                'xxx': ('yyy', 'TEST'),
-                'scheduler': ('n', 'Scheduler')},
+            properties={'xxx': ('yyy', 'TEST'), 'scheduler': ('n', 'Scheduler')},
             reason='whynot',
             scheduler='n',
             sourcestamps=[91],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_combine_change_properties(self):
@@ -664,25 +680,25 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
         self.master.db.insert_test_data([
             fakedb.SourceStamp(id=98, branch='stable'),
             fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
-            fakedb.ChangeProperty(changeid=25, property_name='color',
-                                  property_value='["pink","Change"]'),
+            fakedb.ChangeProperty(
+                changeid=25, property_name='color', property_value='["pink","Change"]'
+            ),
         ])
 
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot',
-                                                             waited_for=False,
-                                                             sourcestamps=[98])
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='whynot', waited_for=False, sourcestamps=[98]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
             builderids=[1, 2],
             external_idstring=None,
-            properties={
-                'scheduler': ('testsched', 'Scheduler'),
-                'color': ('pink', 'Change')},
+            properties={'scheduler': ('testsched', 'Scheduler'), 'color': ('pink', 'Change')},
             reason='whynot',
             scheduler='testsched',
             sourcestamps=[98],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_renderable_builderNames(self):
@@ -706,35 +722,35 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             fakedb.Change(changeid=26, sourcestampid=99, branch='unstable'),
         ])
 
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot',
-                                                             waited_for=False,
-                                                             sourcestamps=[98])
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='whynot', waited_for=False, sourcestamps=[98]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
             builderids=[3],
             external_idstring=None,
-            properties={
-                'scheduler': ('n', 'Scheduler')},
+            properties={'scheduler': ('n', 'Scheduler')},
             reason='whynot',
             scheduler='n',
             sourcestamps=[98],
-            priority=0)
+            priority=0,
+        )
 
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='because',
-                                                             waited_for=False,
-                                                             sourcestamps=[99])
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='because', waited_for=False, sourcestamps=[99]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
             builderids=[1, 2],
             external_idstring=None,
-            properties={
-                'scheduler': ('n', 'Scheduler')},
+            properties={'scheduler': ('n', 'Scheduler')},
             reason='because',
             scheduler='n',
             sourcestamps=[99],
-            priority=0)
+            priority=0,
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_list_of_renderable_builderNames(self):
@@ -747,25 +763,25 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             fakedb.Builder(id=3, name='c'),
             fakedb.SourceStamp(id=98, branch='stable'),
             fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
-            fakedb.ChangeProperty(changeid=25, property_name='extra_builder',
-                                  property_value='["c","Change"]'),
+            fakedb.ChangeProperty(
+                changeid=25, property_name='extra_builder', property_value='["c","Change"]'
+            ),
         ])
 
-        bsid, brids = yield sched.addBuildsetForSourceStamps(reason='whynot',
-                                                             waited_for=False,
-                                                             sourcestamps=[98])
+        bsid, brids = yield sched.addBuildsetForSourceStamps(
+            reason='whynot', waited_for=False, sourcestamps=[98]
+        )
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
             builderids=[1, 2, 3],
             external_idstring=None,
-            properties={
-                'scheduler': ('n', 'Scheduler'),
-                'extra_builder': ('c', 'Change')},
+            properties={'scheduler': ('n', 'Scheduler'), 'extra_builder': ('c', 'Change')},
             reason='whynot',
             scheduler='n',
             sourcestamps=[98],
-            priority=0)
+            priority=0,
+        )
 
     def test_signature_addBuildsetForChanges(self):
         sched = self.makeScheduler(builderNames=['xxx'])
@@ -774,10 +790,17 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             sched.addBuildsetForChanges,  # Real
             self.fake_addBuildsetForChanges,  # Real
         )
-        def addBuildsetForChanges(self, waited_for=False, reason='',
-                                  external_idstring=None, changeids=None, builderNames=None,
-                                  properties=None, priority=None,
-                                  **kw):
+        def addBuildsetForChanges(
+            self,
+            waited_for=False,
+            reason='',
+            external_idstring=None,
+            changeids=None,
+            builderNames=None,
+            properties=None,
+            priority=None,
+            **kw,
+        ):
             pass
 
     def test_signature_addBuildsetForSourceStamps(self):
@@ -787,9 +810,17 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             sched.addBuildsetForSourceStamps,  # Real
             self.fake_addBuildsetForSourceStamps,  # Fake
         )
-        def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
-                                       reason='', external_idstring=None, properties=None,
-                                       builderNames=None, priority=None, **kw):
+        def addBuildsetForSourceStamps(
+            self,
+            waited_for=False,
+            sourcestamps=None,
+            reason='',
+            external_idstring=None,
+            properties=None,
+            builderNames=None,
+            priority=None,
+            **kw,
+        ):
             pass
 
     def test_signature_addBuildsetForSourceStampsWithDefaults(self):
@@ -799,7 +830,14 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin,
             sched.addBuildsetForSourceStampsWithDefaults,  # Real
             self.fake_addBuildsetForSourceStampsWithDefaults,  # Fake
         )
-        def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
-                                                   waited_for=False, properties=None,
-                                                   builderNames=None, priority=None, **kw):
+        def addBuildsetForSourceStampsWithDefaults(
+            self,
+            reason,
+            sourcestamps=None,
+            waited_for=False,
+            properties=None,
+            builderNames=None,
+            priority=None,
+            **kw,
+        ):
             pass

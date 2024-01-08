@@ -18,7 +18,6 @@ from buildbot.test.util import interfaces
 
 
 class ConnectionInterfaceTest(interfaces.InterfaceTests):
-
     def setUp(self):
         # subclasses must set self.conn in this method
         raise NotImplementedError
@@ -50,8 +49,7 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
 
     def test_sig_remoteStartCommand(self):
         @self.assertArgSpecMatches(self.conn.remoteStartCommand)
-        def remoteStartCommand(self, remoteCommand, builderName, commandId,
-                               commandName, args):
+        def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
             pass
 
     def test_sig_remoteShutdown(self):

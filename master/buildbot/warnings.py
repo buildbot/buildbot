@@ -34,6 +34,6 @@ class DeprecatedApiWarning(Warning):
 
 
 def warn_deprecated(version, msg, stacklevel=2):
-    warnings.warn(f"[{version} and later] {msg}",
-                  category=DeprecatedApiWarning,
-                  stacklevel=stacklevel)
+    warnings.warn(
+        f"[{version} and later] {msg}", category=DeprecatedApiWarning, stacklevel=stacklevel
+    )

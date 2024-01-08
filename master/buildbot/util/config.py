@@ -24,7 +24,6 @@ from buildbot.interfaces import IConfigured
 
 @implementer(IConfigured)
 class _DefaultConfigured:
-
     def __init__(self, value):
         self.value = value
 
@@ -37,7 +36,6 @@ registerAdapter(_DefaultConfigured, object, IConfigured)
 
 @implementer(IConfigured)
 class _ListConfigured:
-
     def __init__(self, value):
         self.value = value
 
@@ -50,7 +48,6 @@ registerAdapter(_ListConfigured, list, IConfigured)
 
 @implementer(IConfigured)
 class _DictConfigured:
-
     def __init__(self, value):
         self.value = value
 
@@ -63,7 +60,6 @@ registerAdapter(_DictConfigured, dict, IConfigured)
 
 @implementer(IConfigured)
 class _SREPatternConfigured:
-
     def __init__(self, value):
         self.value = value
 
@@ -76,14 +72,12 @@ registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
 
 @implementer(IConfigured)
 class ConfiguredMixin:
-
     def getConfigDict(self):
         return {'name': self.name}
 
 
 @implementer(IConfigured)
 class _FilePasswordDBConfigured:
-
     def __init__(self, value):
         pass
 

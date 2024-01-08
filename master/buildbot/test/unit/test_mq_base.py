@@ -24,7 +24,6 @@ from buildbot.mq import base
 
 
 class QueueRef(unittest.TestCase):
-
     def test_success(self):
         cb = mock.Mock(name='cb')
         qref = base.QueueRef(cb)

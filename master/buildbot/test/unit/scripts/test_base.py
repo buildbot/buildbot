@@ -31,7 +31,6 @@ from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 
 class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
-
     def setUp(self):
         self.setUpDirs('test')
         self.stdout = StringIO()
@@ -63,7 +62,6 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
 
 class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
-
     """
     Tests for L{base.getConfigFileFromTac}.
     """
@@ -97,8 +95,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         of the config file from there.
         """
         self._createBuildbotTac("configfile='other.cfg'")
-        foundConfigFile = base.getConfigFileFromTac(
-            basedir=self.basedir)
+        foundConfigFile = base.getConfigFileFromTac(basedir=self.basedir)
         self.assertEqual(foundConfigFile, "other.cfg")
 
     def test_getConfigFileFromTac_fallback(self):
@@ -107,8 +104,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         which doesn't contain a C{buildbot.tac},
         it returns C{master.cfg}
         """
-        foundConfigFile = base.getConfigFileFromTac(
-            basedir=self.basedir)
+        foundConfigFile = base.getConfigFileFromTac(basedir=self.basedir)
         self.assertEqual(foundConfigFile, 'master.cfg')
 
     def test_getConfigFileFromTac_tacWithoutConfigFile(self):
@@ -118,8 +114,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         define C{configfile}, L{getConfigFileFromTac} returns C{master.cfg}
         """
         self._createBuildbotTac()
-        foundConfigFile = base.getConfigFileFromTac(
-            basedir=self.basedir)
+        foundConfigFile = base.getConfigFileFromTac(basedir=self.basedir)
         self.assertEqual(foundConfigFile, 'master.cfg')
 
     def test_getConfigFileFromTac_usingFile(self):
@@ -128,20 +123,21 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         containing a C{buildbot.tac} which references C{__file__},
         that reference points to C{buildbot.tac}.
         """
-        self._createBuildbotTac(textwrap.dedent("""
+        self._createBuildbotTac(
+            textwrap.dedent(
+                """
             from twisted.python.util import sibpath
             configfile = sibpath(__file__, "relative.cfg")
-            """))
+            """
+            )
+        )
         foundConfigFile = base.getConfigFileFromTac(basedir=self.basedir)
-        self.assertEqual(
-            foundConfigFile, os.path.join(self.basedir, "relative.cfg"))
+        self.assertEqual(foundConfigFile, os.path.join(self.basedir, "relative.cfg"))
 
 
 class TestSubcommandOptions(unittest.TestCase):
-
     def fakeOptionsFile(self, **kwargs):
-        self.patch(base.SubcommandOptions, 'loadOptionsFile',
-                   lambda self: kwargs.copy())
+        self.patch(base.SubcommandOptions, 'loadOptionsFile', lambda self: kwargs.copy())
 
     def parse(self, cls, *args):
         self.opts = cls()
@@ -185,9 +181,7 @@ class TestSubcommandOptions(unittest.TestCase):
             self.parse(self.RequiredOptions)
 
 
-class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                          unittest.TestCase):
-
+class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     def setUp(self):
         self.setUpDirs('test', 'home')
         self.opts = base.SubcommandOptions()
@@ -205,11 +199,13 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
         if runtime.platformType == 'win32':
             from win32com.shell import shell
-            patches.append(self.patch(shell, 'SHGetFolderPath',
-                                      lambda *args: self.home))
+
+            patches.append(self.patch(shell, 'SHGetFolderPath', lambda *args: self.home))
         else:
+
             def expanduser(p):
                 return p.replace('~/', self.home + '/')
+
             patches.append(self.patch(os.path, 'expanduser', expanduser))
 
         old_dirname = os.path.dirname
@@ -219,6 +215,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
             if p == self.dir:
                 return p
             return old_dirname(p)
+
         patches.append(self.patch(os.path, 'dirname', dirname))
 
         try:
@@ -256,8 +253,9 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         os.makedirs(subdir)
         # on windows, the subdir of the home (well, appdata) dir
         # is 'buildbot', not '.buildbot'
-        self.writeOptionsFile(self.home, 'abc=123',
-                              'buildbot' if runtime.platformType == 'win32' else '.buildbot')
+        self.writeOptionsFile(
+            self.home, 'abc=123', 'buildbot' if runtime.platformType == 'win32' else '.buildbot'
+        )
         self.do_loadOptionsFile(_here=subdir, exp={'abc': 123})
 
     def test_loadOptionsFile_syntax_error(self):
@@ -282,9 +280,7 @@ def mkconfig(**kwargs):
     return config
 
 
-class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                     unittest.TestCase):
-
+class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     def setUp(self):
         self.setUpDirs('test')
         self.setUpStdoutAssertions()
@@ -352,6 +348,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
         def kill(pid, sig):
             raise OSError(errno.ESRCH, "fake")
+
         self.patch(os, "kill", kill)
         rv = base.checkBasedir(mkconfig())
         self.assertTrue(rv)
@@ -371,6 +368,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
         def kill(pid, sig):
             raise OSError(errno.EPERM, "fake")
+
         self.patch(os, "kill", kill)
         rv = base.checkBasedir(mkconfig())
         self.assertFalse(rv)
@@ -395,6 +393,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         @classmethod
         def loadConfig(cls):
             return config_master.MasterConfig()
+
         self.patch(config_master.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIsInstance(cfg, config_master.MasterConfig)
@@ -404,6 +403,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         @classmethod
         def loadConfig(cls):
             raise config_master.ConfigErrors(['oh noes'])
+
         self.patch(config_master.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
@@ -413,6 +413,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         @classmethod
         def loadConfig(cls):
             raise RuntimeError()
+
         self.patch(config_master.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)

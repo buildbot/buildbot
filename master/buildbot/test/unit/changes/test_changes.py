@@ -27,20 +27,26 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class Change(unittest.TestCase, TestReactorMixin):
-
     change23_rows = [
-        fakedb.Change(changeid=23, author="dustin", committer="dustin", comments="fix whitespace",
-                      branch="warnerdb", revision="deadbeef",
-                      when_timestamp=266738404, revlink='http://warner/0e92a098b',
-                      category='devel', repository='git://warner', codebase='mainapp',
-                      project='Buildbot'),
-
+        fakedb.Change(
+            changeid=23,
+            author="dustin",
+            committer="dustin",
+            comments="fix whitespace",
+            branch="warnerdb",
+            revision="deadbeef",
+            when_timestamp=266738404,
+            revlink='http://warner/0e92a098b',
+            category='devel',
+            repository='git://warner',
+            codebase='mainapp',
+            project='Buildbot',
+        ),
         fakedb.ChangeFile(changeid=23, filename='master/README.txt'),
         fakedb.ChangeFile(changeid=23, filename='worker/README.txt'),
-
-        fakedb.ChangeProperty(changeid=23, property_name='notest',
-                              property_value='["no","Change"]'),
-
+        fakedb.ChangeProperty(
+            changeid=23, property_name='notest', property_value='["no","Change"]'
+        ),
         fakedb.ChangeUser(changeid=23, uid=27),
     ]
 
@@ -60,7 +66,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             "revlink": 'http://warner/0e92a098b',
             "properties": {'notest': "no"},
             "files": ['master/README.txt', 'worker/README.txt'],
-            "revision": 'deadbeef'
+            "revision": 'deadbeef',
         })
         self.change23.number = 23
 
@@ -77,7 +83,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             "revlink": 'http://warner/0e92a098c',
             "properties": {'notest': "no"},
             "files": ['master/README.txt', 'worker/README.txt'],
-            "revision": 'deadbeef'
+            "revision": 'deadbeef',
         })
         self.change24.number = 24
 
@@ -94,7 +100,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             "revlink": 'http://warner/0e92a098d',
             "properties": {'notest': "no"},
             "files": ['master/README.txt', 'worker/README.txt'],
-            "revision": 'deadbeef'
+            "revision": 'deadbeef',
         })
         self.change25.number = 25
 
@@ -124,8 +130,10 @@ class Change(unittest.TestCase, TestReactorMixin):
         ok = ok and got.codebase == exp.codebase
         ok = ok and got.project == exp.project
         if not ok:
+
             def printable(c):
                 return pprint.pformat(c.__dict__)
+
             self.fail(f"changes do not match; expected\n{printable(exp)}\ngot\n{printable(got)}")
 
     def test_str(self):
@@ -134,7 +142,10 @@ class Change(unittest.TestCase, TestReactorMixin):
 
     def test_asText(self):
         text = self.change23.asText()
-        self.assertTrue(re.match(textwrap.dedent('''\
+        self.assertTrue(
+            re.match(
+                textwrap.dedent(
+                    """\
             Files:
              master/README.txt
              worker/README.txt
@@ -146,29 +157,37 @@ class Change(unittest.TestCase, TestReactorMixin):
             Comments: fix whitespaceProperties:.
               notest: no
 
-            '''), text), text)
+            """
+                ),
+                text,
+            ),
+            text,
+        )
 
     def test_asDict(self):
         dict = self.change23.asDict()
         self.assertIn('1978', dict['at'])  # timezone-sensitive
         del dict['at']
-        self.assertEqual(dict, {
-            'branch': 'warnerdb',
-            'category': 'devel',
-            'codebase': 'mainapp',
-            'comments': 'fix whitespace',
-            'files': [{'name': 'master/README.txt'},
-                      {'name': 'worker/README.txt'}],
-            'number': 23,
-            'project': 'Buildbot',
-            'properties': [('notest', 'no', 'Change')],
-            'repository': 'git://warner',
-            'rev': 'deadbeef',
-            'revision': 'deadbeef',
-            'revlink': 'http://warner/0e92a098b',
-            'when': 266738404,
-            'who': 'dustin',
-            'committer': 'dustin'})
+        self.assertEqual(
+            dict,
+            {
+                'branch': 'warnerdb',
+                'category': 'devel',
+                'codebase': 'mainapp',
+                'comments': 'fix whitespace',
+                'files': [{'name': 'master/README.txt'}, {'name': 'worker/README.txt'}],
+                'number': 23,
+                'project': 'Buildbot',
+                'properties': [('notest', 'no', 'Change')],
+                'repository': 'git://warner',
+                'rev': 'deadbeef',
+                'revision': 'deadbeef',
+                'revlink': 'http://warner/0e92a098b',
+                'when': 266738404,
+                'who': 'dustin',
+                'committer': 'dustin',
+            },
+        )
 
     def test_getShortAuthor(self):
         self.assertEqual(self.change23.getShortAuthor(), 'dustin')

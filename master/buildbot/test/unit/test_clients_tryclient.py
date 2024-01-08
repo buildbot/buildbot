@@ -25,7 +25,6 @@ from buildbot.util import bytes2unicode
 
 
 class createJobfile(unittest.TestCase):
-
     def makeNetstring(self, *strings):
         return ''.join([f'{len(s)}:{s},' for s in strings])
 
@@ -44,18 +43,34 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests']
         properties = {'foo': 'bar'}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            jobid,
+            branch,
+            baserev,
+            patch_level,
+            patch_body,
+            repository,
+            project,
+            who,
+            comment,
+            builderNames,
+            properties,
+        )
         jobstr = self.makeNetstring(
             '5',
             json.dumps({
-                'jobid': jobid, 'branch': branch, 'baserev': baserev,
+                'jobid': jobid,
+                'branch': branch,
+                'baserev': baserev,
                 'patch_level': patch_level,
-                'repository': repository, 'project': project, 'who': who,
-                'comment': comment, 'builderNames': builderNames,
+                'repository': repository,
+                'project': project,
+                'who': who,
+                'comment': comment,
+                'builderNames': builderNames,
                 'properties': properties,
                 'patch_body': bytes2unicode(patch_body),
-            }))
+            }),
+        )
         self.assertEqual(job, jobstr)
 
     def test_createJobfile_v6(self):
@@ -71,18 +86,34 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests']
         properties = {'foo': 'bar'}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            jobid,
+            branch,
+            baserev,
+            patch_level,
+            patch_body,
+            repository,
+            project,
+            who,
+            comment,
+            builderNames,
+            properties,
+        )
         jobstr = self.makeNetstring(
             '6',
             json.dumps({
-                'jobid': jobid, 'branch': branch, 'baserev': baserev,
+                'jobid': jobid,
+                'branch': branch,
+                'baserev': baserev,
                 'patch_level': patch_level,
-                'repository': repository, 'project': project, 'who': who,
-                'comment': comment, 'builderNames': builderNames,
+                'repository': repository,
+                'project': project,
+                'who': who,
+                'comment': comment,
+                'builderNames': builderNames,
                 'properties': properties,
                 'patch_body_base64': bytes2unicode(base64.b64encode(patch_body)),
-            }))
+            }),
+        )
         self.assertEqual(job, jobstr)
 
     def test_SourceStampExtractor_readPatch(self):
@@ -106,7 +137,7 @@ class createJobfile(unittest.TestCase):
         sse.override_baserev(b"23ae367063327b79234e081f396ecbc\n")
         self.assertEqual(sse.baserev, "23ae367063327b79234e081f396ecbc")
 
-    class RemoteTryPP_TestStream():
+    class RemoteTryPP_TestStream:
         def __init__(self):
             self.writes = []
             self.is_open = True

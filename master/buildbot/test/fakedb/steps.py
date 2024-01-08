@@ -28,19 +28,38 @@ class Step(Row):
 
     id_column = 'id'
     foreignKeys = ('buildid',)
-    required_columns = ('buildid', )
+    required_columns = ('buildid',)
 
-    def __init__(self, id=None, number=29, name='step29', buildid=None,
-                 started_at=1304262222, locks_acquired_at=None, complete_at=None,
-                 state_string='', results=None, urls_json='[]', hidden=0):
-        super().__init__(id=id, number=number, name=name, buildid=buildid, started_at=started_at,
-                         locks_acquired_at=locks_acquired_at,
-                         complete_at=complete_at, state_string=state_string, results=results,
-                         urls_json=urls_json, hidden=hidden)
+    def __init__(
+        self,
+        id=None,
+        number=29,
+        name='step29',
+        buildid=None,
+        started_at=1304262222,
+        locks_acquired_at=None,
+        complete_at=None,
+        state_string='',
+        results=None,
+        urls_json='[]',
+        hidden=0,
+    ):
+        super().__init__(
+            id=id,
+            number=number,
+            name=name,
+            buildid=buildid,
+            started_at=started_at,
+            locks_acquired_at=locks_acquired_at,
+            complete_at=complete_at,
+            state_string=state_string,
+            results=results,
+            urls_json=urls_json,
+            hidden=hidden,
+        )
 
 
 class FakeStepsComponent(FakeDBComponent):
-
     def setUp(self):
         self.steps = {}
 
@@ -69,7 +88,7 @@ class FakeStepsComponent(FakeDBComponent):
             "state_string": row['state_string'],
             "results": row['results'],
             "urls": json.loads(row['urls_json']),
-            "hidden": bool(row['hidden'])
+            "hidden": bool(row['hidden']),
         }
 
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
@@ -103,13 +122,10 @@ class FakeStepsComponent(FakeDBComponent):
         return defer.succeed(ret)
 
     def addStep(self, buildid, name, state_string):
-        validation.verifyType(self.t, 'state_string', state_string,
-                              validation.StringValidator())
-        validation.verifyType(self.t, 'name', name,
-                              validation.IdentifierValidator(50))
+        validation.verifyType(self.t, 'state_string', state_string, validation.StringValidator())
+        validation.verifyType(self.t, 'name', name, validation.IdentifierValidator(50))
         # get a unique name and number
-        build_steps = [r for r in self.steps.values()
-                       if r['buildid'] == buildid]
+        build_steps = [r for r in self.steps.values() if r['buildid'] == buildid]
         if build_steps:
             number = max(r['number'] for r in build_steps) + 1
             names = {r['name'] for r in build_steps}
@@ -133,7 +149,8 @@ class FakeStepsComponent(FakeDBComponent):
             'results': None,
             'state_string': state_string,
             'urls_json': '[]',
-            'hidden': False}
+            'hidden': False,
+        }
 
         return defer.succeed((id, number, name))
 
@@ -152,20 +169,16 @@ class FakeStepsComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def setStepStateString(self, stepid, state_string):
-        validation.verifyType(self.t, 'state_string', state_string,
-                              validation.StringValidator())
+        validation.verifyType(self.t, 'state_string', state_string, validation.StringValidator())
         b = self.steps.get(stepid)
         if b:
             b['state_string'] = state_string
         return defer.succeed(None)
 
     def addURL(self, stepid, name, url, _racehook=None):
-        validation.verifyType(self.t, 'stepid', stepid,
-                              validation.IntValidator())
-        validation.verifyType(self.t, 'name', name,
-                              validation.IdentifierValidator(50))
-        validation.verifyType(self.t, 'url', url,
-                              validation.StringValidator())
+        validation.verifyType(self.t, 'stepid', stepid, validation.IntValidator())
+        validation.verifyType(self.t, 'name', name, validation.IdentifierValidator(50))
+        validation.verifyType(self.t, 'url', url, validation.StringValidator())
         b = self.steps.get(stepid)
         if b:
             urls = json.loads(b['urls_json'])

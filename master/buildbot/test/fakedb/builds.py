@@ -29,9 +29,19 @@ class Build(Row):
     foreignKeys = ('buildrequestid', 'masterid', 'workerid', 'builderid')
     required_columns = ('buildrequestid', 'masterid', 'workerid')
 
-    def __init__(self, id=None, number=29, buildrequestid=None, builderid=None,
-                 workerid=-1, masterid=None,
-                 started_at=1304262222, complete_at=None, state_string="test", results=None):
+    def __init__(
+        self,
+        id=None,
+        number=29,
+        buildrequestid=None,
+        builderid=None,
+        workerid=-1,
+        masterid=None,
+        started_at=1304262222,
+        complete_at=None,
+        state_string="test",
+        results=None,
+    ):
         super().__init__(
             id=id,
             number=number,
@@ -43,7 +53,7 @@ class Build(Row):
             complete_at=complete_at,
             locks_duration_s=0,
             state_string=state_string,
-            results=results
+            results=results,
         )
 
 
@@ -58,7 +68,6 @@ class BuildProperty(Row):
 
 
 class FakeBuildsComponent(FakeDBComponent):
-
     def setUp(self):
         self.builds = {}
 
@@ -71,8 +80,7 @@ class FakeBuildsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, BuildProperty):
                 assert row.buildid in self.builds
-                self.builds[row.buildid]['properties'][
-                    row.name] = (row.value, row.source)
+                self.builds[row.buildid]['properties'][row.name] = (row.value, row.source)
 
     # component methods
 
@@ -94,7 +102,7 @@ class FakeBuildsComponent(FakeDBComponent):
             "complete_at": epoch2datetime(row['complete_at']),
             "locks_duration_s": row["locks_duration_s"],
             "state_string": row['state_string'],
-            "results": row['results']
+            "results": row['results'],
         }
 
     def getBuild(self, buildid):
@@ -110,8 +118,9 @@ class FakeBuildsComponent(FakeDBComponent):
                 return defer.succeed(self._row2dict(row))
         return defer.succeed(None)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None,
-                  resultSpec=None):
+    def getBuilds(
+        self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None
+    ):
         ret = []
         for row in self.builds.values():
             if builderid is not None and row['builderid'] != builderid:
@@ -127,15 +136,16 @@ class FakeBuildsComponent(FakeDBComponent):
             ret = self.applyResultSpec(ret, resultSpec)
         return defer.succeed(ret)
 
-    def addBuild(self, builderid, buildrequestid, workerid, masterid,
-                 state_string):
-        validation.verifyType(self.t, 'state_string', state_string,
-                              validation.StringValidator())
+    def addBuild(self, builderid, buildrequestid, workerid, masterid, state_string):
+        validation.verifyType(self.t, 'state_string', state_string, validation.StringValidator())
         id = self._newId()
-        number = max([0] + [r['number'] for r in self.builds.values()
-                            if r['builderid'] == builderid]) + 1
+        number = (
+            max([0] + [r['number'] for r in self.builds.values() if r['builderid'] == builderid])
+            + 1
+        )
         self.builds[id] = {
-            "id": id, "number": number,
+            "id": id,
+            "number": number,
             "buildrequestid": buildrequestid,
             "builderid": builderid,
             "workerid": workerid,
@@ -144,13 +154,12 @@ class FakeBuildsComponent(FakeDBComponent):
             "started_at": self.reactor.seconds(),
             "locks_duration_s": 0,
             "complete_at": None,
-            "results": None
+            "results": None,
         }
         return defer.succeed((id, number))
 
     def setBuildStateString(self, buildid, state_string):
-        validation.verifyType(self.t, 'state_string', state_string,
-                              validation.StringValidator())
+        validation.verifyType(self.t, 'state_string', state_string, validation.StringValidator())
         b = self.builds.get(buildid)
         if b:
             b['state_string'] = state_string
@@ -166,8 +175,10 @@ class FakeBuildsComponent(FakeDBComponent):
 
     def getBuildProperties(self, bid, resultSpec=None):
         if bid in self.builds:
-            ret = [{"name": k, "source": v[1], "value": v[0]}
-                for k, v in self.builds[bid]['properties'].items()]
+            ret = [
+                {"name": k, "source": v[1], "value": v[0]}
+                for k, v in self.builds[bid]['properties'].items()
+            ]
 
         if resultSpec is not None:
             ret = self.applyResultSpec(ret, resultSpec)

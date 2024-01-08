@@ -23,8 +23,7 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
 
-expectedOutputRegex = \
-    r"""\*\*\* BUILD 1 \*\*\* ==> build successful \(success\)
+expectedOutputRegex = r"""\*\*\* BUILD 1 \*\*\* ==> build successful \(success\)
     \*\*\* STEP worker_preparation \*\*\* ==> worker local1 ready \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
         log:stdio \({loglines}\)
@@ -41,7 +40,6 @@ expectedOutputRegex = \
 
 
 class TriggeringMaster(RunMasterBase):
-
     change = {
         "branch": "master",
         "files": ["foo.c"],
@@ -49,7 +47,7 @@ class TriggeringMaster(RunMasterBase):
         "committer": "me@foo.com",
         "comments": "good stuff",
         "revision": "HEAD",
-        "project": "none"
+        "project": "none",
     }
 
     @defer.inlineCallbacks
@@ -61,35 +59,30 @@ class TriggeringMaster(RunMasterBase):
         from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
-            schedulers.Triggerable(
-                name="trigsched",
-                builderNames=["build"]),
-            schedulers.AnyBranchScheduler(
-                name="sched",
-                builderNames=["testy"])]
+            schedulers.Triggerable(name="trigsched", builderNames=["build"]),
+            schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
+        ]
 
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='echo hello'))
-        f.addStep(steps.Trigger(schedulerNames=['trigsched'],
-                                waitForFinish=True,
-                                updateSourceStamp=True))
+        f.addStep(
+            steps.Trigger(schedulerNames=['trigsched'], waitForFinish=True, updateSourceStamp=True)
+        )
         f.addStep(steps.ShellCommand(command='echo world'))
         f2 = BuildFactory()
         f2.addStep(steps.ShellCommand(command='echo ola'))
         c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f),
-            BuilderConfig(name="build",
-                          workernames=["local1"],
-                          factory=f2)]
+            BuilderConfig(name="testy", workernames=["local1"], factory=f),
+            BuilderConfig(name="build", workernames=["local1"], factory=f2),
+        ]
         if addFailure:
             f3 = BuildFactory()
             f3.addStep(steps.ShellCommand(command='false'))
             c['builders'].append(BuilderConfig(name="build2", workernames=["local1"], factory=f3))
             c['builders'].append(BuilderConfig(name="build3", workernames=["local1"], factory=f2))
-            c['schedulers'][0] = schedulers.Triggerable(name="trigsched",
-                                                        builderNames=["build", "build2", "build3"])
+            c['schedulers'][0] = schedulers.Triggerable(
+                name="trigsched", builderNames=["build", "build2", "build3"]
+            )
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
@@ -98,8 +91,7 @@ class TriggeringMaster(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
-        self.assertEqual(
-            build['steps'][2]['state_string'], 'triggered trigsched, 1 success')
+        self.assertEqual(build['steps'][2]['state_string'], 'triggered trigsched, 1 success')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         dump = StringIO()
@@ -108,8 +100,7 @@ class TriggeringMaster(RunMasterBase):
         # depending on the environment the number of lines is different between
         # test hosts
         loglines = builds[1]['steps'][1]['logs'][0]['num_lines']
-        self.assertRegex(dump.getvalue(),
-                         expectedOutputRegex.format(loglines=loglines))
+        self.assertRegex(dump.getvalue(), expectedOutputRegex.format(loglines=loglines))
 
     @defer.inlineCallbacks
     def test_trigger_failure(self):
@@ -118,6 +109,7 @@ class TriggeringMaster(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
         self.assertEqual(
-            build['steps'][2]['state_string'], 'triggered trigsched, 2 successes, 1 failure')
+            build['steps'][2]['state_string'], 'triggered trigsched, 2 successes, 1 failure'
+        )
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 4)

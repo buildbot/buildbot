@@ -25,7 +25,6 @@ from buildbot.util import poll
 
 
 class TestPollerSync(TestReactorMixin, unittest.TestCase):
-
     @poll.method
     def poll(self):
         self.calls += 1
@@ -175,7 +174,6 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
 
 
 class TestPollerAsync(TestReactorMixin, unittest.TestCase):
-
     @poll.method
     @defer.inlineCallbacks
     def poll(self):
@@ -218,9 +216,9 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         yield self.poll.stop()
 
     def test_repeats_and_stops(self):
-        """ Polling repeats until stopped, and stop returns a Deferred.  The
+        """Polling repeats until stopped, and stop returns a Deferred.  The
         duration of the function's execution does not affect the execution
-        interval: executions occur every 10 seconds.  """
+        interval: executions occur every 10 seconds."""
         self.poll.start(interval=10, now=True)
         self.reactor.advance(0)
 

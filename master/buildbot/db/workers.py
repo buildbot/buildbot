@@ -22,7 +22,6 @@ from buildbot.util import identifiers
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
-
     def findWorkerId(self, name):
         tbl = self.db.model.workers
         # callers should verify this and give good user error messages
@@ -35,8 +34,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 "info": {},
                 "paused": 0,
                 "pause_reason": None,
-                "graceful": 0
-            }
+                "graceful": 0,
+            },
         )
 
     def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids, workerid=None):
@@ -59,12 +58,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             bm_tbl = self.db.model.builder_masters
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
-            q = sa.select(
-                [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
+            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             res = conn.execute(q)
-            buildermasterids = [row['buildermasterid']
-                                for row in res]
+            buildermasterids = [row['buildermasterid'] for row in res]
             res.close()
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
@@ -72,9 +69,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
-
         def thd(conn):
-
             cfg_tbl = self.db.model.configured_workers
             bm_tbl = self.db.model.builder_masters
 
@@ -91,8 +86,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
-            q = sa.select(
-                [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
+            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
             res = conn.execute(q)
@@ -107,28 +101,33 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             # and insert the new ones
             if toinsertbuildermasterids:
                 q = cfg_tbl.insert()
-                conn.execute(q,
-                             [{'workerid': workerid, 'buildermasterid': buildermasterid}
-                              for buildermasterid in toinsertbuildermasterids]).close()
+                conn.execute(
+                    q,
+                    [
+                        {'workerid': workerid, 'buildermasterid': buildermasterid}
+                        for buildermasterid in toinsertbuildermasterids
+                    ],
+                ).close()
 
             transaction.commit()
 
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getWorker(self, workerid=None, name=None, masterid=None,
-                  builderid=None):
+    def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
         if workerid is None and name is None:
             return None
-        workers = yield self.getWorkers(_workerid=workerid,
-                                        _name=name, masterid=masterid, builderid=builderid)
+        workers = yield self.getWorkers(
+            _workerid=workerid, _name=name, masterid=masterid, builderid=builderid
+        )
         if workers:
             return workers[0]
         return None
 
     # returns a Deferred that returns a value
-    def getWorkers(self, _workerid=None, _name=None, masterid=None,
-                   builderid=None, paused=None, graceful=None):
+    def getWorkers(
+        self, _workerid=None, _name=None, masterid=None, builderid=None, paused=None, graceful=None
+    ):
         def thd(conn):
             workers_tbl = self.db.model.workers
             conn_tbl = self.db.model.connected_workers
@@ -140,13 +139,19 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(cfg_tbl)
             j = j.outerjoin(bm_tbl)
             q = sa.select(
-                [workers_tbl.c.id, workers_tbl.c.name, workers_tbl.c.info,
-                 workers_tbl.c.paused,
-                 workers_tbl.c.pause_reason,
-                 workers_tbl.c.graceful,
-                 bm_tbl.c.builderid, bm_tbl.c.masterid],
+                [
+                    workers_tbl.c.id,
+                    workers_tbl.c.name,
+                    workers_tbl.c.info,
+                    workers_tbl.c.paused,
+                    workers_tbl.c.pause_reason,
+                    workers_tbl.c.graceful,
+                    bm_tbl.c.builderid,
+                    bm_tbl.c.masterid,
+                ],
                 from_obj=[j],
-                order_by=[workers_tbl.c.id])
+                order_by=[workers_tbl.c.id],
+            )
 
             if _workerid is not None:
                 q = q.where(workers_tbl.c.id == _workerid)
@@ -177,11 +182,11 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                         'workerinfo': row.info,
                         'paused': bool(row.paused),
                         "pause_reason": row.pause_reason,
-                        'graceful': bool(row.graceful)}
+                        'graceful': bool(row.graceful),
+                    }
                     rv[lastId] = res
                 if row.builderid and row.masterid:
-                    cfgs.append({'builderid': row.builderid,
-                                 'masterid': row.masterid})
+                    cfgs.append({'builderid': row.builderid, 'masterid': row.masterid})
 
             # now go back and get the connection info for the same set of
             # workers
@@ -193,7 +198,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [conn_tbl.c.workerid, conn_tbl.c.masterid],
                 from_obj=[j],
-                order_by=[conn_tbl.c.workerid])
+                order_by=[conn_tbl.c.workerid],
+            )
 
             if _workerid is not None:
                 q = q.where(conn_tbl.c.workerid == _workerid)
@@ -209,6 +215,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 rv[row.workerid]['connected_to'].append(row.masterid)
 
             return list(rv.values())
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -217,8 +224,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn_tbl = self.db.model.connected_workers
             q = conn_tbl.insert()
             try:
-                conn.execute(q,
-                             {'workerid': workerid, 'masterid': masterid})
+                conn.execute(q, {'workerid': workerid, 'masterid': masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
@@ -226,15 +232,16 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             bs_tbl = self.db.model.workers
             q = bs_tbl.update(whereclause=bs_tbl.c.id == workerid)
             conn.execute(q, info=workerinfo)
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
     def workerDisconnected(self, workerid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_workers
-            q = tbl.delete(whereclause=(tbl.c.workerid == workerid) &
-                                       (tbl.c.masterid == masterid))
+            q = tbl.delete(whereclause=(tbl.c.workerid == workerid) & (tbl.c.masterid == masterid))
             conn.execute(q)
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -243,6 +250,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.workers
             q = tbl.update(whereclause=tbl.c.id == workerid)
             conn.execute(q, paused=int(paused), pause_reason=pause_reason)
+
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
@@ -251,4 +259,5 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.workers
             q = tbl.update(whereclause=tbl.c.id == workerid)
             conn.execute(q, graceful=int(graceful))
+
         return self.db.pool.do(thd)

@@ -17,8 +17,8 @@
 
 
 def entry_points_get(entry_points, group):
-    """ Since Python 3.12 dictionary access is removed and replaced by new interface.
-        see: https://github.com/python/cpython/issues/97781
+    """Since Python 3.12 dictionary access is removed and replaced by new interface.
+    see: https://github.com/python/cpython/issues/97781
     """
     if hasattr(entry_points, "select"):
         return entry_points.select(group=group)

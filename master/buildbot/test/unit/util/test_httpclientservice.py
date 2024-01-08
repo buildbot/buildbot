@@ -39,13 +39,10 @@ except ImportError:
 
 # There is no way to unregister an adapter, so we have no other option
 # than registering it as a module side effect :-(
-components.registerAdapter(
-    lambda m: m,
-    mock.Mock, interfaces.IHttpResponse)
+components.registerAdapter(lambda m: m, mock.Mock, interfaces.IHttpResponse)
 
 
 class HTTPClientServiceTestBase(unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         if httpclientservice.txrequests is None or httpclientservice.treq is None:
@@ -59,24 +56,26 @@ class HTTPClientServiceTestBase(unittest.TestCase):
 
 
 class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.parent, 'http://foo', headers=self.base_headers)
+            self.parent, 'http://foo', headers=self.base_headers
+        )
 
     @defer.inlineCallbacks
     def test_get(self):
         yield self._http.get('/bar')
-        self._http._session.request.assert_called_once_with('get', 'http://foo/bar', headers={},
-                                                            background_callback=mock.ANY)
+        self._http._session.request.assert_called_once_with(
+            'get', 'http://foo/bar', headers={}, background_callback=mock.ANY
+        )
 
     @defer.inlineCallbacks
     def test_get_full_url(self):
         yield self._http.get('http://other/bar')
-        self._http._session.request.assert_called_once_with('get', 'http://other/bar', headers={},
-                                                            background_callback=mock.ANY)
+        self._http._session.request.assert_called_once_with(
+            'get', 'http://other/bar', headers={}, background_callback=mock.ANY
+        )
 
     @defer.inlineCallbacks
     def test_put(self):
@@ -84,10 +83,9 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with('put', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonBytes,
-                                                            headers=headers)
+        self._http._session.request.assert_called_once_with(
+            'put', 'http://foo/bar', background_callback=mock.ANY, data=jsonBytes, headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_post(self):
@@ -95,17 +93,16 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonBytes,
-                                                            headers=headers)
+        self._http._session.request.assert_called_once_with(
+            'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonBytes, headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_delete(self):
         yield self._http.delete('/bar')
-        self._http._session.request.assert_called_once_with('delete', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            headers={})
+        self._http._session.request.assert_called_once_with(
+            'delete', 'http://foo/bar', background_callback=mock.ANY, headers={}
+        )
 
     @defer.inlineCallbacks
     def test_post_headers(self):
@@ -113,175 +110,172 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonBytes,
-                                                            headers={
-                                                                'X-TOKEN': 'XXXYYY',
-                                                                'Content-Type': 'application/json'})
+        self._http._session.request.assert_called_once_with(
+            'post',
+            'http://foo/bar',
+            background_callback=mock.ANY,
+            data=jsonBytes,
+            headers={'X-TOKEN': 'XXXYYY', 'Content-Type': 'application/json'},
+        )
 
     @defer.inlineCallbacks
     def test_post_auth(self):
-        self._http = yield httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
-                                                                          auth=('user', 'pa$$'))
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.parent, 'http://foo', auth=('user', 'pa$$')
+        )
         yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonBytes,
-                                                            auth=(
-                                                                'user', 'pa$$'),
-                                                            headers={
-                                                                'Content-Type': 'application/json'
-                                                            })
+        self._http._session.request.assert_called_once_with(
+            'post',
+            'http://foo/bar',
+            background_callback=mock.ANY,
+            data=jsonBytes,
+            auth=('user', 'pa$$'),
+            headers={'Content-Type': 'application/json'},
+        )
 
 
 class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
         self._http = self.successResultOf(
-            httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
-                                                           headers=self.base_headers,
-                                                           skipEncoding=True))
+            httpclientservice.HTTPClientService.getService(
+                self.parent, 'http://foo', headers=self.base_headers, skipEncoding=True
+            )
+        )
 
     @defer.inlineCallbacks
     def test_post_raw(self):
         yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonStr,
-                                                            headers=headers)
+        self._http._session.request.assert_called_once_with(
+            'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonStr, headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_post_rawlist(self):
         yield self._http.post('/bar', json=[{'foo': 'bar'}])
         jsonStr = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data=jsonStr,
-                                                            headers=headers)
+        self._http._session.request.assert_called_once_with(
+            'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonStr, headers=headers
+        )
 
 
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.parent, 'http://foo', headers=self.base_headers)
+            self.parent, 'http://foo', headers=self.base_headers
+        )
 
     @defer.inlineCallbacks
     def test_get(self):
         yield self._http.get('/bar')
-        httpclientservice.treq.get.assert_called_once_with('http://foo/bar',
-                                                           agent=mock.ANY,
-                                                           headers={})
+        httpclientservice.treq.get.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, headers={}
+        )
 
     @defer.inlineCallbacks
     def test_put(self):
         yield self._http.put('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json']}
-        httpclientservice.treq.put.assert_called_once_with('http://foo/bar',
-                                                           agent=mock.ANY,
-                                                           data=b'{"foo": "bar"}',
-                                                           headers=headers)
+        httpclientservice.treq.put.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_post(self):
         yield self._http.post('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json']}
-        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
-                                                            agent=mock.ANY,
-                                                            data=b'{"foo": "bar"}',
-                                                            headers=headers)
+        httpclientservice.treq.post.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_delete(self):
         yield self._http.delete('/bar')
-        httpclientservice.treq.delete.assert_called_once_with('http://foo/bar',
-                                                              agent=mock.ANY,
-                                                              headers={})
+        httpclientservice.treq.delete.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, headers={}
+        )
 
     @defer.inlineCallbacks
     def test_post_headers(self):
         self.base_headers.update({'X-TOKEN': 'XXXYYY'})
         yield self._http.post('/bar', json={'foo': 'bar'})
-        headers = {
-            'Content-Type': ['application/json'],
-            'X-TOKEN': ['XXXYYY']
-        }
-        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
-                                                            agent=mock.ANY,
-                                                            data=b'{"foo": "bar"}',
-                                                            headers=headers)
+        headers = {'Content-Type': ['application/json'], 'X-TOKEN': ['XXXYYY']}
+        httpclientservice.treq.post.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_post_auth(self):
-        self._http = yield httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
-                                                                          auth=('user', 'pa$$'))
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.parent, 'http://foo', auth=('user', 'pa$$')
+        )
         yield self._http.post('/bar', json={'foo': 'bar'})
         headers = {
             'Content-Type': ['application/json'],
         }
-        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
-                                                            agent=mock.ANY,
-                                                            data=b'{"foo": "bar"}',
-                                                            auth=(
-                                                                'user', 'pa$$'),
-                                                            headers=headers)
+        httpclientservice.treq.post.assert_called_once_with(
+            'http://foo/bar',
+            agent=mock.ANY,
+            data=b'{"foo": "bar"}',
+            auth=('user', 'pa$$'),
+            headers=headers,
+        )
 
     @defer.inlineCallbacks
     def test_post_auth_digest(self):
         auth = HTTPDigestAuth('user', 'pa$$')
-        self._http = yield httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
-                                                                          auth=auth)
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.parent, 'http://foo', auth=auth
+        )
         yield self._http.post('/bar', data={'foo': 'bar'})
         # if digest auth, we don't use treq! we use txrequests
-        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
-                                                            background_callback=mock.ANY,
-                                                            data={"foo": 'bar'},
-                                                            auth=auth,
-                                                            headers={
-                                                            })
+        self._http._session.request.assert_called_once_with(
+            'post',
+            'http://foo/bar',
+            background_callback=mock.ANY,
+            data={"foo": 'bar'},
+            auth=auth,
+            headers={},
+        )
 
 
 class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
         self._http = self.successResultOf(
-            httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
-                                                           headers=self.base_headers,
-                                                           skipEncoding=True))
+            httpclientservice.HTTPClientService.getService(
+                self.parent, 'http://foo', headers=self.base_headers, skipEncoding=True
+            )
+        )
 
     @defer.inlineCallbacks
     def test_post_raw(self):
         yield self._http.post('/bar', json={'foo': 'bar'})
         json_str = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': ['application/json']}
-        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
-                                                            agent=mock.ANY,
-                                                            data=json_str,
-                                                            headers=headers)
+        httpclientservice.treq.post.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, data=json_str, headers=headers
+        )
 
     @defer.inlineCallbacks
     def test_post_rawlist(self):
         yield self._http.post('/bar', json=[{'foo': 'bar'}])
         json_str = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': ['application/json']}
-        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
-                                                            agent=mock.ANY,
-                                                            data=json_str,
-                                                            headers=headers)
+        httpclientservice.treq.post.assert_called_once_with(
+            'http://foo/bar', agent=mock.ANY, data=json_str, headers=headers
+        )
 
 
 class MyResource(resource.Resource):
@@ -314,6 +308,7 @@ class MyResource(resource.Resource):
         if request.method == b'HEAD':
             return b''
         return data
+
     render_HEAD = render_GET
     render_POST = render_GET
 
@@ -326,7 +321,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     def httpFactory(self, parent):
         return httpclientservice.HTTPClientService.getService(
-            parent, f'http://127.0.0.1:{self.port}')
+            parent, f'http://127.0.0.1:{self.port}'
+        )
 
     def expect(self, *arg, **kwargs):
         pass
@@ -368,8 +364,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_post_content_with_params(self):
-        self.expect('post', '/', params={"a": 'b'},
-                    content_json={"a": ['b']})
+        self.expect('post', '/', params={"a": 'b'}, content_json={"a": ['b']})
         res = yield self._http.post('/', params={"a": 'b'})
         content = yield res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
@@ -384,8 +379,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_put_content_with_json(self):
         exp_content_json = {"json_received": {"a": 'b'}}
-        self.expect('post', '/', json={"a": 'b'},
-                    content_json=exp_content_json)
+        self.expect('post', '/', json={"a": 'b'}, content_json=exp_content_json)
         res = yield self._http.post('/', json={"a": 'b'})
         content = yield res.content()
         content = bytes2unicode(content)
@@ -396,8 +390,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     def test_put_content_with_json_datetime(self):
         exp_content_json = {"json_received": {"a": 'b', "ts": 12}}
         dt = datetime.datetime.fromtimestamp(12, datetime.timezone.utc)
-        self.expect('post', '/', json={"a": 'b', "ts": dt},
-                    content_json=exp_content_json)
+        self.expect('post', '/', json={"a": 'b', "ts": dt}, content_json=exp_content_json)
         res = yield self._http.post('/', json={"a": 'b', "ts": dt})
         content = yield res.content()
         content = bytes2unicode(content)
@@ -419,8 +412,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_lots(self):
         for _ in range(self.NUM_PARALLEL):
-            self.expect('get', '/', params={"a": 'b'},
-                        content_json={"a": ['b']})
+            self.expect('get', '/', params={"a": 'b'}, content_json={"a": ['b']})
         # use for benchmarking (txrequests: 3ms per request treq: 1ms per
         # request)
         for _ in range(self.NUM_PARALLEL):
@@ -431,8 +423,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_lots_parallel(self):
         for _ in range(self.NUM_PARALLEL):
-            self.expect('get', '/', params={"a": 'b'},
-                        content_json={"a": ['b']})
+            self.expect('get', '/', params={"a": 'b'}, content_json={"a": ['b']})
 
         # use for benchmarking (txrequests: 3ms per request treq: 11ms per
         # request (!?))
@@ -444,12 +435,12 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                 return res.content()
 
             return d
+
         dl = [oneReq() for i in range(self.NUM_PARALLEL)]
         yield defer.gatherResults(dl)
 
 
 class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
@@ -457,11 +448,11 @@ class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):
 
 
 class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):
-
     @defer.inlineCallbacks
     def httpFactory(self, parent):
         service = yield fakehttpclientservice.HTTPClientService.getService(
-            parent, self, f'http://127.0.0.1:{self.port}')
+            parent, self, f'http://127.0.0.1:{self.port}'
+        )
         return service
 
     def expect(self, *arg, **kwargs):

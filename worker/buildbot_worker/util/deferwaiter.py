@@ -23,8 +23,8 @@ from buildbot_worker.util import Notifier
 
 
 class DeferWaiter:
-    """ This class manages a set of Deferred objects and allows waiting for their completion
-    """
+    """This class manages a set of Deferred objects and allows waiting for their completion"""
+
     def __init__(self):
         self._waited = {}
         self._finish_notifier = Notifier()

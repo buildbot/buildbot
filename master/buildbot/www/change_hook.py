@@ -115,8 +115,10 @@ class ChangeHookResource(resource.Resource):
         if dialect not in self.dialects:
             m = f"The dialect specified, '{dialect}', wasn't whitelisted in change_hook"
             log.msg(m)
-            log.msg("Note: if dialect is 'base' then it's possible your URL is "
-                    "malformed and we didn't regex it properly")
+            log.msg(
+                "Note: if dialect is 'base' then it's possible your URL is "
+                "malformed and we didn't regex it properly"
+            )
             raise ValueError(m)
 
         if dialect not in self._dialect_handlers:
@@ -125,8 +127,10 @@ class ChangeHookResource(resource.Resource):
                 klass = options['custom_class']
             else:
                 if dialect not in self._plugins:
-                    m = (f"The dialect specified, '{dialect}', is not registered as "
-                         "a buildbot.webhook plugin")
+                    m = (
+                        f"The dialect specified, '{dialect}', is not registered as "
+                        "a buildbot.webhook plugin"
+                    )
                     log.msg(m)
                     raise ValueError(m)
                 klass = self._plugins.get(dialect)
@@ -174,15 +178,25 @@ class ChangeHookResource(resource.Resource):
             if isinstance(when_timestamp, datetime):
                 chdict['when_timestamp'] = datetime2epoch(when_timestamp)
             # unicodify stuff
-            for k in ('comments', 'author', 'committer', 'revision', 'branch', 'category',
-                    'revlink', 'repository', 'codebase', 'project'):
+            for k in (
+                'comments',
+                'author',
+                'committer',
+                'revision',
+                'branch',
+                'category',
+                'revlink',
+                'repository',
+                'codebase',
+                'project',
+            ):
                 if k in chdict:
                     chdict[k] = bytes2unicode(chdict[k])
             if chdict.get('files'):
-                chdict['files'] = [bytes2unicode(f)
-                                for f in chdict['files']]
+                chdict['files'] = [bytes2unicode(f) for f in chdict['files']]
             if chdict.get('properties'):
-                chdict['properties'] = dict((bytes2unicode(k), v)
-                                            for k, v in chdict['properties'].items())
+                chdict['properties'] = dict(
+                    (bytes2unicode(k), v) for k, v in chdict['properties'].items()
+                )
             chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
             log.msg(f"injected change {chid}")

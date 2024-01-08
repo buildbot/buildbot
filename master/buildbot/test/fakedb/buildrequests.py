@@ -30,12 +30,31 @@ class BuildRequest(Row):
     id_column = 'id'
     required_columns = ('buildsetid',)
 
-    def __init__(self, id=None, buildsetid=None, builderid=None, buildername=None,
-                 priority=0, complete=0, results=-1,
-                 submitted_at=12345678, complete_at=None, waited_for=0):
-        super().__init__(id=id, buildsetid=buildsetid, builderid=builderid, buildername=buildername,
-                         priority=priority, complete=complete, results=results,
-                         submitted_at=submitted_at, complete_at=complete_at, waited_for=waited_for)
+    def __init__(
+        self,
+        id=None,
+        buildsetid=None,
+        builderid=None,
+        buildername=None,
+        priority=0,
+        complete=0,
+        results=-1,
+        submitted_at=12345678,
+        complete_at=None,
+        waited_for=0,
+    ):
+        super().__init__(
+            id=id,
+            buildsetid=buildsetid,
+            builderid=builderid,
+            buildername=buildername,
+            priority=priority,
+            complete=complete,
+            results=results,
+            submitted_at=submitted_at,
+            complete_at=complete_at,
+            waited_for=waited_for,
+        )
 
 
 class BuildRequestClaim(Row):
@@ -50,7 +69,6 @@ class BuildRequestClaim(Row):
 
 
 class FakeBuildRequestsComponent(FakeDBComponent):
-
     # for use in determining "my" requests
     MASTER_ID = 824
 
@@ -86,8 +104,16 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             return None
 
     @defer.inlineCallbacks
-    def getBuildRequests(self, builderid=None, complete=None, claimed=None,
-                         bsid=None, branch=None, repository=None, resultSpec=None):
+    def getBuildRequests(
+        self,
+        builderid=None,
+        complete=None,
+        claimed=None,
+        bsid=None,
+        branch=None,
+        repository=None,
+        resultSpec=None,
+    ):
         rv = []
         for br in self.reqs.values():
             if builderid and br.builderid != builderid:
@@ -149,9 +175,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
-            self.claims[brid] = BuildRequestClaim(brid=brid,
-                                                  masterid=self.MASTER_ID,
-                                                  claimed_at=claimed_at)
+            self.claims[brid] = BuildRequestClaim(
+                brid=brid, masterid=self.MASTER_ID, claimed_at=claimed_at
+            )
         return defer.succeed(None)
 
     def unclaimBuildRequests(self, brids):
@@ -183,9 +209,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def fakeClaimBuildRequest(self, brid, claimed_at=None, masterid=None):
         if masterid is None:
             masterid = self.MASTER_ID
-        self.claims[brid] = BuildRequestClaim(brid=brid,
-                                              masterid=masterid,
-                                              claimed_at=self.reactor.seconds())
+        self.claims[brid] = BuildRequestClaim(
+            brid=brid, masterid=masterid, claimed_at=self.reactor.seconds()
+        )
 
     def fakeUnclaimBuildRequest(self, brid):
         del self.claims[brid]
@@ -194,6 +220,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     def assertMyClaims(self, claimed_brids):
         self.t.assertEqual(
-            [id for (id, brc) in self.claims.items()
-             if brc.masterid == self.MASTER_ID],
-            claimed_brids)
+            [id for (id, brc) in self.claims.items() if brc.masterid == self.MASTER_ID],
+            claimed_brids,
+        )

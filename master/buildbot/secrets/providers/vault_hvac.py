@@ -16,7 +16,6 @@
 HVAC based providers
 """
 
-
 import importlib.metadata
 
 from packaging.version import parse as parse_version
@@ -70,14 +69,24 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
     name = 'SecretInVaultKv'
 
-    def checkConfig(self, vault_server=None, authenticator=None, secrets_mount=None,
-                    api_version=2, path_delimiter='|', path_escape='\\'):
+    def checkConfig(
+        self,
+        vault_server=None,
+        authenticator=None,
+        secrets_mount=None,
+        api_version=2,
+        path_delimiter='|',
+        path_escape='\\',
+    ):
         try:
             import hvac
+
             [hvac]
         except ImportError:  # pragma: no cover
-            config.error(f"{self.__class__.__name__} needs the hvac package installed " +
-                         "(pip install hvac)")
+            config.error(
+                f"{self.__class__.__name__} needs the hvac package installed "
+                + "(pip install hvac)"
+            )
 
         if not isinstance(vault_server, str):
             config.error(f"vault_server must be a string while it is {type(vault_server)}")
@@ -86,19 +95,30 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         if not isinstance(path_escape, str) or len(path_escape) > 1:
             config.error("path_escape must be a single character")
         if not isinstance(authenticator, VaultAuthenticator):
-            config.error("authenticator must be instance of VaultAuthenticator while it is "
-                         f"{type(authenticator)}")
+            config.error(
+                "authenticator must be instance of VaultAuthenticator while it is "
+                f"{type(authenticator)}"
+            )
 
         if api_version not in [1, 2]:
             config.error(f"api_version {api_version} is not supported")
 
-    def reconfigService(self, vault_server=None, authenticator=None, secrets_mount=None,
-                        api_version=2, path_delimiter='|', path_escape='\\'):
+    def reconfigService(
+        self,
+        vault_server=None,
+        authenticator=None,
+        secrets_mount=None,
+        api_version=2,
+        path_delimiter='|',
+        path_escape='\\',
+    ):
         try:
             import hvac
         except ImportError:  # pragma: no cover
-            config.error(f"{self.__class__.__name__} needs the hvac package installed " +
-                         "(pip install hvac)")
+            config.error(
+                f"{self.__class__.__name__} needs the hvac package installed "
+                + "(pip install hvac)"
+            )
 
         if secrets_mount is None:
             secrets_mount = "secret"
@@ -147,11 +167,12 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
             return self.client.secrets.kv.v1.read_secret(path=path, mount_point=self.secrets_mount)
         else:
             if self.version >= parse_version("1.1.1"):
-                return self.client.secrets.kv.v2.read_secret_version(path=path,
-                                                                     mount_point=self.secrets_mount,
-                                                                     raise_on_deleted_version=True)
-            return self.client.secrets.kv.v2.read_secret_version(path=path,
-                                                                 mount_point=self.secrets_mount)
+                return self.client.secrets.kv.v2.read_secret_version(
+                    path=path, mount_point=self.secrets_mount, raise_on_deleted_version=True
+                )
+            return self.client.secrets.kv.v2.read_secret_version(
+                path=path, mount_point=self.secrets_mount
+            )
 
     def thd_hvac_get(self, path):
         """
@@ -173,12 +194,16 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
         parts = self.escaped_split(entry)
         if len(parts) == 1:
-            raise KeyError("Vault secret specification must contain attribute name separated from "
-                           f"path by '{self.path_delimiter}'")
+            raise KeyError(
+                "Vault secret specification must contain attribute name separated from "
+                f"path by '{self.path_delimiter}'"
+            )
         if len(parts) > 2:
-            raise KeyError(f"Multiple separators ('{self.path_delimiter}') found in vault "
-                           f"path '{entry}'. All occurences of '{self.path_delimiter}' in path or "
-                           f"attribute name must be escaped using '{self.path_escape}'")
+            raise KeyError(
+                f"Multiple separators ('{self.path_delimiter}') found in vault "
+                f"path '{entry}'. All occurences of '{self.path_delimiter}' in path or "
+                f"attribute name must be escaped using '{self.path_escape}'"
+            )
 
         name = parts[0]
         key = parts[1]
@@ -192,5 +217,4 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         try:
             return response['data'][key]
         except KeyError as e:
-            raise KeyError(
-                f"The secret {entry} does not exist in Vault provider: {e}") from e
+            raise KeyError(f"The secret {entry} does not exist in Vault provider: {e}") from e

@@ -19,7 +19,6 @@ from buildbot.util.protocol import LineProcessProtocol
 
 
 class FakeLineProcessProtocol(LineProcessProtocol):
-
     def __init__(self):
         super().__init__()
         self.out_lines = []
@@ -33,7 +32,6 @@ class FakeLineProcessProtocol(LineProcessProtocol):
 
 
 class TestLineProcessProtocol(unittest.TestCase):
-
     def test_stdout(self):
         p = FakeLineProcessProtocol()
         p.outReceived(b'\nline2\nline3\nli')

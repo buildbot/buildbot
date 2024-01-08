@@ -105,6 +105,7 @@ class Log:
         def fToRun():
             self.finished = True
             return self.master.data.updates.finishLog(self.logid)
+
         yield self.lock.run(fToRun)
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
@@ -125,7 +126,6 @@ class Log:
 
 
 class PlainLog(Log):
-
     def __init__(self, master, name, type, logid, decoder):
         super().__init__(master, name, type, logid, decoder)
 
@@ -151,7 +151,6 @@ class PlainLog(Log):
 
 
 class TextLog(PlainLog):
-
     pass
 
 
@@ -159,7 +158,6 @@ Log._byType['t'] = TextLog
 
 
 class HtmlLog(PlainLog):
-
     pass
 
 
@@ -167,7 +165,6 @@ Log._byType['h'] = HtmlLog
 
 
 class StreamLog(Log):
-
     pat = re.compile('^', re.M)
 
     def __init__(self, step, name, type, logid, decoder):

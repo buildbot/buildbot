@@ -1,3 +1,11 @@
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.format]
+preview = true # needed for quote-style
+quote-style = "preserve"
+
 [tool.towncrier]
     package = "buildbot"
     package_dir = "master"

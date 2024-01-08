@@ -40,11 +40,11 @@ BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
 
 class our_install_data(install_data):
-
     def finalize_options(self):
-        self.set_undefined_options('install',
-                                   ('install_lib', 'install_dir'),
-                                   )
+        self.set_undefined_options(
+            'install',
+            ('install_lib', 'install_dir'),
+        )
         install_data.finalize_options(self)
 
     def run(self):
@@ -57,7 +57,6 @@ class our_install_data(install_data):
 
 
 class our_sdist(sdist):
-
     def make_release_tree(self, base_dir, files):
         sdist.make_release_tree(self, base_dir, files)
         # ensure there's a buildbot_worker/VERSION file
@@ -103,19 +102,23 @@ setup_args = {
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
     ],
-
     'packages': [
         "buildbot_worker",
         "buildbot_worker.util",
         "buildbot_worker.commands",
         "buildbot_worker.scripts",
         "buildbot_worker.monkeypatches",
-    ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 40% of the archive)
-        "buildbot_worker.test",
-        "buildbot_worker.test.fake",
-        "buildbot_worker.test.unit",
-        "buildbot_worker.test.util",
-    ]),
+    ]
+    + (
+        []
+        if BUILDING_WHEEL
+        else [  # skip tests for wheels (save 40% of the archive)
+            "buildbot_worker.test",
+            "buildbot_worker.test.fake",
+            "buildbot_worker.test.unit",
+            "buildbot_worker.test.util",
+        ]
+    ),
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot_worker", [])],
@@ -124,16 +127,14 @@ setup_args = {
             'VERSION',
         ]
     },
-    'cmdclass': {
-        'install_data': our_install_data,
-        'sdist': our_sdist
-    },
+    'cmdclass': {'install_data': our_install_data, 'sdist': our_sdist},
     'entry_points': {
         'console_scripts': [
             'buildbot-worker=buildbot_worker.scripts.runner:run',
             # this will also be shipped on non windows :-(
             'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',  # noqa pylint: disable=line-too-long
-        ]}
+        ]
+    },
 }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
@@ -187,7 +188,8 @@ if setuptools is not None:
             'pylint>=1.4.0',
             'pyenchant',
             'flake8~=3.9.0',
-        ] + test_deps,
+        ]
+        + test_deps,
     }
 
     if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:

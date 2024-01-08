@@ -26,16 +26,14 @@ from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
 
 
-class TestPBChangeSource(changesource.ChangeSourceMixin,
-                         pbmanager.PBManagerMixin,
-                         TestReactorMixin,
-                         unittest.TestCase):
-
+class TestPBChangeSource(
+    changesource.ChangeSourceMixin, pbmanager.PBManagerMixin, TestReactorMixin, unittest.TestCase
+):
     DEFAULT_CONFIG = {
         "port": '9999',
         "user": 'alice',
         "passwd": 'sekrit',
-        "name": changesource.ChangeSourceMixin.DEFAULT_NAME
+        "name": changesource.ChangeSourceMixin.DEFAULT_NAME,
     }
 
     EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
@@ -49,20 +47,18 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
         self.master.pbmanager = self.pbmanager
 
     def test_registration_no_workerport(self):
-        return self._test_registration(None, exp_ConfigErrors=True,
-                                       user='alice', passwd='sekrit')
+        return self._test_registration(None, exp_ConfigErrors=True, user='alice', passwd='sekrit')
 
     def test_registration_global_workerport(self):
-        return self._test_registration(self.EXP_DEFAULT_REGISTRATION,
-                                       **self.DEFAULT_CONFIG)
+        return self._test_registration(self.EXP_DEFAULT_REGISTRATION, **self.DEFAULT_CONFIG)
 
     def test_registration_custom_port(self):
-        return self._test_registration(('8888', 'alice', 'sekrit'),
-                                       user='alice', passwd='sekrit', port='8888')
+        return self._test_registration(
+            ('8888', 'alice', 'sekrit'), user='alice', passwd='sekrit', port='8888'
+        )
 
     def test_registration_no_userpass(self):
-        return self._test_registration(('9939', 'change', 'changepw'),
-                                       workerPort='9939')
+        return self._test_registration(('9939', 'change', 'changepw'), workerPort='9939')
 
     def test_registration_no_userpass_no_global(self):
         return self._test_registration(None, exp_ConfigErrors=True)
@@ -86,18 +82,17 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
         self.setChangeSourceToMaster(None)
 
         # not quite enough time to cause it to activate
-        self.changesource.clock.advance(
-            self.changesource.POLL_INTERVAL_SEC * 4 / 5)
+        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
         self.assertNotRegistered()
 
         # there we go!
-        self.changesource.clock.advance(
-            self.changesource.POLL_INTERVAL_SEC * 2 / 5)
+        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks
-    def _test_registration(self, exp_registration, exp_ConfigErrors=False,
-                           workerPort=None, **constr_kwargs):
+    def _test_registration(
+        self, exp_registration, exp_ConfigErrors=False, workerPort=None, **constr_kwargs
+    ):
         cfg = mock.Mock()
         cfg.protocols = {'pb': {'port': workerPort}}
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
@@ -125,8 +120,7 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_perspective(self):
-        yield self.attachChangeSource(
-            pb.PBChangeSource('alice', 'sekrit', port='8888'))
+        yield self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
         persp = self.changesource.getPerspective(mock.Mock(), 'alice')
         self.assertIsInstance(persp, pb.ChangePerspective)
 
@@ -216,7 +210,6 @@ class TestPBChangeSource(changesource.ChangeSourceMixin,
 
 
 class TestChangePerspective(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
@@ -226,139 +219,162 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange({"who": 'bar', "files": ['a']})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'bar',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': ['a'],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': 'bar',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': ['a'],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_codebase(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange({"who": 'bar', "files": [], "codebase": 'cb'})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'bar',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': 'cb',
-            'comments': None,
-            'files': [],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': 'bar',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': 'cb',
+                    'comments': None,
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_prefix(self):
         cp = pb.ChangePerspective(self.master, 'xx/')
-        yield cp.perspective_addChange(
-            {"who": 'bar', "files": ['xx/a', 'yy/b']})
+        yield cp.perspective_addChange({"who": 'bar', "files": ['xx/a', 'yy/b']})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'bar',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': ['a'],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': 'bar',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': ['a'],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_sanitize_None(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(
-            {"project": None, "revlink": None, "repository": None}
-        )
+        yield cp.perspective_addChange({"project": None, "revlink": None, "repository": None})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': None,
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': [],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': None,
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_when_None(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(
-            {"when": None}
-        )
+        yield cp.perspective_addChange({"when": None})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': None,
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': [],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': None,
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_files_tuple(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(
-            {"files": ('a', 'b')}
-        )
+        yield cp.perspective_addChange({"files": ('a', 'b')})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': None,
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': ['a', 'b'],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': None,
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': ['a', 'b'],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_unicode(self):
@@ -366,25 +382,30 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
         yield cp.perspective_addChange({
             "author": "\N{SNOWMAN}",
             "comments": "\N{SNOWMAN}",
-            "files": ['\N{VERY MUCH GREATER-THAN}']
+            "files": ['\N{VERY MUCH GREATER-THAN}'],
         })
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': '\u2603',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': '\u2603',
-            'files': ['\u22d9'],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': '\u2603',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': '\u2603',
+                    'files': ['\u22d9'],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_unicode_as_bytestring(self):
@@ -392,25 +413,30 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
         yield cp.perspective_addChange({
             "author": "\N{SNOWMAN}".encode('utf8'),
             "comments": "\N{SNOWMAN}".encode('utf8'),
-            "files": ['\N{VERY MUCH GREATER-THAN}'.encode('utf8')]
+            "files": ['\N{VERY MUCH GREATER-THAN}'.encode('utf8')],
         })
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': '\u2603',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': '\u2603',
-            'files': ['\u22d9'],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': '\u2603',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': '\u2603',
+                    'files': ['\u22d9'],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_non_utf8_bytestring(self):
@@ -419,63 +445,78 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
         replacement = bogus_utf8.decode('utf8', 'replace')
         yield cp.perspective_addChange({"author": bogus_utf8, "files": ['a']})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': replacement,
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': ['a'],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': replacement,
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': ['a'],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': None,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_addChange_old_param_names(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange({"who": 'me', "when": 1234, "files": []})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'me',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': [],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': None,
-            'when_timestamp': 1234,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': 'me',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': 1234,
+                }
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_createUserObject_git_src(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange({"who": 'c <h@c>', "src": 'git'})
 
-        self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': 'c <h@c>',
-            'committer': None,
-            'branch': None,
-            'category': None,
-            'codebase': None,
-            'comments': None,
-            'files': [],
-            'project': '',
-            'properties': {},
-            'repository': '',
-            'revision': None,
-            'revlink': '',
-            'src': 'git',
-            'when_timestamp': None,
-        }])
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': 'c <h@c>',
+                    'committer': None,
+                    'branch': None,
+                    'category': None,
+                    'codebase': None,
+                    'comments': None,
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': 'git',
+                    'when_timestamp': None,
+                }
+            ],
+        )

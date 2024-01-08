@@ -25,13 +25,11 @@ except ImportError:
 
 
 class InfluxStorageService(StatsStorageBase):
-
     """
     Delegates data to InfluxDB
     """
 
-    def __init__(self, url, port, user, password, db, captures,
-                 name="InfluxStorageService"):
+    def __init__(self, url, port, user, password, db, captures, name="InfluxStorageService"):
         if not InfluxDBClient:
             config.error("Python client for InfluxDB not installed.")
             return
@@ -43,8 +41,7 @@ class InfluxStorageService(StatsStorageBase):
         self.name = name
 
         self.captures = captures
-        self.client = InfluxDBClient(self.url, self.port, self.user,
-                                     self.password, self.db)
+        self.client = InfluxDBClient(self.url, self.port, self.user, self.password, self.db)
         self._inited = True
 
     def thd_postStatsValue(self, post_data, series_name, context=None):
@@ -52,10 +49,7 @@ class InfluxStorageService(StatsStorageBase):
             log.err(f"Service {self.name} not initialized")
             return
 
-        data = {
-            'measurement': series_name,
-            'fields': post_data
-        }
+        data = {'measurement': series_name, 'fields': post_data}
 
         log.msg("Sending data to InfluxDB")
         log.msg(f"post_data: {post_data!r}")

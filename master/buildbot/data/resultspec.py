@@ -21,12 +21,12 @@ from buildbot.data import base
 
 
 class FieldBase:
-
     """
     This class implements a basic behavior
     to wrap value into a `Field` instance
 
     """
+
     __slots__ = ['field', 'op', 'values']
 
     singular_operators = {
@@ -112,7 +112,6 @@ class FieldBase:
 
 
 class Property(FieldBase):
-
     """
     Wraps ``property`` type value(s)
 
@@ -120,7 +119,6 @@ class Property(FieldBase):
 
 
 class Filter(FieldBase):
-
     """
     Wraps ``filter`` type value(s)
 
@@ -133,6 +131,7 @@ class NoneComparator:
     '> None' and '< None' are not supported
     in Python 3.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -168,6 +167,7 @@ class ReverseComparator:
     and instead of a > b, it does b > a.
     This can be used in reverse comparisons.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -185,12 +185,11 @@ class ReverseComparator:
 
 
 class ResultSpec:
+    __slots__ = ['filters', 'fields', 'properties', 'order', 'limit', 'offset', 'fieldMapping']
 
-    __slots__ = ['filters', 'fields', 'properties',
-                 'order', 'limit', 'offset', 'fieldMapping']
-
-    def __init__(self, filters=None, fields=None, properties=None, order=None,
-                 limit=None, offset=None):
+    def __init__(
+        self, filters=None, fields=None, properties=None, order=None, limit=None, offset=None
+    ):
         self.filters = filters or []
         self.properties = properties or []
         self.fields = fields
@@ -200,9 +199,11 @@ class ResultSpec:
         self.fieldMapping = {}
 
     def __repr__(self):
-        return (f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
-                f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
-                f"'offset': {self.offset}" + "})")
+        return (
+            f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
+            f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
+            f"'offset': {self.offset}" + "})"
+        )
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
@@ -255,7 +256,8 @@ class ResultSpec:
                 return int(eqVals[0])
             except ValueError as e:
                 raise ValueError(
-                    f"Filter value for {field} should be integer, but got: {eqVals[0]}") from e
+                    f"Filter value for {field} should be integer, but got: {eqVals[0]}"
+                ) from e
         return None
 
     def removePagination(self):
@@ -325,9 +327,12 @@ class ResultSpec:
         # we cannot limit in sql if there is missing filtering or ordering
         if unmatched_filters or unmatched_order:
             if self.offset is not None or self.limit is not None:
-                log.msg("Warning: limited data api query is not backed by db "
-                        "because of following filters",
-                        unmatched_filters, unmatched_order)
+                log.msg(
+                    "Warning: limited data api query is not backed by db "
+                    "because of following filters",
+                    unmatched_filters,
+                    unmatched_order,
+                )
             self.filters = unmatched_filters
             self.order = tuple(unmatched_order)
             return query, None
@@ -368,8 +373,8 @@ class ResultSpec:
             fields = set(self.fields)
 
             def includeFields(d):
-                return dict((k, v) for k, v in d.items()
-                            if k in fields)
+                return dict((k, v) for k, v in d.items() if k in fields)
+
             applyFields = includeFields
         else:
             fields = None
@@ -386,8 +391,9 @@ class ResultSpec:
             # item collection
             if isinstance(data, base.ListResult):
                 # if pagination was applied, then fields, etc. must be empty
-                assert not fields and not order and not filters, \
-                    "endpoint must apply fields, order, and filters if it performs pagination"
+                assert (
+                    not fields and not order and not filters
+                ), "endpoint must apply fields, order, and filters if it performs pagination"
                 offset = data.offset
                 total = data.total
                 limit = data.limit
@@ -408,6 +414,7 @@ class ResultSpec:
                 total = len(data)
 
             if self.order:
+
                 def keyFunc(elem, order=self.order):
                     """
                     Do a multi-level sort by passing in the keys
@@ -442,10 +449,8 @@ class ResultSpec:
             if self.offset is not None or self.limit is not None:
                 if offset is not None or limit is not None:
                     raise AssertionError("endpoint must clear offset/limit")
-                end = ((self.offset or 0) + self.limit
-                       if self.limit is not None
-                       else None)
-                data = data[self.offset:end]
+                end = (self.offset or 0) + self.limit if self.limit is not None else None
+                data = data[self.offset : end]
                 offset = self.offset
                 limit = self.limit
 
@@ -458,6 +463,5 @@ class ResultSpec:
 
 # a resultSpec which does not implement filtering in python (for tests)
 class OptimisedResultSpec(ResultSpec):
-
     def apply(self, data):
         return data

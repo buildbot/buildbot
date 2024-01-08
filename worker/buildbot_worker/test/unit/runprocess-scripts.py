@@ -34,8 +34,15 @@ def invoke_script(function, *args):
     cmd = [sys.executable, __file__, function] + list(args)
     if os.name == 'nt':
         DETACHED_PROCESS = 0x00000008
-        subprocess.Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True,
-                         creationflags=DETACHED_PROCESS)
+        subprocess.Popen(
+            cmd,
+            shell=False,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            close_fds=True,
+            creationflags=DETACHED_PROCESS,
+        )
     else:
         subprocess.Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
 
@@ -60,6 +67,7 @@ script_fns = {}
 def script(fn):
     script_fns[fn.__name__] = fn
     return fn
+
 
 # scripts
 

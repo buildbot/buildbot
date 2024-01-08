@@ -38,7 +38,6 @@ class FakeMaster:
 
 
 class TestPBManager(unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.pbm = PBManager()
@@ -113,8 +112,7 @@ class TestPBManager(unittest.TestCase):
         disp = self.pbm.dispatchers[portstr]
 
         d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
-        self.assertTrue(d.called,
-            "requestAvatarId should have been called since the lock is free")
+        self.assertTrue(d.called, "requestAvatarId should have been called since the lock is free")
 
         yield reg.unregister()
 
@@ -130,12 +128,12 @@ class TestPBManager(unittest.TestCase):
             yield self.pbm.master.initLock.acquire()
             # try to authenticate while the lock is locked
             d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
-            self.assertFalse(d.called,
-                "requestAvatarId should block until the lock is released")
+            self.assertFalse(d.called, "requestAvatarId should block until the lock is released")
         finally:
             # release the lock, it should allow for auth to proceed
             yield self.pbm.master.initLock.release()
 
-        self.assertTrue(d.called,
-            "requestAvatarId should have been called after the lock was released")
+        self.assertTrue(
+            d.called, "requestAvatarId should have been called after the lock was released"
+        )
         yield reg.unregister()

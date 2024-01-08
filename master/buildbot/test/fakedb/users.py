@@ -26,22 +26,22 @@ class User(Row):
     id_column = 'uid'
 
     def __init__(self, uid=None, identifier='soap', bb_username=None, bb_password=None):
-        super().__init__(uid=uid, identifier=identifier, bb_username=bb_username,
-                         bb_password=bb_password)
+        super().__init__(
+            uid=uid, identifier=identifier, bb_username=bb_username, bb_password=bb_password
+        )
 
 
 class UserInfo(Row):
     table = "users_info"
 
     foreignKeys = ('uid',)
-    required_columns = ('uid', )
+    required_columns = ('uid',)
 
     def __init__(self, uid=None, attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'):
         super().__init__(uid=uid, attr_type=attr_type, attr_data=attr_data)
 
 
 class FakeUsersComponent(FakeDBComponent):
-
     def setUp(self):
         self.users = {}
         self.users_info = {}
@@ -53,25 +53,20 @@ class FakeUsersComponent(FakeDBComponent):
                 self.users[row.uid] = {
                     "identifier": row.identifier,
                     "bb_username": row.bb_username,
-                    "bb_password": row.bb_password
+                    "bb_password": row.bb_password,
                 }
 
             if isinstance(row, UserInfo):
                 assert row.uid in self.users
                 if row.uid not in self.users_info:
                     self.users_info[row.uid] = [
-                        {
-                            "attr_type": row.attr_type,
-                            "attr_data": row.attr_data
-                        }
+                        {"attr_type": row.attr_type, "attr_data": row.attr_data}
                     ]
                 else:
-                    self.users_info[row.uid].append(
-                        {
-                            "attr_type": row.attr_type,
-                            "attr_data": row.attr_data
-                        }
-                    )
+                    self.users_info[row.uid].append({
+                        "attr_type": row.attr_type,
+                        "attr_data": row.attr_data,
+                    })
 
     def _user2dict(self, uid):
         usdict = None
@@ -93,15 +88,12 @@ class FakeUsersComponent(FakeDBComponent):
     def findUserByAttr(self, identifier, attr_type, attr_data):
         for uid, attrs in self.users_info.items():
             for attr in attrs:
-                if (attr_type == attr['attr_type'] and
-                        attr_data == attr['attr_data']):
+                if attr_type == attr['attr_type'] and attr_data == attr['attr_data']:
                     return defer.succeed(uid)
 
         uid = self.nextId()
         self.db.insert_test_data([User(uid=uid, identifier=identifier)])
-        self.db.insert_test_data([UserInfo(uid=uid,
-                                         attr_type=attr_type,
-                                         attr_data=attr_data)])
+        self.db.insert_test_data([UserInfo(uid=uid, attr_type=attr_type, attr_data=attr_data)])
         return defer.succeed(uid)
 
     def getUser(self, uid):
@@ -117,8 +109,15 @@ class FakeUsersComponent(FakeDBComponent):
                 usdict = self._user2dict(uid)
         return defer.succeed(usdict)
 
-    def updateUser(self, uid=None, identifier=None, bb_username=None,
-                   bb_password=None, attr_type=None, attr_data=None):
+    def updateUser(
+        self,
+        uid=None,
+        identifier=None,
+        bb_username=None,
+        bb_password=None,
+        attr_type=None,
+        attr_data=None,
+    ):
         assert uid is not None
 
         if identifier is not None:

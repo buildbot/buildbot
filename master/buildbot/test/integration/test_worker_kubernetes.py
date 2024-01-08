@@ -55,11 +55,13 @@ class KubernetesMaster(RunMasterBase):
         if "TEST_KUBERNETES" not in os.environ:
             raise SkipTest(
                 "kubernetes integration tests only run when environment "
-                "variable TEST_KUBERNETES is set")
+                "variable TEST_KUBERNETES is set"
+            )
         if 'masterFQDN' not in os.environ:
             raise SkipTest(
                 "you need to export masterFQDN. You have example in the test file. "
-                "Make sure that you're spawned worker can callback this IP")
+                "Make sure that you're spawned worker can callback this IP"
+            )
 
     @defer.inlineCallbacks
     def setup_config(self, num_concurrent, extra_steps=None):
@@ -67,23 +69,19 @@ class KubernetesMaster(RunMasterBase):
             extra_steps = []
         c = {}
 
-        c['schedulers'] = [
-            schedulers.ForceScheduler(name="force", builderNames=["testy"])
-        ]
+        c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
         triggereables = []
         for i in range(num_concurrent):
             c['schedulers'].append(
-                schedulers.Triggerable(
-                    name="trigsched" + str(i), builderNames=["build"]))
+                schedulers.Triggerable(name="trigsched" + str(i), builderNames=["build"])
+            )
             triggereables.append("trigsched" + str(i))
 
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='echo hello'))
         f.addStep(
-            steps.Trigger(
-                schedulerNames=triggereables,
-                waitForFinish=True,
-                updateSourceStamp=True))
+            steps.Trigger(schedulerNames=triggereables, waitForFinish=True, updateSourceStamp=True)
+        )
         f.addStep(steps.ShellCommand(command='echo world'))
         f2 = BuildFactory()
         f2.addStep(steps.ShellCommand(command='echo ola'))
@@ -94,7 +92,8 @@ class KubernetesMaster(RunMasterBase):
             BuilderConfig(
                 name="build",
                 workernames=["kubernetes" + str(i) for i in range(num_concurrent)],
-                factory=f2)
+                factory=f2,
+            ),
         ]
         masterFQDN = os.environ.get('masterFQDN')
         c['workers'] = [
@@ -102,8 +101,11 @@ class KubernetesMaster(RunMasterBase):
                 'kubernetes' + str(i),
                 'buildbot/buildbot-worker',
                 kube_config=kubeclientservice.KubeCtlProxyConfigLoader(
-                    namespace=os.getenv("KUBE_NAMESPACE", "default")),
-                masterFQDN=masterFQDN) for i in range(num_concurrent)
+                    namespace=os.getenv("KUBE_NAMESPACE", "default")
+                ),
+                masterFQDN=masterFQDN,
+            )
+            for i in range(num_concurrent)
         ]
         # un comment for debugging what happens if things looks locked.
         # c['www'] = {'port': 8080}
@@ -116,7 +118,7 @@ class KubernetesMaster(RunMasterBase):
         yield self.setup_config(num_concurrent=NUM_CONCURRENT)
         yield self.doForceBuild()
 
-        builds = yield self.master.data.get(("builds", ))
+        builds = yield self.master.data.get(("builds",))
         # if there are some retry, there will be more builds
         self.assertEqual(len(builds), 1 + NUM_CONCURRENT)
         for b in builds:

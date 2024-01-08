@@ -32,6 +32,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
     def __init__(self, compareToRef='master', dataName='diffinfo-master', **kwargs):
         try:
             from unidiff import PatchSet
+
             [PatchSet]  # silence pylint
         except ImportError:
             config.error('unidiff package must be installed in order to use GitDiffInfo')
@@ -58,7 +59,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
             'target_file': file.target_file,
             'is_binary': file.is_binary_file,
             'is_rename': file.is_rename,
-            'hunks': [self._convert_hunk(hunk) for hunk in file]
+            'hunks': [self._convert_hunk(hunk) for hunk in file],
         }
 
     def _convert_patchset(self, patchset):
@@ -67,8 +68,9 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
     @defer.inlineCallbacks
     def run(self):
         command = ['git', 'merge-base', 'HEAD', self._compare_to_ref]
-        cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName='stdio-merge-base',
-                                                collectStdout=True)
+        cmd = yield self.makeRemoteShellCommand(
+            command=command, stdioLogName='stdio-merge-base', collectStdout=True
+        )
 
         yield self.runCommand(cmd)
         log = yield self.getLog("stdio-merge-base")
@@ -91,6 +93,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
             return cmd.results()
 
         from unidiff import PatchSet
+
         patchset = PatchSet(self._observer.getStdout(), metadata_only=True)
 
         data = json.dumps(self._convert_patchset(patchset)).encode('utf-8')

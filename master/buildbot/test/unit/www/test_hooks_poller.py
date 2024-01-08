@@ -29,7 +29,6 @@ from buildbot.www import change_hook
 
 
 class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
-
     # New sources should derive from ReconfigurablePollingChangeSource,
     # but older sources will be using PollingChangeSource.
     # Both must work.
@@ -51,18 +50,19 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def setUpRequest(self, args, options=True, activate=True,
-                     poller_cls=Subclass):
+    def setUpRequest(self, args, options=True, activate=True, poller_cls=Subclass):
         self.request = FakeRequest(args=args)
         self.request.uri = b"/change_hook/poller"
         self.request.method = b"GET"
         www = self.request.site.master.www
-        self.master = master = self.request.site.master = \
-            fakemaster.make_master(self, wantData=True)
+        self.master = master = self.request.site.master = fakemaster.make_master(
+            self, wantData=True
+        )
         master.www = www
         yield self.master.startService()
         self.changeHook = change_hook.ChangeHookResource(
-            dialects={'poller': options}, master=master)
+            dialects={'poller': options}, master=master
+        )
         master.change_svc = ChangeManager()
         yield master.change_svc.setServiceParent(master)
         self.changesrc = poller_cls(21, name=b'example')
@@ -138,10 +138,12 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_trigger_old_poller(self):
-        with assertProducesWarnings(DeprecatedApiWarning, num_warnings=2,
-                                    message_pattern="use ReconfigurablePollingChangeSource"):
-            yield self.setUpRequest({b"poller": [b"example"]},
-                                    poller_cls=self.OldstyleSubclass)
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            num_warnings=2,
+            message_pattern="use ReconfigurablePollingChangeSource",
+        ):
+            yield self.setUpRequest({b"poller": [b"example"]}, poller_cls=self.OldstyleSubclass)
         self.assertEqual(self.request.written, b"no change found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, False)

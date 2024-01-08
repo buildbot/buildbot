@@ -56,8 +56,7 @@ git_describe_flags = [
     # string parameter
     ('match', lambda v: ['--match', v] if v else None),
     # numeric parameter
-    ('abbrev', lambda v: [f'--abbrev={v}']
-     if isTrueOrIsExactlyZero(v) else None),
+    ('abbrev', lambda v: [f'--abbrev={v}'] if isTrueOrIsExactlyZero(v) else None),
     ('candidates', lambda v: [f'--candidates={v}'] if isTrueOrIsExactlyZero(v) else None),
     # optional string parameter
     ('dirty', lambda v: ['--dirty'] if (v is True or v == '') else None),
@@ -66,10 +65,8 @@ git_describe_flags = [
 
 
 class Git(Source, GitStepMixin):
-
     name = 'git'
-    renderables = ["repourl", "reference", "branch",
-                   "codebase", "mode", "method", "origin"]
+    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method", "origin"]
 
     def __init__(
         self,
@@ -92,7 +89,7 @@ class Git(Source, GitStepMixin):
         sshPrivateKey=None,
         sshHostKey=None,
         sshKnownHosts=None,
-        **kwargs
+        **kwargs,
     ):
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
@@ -125,14 +122,21 @@ class Git(Source, GitStepMixin):
         if isinstance(self.mode, str):
             if not self._hasAttrGroupMember('mode', self.mode):
                 bbconfig.error(
-                    f"Git: mode must be {' or '.join(self._listAttrGroupMembers('mode'))}")
+                    f"Git: mode must be {' or '.join(self._listAttrGroupMembers('mode'))}"
+                )
             if isinstance(self.method, str):
-                if self.mode == 'full' and \
-                        self.method not in ['clean', 'fresh', 'clobber', 'copy', None]:
+                if self.mode == 'full' and self.method not in [
+                    'clean',
+                    'fresh',
+                    'clobber',
+                    'copy',
+                    None,
+                ]:
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
                     bbconfig.error(
-                        "Git: in mode 'full' shallow only possible with method 'clobber'.")
+                        "Git: in mode 'full' shallow only possible with method 'clobber'."
+                    )
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
@@ -241,8 +245,7 @@ class Git(Source, GitStepMixin):
     @defer.inlineCallbacks
     def fresh(self):
         clean_command = ['clean', '-f', '-f', '-d', '-x']
-        res = yield self._dovccmd(clean_command,
-                                  abandonOnFailure=False)
+        res = yield self._dovccmd(clean_command, abandonOnFailure=False)
         if res == RC_SUCCESS:
             yield self._fetchOrFallback()
         else:
@@ -256,19 +259,22 @@ class Git(Source, GitStepMixin):
 
     @defer.inlineCallbacks
     def copy(self):
-        yield self.runRmdir(self.workdir, abandonOnFailure=False,
-                            timeout=self.timeout)
+        yield self.runRmdir(self.workdir, abandonOnFailure=False, timeout=self.timeout)
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
 
         try:
             yield self.mode_incremental()
-            cmd = remotecommand.RemoteCommand('cpdir',
-                                              {'fromdir': self.srcdir,
-                                               'todir': old_workdir,
-                                               'logEnviron': self.logEnviron,
-                                               'timeout': self.timeout, })
+            cmd = remotecommand.RemoteCommand(
+                'cpdir',
+                {
+                    'fromdir': self.srcdir,
+                    'todir': old_workdir,
+                    'logEnviron': self.logEnviron,
+                    'timeout': self.timeout,
+                },
+            )
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.didFail():
@@ -327,8 +333,7 @@ class Git(Source, GitStepMixin):
         # If the revision already exists in the repo, we don't need to fetch. However, if tags
         # were requested, then fetch still needs to be performed for the tags.
         if not self.tags and self.revision:
-            rc = yield self._dovccmd(['cat-file', '-e', self.revision],
-                                     abandonOnFailure=False)
+            rc = yield self._dovccmd(['cat-file', '-e', self.revision], abandonOnFailure=False)
             if rc == RC_SUCCESS:
                 fetch_required = False
 
@@ -446,7 +451,7 @@ class Git(Source, GitStepMixin):
     @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
         """Perform full clone and checkout to the revision if specified
-           In the case of shallow clones if any of the step fail abort whole build step.
+        In the case of shallow clones if any of the step fail abort whole build step.
         """
         res = yield self._clone(shallowClone)
         if res != RC_SUCCESS:
@@ -471,7 +476,7 @@ class Git(Source, GitStepMixin):
     @defer.inlineCallbacks
     def _fullCloneOrFallback(self):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
-           is set to True remove the build directory and try a full clone again.
+        is set to True remove the build directory and try a full clone again.
         """
 
         res = yield self._fullClone()
@@ -554,8 +559,7 @@ class Git(Source, GitStepMixin):
 
             return "clone"
 
-        cmd = remotecommand.RemoteCommand('listdir',
-                                          {'dir': self.workdir})
+        cmd = remotecommand.RemoteCommand('listdir', {'dir': self.workdir})
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -572,7 +576,6 @@ class Git(Source, GitStepMixin):
 
 
 class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
-
     description = None
     descriptionDone = None
     descriptionSuffix = None
@@ -580,11 +583,21 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     name = 'gitpush'
     renderables = ['repourl', 'branch']
 
-    def __init__(self, workdir=None, repourl=None, branch=None, force=False,
-                 env=None, timeout=20 * 60, logEnviron=True,
-                 sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
-                 config=None, **kwargs):
-
+    def __init__(
+        self,
+        workdir=None,
+        repourl=None,
+        branch=None,
+        force=False,
+        env=None,
+        timeout=20 * 60,
+        logEnviron=True,
+        sshPrivateKey=None,
+        sshHostKey=None,
+        sshKnownHosts=None,
+        config=None,
+        **kwargs,
+    ):
         self.workdir = workdir
         self.repourl = repourl
         self.branch = branch
@@ -636,7 +649,6 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
 
 class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
-
     description = None
     descriptionDone = None
     descriptionSuffix = None
@@ -644,10 +656,19 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     name = 'gittag'
     renderables = ['repourl', 'tagName', 'messages']
 
-    def __init__(self, workdir=None, tagName=None,
-                 annotated=False, messages=None, force=False, env=None,
-                 timeout=20 * 60, logEnviron=True, config=None, **kwargs):
-
+    def __init__(
+        self,
+        workdir=None,
+        tagName=None,
+        annotated=False,
+        messages=None,
+        force=False,
+        env=None,
+        timeout=20 * 60,
+        logEnviron=True,
+        config=None,
+        **kwargs,
+    ):
         self.workdir = workdir
         self.tagName = tagName
         self.annotated = annotated
@@ -712,7 +733,6 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
 
 class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
-
     description = None
     descriptionDone = None
     descriptionSuffix = None
@@ -720,10 +740,19 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     name = 'gitcommit'
     renderables = ['paths', 'messages']
 
-    def __init__(self, workdir=None, paths=None, messages=None, env=None,
-                 timeout=20 * 60, logEnviron=True, emptyCommits='disallow',
-                 config=None, no_verify=False, **kwargs):
-
+    def __init__(
+        self,
+        workdir=None,
+        paths=None,
+        messages=None,
+        env=None,
+        timeout=20 * 60,
+        logEnviron=True,
+        emptyCommits='disallow',
+        config=None,
+        no_verify=False,
+        **kwargs,
+    ):
         self.workdir = workdir
         self.messages = messages
         self.paths = paths
@@ -757,8 +786,10 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
             bbconfig.error('GitCommit: paths must be a list')
 
         if self.emptyCommits not in ('disallow', 'create-empty-commit', 'ignore'):
-            bbconfig.error('GitCommit: emptyCommits must be one of "disallow", '
-                           '"create-empty-commit" and "ignore"')
+            bbconfig.error(
+                'GitCommit: emptyCommits must be one of "disallow", '
+                '"create-empty-commit" and "ignore"'
+            )
 
     @defer.inlineCallbacks
     def run(self):

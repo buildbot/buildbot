@@ -40,7 +40,6 @@ from buildbot.test.util.properties import ConstantRenderable
 
 
 class FakeSource:
-
     def __init__(self):
         self.branch = None
         self.codebase = ''
@@ -54,14 +53,13 @@ class FakeSource:
             'codebase': self.codebase,
             'project': self.project,
             'repository': self.repository,
-            'revision': self.revision
+            'revision': self.revision,
         }
         return ds
 
 
 @implementer(IRenderable)
 class DeferredRenderable:
-
     def __init__(self):
         self.d = defer.Deferred()
 
@@ -73,7 +71,6 @@ class DeferredRenderable:
 
 
 class TestPropertyMap(unittest.TestCase):
-
     """
     Test the behavior of PropertyMap, using the external interface
     provided by WithProperties.
@@ -202,81 +199,90 @@ class TestPropertyMap(unittest.TestCase):
 
     @defer.inlineCallbacks
     def testClearTempValues(self):
-        yield self.doTestSimpleWithProperties('', '',
-                                            prop_temp=lambda b: 'present')
+        yield self.doTestSimpleWithProperties('', '', prop_temp=lambda b: 'present')
         yield self.doTestSimpleWithProperties('%(prop_temp:+present)s', '')
 
     def testTempValue(self):
-        return self.doTestSimpleWithProperties('%(prop_temp)s', 'present',
-                                               prop_temp=lambda b: 'present')
+        return self.doTestSimpleWithProperties(
+            '%(prop_temp)s', 'present', prop_temp=lambda b: 'present'
+        )
 
     def testTempValueOverrides(self):
-        return self.doTestSimpleWithProperties('%(prop_one)s', 2,
-                                               prop_one=lambda b: 2)
+        return self.doTestSimpleWithProperties('%(prop_one)s', 2, prop_one=lambda b: 2)
 
     def testTempValueColonMinusSet(self):
-        return self.doTestSimpleWithProperties('%(prop_one:-missing)s', 2,
-                                               prop_one=lambda b: 2)
+        return self.doTestSimpleWithProperties('%(prop_one:-missing)s', 2, prop_one=lambda b: 2)
 
     def testTempValueColonMinusUnset(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:-missing)s', 'temp',
-                                               prop_nosuch=lambda b: 'temp')
+        return self.doTestSimpleWithProperties(
+            '%(prop_nosuch:-missing)s', 'temp', prop_nosuch=lambda b: 'temp'
+        )
 
     def testTempValueColonTildeTrueSet(self):
-        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'temp',
-                                               prop_false=lambda b: 'temp')
+        return self.doTestSimpleWithProperties(
+            '%(prop_false:~nontrue)s', 'temp', prop_false=lambda b: 'temp'
+        )
 
     def testTempValueColonTildeTrueUnset(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'temp',
-                                               prop_nosuch=lambda b: 'temp')
+        return self.doTestSimpleWithProperties(
+            '%(prop_nosuch:~nontrue)s', 'temp', prop_nosuch=lambda b: 'temp'
+        )
 
     def testTempValueColonTildeFalseFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'nontrue',
-                                               prop_false=lambda b: False)
+        return self.doTestSimpleWithProperties(
+            '%(prop_false:~nontrue)s', 'nontrue', prop_false=lambda b: False
+        )
 
     def testTempValueColonTildeTrueFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_true:~nontrue)s', True,
-                                               prop_true=lambda b: False)
+        return self.doTestSimpleWithProperties(
+            '%(prop_true:~nontrue)s', True, prop_true=lambda b: False
+        )
 
     def testTempValueColonTildeNoneFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'nontrue',
-                                               prop_nosuch=lambda b: False)
+        return self.doTestSimpleWithProperties(
+            '%(prop_nosuch:~nontrue)s', 'nontrue', prop_nosuch=lambda b: False
+        )
 
     def testTempValueColonTildeFalseZero(self):
-        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'nontrue',
-                                               prop_false=lambda b: 0)
+        return self.doTestSimpleWithProperties(
+            '%(prop_false:~nontrue)s', 'nontrue', prop_false=lambda b: 0
+        )
 
     def testTempValueColonTildeTrueZero(self):
-        return self.doTestSimpleWithProperties('%(prop_true:~nontrue)s', True,
-                                               prop_true=lambda b: 0)
+        return self.doTestSimpleWithProperties(
+            '%(prop_true:~nontrue)s', True, prop_true=lambda b: 0
+        )
 
     def testTempValueColonTildeNoneZero(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'nontrue',
-                                               prop_nosuch=lambda b: 0)
+        return self.doTestSimpleWithProperties(
+            '%(prop_nosuch:~nontrue)s', 'nontrue', prop_nosuch=lambda b: 0
+        )
 
     def testTempValueColonTildeFalseBlank(self):
-        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'nontrue',
-                                               prop_false=lambda b: '')
+        return self.doTestSimpleWithProperties(
+            '%(prop_false:~nontrue)s', 'nontrue', prop_false=lambda b: ''
+        )
 
     def testTempValueColonTildeTrueBlank(self):
-        return self.doTestSimpleWithProperties('%(prop_true:~nontrue)s', True,
-                                               prop_true=lambda b: '')
+        return self.doTestSimpleWithProperties(
+            '%(prop_true:~nontrue)s', True, prop_true=lambda b: ''
+        )
 
     def testTempValueColonTildeNoneBlank(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'nontrue',
-                                               prop_nosuch=lambda b: '')
+        return self.doTestSimpleWithProperties(
+            '%(prop_nosuch:~nontrue)s', 'nontrue', prop_nosuch=lambda b: ''
+        )
 
     def testTempValuePlusSetSet(self):
-        return self.doTestSimpleWithProperties('%(prop_one:+set)s', 'set',
-                                               prop_one=lambda b: 2)
+        return self.doTestSimpleWithProperties('%(prop_one:+set)s', 'set', prop_one=lambda b: 2)
 
     def testTempValuePlusUnsetSet(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:+set)s', 'set',
-                                               prop_nosuch=lambda b: 1)
+        return self.doTestSimpleWithProperties(
+            '%(prop_nosuch:+set)s', 'set', prop_nosuch=lambda b: 1
+        )
 
 
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
-
     """
     Test that Interpolate reports errors in the interpolation string
     at configure time.
@@ -287,68 +293,71 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
             Interpolate("%s %(foo)s", 1, foo=2)
 
     def test_invalid_selector(self):
-        with self.assertRaisesConfigError(
-                "invalid Interpolate selector 'garbage'"):
+        with self.assertRaisesConfigError("invalid Interpolate selector 'garbage'"):
             Interpolate("%(garbage:test)s")
 
     def test_no_selector(self):
         with self.assertRaisesConfigError(
-                "invalid Interpolate substitution without selector 'garbage'"):
+            "invalid Interpolate substitution without selector 'garbage'"
+        ):
             Interpolate("%(garbage)s")
 
     def test_invalid_default_type(self):
-        with self.assertRaisesConfigError(
-                "invalid Interpolate default type '@'"):
+        with self.assertRaisesConfigError("invalid Interpolate default type '@'"):
             Interpolate("%(prop:some_prop:@wacky)s")
 
     def test_nested_invalid_selector(self):
-        with self.assertRaisesConfigError(
-                "invalid Interpolate selector 'garbage'"):
+        with self.assertRaisesConfigError("invalid Interpolate selector 'garbage'"):
             Interpolate("%(prop:some_prop:~%(garbage:test)s)s")
 
     def test_colon_ternary_missing_delimeter(self):
         with self.assertRaisesConfigError(
-                "invalid Interpolate ternary expression 'one' with delimiter ':'"):
+            "invalid Interpolate ternary expression 'one' with delimiter ':'"
+        ):
             Interpolate("echo '%(prop:P:?:one)s'")
 
     def test_colon_ternary_paren_delimiter(self):
         with self.assertRaisesConfigError(
-                "invalid Interpolate ternary expression 'one(:)' with delimiter ':'"):
+            "invalid Interpolate ternary expression 'one(:)' with delimiter ':'"
+        ):
             Interpolate("echo '%(prop:P:?:one(:))s'")
 
     def test_colon_ternary_hash_bad_delimeter(self):
         with self.assertRaisesConfigError(
-                "invalid Interpolate ternary expression 'one' with delimiter '|'"):
+            "invalid Interpolate ternary expression 'one' with delimiter '|'"
+        ):
             Interpolate("echo '%(prop:P:#?|one)s'")
 
     def test_prop_invalid_character(self):
         with self.assertRaisesConfigError(
-                "Property name must be alphanumeric for prop Interpolation 'a+a'"):
+            "Property name must be alphanumeric for prop Interpolation 'a+a'"
+        ):
             Interpolate("echo '%(prop:a+a)s'")
 
     def test_kw_invalid_character(self):
         with self.assertRaisesConfigError(
-                "Keyword must be alphanumeric for kw Interpolation 'a+a'"):
+            "Keyword must be alphanumeric for kw Interpolation 'a+a'"
+        ):
             Interpolate("echo '%(kw:a+a)s'")
 
     def test_src_codebase_invalid_character(self):
         with self.assertRaisesConfigError(
-                "Codebase must be alphanumeric for src Interpolation 'a+a:a'"):
+            "Codebase must be alphanumeric for src Interpolation 'a+a:a'"
+        ):
             Interpolate("echo '%(src:a+a:a)s'")
 
     def test_src_attr_invalid_character(self):
         with self.assertRaisesConfigError(
-                "Attribute must be alphanumeric for src Interpolation 'a:a+a'"):
+            "Attribute must be alphanumeric for src Interpolation 'a:a+a'"
+        ):
             Interpolate("echo '%(src:a:a+a)s'")
 
     def test_src_missing_attr(self):
-        with self.assertRaisesConfigError(
-                "Must specify both codebase and attr"):
+        with self.assertRaisesConfigError("Must specify both codebase and attr"):
             Interpolate("echo '%(src:a)s'")
 
 
 class TestInterpolatePositional(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -369,8 +378,7 @@ class TestInterpolatePositional(unittest.TestCase):
         renderable = DeferredRenderable()
         command = Interpolate("echo '%s'", renderable)
         d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "echo 'red fish'")
+        d.addCallback(self.assertEqual, "echo 'red fish'")
         renderable.callback("red fish")
         return d
 
@@ -383,7 +391,6 @@ class TestInterpolatePositional(unittest.TestCase):
 
 
 class TestInterpolateProperties(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -420,8 +427,7 @@ class TestInterpolateProperties(unittest.TestCase):
         # that they didn't have a ``hasKey`` value
         # see http://trac.buildbot.net/ticket/3505
         self.props.setProperty("buildername", "linux4", "test")
-        command = deepcopy(
-            Interpolate("echo buildby-%(prop:buildername:-blddef)s"))
+        command = deepcopy(Interpolate("echo buildby-%(prop:buildername:-blddef)s"))
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo buildby-linux4")
 
@@ -510,7 +516,8 @@ class TestInterpolateProperties(unittest.TestCase):
         self.props.setProperty("one", "proj1", "test")
         self.props.setProperty("two", "proj2", "test")
         command = Interpolate(
-            "echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+            "echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'"
+        )
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'true'")
 
@@ -519,13 +526,13 @@ class TestInterpolateProperties(unittest.TestCase):
         self.props.setProperty("one", "proj1", "test")
         self.props.setProperty("two", "proj2", "test")
         command = Interpolate(
-            "echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+            "echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'"
+        )
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'false'")
 
 
 class TestInterpolateSrc(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -556,8 +563,7 @@ class TestInterpolateSrc(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_src_src(self):
-        command = Interpolate(
-            "echo %(src:cbB:repository)s %(src:cbB:project)s")
+        command = Interpolate("echo %(src:cbB:repository)s %(src:cbB:project)s")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://B.. Project")
 
@@ -605,8 +611,7 @@ class TestInterpolateSrc(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_src_colon_minus_codebase_notfound(self):
-        command = Interpolate(
-            "echo '%(src:unknown_codebase:project:-noproject)s'")
+        command = Interpolate("echo '%(src:unknown_codebase:project:-noproject)s'")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'noproject'")
 
@@ -624,21 +629,18 @@ class TestInterpolateSrc(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_src_colon_tilde_false_src_as_replacement(self):
-        command = Interpolate(
-            "echo '%(src:cbC:project:~%(src:cbA:project)s)s'")
+        command = Interpolate("echo '%(src:cbC:project:~%(src:cbA:project)s)s'")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'Project'")
 
     @defer.inlineCallbacks
     def test_src_colon_tilde_codebase_notfound(self):
-        command = Interpolate(
-            "echo '%(src:unknown_codebase:project:~noproject)s'")
+        command = Interpolate("echo '%(src:unknown_codebase:project:~noproject)s'")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'noproject'")
 
 
 class TestInterpolateKwargs(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -658,8 +660,9 @@ class TestInterpolateKwargs(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_kwarg_kwarg(self):
-        command = Interpolate("echo %(kw:repository)s %(kw:branch)s",
-                              repository="cvs://A..", branch="default")
+        command = Interpolate(
+            "echo %(kw:repository)s %(kw:branch)s", repository="cvs://A..", branch="default"
+        )
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://A.. default")
 
@@ -677,64 +680,55 @@ class TestInterpolateKwargs(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_kwarg_colon_minus_not_available_default(self):
-        command = Interpolate(
-            "echo %(kw:repository:-cvs://A..)s", project="projectA")
+        command = Interpolate("echo %(kw:repository:-cvs://A..)s", project="projectA")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://A..")
 
     @defer.inlineCallbacks
     def test_kwarg_colon_minus_available(self):
-        command = Interpolate(
-            "echo %(kw:repository:-cvs://A..)s", repository="cvs://B..")
+        command = Interpolate("echo %(kw:repository:-cvs://A..)s", repository="cvs://B..")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://B..")
 
     @defer.inlineCallbacks
     def test_kwarg_colon_tilde_true(self):
-        command = Interpolate(
-            "echo %(kw:repository:~cvs://B..)s", repository="cvs://A..")
+        command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository="cvs://A..")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://A..")
 
     @defer.inlineCallbacks
     def test_kwarg_colon_tilde_false(self):
-        command = Interpolate(
-            "echo %(kw:repository:~cvs://B..)s", repository="")
+        command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository="")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://B..")
 
     @defer.inlineCallbacks
     def test_kwarg_colon_tilde_none(self):
-        command = Interpolate(
-            "echo %(kw:repository:~cvs://B..)s", repository=None)
+        command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository=None)
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://B..")
 
     @defer.inlineCallbacks
     def test_kwarg_colon_plus_false(self):
-        command = Interpolate(
-            "echo %(kw:repository:+cvs://B..)s", project="project")
+        command = Interpolate("echo %(kw:repository:+cvs://B..)s", project="project")
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo ")
 
     @defer.inlineCallbacks
     def test_kwarg_colon_plus_true(self):
-        command = Interpolate(
-            "echo %(kw:repository:+cvs://B..)s", repository=None)
+        command = Interpolate("echo %(kw:repository:+cvs://B..)s", repository=None)
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo cvs://B..")
 
     @defer.inlineCallbacks
     def test_kwargs_colon_minus_false_src_as_replacement(self):
-        command = Interpolate(
-            "echo '%(kw:text:-%(src:cbA:branch)s)s'", notext='ddd')
+        command = Interpolate("echo '%(kw:text:-%(src:cbA:branch)s)s'", notext='ddd')
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'default'")
 
     @defer.inlineCallbacks
     def test_kwargs_renderable(self):
-        command = Interpolate(
-            "echo '%(kw:test)s'", test=ConstantRenderable('testing'))
+        command = Interpolate("echo '%(kw:test)s'", test=ConstantRenderable('testing'))
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo 'testing'")
 
@@ -742,31 +736,28 @@ class TestInterpolateKwargs(unittest.TestCase):
         renderable = DeferredRenderable()
         command = Interpolate("echo '%(kw:test)s'", test=renderable)
         d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "echo 'testing'")
+        d.addCallback(self.assertEqual, "echo 'testing'")
         renderable.callback('testing')
 
     def test_kwarg_deferred(self):
         renderable = DeferredRenderable()
         command = Interpolate("echo '%(kw:project)s'", project=renderable)
         d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "echo 'testing'")
+        d.addCallback(self.assertEqual, "echo 'testing'")
         renderable.callback('testing')
 
     def test_nested_kwarg_deferred(self):
         renderable = DeferredRenderable()
         command = Interpolate(
-            "echo '%(kw:missing:~%(kw:fishy)s)s'", missing=renderable, fishy="so long!")
+            "echo '%(kw:missing:~%(kw:fishy)s)s'", missing=renderable, fishy="so long!"
+        )
         d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "echo 'so long!'")
+        d.addCallback(self.assertEqual, "echo 'so long!'")
         renderable.callback(False)
         return d
 
 
 class TestWithProperties(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -795,8 +786,7 @@ class TestWithProperties(unittest.TestCase):
     def testDictColonMinus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
-        command = WithProperties(
-            "build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
+        command = WithProperties("build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
         res = yield self.build.render(command)
         self.assertEqual(res, "build-foo-empty.tar.gz")
 
@@ -804,8 +794,7 @@ class TestWithProperties(unittest.TestCase):
     def testDictColonPlus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
-        command = WithProperties(
-            "build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
+        command = WithProperties("build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
         res = yield self.build.render(command)
         self.assertEqual(res, "build-exists-.tar.gz")
 
@@ -821,8 +810,7 @@ class TestWithProperties(unittest.TestCase):
     def testRecursiveList(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
-        command = [WithProperties("%(x)s %(y)s"), "and",
-                   WithProperties("%(y)s %(x)s")]
+        command = [WithProperties("%(x)s %(y)s"), "and", WithProperties("%(y)s %(x)s")]
         res = yield self.build.render(command)
         self.assertEqual(res, ["10 20", "and", "20 10"])
 
@@ -830,8 +818,7 @@ class TestWithProperties(unittest.TestCase):
     def testRecursiveTuple(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
-        command = (WithProperties("%(x)s %(y)s"), "and",
-                   WithProperties("%(y)s %(x)s"))
+        command = (WithProperties("%(x)s %(y)s"), "and", WithProperties("%(y)s %(x)s"))
         res = yield self.build.render(command)
         self.assertEqual(res, ("10 20", "and", "20 10"))
 
@@ -839,8 +826,7 @@ class TestWithProperties(unittest.TestCase):
     def testRecursiveDict(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
-        command = {WithProperties("%(x)s %(y)s"):
-                   WithProperties("%(y)s %(x)s")}
+        command = {WithProperties("%(x)s %(y)s"): WithProperties("%(y)s %(x)s")}
         res = yield self.build.render(command)
         self.assertEqual(res, {"10 20": "20 10"})
 
@@ -852,8 +838,7 @@ class TestWithProperties(unittest.TestCase):
 
     @defer.inlineCallbacks
     def testLambdaHasattr(self):
-        command = WithProperties('%(foo)s',
-                                 foo=lambda b: b.hasProperty('x') and 'x' or 'y')
+        command = WithProperties('%(foo)s', foo=lambda b: b.hasProperty('x') and 'x' or 'y')
         res = yield self.build.render(command)
         self.assertEqual(res, 'y')
 
@@ -873,7 +858,8 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty('x', 10, 'test')
         self.props.setProperty('y', 20, 'test')
         command = WithProperties(
-            '%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
+            '%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y')
+        )
         res = yield self.build.render(command)
         self.assertEqual(res, '30')
 
@@ -898,7 +884,6 @@ class TestWithProperties(unittest.TestCase):
 
 
 class TestProperties(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
 
@@ -921,17 +906,21 @@ class TestProperties(unittest.TestCase):
         self.props.setProperty("happiness", 7, "builder")
         self.props.setProperty("flames", True, "tester")
 
-        self.assertEqual(sorted(self.props.asList()),
-                         [('flames', True, 'tester'), ('happiness', 7, 'builder')])
+        self.assertEqual(
+            sorted(self.props.asList()), [('flames', True, 'tester'), ('happiness', 7, 'builder')]
+        )
 
     def testAsDict(self):
         self.props.setProperty("msi_filename", "product.msi", 'packager')
         self.props.setProperty("dmg_filename", "product.dmg", 'packager')
 
-        self.assertEqual(self.props.asDict(), {
-            "msi_filename": ('product.msi', 'packager'),
-            "dmg_filename": ('product.dmg', 'packager')
-        })
+        self.assertEqual(
+            self.props.asDict(),
+            {
+                "msi_filename": ('product.msi', 'packager'),
+                "dmg_filename": ('product.dmg', 'packager'),
+            },
+        )
 
     def testUpdate(self):
         self.props.setProperty("x", 24, "old")
@@ -1066,9 +1055,9 @@ class TestProperties(unittest.TestCase):
     def test_render(self):
         @implementer(IRenderable)
         class Renderable:
-
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'
+
         self.props.setProperty('x', 'y', 'test')
         res = yield self.props.render(Renderable())
         self.assertEqual(res, 'yz')
@@ -1082,7 +1071,6 @@ class MyPropertiesThing(PropertiesMixin):
 
 
 class TestPropertiesMixin(unittest.TestCase):
-
     def setUp(self):
         self.mp = MyPropertiesThing()
         self.mp.properties = mock.Mock()
@@ -1108,14 +1096,12 @@ class TestPropertiesMixin(unittest.TestCase):
 
     def test_setProperty(self):
         self.mp.setProperty('abc', 'def', 'src')
-        self.mp.properties.setProperty.assert_called_with('abc', 'def', 'src',
-                                                          runtime=True)
+        self.mp.properties.setProperty.assert_called_with('abc', 'def', 'src', runtime=True)
 
     def test_setProperty_no_source(self):
         # this compatibility is maintained for old code
         self.mp.setProperty('abc', 'def')
-        self.mp.properties.setProperty.assert_called_with('abc', 'def',
-                                                          'Unknown', runtime=True)
+        self.mp.properties.setProperty.assert_called_with('abc', 'def', 'Unknown', runtime=True)
 
     def test_render(self):
         self.mp.render([1, 2])
@@ -1123,7 +1109,6 @@ class TestPropertiesMixin(unittest.TestCase):
 
 
 class TestProperty(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -1161,8 +1146,7 @@ class TestProperty(unittest.TestCase):
     @defer.inlineCallbacks
     def testDefaultValueNested(self):
         self.props.setProperty("xxx", 'yyy', "scheduler")
-        value = Property("do-tests",
-                         default=WithProperties("a-%(xxx)s-b"))
+        value = Property("do-tests", default=WithProperties("a-%(xxx)s-b"))
 
         res = yield self.build.render(value)
         self.assertEqual(res, "a-yyy-b")
@@ -1182,10 +1166,12 @@ class TestProperty(unittest.TestCase):
         self.props.setProperty("do-tests-list", [], "scheduler")
         self.props.setProperty("do-tests-None", None, "scheduler")
 
-        value = [Property("do-tests-string", default="Hello!"),
-                 Property("do-tests-int", default="Hello!"),
-                 Property("do-tests-list", default="Hello!"),
-                 Property("do-tests-None", default="Hello!")]
+        value = [
+            Property("do-tests-string", default="Hello!"),
+            Property("do-tests-int", default="Hello!"),
+            Property("do-tests-list", default="Hello!"),
+            Property("do-tests-None", default="Hello!"),
+        ]
 
         res = yield self.build.render(value)
         self.assertEqual(res, ["Hello!"] * 4)
@@ -1197,12 +1183,12 @@ class TestProperty(unittest.TestCase):
         self.props.setProperty("do-tests-list", [], "scheduler")
         self.props.setProperty("do-tests-None", None, "scheduler")
 
-        value = [Property("do-tests-string", default="Hello!", defaultWhenFalse=False),
-                 Property(
-                     "do-tests-int", default="Hello!", defaultWhenFalse=False),
-                 Property(
-                     "do-tests-list", default="Hello!", defaultWhenFalse=False),
-                 Property("do-tests-None", default="Hello!", defaultWhenFalse=False)]
+        value = [
+            Property("do-tests-string", default="Hello!", defaultWhenFalse=False),
+            Property("do-tests-int", default="Hello!", defaultWhenFalse=False),
+            Property("do-tests-list", default="Hello!", defaultWhenFalse=False),
+            Property("do-tests-None", default="Hello!", defaultWhenFalse=False),
+        ]
 
         res = yield self.build.render(value)
         self.assertEqual(res, ["", 0, [], None])
@@ -1211,8 +1197,7 @@ class TestProperty(unittest.TestCase):
         default = DeferredRenderable()
         value = Property("no-such-property", default)
         d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      "default-value")
+        d.addCallback(self.assertEqual, "default-value")
         default.callback("default-value")
         return d
 
@@ -1353,7 +1338,6 @@ class TestProperty(unittest.TestCase):
 
 
 class TestRenderableAdapters(unittest.TestCase):
-
     """
     Tests for list, tuple and dict renderers.
     """
@@ -1366,8 +1350,7 @@ class TestRenderableAdapters(unittest.TestCase):
         r1 = DeferredRenderable()
         r2 = DeferredRenderable()
         d = self.build.render([r1, r2])
-        d.addCallback(self.assertEqual,
-                      ["lispy", "lists"])
+        d.addCallback(self.assertEqual, ["lispy", "lists"])
         r2.callback("lists")
         r1.callback("lispy")
         return d
@@ -1376,8 +1359,7 @@ class TestRenderableAdapters(unittest.TestCase):
         r1 = DeferredRenderable()
         r2 = DeferredRenderable()
         d = self.build.render((r1, r2))
-        d.addCallback(self.assertEqual,
-                      ("totally", "tupled"))
+        d.addCallback(self.assertEqual, ("totally", "tupled"))
         r2.callback("tupled")
         r1.callback("totally")
         return d
@@ -1388,8 +1370,7 @@ class TestRenderableAdapters(unittest.TestCase):
         k1 = DeferredRenderable()
         k2 = DeferredRenderable()
         d = self.build.render({k1: r1, k2: r2})
-        d.addCallback(self.assertEqual,
-                      {"lock": "load", "dict": "lookup"})
+        d.addCallback(self.assertEqual, {"lock": "load", "dict": "lookup"})
         k1.callback("lock")
         r1.callback("load")
         k2.callback("dict")
@@ -1398,7 +1379,6 @@ class TestRenderableAdapters(unittest.TestCase):
 
 
 class Renderer(unittest.TestCase):
-
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
@@ -1447,7 +1427,6 @@ class Renderer(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_renderer_fails(self):
-
         @defer.inlineCallbacks
         def rend(p):
             raise RuntimeError("oops")
@@ -1469,6 +1448,7 @@ class Renderer(unittest.TestCase):
         @renderer
         def myrend(p):
             pass
+
         self.assertIn('renderer(', repr(myrend))
         # py3 and py2 do not have the same way of repr functions
         # but they always contain the name of function
@@ -1506,7 +1486,8 @@ class Renderer(unittest.TestCase):
             return f"x-{p.getProperty('x')}-{arg}-{kwarg}"
 
         res = yield self.build.render(
-            renderer(rend).withArgs(Property('arg'), kwarg=Property('kw')))
+            renderer(rend).withArgs(Property('arg'), kwarg=Property('kw'))
+        )
         self.assertEqual('x-X-ARG-KW', res)
 
     @defer.inlineCallbacks
@@ -1562,8 +1543,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty("x", "X", "test")
 
         def rend(p, arg, kwarg='y'):
-            return Interpolate('x-%(prop:x)s-%(kw:arg)s-%(kw:kwarg)s',
-                    arg=arg, kwarg=kwarg)
+            return Interpolate('x-%(prop:x)s-%(kw:arg)s-%(kw:kwarg)s', arg=arg, kwarg=kwarg)
 
         res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
         self.assertEqual('x-X-a-kw', res)
@@ -1589,154 +1569,147 @@ class Renderer(unittest.TestCase):
 
 
 class Compare(unittest.TestCase):
-
     def test_WithProperties_lambda(self):
-        self.assertNotEqual(WithProperties("%(key)s", key=lambda p: 'val'), WithProperties(
-            "%(key)s", key=lambda p: 'val'))
+        self.assertNotEqual(
+            WithProperties("%(key)s", key=lambda p: 'val'),
+            WithProperties("%(key)s", key=lambda p: 'val'),
+        )
 
         def rend(p):
             return "val"
-        self.assertEqual(
-            WithProperties("%(key)s", key=rend),
-            WithProperties("%(key)s", key=rend))
+
+        self.assertEqual(WithProperties("%(key)s", key=rend), WithProperties("%(key)s", key=rend))
         self.assertNotEqual(
-            WithProperties("%(key)s", key=rend),
-            WithProperties("%(key)s", otherkey=rend))
+            WithProperties("%(key)s", key=rend), WithProperties("%(key)s", otherkey=rend)
+        )
 
     def test_WithProperties_positional(self):
-        self.assertNotEqual(
-            WithProperties("%s", 'key'),
-            WithProperties("%s", 'otherkey'))
-        self.assertEqual(
-            WithProperties("%s", 'key'),
-            WithProperties("%s", 'key'))
-        self.assertNotEqual(
-            WithProperties("%s", 'key'),
-            WithProperties("k%s", 'key'))
+        self.assertNotEqual(WithProperties("%s", 'key'), WithProperties("%s", 'otherkey'))
+        self.assertEqual(WithProperties("%s", 'key'), WithProperties("%s", 'key'))
+        self.assertNotEqual(WithProperties("%s", 'key'), WithProperties("k%s", 'key'))
 
     def test_Interpolate_constant(self):
-        self.assertNotEqual(
-            Interpolate('some text here'),
-            Interpolate('and other text there'))
-        self.assertEqual(
-            Interpolate('some text here'),
-            Interpolate('some text here'))
+        self.assertNotEqual(Interpolate('some text here'), Interpolate('and other text there'))
+        self.assertEqual(Interpolate('some text here'), Interpolate('some text here'))
 
     def test_Interpolate_positional(self):
         self.assertNotEqual(
-            Interpolate('%s %s', "test", "text"),
-            Interpolate('%s %s', "other", "text"))
-        self.assertEqual(
-            Interpolate('%s %s', "test", "text"),
-            Interpolate('%s %s', "test", "text"))
+            Interpolate('%s %s', "test", "text"), Interpolate('%s %s', "other", "text")
+        )
+        self.assertEqual(Interpolate('%s %s', "test", "text"), Interpolate('%s %s', "test", "text"))
 
     def test_Interpolate_kwarg(self):
         self.assertNotEqual(
             Interpolate("%(kw:test)s", test=object(), other=2),
-            Interpolate("%(kw:test)s", test=object(), other=2))
+            Interpolate("%(kw:test)s", test=object(), other=2),
+        )
         self.assertEqual(
             Interpolate('testing: %(kw:test)s', test="test", other=3),
-            Interpolate('testing: %(kw:test)s', test="test", other=3))
+            Interpolate('testing: %(kw:test)s', test="test", other=3),
+        )
 
     def test_Interpolate_worker(self):
         self.assertEqual(
-            Interpolate('testing: %(worker:test)s'),
-            Interpolate('testing: %(worker:test)s'))
+            Interpolate('testing: %(worker:test)s'), Interpolate('testing: %(worker:test)s')
+        )
 
     def test_renderer(self):
-        self.assertNotEqual(
-            renderer(lambda p: 'val'),
-            renderer(lambda p: 'val'))
+        self.assertNotEqual(renderer(lambda p: 'val'), renderer(lambda p: 'val'))
 
         def rend(p):
             return "val"
-        self.assertEqual(
-            renderer(rend),
-            renderer(rend))
+
+        self.assertEqual(renderer(rend), renderer(rend))
 
     def test_Lookup_simple(self):
         self.assertNotEqual(
-            _Lookup({'test': 5, 'other': 6}, 'other'),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'other'), _Lookup({'test': 5, 'other': 6}, 'test')
+        )
         self.assertEqual(
-            _Lookup({'test': 5, 'other': 6}, 'test'),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'), _Lookup({'test': 5, 'other': 6}, 'test')
+        )
 
     def test_Lookup_default(self):
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'),
+        )
         self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
-            _Lookup({'test': 5, 'other': 6}, 'test', default='default'))
+            _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
+        )
 
     def test_Lookup_defaultWhenFalse(self):
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=False),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'),
+        )
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=False),
-            _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
+            _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True),
+        )
         self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True),
-            _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
+            _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True),
+        )
         self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test'),
-            _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
+            _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True),
+        )
 
     def test_Lookup_hasKey(self):
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey=None),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'),
+        )
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'),
+        )
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
-            _Lookup({'test': 5, 'other': 6}, 'test', hasKey='other-key'))
+            _Lookup({'test': 5, 'other': 6}, 'test', hasKey='other-key'),
+        )
         self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
-            _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'))
+            _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
+        )
 
     def test_Lookup_elideNoneAs(self):
         self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=None),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'),
+        )
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''),
-            _Lookup({'test': 5, 'other': 6}, 'test'))
+            _Lookup({'test': 5, 'other': 6}, 'test'),
+        )
         self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
-            _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''))
+            _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''),
+        )
         self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
-            _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'))
+            _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
+        )
 
     def test_Lazy(self):
-        self.assertNotEqual(
-            _Lazy(5),
-            _Lazy(6))
-        self.assertEqual(
-            _Lazy(5),
-            _Lazy(5))
+        self.assertNotEqual(_Lazy(5), _Lazy(6))
+        self.assertEqual(_Lazy(5), _Lazy(5))
 
     def test_SourceStampDict(self):
-        self.assertNotEqual(
-            _SourceStampDict('binary'),
-            _SourceStampDict('library'))
-        self.assertEqual(
-            _SourceStampDict('binary'),
-            _SourceStampDict('binary'))
+        self.assertNotEqual(_SourceStampDict('binary'), _SourceStampDict('library'))
+        self.assertEqual(_SourceStampDict('binary'), _SourceStampDict('binary'))
 
 
 class TestTransform(unittest.TestCase, ConfigErrorsMixin):
-
     def setUp(self):
         self.props = Properties(propname='propvalue')
 
     def test_invalid_first_arg(self):
         with self.assertRaisesConfigError(
-                "function given to Transform neither callable nor renderable"):
+            "function given to Transform neither callable nor renderable"
+        ):
             Transform(None)
 
     @defer.inlineCallbacks
@@ -1757,15 +1730,13 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
 
     @defer.inlineCallbacks
     def test_args(self):
-        t = Transform(lambda x, y: x + '|' + y,
-                      'abc', Property('propname'))
+        t = Transform(lambda x, y: x + '|' + y, 'abc', Property('propname'))
         res = yield self.props.render(t)
         self.assertEqual(res, 'abc|propvalue')
 
     @defer.inlineCallbacks
     def test_kwargs(self):
-        t = Transform(lambda x, y: x + '|' + y,
-                      x='abc', y=Property('propname'))
+        t = Transform(lambda x, y: x + '|' + y, x='abc', y=Property('propname'))
         res = yield self.props.render(t)
         self.assertEqual(res, 'abc|propvalue')
 

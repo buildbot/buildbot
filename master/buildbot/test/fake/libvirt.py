@@ -15,7 +15,6 @@
 
 
 class Domain:
-
     def __init__(self, name, conn, libvirt_id):
         self.conn = conn
         self._name = name
@@ -44,7 +43,6 @@ class Domain:
 
 
 class Connection:
-
     def __init__(self, uri):
         self.uri = uri
         self.domains = {}

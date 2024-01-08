@@ -26,6 +26,7 @@ class SecretManager(service.BuildbotServiceManager):
     """
     Secret manager
     """
+
     name = 'secrets'
     config_attr = "secretsProviders"
 

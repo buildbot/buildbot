@@ -78,10 +78,10 @@ class AutoLoginPBFactory(PBClientFactory):
         self._client = client
 
     def doLogin(self, root, broker):
-        d = self._cbSendUsername(root, self._credentials.username,
-                                 self._credentials.password, self._client)
-        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
-                       errbackArgs=(broker,))
+        d = self._cbSendUsername(
+            root, self._credentials.username, self._credentials.password, self._client
+        )
+        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective, errbackArgs=(broker,))
         return d
 
     def stopFactory(self):

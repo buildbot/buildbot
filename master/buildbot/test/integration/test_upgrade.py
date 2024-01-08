@@ -40,7 +40,6 @@ from buildbot.test.util import querylog
 
 
 class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
-
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
 
@@ -72,7 +71,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             tarball = util.sibpath(__file__, self.source_tarball)
             if not os.path.exists(tarball):
                 raise unittest.SkipTest(
-                    f"'{tarball}' not found (normal when not building from Git)")
+                    f"'{tarball}' not found (normal when not building from Git)"
+                )
 
             with tarfile.open(tarball) as tf:
                 prefixes = set()
@@ -137,45 +137,49 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             # unique, name, column_names
             diff = []
             for tbl in self.db.model.metadata.sorted_tables:
-                exp = sorted([
-                    {
-                        "name": idx.name,
-                        "unique": idx.unique and 1 or 0,
-                        "column_names": sorted([c.name for c in idx.columns])
-                    }
-                    for idx in tbl.indexes
-                ], key=lambda x: x['name']
-            )
+                exp = sorted(
+                    [
+                        {
+                            "name": idx.name,
+                            "unique": idx.unique and 1 or 0,
+                            "column_names": sorted([c.name for c in idx.columns]),
+                        }
+                        for idx in tbl.indexes
+                    ],
+                    key=lambda x: x['name'],
+                )
 
                 # include implied indexes on postgres and mysql
                 if engine.dialect.name == 'mysql':
-                    implied = [idx for (tname, idx)
-                               in self.db.model.implied_indexes
-                               if tname == tbl.name]
+                    implied = [
+                        idx for (tname, idx) in self.db.model.implied_indexes if tname == tbl.name
+                    ]
                     exp = sorted(exp + implied, key=lambda k: k["name"])
 
-                got = sorted(insp.get_indexes(tbl.name),
-                             key=lambda x: x['name'])
+                got = sorted(insp.get_indexes(tbl.name), key=lambda x: x['name'])
                 if exp != got:
                     got_names = {idx['name'] for idx in got}
                     exp_names = {idx['name'] for idx in exp}
                     got_info = dict((idx['name'], idx) for idx in got)
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:
-                        diff.append(f"got unexpected index {name} on table {tbl.name}: "
-                                    f"{repr(got_info[name])}")
+                        diff.append(
+                            f"got unexpected index {name} on table {tbl.name}: "
+                            f"{repr(got_info[name])}"
+                        )
                     for name in exp_names - got_names:
                         diff.append(f"missing index {name} on table {tbl.name}")
                     for name in got_names & exp_names:
                         gi = {
                             "name": name,
                             "unique": got_info[name]['unique'] and 1 or 0,
-                            "column_names": sorted(got_info[name]['column_names'])
+                            "column_names": sorted(got_info[name]['column_names']),
                         }
                         ei = exp_info[name]
                         if gi != ei:
-                            diff.append(f"index {name} on table {tbl.name} differs: "
-                                        f"got {gi}; exp {ei}")
+                            diff.append(
+                                f"index {name} on table {tbl.name} differs: got {gi}; exp {ei}"
+                            )
             if diff:
                 return "\n".join(diff)
             return None
@@ -187,8 +191,9 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             # TypeError.  Reflection is only used for tests, so we can just skip
             # this test on such platforms.  We still get the advantage of trying
             # the upgrade, at any rate.
-            raise unittest.SkipTest("model comparison skipped: bugs in schema "
-                                    "reflection on this sqlite version") from e
+            raise unittest.SkipTest(
+                "model comparison skipped: bugs in schema reflection on this sqlite version"
+            ) from e
 
         if diff:
             self.fail("\n" + pprint.pformat(diff))
@@ -217,7 +222,6 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
 
 
 class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
-
     use_real_db = True
 
     @defer.inlineCallbacks
@@ -228,15 +232,15 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
         except UnicodeEncodeError as e:
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
-            raise unittest.SkipTest("Cannot encode weird unicode "
-                f"on this platform with {os_encoding}") from e
+            raise unittest.SkipTest(
+                "Cannot encode weird unicode " f"on this platform with {os_encoding}"
+            ) from e
 
         yield self.db.model.upgrade()
         yield self.assertModelMatches()
 
 
 class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
-
     source_tarball = "v2.10.5.tgz"
 
     def test_upgrade(self):
@@ -249,6 +253,7 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
     def test_got_invalid_sqlite_file(self):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
+
         self.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
             yield self.do_test_upgrade()
@@ -257,13 +262,13 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
     def test_got_invalid_sqlite_file2(self):
         def upgrade():
             return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
+
         self.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
             yield self.do_test_upgrade()
 
 
 class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
-
     source_tarball = "v090b4.tgz"
 
     def gotError(self, e):
@@ -282,7 +287,6 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
 
 
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
-
     source_tarball = "v087p1.tgz"
 
     def gotError(self, e):

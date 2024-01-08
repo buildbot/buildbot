@@ -32,10 +32,7 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBuildSetGeneratorBase(
-    ConfigErrorsMixin,
-    TestReactorMixin,
-    ReporterTestMixin,
-    unittest.TestCase
+    ConfigErrorsMixin, TestReactorMixin, ReporterTestMixin, unittest.TestCase
 ):
     def setUp(self):
         self.setup_test_reactor()
@@ -50,12 +47,7 @@ class TestBuildSetGeneratorBase(
 
     @defer.inlineCallbacks
     def setup_generator(
-        self,
-        results=SUCCESS,
-        message=None,
-        db_args=None,
-        insert_build=True,
-        **kwargs
+        self, results=SUCCESS, message=None, db_args=None, insert_build=True, **kwargs
     ):
         if message is None:
             message = {
@@ -113,22 +105,25 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         g, build, buildset = yield self.setup_generator(mode=("change",))
         report = yield self.buildset_message(g, [build], buildset)
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True, mode=('change',),
-                                                                users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=('change',), users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            "extra_info": None,
-            'results': SUCCESS,
-            'builds': [build],
-            "buildset": buildset,
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                'body': 'body',
+                'subject': 'subject',
+                'type': 'text',
+                "extra_info": None,
+                'results': SUCCESS,
+                'builds': [build],
+                "buildset": buildset,
+                'users': [],
+                'patches': [],
+                'logs': [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_message_no_result(self):
@@ -136,22 +131,25 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         buildset["results"] = None
         report = yield self.buildset_message(g, [build], buildset)
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True,
-                                                                mode=('change',), users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=('change',), users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            "extra_info": None,
-            'results': None,
-            'builds': [build],
-            "buildset": buildset,
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                'body': 'body',
+                'subject': 'subject',
+                'type': 'text',
+                "extra_info": None,
+                'results': None,
+                'builds': [build],
+                "buildset": buildset,
+                'users': [],
+                'patches': [],
+                'logs': [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_subject_deprecated(self):
@@ -168,29 +166,30 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         }
 
         g, build, buildset = yield self.setup_generator(
-            results=None,
-            message=message,
-            mode=("change",)
+            results=None, message=message, mode=("change",)
         )
         buildset["results"] = None
         report = yield self.buildset_message(g, [build], buildset)
 
-        g.formatter.format_message_for_build.assert_called_with(self.master, build,
-                                                                is_buildset=True,
-                                                                mode=('change',), users=[])
+        g.formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=True, mode=('change',), users=[]
+        )
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'Buildbot not finished in Buildbot on whole buildset',
-            'type': 'text',
-            "extra_info": None,
-            'results': None,
-            'builds': [build],
-            "buildset": buildset,
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                'body': 'body',
+                'subject': 'Buildbot not finished in Buildbot on whole buildset',
+                'type': 'text',
+                "extra_info": None,
+                'results': None,
+                'builds': [build],
+                "buildset": buildset,
+                'users': [],
+                'patches': [],
+                'logs': [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_complete(self):
@@ -202,18 +201,21 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         del build['parentbuild']
         del build['parentbuilder']
 
-        self.assertEqual(report, {
-            'body': 'body',
-            'subject': 'subject',
-            'type': 'text',
-            "extra_info": None,
-            'results': SUCCESS,
-            'builds': [build],
-            "buildset": buildset,
-            'users': [],
-            'patches': [],
-            'logs': []
-        })
+        self.assertEqual(
+            report,
+            {
+                'body': 'body',
+                'subject': 'subject',
+                'type': 'text',
+                "extra_info": None,
+                'results': SUCCESS,
+                'builds': [build],
+                "buildset": buildset,
+                'users': [],
+                'patches': [],
+                'logs': [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_complete_no_builds(self):
@@ -241,7 +243,6 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
 
 
 class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
-
     GENERATOR_CLASS = BuildSetCombinedStatusGenerator
 
     @defer.inlineCallbacks
@@ -261,12 +262,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         report = yield self.buildset_message(g, buildset, [build])
 
         g.formatter.format_message_for_buildset.assert_called_with(
-            self.master,
-            buildset,
-            [build],
-            is_buildset=True,
-            mode=("passing",),
-            users=[]
+            self.master, buildset, [build], is_buildset=True, mode=("passing",), users=[]
         )
 
         # we retrieve build data differently when processing the buildset, so adjust it to match
@@ -274,18 +270,21 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         del build['parentbuild']
         del build['parentbuilder']
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": "subject",
-            "type": "text",
-            "extra_info": None,
-            "results": SUCCESS,
-            "builds": [build],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "extra_info": None,
+                "results": SUCCESS,
+                "builds": [build],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_message_no_builds(self):
@@ -293,26 +292,24 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         report = yield self.buildset_message(g, buildset, [])
 
         g.formatter.format_message_for_buildset.assert_called_with(
-            self.master,
-            buildset,
-            [],
-            is_buildset=True,
-            mode=("passing",),
-            users=[]
+            self.master, buildset, [], is_buildset=True, mode=("passing",), users=[]
         )
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": "subject",
-            "type": "text",
-            "extra_info": None,
-            "results": SUCCESS,
-            "builds": [],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "extra_info": None,
+                "results": SUCCESS,
+                "builds": [],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_message_no_result(self):
@@ -321,12 +318,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         report = yield self.buildset_message(g, buildset, [build])
 
         g.formatter.format_message_for_buildset.assert_called_with(
-            self.master,
-            buildset,
-            [build],
-            is_buildset=True,
-            mode=("passing",),
-            users=[]
+            self.master, buildset, [build], is_buildset=True, mode=("passing",), users=[]
         )
 
         # we retrieve build data differently when processing the buildset, so adjust it to match
@@ -334,18 +326,21 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         del build['parentbuild']
         del build['parentbuilder']
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": "subject",
-            "type": "text",
-            "extra_info": None,
-            "results": None,
-            "builds": [build],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "extra_info": None,
+                "results": None,
+                "builds": [build],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_message_no_builds_no_result(self):
@@ -354,26 +349,24 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         report = yield self.buildset_message(g, buildset, [])
 
         g.formatter.format_message_for_buildset.assert_called_with(
-            self.master,
-            buildset,
-            [],
-            is_buildset=True,
-            mode=("passing",),
-            users=[]
+            self.master, buildset, [], is_buildset=True, mode=("passing",), users=[]
         )
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": "subject",
-            "type": "text",
-            "extra_info": None,
-            "results": None,
-            "builds": [],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "extra_info": None,
+                "results": None,
+                "builds": [],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_buildset_message_no_result_formatter_no_subject(self):
@@ -388,12 +381,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         report = yield self.buildset_message(g, buildset, [build])
 
         g.formatter.format_message_for_buildset.assert_called_with(
-            self.master,
-            buildset,
-            [build],
-            is_buildset=True,
-            mode=("passing",),
-            users=[]
+            self.master, buildset, [build], is_buildset=True, mode=("passing",), users=[]
         )
 
         # we retrieve build data differently when processing the buildset, so adjust it to match
@@ -401,36 +389,42 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         del build['parentbuild']
         del build['parentbuilder']
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": None,
-            "type": "text",
-            "extra_info": None,
-            "results": SUCCESS,
-            "builds": [build],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": None,
+                "type": "text",
+                "extra_info": None,
+                "results": SUCCESS,
+                "builds": [build],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_complete(self):
         g, _, buildset = yield self.setup_generator(insert_build=False)
         report = yield self.generate(g, ("buildsets", 98, "complete"), buildset)
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": "subject",
-            "type": "text",
-            "extra_info": None,
-            "results": SUCCESS,
-            "builds": [],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "extra_info": None,
+                "results": SUCCESS,
+                "builds": [],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_generate_complete_with_builds(self):
@@ -442,15 +436,18 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         del build['parentbuild']
         del build['parentbuilder']
 
-        self.assertEqual(report, {
-            "body": "body",
-            "subject": "subject",
-            "type": "text",
-            "extra_info": None,
-            "results": SUCCESS,
-            "builds": [build],
-            "buildset": buildset,
-            "users": [],
-            "patches": [],
-            "logs": []
-        })
+        self.assertEqual(
+            report,
+            {
+                "body": "body",
+                "subject": "subject",
+                "type": "text",
+                "extra_info": None,
+                "results": SUCCESS,
+                "builds": [build],
+                "buildset": buildset,
+                "users": [],
+                "patches": [],
+                "logs": [],
+            },
+        )

@@ -34,7 +34,9 @@ def gitDescribeToPep440(version):
     # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit
     # band add dev before 20)
 
-    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?') # noqa pylint: disable=line-too-long
+    VERSION_MATCH = re.compile(
+        r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?'
+    )  # noqa pylint: disable=line-too-long
     v = VERSION_MATCH.search(version)
     if v:
         major = int(v.group('major'))
@@ -66,15 +68,15 @@ def mTimeVersion(init_file):
 
 
 def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
-    """ Extract the tag if a source is from git archive.
+    """Extract the tag if a source is from git archive.
 
-        When source is exported via `git archive`, the git_archive_id init value is modified
-        and placeholders are expanded to the "archived" revision:
+    When source is exported via `git archive`, the git_archive_id init value is modified
+    and placeholders are expanded to the "archived" revision:
 
-            %ct: committer date, UNIX timestamp
-            %d: ref names, like the --decorate option of git-log
+        %ct: committer date, UNIX timestamp
+        %d: ref names, like the --decorate option of git-log
 
-        See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
+    See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
     """
     # mangle the magic string to make sure it is not replaced by git archive
     if not git_archive_id.startswith('$For' + 'mat:'):

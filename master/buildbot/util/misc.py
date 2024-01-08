@@ -29,7 +29,9 @@ def deferredLocked(lock_or_attr):
             if isinstance(lock, str):
                 lock = getattr(args[0], lock)
             return lock.run(fn, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -55,4 +57,4 @@ def writeLocalFile(path, contents, mode=None):  # pragma: no cover
 
 def chunkify_list(l, chunk_size):
     chunk_size = max(1, chunk_size)
-    return (l[i:i + chunk_size] for i in range(0, len(l), chunk_size))
+    return (l[i : i + chunk_size] for i in range(0, len(l), chunk_size))

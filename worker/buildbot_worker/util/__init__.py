@@ -50,7 +50,6 @@ def now(_reactor=None):
 
 
 class Obfuscated(object):
-
     """An obfuscated string in a command"""
 
     def __init__(self, real, fake):
@@ -64,9 +63,11 @@ class Obfuscated(object):
         return repr(self.fake)
 
     def __eq__(self, other):
-        return other.__class__ is self.__class__ and \
-            other.real == self.real and \
-            other.fake == self.fake
+        return (
+            other.__class__ is self.__class__
+            and other.real == self.real
+            and other.fake == self.fake
+        )
 
     @staticmethod
     def to_text(s):
@@ -123,8 +124,7 @@ def rewrap(text, width=None):
 
     # Split text by lines and group lines that comprise paragraphs.
     wrapped_text = ""
-    for do_wrap, lines in itertools.groupby(text.splitlines(True),
-                                            key=needs_wrapping):
+    for do_wrap, lines in itertools.groupby(text.splitlines(True), key=needs_wrapping):
         paragraph = ''.join(lines)
 
         if do_wrap:

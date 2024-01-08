@@ -27,15 +27,18 @@ class SecretInAFile(SecretProviderBase):
     """
     secret is stored in a separate file under the given directory name
     """
+
     name = "SecretInAFile"
 
     def checkFileIsReadOnly(self, dirname, secretfile):
         filepath = os.path.join(dirname, secretfile)
         obs_stat = stat.S_IMODE(os.stat(filepath).st_mode)
         if (obs_stat & 0o7) != 0 and os.name == "posix":
-            config.error(f"Permissions {oct(obs_stat)} on file {secretfile} are too open."
-                         " It is required that your secret files are NOT"
-                         " accessible by others!")
+            config.error(
+                f"Permissions {oct(obs_stat)} on file {secretfile} are too open."
+                " It is required that your secret files are NOT"
+                " accessible by others!"
+            )
 
     def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffixes):
         if not os.access(dirname, os.F_OK):
@@ -54,7 +57,7 @@ class SecretInAFile(SecretProviderBase):
                     with open(os.path.join(dirname, secretfile), encoding='utf-8') as source:
                         secretvalue = source.read()
                     if suffix:
-                        secretfile = secretfile[:-len(suffix)]
+                        secretfile = secretfile[: -len(suffix)]
                     if strip:
                         secretvalue = secretvalue.rstrip("\r\n")
                     secrets[secretfile] = secretvalue
@@ -64,16 +67,14 @@ class SecretInAFile(SecretProviderBase):
         self._dirname = dirname
         if suffixes is None:
             suffixes = [""]
-        self.checkSecretDirectoryIsAvailableAndReadable(dirname,
-                                                        suffixes=suffixes)
+        self.checkSecretDirectoryIsAvailableAndReadable(dirname, suffixes=suffixes)
 
     def reconfigService(self, dirname, suffixes=None, strip=True):
         self._dirname = dirname
         self.secrets = {}
         if suffixes is None:
             suffixes = [""]
-        self.secrets = self.loadSecrets(self._dirname, suffixes=suffixes,
-                                        strip=strip)
+        self.secrets = self.loadSecrets(self._dirname, suffixes=suffixes, strip=strip)
 
     def get(self, entry):
         """

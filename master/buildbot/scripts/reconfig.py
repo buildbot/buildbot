@@ -29,7 +29,6 @@ from buildbot.util import rewrap
 
 
 class Reconfigurator:
-
     @defer.inlineCallbacks
     def run(self, basedir, quiet, timeout=None):
         # Returns "Microsoft" for Vista and "Windows" for other versions
@@ -60,10 +59,14 @@ class Reconfigurator:
         except BuildmasterTimeoutError:
             print("Never saw reconfiguration finish.")
         except ReconfigError:
-            print(rewrap("""\
+            print(
+                rewrap(
+                    """\
                 Reconfiguration failed. Please inspect the master.cfg file for
                 errors, correct them, then try 'buildbot reconfig' again.
-                """))
+                """
+                )
+            )
         except IOError:
             # we were probably unable to open the file in the first place
             self.sighup()

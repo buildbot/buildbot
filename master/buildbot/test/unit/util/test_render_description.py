@@ -19,7 +19,6 @@ from buildbot.util.render_description import render_description
 
 
 class TestRaml(unittest.TestCase):
-
     def test_plain(self):
         self.assertIsNone(render_description("description", None))
 
@@ -28,5 +27,7 @@ class TestRaml(unittest.TestCase):
             render_description("description", "unknown")
 
     def test_markdown(self):
-        self.assertEqual(render_description("# description\ntext", "markdown"),
-                         "<h1>description</h1>\n<p>text</p>")
+        self.assertEqual(
+            render_description("# description\ntext", "markdown"),
+            "<h1>description</h1>\n<p>text</p>",
+        )

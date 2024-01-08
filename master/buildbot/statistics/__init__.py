@@ -38,5 +38,5 @@ __all__ = [
     'CaptureProperty',
     'CapturePropertyAllBuilders',
     'InfluxStorageService',
-    'StatsService'
+    'StatsService',
 ]

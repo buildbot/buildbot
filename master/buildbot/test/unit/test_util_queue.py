@@ -58,11 +58,13 @@ class TestException(Exception):
 
 
 class TestConnectableThreadQueue(unittest.TestCase):
-
     def setUp(self):
-        self.queue = TestableConnectableThreadQueue(self, connect_backoff_start_seconds=0,
-                                                    connect_backoff_multiplier=0,
-                                                    connect_backoff_max_wait_seconds=0)
+        self.queue = TestableConnectableThreadQueue(
+            self,
+            connect_backoff_start_seconds=0,
+            connect_backoff_multiplier=0,
+            connect_backoff_max_wait_seconds=0,
+        )
 
     def tearDown(self):
         self.join_queue()
@@ -182,13 +184,15 @@ class NoneReturningConnectableThreadQueue(FailingConnectableThreadQueue):
 
 
 class ConnectionErrorTests:
-
     def setUp(self):
         self.lock = threading.Lock()
-        self.queue = self.QueueClass(self, self.lock,
-                                     connect_backoff_start_seconds=0.001,
-                                     connect_backoff_multiplier=1,
-                                     connect_backoff_max_wait_seconds=0.0039)
+        self.queue = self.QueueClass(
+            self,
+            self.lock,
+            connect_backoff_start_seconds=0.001,
+            connect_backoff_multiplier=1,
+            connect_backoff_max_wait_seconds=0.0039,
+        )
 
     def tearDown(self):
         self.queue.join(timeout=1)

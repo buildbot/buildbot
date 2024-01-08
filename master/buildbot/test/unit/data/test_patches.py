@@ -21,11 +21,9 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class Patch(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = patches.Patch(self.master)
 
     # no update methods -> nothing to test

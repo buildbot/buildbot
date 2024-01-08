@@ -41,7 +41,6 @@ except ImportError:
 
 
 class MasterPerspective(pb.Avatar):
-
     def __init__(self, on_keepalive=None):
         self.on_keepalive = on_keepalive
 
@@ -54,7 +53,6 @@ class MasterPerspective(pb.Avatar):
 
 @implementer(portal.IRealm)
 class MasterRealm(object):
-
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment
@@ -74,7 +72,6 @@ class MasterRealm(object):
 
 
 class TestWorker(misc.PatcherMixin, unittest.TestCase):
-
     def setUp(self):
         self.realm = None
         self.worker = None
@@ -99,10 +96,8 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
     def start_master(self, perspective, on_attachment=None):
         self.realm = MasterRealm(perspective, on_attachment)
         p = portal.Portal(self.realm)
-        p.registerChecker(
-            checkers.InMemoryUsernamePasswordDatabaseDontUse(testy=b"westy"))
-        self.listeningport = reactor.listenTCP(
-            0, pb.PBServerFactory(p), interface='127.0.0.1')
+        p.registerChecker(checkers.InMemoryUsernamePasswordDatabaseDontUse(testy=b"westy"))
+        self.listeningport = reactor.listenTCP(0, pb.PBServerFactory(p), interface='127.0.0.1')
         # return the dynamically allocated port number
         return self.listeningport.getHost().port
 
@@ -112,40 +107,84 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
     def test_constructor_083_tac(self):
         """invocation as made from default 0.8.3 tac files"""
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
-                   umask=0o123, protocol='pb', maxdelay=10)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, umask=0o123, protocol='pb', maxdelay=10)
 
     def test_constructor_091_tac(self):
         # invocation as made from default 0.9.1 tac files
-        bot.Worker(None, None, 'me', 'pwd', '/s', 10,
-                   connection_string="tcp:host=localhost:port=9010",
-                   umask=0o123, protocol='pb', maxdelay=10)
+        bot.Worker(
+            None,
+            None,
+            'me',
+            'pwd',
+            '/s',
+            10,
+            connection_string="tcp:host=localhost:port=9010",
+            umask=0o123,
+            protocol='pb',
+            maxdelay=10,
+        )
 
     def test_constructor_invalid_both_styles(self):
         """Can't instantiate with both host/port and connection string."""
         # assertRaises as a context manager appears in Python 2.7
-        self.assertRaises(AssertionError, bot.Worker,
-                          'mstr', 9010, 'me', 'pwd', '/s', 10,
-                          connection_string="tcp:anything")
+        self.assertRaises(
+            AssertionError,
+            bot.Worker,
+            'mstr',
+            9010,
+            'me',
+            'pwd',
+            '/s',
+            10,
+            connection_string="tcp:anything",
+        )
 
     def test_constructor_invalid_both_styles_partial(self):
         # assertRaises as a context manager appears in Python 2.7
-        self.assertRaises(AssertionError, bot.Worker,
-                          'mstr', None, 'me', 'pwd', '/s', 10,
-                          connection_string="tcp:anything")
+        self.assertRaises(
+            AssertionError,
+            bot.Worker,
+            'mstr',
+            None,
+            'me',
+            'pwd',
+            '/s',
+            10,
+            connection_string="tcp:anything",
+        )
 
     def test_constructor_invalid_both_styles_partial2(self):
         """Can't instantiate with both host/port and connection string."""
         # assertRaises as a context manager appears in Python 2.7
-        self.assertRaises(AssertionError, bot.Worker,
-                          None, 9010, None, 'me', 'pwd', '/s', 10,
-                          connection_string="tcp:anything")
+        self.assertRaises(
+            AssertionError,
+            bot.Worker,
+            None,
+            9010,
+            None,
+            'me',
+            'pwd',
+            '/s',
+            10,
+            connection_string="tcp:anything",
+        )
 
     def test_constructor_full(self):
         # invocation with all args
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
-                   umask=0o123, maxdelay=10, keepaliveTimeout=10,
-                   unicode_encoding='utf8', protocol='pb', allow_shutdown=True)
+        bot.Worker(
+            'mstr',
+            9010,
+            'me',
+            'pwd',
+            '/s',
+            10,
+            umask=0o123,
+            maxdelay=10,
+            keepaliveTimeout=10,
+            unicode_encoding='utf8',
+            protocol='pb',
+            allow_shutdown=True,
+        )
 
     def test_worker_print(self):
         d = defer.Deferred()
@@ -159,9 +198,16 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         # start up the master and worker
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
-        self.worker = bot.Worker("127.0.0.1", port,
-                                 "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22, protocol='pb')
+        self.worker = bot.Worker(
+            "127.0.0.1",
+            port,
+            "testy",
+            "westy",
+            self.basedir,
+            keepalive=0,
+            umask=0o22,
+            protocol='pb',
+        )
         self.worker.startService()
 
         # and wait for the result of the print
@@ -170,9 +216,16 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
     def test_recordHostname_uname(self):
         self.patch_os_uname(lambda: [0, 'test-hostname.domain.com'])
 
-        self.worker = bot.Worker("127.0.0.1", 9999,
-                                 "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22, protocol='pb')
+        self.worker = bot.Worker(
+            "127.0.0.1",
+            9999,
+            "testy",
+            "westy",
+            self.basedir,
+            keepalive=0,
+            umask=0o22,
+            protocol='pb',
+        )
         self.worker.recordHostname(self.basedir)
         with open(os.path.join(self.basedir, "twistd.hostname")) as f:
             twistdHostname = f.read().strip()
@@ -181,12 +234,20 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
     def test_recordHostname_getfqdn(self):
         def missing():
             raise AttributeError
+
         self.patch_os_uname(missing)
         self.patch(socket, "getfqdn", lambda: 'test-hostname.domain.com')
 
-        self.worker = bot.Worker("127.0.0.1", 9999,
-                                 "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22, protocol='pb')
+        self.worker = bot.Worker(
+            "127.0.0.1",
+            9999,
+            "testy",
+            "westy",
+            self.basedir,
+            keepalive=0,
+            umask=0o22,
+            protocol='pb',
+        )
         self.worker.recordHostname(self.basedir)
         with open(os.path.join(self.basedir, "twistd.hostname")) as f:
             twistdHostname = f.read().strip()
@@ -204,6 +265,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
             called.append(args)
             d1 = defer.succeed(None)
             return d1
+
         fakepersp.callRemote = fakeCallRemote
 
         # set up to call shutdown when we are attached, and chain the results onto
@@ -216,14 +278,22 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_shutdown)
 
-        self.worker = bot.Worker("127.0.0.1", port,
-                                 "testy", "westy", self.basedir,
-                                 keepalive=0, umask=0o22, protocol='pb')
+        self.worker = bot.Worker(
+            "127.0.0.1",
+            port,
+            "testy",
+            "westy",
+            self.basedir,
+            keepalive=0,
+            umask=0o22,
+            protocol='pb',
+        )
 
         self.worker.startService()
 
         def check(ign):
             self.assertEqual(called, [('shutdown',)])
+
         d.addCallback(check)
 
         return d
@@ -232,10 +302,17 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         """Test watching an existing shutdown_file results in gracefulShutdown
         being called."""
 
-        worker = bot.Worker("127.0.0.1", 1234,
-                            "testy", "westy", self.basedir,
-                            keepalive=0, umask=0o22, protocol='pb',
-                            allow_shutdown='file')
+        worker = bot.Worker(
+            "127.0.0.1",
+            1234,
+            "testy",
+            "westy",
+            self.basedir,
+            keepalive=0,
+            umask=0o22,
+            protocol='pb',
+            allow_shutdown='file',
+        )
 
         # Mock out gracefulShutdown
         worker.gracefulShutdown = Mock()

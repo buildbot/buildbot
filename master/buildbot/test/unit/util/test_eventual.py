@@ -22,7 +22,6 @@ from buildbot.util import eventual
 
 
 class Eventually(unittest.TestCase):
-
     def setUp(self):
         # reset the queue to its base state
         eventual._theSimpleQueue = eventual._SimpleCallQueue()
@@ -63,6 +62,7 @@ class Eventually(unittest.TestCase):
 
         def cb_fails():
             raise RuntimeError("should not cause test failure")
+
         eventual.eventually(cb_fails)
         return self.assertResults(['err'])
 
@@ -83,6 +83,7 @@ class Eventually(unittest.TestCase):
             if n <= 0:
                 return
             eventual.eventually(chain, n - 1)
+
         chain(3)
         # (the flush this tests is implicit in assertResults)
         return self.assertResults([3, 2, 1, 0])
@@ -95,6 +96,7 @@ class Eventually(unittest.TestCase):
                 return
             eventual.eventually(tree, n - 1)
             eventual.eventually(tree, n - 1)
+
         tree(2)
         # (the flush this tests is implicit in assertResults)
         return self.assertResults([2, 1, 1, 0, 0, 0, 0])
@@ -105,6 +107,7 @@ class Eventually(unittest.TestCase):
         def cb():
             d = eventual.flushEventualQueue()
             d.addCallback(testd.callback)
+
         eventual.eventually(cb)
         return testd
 

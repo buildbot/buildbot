@@ -22,7 +22,6 @@ from buildbot.steps.shell import WarningCountingShellCommand
 
 
 class TestWarningCountingShellCommand(unittest.TestCase):
-
     # Makes sure that it is possible to suppress warnings even if the
     # warning extractor does not provide line information
 
@@ -30,8 +29,8 @@ class TestWarningCountingShellCommand(unittest.TestCase):
         # Use a warningExtractor that does not provide line
         # information
         w = WarningCountingShellCommand(
-            warningExtractor=WarningCountingShellCommand.warnExtractWholeLine,
-            command="echo")
+            warningExtractor=WarningCountingShellCommand.warnExtractWholeLine, command="echo"
+        )
 
         # Add suppression manually instead of using suppressionFile
         fileRe = None

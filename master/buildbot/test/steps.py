@@ -74,8 +74,7 @@ def _dict_diff(d1, d2):
 
 def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
     if exp_command != got_command:
-        return (f'Expected command type {exp_command} got {got_command}. Expected args '
-                f'{exp_args!r}')
+        return f'Expected command type {exp_command} got {got_command}. Expected args {exp_args!r}'
     if exp_args == got_args:
         return ""
     text = ""
@@ -86,14 +85,14 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
         text += f'Keys in expectation missing from command: {missing_in_cmd!r}\n'
     if diff:
         formatted_diff = [f'"{d[0]}":\nexpected: {d[1]!r}\ngot:      {d[2]!r}\n' for d in diff]
-        text += ('Key differences between expectation and command: {0}\n'.format(
-            '\n'.join(formatted_diff)))
+        text += 'Key differences between expectation and command: {0}\n'.format(
+            '\n'.join(formatted_diff)
+        )
 
     return text
 
 
 class ExpectRemoteRef:
-
     """
     Define an expected RemoteReference in the args to an L{Expect} class
     """
@@ -106,7 +105,6 @@ class ExpectRemoteRef:
 
 
 class Expect:
-
     """
     Define an expected L{RemoteCommand}, with the same arguments
 
@@ -236,14 +234,18 @@ class Expect:
     def _check(self, case, command):
         case.assertEqual(self.interrupted, command.interrupted)
 
-        if command.remote_command == self.remote_command and \
-                self._cleanup_args(command.args) == self._cleanup_args(self.args):
+        if command.remote_command == self.remote_command and self._cleanup_args(
+            command.args
+        ) == self._cleanup_args(self.args):
             return
 
-        cmd_dif = _describe_cmd_difference(self.remote_command, self.args,
-                                           command.remote_command, command.args)
-        msg = ("Command contents different from expected (command index: "
-               f"{case._expected_commands_popped}):\n{cmd_dif}")
+        cmd_dif = _describe_cmd_difference(
+            self.remote_command, self.args, command.remote_command, command.args
+        )
+        msg = (
+            "Command contents different from expected (command index: "
+            f"{case._expected_commands_popped}):\n{cmd_dif}"
+        )
         raise AssertionError(msg)
 
     def __repr__(self):
@@ -251,7 +253,6 @@ class Expect:
 
 
 class ExpectShell(Expect):
-
     """
     Define an expected L{RemoteShellCommand}, with the same arguments Any
     non-default arguments must be specified explicitly (e.g., usePTY).
@@ -260,10 +261,22 @@ class ExpectShell(Expect):
     class NotSet:
         pass
 
-    def __init__(self, workdir, command, env=NotSet,
-                 want_stdout=1, want_stderr=1, initial_stdin=None,
-                 timeout=20 * 60, max_time=None, sigterm_time=None, logfiles=None,
-                 use_pty=False, log_environ=True, interrupt_signal='KILL'):
+    def __init__(
+        self,
+        workdir,
+        command,
+        env=NotSet,
+        want_stdout=1,
+        want_stderr=1,
+        initial_stdin=None,
+        timeout=20 * 60,
+        max_time=None,
+        sigterm_time=None,
+        logfiles=None,
+        use_pty=False,
+        log_environ=True,
+        interrupt_signal='KILL',
+    ):
         if env is self.NotSet:
             env = {}
         if logfiles is None:
@@ -279,7 +292,7 @@ class ExpectShell(Expect):
             'maxTime': max_time,
             'logfiles': logfiles,
             'usePTY': use_pty,
-            'logEnviron': log_environ
+            'logEnviron': log_environ,
         }
 
         if sigterm_time is not self.NotSet:
@@ -293,7 +306,6 @@ class ExpectShell(Expect):
 
 
 class ExpectStat(Expect):
-
     def __init__(self, file, workdir=None, log_environ=None):
         args = {'file': file}
         if workdir is not None:
@@ -303,8 +315,9 @@ class ExpectStat(Expect):
 
         super().__init__('stat', args)
 
-    def stat(self, mode, inode=99, dev=99, nlink=1, uid=0, gid=0, size=99,
-             atime=0, mtime=0, ctime=0):
+    def stat(
+        self, mode, inode=99, dev=99, nlink=1, uid=0, gid=0, size=99, atime=0, mtime=0, ctime=0
+    ):
         self.update('stat', [mode, inode, dev, nlink, uid, gid, size, atime, mtime, ctime])
         return self
 
@@ -321,11 +334,18 @@ class ExpectStat(Expect):
 
 
 class ExpectUploadFile(Expect):
-
-    def __init__(self, blocksize=None, maxsize=None, workersrc=None, workdir=None,
-                 writer=None, keepstamp=None, slavesrc=None, interrupted=False):
-        args = {'workdir': workdir, 'writer': writer,
-                'blocksize': blocksize, 'maxsize': maxsize}
+    def __init__(
+        self,
+        blocksize=None,
+        maxsize=None,
+        workersrc=None,
+        workdir=None,
+        writer=None,
+        keepstamp=None,
+        slavesrc=None,
+        interrupted=False,
+    ):
+        args = {'workdir': workdir, 'writer': writer, 'blocksize': blocksize, 'maxsize': maxsize}
         if keepstamp is not None:
             args['keepstamp'] = keepstamp
         if slavesrc is not None:
@@ -358,11 +378,25 @@ class ExpectUploadFile(Expect):
 
 
 class ExpectUploadDirectory(Expect):
-
-    def __init__(self, compress=None, blocksize=None, maxsize=None, workersrc=None, workdir=None,
-                 writer=None, keepstamp=None, slavesrc=None, interrupted=False):
-        args = {'compress': compress, 'workdir': workdir, 'writer': writer,
-                'blocksize': blocksize, 'maxsize': maxsize}
+    def __init__(
+        self,
+        compress=None,
+        blocksize=None,
+        maxsize=None,
+        workersrc=None,
+        workdir=None,
+        writer=None,
+        keepstamp=None,
+        slavesrc=None,
+        interrupted=False,
+    ):
+        args = {
+            'compress': compress,
+            'workdir': workdir,
+            'writer': writer,
+            'blocksize': blocksize,
+            'maxsize': maxsize,
+        }
         if keepstamp is not None:
             args['keepstamp'] = keepstamp
         if slavesrc is not None:
@@ -395,16 +429,32 @@ class ExpectUploadDirectory(Expect):
         return self
 
     def __repr__(self):
-        return (f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
-                f"{repr(self.args['workersrc'])})")
+        return (
+            f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
+            f"{repr(self.args['workersrc'])})"
+        )
 
 
 class ExpectDownloadFile(Expect):
-
-    def __init__(self, blocksize=None, maxsize=None, workerdest=None, workdir=None,
-                reader=None, mode=None, interrupted=False, slavesrc=None, slavedest=None):
-        args = {'workdir': workdir, 'reader': reader, 'mode': mode,
-                'blocksize': blocksize, 'maxsize': maxsize}
+    def __init__(
+        self,
+        blocksize=None,
+        maxsize=None,
+        workerdest=None,
+        workdir=None,
+        reader=None,
+        mode=None,
+        interrupted=False,
+        slavesrc=None,
+        slavedest=None,
+    ):
+        args = {
+            'workdir': workdir,
+            'reader': reader,
+            'mode': mode,
+            'blocksize': blocksize,
+            'maxsize': maxsize,
+        }
         if slavesrc is not None:
             args['slavesrc'] = slavesrc
         if slavedest is not None:
@@ -430,12 +480,13 @@ class ExpectDownloadFile(Expect):
         return self
 
     def __repr__(self):
-        return (f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
-                f"{repr(self.args['workerdest'])})")
+        return (
+            f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
+            f"{repr(self.args['workerdest'])})"
+        )
 
 
 class ExpectMkdir(Expect):
-
     def __init__(self, dir=None, log_environ=None):
         args = {'dir': dir}
         if log_environ is not None:
@@ -448,7 +499,6 @@ class ExpectMkdir(Expect):
 
 
 class ExpectRmdir(Expect):
-
     def __init__(self, dir=None, log_environ=None, timeout=None, path=None):
         args = {'dir': dir}
         if log_environ is not None:
@@ -465,7 +515,6 @@ class ExpectRmdir(Expect):
 
 
 class ExpectCpdir(Expect):
-
     def __init__(self, fromdir=None, todir=None, log_environ=None, timeout=None, max_time=None):
         args = {'fromdir': fromdir, 'todir': todir}
         if log_environ is not None:
@@ -482,7 +531,6 @@ class ExpectCpdir(Expect):
 
 
 class ExpectGlob(Expect):
-
     def __init__(self, path=None, log_environ=None):
         args = {'path': path}
         if log_environ is not None:
@@ -501,7 +549,6 @@ class ExpectGlob(Expect):
 
 
 class ExpectListdir(Expect):
-
     def __init__(self, dir=None):
         args = {'dir': dir}
 
@@ -518,7 +565,6 @@ class ExpectListdir(Expect):
 
 
 class ExpectRmfile(Expect):
-
     def __init__(self, path=None, log_environ=None):
         args = {'path': path}
         if log_environ is not None:
@@ -536,8 +582,7 @@ def _check_env_is_expected(test, expected_env, env):
 
     env = env or {}
     for var, value in expected_env.items():
-        test.assertEqual(env.get(var), value,
-                         f'Expected environment to have {var} = {repr(value)}')
+        test.assertEqual(env.get(var), value, f'Expected environment to have {var} = {repr(value)}')
 
 
 class ExpectMasterShell:
@@ -573,9 +618,11 @@ class ExpectMasterShell:
         return self
 
     def _check(self, test, command, workdir, env):
-        test.assertDictEqual({'command': command, 'workdir': workdir},
-                             {'command': self._command, 'workdir': self._workdir},
-                             "unexpected command run")
+        test.assertDictEqual(
+            {'command': command, 'workdir': workdir},
+            {'command': self._command, 'workdir': self._workdir},
+            "unexpected command run",
+        )
 
         _check_env_is_expected(test, self._env, env)
         return (self._exit, self._stdout, self._stderr)
@@ -598,7 +645,6 @@ class FakeRunProcess:
 
 
 class TestBuildStepMixin:
-
     """
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
@@ -615,8 +661,9 @@ class TestBuildStepMixin:
         self._expected_commands = []
         self._expected_commands_popped = 0
 
-        self.master = fakemaster.make_master(self, wantData=want_data, wantDb=want_db,
-                                             wantMq=want_mq)
+        self.master = fakemaster.make_master(
+            self, wantData=want_data, wantDb=want_db, wantMq=want_mq
+        )
 
         self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env = {}
@@ -629,9 +676,7 @@ class TestBuildStepMixin:
 
     def _setup_fake_build(self, worker_version, worker_env, build_files):
         if worker_version is None:
-            worker_version = {
-                '*': '99.99'
-            }
+            worker_version = {'*': '99.99'}
 
         if worker_env is None:
             worker_env = {}
@@ -656,9 +701,14 @@ class TestBuildStepMixin:
 
         return build
 
-    def setup_step(self, step, worker_version=None, worker_env=None,
-                   build_files=None, want_default_work_dir=True):
-
+    def setup_step(
+        self,
+        step,
+        worker_version=None,
+        worker_env=None,
+        build_files=None,
+        want_default_work_dir=True,
+    ):
         self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
@@ -677,6 +727,7 @@ class TestBuildStepMixin:
             self.step.logs[name] = _log
             self.step._connectPendingLogObservers()
             return defer.succeed(_log)
+
         self.step.addLog = addLog
 
         def addHTMLLog(name, html):
@@ -684,6 +735,7 @@ class TestBuildStepMixin:
             html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
+
         self.step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
@@ -693,6 +745,7 @@ class TestBuildStepMixin:
             self.step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)
+
         self.step.addCompleteLog = addCompleteLog
 
         self._got_test_result_sets = []
@@ -709,10 +762,18 @@ class TestBuildStepMixin:
 
         self._got_test_results = []
 
-        def add_test_result(setid, value, test_name=None, test_code_path=None, line=None,
-                            duration_ns=None):
-            self._got_test_results.append((setid, value, test_name, test_code_path, line,
-                                           duration_ns))
+        def add_test_result(
+            setid, value, test_name=None, test_code_path=None, line=None, duration_ns=None
+        ):
+            self._got_test_results.append((
+                setid,
+                value,
+                test_name,
+                test_code_path,
+                line,
+                duration_ns,
+            ))
+
         self.step.addTestResult = add_test_result
 
         self._got_build_data = {}
@@ -795,8 +856,9 @@ class TestBuildStepMixin:
 
         @returns: Deferred
         """
-        self.conn = connection.FakeConnection(self, "WorkerForBuilder(connection)", self.step,
-                                              self._interrupt_remote_command_numbers)
+        self.conn = connection.FakeConnection(
+            self, "WorkerForBuilder(connection)", self.step, self._interrupt_remote_command_numbers
+        )
         self.step.setupProgress()
         result = yield self.step.startStep(self.conn)
 
@@ -824,7 +886,8 @@ class TestBuildStepMixin:
                 self.exp_state_string,
                 stepStateString[stepids[0]],
                 f"expected state_string {self.exp_state_string!r}, got "
-                f"{stepStateString[stepids[0]]!r}")
+                f"{stepStateString[stepids[0]]!r}",
+            )
 
         properties = self.build.getProperties()
 
@@ -833,9 +896,10 @@ class TestBuildStepMixin:
             self.assertEqual(properties.getProperty(pn), pv, f"property '{pn}'")
             if ps is not None:
                 self.assertEqual(
-                    properties.getPropertySource(pn), ps,
-                    f"property {pn!r} source has source "
-                    f"{properties.getPropertySource(pn)!r}")
+                    properties.getPropertySource(pn),
+                    ps,
+                    f"property {pn!r} source has source {properties.getPropertySource(pn)!r}",
+                )
 
         for pn in self.exp_missing_properties:
             self.assertFalse(properties.hasProperty(pn), f"unexpected property '{pn}'")
@@ -849,8 +913,7 @@ class TestBuildStepMixin:
             self._match_log(exp, got, 'stderr')
 
         if self.exp_exception:
-            self.assertEqual(
-                len(self.flushLoggedErrors(self.exp_exception)), 1)
+            self.assertEqual(len(self.flushLoggedErrors(self.exp_exception)), 1)
 
         self.assertEqual(self._exp_test_result_sets, self._got_test_result_sets)
         self.assertEqual(self._exp_test_results, self._got_test_results)
@@ -881,12 +944,16 @@ class TestBuildStepMixin:
             exp = self._expected_commands.pop(0)
             self._expected_commands_popped += 1
         else:
-            self.fail(f"got remote command {command.remote_command} {command.args!r} when no "
-                      "further commands were expected")
+            self.fail(
+                f"got remote command {command.remote_command} {command.args!r} when no "
+                "further commands were expected"
+            )
 
         if not isinstance(exp, Expect):
-            self.fail(f"got command {command.remote_command} {command.args!r} but the "
-                      f"expectation is not instance of Expect: {exp!r}")
+            self.fail(
+                f"got command {command.remote_command} {command.args!r} but the "
+                f"expectation is not instance of Expect: {exp!r}"
+            )
 
         try:
             exp._check(self, command)
@@ -902,23 +969,37 @@ class TestBuildStepMixin:
         if not exp.connection_broken:
             command.remote_complete()
 
-    def _patched_create_process(self, reactor, command, workdir=None, env=None,
-                                collect_stdout=True, collect_stderr=True, stderr_is_error=False,
-                                io_timeout=300, runtime_timeout=3600, sigterm_timeout=5,
-                                initial_stdin=None, use_pty=False):
-
+    def _patched_create_process(
+        self,
+        reactor,
+        command,
+        workdir=None,
+        env=None,
+        collect_stdout=True,
+        collect_stderr=True,
+        stderr_is_error=False,
+        io_timeout=300,
+        runtime_timeout=3600,
+        sigterm_timeout=5,
+        initial_stdin=None,
+        use_pty=False,
+    ):
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
         if self._expected_commands:
             exp = self._expected_commands.pop(0)
             self._expected_commands_popped += 1
         else:
-            self.fail(f"got master command {command!r} at {workdir} ({env!r}) when no "
-                      "further commands were expected")
+            self.fail(
+                f"got master command {command!r} at {workdir} ({env!r}) when no "
+                "further commands were expected"
+            )
 
         if not isinstance(exp, ExpectMasterShell):
-            self.fail(f"got command {command!r} at {workdir} ({env!r}) but the "
-                      f"expectation is not instance of ExpectMasterShell: {exp!r}")
+            self.fail(
+                f"got command {command!r} at {workdir} ({env!r}) but the "
+                f"expectation is not instance of ExpectMasterShell: {exp!r}"
+            )
 
         try:
             rc, stdout, stderr = exp._check(self, command, workdir, env)

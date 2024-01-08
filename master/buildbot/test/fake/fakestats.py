@@ -21,7 +21,6 @@ from buildbot.statistics.storage_backends.base import StatsStorageBase
 
 
 class FakeStatsStorageService(StatsStorageBase):
-
     """
     Fake Storage service used in unit tests
     """
@@ -29,8 +28,7 @@ class FakeStatsStorageService(StatsStorageBase):
     def __init__(self, stats=None, name='FakeStatsStorageService'):
         self.stored_data = []
         if not stats:
-            self.stats = [capture.CaptureProperty("TestBuilder",
-                                                  'test')]
+            self.stats = [capture.CaptureProperty("TestBuilder", 'test')]
         else:
             self.stats = stats
         self.name = name
@@ -43,7 +41,6 @@ class FakeStatsStorageService(StatsStorageBase):
 
 
 class FakeBuildStep(buildstep.BuildStep):
-
     """
     A fake build step to be used for testing.
     """
@@ -57,7 +54,6 @@ class FakeBuildStep(buildstep.BuildStep):
 
 
 class FakeInfluxDBClient:
-
     """
     Fake Influx module for testing on systems that don't have influxdb installed.
     """

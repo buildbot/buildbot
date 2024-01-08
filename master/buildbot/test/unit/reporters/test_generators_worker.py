@@ -24,20 +24,17 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 
 
-class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin,
-                                 unittest.TestCase):
-
+class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     def _get_worker_dict(self, worker_name):
         return {
             'name': worker_name,
             'notify': ["workeradmin@example.org"],
             'workerinfo': {"admin": "myadmin"},
-            'last_connection': "yesterday"
+            'last_connection': "yesterday",
         }
 
     @parameterized.expand([
@@ -48,8 +45,9 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin,
     def test_report_matched_worker(self, worker_filter):
         g = WorkerMissingGenerator(workers=worker_filter)
 
-        report = yield g.generate(self.master, None, 'worker.98.complete',
-                                  self._get_worker_dict('myworker'))
+        report = yield g.generate(
+            self.master, None, 'worker.98.complete', self._get_worker_dict('myworker')
+        )
 
         self.assertEqual(report['users'], ['workeradmin@example.org'])
         self.assertIn(b"worker named myworker went away", report['body'])
@@ -58,8 +56,9 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin,
     def test_report_not_matched_worker(self):
         g = WorkerMissingGenerator(workers=['other'])
 
-        report = yield g.generate(self.master, None, 'worker.98.complete',
-                                  self._get_worker_dict('myworker'))
+        report = yield g.generate(
+            self.master, None, 'worker.98.complete', self._get_worker_dict('myworker')
+        )
 
         self.assertIsNone(report)
 

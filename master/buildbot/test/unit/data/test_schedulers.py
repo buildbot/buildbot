@@ -29,7 +29,6 @@ from buildbot.util import epoch2datetime
 
 
 class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = schedulers.SchedulerEndpoint
     resourceTypeClass = schedulers.Scheduler
 
@@ -95,7 +94,6 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = schedulers.SchedulersEndpoint
     resourceTypeClass = schedulers.Scheduler
 
@@ -124,8 +122,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for m in schedulers:
             self.validateData(m)
 
-        self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
-                         [13, 14, 15, 16])
+        self.assertEqual(sorted([m['schedulerid'] for m in schedulers]), [13, 14, 15, 16])
 
     @defer.inlineCallbacks
     def test_get_masterid(self):
@@ -134,8 +131,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for m in schedulers:
             self.validateData(m)
 
-        self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
-                         [15, 16])
+        self.assertEqual(sorted([m['schedulerid'] for m in schedulers]), [15, 16])
 
     @defer.inlineCallbacks
     def test_get_masterid_missing(self):
@@ -144,19 +140,16 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(schedulers, [])
 
 
-class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
-                unittest.TestCase):
-
+class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = schedulers.Scheduler(self.master)
 
     def test_signature_schedulerEnable(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.schedulerEnable,
-            self.rtype.schedulerEnable)
+            self.master.data.updates.schedulerEnable, self.rtype.schedulerEnable
+        )
         def schedulerEnable(self, schedulerid, v):
             pass
 
@@ -169,51 +162,65 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
             fakedb.SchedulerMaster(schedulerid=13, masterid=22),
         ])
         yield self.rtype.schedulerEnable(13, False)
-        self.master.mq.assertProductions(
-            [(('schedulers', '13', 'updated'),
-              {'enabled': False,
-               'master': {'active': False,
-                          'last_active': epoch2datetime(SOMETIME),
-                          'masterid': 22,
-                          'name': 'some:master'},
-               'name': 'some:scheduler',
-               'schedulerid': 13})])
+        self.master.mq.assertProductions([
+            (
+                ('schedulers', '13', 'updated'),
+                {
+                    'enabled': False,
+                    'master': {
+                        'active': False,
+                        'last_active': epoch2datetime(SOMETIME),
+                        'masterid': 22,
+                        'name': 'some:master',
+                    },
+                    'name': 'some:scheduler',
+                    'schedulerid': 13,
+                },
+            )
+        ])
         yield self.rtype.schedulerEnable(13, True)
-        self.master.mq.assertProductions(
-            [(('schedulers', '13', 'updated'),
-              {'enabled': True,
-               'master': {'active': False,
-                          'last_active': epoch2datetime(SOMETIME),
-                          'masterid': 22,
-                          'name': 'some:master'},
-               'name': 'some:scheduler',
-               'schedulerid': 13})])
+        self.master.mq.assertProductions([
+            (
+                ('schedulers', '13', 'updated'),
+                {
+                    'enabled': True,
+                    'master': {
+                        'active': False,
+                        'last_active': epoch2datetime(SOMETIME),
+                        'masterid': 22,
+                        'name': 'some:master',
+                    },
+                    'name': 'some:scheduler',
+                    'schedulerid': 13,
+                },
+            )
+        ])
 
     def test_signature_findSchedulerId(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.findSchedulerId,  # fake
-            self.rtype.findSchedulerId)  # real
+            self.rtype.findSchedulerId,
+        )  # real
         def findSchedulerId(self, name):
             pass
 
     @defer.inlineCallbacks
     def test_findSchedulerId(self):
-        self.master.db.schedulers.findSchedulerId = mock.Mock(
-            return_value=defer.succeed(10))
+        self.master.db.schedulers.findSchedulerId = mock.Mock(return_value=defer.succeed(10))
         self.assertEqual((yield self.rtype.findSchedulerId('sch')), 10)
         self.master.db.schedulers.findSchedulerId.assert_called_with('sch')
 
     def test_signature_trySetSchedulerMaster(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.trySetSchedulerMaster,  # fake
-            self.rtype.trySetSchedulerMaster)  # real
+            self.rtype.trySetSchedulerMaster,
+        )  # real
         def trySetSchedulerMaster(self, schedulerid, masterid):
             pass
 
     @defer.inlineCallbacks
     def test_trySetSchedulerMaster_succeeds(self):
-        self.master.db.schedulers.setSchedulerMaster = mock.Mock(
-            return_value=defer.succeed(None))
+        self.master.db.schedulers.setSchedulerMaster = mock.Mock(return_value=defer.succeed(None))
 
         result = yield self.rtype.trySetSchedulerMaster(10, 20)
 
@@ -222,11 +229,9 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
 
     @defer.inlineCallbacks
     def test_trySetSchedulerMaster_fails(self):
-        d = defer.fail(failure.Failure(
-            schedulers.SchedulerAlreadyClaimedError('oh noes')))
+        d = defer.fail(failure.Failure(schedulers.SchedulerAlreadyClaimedError('oh noes')))
 
-        self.master.db.schedulers.setSchedulerMaster = mock.Mock(
-            return_value=d)
+        self.master.db.schedulers.setSchedulerMaster = mock.Mock(return_value=d)
         result = yield self.rtype.trySetSchedulerMaster(10, 20)
 
         self.assertFalse(result)
@@ -235,8 +240,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests,
     def test_trySetSchedulerMaster_raisesOddException(self):
         d = defer.fail(failure.Failure(RuntimeError('oh noes')))
 
-        self.master.db.schedulers.setSchedulerMaster = mock.Mock(
-            return_value=d)
+        self.master.db.schedulers.setSchedulerMaster = mock.Mock(return_value=d)
 
         try:
             yield self.rtype.trySetSchedulerMaster(10, 20)

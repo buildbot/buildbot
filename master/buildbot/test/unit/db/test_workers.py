@@ -34,7 +34,6 @@ def configuredOnKey(worker):
 
 
 class Tests(interfaces.InterfaceTests):
-
     # common sample data
 
     baseRows = [
@@ -53,16 +52,11 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuilderMaster(id=14, builderid=20, masterid=11),
         fakedb.BuilderMaster(id=15, builderid=22, masterid=11),
         fakedb.BuilderMaster(id=16, builderid=22, masterid=10),
-        fakedb.ConfiguredWorker(
-            id=3012, workerid=30, buildermasterid=12),
-        fakedb.ConfiguredWorker(
-            id=3013, workerid=30, buildermasterid=13),
-        fakedb.ConfiguredWorker(
-            id=3014, workerid=30, buildermasterid=14),
-        fakedb.ConfiguredWorker(
-            id=3114, workerid=31, buildermasterid=14),
-        fakedb.ConfiguredWorker(
-            id=3115, workerid=31, buildermasterid=15),
+        fakedb.ConfiguredWorker(id=3012, workerid=30, buildermasterid=12),
+        fakedb.ConfiguredWorker(id=3013, workerid=30, buildermasterid=13),
+        fakedb.ConfiguredWorker(id=3014, workerid=30, buildermasterid=14),
+        fakedb.ConfiguredWorker(id=3114, workerid=31, buildermasterid=14),
+        fakedb.ConfiguredWorker(id=3115, workerid=31, buildermasterid=15),
         fakedb.ConnectedWorker(id=3010, workerid=30, masterid=10),
         fakedb.ConnectedWorker(id=3111, workerid=31, masterid=11),
     ]
@@ -94,8 +88,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getWorker(self):
         @self.assertArgSpecMatches(self.db.workers.getWorker)
-        def getWorker(self, workerid=None, name=None,
-                      masterid=None, builderid=None):
+        def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
             pass
 
     def test_signature_getWorkers(self):
@@ -163,54 +156,67 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.baseRows)
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "connected_to": [],
-            "configured_on": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "connected_to": [],
+                "configured_on": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_connected_not_configured(self):
-        yield self.insert_test_data(self.baseRows + [
-            # the worker is connected to this master, but not configured.
-            # weird, but the DB should represent it.
-            fakedb.Worker(id=32, name='two'),
-            fakedb.ConnectedWorker(workerid=32, masterid=11),
-        ])
+        yield self.insert_test_data(
+            self.baseRows
+            + [
+                # the worker is connected to this master, but not configured.
+                # weird, but the DB should represent it.
+                fakedb.Worker(id=32, name='two'),
+                fakedb.ConnectedWorker(workerid=32, masterid=11),
+            ]
+        )
         workerdict = yield self.db.workers.getWorker(workerid=32)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 32,
-            "name": 'two',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "connected_to": [11],
-            "configured_on": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 32,
+                "name": 'two',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "connected_to": [11],
+                "configured_on": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_multiple_connections(self):
-        yield self.insert_test_data(self.baseRows + [
-            # the worker is connected to two masters at once.
-            # weird, but the DB should represent it.
-            fakedb.Worker(id=32, name='two'),
-            fakedb.ConnectedWorker(workerid=32, masterid=10),
-            fakedb.ConnectedWorker(workerid=32, masterid=11),
-            fakedb.BuilderMaster(id=24, builderid=20, masterid=10),
-            fakedb.BuilderMaster(id=25, builderid=20, masterid=11),
-            fakedb.ConfiguredWorker(workerid=32, buildermasterid=24),
-            fakedb.ConfiguredWorker(workerid=32, buildermasterid=25),
-        ])
+        yield self.insert_test_data(
+            self.baseRows
+            + [
+                # the worker is connected to two masters at once.
+                # weird, but the DB should represent it.
+                fakedb.Worker(id=32, name='two'),
+                fakedb.ConnectedWorker(workerid=32, masterid=10),
+                fakedb.ConnectedWorker(workerid=32, masterid=11),
+                fakedb.BuilderMaster(id=24, builderid=20, masterid=10),
+                fakedb.BuilderMaster(id=25, builderid=20, masterid=11),
+                fakedb.ConfiguredWorker(workerid=32, buildermasterid=24),
+                fakedb.ConfiguredWorker(workerid=32, buildermasterid=25),
+            ]
+        )
         workerdict = yield self.db.workers.getWorker(workerid=32)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict,
+        self.assertEqual(
+            workerdict,
             {
                 "id": 32,
                 "name": 'two',
@@ -222,8 +228,8 @@ class Tests(interfaces.InterfaceTests):
                 "configured_on": [
                     {'builderid': 20, 'masterid': 10},
                     {'builderid': 20, 'masterid': 11},
-                ]
-            }
+                ],
+            },
         )
 
     @defer.inlineCallbacks
@@ -231,158 +237,186 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.baseRows)
         workerdict = yield self.db.workers.getWorker(name='zero')
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "connected_to": [],
-            "configured_on": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "connected_to": [],
+                "configured_on": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_not_connected(self):
-        yield self.insert_test_data(self.baseRows + [
-            fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
-            fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
-        ])
+        yield self.insert_test_data(
+            self.baseRows
+            + [
+                fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+                fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
+            ]
+        )
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": [
-                {'masterid': 10, 'builderid': 20}
-            ],
-            "connected_to": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": [{'masterid': 10, 'builderid': 20}],
+                "connected_to": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_connected(self):
-        yield self.insert_test_data(self.baseRows + [
-            fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
-            fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
-            fakedb.ConnectedWorker(workerid=30, masterid=10),
-        ])
+        yield self.insert_test_data(
+            self.baseRows
+            + [
+                fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+                fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
+                fakedb.ConnectedWorker(workerid=30, masterid=10),
+            ]
+        )
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": [
-                {'masterid': 10, 'builderid': 20}
-            ],
-            "connected_to": [10]
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": [{'masterid': 10, 'builderid': 20}],
+                "connected_to": [10],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_with_multiple_masters(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        workerdict['configured_on'] = sorted(
-            workerdict['configured_on'], key=configuredOnKey)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": sorted([
-                {'masterid': 10, 'builderid': 20},
-                {'masterid': 10, 'builderid': 21},
-                {'masterid': 11, 'builderid': 20},
-            ], key=configuredOnKey),
-            "connected_to": [10]
-        })
+        workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": sorted(
+                    [
+                        {'masterid': 10, 'builderid': 20},
+                        {'masterid': 10, 'builderid': 21},
+                        {'masterid': 11, 'builderid': 20},
+                    ],
+                    key=configuredOnKey,
+                ),
+                "connected_to": [10],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_with_multiple_masters_builderid(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30, builderid=20)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        workerdict['configured_on'] = sorted(
-            workerdict['configured_on'], key=configuredOnKey)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": sorted([
-                {'masterid': 10, 'builderid': 20},
-                {'masterid': 11, 'builderid': 20},
-            ], key=configuredOnKey),
-            "connected_to": [10]
-        })
+        workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": sorted(
+                    [
+                        {'masterid': 10, 'builderid': 20},
+                        {'masterid': 11, 'builderid': 20},
+                    ],
+                    key=configuredOnKey,
+                ),
+                "connected_to": [10],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_with_multiple_masters_masterid(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30, masterid=11)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": [
-                {'masterid': 11, 'builderid': 20},
-            ],
-            "connected_to": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": [
+                    {'masterid': 11, 'builderid': 20},
+                ],
+                "connected_to": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_with_multiple_masters_builderid_masterid(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
-        workerdict = yield self.db.workers.getWorker(workerid=30,
-                                                     builderid=20, masterid=11)
+        workerdict = yield self.db.workers.getWorker(workerid=30, builderid=20, masterid=11)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": [
-                {'masterid': 11, 'builderid': 20},
-            ],
-            "connected_to": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": [
+                    {'masterid': 11, 'builderid': 20},
+                ],
+                "connected_to": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorker_by_name_with_multiple_masters_builderid_masterid(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
-        workerdict = yield self.db.workers.getWorker(name='zero',
-                                                     builderid=20, masterid=11)
+        workerdict = yield self.db.workers.getWorker(name='zero', builderid=20, masterid=11)
         validation.verifyDbDict(self, 'workerdict', workerdict)
-        self.assertEqual(workerdict, {
-            "id": 30,
-            "name": 'zero',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": False,
-            "configured_on": [
-                {'masterid': 11, 'builderid': 20},
-            ],
-            "connected_to": []
-        })
+        self.assertEqual(
+            workerdict,
+            {
+                "id": 30,
+                "name": 'zero',
+                "workerinfo": {'a': 'b'},
+                "paused": False,
+                "pause_reason": None,
+                "graceful": False,
+                "configured_on": [
+                    {'masterid': 11, 'builderid': 20},
+                ],
+                "connected_to": [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_getWorkers_no_config(self):
@@ -404,8 +438,9 @@ class Tests(interfaces.InterfaceTests):
                         "pause_reason": None,
                         "graceful": False,
                         "configured_on": [],
-                        "connected_to": []
-                    }, {
+                        "connected_to": [],
+                    },
+                    {
                         "id": 31,
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
@@ -413,10 +448,11 @@ class Tests(interfaces.InterfaceTests):
                         "pause_reason": None,
                         "graceful": False,
                         "configured_on": [],
-                        "connected_to": []
+                        "connected_to": [],
                     },
-                ], key=workerKey
-            )
+                ],
+                key=workerKey,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -425,8 +461,7 @@ class Tests(interfaces.InterfaceTests):
         workerdicts = yield self.db.workers.getWorkers()
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
-            workerdict['configured_on'] = sorted(
-                workerdict['configured_on'], key=configuredOnKey)
+            workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(
             sorted(workerdicts, key=workerKey),
             sorted(
@@ -438,27 +473,35 @@ class Tests(interfaces.InterfaceTests):
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                            {'masterid': 10, 'builderid': 20},
-                            {'masterid': 10, 'builderid': 21},
-                            {'masterid': 11, 'builderid': 20},
-                        ], key=configuredOnKey),
-                        "connected_to": [10]
-                    }, {
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 10, 'builderid': 20},
+                                {'masterid': 10, 'builderid': 21},
+                                {'masterid': 11, 'builderid': 20},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [10],
+                    },
+                    {
                         "id": 31,
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                            {'masterid': 11, 'builderid': 20},
-                            {'masterid': 11, 'builderid': 22},
-                        ], key=configuredOnKey),
-                        "connected_to": [11]
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 11, 'builderid': 20},
+                                {'masterid': 11, 'builderid': 22},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [11],
                     },
-                ], key=workerKey
-            )
+                ],
+                key=workerKey,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -467,8 +510,7 @@ class Tests(interfaces.InterfaceTests):
         workerdicts = yield self.db.workers.getWorkers(masterid=11, builderid=21)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
-            workerdict['configured_on'] = sorted(
-                workerdict['configured_on'], key=configuredOnKey)
+            workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(sorted(workerdicts, key=workerKey), [])
 
     @defer.inlineCallbacks
@@ -477,8 +519,7 @@ class Tests(interfaces.InterfaceTests):
         workerdicts = yield self.db.workers.getWorkers(builderid=20)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
-            workerdict['configured_on'] = sorted(
-                workerdict['configured_on'], key=configuredOnKey)
+            workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(
             sorted(workerdicts, key=workerKey),
             sorted(
@@ -490,25 +531,33 @@ class Tests(interfaces.InterfaceTests):
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                            {'masterid': 10, 'builderid': 20},
-                            {'masterid': 11, 'builderid': 20},
-                        ], key=configuredOnKey),
-                        "connected_to": [10]
-                    }, {
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 10, 'builderid': 20},
+                                {'masterid': 11, 'builderid': 20},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [10],
+                    },
+                    {
                         "id": 31,
                         "name": 'one',
                         "workerinfo": {'a': 'b'},
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                             {'masterid': 11, 'builderid': 20},
-                        ], key=configuredOnKey),
-                        "connected_to": [11]
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 11, 'builderid': 20},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [11],
                     },
-                ], key=workerKey
-            )
+                ],
+                key=workerKey,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -517,8 +566,7 @@ class Tests(interfaces.InterfaceTests):
         workerdicts = yield self.db.workers.getWorkers(masterid=10)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
-            workerdict['configured_on'] = sorted(
-                workerdict['configured_on'], key=configuredOnKey)
+            workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(
             sorted(workerdicts, key=workerKey),
             sorted(
@@ -530,14 +578,18 @@ class Tests(interfaces.InterfaceTests):
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                            {'masterid': 10, 'builderid': 20},
-                            {'masterid': 10, 'builderid': 21},
-                        ], key=configuredOnKey),
-                        "connected_to": [10]
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 10, 'builderid': 20},
+                                {'masterid': 10, 'builderid': 21},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [10],
                     },
-                ], key=workerKey
-            )
+                ],
+                key=workerKey,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -546,8 +598,7 @@ class Tests(interfaces.InterfaceTests):
         workerdicts = yield self.db.workers.getWorkers(masterid=11)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
-            workerdict['configured_on'] = sorted(
-                workerdict['configured_on'], key=configuredOnKey)
+            workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(
             sorted(workerdicts, key=workerKey),
             sorted(
@@ -559,10 +610,13 @@ class Tests(interfaces.InterfaceTests):
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                             {'masterid': 11, 'builderid': 20},
-                        ], key=configuredOnKey),
-                        "connected_to": []
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 11, 'builderid': 20},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [],
                     },
                     {
                         "id": 31,
@@ -571,25 +625,27 @@ class Tests(interfaces.InterfaceTests):
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([
-                            {'masterid': 11, 'builderid': 20},
-                            {'masterid': 11, 'builderid': 22},
-                        ], key=configuredOnKey),
-                        "connected_to": [11]
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 11, 'builderid': 20},
+                                {'masterid': 11, 'builderid': 22},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [11],
                     },
-                ], key=workerKey
-            )
+                ],
+                key=workerKey,
+            ),
         )
 
     @defer.inlineCallbacks
     def test_getWorkers_with_config_masterid_11_builderid_22(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
-        workerdicts = yield self.db.workers.getWorkers(
-            masterid=11, builderid=22)
+        workerdicts = yield self.db.workers.getWorkers(masterid=11, builderid=22)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
-            workerdict['configured_on'] = sorted(
-                workerdict['configured_on'], key=configuredOnKey)
+            workerdict['configured_on'] = sorted(workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(
             sorted(workerdicts, key=workerKey),
             sorted(
@@ -601,12 +657,17 @@ class Tests(interfaces.InterfaceTests):
                         "paused": False,
                         "pause_reason": None,
                         "graceful": False,
-                        "configured_on": sorted([{'masterid': 11, 'builderid': 22}, ],
-                            key=configuredOnKey),
-                        "connected_to": [11]
+                        "configured_on": sorted(
+                            [
+                                {'masterid': 11, 'builderid': 22},
+                            ],
+                            key=configuredOnKey,
+                        ),
+                        "connected_to": [11],
                     },
-                ], key=workerKey
-            )
+                ],
+                key=workerKey,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -614,43 +675,50 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
         yield self.db.workers.set_worker_paused(31, paused=True, pause_reason="reason")
         yield self.db.workers.set_worker_graceful(31, graceful=False)
-        workerdicts = yield self.db.workers.getWorkers(
-            paused=True)
+        workerdicts = yield self.db.workers.getWorkers(paused=True)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
             workerdict['configured_on'] = []
-        self.assertEqual(workerdicts, [
-        {
-            "id": 31,
-            "name": 'one',
-            "workerinfo": {'a': 'b'},
-            "paused": True,
-            "pause_reason": "reason",
-            "graceful": False,
-            "configured_on": [],
-            "connected_to": [11]
-        }, ])
+        self.assertEqual(
+            workerdicts,
+            [
+                {
+                    "id": 31,
+                    "name": 'one',
+                    "workerinfo": {'a': 'b'},
+                    "paused": True,
+                    "pause_reason": "reason",
+                    "graceful": False,
+                    "configured_on": [],
+                    "connected_to": [11],
+                },
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_getWorkers_with_graceful(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
         yield self.db.workers.set_worker_paused(31, paused=False)
         yield self.db.workers.set_worker_graceful(31, graceful=True)
-        workerdicts = yield self.db.workers.getWorkers(
-            graceful=True)
+        workerdicts = yield self.db.workers.getWorkers(graceful=True)
         for workerdict in workerdicts:
             validation.verifyDbDict(self, 'workerdict', workerdict)
             workerdict['configured_on'] = []
-        self.assertEqual(workerdicts, [{
-            "id": 31,
-            "name": 'one',
-            "workerinfo": {'a': 'b'},
-            "paused": False,
-            "pause_reason": None,
-            "graceful": True,
-            "configured_on": [],
-            "connected_to": [11]
-        }, ])
+        self.assertEqual(
+            workerdicts,
+            [
+                {
+                    "id": 31,
+                    "name": 'one',
+                    "workerinfo": {'a': 'b'},
+                    "paused": False,
+                    "pause_reason": None,
+                    "graceful": True,
+                    "configured_on": [],
+                    "connected_to": [11],
+                },
+            ],
+        )
 
     @defer.inlineCallbacks
     def test_workerConnected_existing(self):
@@ -658,43 +726,48 @@ class Tests(interfaces.InterfaceTests):
 
         NEW_INFO = {'other': [1, 2, 3]}
 
-        yield self.db.workers.workerConnected(
-            workerid=self.W1_ID, masterid=11, workerinfo=NEW_INFO)
+        yield self.db.workers.workerConnected(workerid=self.W1_ID, masterid=11, workerinfo=NEW_INFO)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w, {
-            'id': self.W1_ID,
-            'name': self.W1_NAME,
-            'workerinfo': NEW_INFO,
-            'paused': False,
-            "pause_reason": None,
-            'graceful': False,
-            'configured_on': [],
-            'connected_to': [11]
-        })
+        self.assertEqual(
+            w,
+            {
+                'id': self.W1_ID,
+                'name': self.W1_NAME,
+                'workerinfo': NEW_INFO,
+                'paused': False,
+                "pause_reason": None,
+                'graceful': False,
+                'configured_on': [],
+                'connected_to': [11],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_workerConnected_already_connected(self):
-        yield self.insert_test_data(self.baseRows + self.worker1_rows + [
-            fakedb.ConnectedWorker(id=888,
-                                   workerid=self.W1_ID, masterid=11),
-        ])
-        yield self.db.workers.workerConnected(
-            workerid=self.W1_ID, masterid=11, workerinfo={})
+        yield self.insert_test_data(
+            self.baseRows
+            + self.worker1_rows
+            + [
+                fakedb.ConnectedWorker(id=888, workerid=self.W1_ID, masterid=11),
+            ]
+        )
+        yield self.db.workers.workerConnected(workerid=self.W1_ID, masterid=11, workerinfo={})
 
         w = yield self.db.workers.getWorker(self.W1_ID)
         self.assertEqual(w['connected_to'], [11])
 
     @defer.inlineCallbacks
     def test_workerDisconnected(self):
-        yield self.insert_test_data(self.baseRows + self.worker1_rows + [
-            fakedb.ConnectedWorker(id=888,
-                                   workerid=self.W1_ID, masterid=10),
-            fakedb.ConnectedWorker(id=889,
-                                   workerid=self.W1_ID, masterid=11),
-        ])
-        yield self.db.workers.workerDisconnected(
-            workerid=self.W1_ID, masterid=11)
+        yield self.insert_test_data(
+            self.baseRows
+            + self.worker1_rows
+            + [
+                fakedb.ConnectedWorker(id=888, workerid=self.W1_ID, masterid=10),
+                fakedb.ConnectedWorker(id=889, workerid=self.W1_ID, masterid=11),
+            ]
+        )
+        yield self.db.workers.workerDisconnected(workerid=self.W1_ID, masterid=11)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
         self.assertEqual(w['connected_to'], [10])
@@ -702,8 +775,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_workerDisconnected_already_disconnected(self):
         yield self.insert_test_data(self.baseRows + self.worker1_rows)
-        yield self.db.workers.workerDisconnected(
-            workerid=self.W1_ID, masterid=11)
+        yield self.db.workers.workerDisconnected(workerid=self.W1_ID, masterid=11)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
         self.assertEqual(w['connected_to'], [])
@@ -715,30 +787,36 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.set_worker_paused(self.W1_ID, False, None)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w, {
-            'id': self.W1_ID,
-            'name': self.W1_NAME,
-            'workerinfo': self.W1_INFO,
-            'paused': False,
-            "pause_reason": None,
-            'graceful': False,
-            'configured_on': [],
-            'connected_to': []
-        })
+        self.assertEqual(
+            w,
+            {
+                'id': self.W1_ID,
+                'name': self.W1_NAME,
+                'workerinfo': self.W1_INFO,
+                'paused': False,
+                "pause_reason": None,
+                'graceful': False,
+                'configured_on': [],
+                'connected_to': [],
+            },
+        )
 
         yield self.db.workers.set_worker_paused(self.W1_ID, True, "reason")
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w, {
-            'id': self.W1_ID,
-            'name': self.W1_NAME,
-            'workerinfo': self.W1_INFO,
-            'paused': True,
-            "pause_reason": "reason",
-            'graceful': False,
-            'configured_on': [],
-            'connected_to': []
-        })
+        self.assertEqual(
+            w,
+            {
+                'id': self.W1_ID,
+                'name': self.W1_NAME,
+                'workerinfo': self.W1_INFO,
+                'paused': True,
+                "pause_reason": "reason",
+                'graceful': False,
+                'configured_on': [],
+                'connected_to': [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_set_worker_graceful_existing(self):
@@ -747,30 +825,36 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.set_worker_graceful(self.W1_ID, False)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w, {
-            'id': self.W1_ID,
-            'name': self.W1_NAME,
-            'workerinfo': self.W1_INFO,
-            'paused': False,
-            "pause_reason": None,
-            'graceful': False,
-            'configured_on': [],
-            'connected_to': []
-        })
+        self.assertEqual(
+            w,
+            {
+                'id': self.W1_ID,
+                'name': self.W1_NAME,
+                'workerinfo': self.W1_INFO,
+                'paused': False,
+                "pause_reason": None,
+                'graceful': False,
+                'configured_on': [],
+                'connected_to': [],
+            },
+        )
 
         yield self.db.workers.set_worker_graceful(self.W1_ID, True)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w, {
-            'id': self.W1_ID,
-            'name': self.W1_NAME,
-            'workerinfo': self.W1_INFO,
-            'paused': False,
-            "pause_reason": None,
-            'graceful': True,
-            'configured_on': [],
-            'connected_to': []
-        })
+        self.assertEqual(
+            w,
+            {
+                'id': self.W1_ID,
+                'name': self.W1_NAME,
+                'workerinfo': self.W1_INFO,
+                'paused': False,
+                "pause_reason": None,
+                'graceful': True,
+                'configured_on': [],
+                'connected_to': [],
+            },
+        )
 
     @defer.inlineCallbacks
     def test_workerConfigured(self):
@@ -779,14 +863,20 @@ class Tests(interfaces.InterfaceTests):
         # should remove builder 21, and add 22
         yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
 
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=10, builderids=[20, 22])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[20, 22])
 
         w = yield self.db.workers.getWorker(30)
-        self.assertEqual(sorted(w['configured_on'], key=configuredOnKey), sorted([
-            {'builderid': 20, 'masterid': 11},
-            {'builderid': 20, 'masterid': 10},
-            {'builderid': 22, 'masterid': 10}], key=configuredOnKey))
+        self.assertEqual(
+            sorted(w['configured_on'], key=configuredOnKey),
+            sorted(
+                [
+                    {'builderid': 20, 'masterid': 11},
+                    {'builderid': 20, 'masterid': 10},
+                    {'builderid': 22, 'masterid': 10},
+                ],
+                key=configuredOnKey,
+            ),
+        )
 
     @defer.inlineCallbacks
     def test_workerConfiguredTwice(self):
@@ -795,20 +885,22 @@ class Tests(interfaces.InterfaceTests):
         # should remove builder 21, and add 22
         yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
 
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=10, builderids=[20, 22])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[20, 22])
 
         # configure again (should eat the duplicate insertion errors)
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=10, builderids=[20, 21, 22])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[20, 21, 22])
 
         w = yield self.db.workers.getWorker(30)
         x1 = sorted(w['configured_on'], key=configuredOnKey)
-        x2 = sorted([{'builderid': 20, 'masterid': 11},
-                     {'builderid': 20, 'masterid': 10},
-                     {'builderid': 21, 'masterid': 10},
-                     {'builderid': 22, 'masterid': 10}],
-                    key=configuredOnKey)
+        x2 = sorted(
+            [
+                {'builderid': 20, 'masterid': 11},
+                {'builderid': 20, 'masterid': 10},
+                {'builderid': 21, 'masterid': 10},
+                {'builderid': 22, 'masterid': 10},
+            ],
+            key=configuredOnKey,
+        )
         self.assertEqual(x1, x2)
 
     @defer.inlineCallbacks
@@ -816,38 +908,44 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=10, builderids=[20, 22])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[20, 22])
 
         w = yield self.db.workers.getWorker(30)
         w['configured_on'] = sorted(w['configured_on'], key=configuredOnKey)
-        self.assertEqual(w['configured_on'],
-                         sorted([{'builderid': 20, 'masterid': 11},
-                                 {'builderid': 20, 'masterid': 10},
-                                 {'builderid': 22, 'masterid': 10}],
-                                key=configuredOnKey))
+        self.assertEqual(
+            w['configured_on'],
+            sorted(
+                [
+                    {'builderid': 20, 'masterid': 11},
+                    {'builderid': 20, 'masterid': 10},
+                    {'builderid': 22, 'masterid': 10},
+                ],
+                key=configuredOnKey,
+            ),
+        )
 
     @defer.inlineCallbacks
     def test_workerReConfigured_should_not_affect_other_worker(self):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove all the builders in master 11
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=11, builderids=[])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=11, builderids=[])
 
         w = yield self.db.workers.getWorker(30)
         x1 = sorted(w['configured_on'], key=configuredOnKey)
-        x2 = sorted([{'builderid': 20, 'masterid': 10},
-                     {'builderid': 21, 'masterid': 10}],
-                    key=configuredOnKey)
+        x2 = sorted(
+            [{'builderid': 20, 'masterid': 10}, {'builderid': 21, 'masterid': 10}],
+            key=configuredOnKey,
+        )
         self.assertEqual(x1, x2)
 
         # ensure worker 31 is not affected (see GitHub issue#3392)
         w = yield self.db.workers.getWorker(31)
         x1 = sorted(w['configured_on'], key=configuredOnKey)
-        x2 = sorted([{'builderid': 20, 'masterid': 11},
-                     {'builderid': 22, 'masterid': 11}],
-                    key=configuredOnKey)
+        x2 = sorted(
+            [{'builderid': 20, 'masterid': 11}, {'builderid': 22, 'masterid': 11}],
+            key=configuredOnKey,
+        )
         self.assertEqual(x1, x2)
 
     @defer.inlineCallbacks
@@ -855,13 +953,11 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove all builders from master 10
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=10, builderids=[])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[])
 
         w = yield self.db.workers.getWorker(30)
         w['configured_on'] = sorted(w['configured_on'], key=configuredOnKey)
-        expected = sorted([
-            {'builderid': 20, 'masterid': 11}], key=configuredOnKey)
+        expected = sorted([{'builderid': 20, 'masterid': 11}], key=configuredOnKey)
         self.assertEqual(w['configured_on'], expected)
 
     @defer.inlineCallbacks
@@ -870,8 +966,7 @@ class Tests(interfaces.InterfaceTests):
 
         # should remove builder 21, and add 22
         yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
-        yield self.db.workers.workerConfigured(
-            workerid=30, masterid=10, builderids=[])
+        yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[])
 
         # should only keep builder for master 11
         w = yield self.db.workers.getWorker(30)
@@ -892,44 +987,50 @@ class Tests(interfaces.InterfaceTests):
 
 
 class RealTests(Tests):
-
     # tests that only "real" implementations will pass
     pass
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent()
 
 
-class TestRealDB(unittest.TestCase,
-                 connector_component.ConnectorComponentMixin,
-                 RealTests, querylog.SqliteMaxVariableMixin):
-
+class TestRealDB(
+    unittest.TestCase,
+    connector_component.ConnectorComponentMixin,
+    RealTests,
+    querylog.SqliteMaxVariableMixin,
+):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['workers', 'masters', 'projects', 'builders',
-                         'builder_masters', 'connected_workers',
-                         'configured_workers'])
+            table_names=[
+                'workers',
+                'masters',
+                'projects',
+                'builders',
+                'builder_masters',
+                'connected_workers',
+                'configured_workers',
+            ]
+        )
 
-        self.db.workers = \
-            workers.WorkersConnectorComponent(self.db)
+        self.db.workers = workers.WorkersConnectorComponent(self.db)
 
     @defer.inlineCallbacks
     def test_workerConfiguredMany(self):
-        manyWorkers = [
-            fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
-        ] + [
-            fakedb.Worker(id=50 + n, name='zero' + str(n))
-            for n in range(1000)
-        ] + [
-            fakedb.ConfiguredWorker(
-                id=n + 3000, workerid=50 + n, buildermasterid=1000)
-            for n in range(1000)
-        ]
+        manyWorkers = (
+            [
+                fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
+            ]
+            + [fakedb.Worker(id=50 + n, name='zero' + str(n)) for n in range(1000)]
+            + [
+                fakedb.ConfiguredWorker(id=n + 3000, workerid=50 + n, buildermasterid=1000)
+                for n in range(1000)
+            ]
+        )
         yield self.insert_test_data(self.baseRows + manyWorkers)
 
         # should successfully remove all ConfiguredWorker rows
@@ -941,20 +1042,20 @@ class TestRealDB(unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_workerConfiguredManyBuilders(self):
-        manyWorkers = [
-            fakedb.Builder(id=100 + n, name='a' + str(n))
-            for n in range(1000)
-        ] + [
-            fakedb.Worker(id=50 + n, name='zero' + str(n))
-            for n in range(2000)
-        ] + [
-            fakedb.BuilderMaster(id=1000 + n, builderid=100 + n, masterid=10)
-            for n in range(1000)
-        ] + [
-            fakedb.ConfiguredWorker(
-                id=n + 3000, workerid=50 + n, buildermasterid=int(1000 + n / 2))
-            for n in range(2000)
-        ]
+        manyWorkers = (
+            [fakedb.Builder(id=100 + n, name='a' + str(n)) for n in range(1000)]
+            + [fakedb.Worker(id=50 + n, name='zero' + str(n)) for n in range(2000)]
+            + [
+                fakedb.BuilderMaster(id=1000 + n, builderid=100 + n, masterid=10)
+                for n in range(1000)
+            ]
+            + [
+                fakedb.ConfiguredWorker(
+                    id=n + 3000, workerid=50 + n, buildermasterid=int(1000 + n / 2)
+                )
+                for n in range(2000)
+            ]
+        )
         yield self.insert_test_data(self.baseRows + manyWorkers)
 
         # should successfully remove all ConfiguredWorker rows

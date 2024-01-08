@@ -23,7 +23,6 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builder and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def setup_config(self):
         c = {}
@@ -33,19 +32,13 @@ class ShellMaster(RunMasterBase):
         from buildbot.process.factory import BuildFactory
 
         c['schedulers'] = [
-            schedulers.AnyBranchScheduler(
-                name="sched",
-                builderNames=["testy"]),
-            schedulers.ForceScheduler(
-                name="force",
-                builderNames=["testy"])]
+            schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
+            schedulers.ForceScheduler(name="force", builderNames=["testy"]),
+        ]
 
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='echo hello'))
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         c['www'] = {'graphql': True}
         yield self.setup_master(c)
 
@@ -60,9 +53,10 @@ class ShellMaster(RunMasterBase):
             "committer": "me@foo.com",
             "comments": "good stuff",
             "revision": "HEAD",
-            "project": "none"
+            "project": "none",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True,
-                                        wantProperties=True)
+        build = yield self.doForceBuild(
+            wantSteps=True, useChange=change, wantLogs=True, wantProperties=True
+        )
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['properties']['owners'], (['me@foo.com'], 'Build'))

@@ -48,15 +48,24 @@ class RunProcessPP(protocol.ProcessProtocol):
 
 
 class RunProcess:
-
     TIMEOUT_KILL = 5
     interrupt_signal = "KILL"
 
-    def __init__(self, reactor, command, workdir=None, env=None,
-                 collect_stdout=True, collect_stderr=True, stderr_is_error=False,
-                 io_timeout=300, runtime_timeout=3600, sigterm_timeout=5, initial_stdin=None,
-                 use_pty=False):
-
+    def __init__(
+        self,
+        reactor,
+        command,
+        workdir=None,
+        env=None,
+        collect_stdout=True,
+        collect_stderr=True,
+        stderr_is_error=False,
+        io_timeout=300,
+        runtime_timeout=3600,
+        sigterm_timeout=5,
+        initial_stdin=None,
+        use_pty=False,
+    ):
         self._reactor = reactor
         self.command = command
 
@@ -143,15 +152,17 @@ class RunProcess:
             environ['PWD'] = os.path.abspath(self.workdir)
 
         argv = unicode2bytes(self.command)
-        self.process = self._reactor.spawnProcess(self.pp, argv[0], argv, environ, self.workdir,
-                                                  usePTY=self.use_pty)
+        self.process = self._reactor.spawnProcess(
+            self.pp, argv[0], argv, environ, self.workdir, usePTY=self.use_pty
+        )
 
         if self.io_timeout:
             self.io_timer = self._reactor.callLater(self.io_timeout, self.io_timed_out)
 
         if self.runtime_timeout:
-            self.runtime_timer = self._reactor.callLater(self.runtime_timeout,
-                                                         self.runtime_timed_out)
+            self.runtime_timer = self._reactor.callLater(
+                self.runtime_timeout, self.runtime_timed_out
+            )
 
     def add_stdout(self, data):
         if self.consumer_stdout is not None:
@@ -233,7 +244,6 @@ class RunProcess:
         return False
 
     def check_process_was_killed(self):
-
         self.sigterm_timer = None
         if not self.is_dead():
             if not self.send_signal(self.interrupt_signal):
@@ -304,8 +314,9 @@ class RunProcess:
 
         if self.sigterm_timeout is not None:
             self.send_signal("TERM")
-            self.sigterm_timer = self._reactor.callLater(self.sigterm_timeout,
-                                                         self.check_process_was_killed)
+            self.sigterm_timer = self._reactor.callLater(
+                self.sigterm_timeout, self.check_process_was_killed
+            )
         else:
             if not self.send_signal(self.interrupt_signal):
                 log.msg(f"{self}: failed to kill process")

@@ -29,7 +29,6 @@ from buildbot.util.ssfilter import SourceStampFilter
 
 
 class TestFilterSet(unittest.TestCase):
-
     def test_empty_filter(self):
         filter = _OldBuildFilterSet()
         self.assertFalse(filter.is_matched('builder', {'prop': 'value'}))
@@ -50,13 +49,12 @@ class TestFilterSet(unittest.TestCase):
 
 
 class TestOldBuildTracker(unittest.TestCase):
-
     def setUp(self):
         filter = _OldBuildFilterSet()
 
-        ss_filter = SourceStampFilter(codebase_eq=['cb1', 'cb2'],
-                                      repository_eq=['rp1', 'rp2'],
-                                      branch_eq=['br1', 'br2'])
+        ss_filter = SourceStampFilter(
+            codebase_eq=['cb1', 'cb2'], repository_eq=['rp1', 'rp2'], branch_eq=['br1', 'br2']
+        )
         filter.add_filter(['bldr1', 'bldr2'], ss_filter)
         self.cancellations = []
         self.tracker = _OldBuildTracker(filter, lambda ss: ss['branch'], self.on_cancel)
@@ -89,8 +87,10 @@ class TestOldBuildTracker(unittest.TestCase):
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
     def test_multi_codebase_unknown_branch_not_tracked(self):
-        ss_dicts = [self.create_ss_dict('pr1', 'cb1', 'rp1', None),
-                    self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2')]
+        ss_dicts = [
+            self.create_ss_dict('pr1', 'cb1', 'rp1', None),
+            self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2'),
+        ]
 
         self.tracker.on_new_build(1, 'bldr1', ss_dicts)
         self.assertFalse(self.tracker.is_build_tracked(1))
@@ -108,8 +108,10 @@ class TestOldBuildTracker(unittest.TestCase):
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
     def test_multi_codebase_unmatched_ss_not_tracked(self):
-        ss_dicts = [self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked'),
-                    self.create_ss_dict('pr2', 'cb2', 'rp2', 'untracked')]
+        ss_dicts = [
+            self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked'),
+            self.create_ss_dict('pr2', 'cb2', 'rp2', 'untracked'),
+        ]
 
         self.tracker.on_new_build(1, 'bldr1', ss_dicts)
         self.assertFalse(self.tracker.is_build_tracked(1))
@@ -118,8 +120,10 @@ class TestOldBuildTracker(unittest.TestCase):
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
     def test_multi_codebase_tracks_if_at_least_one_ss_match(self):
-        ss_dicts = [self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked'),
-                    self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2')]
+        ss_dicts = [
+            self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked'),
+            self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2'),
+        ]
 
         self.tracker.on_new_build(1, 'bldr1', ss_dicts)
 
@@ -271,15 +275,22 @@ class TestOldBuildTracker(unittest.TestCase):
 
 
 class TestOldBuildCancellerUtils(ConfigErrorsMixin, unittest.TestCase):
-
     @parameterized.expand([
         ('only_builder', [(['bldr'], SourceStampFilter())]),
         ('with_codebase', [(['bldr'], SourceStampFilter(codebase_eq=['value']))]),
         ('with_repository', [(['bldr'], SourceStampFilter(repository_eq=['value']))]),
         ('with_branch', [(['bldr'], SourceStampFilter(branch_eq=['value']))]),
-        ('all', [(['bldr'], SourceStampFilter(codebase_eq=['v1', 'v2'],
-                                              repository_eq=['v1', 'v2'],
-                                              branch_eq=['v1', 'v2']))]),
+        (
+            'all',
+            [
+                (
+                    ['bldr'],
+                    SourceStampFilter(
+                        codebase_eq=['v1', 'v2'], repository_eq=['v1', 'v2'], branch_eq=['v1', 'v2']
+                    ),
+                )
+            ],
+        ),
     ])
     def test_check_filters_valid(self, name, filters):
         OldBuildCanceller.check_filters(filters)
@@ -308,7 +319,6 @@ class TestOldBuildCancellerUtils(ConfigErrorsMixin, unittest.TestCase):
 
 
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -340,40 +350,81 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
             fakedb.Builder(id=79, name='builder1'),
             fakedb.Builder(id=80, name='builder2'),
             fakedb.Builder(id=81, name='builder3'),
-
             fakedb.Buildset(id=98, results=None, reason="reason98"),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
-            fakedb.SourceStamp(id=234, revision='revision1', project='project1',
-                               codebase='codebase1', repository='repository1', branch='branch1'),
+            fakedb.SourceStamp(
+                id=234,
+                revision='revision1',
+                project='project1',
+                codebase='codebase1',
+                repository='repository1',
+                branch='branch1',
+            ),
             fakedb.BuildRequest(id=10, buildsetid=98, builderid=79),
-            fakedb.Build(id=19, number=1, builderid=79, buildrequestid=10, workerid=13,
-                         masterid=92, results=None, state_string="state1"),
-
+            fakedb.Build(
+                id=19,
+                number=1,
+                builderid=79,
+                buildrequestid=10,
+                workerid=13,
+                masterid=92,
+                results=None,
+                state_string="state1",
+            ),
             fakedb.Buildset(id=99, results=None, reason="reason99"),
             fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=235),
-            fakedb.SourceStamp(id=235, revision='revision2', project='project2',
-                               codebase='codebase2', repository='repository2', branch='branch2'),
+            fakedb.SourceStamp(
+                id=235,
+                revision='revision2',
+                project='project2',
+                codebase='codebase2',
+                repository='repository2',
+                branch='branch2',
+            ),
             fakedb.BuildRequest(id=11, buildsetid=99, builderid=80),
-            fakedb.Build(id=20, number=1, builderid=80, buildrequestid=11, workerid=13,
-                         masterid=92, results=None, state_string="state2"),
-
+            fakedb.Build(
+                id=20,
+                number=1,
+                builderid=80,
+                buildrequestid=11,
+                workerid=13,
+                masterid=92,
+                results=None,
+                state_string="state2",
+            ),
             fakedb.Buildset(id=100, results=None, reason="reason100"),
             fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=236),
-            fakedb.SourceStamp(id=236, revision='revision2', project='project2',
-                               codebase='codebase2', repository='repository2',
-                               branch='refs/changes/10/12310/2'),
+            fakedb.SourceStamp(
+                id=236,
+                revision='revision2',
+                project='project2',
+                codebase='codebase2',
+                repository='repository2',
+                branch='refs/changes/10/12310/2',
+            ),
             fakedb.BuildRequest(id=12, buildsetid=100, builderid=81),
-            fakedb.Build(id=21, number=1, builderid=81, buildrequestid=12, workerid=13,
-                         masterid=92, results=None, state_string="state3"),
+            fakedb.Build(
+                id=21,
+                number=1,
+                builderid=81,
+                buildrequestid=12,
+                workerid=13,
+                masterid=92,
+                results=None,
+                state_string="state3",
+            ),
         ])
 
     @defer.inlineCallbacks
     def setup_canceller_with_filters(self):
-        self.canceller = OldBuildCanceller('canceller', [
-            (['builder1'], SourceStampFilter(branch_eq=['branch1'])),
-            (['builder2'], SourceStampFilter(branch_eq=['branch2'])),
-            (['builder3'], SourceStampFilter()),
-        ])
+        self.canceller = OldBuildCanceller(
+            'canceller',
+            [
+                (['builder1'], SourceStampFilter(branch_eq=['branch1'])),
+                (['builder2'], SourceStampFilter(branch_eq=['branch2'])),
+                (['builder3'], SourceStampFilter()),
+            ],
+        )
         yield self.canceller.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -385,13 +436,15 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         expected_productions = []
         for kind, id in cancellations:
             if kind == 'build':
-                expected_productions.append(
-                    (('control', 'builds', str(id), 'stop'),
-                     {'reason': 'Build has been obsoleted by a newer commit'}))
+                expected_productions.append((
+                    ('control', 'builds', str(id), 'stop'),
+                    {'reason': 'Build has been obsoleted by a newer commit'},
+                ))
             elif kind == 'breq':
-                expected_productions.append(
-                    (('control', 'buildrequests', str(id), 'cancel'),
-                     {'reason': 'Build request has been obsoleted by a newer commit'}))
+                expected_productions.append((
+                    ('control', 'buildrequests', str(id), 'cancel'),
+                    {'reason': 'Build request has been obsoleted by a newer commit'},
+                ))
             elif kind == 'buildrequests':
                 brdict = yield self.master.db.buildrequests.getBuildRequest(id)
                 expected_productions.append((('buildrequests', str(id), 'cancel'), brdict))
@@ -416,8 +469,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
     def test_cancel_build_after_new_commit_gerrit_branch_filter(self):
         yield self.setup_canceller_with_filters()
 
-        ss_dict = self.create_ss_dict('project2', 'codebase2', 'repository2',
-                                      'refs/changes/10/12310/3')
+        ss_dict = self.create_ss_dict(
+            'project2', 'codebase2', 'repository2', 'refs/changes/10/12310/3'
+        )
 
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.assert_cancelled([('build', 21)])
@@ -487,10 +541,13 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.canceller._on_buildrequest_new = waiting_on_buildrequest_new
 
         # Start reconfig. We verify that we actually blocked in on_build_new
-        d = self.canceller.reconfigService('canceller', [
-            {'builders': ['builder1'], 'branch_eq': ['branch1']},
-            {'builders': ['builder2'], 'branch_eq': ['branch2']},
-        ])
+        d = self.canceller.reconfigService(
+            'canceller',
+            [
+                {'builders': ['builder1'], 'branch_eq': ['branch1']},
+                {'builders': ['builder2'], 'branch_eq': ['branch2']},
+            ],
+        )
 
         self.assertEqual(on_build_new_build_ids, [])
         self.assertEqual(on_buildrequest_new_breq_ids, [10])

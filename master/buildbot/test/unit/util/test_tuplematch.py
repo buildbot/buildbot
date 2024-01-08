@@ -20,7 +20,6 @@ from buildbot.util import tuplematch
 
 
 class MatchTuple(tuplematching.TupleMatchingMixin, unittest.TestCase):
-
     # called by the TupleMatchingMixin methods
 
     def do_test_match(self, routingKey, shouldMatch, filter):

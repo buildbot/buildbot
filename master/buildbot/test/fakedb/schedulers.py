@@ -63,7 +63,6 @@ class SchedulerChange(Row):
 
 
 class FakeSchedulersComponent(FakeDBComponent):
-
     def setUp(self):
         self.schedulers = {}
         self.scheduler_masters = {}
@@ -85,8 +84,7 @@ class FakeSchedulersComponent(FakeDBComponent):
     # component methods
 
     def classifyChanges(self, schedulerid, classifications):
-        self.classifications.setdefault(
-            schedulerid, {}).update(classifications)
+        self.classifications.setdefault(schedulerid, {}).update(classifications)
         return defer.succeed(None)
 
     def flushChangeClassifications(self, schedulerid, less_than=None):
@@ -99,40 +97,49 @@ class FakeSchedulersComponent(FakeDBComponent):
             self.classifications[schedulerid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, schedulerid, branch=-1, repository=-1,
-                                 project=-1, codebase=-1):
+    def getChangeClassifications(
+        self, schedulerid, branch=-1, repository=-1, project=-1, codebase=-1
+    ):
         classifications = self.classifications.setdefault(schedulerid, {})
 
         sentinel = {
             "branch": object(),
             "repository": object(),
             "project": object(),
-            "codebase": object()
+            "codebase": object(),
         }
 
         if branch != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.items()
-                if self.db.changes.changes.get(k, sentinel)['branch'] == branch)
+                (k, v)
+                for (k, v) in classifications.items()
+                if self.db.changes.changes.get(k, sentinel)['branch'] == branch
+            )
 
         if repository != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.items()
-                if self.db.changes.changes.get(k, sentinel)['repository'] == repository)
+                (k, v)
+                for (k, v) in classifications.items()
+                if self.db.changes.changes.get(k, sentinel)['repository'] == repository
+            )
 
         if project != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.items()
-                if self.db.changes.changes.get(k, sentinel)['project'] == project)
+                (k, v)
+                for (k, v) in classifications.items()
+                if self.db.changes.changes.get(k, sentinel)['project'] == project
+            )
 
         if codebase != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.items()
-                if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase)
+                (k, v)
+                for (k, v) in classifications.items()
+                if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase
+            )
 
         return defer.succeed(classifications)
 
@@ -150,7 +157,7 @@ class FakeSchedulersComponent(FakeDBComponent):
                 "id": schedulerid,
                 "name": self.schedulers[schedulerid],
                 "enabled": self.enabled.get(schedulerid, True),
-                "masterid": None
+                "masterid": None,
             }
             # only set masterid if the relevant scheduler master exists and
             # is active
@@ -159,9 +166,7 @@ class FakeSchedulersComponent(FakeDBComponent):
         return None
 
     def getSchedulers(self, active=None, masterid=None):
-        d = defer.DeferredList([
-            self.getScheduler(id) for id in self.schedulers
-        ])
+        d = defer.DeferredList([self.getScheduler(id) for id in self.schedulers])
 
         @d.addCallback
         def filter(results):
@@ -169,16 +174,14 @@ class FakeSchedulersComponent(FakeDBComponent):
             results = [r[1] for r in results]
             # filter for masterid
             if masterid is not None:
-                results = [r for r in results
-                           if r['masterid'] == masterid]
+                results = [r for r in results if r['masterid'] == masterid]
             # filter for active or inactive if necessary
             if active:
-                results = [r for r in results
-                           if r['masterid'] is not None]
+                results = [r for r in results if r['masterid'] is not None]
             elif active is not None:
-                results = [r for r in results
-                           if r['masterid'] is None]
+                results = [r for r in results if r['masterid'] is None]
             return results
+
         return d
 
     def setSchedulerMaster(self, schedulerid, masterid):
@@ -206,13 +209,10 @@ class FakeSchedulersComponent(FakeDBComponent):
     # assertions
 
     def assertClassifications(self, schedulerid, classifications):
-        self.t.assertEqual(
-            self.classifications.get(schedulerid, {}),
-            classifications)
+        self.t.assertEqual(self.classifications.get(schedulerid, {}), classifications)
 
     def assertSchedulerMaster(self, schedulerid, masterid):
-        self.t.assertEqual(self.scheduler_masters.get(schedulerid),
-                           masterid)
+        self.t.assertEqual(self.scheduler_masters.get(schedulerid), masterid)
 
     def enable(self, schedulerid, v):
         assert schedulerid in self.schedulers

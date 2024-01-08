@@ -26,7 +26,6 @@ from buildbot.util import bytes2unicode
 
 
 class Source(buildstep.BuildStep, CompositeStepMixin):
-
     """This is a base class to generate a source tree in the worker.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
@@ -34,8 +33,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
     starts a RemoteCommand with those arguments.
     """
 
-    renderables = ['description', 'descriptionDone', 'descriptionSuffix',
-                   'workdir', 'env']
+    renderables = ['description', 'descriptionDone', 'descriptionSuffix', 'workdir', 'env']
 
     description = None  # set this to a list of short strings to override
     descriptionDone = None  # alternate description when the step is complete
@@ -47,10 +45,21 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
     branch = None  # the default branch, should be set in __init__
 
-    def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
-                 timeout=20 * 60, retry=None, env=None, logEnviron=True,
-                 description=None, descriptionDone=None, descriptionSuffix=None,
-                 codebase='', **kwargs):
+    def __init__(
+        self,
+        workdir=None,
+        mode='update',
+        alwaysUseLatest=False,
+        timeout=20 * 60,
+        retry=None,
+        env=None,
+        logEnviron=True,
+        description=None,
+        descriptionDone=None,
+        descriptionSuffix=None,
+        codebase='',
+        **kwargs,
+    ):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
@@ -93,12 +102,8 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         default value will then match all changes.
         """
 
-        descriptions_for_mode = {
-            "clobber": "checkout",
-            "export": "exporting"}
-        descriptionDones_for_mode = {
-            "clobber": "checkout",
-            "export": "export"}
+        descriptions_for_mode = {"clobber": "checkout", "export": "exporting"}
+        descriptionDones_for_mode = {"clobber": "checkout", "export": "export"}
 
         if not description:
             description = [descriptions_for_mode.get(mode, "updating")]
@@ -107,10 +112,12 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         if not descriptionSuffix and codebase:
             descriptionSuffix = [codebase]
 
-        super().__init__(description=description,
-                         descriptionDone=descriptionDone,
-                         descriptionSuffix=descriptionSuffix,
-                         **kwargs)
+        super().__init__(
+            description=description,
+            descriptionDone=descriptionDone,
+            descriptionSuffix=descriptionSuffix,
+            **kwargs,
+        )
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
@@ -120,8 +127,8 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         self.codebase = codebase
         if self.codebase:
             self.name = properties.Interpolate(
-                "%(kw:name)s-%(kw:codebase)s",
-                name=self.name, codebase=self.codebase)
+                "%(kw:name)s-%(kw:codebase)s", name=self.name, codebase=self.codebase
+            )
 
         self.alwaysUseLatest = alwaysUseLatest
 
@@ -152,12 +159,13 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         """
         from inspect import getmembers
         from inspect import ismethod
+
         methods = getmembers(self, ismethod)
         group_prefix = attrGroup + '_'
         group_len = len(group_prefix)
-        group_members = [method[0][group_len:]
-                         for method in methods
-                         if method[0].startswith(group_prefix)]
+        group_members = [
+            method[0][group_len:] for method in methods if method[0].startswith(group_prefix)
+        ]
         return group_members
 
     def updateSourceProperty(self, name, value, source=''):
@@ -170,14 +178,16 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             source = self.__class__.__name__
 
         if self.codebase != '':
-            assert not isinstance(self.getProperty(name, None), str), \
-                f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
+            assert not isinstance(
+                self.getProperty(name, None), str
+            ), f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
             super().setProperty(name, property_dict, source)
         else:
-            assert not isinstance(self.getProperty(name, None), dict), \
-                f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
+            assert not isinstance(
+                self.getProperty(name, None), dict
+            ), f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
             super().setProperty(name, value, source)
 
     def computeSourceRevision(self, changes):
@@ -192,12 +202,18 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):
-        patch_command = ['patch', f'-p{patch[0]}', '--remove-empty-files',
-                         '--force', '--forward', '-i', '.buildbot-diff']
-        cmd = remotecommand.RemoteShellCommand(self.workdir,
-                                               patch_command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron)
+        patch_command = [
+            'patch',
+            f'-p{patch[0]}',
+            '--remove-empty-files',
+            '--force',
+            '--forward',
+            '-i',
+            '.buildbot-diff',
+        ]
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir, patch_command, env=self.env, logEnviron=self.logEnviron
+        )
 
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
@@ -223,10 +239,13 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         yield self.downloadFileContentToWorker('.buildbot-diff', diff)
         yield self.downloadFileContentToWorker('.buildbot-patched', 'patched\n')
         yield self.applyPatch(patch)
-        cmd = remotecommand.RemoteCommand('rmdir',
-                                          {'dir': self.build.path_module.join(self.workdir,
-                                                                              ".buildbot-diff"),
-                                           'logEnviron': self.logEnviron})
+        cmd = remotecommand.RemoteCommand(
+            'rmdir',
+            {
+                'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
+                'logEnviron': self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -235,17 +254,18 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         return cmd.rc
 
     def sourcedirIsPatched(self):
-        d = self.pathExists(
-            self.build.path_module.join(self.workdir, '.buildbot-patched'))
+        d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
 
     @defer.inlineCallbacks
     def run(self):
         if getattr(self, 'startVC', None) is not None:
-            msg = 'Old-style source steps are no longer supported. Please convert your custom ' \
-                  'source step to new style (replace startVC with run_vc and convert all used ' \
-                  'old style APIs to new style). Please consider contributing the source step to ' \
-                  'upstream BuildBot so that such migrations can be avoided in the future.'
+            msg = (
+                'Old-style source steps are no longer supported. Please convert your custom '
+                'source step to new style (replace startVC with run_vc and convert all used '
+                'old style APIs to new style). Please consider contributing the source step to '
+                'upstream BuildBot so that such migrations can be avoided in the future.'
+            )
             raise NotImplementedError(msg)
 
         if not self.alwaysUseLatest:
@@ -275,9 +295,9 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             else:
                 log.msg(f"No sourcestamp found in build for codebase '{self.codebase}'")
                 self.descriptionDone = f"Codebase {self.codebase} not in build"
-                yield self.addCompleteLog("log",
-                                          "No sourcestamp found in build for "
-                                          f"codebase '{self.codebase}'")
+                yield self.addCompleteLog(
+                    "log", "No sourcestamp found in build for " f"codebase '{self.codebase}'"
+                )
                 return FAILURE
 
         else:

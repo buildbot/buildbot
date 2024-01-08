@@ -23,9 +23,7 @@ from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
 
-class TestDebLintian(TestBuildStepMixin, TestReactorMixin,
-                     unittest.TestCase):
-
+class TestDebLintian(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -40,19 +38,28 @@ class TestDebLintian(TestBuildStepMixin, TestReactorMixin,
     def test_success(self):
         self.setup_step(lintian.DebLintian('foo_0.23_i386.changes'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['lintian', '-v', 'foo_0.23_i386.changes'])
-            .exit(0))
+            ExpectShell(workdir='wkdir', command=['lintian', '-v', 'foo_0.23_i386.changes']).exit(0)
+        )
         self.expect_outcome(result=SUCCESS, state_string="Lintian")
         return self.run_step()
 
     def test_success_suppressTags(self):
-        self.setup_step(lintian.DebLintian('foo_0.23_i386.changes',
-                                          suppressTags=['bad-distribution-in-changes-file']))
+        self.setup_step(
+            lintian.DebLintian(
+                'foo_0.23_i386.changes', suppressTags=['bad-distribution-in-changes-file']
+            )
+        )
         self.expect_commands(
-            ExpectShell(workdir='wkdir',
-                        command=['lintian', '-v', 'foo_0.23_i386.changes',
-                                 '--suppress-tags', 'bad-distribution-in-changes-file'])
-            .exit(0))
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'lintian',
+                    '-v',
+                    'foo_0.23_i386.changes',
+                    '--suppress-tags',
+                    'bad-distribution-in-changes-file',
+                ],
+            ).exit(0)
+        )
         self.expect_outcome(result=SUCCESS)
         return self.run_step()

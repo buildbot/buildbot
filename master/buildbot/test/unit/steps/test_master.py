@@ -34,9 +34,7 @@ from buildbot.test.steps import TestBuildStepMixin
 _COMSPEC_ENV = 'COMSPEC'
 
 
-class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
-                             unittest.TestCase):
-
+class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         if runtime.platformType == 'win32':
@@ -54,9 +52,15 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
 
     def test_constr_args(self):
         self.setup_step(
-            master.MasterShellCommand(description='x', descriptionDone='y',
-                                      env={'a': 'b'}, workdir='build', usePTY=True,
-                                      command='true'))
+            master.MasterShellCommand(
+                description='x',
+                descriptionDone='y',
+                env={'a': 'b'},
+                workdir='build',
+                usePTY=True,
+                command='true',
+            )
+        )
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
@@ -69,7 +73,8 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
             .env({'a': 'b'})
             .stdout(b'hello!\n')
             .stderr(b'world\n')
-            .exit(0))
+            .exit(0)
+        )
 
         self.expect_log_file('stdio', "hello!\n")
         self.expect_outcome(result=SUCCESS, state_string='y')
@@ -78,18 +83,14 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_env_subst(self):
         os.environ['WORLD'] = 'hello'
-        self.setup_step(
-            master.MasterShellCommand(command='true', env={'HELLO': '${WORLD}'}))
+        self.setup_step(master.MasterShellCommand(command='true', env={'HELLO': '${WORLD}'}))
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
 
-        self.expect_commands(
-            ExpectMasterShell(exp_argv)
-            .env({'HELLO': 'hello'})
-            .exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': 'hello'}).exit(0))
 
         self.expect_outcome(result=SUCCESS)
 
@@ -102,8 +103,9 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
     def test_env_list_subst(self):
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
-        self.setup_step(master.MasterShellCommand(command='true',
-                                                  env={'HELLO': ['${WORLD}', '${LIST}']}))
+        self.setup_step(
+            master.MasterShellCommand(command='true', env={'HELLO': ['${WORLD}', '${LIST}']})
+        )
 
         if sys.platform == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
@@ -112,10 +114,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
             exp_argv = ['/bin/sh', '-c', 'true']
             exp_env = 'hello:world'
 
-        self.expect_commands(
-            ExpectMasterShell(exp_argv)
-            .env({'HELLO': exp_env})
-            .exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': exp_env}).exit(0))
 
         self.expect_outcome(result=SUCCESS)
 
@@ -126,8 +125,11 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
             del os.environ['LIST']
 
     def test_prop_rendering(self):
-        self.setup_step(master.MasterShellCommand(command=Interpolate('%(prop:project)s-BUILD'),
-                                                  workdir='build'))
+        self.setup_step(
+            master.MasterShellCommand(
+                command=Interpolate('%(prop:project)s-BUILD'), workdir='build'
+            )
+        )
         self.build.setProperty("project", "BUILDBOT-TEST", "TEST")
 
         if runtime.platformType == 'win32':
@@ -135,38 +137,36 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin,
         else:
             exp_argv = ['/bin/sh', '-c', 'BUILDBOT-TEST-BUILD']
 
-        self.expect_commands(
-            ExpectMasterShell(exp_argv)
-            .workdir('build')
-            .exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').exit(0))
 
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_constr_args_descriptionSuffix(self):
-        self.setup_step(master.MasterShellCommand(description='x', descriptionDone='y',
-                                                 descriptionSuffix='z',
-                                                 env={'a': 'b'}, workdir='build', usePTY=True,
-                                                 command='true'))
+        self.setup_step(
+            master.MasterShellCommand(
+                description='x',
+                descriptionDone='y',
+                descriptionSuffix='z',
+                env={'a': 'b'},
+                workdir='build',
+                usePTY=True,
+                command='true',
+            )
+        )
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
 
-        self.expect_commands(
-            ExpectMasterShell(exp_argv)
-            .workdir('build')
-            .env({'a': 'b'})
-            .exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').env({'a': 'b'}).exit(0))
 
         self.expect_outcome(result=SUCCESS, state_string='y z')
         return self.run_step()
 
 
-class TestSetProperty(TestBuildStepMixin, TestReactorMixin,
-                      unittest.TestCase):
-
+class TestSetProperty(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -175,21 +175,20 @@ class TestSetProperty(TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_simple(self):
-        self.setup_step(master.SetProperty(property="testProperty", value=Interpolate(
-            "sch=%(prop:scheduler)s, worker=%(prop:workername)s")))
-        self.build.setProperty(
-            'scheduler', 'force', source='SetProperty', runtime=True)
-        self.build.setProperty(
-            'workername', 'testWorker', source='SetProperty', runtime=True)
+        self.setup_step(
+            master.SetProperty(
+                property="testProperty",
+                value=Interpolate("sch=%(prop:scheduler)s, worker=%(prop:workername)s"),
+            )
+        )
+        self.build.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
+        self.build.setProperty('workername', 'testWorker', source='SetProperty', runtime=True)
         self.expect_outcome(result=SUCCESS, state_string="Set")
-        self.expect_property(
-            'testProperty', 'sch=force, worker=testWorker', source='SetProperty')
+        self.expect_property('testProperty', 'sch=force, worker=testWorker', source='SetProperty')
         return self.run_step()
 
 
-class TestLogRenderable(TestBuildStepMixin, TestReactorMixin,
-                        unittest.TestCase):
-
+class TestLogRenderable(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -198,19 +197,19 @@ class TestLogRenderable(TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_simple(self):
-        self.setup_step(master.LogRenderable(
-            content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')))
+        self.setup_step(
+            master.LogRenderable(
+                content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')
+            )
+        )
         self.build.setProperty("scheduler", "force", source="TestSetProperty", runtime=True)
         self.build.setProperty("workername", "testWorker", source="TestSetProperty", runtime=True)
         self.expect_outcome(result=SUCCESS, state_string='Logged')
-        self.expect_log_file(
-            'Output', pprint.pformat('sch=force, worker=testWorker'))
+        self.expect_log_file('Output', pprint.pformat('sch=force, worker=testWorker'))
         return self.run_step()
 
 
-class TestsSetProperties(TestBuildStepMixin, TestReactorMixin,
-                         unittest.TestCase):
-
+class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -221,8 +220,7 @@ class TestsSetProperties(TestBuildStepMixin, TestReactorMixin,
     def doOneTest(self, **kwargs):
         # all three tests should create a 'a' property with 'b' value, all with different
         # more or less dynamic methods
-        self.setup_step(
-            master.SetProperties(name="my-step", **kwargs))
+        self.setup_step(master.SetProperties(name="my-step", **kwargs))
         self.expect_property('a', 'b', 'my-step')
         self.expect_outcome(result=SUCCESS, state_string='Properties Set')
         return self.run_step()
@@ -238,12 +236,11 @@ class TestsSetProperties(TestBuildStepMixin, TestReactorMixin,
         def manipulate(props):
             # the renderer returns renderable!
             return {'a': Interpolate('b')}
+
         return self.doOneTest(properties=manipulate)
 
 
-class TestAssert(TestBuildStepMixin, TestReactorMixin,
-                 unittest.TestCase):
-
+class TestAssert(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         return self.setup_test_build_step()
@@ -252,15 +249,13 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin,
         return self.tear_down_test_build_step()
 
     def test_eq_pass(self):
-        self.setup_step(master.Assert(
-            Property("test_prop") == "foo"))
+        self.setup_step(master.Assert(Property("test_prop") == "foo"))
         self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_eq_fail(self):
-        self.setup_step(master.Assert(
-            Property("test_prop") == "bar"))
+        self.setup_step(master.Assert(Property("test_prop") == "bar"))
         self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=FAILURE)
         return self.run_step()
@@ -269,6 +264,7 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin,
         @renderer
         def test_renderer(props):
             return props.getProperty("test_prop") == "foo"
+
         self.setup_step(master.Assert(test_renderer))
         self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=SUCCESS)
@@ -278,6 +274,7 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin,
         @renderer
         def test_renderer(props):
             return props.getProperty("test_prop") == "bar"
+
         self.setup_step(master.Assert(test_renderer))
         self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=FAILURE)

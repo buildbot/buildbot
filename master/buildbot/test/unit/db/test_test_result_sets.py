@@ -24,7 +24,6 @@ from buildbot.test.util import validation
 
 
 class Tests(interfaces.InterfaceTests):
-
     common_data = [
         fakedb.Worker(id=47, name='linux'),
         fakedb.Buildset(id=20),
@@ -34,12 +33,9 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuildRequest(id=42, buildsetid=20, builderid=88),
         fakedb.BuildRequest(id=43, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
-        fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
-                     builderid=88, workerid=47),
-        fakedb.Build(id=31, buildrequestid=42, number=8, masterid=88,
-                     builderid=88, workerid=47),
-        fakedb.Build(id=40, buildrequestid=43, number=9, masterid=88,
-                     builderid=89, workerid=47),
+        fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88, builderid=88, workerid=47),
+        fakedb.Build(id=31, buildrequestid=42, number=8, masterid=88, builderid=88, workerid=47),
+        fakedb.Build(id=40, buildrequestid=43, number=9, masterid=88, builderid=89, workerid=47),
         fakedb.Step(id=131, number=231, name='step231', buildid=30),
         fakedb.Step(id=132, number=232, name='step232', buildid=30),
         fakedb.Step(id=141, number=241, name='step241', buildid=31),
@@ -47,14 +43,30 @@ class Tests(interfaces.InterfaceTests):
     ]
 
     common_test_result_set_data = [
-        fakedb.TestResultSet(id=91, builderid=88, buildid=30, stepid=131, description='desc1',
-                             category='cat', value_unit='ms', tests_failed=None,
-                             tests_passed=None,
-                             complete=0),
-        fakedb.TestResultSet(id=92, builderid=88, buildid=30, stepid=131, description='desc2',
-                             category='cat', value_unit='ms', tests_failed=None,
-                             tests_passed=None,
-                             complete=1),
+        fakedb.TestResultSet(
+            id=91,
+            builderid=88,
+            buildid=30,
+            stepid=131,
+            description='desc1',
+            category='cat',
+            value_unit='ms',
+            tests_failed=None,
+            tests_passed=None,
+            complete=0,
+        ),
+        fakedb.TestResultSet(
+            id=92,
+            builderid=88,
+            buildid=30,
+            stepid=131,
+            description='desc2',
+            category='cat',
+            value_unit='ms',
+            tests_failed=None,
+            tests_passed=None,
+            complete=1,
+        ),
     ]
 
     def test_signature_add_test_result_set(self):
@@ -69,8 +81,9 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_get_test_result_sets(self):
         @self.assertArgSpecMatches(self.db.test_result_sets.getTestResultSets)
-        def getTestResultSets(self, builderid, buildid=None, stepid=None, complete=None,
-                              result_spec=None):
+        def getTestResultSets(
+            self, builderid, buildid=None, stepid=None, complete=None, result_spec=None
+        ):
             pass
 
     def test_signature_complete_test_result_set(self):
@@ -81,49 +94,99 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_add_set_get_set(self):
         yield self.insert_test_data(self.common_data)
-        set_id = yield self.db.test_result_sets.addTestResultSet(builderid=88, buildid=30,
-                                                                 stepid=131,
-                                                                 description='desc', category='cat',
-                                                                 value_unit='ms')
+        set_id = yield self.db.test_result_sets.addTestResultSet(
+            builderid=88,
+            buildid=30,
+            stepid=131,
+            description='desc',
+            category='cat',
+            value_unit='ms',
+        )
         set_dict = yield self.db.test_result_sets.getTestResultSet(set_id)
         validation.verifyDbDict(self, 'test_result_setdict', set_dict)
-        self.assertEqual(set_dict, {
-            'id': set_id,
-            'builderid': 88,
-            'buildid': 30,
-            'stepid': 131,
-            'description': 'desc',
-            'category': 'cat',
-            'value_unit': 'ms',
-            'tests_failed': None,
-            'tests_passed': None,
-            'complete': False
-        })
+        self.assertEqual(
+            set_dict,
+            {
+                'id': set_id,
+                'builderid': 88,
+                'buildid': 30,
+                'stepid': 131,
+                'description': 'desc',
+                'category': 'cat',
+                'value_unit': 'ms',
+                'tests_failed': None,
+                'tests_passed': None,
+                'complete': False,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_sets(self):
-        yield self.insert_test_data(self.common_data + [
-            fakedb.TestResultSet(id=91, builderid=88, buildid=30, stepid=131, description='desc1',
-                                 category='cat', value_unit='ms', tests_failed=None,
-                                 tests_passed=None,
-                                 complete=0),
-            fakedb.TestResultSet(id=92, builderid=89, buildid=40, stepid=142, description='desc2',
-                                 category='cat', value_unit='ms', tests_failed=None,
-                                 tests_passed=None,
-                                 complete=1),
-            fakedb.TestResultSet(id=93, builderid=88, buildid=31, stepid=141, description='desc3',
-                                 category='cat', value_unit='ms', tests_failed=None,
-                                 tests_passed=None,
-                                 complete=1),
-            fakedb.TestResultSet(id=94, builderid=88, buildid=30, stepid=132, description='desc4',
-                                 category='cat', value_unit='ms', tests_failed=None,
-                                 tests_passed=None,
-                                 complete=1),
-            fakedb.TestResultSet(id=95, builderid=88, buildid=30, stepid=131, description='desc4',
-                                 category='cat', value_unit='ms', tests_failed=None,
-                                 tests_passed=None,
-                                 complete=0),
-        ])
+        yield self.insert_test_data(
+            self.common_data
+            + [
+                fakedb.TestResultSet(
+                    id=91,
+                    builderid=88,
+                    buildid=30,
+                    stepid=131,
+                    description='desc1',
+                    category='cat',
+                    value_unit='ms',
+                    tests_failed=None,
+                    tests_passed=None,
+                    complete=0,
+                ),
+                fakedb.TestResultSet(
+                    id=92,
+                    builderid=89,
+                    buildid=40,
+                    stepid=142,
+                    description='desc2',
+                    category='cat',
+                    value_unit='ms',
+                    tests_failed=None,
+                    tests_passed=None,
+                    complete=1,
+                ),
+                fakedb.TestResultSet(
+                    id=93,
+                    builderid=88,
+                    buildid=31,
+                    stepid=141,
+                    description='desc3',
+                    category='cat',
+                    value_unit='ms',
+                    tests_failed=None,
+                    tests_passed=None,
+                    complete=1,
+                ),
+                fakedb.TestResultSet(
+                    id=94,
+                    builderid=88,
+                    buildid=30,
+                    stepid=132,
+                    description='desc4',
+                    category='cat',
+                    value_unit='ms',
+                    tests_failed=None,
+                    tests_passed=None,
+                    complete=1,
+                ),
+                fakedb.TestResultSet(
+                    id=95,
+                    builderid=88,
+                    buildid=30,
+                    stepid=131,
+                    description='desc4',
+                    category='cat',
+                    value_unit='ms',
+                    tests_failed=None,
+                    tests_passed=None,
+                    complete=0,
+                ),
+            ]
+        )
 
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88)
         self.assertEqual([d['id'] for d in set_dicts], [91, 93, 94, 95])
@@ -150,18 +213,21 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
-        self.assertEqual(set_dict, {
-            'id': 91,
-            'builderid': 88,
-            'buildid': 30,
-            'stepid': 131,
-            'description': 'desc1',
-            'category': 'cat',
-            'value_unit': 'ms',
-            'tests_failed': None,
-            'tests_passed': None,
-            'complete': False
-        })
+        self.assertEqual(
+            set_dict,
+            {
+                'id': 91,
+                'builderid': 88,
+                'buildid': 30,
+                'stepid': 131,
+                'description': 'desc1',
+                'category': 'cat',
+                'value_unit': 'ms',
+                'tests_failed': None,
+                'tests_passed': None,
+                'complete': False,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_non_existing_set(self):
@@ -182,18 +248,21 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.test_result_sets.completeTestResultSet(91, tests_passed=12, tests_failed=2)
 
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
-        self.assertEqual(set_dict, {
-            'id': 91,
-            'builderid': 88,
-            'buildid': 30,
-            'stepid': 131,
-            'description': 'desc1',
-            'category': 'cat',
-            'value_unit': 'ms',
-            'tests_failed': 2,
-            'tests_passed': 12,
-            'complete': True
-        })
+        self.assertEqual(
+            set_dict,
+            {
+                'id': 91,
+                'builderid': 88,
+                'buildid': 30,
+                'stepid': 131,
+                'description': 'desc1',
+                'category': 'cat',
+                'value_unit': 'ms',
+                'tests_failed': 2,
+                'tests_passed': 12,
+                'complete': True,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_complete_set_without_test_counts(self):
@@ -202,36 +271,45 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.test_result_sets.completeTestResultSet(91)
 
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
-        self.assertEqual(set_dict, {
-            'id': 91,
-            'builderid': 88,
-            'buildid': 30,
-            'stepid': 131,
-            'description': 'desc1',
-            'category': 'cat',
-            'value_unit': 'ms',
-            'tests_failed': None,
-            'tests_passed': None,
-            'complete': True
-        })
+        self.assertEqual(
+            set_dict,
+            {
+                'id': 91,
+                'builderid': 88,
+                'buildid': 30,
+                'stepid': 131,
+                'description': 'desc1',
+                'category': 'cat',
+                'value_unit': 'ms',
+                'tests_failed': None,
+                'tests_passed': None,
+                'complete': True,
+            },
+        )
 
 
 class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent()
 
 
-class TestRealDB(unittest.TestCase,
-                 connector_component.ConnectorComponentMixin,
-                 Tests):
-
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['steps', 'builds', 'builders', 'masters', 'buildrequests', 'buildsets',
-                         'workers', 'test_result_sets', "projects"])
+            table_names=[
+                'steps',
+                'builds',
+                'builders',
+                'masters',
+                'buildrequests',
+                'buildsets',
+                'workers',
+                'test_result_sets',
+                "projects",
+            ]
+        )
 
         self.db.test_result_sets = test_result_sets.TestResultSetsConnectorComponent(self.db)
 

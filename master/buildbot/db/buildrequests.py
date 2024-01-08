@@ -41,7 +41,6 @@ class BrDict(dict):
 
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
-
     def _saSelectQuery(self):
         reqs_tbl = self.db.model.buildrequests
         claims_tbl = self.db.model.buildrequest_claims
@@ -50,21 +49,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         bsss_tbl = self.db.model.buildset_sourcestamps
         sstamps_tbl = self.db.model.sourcestamps
 
-        from_clause = reqs_tbl.outerjoin(claims_tbl,
-                                         reqs_tbl.c.id == claims_tbl.c.brid)
-        from_clause = from_clause.join(bsets_tbl,
-                                       reqs_tbl.c.buildsetid == bsets_tbl.c.id)
-        from_clause = from_clause.join(bsss_tbl,
-                                       bsets_tbl.c.id == bsss_tbl.c.buildsetid)
-        from_clause = from_clause.join(sstamps_tbl,
-                                       bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
-        from_clause = from_clause.join(builder_tbl,
-                                       reqs_tbl.c.builderid == builder_tbl.c.id)
+        from_clause = reqs_tbl.outerjoin(claims_tbl, reqs_tbl.c.id == claims_tbl.c.brid)
+        from_clause = from_clause.join(bsets_tbl, reqs_tbl.c.buildsetid == bsets_tbl.c.id)
+        from_clause = from_clause.join(bsss_tbl, bsets_tbl.c.id == bsss_tbl.c.buildsetid)
+        from_clause = from_clause.join(sstamps_tbl, bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+        from_clause = from_clause.join(builder_tbl, reqs_tbl.c.builderid == builder_tbl.c.id)
 
-        return sa.select([reqs_tbl, claims_tbl, sstamps_tbl.c.branch,
-                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase,
-                          builder_tbl.c.name.label('buildername')
-                          ]).select_from(from_clause)
+        return sa.select([
+            reqs_tbl,
+            claims_tbl,
+            sstamps_tbl.c.branch,
+            sstamps_tbl.c.repository,
+            sstamps_tbl.c.codebase,
+            builder_tbl.c.name.label('buildername'),
+        ]).select_from(from_clause)
 
     # returns a Deferred that returns a value
     def getBuildRequest(self, brid):
@@ -79,12 +77,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rv = self._brdictFromRow(row, self.db.master.masterid)
             res.close()
             return rv
+
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getBuildRequests(self, builderid=None, complete=None, claimed=None,
-                         bsid=None, branch=None, repository=None, resultSpec=None):
-
+    def getBuildRequests(
+        self,
+        builderid=None,
+        complete=None,
+        claimed=None,
+        bsid=None,
+        branch=None,
+        repository=None,
+        resultSpec=None,
+    ):
         def deduplicateBrdict(brdicts):
             return list(({b['buildrequestid']: b for b in brdicts}).values())
 
@@ -96,15 +102,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if claimed is not None:
                 if isinstance(claimed, bool):
                     if not claimed:
-                        q = q.where(
-                            (claims_tbl.c.claimed_at == NULL) &
-                            (reqs_tbl.c.complete == 0))
+                        q = q.where((claims_tbl.c.claimed_at == NULL) & (reqs_tbl.c.complete == 0))
                     else:
-                        q = q.where(
-                            (claims_tbl.c.claimed_at != NULL))
+                        q = q.where((claims_tbl.c.claimed_at != NULL))
                 else:
-                    q = q.where(
-                        (claims_tbl.c.masterid == claimed))
+                    q = q.where((claims_tbl.c.masterid == claimed))
             if builderid is not None:
                 q = q.where(reqs_tbl.c.builderid == builderid)
             if complete is not None:
@@ -121,14 +123,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(sstamps_tbl.c.repository == repository)
 
             if resultSpec is not None:
-                return deduplicateBrdict(resultSpec.thd_execute(
-                    conn, q,
-                    lambda r: self._brdictFromRow(r, self.db.master.masterid)))
+                return deduplicateBrdict(
+                    resultSpec.thd_execute(
+                        conn, q, lambda r: self._brdictFromRow(r, self.db.master.masterid)
+                    )
+                )
 
             res = conn.execute(q)
 
-            return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid)
-                                      for row in res.fetchall()])
+            return deduplicateBrdict([
+                self._brdictFromRow(row, self.db.master.masterid) for row in res.fetchall()
+            ])
+
         res = yield self.db.pool.do(thd)
         return res
 
@@ -145,9 +151,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             try:
                 q = tbl.insert()
-                conn.execute(q, [
-                    {"brid": id, "masterid": self.db.master.masterid, "claimed_at": claimed_at}
-                    for id in brids])
+                conn.execute(
+                    q,
+                    [
+                        {"brid": id, "masterid": self.db.master.masterid, "claimed_at": claimed_at}
+                        for id in brids
+                    ],
+                )
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()
                 raise AlreadyClaimedError() from e
@@ -174,13 +184,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 try:
                     q = claims_tbl.delete(
                         (claims_tbl.c.brid.in_(batch))
-                        & (claims_tbl.c.masterid == self.db.master.masterid))
+                        & (claims_tbl.c.masterid == self.db.master.masterid)
+                    )
                     conn.execute(q)
                 except Exception:
                     transaction.rollback()
                     raise
 
             transaction.commit()
+
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
@@ -204,22 +216,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # we'll need to batch the brids into groups of 100, so that the
             # parameter lists supported by the DBAPI aren't exhausted
             for batch in self.doBatch(brids, 100):
-
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q,
-                                   complete=1,
-                                   results=results,
-                                   complete_at=complete_at)
+                res = conn.execute(q, complete=1, results=results, complete_at=complete_at)
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
-                    log.msg(f"tried to complete {len(batch)} buildrequests, "
-                            f"but only completed {res.rowcount}")
+                    log.msg(
+                        f"tried to complete {len(batch)} buildrequests, "
+                        f"but only completed {res.rowcount}"
+                    )
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()
+
         yield self.db.pool.do(thd)
 
     def set_build_requests_priority(self, brids, priority):
@@ -236,20 +247,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # we'll need to batch the brids into groups of 100, so that the
             # parameter lists supported by the DBAPI aren't exhausted
             for batch in self.doBatch(brids, 100):
-
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q,
-                                   priority=priority)
+                res = conn.execute(q, priority=priority)
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
-                    log.msg(f"tried to complete {len(batch)} buildrequests, "
-                            f"but only completed {res.rowcount}")
+                    log.msg(
+                        f"tried to complete {len(batch)} buildrequests, "
+                        f"but only completed {res.rowcount}"
+                    )
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()
+
         return self.db.pool.do(thd)
 
     @staticmethod
@@ -266,11 +278,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         complete_at = epoch2datetime(row.complete_at)
         claimed_at = epoch2datetime(claimed_at)
 
-        return BrDict(buildrequestid=row.id, buildsetid=row.buildsetid,
-                      builderid=row.builderid, buildername=row.buildername,
-                      priority=row.priority,
-                      claimed=claimed, claimed_at=claimed_at,
-                      claimed_by_masterid=claimed_by_masterid,
-                      complete=bool(row.complete), results=row.results,
-                      submitted_at=submitted_at, complete_at=complete_at,
-                      waited_for=bool(row.waited_for))
+        return BrDict(
+            buildrequestid=row.id,
+            buildsetid=row.buildsetid,
+            builderid=row.builderid,
+            buildername=row.buildername,
+            priority=row.priority,
+            claimed=claimed,
+            claimed_at=claimed_at,
+            claimed_by_masterid=claimed_by_masterid,
+            complete=bool(row.complete),
+            results=row.results,
+            submitted_at=submitted_at,
+            complete_at=complete_at,
+            waited_for=bool(row.waited_for),
+        )

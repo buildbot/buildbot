@@ -25,7 +25,6 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class UrlForBuildMaster(RunMasterBase):
-
     proto = "null"
 
     @defer.inlineCallbacks
@@ -37,19 +36,12 @@ class UrlForBuildMaster(RunMasterBase):
         from buildbot.plugins import util
         from buildbot.process.factory import BuildFactory
 
-        c['schedulers'] = [
-            schedulers.ForceScheduler(
-                name="force",
-                builderNames=["testy"])]
+        c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
         f = BuildFactory()
         # do a bunch of transfer to exercise the protocol
         f.addStep(steps.ShellCommand(command=["echo", util.URLForBuild]))
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)
-        ]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
@@ -63,5 +55,4 @@ class UrlForBuildMaster(RunMasterBase):
         else:
             command = "echo 'http://localhost:8080/#/builders/1/builds/1'"
 
-        self.assertIn(command,
-                      build['steps'][1]['logs'][0]['contents']['content'])
+        self.assertIn(command, build['steps'][1]['logs'][0]['contents']['content'])

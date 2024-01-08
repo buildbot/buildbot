@@ -16,8 +16,15 @@
 ALL_RESULTS = list(range(7))
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = ALL_RESULTS
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
-MultipleResults = ["successes", "warnings", "failures", "skipped", "exceptions",
-                   "retries", "cancelled"]
+MultipleResults = [
+    "successes",
+    "warnings",
+    "failures",
+    "skipped",
+    "exceptions",
+    "retries",
+    "cancelled",
+]
 
 
 def statusToString(status, count=1):
@@ -66,7 +73,6 @@ def computeResultAndTermination(obj, result, previousResult):
 
 
 class ResultComputingConfigMixin:
-
     haltOnFailure = False
     flunkOnWarnings = False
     flunkOnFailure = True

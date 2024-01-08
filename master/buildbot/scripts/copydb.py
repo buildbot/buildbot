@@ -51,12 +51,14 @@ def _copy_database_in_reactor(config):
 
     config['basedir'] = os.path.abspath(config['basedir'])
 
-    with base.captureErrors((SyntaxError, ImportError),
-                            f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
+    with base.captureErrors(
+        (SyntaxError, ImportError), f"Unable to load 'buildbot.tac' from '{config['basedir']}':"
+    ):
         config_file = base.getConfigFileFromTac(config['basedir'])
 
-    with base.captureErrors(config_module.ConfigErrors,
-                            f"Unable to load '{config_file}' from '{config['basedir']}':"):
+    with base.captureErrors(
+        config_module.ConfigErrors, f"Unable to load '{config_file}' from '{config['basedir']}':"
+    ):
         master_src_cfg = base.loadConfig(config, config_file)
         master_dst_cfg = base.loadConfig(config, config_file)
         master_dst_cfg.db["db_url"] = config["destination_url"]
@@ -102,7 +104,6 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
             try:
                 rows = rows_queue.get(timeout=1)
                 if rows is None:
-
                     if autoincrement_foreign_key_column is not None and max_column_id != 0:
                         if dst_db.pool.engine.dialect.name == 'postgresql':
                             # Explicitly inserting primary row IDs does not bump the primary key
@@ -117,9 +118,7 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
                     rows_queue.task_done()
                     return
 
-                row_dicts = [
-                    {k: getattr(row, k) for k in column_keys} for row in rows
-                ]
+                row_dicts = [{k: getattr(row, k) for k in column_keys} for row in rows]
 
                 if autoincrement_foreign_key_column is not None:
                     for row in row_dicts:
@@ -128,9 +127,10 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
                 if table_name == "buildsets":
                     for row_dict in row_dicts:
                         if row_dict["parent_buildid"] is not None:
-                            buildset_to_parent_buildid.append(
-                                (row_dict["id"], row_dict["parent_buildid"])
-                            )
+                            buildset_to_parent_buildid.append((
+                                row_dict["id"],
+                                row_dict["parent_buildid"],
+                            ))
                         row_dict["parent_buildid"] = None
 
             except queue.Empty:
@@ -138,8 +138,10 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
 
             try:
                 written_count[0] += len(rows)
-                print_log(f"Copying {len(rows)} items ({written_count[0]}/{total_count[0]}) "
-                          f"for {table_name} table")
+                print_log(
+                    f"Copying {len(rows)} items ({written_count[0]}/{total_count[0]}) "
+                    f"for {table_name} table"
+                )
 
                 if len(row_dicts) > 0:
                     conn.execute(table.insert(), row_dicts)
@@ -224,12 +226,7 @@ def _copy_database_with_db(src_db, dst_db, print_log):
     for table_name in table_names:
         table = metadata.tables[table_name]
         yield _copy_single_table(
-            src_db,
-            dst_db,
-            table,
-            table_name,
-            buildset_to_parent_buildid,
-            print_log
+            src_db, dst_db, table, table_name, buildset_to_parent_buildid, print_log
         )
 
     def thd_write_buildset_parent_buildid(conn):
@@ -245,10 +242,13 @@ def _copy_database_with_db(src_db, dst_db, print_log):
                 f"for buildset.parent_buildid field"
             )
 
-            conn.execute(q, [
-                {'_id': buildset_id, 'parent_buildid': parent_buildid}
-                for buildset_id, parent_buildid in rows
-            ])
+            conn.execute(
+                q,
+                [
+                    {'_id': buildset_id, 'parent_buildid': parent_buildid}
+                    for buildset_id, parent_buildid in rows
+                ],
+            )
 
     yield dst_db.pool.do(thd_write_buildset_parent_buildid)
 

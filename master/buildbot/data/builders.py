@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid
@@ -49,12 +48,11 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
             "description_format": bdict["description_format"],
             "description_html": bdict["description_html"],
             "projectid": bdict['projectid'],
-            "tags": bdict['tags']
+            "tags": bdict['tags'],
         }
 
 
 class BuildersEndpoint(base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'builders'
     pathPatterns = """
@@ -66,8 +64,7 @@ class BuildersEndpoint(base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
-            masterid=kwargs.get('masterid', None),
-            projectid=kwargs.get('projectid', None)
+            masterid=kwargs.get('masterid', None), projectid=kwargs.get('projectid', None)
         )
         return [
             {
@@ -78,7 +75,7 @@ class BuildersEndpoint(base.Endpoint):
                 "description_format": bd['description_format'],
                 "description_html": bd['description_html'],
                 "projectid": bd['projectid'],
-                "tags": bd['tags']
+                "tags": bd['tags'],
             }
             for bd in bdicts
         ]
@@ -90,7 +87,6 @@ class BuildersEndpoint(base.Endpoint):
 
 
 class Builder(base.ResourceType):
-
     name = "builder"
     plural = "builders"
     endpoints = [BuilderEndpoint, BuildersEndpoint]
@@ -109,6 +105,7 @@ class Builder(base.ResourceType):
         description_html = types.NoneOk(types.String())
         projectid = types.NoneOk(types.Integer())
         tags = types.List(of=types.String())
+
     entityType = EntityType(name, 'Builder')
 
     @defer.inlineCallbacks
@@ -122,8 +119,9 @@ class Builder(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def updateBuilderInfo(self, builderid, description, description_format, description_html,
-                          projectid, tags):
+    def updateBuilderInfo(
+        self, builderid, description, description_format, description_html, projectid, tags
+    ):
         ret = yield self.master.db.builders.updateBuilderInfo(
             builderid, description, description_format, description_html, projectid, tags
         )
@@ -144,22 +142,23 @@ class Builder(base.ResourceType):
             if bldr['name'] not in builderNames_set:
                 builderid = bldr['id']
                 yield self.master.db.builders.removeBuilderMaster(
-                    masterid=masterid, builderid=builderid)
-                self.master.mq.produce(('builders', str(builderid), 'stopped'), {
-                    "builderid": builderid,
-                    "masterid": masterid,
-                    "name": bldr['name']
-                })
+                    masterid=masterid, builderid=builderid
+                )
+                self.master.mq.produce(
+                    ('builders', str(builderid), 'stopped'),
+                    {"builderid": builderid, "masterid": masterid, "name": bldr['name']},
+                )
             else:
                 builderNames_set.remove(bldr['name'])
 
         # now whatever's left in builderNames_set is new
         for name in builderNames_set:
             builderid = yield self.master.db.builders.findBuilderId(name)
-            yield self.master.db.builders.addBuilderMaster(
-                masterid=masterid, builderid=builderid)
-            self.master.mq.produce(('builders', str(builderid), 'started'),
-                                   {"builderid": builderid, "masterid": masterid, "name": name})
+            yield self.master.db.builders.addBuilderMaster(masterid=masterid, builderid=builderid)
+            self.master.mq.produce(
+                ('builders', str(builderid), 'started'),
+                {"builderid": builderid, "masterid": masterid, "name": name},
+            )
 
     # returns a Deferred that returns None
     def _masterDeactivated(self, masterid):

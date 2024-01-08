@@ -26,6 +26,7 @@ from buildbot.config import error
 
 try:
     from twisted.internet.ssl import *  # noqa pylint: disable=unused-wildcard-import, wildcard-import
+
     ssl_import_error = None
     has_ssl = True
 except ImportError as e:
@@ -35,8 +36,10 @@ except ImportError as e:
 
 def ensureHasSSL(module):
     if not has_ssl:
-        error(f"TLS dependencies required for {module} are not installed : "
-              f"{ssl_import_error}\n pip install 'buildbot[tls]'")
+        error(
+            f"TLS dependencies required for {module} are not installed : "
+            f"{ssl_import_error}\n pip install 'buildbot[tls]'"
+        )
 
 
 def skipUnless(f):

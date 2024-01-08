@@ -64,14 +64,12 @@ class LatentWorkerSubstantiatiationCancelled(Exception):
 
 
 class IPlugin(Interface):
-
     """
     Base interface for all Buildbot plugins
     """
 
 
 class IChangeSource(IPlugin):
-
     """
     Service which feeds Change objects to the changemaster. When files or
     directories are changed in version control, this object should represent
@@ -81,15 +79,14 @@ class IChangeSource(IPlugin):
 
     See 'Writing Change Sources' in the manual for more information.
     """
-    master = Attribute('master',
-                       'Pointer to BuildMaster, automatically set when started.')
+
+    master = Attribute('master', 'Pointer to BuildMaster, automatically set when started.')
 
     def describe():
         """Return a string which briefly describes this source."""
 
 
 class ISourceStamp(Interface):
-
     """
     @cvar branch: branch from which source was drawn
     @type branch: string or None
@@ -134,13 +131,11 @@ class ISourceStamp(Interface):
 
 
 class IEmailSender(Interface):
-
     """I know how to send email, and can be used by other parts of the
     Buildbot to contact developers."""
 
 
 class IEmailLookup(Interface):
-
     def getAddress(user):
         """Turn a User-name string into a valid email address. Either return
         a string (with an @ in it), None (to indicate that the user cannot
@@ -148,7 +143,6 @@ class IEmailLookup(Interface):
 
 
 class ILogObserver(Interface):
-
     """Objects which provide this interface can be used in a BuildStep to
     watch the output of a LogFile and parse it incrementally.
     """
@@ -171,12 +165,12 @@ class IWorker(IPlugin):
 
 
 class ILatentWorker(IWorker):
+    """A worker that is not always running, but can run when requested."""
 
-    """A worker that is not always running, but can run when requested.
-    """
-    substantiated = Attribute('Substantiated',
-                              'Whether the latent worker is currently '
-                              'substantiated with a real instance.')
+    substantiated = Attribute(
+        'Substantiated',
+        'Whether the latent worker is currently substantiated with a real instance.',
+    )
 
     def substantiate():
         """Request that the worker substantiate with a real instance.
@@ -207,21 +201,18 @@ class IMachine(Interface):
 
 class IMachineAction(Interface):
     def perform(self, manager):
-        """ Perform an action on the machine managed by manager. Returns a
-            deferred evaluating to True if it was possible to execute the
-            action.
+        """Perform an action on the machine managed by manager. Returns a
+        deferred evaluating to True if it was possible to execute the
+        action.
         """
 
 
 class ILatentMachine(IMachine):
-    """ A machine that is not always running, but can be started when requested.
-    """
+    """A machine that is not always running, but can be started when requested."""
 
 
 class IRenderable(Interface):
-
-    """An object that can be interpolated with properties from a build.
-    """
+    """An object that can be interpolated with properties from a build."""
 
     def getRenderingFor(iprops):
         """Return a deferred that fires with interpolation with the given properties
@@ -231,7 +222,6 @@ class IRenderable(Interface):
 
 
 class IProperties(Interface):
-
     """
     An object providing access to build properties
     """
@@ -312,45 +302,40 @@ class IScheduler(IPlugin):
 
 
 class ITriggerableScheduler(Interface):
-
     """
     A scheduler that can be triggered by buildsteps.
     """
 
-    def trigger(waited_for, sourcestamps=None, set_props=None,
-                parent_buildid=None, parent_relationship=None):
-        """Trigger a build with the given source stamp and properties.
-        """
+    def trigger(
+        waited_for, sourcestamps=None, set_props=None, parent_buildid=None, parent_relationship=None
+    ):
+        """Trigger a build with the given source stamp and properties."""
 
 
 class IBuildStepFactory(Interface):
-
     def buildStep():
         pass
 
 
 class IBuildStep(IPlugin):
-
     """
     A build step
     """
+
     # Currently has nothing
 
 
 class IConfigured(Interface):
-
     def getConfigDict():
         return {}  # return something to silence warnings at call sites
 
 
 class IReportGenerator(Interface):
-
     def generate(self, master, reporter, key, build):
         pass
 
 
 class IConfigLoader(Interface):
-
     def loadConfig():
         """
         Load the specified configuration.
@@ -360,23 +345,21 @@ class IConfigLoader(Interface):
 
 
 class IHttpResponse(Interface):
-
     def content():
         """
         :returns: raw (``bytes``) content of the response via deferred
         """
+
     def json():
         """
         :returns: json decoded content of the response via deferred
         """
-    code = Attribute('code',
-                     "http status code of the request's response (e.g 200)")
-    url = Attribute('url',
-                    "request's url (e.g https://api.github.com/endpoint')")
+
+    code = Attribute('code', "http status code of the request's response (e.g 200)")
+    url = Attribute('url', "request's url (e.g https://api.github.com/endpoint')")
 
 
 class IConfigurator(Interface):
-
     def configure(config_dict):
         """
         Alter the buildbot config_dict, as defined in master.cfg

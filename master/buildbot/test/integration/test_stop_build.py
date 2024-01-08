@@ -20,7 +20,6 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class ShellMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def setup_config(self):
         c = {}
@@ -31,14 +30,12 @@ class ShellMaster(RunMasterBase):
 
         c['schedulers'] = [
             schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"]),
-            schedulers.ForceScheduler(name="force", builderNames=["testy"])
+            schedulers.ForceScheduler(name="force", builderNames=["testy"]),
         ]
 
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='sleep 100', name='sleep'))
-        c['builders'] = [
-            BuilderConfig(name="testy", workernames=["local1"], factory=f)
-        ]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
@@ -52,11 +49,10 @@ class ShellMaster(RunMasterBase):
                 brs = yield self.master.data.get(('buildrequests',))
                 brid = brs[-1]['buildrequestid']
                 self.master.data.control(
-                    'cancel', {'reason': 'cancelled by test'}, ('buildrequests', brid))
+                    'cancel', {'reason': 'cancelled by test'}, ('buildrequests', brid)
+                )
 
-        yield self.master.mq.startConsuming(
-            newStepCallback,
-            ('steps', None, 'new'))
+        yield self.master.mq.startConsuming(newStepCallback, ('steps', None, 'new'))
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True, wantProperties=True)
         self.assertEqual(build['buildid'], 1)

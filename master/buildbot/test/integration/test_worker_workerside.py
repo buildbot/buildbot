@@ -43,7 +43,6 @@ DEFAULT_PORT = os.environ.get("BUILDBOT_TEST_DEFAULT_PORT", "0")
 
 
 class FakeBuilder(builder.Builder):
-
     def attached(self, worker, commands):
         return defer.succeed(None)
 
@@ -84,8 +83,7 @@ class TestingWorker(buildbot_worker.bot.Worker):
             orig_got_persp(persp)
             self.master_perspective = persp
             self.tests_connected.callback(persp)
-            persp.broker.notifyOnDisconnect(
-                lambda: self.tests_disconnected.callback(None))
+            persp.broker.notifyOnDisconnect(lambda: self.tests_disconnected.callback(None))
 
         def failedToGetPerspective(why, broker):
             orig_failed_get_persp(why, broker)
@@ -96,7 +94,6 @@ class TestingWorker(buildbot_worker.bot.Worker):
 
 
 class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
-
     """
     Test handling of connections from real worker code
 
@@ -113,8 +110,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True,
-                                             wantDb=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         # set the worker port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = PBManager()
@@ -123,8 +119,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         # remove the fakeServiceParent from fake service hierarchy, and replace
         # by a real one
         yield self.master.workers.disownServiceParent()
-        self.workers = self.master.workers = workermanager.WorkerManager(
-            self.master)
+        self.workers = self.master.workers = workermanager.WorkerManager(self.master)
         yield self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()
@@ -159,11 +154,14 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
             yield self.buildworker.waitForCompleteShutdown()
 
     @defer.inlineCallbacks
-    def addMasterSideWorker(self,
-                            connection_string=f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
-                            name="testworker", password="pw",
-                            update_port=True,
-                            **kwargs):
+    def addMasterSideWorker(
+        self,
+        connection_string=f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
+        name="testworker",
+        password="pw",
+        update_port=True,
+        **kwargs,
+    ):
         """
         Create a master-side worker instance and add it to the BotMaster
 
@@ -175,9 +173,11 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         new_config = self.master.config
         new_config.protocols = {"pb": {"port": connection_string}}
         new_config.workers = [self.buildworker]
-        new_config.builders = [config.BuilderConfig(
-            name='bldr',
-            workername='testworker', factory=factory.BuildFactory())]
+        new_config.builders = [
+            config.BuilderConfig(
+                name='bldr', workername='testworker', factory=factory.BuildFactory()
+            )
+        ]
 
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
         yield self.workers.reconfigServiceWithBuildbotConfig(new_config)
@@ -194,13 +194,26 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         """
         return worker.bf.disconnect()
 
-    def addWorker(self, connection_string_tpl=r"tcp:host=127.0.0.1:port={port}",
-                  password="pw", name="testworker", keepalive=None):
+    def addWorker(
+        self,
+        connection_string_tpl=r"tcp:host=127.0.0.1:port={port}",
+        password="pw",
+        name="testworker",
+        keepalive=None,
+    ):
         """Add a true Worker object to the services."""
         wdir = tempfile.mkdtemp()
         self.tmpdirs.add(wdir)
-        return TestingWorker(None, None, name, password, wdir, keepalive, protocol='pb',
-                             connection_string=connection_string_tpl.format(port=self.port))
+        return TestingWorker(
+            None,
+            None,
+            name,
+            password,
+            wdir,
+            keepalive,
+            protocol='pb',
+            connection_string=connection_string_tpl.format(port=self.port),
+        )
 
     @defer.inlineCallbacks
     def test_connect_disconnect(self):
@@ -263,7 +276,8 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         yield self.addMasterSideWorker(
             password='pw2',
             update_port=False,  # don't know why, but it'd fail
-            connection_string=f"tcp:{self.port}:interface=127.0.0.1")
+            connection_string=f"tcp:{self.port}:interface=127.0.0.1",
+        )
         timeout = reactor.callLater(10, could_not_connect)
         yield worker.tests_connected
 
@@ -280,6 +294,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         This works by patching the master to callback a deferred on which the
         test waits.
         """
+
         def perspective_keepalive(Connection_self):
             waiter = worker.keepalive_waiter
             if waiter is not None:
@@ -287,6 +302,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
                 worker.keepalive_waiter = None
 
         from buildbot.worker.protocols.pb import Connection
+
         self.patch(Connection, 'perspective_keepalive', perspective_keepalive)
 
         yield self.addMasterSideWorker()

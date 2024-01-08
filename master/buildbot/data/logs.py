@@ -22,7 +22,6 @@ from buildbot.util import identifiers
 
 
 class EndpointMixin:
-
     def db2data(self, dbdict):
         data = {
             'logid': dbdict['id'],
@@ -37,7 +36,6 @@ class EndpointMixin:
 
 
 class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /logs/n:logid
@@ -60,13 +58,11 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         if stepid is None:
             return None
 
-        dbdict = yield self.master.db.logs.getLogBySlug(stepid,
-                                                        kwargs.get('log_slug'))
+        dbdict = yield self.master.db.logs.getLogBySlug(stepid, kwargs.get('log_slug'))
         return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /steps/n:stepid/logs
@@ -91,7 +87,6 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 
 class Log(base.ResourceType):
-
     name = "log"
     plural = "logs"
     endpoints = [LogEndpoint, LogsEndpoint]
@@ -126,7 +121,8 @@ class Log(base.ResourceType):
         while True:
             try:
                 logid = yield self.master.db.logs.addLog(
-                    stepid=stepid, name=name, slug=slug, type=type)
+                    stepid=stepid, name=name, slug=slug, type=type
+                )
             except KeyError:
                 slug = identifiers.incrementIdentifier(50, slug)
                 continue

@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class Db2DataMixin:
-
     def db2data(self, dbdict):
         data = {
             'test_result_setid': dbdict['id'],
@@ -39,7 +38,6 @@ class Db2DataMixin:
 
 
 class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builders/n:builderid/test_result_sets
@@ -50,32 +48,34 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-
         complete = resultSpec.popBooleanFilter('complete')
         if 'stepid' in kwargs:
             step_dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
             build_dbdict = yield self.master.db.builds.getBuild(step_dbdict['buildid'])
 
             sets = yield self.master.db.test_result_sets.getTestResultSets(
-                    build_dbdict['builderid'],
-                    buildid=step_dbdict['buildid'],
-                    stepid=kwargs['stepid'],
-                    complete=complete,
-                    result_spec=resultSpec)
+                build_dbdict['builderid'],
+                buildid=step_dbdict['buildid'],
+                stepid=kwargs['stepid'],
+                complete=complete,
+                result_spec=resultSpec,
+            )
         elif 'buildid' in kwargs:
             build_dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
 
             sets = yield self.master.db.test_result_sets.getTestResultSets(
-                    build_dbdict['builderid'],
-                    buildid=kwargs['buildid'],
-                    complete=complete,
-                    result_spec=resultSpec)
+                build_dbdict['builderid'],
+                buildid=kwargs['buildid'],
+                complete=complete,
+                result_spec=resultSpec,
+            )
 
         else:
             # The following is true: 'buildername' in kwargs or 'builderid' in kwargs:
             builderid = yield self.getBuilderId(kwargs)
             sets = yield self.master.db.test_result_sets.getTestResultSets(
-                    builderid, complete=complete, result_spec=resultSpec)
+                builderid, complete=complete, result_spec=resultSpec
+            )
 
         results = []
         for dbdict in sets:
@@ -84,7 +84,6 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
 
 
 class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /test_result_sets/n:test_result_setid
@@ -97,7 +96,6 @@ class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint)
 
 
 class TestResultSet(base.ResourceType):
-
     name = "test_result_set"
     plural = "test_result_sets"
     endpoints = [TestResultSetsEndpoint, TestResultSetEndpoint]
@@ -117,6 +115,7 @@ class TestResultSet(base.ResourceType):
         tests_passed = types.NoneOk(types.Integer())
         tests_failed = types.NoneOk(types.Integer())
         complete = types.Boolean()
+
     entityType = EntityType(name, 'TestResultSet')
 
     @defer.inlineCallbacks
@@ -127,16 +126,16 @@ class TestResultSet(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
-        test_result_setid = \
-            yield self.master.db.test_result_sets.addTestResultSet(builderid, buildid, stepid,
-                                                                   description, category,
-                                                                   value_unit)
+        test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
+            builderid, buildid, stepid, description, category, value_unit
+        )
         yield self.generateEvent(test_result_setid, 'new')
         return test_result_setid
 
     @base.updateMethod
     @defer.inlineCallbacks
     def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
-        yield self.master.db.test_result_sets.completeTestResultSet(test_result_setid,
-                                                                    tests_passed, tests_failed)
+        yield self.master.db.test_result_sets.completeTestResultSet(
+            test_result_setid, tests_passed, tests_failed
+        )
         yield self.generateEvent(test_result_setid, 'completed')

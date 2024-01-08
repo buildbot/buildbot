@@ -92,35 +92,26 @@ class WsProtocol(WebSocketServerProtocol):
                 self.is_graphql = False
             elif self.is_graphql:
                 return self.send_error(
-                    error="missing 'type' in websocket frame when"
-                    " already started using graphql",
+                    error="missing 'type' in websocket frame when already started using graphql",
                     code=400,
                     _id=None,
                 )
             self.is_graphql = False
             cmd = frame.pop("cmd", None)
             if cmd is None:
-                return self.send_error(
-                    error="no 'cmd' in websocket frame", code=400, _id=None
-                )
+                return self.send_error(error="no 'cmd' in websocket frame", code=400, _id=None)
             cmdmeth = "cmd_" + cmd
 
         meth = getattr(self, cmdmeth, None)
         if meth is None:
-            return self.send_error(
-                error=f"no such command type '{cmd}'", code=404, _id=_id
-            )
+            return self.send_error(error=f"no such command type '{cmd}'", code=404, _id=_id)
         try:
             return meth(**frame)
         except TypeError as e:
-            return self.send_error(
-                error=f"Invalid method argument '{str(e)}'", code=400, _id=_id
-            )
+            return self.send_error(error=f"Invalid method argument '{str(e)}'", code=400, _id=_id)
         except Exception as e:
             log.err(e, f"while calling command {cmdmeth}")
-            return self.send_error(
-                error=f"Internal Error '{str(e)}'", code=500, _id=_id
-            )
+            return self.send_error(error=f"Internal Error '{str(e)}'", code=500, _id=_id)
 
     # legacy protocol methods
 
@@ -214,13 +205,11 @@ class WsProtocol(WebSocketServerProtocol):
         errors = None
         if res.errors:
             errors = [e.formatted for e in res.errors]
-        data = self.to_json(
-            {
-                "type": "data",
-                "payload": {"data": res.data, "errors": errors},
-                "id": sub.id,
-            }
-        )
+        data = self.to_json({
+            "type": "data",
+            "payload": {"data": res.data, "errors": errors},
+            "id": sub.id,
+        })
         cksum = hashlib.blake2b(data).digest()
         if cksum != sub.last_value_chksum:
             sub.last_value_chksum = cksum
@@ -242,9 +231,7 @@ class WsProtocol(WebSocketServerProtocol):
         if id in self.graphql_subs:
             del self.graphql_subs[id]
         else:
-            return self.send_error(
-                error="stopping unknown subscription", code=400, _id=id
-            )
+            return self.send_error(error="stopping unknown subscription", code=400, _id=id)
         if not self.graphql_subs and self.graphql_consumer:
             self.graphql_consumer.stopConsuming()
             self.graphql_consumer = None

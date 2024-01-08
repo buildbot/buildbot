@@ -27,7 +27,6 @@ from buildbot.util import unicode2bytes
 
 
 class Consumer:
-
     def __init__(self, request):
         self.request = request
         self.qrefs = {}
@@ -45,8 +44,7 @@ class Consumer:
         key = [bytes2unicode(e) for e in event]
         msg = {"key": key, "message": data}
         request.write(b"event: " + b"event" + b"\n")
-        request.write(
-            b"data: " + unicode2bytes(json.dumps(msg, default=toJson)) + b"\n")
+        request.write(b"data: " + unicode2bytes(json.dumps(msg, default=toJson)) + b"\n")
         request.write(b"\n")
 
     def registerQref(self, path, qref):
@@ -108,12 +106,14 @@ class EventResource(resource.Resource):
                     options[k] = options[k][1]
 
             try:
-                d = self.master.mq.startConsuming(consumer.onMessage,
-                                                  tuple(bytes2unicode(p) for p in path))
+                d = self.master.mq.startConsuming(
+                    consumer.onMessage, tuple(bytes2unicode(p) for p in path)
+                )
 
                 @d.addCallback
                 def register(qref):
                     consumer.registerQref(pathref, qref)
+
                 d.addErrback(log.err, "while calling startConsuming")
             except NotImplementedError:
                 return self.finish(request, 404, b"not implemented")

@@ -30,21 +30,21 @@ from buildbot.worker.marathon import MarathonLatentWorker
 class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
-        self.build = Properties(
-            image="busybox:latest", builder="docker_worker")
+        self.build = Properties(image="busybox:latest", builder="docker_worker")
         self.worker = None
 
     def tearDown(self):
         if self.worker is not None:
+
             class FakeResult:
                 code = 200
+
             self._http.delete = lambda _: defer.succeed(FakeResult())
             self.worker.master.stopService()
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
 
     def test_constructor_normal(self):
-        worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo',
-                                      'bar', 'debian:wheezy')
+        worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo', 'bar', 'debian:wheezy')
         # class instantiation configures nothing
         self.assertEqual(worker._http, None)
 
@@ -55,7 +55,8 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         self.worker = worker
         master = fakemaster.make_master(self, wantData=True)
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-                master, self, 'tcp://marathon.local', auth=kwargs.get('auth'))
+            master, self, 'tcp://marathon.local', auth=kwargs.get('auth')
+        )
         yield worker.setServiceParent(master)
         worker.reactor = self.reactor
         yield master.startService()
@@ -80,31 +81,27 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         worker = yield self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
-        self._http.expect(
-            method='delete',
-            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
             json={
                 'instances': 1,
                 'container': {
-                    'docker': {
-                        'image': 'rendered:debian:wheezy',
-                        'network': 'BRIDGE'
-                    },
-                    'type': 'DOCKER'
+                    'docker': {'image': 'rendered:debian:wheezy', 'network': 'BRIDGE'},
+                    'type': 'DOCKER',
                 },
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
-                    'WORKERPASS': "pass"
-                }
+                    'WORKERPASS': "pass",
+                },
             },
             code=201,
-            content_json={'Id': 'id'})
+            content_json={'Id': 'id'},
+        )
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
@@ -118,31 +115,27 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         worker = yield self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
-        self._http.expect(
-            method='delete',
-            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
             json={
                 'instances': 1,
                 'container': {
-                    'docker': {
-                        'image': 'rendered:debian:wheezy',
-                        'network': 'BRIDGE'
-                    },
-                    'type': 'DOCKER'
+                    'docker': {'image': 'rendered:debian:wheezy', 'network': 'BRIDGE'},
+                    'type': 'DOCKER',
                 },
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
-                    'WORKERPASS': "pass"
-                }
+                    'WORKERPASS': "pass",
+                },
             },
             code=201,
-            content_json={'Id': 'id'})
+            content_json={'Id': 'id'},
+        )
 
         worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertEqual(worker.instance, {'Id': 'id'})
@@ -151,36 +144,30 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_start_worker_but_error(self):
         worker = yield self.makeWorker()
-        self._http.expect(
-            method='delete',
-            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
             json={
                 'instances': 1,
                 'container': {
-                    'docker': {
-                        'image': 'rendered:debian:wheezy',
-                        'network': 'BRIDGE'
-                    },
-                    'type': 'DOCKER'
+                    'docker': {'image': 'rendered:debian:wheezy', 'network': 'BRIDGE'},
+                    'type': 'DOCKER',
                 },
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
-                    'WORKERPASS': "pass"
-                }
+                    'WORKERPASS': "pass",
+                },
             },
             code=404,
-            content_json={'message': 'image not found'})
-        self._http.expect(
-            method='delete',
-            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+            content_json={'message': 'image not found'},
+        )
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
-        self.reactor.advance(.1)
+        self.reactor.advance(0.1)
         with self.assertRaises(Exception):
             yield d
         self.assertEqual(worker.instance, None)
@@ -189,32 +176,23 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def test_start_worker_with_params(self):
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
-        worker = yield self.makeWorker(marathon_extra_config={
-            'container': {
-                'docker': {
-                    'network': None
-                }
-            },
-            'env': {
-                'PARAMETER': 'foo'
+        worker = yield self.makeWorker(
+            marathon_extra_config={
+                'container': {'docker': {'network': None}},
+                'env': {'PARAMETER': 'foo'},
             }
-        })
+        )
         worker.password = "pass"
         worker.masterFQDN = "master"
-        self._http.expect(
-            method='delete',
-            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
             json={
                 'instances': 1,
                 'container': {
-                    'docker': {
-                        'image': 'rendered:debian:wheezy',
-                        'network': None
-                    },
-                    'type': 'DOCKER'
+                    'docker': {'image': 'rendered:debian:wheezy', 'network': None},
+                    'type': 'DOCKER',
                 },
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
@@ -222,11 +200,12 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",
-                    'PARAMETER': 'foo'
-                }
+                    'PARAMETER': 'foo',
+                },
             },
             code=201,
-            content_json={'Id': 'id'})
+            content_json={'Id': 'id'},
+        )
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())

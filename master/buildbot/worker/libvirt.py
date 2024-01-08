@@ -124,16 +124,27 @@ class LibVirtWorker(AbstractLatentWorker):
     ns = 'http://buildbot.net/'
     metakey = 'buildbot'
 
-    def __init__(self, name, password, connection=None, hd_image=None, base_image=None,
-                 uri="system:///", xml=None, masterFQDN=None, **kwargs):
+    def __init__(
+        self,
+        name,
+        password,
+        connection=None,
+        hd_image=None,
+        base_image=None,
+        uri="system:///",
+        xml=None,
+        masterFQDN=None,
+        **kwargs,
+    ):
         super().__init__(name, password, **kwargs)
         if not libvirt:
-            config.error(
-                "The python module 'libvirt' is needed to use a LibVirtWorker")
+            config.error("The python module 'libvirt' is needed to use a LibVirtWorker")
 
         if connection is not None:
-            warn_deprecated('3.2.0', 'LibVirtWorker connection argument has been deprecated: ' +
-                            'please use uri')
+            warn_deprecated(
+                '3.2.0',
+                'LibVirtWorker connection argument has been deprecated: ' + 'please use uri',
+            )
             if uri != "system:///":
                 config.error('connection and uri arguments cannot be used together')
             uri = connection.uri
@@ -184,18 +195,26 @@ class LibVirtWorker(AbstractLatentWorker):
             return
 
         if self.cheap_copy:
-            clone_cmd = ['qemu-img', 'create',
-                         '-o', 'backing_fmt=qcow2',
-                         '-b', self.base_image,
-                         '-f', 'qcow2', self.image]
+            clone_cmd = [
+                'qemu-img',
+                'create',
+                '-o',
+                'backing_fmt=qcow2',
+                '-b',
+                self.base_image,
+                '-f',
+                'qcow2',
+                self.image,
+            ]
         else:
             clone_cmd = ['cp', self.base_image, self.image]
 
         log.msg(f"Cloning base image: {clone_cmd}'")
 
         try:
-            rc = yield runprocess.run_process(self.master.reactor, clone_cmd, collect_stdout=False,
-                                              collect_stderr=False)
+            rc = yield runprocess.run_process(
+                self.master.reactor, clone_cmd, collect_stdout=False, collect_stderr=False
+            )
             if rc != 0:
                 raise LatentWorkerFailedToSubstantiate(f'Failed to clone image (rc={rc})')
         except Exception as e:
@@ -218,10 +237,12 @@ class LibVirtWorker(AbstractLatentWorker):
             domain_id = yield self._get_domain_id()
             if domain_id != -1:
                 raise LatentWorkerFailedToSubstantiate(
-                    f"{self}: Cannot start_instance as it's already active")
+                    f"{self}: Cannot start_instance as it's already active"
+                )
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                f'{self}: Got error while retrieving domain ID: {e}') from e
+                f'{self}: Got error while retrieving domain ID: {e}'
+            ) from e
 
         yield self._prepare_base_image()
 
@@ -230,18 +251,22 @@ class LibVirtWorker(AbstractLatentWorker):
                 yield self._pool_do(lambda conn: conn.createXML(self.xml, 0))
             else:
                 domain = yield self._get_domain()
-                yield self._pool_do(lambda conn: domain.setMetadata(
-                    libvirt.VIR_DOMAIN_METADATA_ELEMENT,
-                    self.metadata.format(self.workername, self.password, self.masterFQDN),
-                    self.metakey,
-                    self.ns,
-                    libvirt.VIR_DOMAIN_AFFECT_CONFIG))
+                yield self._pool_do(
+                    lambda conn: domain.setMetadata(
+                        libvirt.VIR_DOMAIN_METADATA_ELEMENT,
+                        self.metadata.format(self.workername, self.password, self.masterFQDN),
+                        self.metakey,
+                        self.ns,
+                        libvirt.VIR_DOMAIN_AFFECT_CONFIG,
+                    )
+                )
 
                 yield self._pool_do(lambda conn: domain.create())
 
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
-                f'{self}: Got error while starting VM: {e}') from e
+                f'{self}: Got error while starting VM: {e}'
+            ) from e
 
         return True
 

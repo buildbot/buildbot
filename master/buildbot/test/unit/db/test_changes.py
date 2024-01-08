@@ -34,31 +34,49 @@ OTHERTIME = 937239287
 
 
 class Tests(interfaces.InterfaceTests):
-
     # common sample data
 
     change13_rows = [
         fakedb.SourceStamp(id=92, branch="thirteen"),
-        fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
-                      branch="master", revision="deadbeef", committer="justin",
-                      when_timestamp=266738400, revlink=None, category=None,
-                      repository='', codebase='', project='', sourcestampid=92),
-
+        fakedb.Change(
+            changeid=13,
+            author="dustin",
+            comments="fix spelling",
+            branch="master",
+            revision="deadbeef",
+            committer="justin",
+            when_timestamp=266738400,
+            revlink=None,
+            category=None,
+            repository='',
+            codebase='',
+            project='',
+            sourcestampid=92,
+        ),
         fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
         fakedb.ChangeFile(changeid=13, filename='worker/README.txt'),
-
-        fakedb.ChangeProperty(changeid=13, property_name='notest',
-                              property_value='["no","Change"]'),
+        fakedb.ChangeProperty(
+            changeid=13, property_name='notest', property_value='["no","Change"]'
+        ),
     ]
 
     change14_rows = [
         fakedb.SourceStamp(id=233, branch="fourteen"),
-        fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
-                      branch="warnerdb", revision="0e92a098b", committer="david",
-                      when_timestamp=266738404, revlink='http://warner/0e92a098b',
-                      category='devel', repository='git://warner', codebase='mainapp',
-                      project='Buildbot', sourcestampid=233),
-
+        fakedb.Change(
+            changeid=14,
+            author="warner",
+            comments="fix whitespace",
+            branch="warnerdb",
+            revision="0e92a098b",
+            committer="david",
+            when_timestamp=266738404,
+            revlink='http://warner/0e92a098b',
+            category='devel',
+            repository='git://warner',
+            codebase='mainapp',
+            project='Buildbot',
+            sourcestampid=233,
+        ),
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
 
@@ -85,10 +103,24 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(self.db.changes.addChange)
-        def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
-                      revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink='', properties=None, repository='', codebase='',
-                      project='', uid=None):
+        def addChange(
+            self,
+            author=None,
+            committer=None,
+            files=None,
+            comments=None,
+            is_dir=None,
+            revision=None,
+            when_timestamp=None,
+            branch=None,
+            category=None,
+            revlink='',
+            properties=None,
+            repository='',
+            codebase='',
+            project='',
+            uid=None,
+        ):
             pass
 
     def test_signature_getChange(self):
@@ -112,44 +144,48 @@ class Tests(interfaces.InterfaceTests):
             properties={},
             repository='repo://',
             codebase='cb',
-            project='proj')
+            project='proj',
+        )
         chdict = yield self.db.changes.getChange(changeid)
         validation.verifyDbDict(self, 'chdict', chdict)
         chdict = chdict.copy()
         ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
         chdict['sourcestampid'] = ss
-        self.assertEqual(chdict, {
-            'author': 'dustin',
-            'committer': 'justin',
-            'branch': 'master',
-            'category': None,
-            'changeid': changeid,
-            'parent_changeids': [],
-            'codebase': 'cb',
-            'comments': 'fix spelling',
-            'files': [],
-            'project': 'proj',
-            'properties': {},
-            'repository': 'repo://',
-            'revision': '2d6caa52',
-            'revlink': None,
-            'sourcestampid': {
+        self.assertEqual(
+            chdict,
+            {
+                'author': 'dustin',
+                'committer': 'justin',
                 'branch': 'master',
+                'category': None,
+                'changeid': changeid,
+                'parent_changeids': [],
                 'codebase': 'cb',
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patchid': None,
+                'comments': 'fix spelling',
+                'files': [],
                 'project': 'proj',
+                'properties': {},
                 'repository': 'repo://',
                 'revision': '2d6caa52',
-                'created_at': epoch2datetime(SOMETIME),
-                'ssid': ss['ssid'],
+                'revlink': None,
+                'sourcestampid': {
+                    'branch': 'master',
+                    'codebase': 'cb',
+                    'patch_author': None,
+                    'patch_body': None,
+                    'patch_comment': None,
+                    'patch_level': None,
+                    'patch_subdir': None,
+                    'patchid': None,
+                    'project': 'proj',
+                    'repository': 'repo://',
+                    'revision': '2d6caa52',
+                    'created_at': epoch2datetime(SOMETIME),
+                    'ssid': ss['ssid'],
+                },
+                'when_timestamp': epoch2datetime(OTHERTIME),
             },
-            'when_timestamp': epoch2datetime(OTHERTIME),
-        })
+        )
 
     @defer.inlineCallbacks
     def test_addChange_withParent(self):
@@ -169,44 +205,48 @@ class Tests(interfaces.InterfaceTests):
             properties={},
             repository='git://warner',
             codebase='mainapp',
-            project='Buildbot')
+            project='Buildbot',
+        )
         chdict = yield self.db.changes.getChange(changeid)
         validation.verifyDbDict(self, 'chdict', chdict)
         chdict = chdict.copy()
         ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
         chdict['sourcestampid'] = ss
-        self.assertEqual(chdict, {
-            'author': 'delanne',
-            'committer': 'melanne',
-            'branch': 'warnerdb',
-            'category': 'devel',
-            'changeid': changeid,
-            'parent_changeids': [14],
-            'codebase': 'mainapp',
-            'comments': 'child of changeid14',
-            'files': [],
-            'project': 'Buildbot',
-            'properties': {},
-            'repository': 'git://warner',
-            'revision': '50adad56',
-            'revlink': None,
-            'sourcestampid': {
+        self.assertEqual(
+            chdict,
+            {
+                'author': 'delanne',
+                'committer': 'melanne',
                 'branch': 'warnerdb',
+                'category': 'devel',
+                'changeid': changeid,
+                'parent_changeids': [14],
                 'codebase': 'mainapp',
-                'created_at': epoch2datetime(SOMETIME),
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patchid': None,
+                'comments': 'child of changeid14',
+                'files': [],
                 'project': 'Buildbot',
+                'properties': {},
                 'repository': 'git://warner',
                 'revision': '50adad56',
-                'ssid': ss['ssid']
+                'revlink': None,
+                'sourcestampid': {
+                    'branch': 'warnerdb',
+                    'codebase': 'mainapp',
+                    'created_at': epoch2datetime(SOMETIME),
+                    'patch_author': None,
+                    'patch_body': None,
+                    'patch_comment': None,
+                    'patch_level': None,
+                    'patch_subdir': None,
+                    'patchid': None,
+                    'project': 'Buildbot',
+                    'repository': 'git://warner',
+                    'revision': '50adad56',
+                    'ssid': ss['ssid'],
+                },
+                'when_timestamp': epoch2datetime(OTHERTIME),
             },
-            'when_timestamp': epoch2datetime(OTHERTIME),
-        })
+        )
 
     @defer.inlineCallbacks
     def test_getChange_chdict(self):
@@ -236,25 +276,32 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeUids_found(self):
-        yield self.insert_test_data(self.change14_rows + [
-            fakedb.SourceStamp(id=92),
-            fakedb.User(uid=1),
-            fakedb.ChangeUser(changeid=14, uid=1),
-        ])
+        yield self.insert_test_data(
+            self.change14_rows
+            + [
+                fakedb.SourceStamp(id=92),
+                fakedb.User(uid=1),
+                fakedb.ChangeUser(changeid=14, uid=1),
+            ]
+        )
         res = yield self.db.changes.getChangeUids(14)
 
         self.assertEqual(res, [1])
 
     @defer.inlineCallbacks
     def test_getChangeUids_multi(self):
-        yield self.insert_test_data(self.change14_rows + self.change13_rows + [
-            fakedb.User(uid=1, identifier="one"),
-            fakedb.User(uid=2, identifier="two"),
-            fakedb.User(uid=99, identifier="nooo"),
-            fakedb.ChangeUser(changeid=14, uid=1),
-            fakedb.ChangeUser(changeid=14, uid=2),
-            fakedb.ChangeUser(changeid=13, uid=99),  # not selected
-        ])
+        yield self.insert_test_data(
+            self.change14_rows
+            + self.change13_rows
+            + [
+                fakedb.User(uid=1, identifier="one"),
+                fakedb.User(uid=2, identifier="two"),
+                fakedb.User(uid=99, identifier="nooo"),
+                fakedb.ChangeUser(changeid=14, uid=1),
+                fakedb.ChangeUser(changeid=14, uid=2),
+                fakedb.ChangeUser(changeid=13, uid=99),  # not selected
+            ]
+        )
         res = yield self.db.changes.getChangeUids(14)
 
         self.assertEqual(sorted(res), [1, 2])
@@ -265,14 +312,18 @@ class Tests(interfaces.InterfaceTests):
             pass
 
     def insert7Changes(self):
-        return self.insert_test_data([
-            fakedb.SourceStamp(id=922),
-            fakedb.Change(changeid=8, sourcestampid=922),
-            fakedb.Change(changeid=9, sourcestampid=922),
-            fakedb.Change(changeid=10, sourcestampid=922),
-            fakedb.Change(changeid=11, sourcestampid=922),
-            fakedb.Change(changeid=12, sourcestampid=922),
-        ] + self.change13_rows + self.change14_rows)
+        return self.insert_test_data(
+            [
+                fakedb.SourceStamp(id=922),
+                fakedb.Change(changeid=8, sourcestampid=922),
+                fakedb.Change(changeid=9, sourcestampid=922),
+                fakedb.Change(changeid=10, sourcestampid=922),
+                fakedb.Change(changeid=11, sourcestampid=922),
+                fakedb.Change(changeid=12, sourcestampid=922),
+            ]
+            + self.change13_rows
+            + self.change14_rows
+        )
 
     @defer.inlineCallbacks
     def test_getChanges_subset(self):
@@ -292,10 +343,12 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangesHugeCount(self):
-        yield self.insert_test_data([
-            fakedb.SourceStamp(id=92),
-        ] + [
-            fakedb.Change(changeid=i) for i in range(2, 102)])
+        yield self.insert_test_data(
+            [
+                fakedb.SourceStamp(id=92),
+            ]
+            + [fakedb.Change(changeid=i) for i in range(2, 102)]
+        )
         n = yield self.db.changes.getChangesCount()
 
         self.assertEqual(n, 100)
@@ -323,10 +376,10 @@ class Tests(interfaces.InterfaceTests):
             changeids = [c['changeid'] for c in changes]
             self.assertEqual(changeids, [13, 14])
             # double-check that they have .files, etc.
-            self.assertEqual(sorted(changes[0]['files']),
-                             sorted(['master/README.txt', 'worker/README.txt']))
-            self.assertEqual(changes[0]['properties'],
-                             {'notest': ('no', 'Change')})
+            self.assertEqual(
+                sorted(changes[0]['files']), sorted(['master/README.txt', 'worker/README.txt'])
+            )
+            self.assertEqual(changes[0]['properties'], {'notest': ('no', 'Change')})
 
         rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
         changes = yield self.db.changes.getChanges(resultSpec=rs)
@@ -363,15 +416,13 @@ class Tests(interfaces.InterfaceTests):
     def test_getParentChangeIds(self):
         yield self.insert_test_data(self.change14_rows + self.change13_rows)
 
-        changeid = yield self.db.changes.getParentChangeIds(branch='warnerdb',
-                                                      repository='git://warner',
-                                                      project='Buildbot',
-                                                      codebase='mainapp')
+        changeid = yield self.db.changes.getParentChangeIds(
+            branch='warnerdb', repository='git://warner', project='Buildbot', codebase='mainapp'
+        )
         self.assertEqual(changeid, [14])
 
 
 class RealTests(Tests):
-
     # tests that only "real" implementations will pass
 
     @defer.inlineCallbacks
@@ -390,7 +441,8 @@ class RealTests(Tests):
             properties={'platform': ('linux', 'Change')},
             repository='',
             codebase='cb',
-            project='')
+            project='',
+        )
         # check all of the columns of the four relevant tables
 
         def thd_change(conn):
@@ -410,6 +462,7 @@ class RealTests(Tests):
             self.assertEqual(r[0].codebase, 'cb')
             self.assertEqual(r[0].project, '')
             self.assertEqual(r[0].sourcestampid, 1)
+
         yield self.db.pool.do(thd_change)
 
         def thd_change_files(conn):
@@ -421,6 +474,7 @@ class RealTests(Tests):
             self.assertEqual(len(r), 2)
             self.assertEqual(r[0].filename, 'master/LICENSING.txt')
             self.assertEqual(r[1].filename, 'worker/LICENSING.txt')
+
         yield self.db.pool.do(thd_change_files)
 
         def thd_change_properties(conn):
@@ -432,6 +486,7 @@ class RealTests(Tests):
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].property_name, 'platform')
             self.assertEqual(r[0].property_value, '["linux", "Change"]')
+
         yield self.db.pool.do(thd_change_properties)
 
         def thd_change_users(conn):
@@ -439,22 +494,29 @@ class RealTests(Tests):
             r = conn.execute(query)
             r = r.fetchall()
             self.assertEqual(len(r), 0)
+
         yield self.db.pool.do(thd_change_users)
 
         def thd_change_sourcestamps(conn):
             query = self.db.model.sourcestamps.select()
             r = conn.execute(query)
-            self.assertEqual([dict(row) for row in r.fetchall()], [{
-                'branch': 'master',
-                'codebase': 'cb',
-                'id': 1,
-                'patchid': None,
-                'project': '',
-                'repository': '',
-                'revision': '2d6caa52',
-                'created_at': SOMETIME,
-                'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
-            }])
+            self.assertEqual(
+                [dict(row) for row in r.fetchall()],
+                [
+                    {
+                        'branch': 'master',
+                        'codebase': 'cb',
+                        'id': 1,
+                        'patchid': None,
+                        'project': '',
+                        'repository': '',
+                        'revision': '2d6caa52',
+                        'created_at': SOMETIME,
+                        'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
+                    }
+                ],
+            )
+
         yield self.db.pool.do(thd_change_sourcestamps)
 
     @defer.inlineCallbacks
@@ -473,7 +535,8 @@ class RealTests(Tests):
             properties={},
             repository='',
             codebase='',
-            project='')
+            project='',
+        )
         # check all of the columns of the four relevant tables
 
         def thd(conn):
@@ -482,6 +545,7 @@ class RealTests(Tests):
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, changeid)
             self.assertEqual(r[0].when_timestamp, OTHERTIME)
+
         yield self.db.pool.do(thd)
 
         def thd_change(conn):
@@ -489,6 +553,7 @@ class RealTests(Tests):
             r = conn.execute(query)
             r = r.fetchall()
             self.assertEqual(len(r), 0)
+
         yield self.db.pool.do(thd_change)
 
         def thd_change_file(conn):
@@ -496,6 +561,7 @@ class RealTests(Tests):
             r = conn.execute(query)
             r = r.fetchall()
             self.assertEqual(len(r), 0)
+
         yield self.db.pool.do(thd_change_file)
 
         def thd_change_properties(conn):
@@ -503,6 +569,7 @@ class RealTests(Tests):
             r = conn.execute(query)
             r = r.fetchall()
             self.assertEqual(len(r), 0)
+
         yield self.db.pool.do(thd_change_properties)
 
     @defer.inlineCallbacks
@@ -511,20 +578,21 @@ class RealTests(Tests):
             fakedb.User(uid=1, identifier="one"),
         ])
         changeid = yield self.db.changes.addChange(
-                          author='dustin',
-                          committer='justin',
-                          files=[],
-                          comments='fix spelling',
-                          revision='2d6caa52',
-                          when_timestamp=epoch2datetime(OTHERTIME),
-                          branch='master',
-                          category=None,
-                          revlink=None,
-                          properties={},
-                          repository='',
-                          codebase='',
-                          project='',
-                          uid=1)
+            author='dustin',
+            committer='justin',
+            files=[],
+            comments='fix spelling',
+            revision='2d6caa52',
+            when_timestamp=epoch2datetime(OTHERTIME),
+            branch='master',
+            category=None,
+            revlink=None,
+            properties={},
+            repository='',
+            codebase='',
+            project='',
+            uid=1,
+        )
         # check all of the columns of the five relevant tables
 
         def thd_change(conn):
@@ -533,6 +601,7 @@ class RealTests(Tests):
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, changeid)
             self.assertEqual(r[0].when_timestamp, OTHERTIME)
+
         yield self.db.pool.do(thd_change)
 
         def thd_change_files(conn):
@@ -540,6 +609,7 @@ class RealTests(Tests):
             r = conn.execute(query)
             r = r.fetchall()
             self.assertEqual(len(r), 0)
+
         yield self.db.pool.do(thd_change_files)
 
         def thd_change_properties(conn):
@@ -547,6 +617,7 @@ class RealTests(Tests):
             r = conn.execute(query)
             r = r.fetchall()
             self.assertEqual(len(r), 0)
+
         yield self.db.pool.do(thd_change_properties)
 
         def thd_change_users(conn):
@@ -556,23 +627,29 @@ class RealTests(Tests):
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, 1)
             self.assertEqual(r[0].uid, 1)
+
         yield self.db.pool.do(thd_change_users)
 
     @defer.inlineCallbacks
     def test_pruneChanges(self):
-        yield self.insert_test_data([
-            fakedb.Scheduler(id=29),
-            fakedb.SourceStamp(id=234, branch='aa'),
-            fakedb.SourceStamp(id=235, branch='bb'),
-            fakedb.Change(changeid=11),
-            fakedb.Change(changeid=12, sourcestampid=234),
-            fakedb.SchedulerChange(schedulerid=29, changeid=12),
-        ] + self.change13_rows + [
-            fakedb.SchedulerChange(schedulerid=29, changeid=13),
-        ] + self.change14_rows + [
-            fakedb.SchedulerChange(schedulerid=29, changeid=14),
-            fakedb.Change(changeid=15, sourcestampid=235),
-        ]
+        yield self.insert_test_data(
+            [
+                fakedb.Scheduler(id=29),
+                fakedb.SourceStamp(id=234, branch='aa'),
+                fakedb.SourceStamp(id=235, branch='bb'),
+                fakedb.Change(changeid=11),
+                fakedb.Change(changeid=12, sourcestampid=234),
+                fakedb.SchedulerChange(schedulerid=29, changeid=12),
+            ]
+            + self.change13_rows
+            + [
+                fakedb.SchedulerChange(schedulerid=29, changeid=13),
+            ]
+            + self.change14_rows
+            + [
+                fakedb.SchedulerChange(schedulerid=29, changeid=14),
+                fakedb.Change(changeid=15, sourcestampid=235),
+            ]
         )
 
         # pruning with a horizon of 2 should delete changes 11, 12 and 13
@@ -580,45 +657,50 @@ class RealTests(Tests):
 
         def thd(conn):
             results = {}
-            for tbl_name in ('scheduler_changes', 'change_files',
-                             'change_properties', 'changes'):
+            for tbl_name in ('scheduler_changes', 'change_files', 'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
                 res = conn.execute(sa.select([tbl.c.changeid]))
-                results[tbl_name] = sorted(
-                    [row[0] for row in res.fetchall()])
-            self.assertEqual(results, {
-                'scheduler_changes': [14],
-                'change_files': [14],
-                'change_properties': [],
-                'changes': [14, 15],
-            })
+                results[tbl_name] = sorted([row[0] for row in res.fetchall()])
+            self.assertEqual(
+                results,
+                {
+                    'scheduler_changes': [14],
+                    'change_files': [14],
+                    'change_properties': [],
+                    'changes': [14, 15],
+                },
+            )
+
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def test_pruneChanges_lots(self):
-        yield self.insert_test_data([
-            fakedb.SourceStamp(id=29),
-        ] + [
-            fakedb.Change(changeid=n, sourcestampid=29)
-            for n in range(1, 151)
-        ])
+        yield self.insert_test_data(
+            [
+                fakedb.SourceStamp(id=29),
+            ]
+            + [fakedb.Change(changeid=n, sourcestampid=29) for n in range(1, 151)]
+        )
 
         yield self.db.changes.pruneChanges(1)
 
         def thd(conn):
             results = {}
-            for tbl_name in ('scheduler_changes', 'change_files',
-                             'change_properties', 'changes'):
+            for tbl_name in ('scheduler_changes', 'change_files', 'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
                 res = conn.execute(sa.select([sa.func.count()]).select_from(tbl))
                 results[tbl_name] = res.fetchone()[0]
                 res.close()
-            self.assertEqual(results, {
-                'scheduler_changes': 0,
-                'change_files': 0,
-                'change_properties': 0,
-                'changes': 1,
-            })
+            self.assertEqual(
+                results,
+                {
+                    'scheduler_changes': 0,
+                    'change_files': 0,
+                    'change_properties': 0,
+                    'changes': 1,
+                },
+            )
+
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
@@ -630,81 +712,108 @@ class RealTests(Tests):
         def thd(conn):
             tbl = self.db.model.changes
             res = conn.execute(tbl.select())
-            self.assertEqual([row.changeid for row in res.fetchall()],
-                             [13])
+            self.assertEqual([row.changeid for row in res.fetchall()], [13])
+
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def test_getChangesForBuild(self):
-        rows = [fakedb.Master(id=88, name="bar"),
-                fakedb.Worker(id=13, name='one'),
-                fakedb.Builder(id=77, name='A')]
-        lastID = {"changeid": 0,
-                  "sourcestampid": 0,
-                  "buildsetid": 0,
-                  "buildsetSourceStampid": 0,
-                  "buildrequestid": 0,
-                  "buildid": 0}
+        rows = [
+            fakedb.Master(id=88, name="bar"),
+            fakedb.Worker(id=13, name='one'),
+            fakedb.Builder(id=77, name='A'),
+        ]
+        lastID = {
+            "changeid": 0,
+            "sourcestampid": 0,
+            "buildsetid": 0,
+            "buildsetSourceStampid": 0,
+            "buildrequestid": 0,
+            "buildid": 0,
+        }
 
         codebase_ss = {}  # shared state between addChange and addBuild
 
-        def addChange(codebase, revision, author, committer, comments, branch='master',
-                      category='cat', project='proj', repository='repo'):
+        def addChange(
+            codebase,
+            revision,
+            author,
+            committer,
+            comments,
+            branch='master',
+            category='cat',
+            project='proj',
+            repository='repo',
+        ):
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
             parent_changeids = codebase_ss.get(codebase, None)
 
             codebase_ss[codebase] = lastID["sourcestampid"]
 
-            changeRows = [fakedb.SourceStamp(id=lastID["sourcestampid"],
-                                             codebase=codebase,
-                                             revision=revision),
-                          fakedb.Change(changeid=lastID["changeid"],
-                                        author=author,
-                                        committer=committer,
-                                        comments=comments,
-                                        revision=revision,
-                                        sourcestampid=lastID["sourcestampid"],
-                                        parent_changeids=parent_changeids,
-                                        when_timestamp=SOMETIME +
-                                        lastID["changeid"],
-                                        branch=branch,
-                                        category=category,
-                                        project=project,
-                                        repository=repository)]
+            changeRows = [
+                fakedb.SourceStamp(
+                    id=lastID["sourcestampid"], codebase=codebase, revision=revision
+                ),
+                fakedb.Change(
+                    changeid=lastID["changeid"],
+                    author=author,
+                    committer=committer,
+                    comments=comments,
+                    revision=revision,
+                    sourcestampid=lastID["sourcestampid"],
+                    parent_changeids=parent_changeids,
+                    when_timestamp=SOMETIME + lastID["changeid"],
+                    branch=branch,
+                    category=category,
+                    project=project,
+                    repository=repository,
+                ),
+            ]
             return changeRows
 
         def addBuild(codebase_ss, results=0):
-
             lastID["buildid"] += 1
             lastID["buildsetid"] += 1
             lastID["buildrequestid"] += 1
 
-            buildRows = [fakedb.Buildset(id=lastID["buildsetid"],
-                                         reason='foo',
-                                         submitted_at=1300305012, results=-1)]
+            buildRows = [
+                fakedb.Buildset(
+                    id=lastID["buildsetid"], reason='foo', submitted_at=1300305012, results=-1
+                )
+            ]
             for ss in codebase_ss.values():
                 lastID["buildsetSourceStampid"] += 1
                 buildRows.append(
-                    fakedb.BuildsetSourceStamp(id=lastID["buildsetSourceStampid"],
-                                               sourcestampid=ss,
-                                               buildsetid=lastID["buildsetid"]))
+                    fakedb.BuildsetSourceStamp(
+                        id=lastID["buildsetSourceStampid"],
+                        sourcestampid=ss,
+                        buildsetid=lastID["buildsetid"],
+                    )
+                )
             codebase_ss.clear()
             buildRows.extend([
-                fakedb.BuildRequest(id=lastID["buildrequestid"],
-                                    buildsetid=lastID["buildsetid"],
-                                    builderid=77,
-                                    priority=13, submitted_at=1300305712, results=-1),
-                fakedb.Build(id=lastID["buildid"],
-                             buildrequestid=lastID["buildrequestid"],
-                             number=lastID["buildid"],
-                             masterid=88,
-                             builderid=77,
-                             state_string="test",
-                             workerid=13,
-                             started_at=SOMETIME + lastID["buildid"],
-                             complete_at=SOMETIME + 2 * lastID["buildid"],
-                             results=results)])
+                fakedb.BuildRequest(
+                    id=lastID["buildrequestid"],
+                    buildsetid=lastID["buildsetid"],
+                    builderid=77,
+                    priority=13,
+                    submitted_at=1300305712,
+                    results=-1,
+                ),
+                fakedb.Build(
+                    id=lastID["buildid"],
+                    buildrequestid=lastID["buildrequestid"],
+                    number=lastID["buildid"],
+                    masterid=88,
+                    builderid=77,
+                    state_string="test",
+                    workerid=13,
+                    started_at=SOMETIME + lastID["buildid"],
+                    complete_at=SOMETIME + 2 * lastID["buildid"],
+                    results=results,
+                ),
+            ])
             return buildRows
 
         # Build1 has 1 change per code base
@@ -749,30 +858,41 @@ class RealTests(Tests):
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent()
 
 
-class TestRealDB(unittest.TestCase,
-                 connector_component.ConnectorComponentMixin,
-                 RealTests):
-
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
-            table_names=['changes', 'change_files',
-                         'change_properties', 'scheduler_changes', 'schedulers',
-                         'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
-                         'users', 'buildsets', 'workers', 'builders', 'masters',
-                         'buildrequests', 'builds', 'buildset_sourcestamps',
-                         'workers', "projects"])
+            table_names=[
+                'changes',
+                'change_files',
+                'change_properties',
+                'scheduler_changes',
+                'schedulers',
+                'sourcestampsets',
+                'sourcestamps',
+                'patches',
+                'change_users',
+                'users',
+                'buildsets',
+                'workers',
+                'builders',
+                'masters',
+                'buildrequests',
+                'builds',
+                'buildset_sourcestamps',
+                'workers',
+                "projects",
+            ]
+        )
 
         self.db.changes = changes.ChangesConnectorComponent(self.db)
         self.db.builds = builds.BuildsConnectorComponent(self.db)
-        self.db.sourcestamps = \
-            sourcestamps.SourceStampsConnectorComponent(self.db)
+        self.db.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self.db)
         self.master = self.db.master
         self.master.db = self.db
 

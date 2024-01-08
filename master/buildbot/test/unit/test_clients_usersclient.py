@@ -24,7 +24,6 @@ from buildbot.clients import usersclient
 
 
 class TestUsersClient(unittest.TestCase):
-
     def setUp(self):
         # patch out some PB components and make up some mocks
         self.patch(pb, 'PBClientFactory', self._fake_PBClientFactory)
@@ -61,7 +60,7 @@ class TestUsersClient(unittest.TestCase):
             "bb_username": bb_username,
             "bb_password": bb_password,
             "ids": ids,
-            "info": info
+            "info": info,
         }
         return defer.succeed(None)
 
@@ -69,23 +68,27 @@ class TestUsersClient(unittest.TestCase):
         self.lostConnection = True
 
     def assertProcess(self, host, port, called_with):
-        self.assertEqual([host, port, called_with],
-                         [self.conn_host, self.conn_port, self.called_with])
+        self.assertEqual(
+            [host, port, called_with], [self.conn_host, self.conn_port, self.called_with]
+        )
 
     @defer.inlineCallbacks
     def test_usersclient_info(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        yield uc.send('update', 'bb_user', 'hashed_bb_pass', None,
-                    [{'identifier': 'x', 'svn': 'x'}])
+        yield uc.send(
+            'update', 'bb_user', 'hashed_bb_pass', None, [{'identifier': 'x', 'svn': 'x'}]
+        )
 
-        self.assertProcess('localhost', 1234,
+        self.assertProcess(
+            'localhost',
+            1234,
             {
                 "op": 'update',
                 "bb_username": 'bb_user',
                 "bb_password": 'hashed_bb_pass',
                 "ids": None,
-                "info": [{"identifier": 'x', "svn": 'x'}]
-            }
+                "info": [{"identifier": 'x', "svn": 'x'}],
+            },
         )
 
     @defer.inlineCallbacks
@@ -93,6 +96,8 @@ class TestUsersClient(unittest.TestCase):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
         yield uc.send('remove', None, None, ['x'], None)
 
-        self.assertProcess('localhost', 1234,
-                           {"op": 'remove', "bb_username": None,
-                           "bb_password": None, "ids": ['x'], "info": None})
+        self.assertProcess(
+            'localhost',
+            1234,
+            {"op": 'remove', "bb_username": None, "bb_password": None, "ids": ['x'], "info": None},
+        )

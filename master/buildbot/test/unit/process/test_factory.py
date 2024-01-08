@@ -28,7 +28,6 @@ from buildbot.steps.shell import Configure
 
 
 class TestBuildFactory(unittest.TestCase):
-
     def setUp(self):
         self.factory = BuildFactory()
 
@@ -49,8 +48,7 @@ class TestBuildFactory(unittest.TestCase):
         # check if the number of nodes grew by one
         self.assertTrue(length + 1, len(self.factory.steps))
         # check if the 'right' node added in the factory
-        self.assertEqual(self.factory.steps[-1],
-                         _BuildStepFactory(BuildStep, name=string))
+        self.assertEqual(self.factory.steps[-1], _BuildStepFactory(BuildStep, name=string))
 
     def test_s(self):
         """
@@ -58,8 +56,7 @@ class TestBuildFactory(unittest.TestCase):
         to construct a step.
         """
         stepFactory = s(BuildStep, name='test')
-        self.assertEqual(
-            stepFactory, _BuildStepFactory(BuildStep, name='test'))
+        self.assertEqual(stepFactory, _BuildStepFactory(BuildStep, name='test'))
         warnings = self.flushWarnings([self.test_s])
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
@@ -78,13 +75,12 @@ class TestBuildFactory(unittest.TestCase):
 
     def test_addSteps(self):
         self.factory.addSteps([BuildStep(), BuildStep()])
-        self.assertEqual(self.factory.steps[-2:],
-                         [_BuildStepFactory(BuildStep),
-                          _BuildStepFactory(BuildStep)])
+        self.assertEqual(
+            self.factory.steps[-2:], [_BuildStepFactory(BuildStep), _BuildStepFactory(BuildStep)]
+        )
 
 
 class TestGNUAutoconf(TestBuildFactory):
-
     def setUp(self):
         self.factory = GNUAutoconf(source=BuildStep())
 
@@ -117,14 +113,15 @@ class TestGNUAutoconf(TestBuildFactory):
     def test_init_none(self):
         """Default steps can be uninitialized by setting None"""
 
-        self.factory = GNUAutoconf(source=BuildStep(), compile=None, test=None,
-                                   distcheck=None)
+        self.factory = GNUAutoconf(source=BuildStep(), compile=None, test=None, distcheck=None)
         for step in self.factory.steps:
             try:
                 cmd = step.buildStep().command
-                self.assertNotIn(cmd, [['make', 'all'], ['make', 'check'],
-                                 ['make', 'distcheck']],
-                                 f"Build step {cmd} should not be present.")
+                self.assertNotIn(
+                    cmd,
+                    [['make', 'all'], ['make', 'check'], ['make', 'distcheck']],
+                    f"Build step {cmd} should not be present.",
+                )
             except (AttributeError, KeyError):
                 pass
 
@@ -144,8 +141,7 @@ class TestGNUAutoconf(TestBuildFactory):
         self.assertTrue(reconfPresent)
 
         # test setting your own reconfiguration step
-        self.factory = GNUAutoconf(source=BuildStep(),
-                                   reconf=['notsoautoreconf'])
+        self.factory = GNUAutoconf(source=BuildStep(), reconf=['notsoautoreconf'])
         self.test_init()
         for step in self.factory.steps:
             try:

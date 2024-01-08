@@ -18,18 +18,18 @@ from sphinx.domains.std import StandardDomain
 
 
 class PythonAPIIndex(Index):
-
     objecttype = 'class'
     name = 'apiindex'
     localname = 'Public API Index'
     shortname = 'classes'
 
     def generate(self, docnames=None):
-        unsorted_objects = [(refname, entry.docname, entry.objtype)
-                            for (refname, entry) in self.domain.data['objects'].items()
-                            if entry.objtype in ['class', 'function']]
-        objects = sorted(unsorted_objects,
-                         key=lambda x: x[0].lower())
+        unsorted_objects = [
+            (refname, entry.docname, entry.objtype)
+            for (refname, entry) in self.domain.data['objects'].items()
+            if entry.objtype in ['class', 'function']
+        ]
+        objects = sorted(unsorted_objects, key=lambda x: x[0].lower())
 
         entries = []
 

@@ -23,15 +23,15 @@ from twisted.python import log
 
 
 class LRUCache:
-
     """
     A least-recently-used cache, with a fixed maximum size.
 
     See buildbot manual for more information.
     """
 
-    __slots__ = ('max_size max_queue miss_fn queue cache weakrefs '
-                 'refcount hits refhits misses'.split())
+    __slots__ = (
+        'max_size max_queue miss_fn queue cache weakrefs refcount hits refhits misses'.split()
+    )
     sentinel = object()
     QUEUE_SIZE_FACTOR = 10
 
@@ -121,8 +121,7 @@ class LRUCache:
             refcount.clear()
             queue_appendleft = queue.appendleft
             queue_appendleft(self.sentinel)
-            for k in filterfalse(refcount.__contains__,
-                                 iter(queue.pop, self.sentinel)):
+            for k in filterfalse(refcount.__contains__, iter(queue.pop, self.sentinel)):
                 queue_appendleft(k)
                 refcount[k] = 1
 
@@ -167,7 +166,6 @@ class LRUCache:
 
 
 class AsyncLRUCache(LRUCache):
-
     """
     An LRU cache with asynchronous locking to ensure that in the common case of
     multiple concurrent requests for the same key, only one fetch is performed.

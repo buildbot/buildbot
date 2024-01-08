@@ -24,7 +24,6 @@ from buildbot.util import service
 
 
 class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
-
     """
     Perspective registered in buildbot.pbmanager and contains the real
     workings of `buildbot user` by working with the database when
@@ -116,8 +115,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             for user in ids:
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
-                uid = yield self.master.db.users.identifierToUid(
-                    identifier=user)
+                uid = yield self.master.db.users.identifierToUid(identifier=user)
 
                 result = None
                 if op == 'remove':
@@ -138,8 +136,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
                 ident = user.pop('identifier')
-                uid = yield self.master.db.users.identifierToUid(
-                    identifier=ident)
+                uid = yield self.master.db.users.identifierToUid(identifier=ident)
 
                 # if only an identifier was in user, we're updating only
                 # the bb_username and bb_password.
@@ -149,7 +146,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                             uid=uid,
                             identifier=ident,
                             bb_username=bb_username,
-                            bb_password=bb_password)
+                            bb_password=bb_password,
+                        )
                         results.append(ident)
                     else:
                         log.msg(f"Unable to find uid for identifier {user}")
@@ -166,14 +164,14 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                                     bb_username=bb_username,
                                     bb_password=bb_password,
                                     attr_type=attr,
-                                    attr_data=user[attr])
+                                    attr_data=user[attr],
+                                )
                             else:
                                 log.msg(f"Unable to find uid for identifier {user}")
                         elif op == 'add':
                             result = yield self.master.db.users.findUserByAttr(
-                                identifier=ident,
-                                attr_type=attr,
-                                attr_data=user[attr])
+                                identifier=ident, attr_type=attr, attr_data=user[attr]
+                            )
                             once_through = True
                         results.append(ident)
 
@@ -186,7 +184,6 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
 
 
 class CommandlineUserManager(service.AsyncMultiService):
-
     """
     Service that runs to set up and register CommandlineUserManagerPerspective
     so `buildbot user` calls get to perspective_commandline.
@@ -194,8 +191,9 @@ class CommandlineUserManager(service.AsyncMultiService):
 
     def __init__(self, username=None, passwd=None, port=None):
         super().__init__()
-        assert username and passwd, ("A username and password pair must be given "
-                                     "to connect and use `buildbot user`")
+        assert (
+            username and passwd
+        ), "A username and password pair must be given to connect and use `buildbot user`"
         self.username = username
         self.passwd = passwd
 
@@ -209,8 +207,9 @@ class CommandlineUserManager(service.AsyncMultiService):
         def factory(mind, username):
             return CommandlineUserManagerPerspective(self.master)
 
-        self.registration = yield self.master.pbmanager.register(self.port, self.username,
-                                                                 self.passwd, factory)
+        self.registration = yield self.master.pbmanager.register(
+            self.port, self.username, self.passwd, factory
+        )
         yield super().startService()
 
     def stopService(self):
@@ -221,4 +220,5 @@ class CommandlineUserManager(service.AsyncMultiService):
             if self.registration:
                 return self.registration.unregister()
             return None
+
         return d

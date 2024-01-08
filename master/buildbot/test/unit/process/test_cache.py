@@ -22,7 +22,6 @@ from buildbot.process import cache
 
 
 class CacheManager(unittest.TestCase):
-
     def setUp(self):
         self.caches = cache.CacheManager()
 
@@ -42,12 +41,10 @@ class CacheManager(unittest.TestCase):
     def test_reconfigServiceWithBuildbotConfig(self):
         # load config with one cache loaded and the other not
         foo_cache = self.caches.get_cache("foo", None)
-        yield self.caches.reconfigServiceWithBuildbotConfig(
-            self.make_config(foo=5, bar=6, bing=11))
+        yield self.caches.reconfigServiceWithBuildbotConfig(self.make_config(foo=5, bar=6, bing=11))
 
         bar_cache = self.caches.get_cache("bar", None)
-        self.assertEqual((foo_cache.max_size, bar_cache.max_size),
-                         (5, 6))
+        self.assertEqual((foo_cache.max_size, bar_cache.max_size), (5, 6))
 
     def test_get_metrics(self):
         self.caches.get_cache("foo", None)

@@ -17,7 +17,6 @@
 Steps and objects related to pbuilder
 """
 
-
 import re
 import stat
 import time
@@ -33,8 +32,8 @@ from buildbot.steps.shell import WarningCountingShellCommand
 
 
 class DebPbuilder(WarningCountingShellCommand):
-
     """Build a debian package with pbuilder inside of a chroot."""
+
     name = "pbuilder"
 
     haltOnFailure = 1
@@ -58,19 +57,29 @@ class DebPbuilder(WarningCountingShellCommand):
     pbuilder = '/usr/sbin/pbuilder'
     baseOption = '--basetgz'
 
-    renderables = ['architecture', 'distribution', 'basetgz', 'mirror', 'othermirror',
-            'extrapackages', 'keyring', 'components']
+    renderables = [
+        'architecture',
+        'distribution',
+        'basetgz',
+        'mirror',
+        'othermirror',
+        'extrapackages',
+        'keyring',
+        'components',
+    ]
 
-    def __init__(self,
-                 architecture=None,
-                 distribution=None,
-                 basetgz=None,
-                 mirror=None,
-                 othermirror=None,
-                 extrapackages=None,
-                 keyring=None,
-                 components=None,
-                 **kwargs):
+    def __init__(
+        self,
+        architecture=None,
+        distribution=None,
+        basetgz=None,
+        mirror=None,
+        othermirror=None,
+        extrapackages=None,
+        keyring=None,
+        components=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
 
         if architecture:
@@ -93,11 +102,9 @@ class DebPbuilder(WarningCountingShellCommand):
         if not self.distribution:
             config.error("You must specify a distribution.")
 
-        self.suppressions.append(
-            (None, re.compile(r"\.pbuilderrc does not exist"), None, None))
+        self.suppressions.append((None, re.compile(r"\.pbuilderrc does not exist"), None, None))
 
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     @defer.inlineCallbacks
     def run(self):
@@ -133,9 +140,17 @@ class DebPbuilder(WarningCountingShellCommand):
         if cmd.rc != 0:
             log.msg("basetgz not found, initializing it.")
 
-            command = ['sudo', self.pbuilder, '--create', self.baseOption,
-                       self.basetgz, '--distribution', self.distribution,
-                       '--mirror', self.mirror]
+            command = [
+                'sudo',
+                self.pbuilder,
+                '--create',
+                self.baseOption,
+                self.basetgz,
+                '--distribution',
+                self.distribution,
+                '--mirror',
+                self.mirror,
+            ]
             if self.othermirror:
                 command += ['--othermirror', self.othermirror]
             if self.architecture:
@@ -169,8 +184,7 @@ class DebPbuilder(WarningCountingShellCommand):
             age = time.time() - s[stat.ST_MTIME]
             if age >= self.maxAge:
                 log.msg("basetgz outdated, updating")
-                command = ['sudo', self.pbuilder, '--update',
-                           self.baseOption, self.basetgz]
+                command = ['sudo', self.pbuilder, '--update', self.baseOption, self.basetgz]
 
                 cmd = remotecommand.RemoteShellCommand(self.workdir, command)
                 stdio_log = yield self.addLog("pbuilder")
@@ -195,8 +209,8 @@ class DebPbuilder(WarningCountingShellCommand):
 
 
 class DebCowbuilder(DebPbuilder):
-
     """Build a debian package with cowbuilder inside of a chroot."""
+
     name = "cowbuilder"
 
     _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.cow/"
@@ -206,8 +220,8 @@ class DebCowbuilder(DebPbuilder):
 
 
 class UbuPbuilder(DebPbuilder):
-
     """Build a Ubuntu package with pbuilder inside of a chroot."""
+
     distribution = None
     mirror = "http://archive.ubuntu.com/ubuntu/"
 
@@ -215,8 +229,8 @@ class UbuPbuilder(DebPbuilder):
 
 
 class UbuCowbuilder(DebCowbuilder):
-
     """Build a Ubuntu package with cowbuilder inside of a chroot."""
+
     distribution = None
     mirror = "http://archive.ubuntu.com/ubuntu/"
 

@@ -28,8 +28,10 @@ def check_param_length(value, name, max_length):
             interpolations = {k: '' for k in value.interpolations}
         shortest_value = value.fmtstring % interpolations
         if len(shortest_value) > max_length:
-            error(f"{name} '{value}' (shortest interpolation) exceeds maximum length of "
-                  f"{max_length}")
+            error(
+                f"{name} '{value}' (shortest interpolation) exceeds maximum length of "
+                f"{max_length}"
+            )
 
 
 def check_param_type(value, default_value, class_inst, name, types, types_msg):
@@ -58,9 +60,12 @@ def check_param_int_none(value, class_inst, name):
 def check_markdown_support(class_inst):
     try:
         import markdown  # pylint: disable=import-outside-toplevel
+
         [markdown]
         return True
     except ImportError:  # pragma: no cover
-        error(f"{class_inst.__name__}: Markdown library is required in order to use "
-              "markdown format ('pip install Markdown')")
+        error(
+            f"{class_inst.__name__}: Markdown library is required in order to use "
+            "markdown format ('pip install Markdown')"
+        )
         return False

@@ -35,7 +35,6 @@ from buildbot.util import service
 
 
 class FakeCache:
-
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
     I{does} do the weakref part, to catch un-weakref-able objects."""
 
@@ -51,6 +50,7 @@ class FakeCache:
             if x is not None:
                 weakref.ref(x)
             return x
+
         return d
 
     def put(self, key, val):
@@ -58,13 +58,11 @@ class FakeCache:
 
 
 class FakeCaches:
-
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
 
 
 class FakeBuilder:
-
     def __init__(self, master=None, buildername="Builder"):
         if master:
             self.master = master
@@ -78,7 +76,6 @@ class FakeLogRotation:
 
 
 class FakeMaster(service.MasterService):
-
     """
     Create a fake Master instance: a Mock with some convenience
     implementations:
@@ -86,8 +83,7 @@ class FakeMaster(service.MasterService):
     - Non-caching implementation for C{self.caches}
     """
 
-    def __init__(self, reactor,
-                 master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+    def __init__(self, reactor, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
         super().__init__()
         self._master_id = master_id
         self.reactor = reactor
@@ -119,6 +115,7 @@ class FakeMaster(service.MasterService):
                 rv = self.objectids[k] = self.next_objectid
                 self.next_objectid += 1
             return defer.succeed(rv)
+
         self.db.state.getObjectId = getObjectId
 
     def getObjectId(self):
@@ -127,11 +124,20 @@ class FakeMaster(service.MasterService):
     def subscribeToBuildRequests(self, callback):
         pass
 
+
 # Leave this alias, in case we want to add more behavior later
 
 
-def make_master(testcase, wantMq=False, wantDb=False, wantData=False,
-                wantRealReactor=False, wantGraphql=False, url=None, **kwargs):
+def make_master(
+    testcase,
+    wantMq=False,
+    wantDb=False,
+    wantData=False,
+    wantRealReactor=False,
+    wantGraphql=False,
+    url=None,
+    **kwargs,
+):
     if wantRealReactor:
         _reactor = reactor
     else:

@@ -19,34 +19,33 @@ try:
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
-    print('Please install buildbot_pkg module in order to install that '
-          'package, or use the pre-build .whl modules available on pypi',
-          file=sys.stderr)
+
+    print(
+        'Please install buildbot_pkg module in order to install that '
+        'package, or use the pre-build .whl modules available on pypi',
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 setup_www_plugin(
     name='buildbot-badges',
     description='Buildbot badges',
-    author=u'Buildbot Team Members',
-    author_email=u'users@buildbot.net',
+    author='Buildbot Team Members',
+    author_email='users@buildbot.net',
     url='http://buildbot.net/',
     packages=['buildbot_badges'],
-    install_requires=[
-        'klein',
-        'CairoSVG',
-        'cairocffi', 'Jinja2'
-    ],
+    install_requires=['klein', 'CairoSVG', 'cairocffi', 'Jinja2'],
     package_data={
         '': [
             # dist is required by buildbot_pkg
-            'VERSION', 'templates/*.svg.j2', 'static/.placeholder'
+            'VERSION',
+            'templates/*.svg.j2',
+            'static/.placeholder',
         ],
     },
     entry_points="""
         [buildbot.www]
         badges = buildbot_badges:ep
     """,
-    classifiers=[
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
-    ],
+    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
 )

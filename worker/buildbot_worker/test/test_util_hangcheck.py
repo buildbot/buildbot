@@ -32,7 +32,8 @@ def assert_clock_idle(case, clock):
     calls.
     """
     case.assertEqual(
-        clock.getDelayedCalls(), [],
+        clock.getDelayedCalls(),
+        [],
     )
 
 
@@ -138,9 +139,7 @@ class HangCheckTests(TestCase):
         transport.protocol = protocol
         protocol.makeConnection(transport)
         reason = ConnectionDone("Bye.")
-        protocol.connectionLost(
-            Failure(reason)
-        )
+        protocol.connectionLost(Failure(reason))
 
         self.assertTrue(wrapped_protocol.closed)
         self.assertEqual(
@@ -161,9 +160,7 @@ class HangCheckTests(TestCase):
 
         transport.protocol = protocol
         protocol.makeConnection(transport)
-        protocol.connectionLost(
-            Failure(ConnectionDone("Bye."))
-        )
+        protocol.connectionLost(Failure(ConnectionDone("Bye.")))
 
         assert_clock_idle(self, clock)
 
@@ -181,9 +178,7 @@ class HangCheckTests(TestCase):
         transport.protocol = protocol
         protocol.makeConnection(transport)
         protocol.dataReceived(b"some-data")
-        protocol.connectionLost(
-            Failure(ConnectionDone("Bye."))
-        )
+        protocol.connectionLost(Failure(ConnectionDone("Bye.")))
 
         assert_clock_idle(self, clock)
 
@@ -230,13 +225,14 @@ class EndToEndHangCheckTests(TestCase):
         result = defer.Deferred()
 
         site = Site(Data("", "text/plain"))
-        client = HangCheckFactory(
-            PBClientFactory(), lambda: result.callback(None))
+        client = HangCheckFactory(PBClientFactory(), lambda: result.callback(None))
 
         self.patch(HangCheckProtocol, '_HUNG_CONNECTION_TIMEOUT', 0.1)
 
         d_connected = connected_server_and_client(
-            self, site, client,
+            self,
+            site,
+            client,
         )
 
         def cancel_all():

@@ -23,6 +23,7 @@ def patch_noargs_decorator(decorator):
         wrapper = decorator(func)
         wrapper.__wrapped__ = func
         return wrapper
+
     util.mergeFunctionMetadata(decorator, new_decorator)
     return new_decorator
 

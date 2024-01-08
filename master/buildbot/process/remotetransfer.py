@@ -28,7 +28,6 @@ from buildbot.worker.protocols import base
 
 
 class FileWriter(base.FileWriterImpl):
-
     """
     Helper class that acts as a file-object with write access
     """
@@ -57,7 +56,7 @@ class FileWriter(base.FileWriterImpl):
         data = unicode2bytes(data)
         if self.remaining is not None:
             if len(data) > self.remaining:
-                data = data[:self.remaining]
+                data = data[: self.remaining]
             self.fp.write(data)
             self.remaining = self.remaining - len(data)
         else:
@@ -94,7 +93,6 @@ class FileWriter(base.FileWriterImpl):
 
 
 class DirectoryWriter(FileWriter):
-
     """
     A DirectoryWriter is implemented as a FileWriter, with an added post-processing
     step to unpack the archive, once the transfer has completed.
@@ -134,7 +132,6 @@ class DirectoryWriter(FileWriter):
 
 
 class FileReader(base.FileReaderImpl):
-
     """
     Helper class that acts as a file-object with read access
     """
@@ -168,7 +165,6 @@ class FileReader(base.FileReaderImpl):
 
 
 class StringFileWriter(base.FileWriterImpl):
-
     """
     FileWriter class that just puts received data into a buffer.
 
@@ -187,7 +183,6 @@ class StringFileWriter(base.FileWriterImpl):
 
 
 class StringFileReader(FileReader):
-
     """
     FileWriter class that just buid send data from a string.
 

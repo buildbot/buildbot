@@ -30,7 +30,6 @@ _HEADER_EVENT = b'X-Event-Key'
 
 
 class BitbucketCloudEventHandler(PullRequestMixin):
-
     property_basename = "bitbucket"
 
     def __init__(self, master, options=None):
@@ -39,9 +38,7 @@ class BitbucketCloudEventHandler(PullRequestMixin):
             options = {}
         self.options = options
         self._codebase = self.options.get('codebase', None)
-        self.external_property_whitelist = self.options.get(
-            'bitbucket_property_whitelist', []
-        )
+        self.external_property_whitelist = self.options.get('bitbucket_property_whitelist', [])
 
     def process(self, request):
         payload = self._get_payload(request)
@@ -99,7 +96,7 @@ class BitbucketCloudEventHandler(PullRequestMixin):
                 'comments': f'Bitbucket Cloud commit {commit_hash}',
                 'branch': branch,
                 'project': project,
-                'category': category
+                'category': category,
             }
 
             if callable(self._codebase):
@@ -113,29 +110,27 @@ class BitbucketCloudEventHandler(PullRequestMixin):
 
     def handle_pullrequest_created(self, payload):
         return self.handle_pullrequest(
-            payload,
-            GIT_MERGE_REF.format(int(payload['pullrequest']['id'])),
-            "pull-created")
+            payload, GIT_MERGE_REF.format(int(payload['pullrequest']['id'])), "pull-created"
+        )
 
     def handle_pullrequest_updated(self, payload):
         return self.handle_pullrequest(
-            payload,
-            GIT_MERGE_REF.format(int(payload['pullrequest']['id'])),
-            "pull-updated")
+            payload, GIT_MERGE_REF.format(int(payload['pullrequest']['id'])), "pull-updated"
+        )
 
     def handle_pullrequest_fulfilled(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_BRANCH_REF.format(
-                payload['pullrequest']['toRef']['branch']['name']),
-            "pull-fulfilled")
+            GIT_BRANCH_REF.format(payload['pullrequest']['toRef']['branch']['name']),
+            "pull-fulfilled",
+        )
 
     def handle_pullrequest_rejected(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_BRANCH_REF.format(
-                payload['pullrequest']['fromRef']['branch']['name']),
-            "pull-rejected")
+            GIT_BRANCH_REF.format(payload['pullrequest']['fromRef']['branch']['name']),
+            "pull-rejected",
+        )
 
     def handle_pullrequest(self, payload, refname, category):
         pr_number = int(payload['pullrequest']['id'])
@@ -154,7 +149,7 @@ class BitbucketCloudEventHandler(PullRequestMixin):
             'properties': {
                 'pullrequesturl': revlink,
                 **self.extractProperties(payload['pullrequest']),
-            }
+            },
         }
 
         if callable(self._codebase):

@@ -16,7 +16,6 @@
 Source step code for darcs
 """
 
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -31,17 +30,14 @@ from buildbot.steps.source.base import Source
 
 
 class Darcs(Source):
-
-    """ Class for Darcs with all smarts """
+    """Class for Darcs with all smarts"""
 
     name = 'darcs'
 
     renderables = ['repourl']
     possible_methods = ('clobber', 'copy')
 
-    def __init__(self, repourl=None, mode='incremental',
-                 method=None, **kwargs):
-
+    def __init__(self, repourl=None, mode='incremental', method=None, **kwargs):
         self.repourl = repourl
         self.method = method
         self.mode = mode
@@ -88,10 +84,13 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def checkDarcs(self):
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['darcs', '--version'],
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ['darcs', '--version'],
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         return cmd.rc == 0
@@ -116,20 +115,29 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand(
+            'rmdir',
+            {
+                'dir': self.workdir,
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
         self.workdir = 'source'
         yield self.mode_incremental()
 
-        cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir': 'build',
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand(
+            'cpdir',
+            {
+                'fromdir': 'source',
+                'todir': 'build',
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -142,8 +150,7 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def _clone(self, abandonOnFailure=False):
-        command = ['darcs', 'get', '--verbose',
-                   '--lazy', '--repo-name', self.workdir]
+        command = ['darcs', 'get', '--verbose', '--lazy', '--repo-name', self.workdir]
 
         if self.revision:
             yield self.downloadFileContentToWorker('.darcs-context', self.revision)
@@ -155,7 +162,6 @@ class Darcs(Source):
 
     @defer.inlineCallbacks
     def _checkout(self):
-
         if self.retry:
             abandonOnFailure = self.retry[1] <= 0
         else:
@@ -183,21 +189,31 @@ class Darcs(Source):
         self.updateSourceProperty('got_revision', revision)
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
-                 abandonOnFailure=True, wkdir=None):
+    def _dovccmd(
+        self,
+        command,
+        collectStdout=False,
+        initialStdin=None,
+        decodeRC=None,
+        abandonOnFailure=True,
+        wkdir=None,
+    ):
         if not command:
             raise ValueError("No command specified")
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         workdir = wkdir or self.workdir
-        cmd = remotecommand.RemoteShellCommand(workdir, command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin,
-                                               decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(
+            workdir,
+            command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            decodeRC=decodeRC,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 

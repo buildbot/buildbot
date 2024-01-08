@@ -61,14 +61,13 @@ gitJsonPayload = b"""
 """
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
-                                            TestReactorMixin):
-
+class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
         dialects = {'gitorious': True}
         self.changeHook = change_hook.ChangeHookResource(
-            dialects=dialects, master=fakeMasterForHooks(self))
+            dialects=dialects, master=fakeMasterForHooks(self)
+        )
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.
@@ -85,20 +84,13 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase,
 
         # Gitorious doesn't send changed files
         self.assertEqual(change['files'], [])
-        self.assertEqual(change["repository"],
-                         "http://gitorious.org/q/mainline")
-        self.assertEqual(
-            change["when_timestamp"],
-            1326218547
-        )
+        self.assertEqual(change["repository"], "http://gitorious.org/q/mainline")
+        self.assertEqual(change["when_timestamp"], 1326218547)
         self.assertEqual(change["author"], "jason <jason@nospam.org>")
-        self.assertEqual(change["revision"],
-                         'df5744f7bc8663b39717f87742dc94f52ccbf4dd')
-        self.assertEqual(change["comments"],
-                         "added a place to put the docstring for Book")
+        self.assertEqual(change["revision"], 'df5744f7bc8663b39717f87742dc94f52ccbf4dd')
+        self.assertEqual(change["comments"], "added a place to put the docstring for Book")
         self.assertEqual(change["branch"], "new_look")
-        revlink = ("http://gitorious.org/q/mainline/commit/"
-                   "df5744f7bc8663b39717f87742dc94f52ccbf4dd")
+        revlink = "http://gitorious.org/q/mainline/commit/df5744f7bc8663b39717f87742dc94f52ccbf4dd"
         self.assertEqual(change["revlink"], revlink)
 
     @defer.inlineCallbacks

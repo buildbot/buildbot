@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class Patch(base.ResourceType):
-
     name = "patch"
     plural = "patches"
     endpoints = []
@@ -34,4 +33,5 @@ class Patch(base.ResourceType):
         subdir = types.String()
         author = types.String()
         comment = types.String()
+
     entityType = EntityType(name, 'Patch')

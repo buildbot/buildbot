@@ -23,7 +23,15 @@ from buildbot.data import types
 testData = {
     13: {'testid': 13, 'info': 'ok', 'success': True, 'tags': []},
     14: {'testid': 14, 'info': 'failed', 'success': False, 'tags': []},
-    15: {'testid': 15, 'info': 'warned', 'success': True, 'tags': ['a', 'b', ]},
+    15: {
+        'testid': 15,
+        'info': 'warned',
+        'success': True,
+        'tags': [
+            'a',
+            'b',
+        ],
+    },
     16: {'testid': 16, 'info': 'skipped', 'success': True, 'tags': ['a']},
     17: {'testid': 17, 'info': 'ignored', 'success': True, 'tags': []},
     18: {'testid': 18, 'info': 'unexp', 'success': False, 'tags': []},
@@ -55,11 +63,7 @@ class RawTestsEndpoint(base.Endpoint):
     pathPatterns = "/rawtest"
 
     def get(self, resultSpec, kwargs):
-        return defer.succeed({
-            "filename": "test.txt",
-            "mime-type": "text/test",
-            'raw': 'value'
-        })
+        return defer.succeed({"filename": "test.txt", "mime-type": "text/test", 'raw': 'value'})
 
 
 class FailEndpoint(base.Endpoint):
@@ -118,6 +122,7 @@ class Step(base.ResourceType):
         stepid = types.Integer()
         testid = types.Integer()
         info = types.String()
+
     entityType = EntityType(name, 'Step')
 
 
@@ -133,6 +138,7 @@ class Test(base.ResourceType):
         info = types.String()
         success = types.Boolean()
         tags = types.List(of=types.String())
+
     entityType = EntityType(name, 'Test')
 
 
@@ -192,7 +198,8 @@ type Step {{
   testid: Int!
   info: String!
 }}
-""".format(queries="""  tests(info: String,
+""".format(
+    queries="""  tests(info: String,
    info__contains: String,
    info__eq: String,
    info__ge: String,
@@ -233,4 +240,5 @@ type Step {{
    order: String,
    limit: Int,
    offset: Int): [Test]!
-  test(testid: Int): Test""")
+  test(testid: Int): Test"""
+)

@@ -38,8 +38,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
     def setUpEndpoint(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True,
-                                             wantData=True)
+        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data
@@ -58,14 +57,15 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
                 continue
             if not pp.startswith('/') or pp.endswith('/'):
                 raise AssertionError(f"invalid pattern {repr(pp)}")
-        pathPatterns = [tuple(pp.split('/')[1:])
-                        for pp in pathPatterns]
+        pathPatterns = [tuple(pp.split('/')[1:]) for pp in pathPatterns]
         for pp in pathPatterns:
             self.matcher[pp] = self.ep
 
         self.pathArgs = [
             {arg.split(':', 1)[1] for arg in pp if ':' in arg}
-            for pp in pathPatterns if pp is not None]
+            for pp in pathPatterns
+            if pp is not None
+        ]
 
     def tearDownEndpoint(self):
         pass
@@ -102,10 +102,12 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
     def test_get_spec(self):
         try:
+
             @self.assertArgSpecMatches(self.ep.get)
             def get(self, resultSpec, kwargs):
                 pass
         except trial.unittest.FailTest:
+
             @self.assertArgSpecMatches(self.ep.get)
             def get(self, result_spec, kwargs):
                 pass

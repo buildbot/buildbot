@@ -26,7 +26,6 @@ from buildbot.util.misc import writeLocalFile
 
 
 class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
-
     def createTempDir(self, dirname):
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
@@ -40,8 +39,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.tmp_dir = self.createTempDir("temp")
-        self.filepath = self.createFileTemp(self.tmp_dir, "tempfile.txt",
-                                            text="key value\n")
+        self.filepath = self.createFileTemp(self.tmp_dir, "tempfile.txt", text="key value\n")
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
 
@@ -56,23 +54,24 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     def testCheckConfigErrorSecretInAFileService(self):
         if os.name != "posix":
             self.skipTest("Permission checks only works on posix systems")
-        filepath = self.createFileTemp(self.tmp_dir, "tempfile2.txt",
-                                       chmodRights=stat.S_IROTH)
-        expctd_msg_error = " on file tempfile2.txt are too " \
-                           "open. It is required that your secret files are" \
-                           " NOT accessible by others!"
+        filepath = self.createFileTemp(self.tmp_dir, "tempfile2.txt", chmodRights=stat.S_IROTH)
+        expctd_msg_error = (
+            " on file tempfile2.txt are too "
+            "open. It is required that your secret files are"
+            " NOT accessible by others!"
+        )
         with self.assertRaisesConfigError(expctd_msg_error):
             self.srvfile.checkConfig(self.tmp_dir)
         os.remove(filepath)
 
     @defer.inlineCallbacks
     def testCheckConfigfileExtension(self):
-        filepath = self.createFileTemp(self.tmp_dir, "tempfile2.ini",
-                                       text="test suffix",
-                                       chmodRights=stat.S_IRWXU)
-        filepath2 = self.createFileTemp(self.tmp_dir, "tempfile2.txt",
-                                        text="some text",
-                                        chmodRights=stat.S_IRWXU)
+        filepath = self.createFileTemp(
+            self.tmp_dir, "tempfile2.ini", text="test suffix", chmodRights=stat.S_IRWXU
+        )
+        filepath2 = self.createFileTemp(
+            self.tmp_dir, "tempfile2.txt", text="some text", chmodRights=stat.S_IRWXU
+        )
         yield self.srvfile.reconfigService(self.tmp_dir, suffixes=[".ini"])
         self.assertEqual(self.srvfile.get("tempfile2"), "test suffix")
         self.assertEqual(self.srvfile.get("tempfile3"), None)

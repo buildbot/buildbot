@@ -25,7 +25,6 @@ from buildbot.util.git import getSshKnownHostsContents
 
 
 class TestEscapeShellArgIfNeeded(unittest.TestCase):
-
     def assert_escapes(self, arg):
         escaped = f'"{arg}"'
         self.assertEqual(escapeShellArgIfNeeded(arg), escaped)
@@ -56,18 +55,32 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
 
 
 class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
-
     @parameterized.expand([
         ('no_keys', None, None, None, None),
         ('only_private_key', 'key', None, None, None),
         ('private_key_host_key', 'key', 'host', None, None),
         ('private_key_known_hosts', 'key', None, 'hosts', None),
-        ('no_private_key_host_key', None, 'host', None,
-         'sshPrivateKey must be provided in order use sshHostKey'),
-        ('no_private_key_known_hosts', None, None, 'hosts',
-         'sshPrivateKey must be provided in order use sshKnownHosts'),
-        ('both_host_key_known_hosts', 'key', 'host', 'hosts',
-         'only one of sshKnownHosts and sshHostKey can be provided'),
+        (
+            'no_private_key_host_key',
+            None,
+            'host',
+            None,
+            'sshPrivateKey must be provided in order use sshHostKey',
+        ),
+        (
+            'no_private_key_known_hosts',
+            None,
+            None,
+            'hosts',
+            'sshPrivateKey must be provided in order use sshKnownHosts',
+        ),
+        (
+            'both_host_key_known_hosts',
+            'key',
+            'host',
+            'hosts',
+            'only one of sshKnownHosts and sshHostKey can be provided',
+        ),
     ])
     def test_config(self, name, private_key, host_key, known_hosts, config_error):
         self.sshPrivateKey = private_key
@@ -81,7 +94,6 @@ class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
 
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
-
     def setUp(self):
         self.sshPrivateKey = None
         self.sshHostKey = None
@@ -132,8 +144,7 @@ class TestAdjustCommandParamsForSshPrivateKey(GitMixin, unittest.TestCase):
         command = []
         env = {}
         with self.assertRaises(Exception):
-            self.adjustCommandParamsForSshPrivateKey(command, env,
-                                                     'path/to/key')
+            self.adjustCommandParamsForSshPrivateKey(command, env, 'path/to/key')
 
 
 class TestGetSshKnownHostsContents(unittest.TestCase):
@@ -145,24 +156,21 @@ class TestGetSshKnownHostsContents(unittest.TestCase):
 
 
 class TestensureSshKeyNewline(unittest.TestCase):
-
     def setUp(self):
-        self.sshGoodPrivateKey = \
-"""-----BEGIN SSH PRIVATE KEY-----
+        self.sshGoodPrivateKey = """-----BEGIN SSH PRIVATE KEY-----
 base64encodedkeydata
 -----END SSH PRIVATE KEY-----
 """
-        self.sshMissingNewlinePrivateKey = \
-"""-----BEGIN SSH PRIVATE KEY-----
+        self.sshMissingNewlinePrivateKey = """-----BEGIN SSH PRIVATE KEY-----
 base64encodedkeydata
 -----END SSH PRIVATE KEY-----"""
 
     def test_good_key(self):
         """Don't break good keys"""
-        self.assertEqual(self.sshGoodPrivateKey,
-                         ensureSshKeyNewline(self.sshGoodPrivateKey))
+        self.assertEqual(self.sshGoodPrivateKey, ensureSshKeyNewline(self.sshGoodPrivateKey))
 
     def test_missing_newline(self):
         """Add missing newline to stripped keys"""
-        self.assertEqual(self.sshGoodPrivateKey,
-                         ensureSshKeyNewline(self.sshMissingNewlinePrivateKey))
+        self.assertEqual(
+            self.sshGoodPrivateKey, ensureSshKeyNewline(self.sshMissingNewlinePrivateKey)
+        )

@@ -42,10 +42,10 @@ fake_ldap.get_config_parameter = get_config_parameter
 
 
 class FakeLdap:
-
     def __init__(self):
         def search(base, filterstr='f', scope=None, attributes=None):
             pass
+
         self.search = mock.Mock(spec=search)
 
 
@@ -66,6 +66,7 @@ class CommonTestCase(unittest.TestCase):
 
         def search(base, filterstr='f', attributes=None):
             pass
+
         self.userInfoProvider.search = mock.Mock(spec=search)
 
     def makeUserInfoProvider(self):
@@ -73,8 +74,7 @@ class CommonTestCase(unittest.TestCase):
         raise NotImplementedError
 
     def _makeSearchSideEffect(self, attribute_type, ret):
-        ret = [[{'dn': i[0], attribute_type: i[1]} for i in r]
-               for r in ret]
+        ret = [[{'dn': i[0], attribute_type: i[1]} for i in r] for r in ret]
         self.userInfoProvider.search.side_effect = ret
 
     def makeSearchSideEffect(self, ret):
@@ -93,18 +93,22 @@ class CommonTestCase(unittest.TestCase):
 
 
 class LdapUserInfo(CommonTestCase):
-
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
-            uri="ldap://uri", bindUser="user", bindPw="pass",
-            accountBase="accbase", groupBase="groupbase",
-            accountPattern="accpattern", groupMemberPattern="groupMemberPattern",
+            uri="ldap://uri",
+            bindUser="user",
+            bindPw="pass",
+            accountBase="accbase",
+            groupBase="groupbase",
+            accountPattern="accpattern",
+            groupMemberPattern="groupMemberPattern",
             accountFullName="accountFullName",
             accountEmail="accountEmail",
             groupName="groupName",
             avatarPattern="avatar",
             avatarData="picture",
-            accountExtraFields=["myfield"])
+            accountExtraFields=["myfield"],
+        )
 
     @defer.inlineCallbacks
     def test_updateUserInfoNoResults(self):
@@ -114,34 +118,44 @@ class LdapUserInfo(CommonTestCase):
             yield self.userInfoProvider.getUserInfo("me")
         except KeyError as e:
             self.assertRegex(
-                repr(e), r"KeyError\('ldap search \"accpattern\" returned 0 results',?\)")
+                repr(e), r"KeyError\('ldap search \"accpattern\" returned 0 results',?\)"
+            )
         else:
             self.fail("should have raised a key error")
 
     @defer.inlineCallbacks
     def test_updateUserInfoNoGroups(self):
-        self.makeSearchSideEffect([[(
-            "cn", {"accountFullName": "me too",
-                   "accountEmail": "mee@too"})], [], []])
+        self.makeSearchSideEffect([
+            [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
+            [],
+            [],
+        ])
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
-            (('accbase', 'accpattern',
-              ['accountEmail', 'accountFullName', 'myfield']), {}),
+            (('accbase', 'accpattern', ['accountEmail', 'accountFullName', 'myfield']), {}),
             (('groupbase', 'groupMemberPattern', ['groupName']), {}),
         ])
-        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
-                               'groups': [], 'username': 'me'})
+        self.assertEqual(
+            res, {'email': 'mee@too', 'full_name': 'me too', 'groups': [], 'username': 'me'}
+        )
 
     @defer.inlineCallbacks
     def test_updateUserInfoGroups(self):
-        self.makeSearchSideEffect([[("cn", {"accountFullName": "me too",
-                                            "accountEmail": "mee@too"})],
-                                   [("cn", {"groupName": ["group"]}),
-                                    ("cn", {"groupName": ["group2"]})
-                                    ], []])
+        self.makeSearchSideEffect([
+            [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
+            [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
+            [],
+        ])
         res = yield self.userInfoProvider.getUserInfo("me")
-        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
-                               'groups': ["group", "group2"], 'username': 'me'})
+        self.assertEqual(
+            res,
+            {
+                'email': 'mee@too',
+                'full_name': 'me too',
+                'groups': ["group", "group2"],
+                'username': 'me',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_updateUserInfoGroupsUnicodeDn(self):
@@ -152,14 +166,21 @@ class LdapUserInfo(CommonTestCase):
         # in ldap3.protocol.convert.validate_assertion_value()
         # So we use an unicode pattern:
         self.userInfoProvider.groupMemberPattern = '(member=%(dn)s)'
-        self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",
-                                          "accountEmail": "mee@too"})],
-                                   [("cn", {"groupName": ["group"]}),
-                                    ("cn", {"groupName": ["group2"]})
-                                    ], []])
+        self.makeSearchSideEffect([
+            [(dn, {"accountFullName": "me too", "accountEmail": "mee@too"})],
+            [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
+            [],
+        ])
         res = yield self.userInfoProvider.getUserInfo("me")
-        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
-                               'groups': ["group", "group2"], 'username': 'me'})
+        self.assertEqual(
+            res,
+            {
+                'email': 'mee@too',
+                'full_name': 'me too',
+                'groups': ["group", "group2"],
+                'username': 'me',
+            },
+        )
 
 
 class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
@@ -168,9 +189,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         CommonTestCase.setUp(self)
         self.setup_test_reactor()
 
-        master = self.make_master(
-            url='http://a/b/',
-            avatar_methods=[self.userInfoProvider])
+        master = self.make_master(url='http://a/b/', avatar_methods=[self.userInfoProvider])
 
         self.rsrc = avatar.AvatarResource(master)
         self.rsrc.reconfigResource(master.config)
@@ -179,21 +198,25 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
 
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
-            uri="ldap://uri", bindUser="user", bindPw="pass",
-            accountBase="accbase", groupBase="groupbase",
-            accountPattern="accpattern=%(username)s", groupMemberPattern="groupMemberPattern",
+            uri="ldap://uri",
+            bindUser="user",
+            bindPw="pass",
+            accountBase="accbase",
+            groupBase="groupbase",
+            accountPattern="accpattern=%(username)s",
+            groupMemberPattern="groupMemberPattern",
             accountFullName="accountFullName",
             accountEmail="accountEmail",
             groupName="groupName",
             avatarPattern="avatar=%(email)s",
             avatarData="picture",
-            accountExtraFields=["myfield"])
+            accountExtraFields=["myfield"],
+        )
 
     @defer.inlineCallbacks
     def _getUserAvatar(self, mimeTypeAndData):
         _, data = mimeTypeAndData
-        self.makeRawSearchSideEffect([
-            [("cn", {"picture": [data]})]])
+        self.makeRawSearchSideEffect([[("cn", {"picture": [data]})]])
         res = yield self.render_resource(self.rsrc, b'/?email=me')
         self.assertSearchCalledWith([
             (('accbase', 'avatar=me', ['picture']), {}),
@@ -204,22 +227,19 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
     def test_getUserAvatarPNG(self):
         mimeTypeAndData = (b'image/png', b'\x89PNG lljklj')
         yield self._getUserAvatar(mimeTypeAndData)
-        self.assertRequest(contentType=mimeTypeAndData[0],
-            content=mimeTypeAndData[1])
+        self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarJPEG(self):
         mimeTypeAndData = (b'image/jpeg', b'\xff\xd8\xff lljklj')
         yield self._getUserAvatar(mimeTypeAndData)
-        self.assertRequest(contentType=mimeTypeAndData[0],
-            content=mimeTypeAndData[1])
+        self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarGIF(self):
         mimeTypeAndData = (b'image/gif', b'GIF8 lljklj')
         yield self._getUserAvatar(mimeTypeAndData)
-        self.assertRequest(contentType=mimeTypeAndData[0],
-            content=mimeTypeAndData[1])
+        self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
     def test_getUserAvatarUnknownType(self):
@@ -232,14 +252,12 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
     def test_getUsernameAvatar(self):
         mimeType = b'image/gif'
         data = b'GIF8 lljklj'
-        self.makeRawSearchSideEffect([
-            [("cn", {"picture": [data]})]])
+        self.makeRawSearchSideEffect([[("cn", {"picture": [data]})]])
         yield self.render_resource(self.rsrc, b'/?username=me')
         self.assertSearchCalledWith([
             (('accbase', 'accpattern=me', ['picture']), {}),
         ])
-        self.assertRequest(contentType=mimeType,
-            content=data)
+        self.assertRequest(contentType=mimeType, content=data)
 
     @defer.inlineCallbacks
     def test_getUnknownUsernameAvatar(self):
@@ -254,61 +272,74 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
 class LdapUserInfoNotEscCharsDn(CommonTestCase):
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
-            uri="ldap://uri", bindUser="user", bindPw="pass",
-            accountBase="accbase", groupBase="groupbase",
-            accountPattern="accpattern", groupMemberPattern="(member=%(dn)s)",
+            uri="ldap://uri",
+            bindUser="user",
+            bindPw="pass",
+            accountBase="accbase",
+            groupBase="groupbase",
+            accountPattern="accpattern",
+            groupMemberPattern="(member=%(dn)s)",
             accountFullName="accountFullName",
             accountEmail="accountEmail",
             groupName="groupName",
             avatarPattern="avatar",
-            avatarData="picture")
+            avatarData="picture",
+        )
 
     @defer.inlineCallbacks
     def test_getUserInfoGroupsNotEscCharsDn(self):
         dn = "cn=Lastname, Firstname \28UIDxxx\29,dc=example,dc=org"
         pattern = self.userInfoProvider.groupMemberPattern % {"dn": dn}
-        self.makeSearchSideEffect([[(dn, {"accountFullName": "Lastname, Firstname (UIDxxx)",
-                                          "accountEmail": "mee@too"})],
-                                   [("cn", {"groupName": ["group"]}),
-                                    ("cn", {"groupName": ["group2"]})
-                                    ], []])
+        self.makeSearchSideEffect([
+            [(dn, {"accountFullName": "Lastname, Firstname (UIDxxx)", "accountEmail": "mee@too"})],
+            [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
+            [],
+        ])
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
-            (('accbase', 'accpattern',
-              ['accountEmail', 'accountFullName']), {}),
+            (('accbase', 'accpattern', ['accountEmail', 'accountFullName']), {}),
             (('groupbase', pattern, ['groupName']), {}),
         ])
-        self.assertEqual(res, {'email': 'mee@too',
-                               'full_name': 'Lastname, Firstname (UIDxxx)',
-                               'groups': ["group", "group2"],
-                               'username': 'me'})
+        self.assertEqual(
+            res,
+            {
+                'email': 'mee@too',
+                'full_name': 'Lastname, Firstname (UIDxxx)',
+                'groups': ["group", "group2"],
+                'username': 'me',
+            },
+        )
 
 
 class LdapUserInfoNoGroups(CommonTestCase):
-
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
-            uri="ldap://uri", bindUser="user", bindPw="pass",
+            uri="ldap://uri",
+            bindUser="user",
+            bindPw="pass",
             accountBase="accbase",
             accountPattern="accpattern",
             accountFullName="accountFullName",
             accountEmail="accountEmail",
             avatarPattern="avatar",
             avatarData="picture",
-            accountExtraFields=["myfield"])
+            accountExtraFields=["myfield"],
+        )
 
     @defer.inlineCallbacks
     def test_updateUserInfo(self):
-        self.makeSearchSideEffect([[(
-            "cn", {"accountFullName": "me too",
-                   "accountEmail": "mee@too"})], [], []])
+        self.makeSearchSideEffect([
+            [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
+            [],
+            [],
+        ])
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
-            (('accbase', 'accpattern',
-              ['accountEmail', 'accountFullName', 'myfield']), {}),
+            (('accbase', 'accpattern', ['accountEmail', 'accountFullName', 'myfield']), {}),
         ])
-        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
-                               'groups': [], 'username': 'me'})
+        self.assertEqual(
+            res, {'email': 'mee@too', 'full_name': 'me too', 'groups': [], 'username': 'me'}
+        )
 
 
 class Config(unittest.TestCase):
@@ -317,29 +348,41 @@ class Config(unittest.TestCase):
 
     def test_missing_group_name(self):
         with self.assertRaises(ValueError):
-            ldapuserinfo.LdapUserInfo(groupMemberPattern="member=%(dn)s",
-                                      groupBase="grpbase", uri="ldap://uri",
-                                      bindUser="user", bindPw="pass",
-                                      accountBase="accbase",
-                                      accountPattern="accpattern",
-                                      accountFullName="accountFullName",
-                                      accountEmail="accountEmail")
+            ldapuserinfo.LdapUserInfo(
+                groupMemberPattern="member=%(dn)s",
+                groupBase="grpbase",
+                uri="ldap://uri",
+                bindUser="user",
+                bindPw="pass",
+                accountBase="accbase",
+                accountPattern="accpattern",
+                accountFullName="accountFullName",
+                accountEmail="accountEmail",
+            )
 
     def test_missing_group_base(self):
         with self.assertRaises(ValueError):
-            ldapuserinfo.LdapUserInfo(groupMemberPattern="member=%(dn)s",
-                                      groupName="group",
-                                      uri="ldap://uri", bindUser="user",
-                                      bindPw="pass", accountBase="accbase",
-                                      accountPattern="accpattern",
-                                      accountFullName="accountFullName",
-                                      accountEmail="accountEmail")
+            ldapuserinfo.LdapUserInfo(
+                groupMemberPattern="member=%(dn)s",
+                groupName="group",
+                uri="ldap://uri",
+                bindUser="user",
+                bindPw="pass",
+                accountBase="accbase",
+                accountPattern="accpattern",
+                accountFullName="accountFullName",
+                accountEmail="accountEmail",
+            )
 
     def test_missing_two_params(self):
         with self.assertRaises(ValueError):
-            ldapuserinfo.LdapUserInfo(groupName="group", uri="ldap://uri",
-                                      bindUser="user", bindPw="pass",
-                                      accountBase="accbase",
-                                      accountPattern="accpattern",
-                                      accountFullName="accountFullName",
-                                      accountEmail="accountEmail")
+            ldapuserinfo.LdapUserInfo(
+                groupName="group",
+                uri="ldap://uri",
+                bindUser="user",
+                bindPw="pass",
+                accountBase="accbase",
+                accountPattern="accpattern",
+                accountFullName="accountFullName",
+                accountEmail="accountEmail",
+            )

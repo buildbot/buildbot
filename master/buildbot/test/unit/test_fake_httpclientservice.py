@@ -40,13 +40,13 @@ class myTestedService(service.BuildbotService):
 
 
 class Test(unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         baseurl = 'http://127.0.0.1:8080'
         self.parent = service.MasterService()
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.parent, self, baseurl)
+            self.parent, self, baseurl
+        )
         self.tested = myTestedService(baseurl)
 
         yield self.tested.setServiceParent(self.parent)

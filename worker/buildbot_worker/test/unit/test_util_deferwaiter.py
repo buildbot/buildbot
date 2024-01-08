@@ -24,7 +24,6 @@ class TestException(Exception):
 
 
 class WaiterTests(unittest.TestCase):
-
     def test_add_deferred_called(self):
         w = DeferWaiter()
         w.add(defer.succeed(None))

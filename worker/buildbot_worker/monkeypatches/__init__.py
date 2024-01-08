@@ -16,4 +16,5 @@
 
 def patch_all():
     from buildbot_worker.monkeypatches import testcase_assert
+
     testcase_assert.patch()

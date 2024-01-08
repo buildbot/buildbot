@@ -31,16 +31,39 @@ class Change(Row):
     dicts = ('properties',)
     id_column = 'changeid'
 
-    def __init__(self, changeid=None, author='frank', committer='steve',
-                 comments='test change', branch='master', revision='abcd',
-                 revlink='http://vc/abcd', when_timestamp=1200000, category='cat',
-                 repository='repo', codebase='', project='proj', sourcestampid=92,
-                 parent_changeids=None):
-        super().__init__(changeid=changeid, author=author, committer=committer, comments=comments,
-                         branch=branch, revision=revision, revlink=revlink,
-                         when_timestamp=when_timestamp, category=category, repository=repository,
-                         codebase=codebase, project=project, sourcestampid=sourcestampid,
-                         parent_changeids=parent_changeids)
+    def __init__(
+        self,
+        changeid=None,
+        author='frank',
+        committer='steve',
+        comments='test change',
+        branch='master',
+        revision='abcd',
+        revlink='http://vc/abcd',
+        when_timestamp=1200000,
+        category='cat',
+        repository='repo',
+        codebase='',
+        project='proj',
+        sourcestampid=92,
+        parent_changeids=None,
+    ):
+        super().__init__(
+            changeid=changeid,
+            author=author,
+            committer=committer,
+            comments=comments,
+            branch=branch,
+            revision=revision,
+            revlink=revlink,
+            when_timestamp=when_timestamp,
+            category=category,
+            repository=repository,
+            codebase=codebase,
+            project=project,
+            sourcestampid=sourcestampid,
+            parent_changeids=parent_changeids,
+        )
 
 
 class ChangeFile(Row):
@@ -60,8 +83,9 @@ class ChangeProperty(Row):
     required_columns = ('changeid',)
 
     def __init__(self, changeid=None, property_name=None, property_value=None):
-        super().__init__(changeid=changeid, property_name=property_name,
-                         property_value=property_value)
+        super().__init__(
+            changeid=changeid, property_name=property_name, property_value=property_value
+        )
 
 
 class ChangeUser(Row):
@@ -75,7 +99,6 @@ class ChangeUser(Row):
 
 
 class FakeChangesComponent(FakeDBComponent):
-
     def setUp(self):
         self.changes = {}
 
@@ -106,10 +129,24 @@ class FakeChangesComponent(FakeDBComponent):
     # component methods
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, committer=None, files=None, comments=None, is_dir=None,
-                  revision=None, when_timestamp=None, branch=None,
-                  category=None, revlink='', properties=None, repository='',
-                  codebase='', project='', uid=None):
+    def addChange(
+        self,
+        author=None,
+        committer=None,
+        files=None,
+        comments=None,
+        is_dir=None,
+        revision=None,
+        when_timestamp=None,
+        branch=None,
+        category=None,
+        revlink='',
+        properties=None,
+        repository='',
+        codebase='',
+        project='',
+        uid=None,
+    ):
         if properties is None:
             properties = {}
 
@@ -119,8 +156,12 @@ class FakeChangesComponent(FakeDBComponent):
             changeid = 500
 
         ssid = yield self.db.sourcestamps.findSourceStampId(
-            revision=revision, branch=branch, repository=repository,
-            codebase=codebase, project=project)
+            revision=revision,
+            branch=branch,
+            repository=repository,
+            codebase=codebase,
+            project=project,
+        )
 
         parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
 
@@ -141,7 +182,7 @@ class FakeChangesComponent(FakeDBComponent):
             "uids": [],
             "files": files,
             "properties": properties,
-            "sourcestampid": ssid
+            "sourcestampid": ssid,
         }
 
         if uid:
@@ -157,10 +198,12 @@ class FakeChangesComponent(FakeDBComponent):
     def getParentChangeIds(self, branch, repository, project, codebase):
         if self.changes:
             for change in self.changes.values():
-                if (change['branch'] == branch and
-                        change['repository'] == repository and
-                        change['project'] == project and
-                        change['codebase'] == codebase):
+                if (
+                    change['branch'] == branch
+                    and change['repository'] == repository
+                    and change['project'] == project
+                    and change['codebase'] == codebase
+                ):
                     return defer.succeed([change['changeid']])
         return defer.succeed([])
 
@@ -182,7 +225,7 @@ class FakeChangesComponent(FakeDBComponent):
     def getChanges(self, resultSpec=None):
         if resultSpec is not None and resultSpec.limit is not None:
             ids = sorted(self.changes.keys())
-            chdicts = [self._chdict(self.changes[id]) for id in ids[-resultSpec.limit:]]
+            chdicts = [self._chdict(self.changes[id]) for id in ids[-resultSpec.limit :]]
             return defer.succeed(chdicts)
         chdicts = [self._chdict(v) for v in self.changes.values()]
         return defer.succeed(chdicts)
@@ -193,12 +236,10 @@ class FakeChangesComponent(FakeDBComponent):
     def getChangesForBuild(self, buildid):
         # the algorithm is too complicated to be worth faked, better patch it
         # ad-hoc
-        raise NotImplementedError(
-            "Please patch in tests to return appropriate results")
+        raise NotImplementedError("Please patch in tests to return appropriate results")
 
     def getChangeFromSSid(self, ssid):
-        chdicts = [self._chdict(v) for v in self.changes.values()
-                   if v['sourcestampid'] == ssid]
+        chdicts = [self._chdict(v) for v in self.changes.values() if v['sourcestampid'] == ssid]
         if chdicts:
             return defer.succeed(chdicts[0])
         return defer.succeed(None)
@@ -260,6 +301,6 @@ class FakeChangesComponent(FakeDBComponent):
             "repository": change.repository,
             "codebase": change.codebase,
             "project": change.project,
-            "uids": []
+            "uids": [],
         }
         self.changes[changeid] = row

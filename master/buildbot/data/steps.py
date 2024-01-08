@@ -21,7 +21,6 @@ from buildbot.data import types
 
 
 class Db2DataMixin:
-
     def db2data(self, dbdict):
         data = {
             'stepid': dbdict['id'],
@@ -41,7 +40,6 @@ class Db2DataMixin:
 
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /steps/n:stepid
@@ -62,14 +60,12 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         if buildid is None:
             return None
         dbdict = yield self.master.db.steps.getStep(
-            buildid=buildid,
-            number=kwargs.get('step_number'),
-            name=kwargs.get('step_name'))
+            buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
+        )
         return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds/n:buildid/steps
@@ -98,7 +94,6 @@ class UrlEntityType(types.Entity):
 
 
 class Step(base.ResourceType):
-
     name = "step"
     plural = "steps"
     endpoints = [StepEndpoint, StepsEndpoint]
@@ -120,9 +115,9 @@ class Step(base.ResourceType):
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
         state_string = types.String()
-        urls = types.List(
-            of=UrlEntityType("Url", "Url"))
+        urls = types.List(of=UrlEntityType("Url", "Url"))
         hidden = types.Boolean()
+
     entityType = EntityType(name, 'Step')
 
     @defer.inlineCallbacks
@@ -134,7 +129,8 @@ class Step(base.ResourceType):
     @defer.inlineCallbacks
     def addStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
-            buildid=buildid, name=name, state_string='pending')
+            buildid=buildid, name=name, state_string='pending'
+        )
         yield self.generateEvent(stepid, 'new')
         return (stepid, num, name)
 
@@ -144,9 +140,7 @@ class Step(base.ResourceType):
         if started_at is None:
             started_at = int(self.master.reactor.seconds())
         yield self.master.db.steps.startStep(
-            stepid=stepid,
-            started_at=started_at,
-            locks_acquired=locks_acquired
+            stepid=stepid, started_at=started_at, locks_acquired=locks_acquired
         )
         yield self.generateEvent(stepid, 'started')
 
@@ -164,20 +158,17 @@ class Step(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def setStepStateString(self, stepid, state_string):
-        yield self.master.db.steps.setStepStateString(
-            stepid=stepid, state_string=state_string)
+        yield self.master.db.steps.setStepStateString(stepid=stepid, state_string=state_string)
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def addStepURL(self, stepid, name, url):
-        yield self.master.db.steps.addURL(
-            stepid=stepid, name=name, url=url)
+        yield self.master.db.steps.addURL(stepid=stepid, name=name, url=url)
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def finishStep(self, stepid, results, hidden):
-        yield self.master.db.steps.finishStep(
-            stepid=stepid, results=results, hidden=hidden)
+        yield self.master.db.steps.finishStep(stepid=stepid, results=results, hidden=hidden)
         yield self.generateEvent(stepid, 'finished')

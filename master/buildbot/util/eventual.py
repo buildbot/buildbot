@@ -22,7 +22,6 @@ from twisted.python import log
 
 
 class _SimpleCallQueue:
-
     _reactor = reactor
 
     def __init__(self):

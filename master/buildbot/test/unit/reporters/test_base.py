@@ -35,15 +35,14 @@ class TestException(Exception):
     pass
 
 
-class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
-                       unittest.TestCase, ReporterTestMixin):
-
+class TestReporterBase(
+    ConfigErrorsMixin, TestReactorMixin, LoggingMixin, unittest.TestCase, ReporterTestMixin
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.setUpLogging()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def setupNotifier(self, generators):
@@ -56,7 +55,6 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
     @defer.inlineCallbacks
     def setup_build_message(self, **kwargs):
-
         build = yield self.insert_build_finished(FAILURE)
         buildset = yield self.get_inserted_buildset()
 
@@ -92,8 +90,9 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
     def test_buildMessage_nominal(self):
         mn, build, buildset, formatter = yield self.setup_build_message(mode=("failing",))
 
-        formatter.format_message_for_build.assert_called_with(self.master, build, is_buildset=False,
-                                                              mode=('failing',), users=['me@foo'])
+        formatter.format_message_for_build.assert_called_with(
+            self.master, build, is_buildset=False, mode=('failing',), users=['me@foo']
+        )
 
         report = {
             'body': 'body',
@@ -105,7 +104,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
             "buildset": buildset,
             'users': ['me@foo'],
             'patches': [],
-            'logs': []
+            'logs': [],
         }
 
         self.assertEqual(mn.sendMessage.call_count, 1)
@@ -120,7 +119,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
             'name': 'myworker',
             'notify': ["workeradmin@example.org"],
             'workerinfo': {"admin": "myadmin"},
-            'last_connection': "yesterday"
+            'last_connection': "yesterday",
         }
         yield mn._got_event(('workers', 98, 'missing'), worker_dict)
 
@@ -225,21 +224,13 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
         # This makes it possible to mock generate calls in arbitrary order
         mock_generate_calls = {
-            'buildrequests': {
-                1: {
-                    'new': defer.Deferred()
-                }
-            },
-            'builds': {
-                1: {
-                    'new': defer.Deferred(),
-                    'finished': defer.Deferred()
-                }
-            }
+            'buildrequests': {1: {'new': defer.Deferred()}},
+            'builds': {1: {'new': defer.Deferred(), 'finished': defer.Deferred()}},
         }
 
         def mock_generate(_1, _2, key, msg):
             return mock_generate_calls[key[0]][msg['buildrequestid']][key[2]]
+
         gen.generate = mock.Mock(side_effect=mock_generate)
         gen2.generate = mock.Mock(side_effect=mock_generate)
 
@@ -264,8 +255,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
 
         # Now sendMessage should have been called three times in given order
         self.assertEqual(
-            notifier.sendMessage.call_args_list,
-            [mock.call([1]), mock.call([2]), mock.call([3])]
+            notifier.sendMessage.call_args_list, [mock.call([1]), mock.call([2]), mock.call([3])]
         )
 
     @defer.inlineCallbacks
@@ -277,19 +267,14 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         # This makes it possible to mock generate calls in arbitrary order
         mock_generate_calls = {
             'builds': {
-                1: {
-                    'new': defer.Deferred(),
-                    'finished': defer.Deferred()
-                },
-                2: {
-                    'new': defer.Deferred(),
-                    'finished': defer.Deferred()
-                }
+                1: {'new': defer.Deferred(), 'finished': defer.Deferred()},
+                2: {'new': defer.Deferred(), 'finished': defer.Deferred()},
             }
         }
 
         def mock_generate(_1, _2, key, msg):
             return mock_generate_calls[key[0]][msg['buildrequestid']][key[2]]
+
         gen.generate = mock.Mock(side_effect=mock_generate)
 
         # Handle an event (for first build) when generate is slow
@@ -314,5 +299,5 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         # Now sendMessage should have been called four times in given order
         self.assertEqual(
             notifier.sendMessage.call_args_list,
-            [mock.call([21]), mock.call([22]), mock.call([11]), mock.call([12])]
+            [mock.call([21]), mock.call([22]), mock.call([11]), mock.call([12])],
         )

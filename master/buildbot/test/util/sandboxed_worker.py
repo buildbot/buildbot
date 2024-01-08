@@ -41,8 +41,9 @@ class WorkerProcessProtocol(protocol.ProcessProtocol):
 
 
 class SandboxedWorker(AsyncService):
-    def __init__(self, masterhost, port, name, passwd, workerdir, sandboxed_worker_path,
-                 protocol='pb'):
+    def __init__(
+        self, masterhost, port, name, passwd, workerdir, sandboxed_worker_path, protocol='pb'
+    ):
         self.masterhost = masterhost
         self.port = port
         self.workername = name
@@ -53,23 +54,29 @@ class SandboxedWorker(AsyncService):
         self.worker = None
 
     def startService(self):
-
         # Note that we create the worker with sync API
         # We don't really care as we are in tests
 
-        res = subprocess.run([self.sandboxed_worker_path, "create-worker",
-                             f'--protocol={self.protocol}', '-q', self.workerdir,
-                             self.masterhost + ":" + str(self.port), self.workername,
-                             self.workerpasswd],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             check=False)
+        res = subprocess.run(
+            [
+                self.sandboxed_worker_path,
+                "create-worker",
+                f'--protocol={self.protocol}',
+                '-q',
+                self.workerdir,
+                self.masterhost + ":" + str(self.port),
+                self.workername,
+                self.workerpasswd,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
         if res.returncode != 0:
             # we do care about finding out why it failed though
-            raise RuntimeError("\n".join([
-                "Unable to create worker!",
-                res.stdout.decode(),
-                res.stderr.decode()
-            ]))
+            raise RuntimeError(
+                "\n".join(["Unable to create worker!", res.stdout.decode(), res.stderr.decode()])
+            )
 
         self.processprotocol = processProtocol = WorkerProcessProtocol()
         # we need to spawn the worker asynchronously though

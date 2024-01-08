@@ -20,7 +20,6 @@ from buildbot.util import service
 
 
 class FakeMsgManager(service.AsyncMultiService):
-
     def __init__(self):
         super().__init__()
         self.setName("fake-msgmanager")
@@ -41,7 +40,6 @@ class FakeMsgManager(service.AsyncMultiService):
 
 
 class FakeRegistration:
-
     def __init__(self, msgmanager, portstr, username):
         self._portstr = portstr
         self._username = username

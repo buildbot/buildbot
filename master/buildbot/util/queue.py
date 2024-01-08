@@ -49,14 +49,20 @@ class ConnectableThreadQueue(threading.Thread):
     on_close_connection() if needed to close the connection. Any work submitted after join() is
     called will be ignored.
     """
-    def __init__(self, connect_backoff_start_seconds=1, connect_backoff_multiplier=1.1,
-                 connect_backoff_max_wait_seconds=3600):
+
+    def __init__(
+        self,
+        connect_backoff_start_seconds=1,
+        connect_backoff_multiplier=1.1,
+        connect_backoff_max_wait_seconds=3600,
+    ):
         self._queue = UndoableQueue()
         self._conn = None
-        self._backoff_engine = \
-            backoff.ExponentialBackoffEngineSync(start_seconds=connect_backoff_start_seconds,
-                                                 multiplier=connect_backoff_multiplier,
-                                                 max_wait_seconds=connect_backoff_max_wait_seconds)
+        self._backoff_engine = backoff.ExponentialBackoffEngineSync(
+            start_seconds=connect_backoff_start_seconds,
+            multiplier=connect_backoff_multiplier,
+            max_wait_seconds=connect_backoff_max_wait_seconds,
+        )
 
         super().__init__(daemon=True)
         self.connecting = False

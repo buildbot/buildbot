@@ -37,6 +37,7 @@ try:
     from twisted.conch import checkers as conchc
     from twisted.conch import manhole_ssh
     from twisted.conch.openssh_compat.factory import OpenSSHFactory
+
     _hush_pyflakes = [manhole_ssh, conchc, OpenSSHFactory]
     del _hush_pyflakes
 except ImportError:
@@ -62,16 +63,15 @@ class makeTelnetProtocol:
 
 @implementer(portal.IRealm)
 class _TelnetRealm:
-
     def __init__(self, namespace_maker):
         self.namespace_maker = namespace_maker
 
     def requestAvatar(self, avatarId, *interfaces):
         if telnet.ITelnetProtocol in interfaces:
             namespace = self.namespace_maker()
-            p = telnet.TelnetBootstrapProtocol(insults.ServerProtocol,
-                                               manhole.ColoredManhole,
-                                               namespace)
+            p = telnet.TelnetBootstrapProtocol(
+                insults.ServerProtocol, manhole.ColoredManhole, namespace
+            )
             return (telnet.ITelnetProtocol, p, lambda: None)
         raise NotImplementedError()
 
@@ -88,8 +88,8 @@ class chainedProtocolFactory:
 
 
 if conchc:
-    class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
 
+    class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
         """Accept connections using SSH keys from a given file.
 
         SSHPublicKeyDatabase takes the username that the prospective client has
@@ -103,8 +103,7 @@ if conchc:
         """
 
         def __init__(self, authorized_keys_file):
-            self.authorized_keys_file = os.path.expanduser(
-                authorized_keys_file)
+            self.authorized_keys_file = os.path.expanduser(authorized_keys_file)
 
         def checkKey(self, credentials):
             with open(self.authorized_keys_file, "rb") as f:
@@ -121,7 +120,6 @@ if conchc:
 
 
 class _BaseManhole(service.AsyncMultiService):
-
     """This provides remote access to a python interpreter (a read/exec/print
     loop) embedded in the buildmaster via an internal SSH server. This allows
     detailed inspection of the buildmaster state. It is of most use to
@@ -209,7 +207,6 @@ class _BaseManhole(service.AsyncMultiService):
 
 
 class TelnetManhole(_BaseManhole, ComparableMixin):
-
     compare_attrs = ("port", "username", "password")
 
     def __init__(self, port, username, password):
@@ -223,7 +220,6 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
 
 
 class PasswordManhole(_BaseManhole, ComparableMixin):
-
     compare_attrs = ("port", "username", "password", "ssh_hostkey_dir")
 
     def __init__(self, port, username, password, ssh_hostkey_dir):
@@ -240,7 +236,6 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
 
 
 class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
-
     compare_attrs = ("port", "keyfile", "ssh_hostkey_dir")
 
     def __init__(self, port, keyfile, ssh_hostkey_dir):
@@ -255,7 +250,6 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
 
 
 class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
-
     """This Manhole accepts ssh connections, but uses an arbitrary
     user-supplied 'checker' object to perform authentication."""
 
@@ -278,6 +272,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 
         super().__init__(port, checker)
 
+
 # utility functions for the manhole
 
 
@@ -294,7 +289,7 @@ def show(x):
             continue
         if isinstance(v, str):
             if len(v) > 80 - maxlen - 5:
-                v = repr(v[:80 - maxlen - 5]) + "..."
+                v = repr(v[: 80 - maxlen - 5]) + "..."
         elif isinstance(v, (int, type(None))):
             v = str(v)
         elif isinstance(v, (list, tuple, dict)):

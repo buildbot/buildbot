@@ -26,7 +26,8 @@ def test_unicode(migrate_engine):
     submeta.bind = migrate_engine
 
     test_unicode = sautils.Table(
-        'test_unicode', submeta,
+        'test_unicode',
+        submeta,
         sa.Column('u', sa.Unicode(length=100)),
         sa.Column('b', sa.LargeBinary),
     )

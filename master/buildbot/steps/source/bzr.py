@@ -28,13 +28,18 @@ from buildbot.steps.source.base import Source
 
 
 class Bzr(Source):
-
     name = 'bzr'
     renderables = ['repourl', 'baseURL']
 
-    def __init__(self, repourl=None, baseURL=None, mode='incremental',
-                 method=None, defaultBranch=None, **kwargs):
-
+    def __init__(
+        self,
+        repourl=None,
+        baseURL=None,
+        mode='incremental',
+        method=None,
+        defaultBranch=None,
+        **kwargs,
+    ):
         self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
@@ -42,12 +47,10 @@ class Bzr(Source):
         self.method = method
         super().__init__(**kwargs)
         if repourl and baseURL:
-            raise ValueError("you must provide exactly one of repourl and"
-                             " baseURL")
+            raise ValueError("you must provide exactly one of repourl and baseURL")
 
         if repourl is None and baseURL is None:
-            raise ValueError("you must provide at least one of repourl and"
-                             " baseURL")
+            raise ValueError("you must provide at least one of repourl and baseURL")
 
         if baseURL is not None and defaultBranch is None:
             raise ValueError("you must provide defaultBranch with baseURL")
@@ -120,8 +123,13 @@ class Bzr(Source):
 
     @defer.inlineCallbacks
     def _clobber(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron, })
+        cmd = remotecommand.RemoteCommand(
+            'rmdir',
+            {
+                'dir': self.workdir,
+                'logEnviron': self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -135,16 +143,25 @@ class Bzr(Source):
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': 'build',
-                                                    'logEnviron': self.logEnviron, })
+        cmd = remotecommand.RemoteCommand(
+            'rmdir',
+            {
+                'dir': 'build',
+                'logEnviron': self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
         yield self.mode_incremental()
 
-        cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir': 'build',
-                                           'logEnviron': self.logEnviron, })
+        cmd = remotecommand.RemoteCommand(
+            'cpdir',
+            {
+                'fromdir': 'source',
+                'todir': 'build',
+                'logEnviron': self.logEnviron,
+            },
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -202,11 +219,14 @@ class Bzr(Source):
         return lastChange
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['bzr'] + command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ['bzr'] + command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+        )
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -218,6 +238,7 @@ class Bzr(Source):
             if collectStdout:
                 return cmd.stdout
             return cmd.rc
+
         return d
 
     def checkBzr(self):
@@ -226,6 +247,7 @@ class Bzr(Source):
         @d.addCallback
         def check(res):
             return res == 0
+
         return d
 
     def _getMethod(self):
@@ -239,8 +261,9 @@ class Bzr(Source):
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
-        stdout = yield self._dovccmd(["version-info", "--custom", "--template='{revno}"],
-                                     collectStdout=True)
+        stdout = yield self._dovccmd(
+            ["version-info", "--custom", "--template='{revno}"], collectStdout=True
+        )
 
         revision = stdout.strip("'")
         try:

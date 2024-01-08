@@ -26,7 +26,6 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # with one builder and a shellcommand step, which use usePTY
 class ShellMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def setup_config(self, usePTY):
         c = {}
@@ -35,19 +34,16 @@ class ShellMaster(RunMasterBase):
         from buildbot.plugins import steps
         from buildbot.process.factory import BuildFactory
 
-        c['schedulers'] = [
-            schedulers.ForceScheduler(
-                name="force",
-                builderNames=["testy"])]
+        c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
         f = BuildFactory()
-        f.addStep(steps.ShellCommand(
-            command='if [ -t 1 ] ; then echo in a terminal; else echo "not a terminal"; fi',
-            usePTY=usePTY))
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)]
+        f.addStep(
+            steps.ShellCommand(
+                command='if [ -t 1 ] ; then echo in a terminal; else echo "not a terminal"; fi',
+                usePTY=usePTY,
+            )
+        )
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
     @skipUnlessPlatformIs('posix')

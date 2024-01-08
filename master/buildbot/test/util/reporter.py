@@ -20,7 +20,6 @@ from buildbot.test import fakedb
 
 
 class ReporterTestMixin:
-
     def setup_reporter_test(self):
         self.reporter_test_project = 'testProject'
         self.reporter_test_repo = 'https://example.org/repo'
@@ -42,18 +41,19 @@ class ReporterTestMixin:
 
     @defer.inlineCallbacks
     def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
-        self.insert_test_data([results], results, insertSS=insert_ss,
-                            parentPlan=parent_plan, insert_patch=insert_patch)
+        self.insert_test_data(
+            [results],
+            results,
+            insertSS=insert_ss,
+            parentPlan=parent_plan,
+            insert_patch=insert_patch,
+        )
         build = yield self.master.data.get(("builds", 20))
         return build
 
     @defer.inlineCallbacks
     def insert_buildset_no_builds(
-        self,
-        results,
-        insert_ss=True,
-        parent_plan=False,
-        insert_patch=False
+        self, results, insert_ss=True, parent_plan=False, insert_patch=False
     ):
         self.insert_test_data(
             [], results, insertSS=insert_ss, parentPlan=parent_plan, insert_patch=insert_patch
@@ -77,9 +77,8 @@ class ReporterTestMixin:
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
-            fakedb.Buildset(id=98, results=None, reason="testReason1",
-                            parent_buildid=None),
-            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79)
+            fakedb.Buildset(id=98, results=None, reason="testReason1", parent_buildid=None),
+            fakedb.BuildRequest(id=11, buildsetid=98, builderid=79),
         ])
 
         patchid = 99 if insert_patch else None
@@ -93,28 +92,45 @@ class ReporterTestMixin:
                 revision=self.reporter_test_revision,
                 repository=self.reporter_test_repo,
                 codebase=self.reporter_test_codebase,
-                patchid=patchid),
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
-                         patch_author='him@foo', patch_comment='foo', subdir='/foo',
-                         patchlevel=3)
+                patchid=patchid,
+            ),
+            fakedb.Patch(
+                id=99,
+                patch_base64='aGVsbG8sIHdvcmxk',
+                patch_author='him@foo',
+                patch_comment='foo',
+                subdir='/foo',
+                patchlevel=3,
+            ),
         ])
         request = yield self.master.data.get(("buildrequests", 11))
         return request
 
-    def insert_test_data(self, buildResults, finalResult, insertSS=True,
-                       parentPlan=False, insert_patch=False):
+    def insert_test_data(
+        self, buildResults, finalResult, insertSS=True, parentPlan=False, insert_patch=False
+    ):
         self.db = self.master.db
         self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
-            fakedb.Buildset(id=98, results=finalResult, reason="testReason1",
-                            parent_buildid=19 if parentPlan else None),
-            fakedb.Change(changeid=13, branch=self.reporter_test_branch, revision='9283',
-                          author='me@foo', repository=self.reporter_test_repo,
-                          codebase=self.reporter_test_codebase, project='world-domination',
-                          sourcestampid=234),
+            fakedb.Buildset(
+                id=98,
+                results=finalResult,
+                reason="testReason1",
+                parent_buildid=19 if parentPlan else None,
+            ),
+            fakedb.Change(
+                changeid=13,
+                branch=self.reporter_test_branch,
+                revision='9283',
+                author='me@foo',
+                repository=self.reporter_test_repo,
+                codebase=self.reporter_test_codebase,
+                project='world-domination',
+                sourcestampid=234,
+            ),
         ])
 
         if parentPlan:
@@ -123,8 +139,16 @@ class ReporterTestMixin:
                 fakedb.Builder(id=78, name='Builder_parent'),
                 fakedb.Buildset(id=97, results=finalResult, reason="testReason0"),
                 fakedb.BuildRequest(id=10, buildsetid=98, builderid=78),
-                fakedb.Build(id=19, number=1, builderid=78, buildrequestid=10, workerid=12,
-                             masterid=92, results=finalResult, state_string="buildText"),
+                fakedb.Build(
+                    id=19,
+                    number=1,
+                    builderid=78,
+                    buildrequestid=10,
+                    workerid=12,
+                    masterid=92,
+                    results=finalResult,
+                    state_string="buildText",
+                ),
             ])
 
         if insertSS:
@@ -139,40 +163,54 @@ class ReporterTestMixin:
                     revision=self.reporter_test_revision,
                     repository=self.reporter_test_repo,
                     codebase=self.reporter_test_codebase,
-                    patchid=patchid),
-                fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
-                             patch_author='him@foo', patch_comment='foo', subdir='/foo',
-                             patchlevel=3),
+                    patchid=patchid,
+                ),
+                fakedb.Patch(
+                    id=99,
+                    patch_base64='aGVsbG8sIHdvcmxk',
+                    patch_author='him@foo',
+                    patch_comment='foo',
+                    subdir='/foo',
+                    patchlevel=3,
+                ),
             ])
 
         for i, results in enumerate(buildResults):
             started_at = 10000001
             complete_at = None if results is None else 10000005
             self.db.insert_test_data([
-                fakedb.BuildRequest(
-                    id=11 + i, buildsetid=98, builderid=79 + i),
-                fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i,
-                             workerid=13, masterid=92, results=results, state_string="buildText",
-                             started_at=started_at, complete_at=complete_at),
+                fakedb.BuildRequest(id=11 + i, buildsetid=98, builderid=79 + i),
+                fakedb.Build(
+                    id=20 + i,
+                    number=i,
+                    builderid=79 + i,
+                    buildrequestid=11 + i,
+                    workerid=13,
+                    masterid=92,
+                    results=results,
+                    state_string="buildText",
+                    started_at=started_at,
+                    complete_at=complete_at,
+                ),
                 fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
-                fakedb.Log(id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s',
-                           num_lines=7),
-                fakedb.LogChunk(logid=60 + i, first_line=0, last_line=1, compressed=0,
-                                content='Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
-                fakedb.BuildProperty(
-                    buildid=20 + i, name="workername", value="wrk"),
-                fakedb.BuildProperty(
-                    buildid=20 + i, name="reason", value="because"),
-                fakedb.BuildProperty(
-                    buildid=20 + i, name="buildername", value="Builder0"),
-                fakedb.BuildProperty(
-                    buildid=20 + i, name="buildnumber", value=f"{i}"),
+                fakedb.Log(
+                    id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s', num_lines=7
+                ),
+                fakedb.LogChunk(
+                    logid=60 + i,
+                    first_line=0,
+                    last_line=1,
+                    compressed=0,
+                    content='Unicode log with non-ascii (\u00E5\u00E4\u00F6).',
+                ),
+                fakedb.BuildProperty(buildid=20 + i, name="workername", value="wrk"),
+                fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),
+                fakedb.BuildProperty(buildid=20 + i, name="buildername", value="Builder0"),
+                fakedb.BuildProperty(buildid=20 + i, name="buildnumber", value=f"{i}"),
                 fakedb.BuildProperty(buildid=20 + i, name="scheduler", value="checkin"),
             ])
             for k, v in self.reporter_test_props.items():
-                self.db.insert_test_data([
-                    fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
-                ])
+                self.db.insert_test_data([fakedb.BuildProperty(buildid=20 + i, name=k, value=v)])
 
         self.setup_fake_get_changes_for_build()
 

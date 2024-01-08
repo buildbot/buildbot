@@ -25,13 +25,13 @@ from buildbot_worker.commands import utils
 
 
 class GetCommand(unittest.TestCase):
-
     def setUp(self):
         # monkey-patch 'which' to return something appropriate
         self.which_results = {}
 
         def which(arg):
             return self.which_results.get(arg, [])
+
         self.patch(twisted.python.procutils, 'which', which)
         # note that utils.py currently imports which by name, so we
         # patch it there, too
@@ -75,15 +75,12 @@ class GetCommand(unittest.TestCase):
         })
         # this one will work out differently depending on platform..
         if runtime.platformType == 'win32':
-            self.assertEqual(
-                utils.getCommand('xeyes'), r'c:\program files\xeyes.exe')
+            self.assertEqual(utils.getCommand('xeyes'), r'c:\program files\xeyes.exe')
         else:
-            self.assertEqual(
-                utils.getCommand('xeyes'), r'c:\program files\xeyes.com')
+            self.assertEqual(utils.getCommand('xeyes'), r'c:\program files\xeyes.com')
 
 
 class RmdirRecursive(unittest.TestCase):
-
     # this is more complicated than you'd think because Twisted doesn't
     # rmdir its test directory very well, either..
 
@@ -113,8 +110,7 @@ class RmdirRecursive(unittest.TestCase):
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
         except Exception:
-            print(
-                "\n(target directory was not removed by test, and cleanup failed too)\n")
+            print("\n(target directory was not removed by test, and cleanup failed too)\n")
             raise
 
     def test_rmdirRecursive_easy(self):

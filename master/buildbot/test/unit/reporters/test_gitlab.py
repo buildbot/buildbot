@@ -33,9 +33,9 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCase,
-                           ReporterTestMixin, logging.LoggingMixin):
-
+class TestGitLabStatusPush(
+    TestReactorMixin, ConfigErrorsMixin, unittest.TestCase, ReporterTestMixin, logging.LoggingMixin
+):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -44,14 +44,17 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         # repository must be in the form http://gitlab/<owner>/<project>
         self.reporter_test_repo = 'http://gitlab/buildbot/buildbot'
 
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True,
-                                             wantMq=True)
+        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self,
-            HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
-            debug=None, verify=None)
+            self.master,
+            self,
+            HOSTED_BASE_URL,
+            headers={'PRIVATE-TOKEN': 'XXYYZZ'},
+            debug=None,
+            verify=None,
+        )
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
         yield self.sp.setServiceParent(self.master)
 
@@ -71,25 +74,29 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_buildrequest(self):
         buildrequest = yield self.insert_buildrequest_new()
-        self._http.expect(
-            'get',
-            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
-                "id": 1
-            })
+        self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'pending',
-                  'target_url': 'http://localhost:8080/#/buildrequests/11',
-                  'ref': 'master',
-                  'description': 'Build pending.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'pending',
+                'target_url': 'http://localhost:8080/#/buildrequests/11',
+                'ref': 'master',
+                'description': 'Build pending.',
+                'name': 'buildbot/Builder0',
+            },
+        )
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'canceled',
-                  'target_url': 'http://localhost:8080/#/buildrequests/11',
-                  'ref': 'master',
-                  'description': 'Build pending.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'canceled',
+                'target_url': 'http://localhost:8080/#/buildrequests/11',
+                'ref': 'master',
+                'description': 'Build pending.',
+                'name': 'buildbot/Builder0',
+            },
+        )
 
         yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
         yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
@@ -98,39 +105,51 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
     def test_basic(self):
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'get',
-            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
-                "id": 1
-            })
+        self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build started.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'running',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build started.',
+                'name': 'buildbot/Builder0',
+            },
+        )
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'success',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'success',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build done.',
+                'name': 'buildbot/Builder0',
+            },
+        )
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'failed',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'failed',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build done.',
+                'name': 'buildbot/Builder0',
+            },
+        )
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'canceled',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'canceled',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build done.',
+                'name': 'buildbot/Builder0',
+            },
+        )
 
         yield self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
@@ -146,18 +165,18 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'get',
-            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
-                "id": 1
-            })
+        self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build started.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'running',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build started.',
+                'name': 'buildbot/Builder0',
+            },
+        )
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
 
@@ -169,10 +188,14 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         self._http.expect(
             'post',
             '/api/v4/projects/20922342342/statuses/d34db33fd43db33f',
-            json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build started.', 'name': 'buildbot/Builder0'})
+            json={
+                'state': 'running',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build started.',
+                'name': 'buildbot/Builder0',
+            },
+        )
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
         # Don't run these tests in parallel!
@@ -186,13 +209,15 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
-            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
-                "message": 'project not found'
-            }, code=404)
+            '/api/v4/projects/buildbot%2Fbuildbot',
+            content_json={"message": 'project not found'},
+            code=404,
+        )
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
-        self.assertLogged(r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:"
-                          r" project not found")
+        self.assertLogged(
+            r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot: project not found"
+        )
 
     @defer.inlineCallbacks
     def test_nourl(self):
@@ -208,39 +233,39 @@ class TestGitLabStatusPush(TestReactorMixin, ConfigErrorsMixin, unittest.TestCas
         self.setUpLogging()
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'get',
-            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
-                "id": 1
-            })
+        self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
             '/api/v4/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'running',
-                  'target_url': 'http://localhost:8080/#/builders/79/builds/0',
-                  'ref': 'master',
-                  'description': 'Build started.', 'name': 'buildbot/Builder0'},
+            json={
+                'state': 'running',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'ref': 'master',
+                'description': 'Build started.',
+                'name': 'buildbot/Builder0',
+            },
             content_json={'message': 'sha1 not found for branch master'},
-            code=404)
+            code=404,
+        )
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
-        self.assertLogged("Could not send status \"running\" for"
-                          " http://gitlab/buildbot/buildbot at d34db33fd43db33f:"
-                          " sha1 not found for branch master")
+        self.assertLogged(
+            "Could not send status \"running\" for"
+            " http://gitlab/buildbot/buildbot at d34db33fd43db33f:"
+            " sha1 not found for branch master"
+        )
 
     @defer.inlineCallbacks
     def test_badchange(self):
         self.setUpLogging()
         build = yield self.insert_build_new()
         # we make sure proper calls to txrequests have been made
-        self._http.expect(
-            'get',
-            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
-                "id": 1
-            })
+        self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
-        self.assertLogged("Failed to send status \"running\" for"
-                          " http://gitlab/buildbot/buildbot at d34db33fd43db33f\n"
-                          "Traceback")
+        self.assertLogged(
+            "Failed to send status \"running\" for"
+            " http://gitlab/buildbot/buildbot at d34db33fd43db33f\n"
+            "Traceback"
+        )
         self.flushLoggedErrors(AssertionError)

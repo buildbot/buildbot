@@ -29,7 +29,6 @@ from buildbot.worker import manager as workermanager
 
 @implementer(interfaces.IWorker)
 class FakeWorker(service.BuildbotService):
-
     reconfig_count = 0
 
     def __init__(self, workername):
@@ -46,7 +45,6 @@ class FakeWorker2(FakeWorker):
 
 
 class TestWorkerManager(TestReactorMixin, unittest.TestCase):
-
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -118,7 +116,5 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
             pass
 
         conn = mock.Mock()
-        conn.remoteGetWorkerInfo = mock.Mock(
-            return_value=defer.fail(Error()))
-        yield self.assertFailure(
-            self.workers.newConnection(conn, "worker"), Error)
+        conn.remoteGetWorkerInfo = mock.Mock(return_value=defer.fail(Error()))
+        yield self.assertFailure(self.workers.newConnection(conn, "worker"), Error)

@@ -18,13 +18,13 @@ from buildbot.config.master import MasterConfig
 
 
 class ConfiguratorMixin:
-
     """
     Support for testing configurators.
 
     @ivar configurator: the configurator under test
     @ivar config_dict: the config dict that the configurator is modifying
     """
+
     def setUp(self):
         self.config_dict = {}
 
@@ -58,10 +58,7 @@ class ConfiguratorMixin:
     def expectBuilderHasSteps(self, name, step_classes):
         builder = self.expectBuilder(name)
         for step_class in step_classes:
-            found = [
-                step
-                for step in builder.factory.steps if step.step_class == step_class
-            ]
+            found = [step for step in builder.factory.steps if step.step_class == step_class]
             if not found:
                 self.fail(f"expected a buildstep of {step_class!r} in {name}")
 

@@ -24,7 +24,6 @@ from buildbot.warnings import warn_deprecated
 
 
 class Db2DataMixin:
-
     def db2data(self, dbdict):
         return {
             'workerid': dbdict['id'],
@@ -33,18 +32,15 @@ class Db2DataMixin:
             'paused': dbdict['paused'],
             "pause_reason": dbdict["pause_reason"],
             'graceful': dbdict['graceful'],
-            'connected_to': [
-                {'masterid': id}
-                for id in dbdict['connected_to']],
+            'connected_to': [{'masterid': id} for id in dbdict['connected_to']],
             'configured_on': [
-                {'masterid': c['masterid'],
-                 'builderid': c['builderid']}
-                for c in dbdict['configured_on']],
+                {'masterid': c['masterid'], 'builderid': c['builderid']}
+                for c in dbdict['configured_on']
+            ],
         }
 
 
 class WorkerEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /workers/n:workerid
@@ -63,7 +59,8 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             workerid=kwargs.get('workerid'),
             name=kwargs.get('name'),
             masterid=kwargs.get('masterid'),
-            builderid=kwargs.get('builderid'))
+            builderid=kwargs.get('builderid'),
+        )
         if sldict:
             return self.db2data(sldict)
         return None
@@ -76,15 +73,14 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
         worker = yield self.get(None, kwargs)
         if worker is not None:
             self.master.mq.produce(
-            ("control", "worker", str(worker["workerid"]), action),
-            {"reason": kwargs.get("reason", args.get("reason", "no reason"))},
-        )
+                ("control", "worker", str(worker["workerid"]), action),
+                {"reason": kwargs.get("reason", args.get("reason", "no reason"))},
+            )
         else:
             raise exceptions.exceptions.InvalidPathError("worker not found")
 
 
 class WorkersEndpoint(Db2DataMixin, base.Endpoint):
-
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'workers'
     pathPatterns = """
@@ -102,7 +98,8 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
             builderid=kwargs.get('builderid'),
             masterid=kwargs.get('masterid'),
             paused=paused,
-            graceful=graceful)
+            graceful=graceful,
+        )
         return [self.db2data(w) for w in workers_dicts]
 
 
@@ -116,7 +113,6 @@ class MasterIdEntityType(types.Entity):
 
 
 class Worker(base.ResourceType):
-
     name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
@@ -135,15 +131,15 @@ class Worker(base.ResourceType):
         paused = types.Boolean()
         pause_reason = types.NoneOk(types.String())
         graceful = types.Boolean()
+
     entityType = EntityType(name, 'Worker')
 
     @base.updateMethod
     # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
         return self.master.db.workers.workerConfigured(
-            workerid=workerid,
-            masterid=masterid,
-            builderids=builderids)
+            workerid=workerid, masterid=masterid, builderids=builderids
+        )
 
     @base.updateMethod
     def findWorkerId(self, name):
@@ -155,18 +151,15 @@ class Worker(base.ResourceType):
     @defer.inlineCallbacks
     def workerConnected(self, workerid, masterid, workerinfo):
         yield self.master.db.workers.workerConnected(
-            workerid=workerid,
-            masterid=masterid,
-            workerinfo=workerinfo)
+            workerid=workerid, masterid=masterid, workerinfo=workerinfo
+        )
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'connected')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def workerDisconnected(self, workerid, masterid):
-        yield self.master.db.workers.workerDisconnected(
-            workerid=workerid,
-            masterid=masterid)
+        yield self.master.db.workers.workerDisconnected(workerid=workerid, masterid=masterid)
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'disconnected')
 
@@ -181,8 +174,11 @@ class Worker(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def setWorkerState(self, workerid, paused, graceful):
-        warn_deprecated("3.10.0", "setWorkerState() has been deprecated, "
-                        "please use set_worker_paused() and/or set_worker_graceful()")
+        warn_deprecated(
+            "3.10.0",
+            "setWorkerState() has been deprecated, "
+            "please use set_worker_paused() and/or set_worker_graceful()",
+        )
         yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
         yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
         bs = yield self.master.data.get(('workers', workerid))
@@ -192,9 +188,7 @@ class Worker(base.ResourceType):
     @defer.inlineCallbacks
     def set_worker_paused(self, workerid, paused, pause_reason=None):
         yield self.master.db.workers.set_worker_paused(
-            workerid=workerid,
-            paused=paused,
-            pause_reason=pause_reason
+            workerid=workerid, paused=paused, pause_reason=pause_reason
         )
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'state_updated')
@@ -209,8 +203,7 @@ class Worker(base.ResourceType):
     @base.updateMethod
     def deconfigureAllWorkersForMaster(self, masterid):
         # unconfigure all workers for this master
-        return self.master.db.workers.deconfigureAllWorkersForMaster(
-            masterid=masterid)
+        return self.master.db.workers.deconfigureAllWorkersForMaster(masterid=masterid)
 
     def _masterDeactivated(self, masterid):
         return self.deconfigureAllWorkersForMaster(masterid)

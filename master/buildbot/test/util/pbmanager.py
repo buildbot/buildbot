@@ -20,7 +20,6 @@ from twisted.internet import defer
 
 
 class PBManagerMixin:
-
     def setUpPBChangeSource(self):
         "Set up a fake self.pbmanager."
         self.registrations = []
@@ -34,6 +33,7 @@ class PBManagerMixin:
         def unregister():
             self.unregistrations.append((portstr, username, password))
             return defer.succeed(None)
+
         reg.unregister = unregister
         self.registrations.append((portstr, username, password))
         return reg
@@ -48,8 +48,9 @@ class PBManagerMixin:
         for ps, un, pw in self.registrations:
             if ps == portstr and username == un and pw == password:
                 return
-        self.fail(f"not registered: {repr(portstr, username, password)} not in "
-                  f"{self.registrations}")
+        self.fail(
+            f"not registered: {repr(portstr, username, password)} not in {self.registrations}"
+        )
 
     def assertUnregistered(self, portstr, username, password):
         for ps, un, pw in self.unregistrations:

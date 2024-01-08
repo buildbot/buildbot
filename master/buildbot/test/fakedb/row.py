@@ -21,7 +21,6 @@ from buildbot.util import unicode2bytes
 
 
 class Row:
-
     """
     Parent class for row classes, which are used to specify test data for
     database-related tests.
@@ -56,8 +55,9 @@ class Row:
 
     def __init__(self, **kwargs):
         if self.__init__.__func__ is Row.__init__:
-            raise RuntimeError('Row.__init__ must be overridden to supply default values for '
-                               'columns')
+            raise RuntimeError(
+                'Row.__init__ must be overridden to supply default values for columns'
+            )
 
         self.values = kwargs.copy()
         if self.id_column:
@@ -83,8 +83,7 @@ class Row:
             self.values[col] = unicode2bytes(self.values[col])
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
-            self.values[hash_col] = self.hashColumns(
-                *(self.values[c] for c in src_cols))
+            self.values[hash_col] = self.hashColumns(*(self.values[c] for c in src_cols))
 
         # make the values appear as attributes
         self.__dict__.update(self.values)
@@ -154,15 +153,15 @@ class Row:
             "brid": db.buildrequests.getBuildRequest,
             "stepid": db.steps.getStep,
             "masterid": db.masters.getMaster,
-            "rebuilt_buildid": db.builds.getBuild
+            "rebuilt_buildid": db.builds.getBuild,
         }
         for foreign_key in self.foreignKeys:
             if foreign_key in accessors:
                 key = getattr(self, foreign_key)
                 if key is not None:
                     val = yield accessors[foreign_key](key)
-                    t.assertTrue(val is not None,
-                                 f"foreign key {foreign_key}:{repr(key)} does not exit")
+                    t.assertTrue(
+                        val is not None, f"foreign key {foreign_key}:{repr(key)} does not exit"
+                    )
             else:
-                raise ValueError(
-                    "warning, unsupported foreign key", foreign_key, self.table)
+                raise ValueError("warning, unsupported foreign key", foreign_key, self.table)

@@ -22,7 +22,6 @@ from buildbot.pbutil import NewCredPerspective
 
 
 class ChangePerspective(NewCredPerspective):
-
     def __init__(self, master, prefix):
         self.master = master
         self.prefix = prefix
@@ -77,7 +76,7 @@ class ChangePerspective(NewCredPerspective):
                 if not path.startswith(self.prefix):
                     # this file does not start with the prefix, so ignore it
                     continue
-                path = path[len(self.prefix):]
+                path = path[len(self.prefix) :]
             files.append(path)
         changedict['files'] = files
 
@@ -99,9 +98,7 @@ class ChangePerspective(NewCredPerspective):
 class PBChangeSource(base.ChangeSource):
     compare_attrs = ("user", "passwd", "port", "prefix", "port")
 
-    def __init__(self, user="change", passwd="changepw", port=None,
-                 prefix=None, name=None):
-
+    def __init__(self, user="change", passwd="changepw", port=None, prefix=None, name=None):
         if name is None:
             if prefix:
                 name = f"PBChangeSource:{prefix}:{port}"
@@ -136,8 +133,7 @@ class PBChangeSource(base.ChangeSource):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         port = self._calculatePort(new_config)
         if not port:
-            config.error("No port specified for PBChangeSource, and no "
-                         "worker port configured")
+            config.error("No port specified for PBChangeSource, and no worker port configured")
 
         # and, if it's changed, re-register
         if port != self.registered_port and self.isActive():
@@ -159,8 +155,9 @@ class PBChangeSource(base.ChangeSource):
         if not port:
             return
         self.registered_port = port
-        self.registration = yield self.master.pbmanager.register(port, self.user, self.passwd,
-                                                                 self.getPerspective)
+        self.registration = yield self.master.pbmanager.register(
+            port, self.user, self.passwd, self.getPerspective
+        )
 
     def _unregister(self):
         self.registered_port = None

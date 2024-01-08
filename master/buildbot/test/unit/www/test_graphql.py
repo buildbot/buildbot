@@ -57,9 +57,7 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_failure(self):
-        self.master.graphql.query = mock.Mock(
-            return_value=defer.fail(RuntimeError("oh noes"))
-        )
+        self.master.graphql.query = mock.Mock(return_value=defer.fail(RuntimeError("oh noes")))
         yield self.render_resource(
             self.rsrc,
             b"/?query={builders{name}}",
@@ -79,20 +77,18 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.rsrc,
             b"/?query={tests{testid}}",
         )
-        self.assertResult(
-            {
-                "tests": [
-                    {"testid": 13},
-                    {"testid": 14},
-                    {"testid": 15},
-                    {"testid": 16},
-                    {"testid": 17},
-                    {"testid": 18},
-                    {"testid": 19},
-                    {"testid": 20},
-                ]
-            }
-        )
+        self.assertResult({
+            "tests": [
+                {"testid": 13},
+                {"testid": 14},
+                {"testid": 15},
+                {"testid": 16},
+                {"testid": 17},
+                {"testid": 18},
+                {"testid": 19},
+                {"testid": 20},
+            ]
+        })
 
     @defer.inlineCallbacks
     def test_get_query_item(self):
@@ -108,15 +104,13 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.rsrc,
             b"/?query={test(testid:13){testid, info, steps { info }}}",
         )
-        self.assertResult(
-            {
-                "test": {
-                    "testid": 13,
-                    "info": "ok",
-                    "steps": [{"info": "ok"}, {"info": "failed"}],
-                }
+        self.assertResult({
+            "test": {
+                "testid": 13,
+                "info": "ok",
+                "steps": [{"info": "ok"}, {"info": "failed"}],
             }
-        )
+        })
 
     @defer.inlineCallbacks
     def test_get_query_items_result_spec(self):
@@ -124,9 +118,9 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.rsrc,
             b"/?query={tests(testid__gt:18){testid, info}}",
         )
-        self.assertResult(
-            {"tests": [{"testid": 19, "info": "todo"}, {"testid": 20, "info": "error"}]}
-        )
+        self.assertResult({
+            "tests": [{"testid": 19, "info": "todo"}, {"testid": 20, "info": "error"}]
+        })
 
     @defer.inlineCallbacks
     def test_get_noquery(self):
@@ -145,20 +139,18 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             content=b"{tests{testid}}",
             content_type=b"application/graphql",
         )
-        self.assertResult(
-            {
-                "tests": [
-                    {"testid": 13},
-                    {"testid": 14},
-                    {"testid": 15},
-                    {"testid": 16},
-                    {"testid": 17},
-                    {"testid": 18},
-                    {"testid": 19},
-                    {"testid": 20},
-                ]
-            }
-        )
+        self.assertResult({
+            "tests": [
+                {"testid": 13},
+                {"testid": 14},
+                {"testid": 15},
+                {"testid": 16},
+                {"testid": 17},
+                {"testid": 18},
+                {"testid": 19},
+                {"testid": 20},
+            ]
+        })
 
     @defer.inlineCallbacks
     def test_post_query_json_content(self):
@@ -169,20 +161,18 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             content=json.dumps(query).encode(),
             content_type=b"application/json",
         )
-        self.assertResult(
-            {
-                "tests": [
-                    {"testid": 13},
-                    {"testid": 14},
-                    {"testid": 15},
-                    {"testid": 16},
-                    {"testid": 17},
-                    {"testid": 18},
-                    {"testid": 19},
-                    {"testid": 20},
-                ]
-            }
-        )
+        self.assertResult({
+            "tests": [
+                {"testid": 13},
+                {"testid": 14},
+                {"testid": 15},
+                {"testid": 16},
+                {"testid": 17},
+                {"testid": 18},
+                {"testid": 19},
+                {"testid": 20},
+            ]
+        })
 
     @defer.inlineCallbacks
     def test_post_query_json_content_operationName(self):
@@ -200,7 +190,6 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_post_query_json_badcontent_type(self):
-
         yield self.render_resource(
             self.rsrc, method=b"POST", content=b"foo", content_type=b"application/foo"
         )
@@ -208,7 +197,6 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_post_query_json_nocontent_type(self):
-
         yield self.render_resource(self.rsrc, method=b"POST")
         self.assertSimpleError("no content-type", 400)
 
@@ -244,9 +232,7 @@ class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         yield self.render_resource(self.rsrc, b"/")
         self.assertRequest(
             content=unicode2bytes(
-                json.dumps(
-                    {"data": None, "errors": [{"message": "graphql not enabled"}]}
-                )
+                json.dumps({"data": None, "errors": [{"message": "graphql not enabled"}]})
             ),
             responseCode=501,
         )

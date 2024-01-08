@@ -25,20 +25,21 @@ from buildbot.util.eventual import _setReactor
 
 
 class TestReactorMixin:
-
     """
     Mix this in to get TestReactor as self.reactor which is correctly cleaned up
     at the end
     """
-    def setup_test_reactor(self, use_asyncio=False):
 
+    def setup_test_reactor(self, use_asyncio=False):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
         _setReactor(self.reactor)
 
         def deferToThread(f, *args, **kwargs):
-            return threads.deferToThreadPool(self.reactor, self.reactor.getThreadPool(),
-                                             f, *args, **kwargs)
+            return threads.deferToThreadPool(
+                self.reactor, self.reactor.getThreadPool(), f, *args, **kwargs
+            )
+
         self.patch(threads, 'deferToThread', deferToThread)
 
         # During shutdown sequence we must first stop the reactor and only then
@@ -56,4 +57,5 @@ class TestReactorMixin:
                 self.asyncio_loop.stop()
                 self.asyncio_loop.close()
                 asyncio.set_event_loop(None)
+
             self.addCleanup(stop)

@@ -16,7 +16,6 @@
 Source step code for mercurial
 """
 
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -31,17 +30,24 @@ from buildbot.steps.source.base import Source
 
 
 class Mercurial(Source):
+    """Class for Mercurial with all the smarts"""
 
-    """ Class for Mercurial with all the smarts """
     name = "hg"
 
     renderables = ["repourl"]
     possible_methods = (None, 'clean', 'fresh', 'clobber')
     possible_branchTypes = ('inrepo', 'dirname')
 
-    def __init__(self, repourl=None, mode='incremental',
-                 method=None, defaultBranch=None, branchType='dirname',
-                 clobberOnBranchChange=True, **kwargs):
+    def __init__(
+        self,
+        repourl=None,
+        mode='incremental',
+        method=None,
+        defaultBranch=None,
+        branchType='dirname',
+        clobberOnBranchChange=True,
+        **kwargs,
+    ):
         """
         @type  repourl: string
         @param repourl: the URL which points at the Mercurial repository.
@@ -111,7 +117,7 @@ class Mercurial(Source):
             self.branch = self.defaultBranch
             self.update_branch = branch
         elif self.branchType == 'inrepo':
-            self.update_branch = (branch or 'default')
+            self.update_branch = branch or 'default'
 
         yield self._getAttrGroupMember('mode', self.mode)()
 
@@ -160,8 +166,9 @@ class Mercurial(Source):
 
     @defer.inlineCallbacks
     def _clobber(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron})
+        cmd = remotecommand.RemoteCommand(
+            'rmdir', {'dir': self.workdir, 'logEnviron': self.logEnviron}
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -190,8 +197,10 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def _checkBranchChange(self):
         current_branch = yield self._getCurrentBranch()
-        msg = (f"Working dir is on in-repo branch '{current_branch}' and build needs "
-               f"'{self.update_branch}'.")
+        msg = (
+            f"Working dir is on in-repo branch '{current_branch}' and build needs "
+            f"'{self.update_branch}'."
+        )
         if current_branch != self.update_branch and self.clobberOnBranchChange:
             msg += ' Clobbering.'
             log.msg(msg)
@@ -216,20 +225,24 @@ class Mercurial(Source):
         yield self._checkBranchChange()
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
-                 abandonOnFailure=True):
+    def _dovccmd(
+        self, command, collectStdout=False, initialStdin=None, decodeRC=None, abandonOnFailure=True
+    ):
         if not command:
             raise ValueError("No command specified")
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin,
-                                               decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            ['hg', '--verbose'] + command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            decodeRC=decodeRC,
+        )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -248,9 +261,11 @@ class Mercurial(Source):
         # order, and just pay attention to the last one. See ticket #103 for
         # more details.
         if len(changes) > 1:
-            log.msg("Mercurial.computeSourceRevision: warning: "
-                    f"there are {len(changes)} changes here, assuming the last one is "
-                    "the most recent")
+            log.msg(
+                "Mercurial.computeSourceRevision: warning: "
+                f"there are {len(changes)} changes here, assuming the last one is "
+                "the most recent"
+            )
         return changes[-1].revision
 
     @defer.inlineCallbacks
@@ -285,9 +300,13 @@ class Mercurial(Source):
             if self.workerVersionIsOlderThan('rmdir', '2.14'):
                 yield self.removeFiles(files)
             else:
-                cmd = remotecommand.RemoteCommand('rmdir', {'dir': files,
-                                                            'logEnviron':
-                                                            self.logEnviron, })
+                cmd = remotecommand.RemoteCommand(
+                    'rmdir',
+                    {
+                        'dir': files,
+                        'logEnviron': self.logEnviron,
+                    },
+                )
                 cmd.useLog(self.stdio_log, False)
                 yield self.runCommand(cmd)
 
@@ -296,8 +315,13 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            cmd = remotecommand.RemoteCommand('rmdir', {'dir': filename,
-                                                        'logEnviron': self.logEnviron, })
+            cmd = remotecommand.RemoteCommand(
+                'rmdir',
+                {
+                    'dir': filename,
+                    'logEnviron': self.logEnviron,
+                },
+            )
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:
@@ -318,8 +342,9 @@ class Mercurial(Source):
             abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
-        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'],
-                          abandonOnFailure=abandonOnFailure)
+        d = self._dovccmd(
+            ['clone', '--noupdate', self.repourl, '.'], abandonOnFailure=abandonOnFailure
+        )
 
         def _retry(res):
             if self.stopped or res == 0:
@@ -345,9 +370,11 @@ class Mercurial(Source):
         @d.addCallback
         def check(res):
             return res == 0
+
         return d
 
     def applyPatch(self, patch):
-        d = self._dovccmd(['import', '--no-commit', '-p', str(patch[0]), '-'],
-                          initialStdin=patch[1])
+        d = self._dovccmd(
+            ['import', '--no-commit', '-p', str(patch[0]), '-'], initialStdin=patch[1]
+        )
         return d

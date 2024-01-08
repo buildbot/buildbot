@@ -17,7 +17,6 @@ from twisted.internet import defer
 
 
 class FakeConnection:
-
     is_fake_test_connection = True
 
     _waiting_for_interrupt = False
@@ -33,7 +32,6 @@ class FakeConnection:
 
     @defer.inlineCallbacks
     def remoteStartCommand(self, remote_command, builder_name, command_id, command_name, args):
-
         self._waiting_for_interrupt = False
         if self._next_command_number in self._commands_numbers_to_interrupt:
             self._waiting_for_interrupt = True

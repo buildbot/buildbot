@@ -15,7 +15,6 @@
 
 
 class AbandonChain(Exception):
-
     """A series of chained steps can raise this exception to indicate that
     one of the intermediate RunProcesses has failed, such that there is no
     point in running the remainder. The first argument to the exception

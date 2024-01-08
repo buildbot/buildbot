@@ -52,6 +52,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         if YAML is None:
             # for running the test ruamel is not needed (to avoid a build dependency for distros)
             import yaml
+
             return yaml.safe_load(f)
         self.yaml = YAML()
         self.yaml.default_flow_style = False
@@ -86,9 +87,11 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         master.graphql.reconfigServiceWithBuildbotConfig(master.config)
 
         self.master = master
-        scheds = [ForceScheduler(
-            name="force",
-            builderNames=["runtests0", "runtests1", "runtests2", "slowruntests"])]
+        scheds = [
+            ForceScheduler(
+                name="force", builderNames=["runtests0", "runtests1", "runtests2", "slowruntests"]
+            )
+        ]
         self.master.allSchedulers = lambda: scheds
 
         yield self.master.startService()
@@ -103,115 +106,241 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         self.master.db.insert_test_data([
             fakedb.Master(id=1),
             fakedb.Worker(id=1, name='example-worker'),
-
             fakedb.Scheduler(id=1, name='custom', enabled=1),
             fakedb.Scheduler(id=2, name='all', enabled=2),
             fakedb.Scheduler(id=3, name='force', enabled=3),
-
             fakedb.SchedulerMaster(schedulerid=1, masterid=1),
             fakedb.SchedulerMaster(schedulerid=2, masterid=1),
             fakedb.SchedulerMaster(schedulerid=3, masterid=1),
-
             fakedb.Builder(id=1, name='runtests1'),
             fakedb.Builder(id=2, name='runtests2'),
             fakedb.Builder(id=3, name='runtests3'),
-
             fakedb.BuilderMaster(id=1, builderid=1, masterid=1),
             fakedb.BuilderMaster(id=2, builderid=2, masterid=1),
             fakedb.BuilderMaster(id=3, builderid=3, masterid=1),
-
             fakedb.Tag(id=1, name='tag1'),
             fakedb.Tag(id=2, name='tag12'),
             fakedb.Tag(id=3, name='tag23'),
-
             fakedb.BuildersTags(id=1, builderid=1, tagid=1),
             fakedb.BuildersTags(id=2, builderid=1, tagid=2),
             fakedb.BuildersTags(id=3, builderid=2, tagid=2),
             fakedb.BuildersTags(id=4, builderid=2, tagid=3),
             fakedb.BuildersTags(id=5, builderid=3, tagid=3),
-
-            fakedb.Buildset(id=1, results=SUCCESS, reason="Force reason 1",
-                            submitted_at=100000, complete_at=100110, complete=1),
-            fakedb.Buildset(id=2, results=SUCCESS, reason="Force reason 2",
-                            submitted_at=100200, complete_at=100330, complete=1),
-            fakedb.Buildset(id=3, results=SUCCESS, reason="Force reason 3",
-                            submitted_at=100400, complete_at=100550, complete=1),
-
-            fakedb.BuildsetProperty(buildsetid=1, property_name='scheduler',
-                                    property_value='["custom", "Scheduler"]'),
-            fakedb.BuildsetProperty(buildsetid=2, property_name='scheduler',
-                                    property_value='["all", "Scheduler"]'),
-            fakedb.BuildsetProperty(buildsetid=3, property_name='scheduler',
-                                    property_value='["force", "Scheduler"]'),
-            fakedb.BuildsetProperty(buildsetid=3, property_name='owner',
-                                    property_value='["some@example.com", "Force Build Form"]'),
-
+            fakedb.Buildset(
+                id=1,
+                results=SUCCESS,
+                reason="Force reason 1",
+                submitted_at=100000,
+                complete_at=100110,
+                complete=1,
+            ),
+            fakedb.Buildset(
+                id=2,
+                results=SUCCESS,
+                reason="Force reason 2",
+                submitted_at=100200,
+                complete_at=100330,
+                complete=1,
+            ),
+            fakedb.Buildset(
+                id=3,
+                results=SUCCESS,
+                reason="Force reason 3",
+                submitted_at=100400,
+                complete_at=100550,
+                complete=1,
+            ),
+            fakedb.BuildsetProperty(
+                buildsetid=1, property_name='scheduler', property_value='["custom", "Scheduler"]'
+            ),
+            fakedb.BuildsetProperty(
+                buildsetid=2, property_name='scheduler', property_value='["all", "Scheduler"]'
+            ),
+            fakedb.BuildsetProperty(
+                buildsetid=3, property_name='scheduler', property_value='["force", "Scheduler"]'
+            ),
+            fakedb.BuildsetProperty(
+                buildsetid=3,
+                property_name='owner',
+                property_value='["some@example.com", "Force Build Form"]',
+            ),
             fakedb.SourceStamp(id=1, branch='master', revision='1234abcd'),
             fakedb.Change(changeid=1, branch='master', revision='1234abcd', sourcestampid=1),
-            fakedb.ChangeProperty(changeid=1, property_name="owner",
-                                  property_value='["me@example.com", "change"]'),
-            fakedb.ChangeProperty(changeid=1, property_name="other_prop",
-                                  property_value='["value", "change"]'),
+            fakedb.ChangeProperty(
+                changeid=1, property_name="owner", property_value='["me@example.com", "change"]'
+            ),
+            fakedb.ChangeProperty(
+                changeid=1, property_name="other_prop", property_value='["value", "change"]'
+            ),
             fakedb.BuildsetSourceStamp(id=1, buildsetid=1, sourcestampid=1),
             fakedb.BuildsetSourceStamp(id=2, buildsetid=2, sourcestampid=1),
             fakedb.BuildsetSourceStamp(id=3, buildsetid=3, sourcestampid=1),
-
-            fakedb.BuildRequest(id=1, buildsetid=1, builderid=1, results=SUCCESS,
-                                submitted_at=100001, complete_at=100109, complete=1),
-            fakedb.BuildRequest(id=2, buildsetid=2, builderid=1, results=SUCCESS,
-                                submitted_at=100201, complete_at=100329, complete=1),
-            fakedb.BuildRequest(id=3, buildsetid=3, builderid=2, results=SUCCESS,
-                                submitted_at=100401, complete_at=100549, complete=1),
-
-            fakedb.Build(id=1, number=1, buildrequestid=1, builderid=1, workerid=1,
-                         masterid=1001, started_at=100002, complete_at=100108,
-                         state_string='build successful', results=SUCCESS),
-            fakedb.Build(id=2, number=2, buildrequestid=2, builderid=1, workerid=1,
-                         masterid=1001, started_at=100202, complete_at=100328,
-                         state_string='build successful', results=SUCCESS),
-            fakedb.Build(id=3, number=1, buildrequestid=3, builderid=2, workerid=1,
-                         masterid=1001, started_at=100402, complete_at=100548,
-                         state_string='build successful', results=SUCCESS),
-
-            fakedb.BuildProperty(buildid=3, name='reason', value='"force build"',
-                                 source="Force Build Form"),
-            fakedb.BuildProperty(buildid=3, name='owner', value='"some@example.com"',
-                                 source="Force Build Form"),
-            fakedb.BuildProperty(buildid=3, name='scheduler', value='"force"',
-                                 source="Scheduler"),
-            fakedb.BuildProperty(buildid=3, name='buildername', value='"runtests3"',
-                                 source="Builder"),
-            fakedb.BuildProperty(buildid=3, name='workername', value='"example-worker"',
-                                 source="Worker"),
-
-            fakedb.Step(id=1, number=1, name='step1', buildid=1,
-                        started_at=100010, locks_acquired_at=100012, complete_at=100019,
-                        state_string='step1 done'),
-            fakedb.Step(id=2, number=2, name='step2', buildid=1,
-                        started_at=100020, locks_acquired_at=100022, complete_at=100029,
-                        state_string='step2 done'),
-            fakedb.Step(id=3, number=3, name='step3', buildid=1,
-                        started_at=100030, locks_acquired_at=100032, complete_at=100039,
-                        state_string='step3 done'),
-            fakedb.Step(id=11, number=1, name='step1', buildid=2,
-                        started_at=100210, locks_acquired_at=100212, complete_at=100219,
-                        state_string='step1 done'),
-            fakedb.Step(id=12, number=2, name='step2', buildid=2,
-                        started_at=100220, locks_acquired_at=100222, complete_at=100229,
-                        state_string='step2 done'),
-            fakedb.Step(id=13, number=3, name='step3', buildid=2,
-                        started_at=100230, locks_acquired_at=100232, complete_at=100239,
-                        state_string='step3 done'),
-            fakedb.Step(id=21, number=1, name='step1', buildid=3,
-                        started_at=100410, locks_acquired_at=100412, complete_at=100419,
-                        state_string='step1 done'),
-            fakedb.Step(id=22, number=2, name='step2', buildid=3,
-                        started_at=100420, locks_acquired_at=100422, complete_at=100429,
-                        state_string='step2 done'),
-            fakedb.Step(id=23, number=3, name='step3', buildid=3,
-                        started_at=100430, locks_acquired_at=100432, complete_at=100439,
-                        state_string='step3 done'),
-
+            fakedb.BuildRequest(
+                id=1,
+                buildsetid=1,
+                builderid=1,
+                results=SUCCESS,
+                submitted_at=100001,
+                complete_at=100109,
+                complete=1,
+            ),
+            fakedb.BuildRequest(
+                id=2,
+                buildsetid=2,
+                builderid=1,
+                results=SUCCESS,
+                submitted_at=100201,
+                complete_at=100329,
+                complete=1,
+            ),
+            fakedb.BuildRequest(
+                id=3,
+                buildsetid=3,
+                builderid=2,
+                results=SUCCESS,
+                submitted_at=100401,
+                complete_at=100549,
+                complete=1,
+            ),
+            fakedb.Build(
+                id=1,
+                number=1,
+                buildrequestid=1,
+                builderid=1,
+                workerid=1,
+                masterid=1001,
+                started_at=100002,
+                complete_at=100108,
+                state_string='build successful',
+                results=SUCCESS,
+            ),
+            fakedb.Build(
+                id=2,
+                number=2,
+                buildrequestid=2,
+                builderid=1,
+                workerid=1,
+                masterid=1001,
+                started_at=100202,
+                complete_at=100328,
+                state_string='build successful',
+                results=SUCCESS,
+            ),
+            fakedb.Build(
+                id=3,
+                number=1,
+                buildrequestid=3,
+                builderid=2,
+                workerid=1,
+                masterid=1001,
+                started_at=100402,
+                complete_at=100548,
+                state_string='build successful',
+                results=SUCCESS,
+            ),
+            fakedb.BuildProperty(
+                buildid=3, name='reason', value='"force build"', source="Force Build Form"
+            ),
+            fakedb.BuildProperty(
+                buildid=3, name='owner', value='"some@example.com"', source="Force Build Form"
+            ),
+            fakedb.BuildProperty(buildid=3, name='scheduler', value='"force"', source="Scheduler"),
+            fakedb.BuildProperty(
+                buildid=3, name='buildername', value='"runtests3"', source="Builder"
+            ),
+            fakedb.BuildProperty(
+                buildid=3, name='workername', value='"example-worker"', source="Worker"
+            ),
+            fakedb.Step(
+                id=1,
+                number=1,
+                name='step1',
+                buildid=1,
+                started_at=100010,
+                locks_acquired_at=100012,
+                complete_at=100019,
+                state_string='step1 done',
+            ),
+            fakedb.Step(
+                id=2,
+                number=2,
+                name='step2',
+                buildid=1,
+                started_at=100020,
+                locks_acquired_at=100022,
+                complete_at=100029,
+                state_string='step2 done',
+            ),
+            fakedb.Step(
+                id=3,
+                number=3,
+                name='step3',
+                buildid=1,
+                started_at=100030,
+                locks_acquired_at=100032,
+                complete_at=100039,
+                state_string='step3 done',
+            ),
+            fakedb.Step(
+                id=11,
+                number=1,
+                name='step1',
+                buildid=2,
+                started_at=100210,
+                locks_acquired_at=100212,
+                complete_at=100219,
+                state_string='step1 done',
+            ),
+            fakedb.Step(
+                id=12,
+                number=2,
+                name='step2',
+                buildid=2,
+                started_at=100220,
+                locks_acquired_at=100222,
+                complete_at=100229,
+                state_string='step2 done',
+            ),
+            fakedb.Step(
+                id=13,
+                number=3,
+                name='step3',
+                buildid=2,
+                started_at=100230,
+                locks_acquired_at=100232,
+                complete_at=100239,
+                state_string='step3 done',
+            ),
+            fakedb.Step(
+                id=21,
+                number=1,
+                name='step1',
+                buildid=3,
+                started_at=100410,
+                locks_acquired_at=100412,
+                complete_at=100419,
+                state_string='step1 done',
+            ),
+            fakedb.Step(
+                id=22,
+                number=2,
+                name='step2',
+                buildid=3,
+                started_at=100420,
+                locks_acquired_at=100422,
+                complete_at=100429,
+                state_string='step2 done',
+            ),
+            fakedb.Step(
+                id=23,
+                number=3,
+                name='step3',
+                buildid=3,
+                started_at=100430,
+                locks_acquired_at=100432,
+                complete_at=100439,
+                state_string='step3 done',
+            ),
             fakedb.Log(id=1, name='stdio', slug='stdio', stepid=1, complete=1, num_lines=10),
             fakedb.Log(id=2, name='stdio', slug='stdio', stepid=2, complete=1, num_lines=20),
             fakedb.Log(id=3, name='stdio', slug='stdio', stepid=3, complete=1, num_lines=30),
@@ -221,13 +350,11 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             fakedb.Log(id=21, name='stdio', slug='stdio', stepid=21, complete=1, num_lines=50),
             fakedb.Log(id=22, name='stdio', slug='stdio', stepid=22, complete=1, num_lines=60),
             fakedb.Log(id=23, name='stdio', slug='stdio', stepid=23, complete=1, num_lines=70),
-
-            fakedb.LogChunk(logid=1, first_line=0, last_line=2,
-                            content='o line1\no line2\n'),
-            fakedb.LogChunk(logid=1, first_line=2, last_line=3,
-                            content='o line3\n'),
-            fakedb.LogChunk(logid=2, first_line=0, last_line=4,
-                            content='o line1\no line2\no line3\no line4\n'),
+            fakedb.LogChunk(logid=1, first_line=0, last_line=2, content='o line1\no line2\n'),
+            fakedb.LogChunk(logid=1, first_line=2, last_line=3, content='o line3\n'),
+            fakedb.LogChunk(
+                logid=2, first_line=0, last_line=4, content='o line1\no line2\no line3\no line4\n'
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -247,9 +374,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             focussed_data = data
         for test in focussed_data:
             query = test['query']
-            result = yield self.master.graphql.query(
-                query
-            )
+            result = yield self.master.graphql.query(query)
             self.assertIsNone(result.errors)
             if 'expected' not in test or regen:
                 need_save = True
@@ -259,8 +384,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
                 # but confuses the comparison)
                 result_data = json.loads(json.dumps(result.data, default=toJson))
                 expected = json.loads(json.dumps(test['expected'], default=toJson))
-                self.assertEqual(
-                    result_data, expected, f"for {query}")
+                self.assertEqual(result_data, expected, f"for {query}")
         if need_save:
             with open(fn, 'w', encoding='utf-8') as f:
                 self.save_yaml(data, f)

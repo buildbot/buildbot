@@ -78,7 +78,6 @@ def cleanupDatabase(config):  # pragma: no cover
 
 @defer.inlineCallbacks
 def _cleanupDatabase(config):
-
     if not base.checkBasedir(config):
         return 1
 
@@ -89,12 +88,14 @@ def _cleanupDatabase(config):
     try:
         os.chdir(config['basedir'])
 
-        with base.captureErrors((SyntaxError, ImportError),
-                                f"Unable to load 'buildbot.tac' from '{config['basedir']}':"):
+        with base.captureErrors(
+            (SyntaxError, ImportError), f"Unable to load 'buildbot.tac' from '{config['basedir']}':"
+        ):
             configFile = base.getConfigFileFromTac(config['basedir'])
 
-        with base.captureErrors(config_module.ConfigErrors,
-                                f"Unable to load '{configFile}' from '{config['basedir']}':"):
+        with base.captureErrors(
+            config_module.ConfigErrors, f"Unable to load '{configFile}' from '{config['basedir']}':"
+        ):
             master_cfg = base.loadConfig(config, configFile)
 
         if not master_cfg:

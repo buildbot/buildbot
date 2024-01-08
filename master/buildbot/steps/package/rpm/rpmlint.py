@@ -24,7 +24,6 @@ from buildbot.steps.shell import Test
 
 
 class RpmLint(Test):
-
     """
     Rpmlint build step.
     """
@@ -37,10 +36,7 @@ class RpmLint(Test):
     fileloc = '.'
     config = None
 
-    def __init__(self,
-                 fileloc=None,
-                 config=None,
-                 **kwargs):
+    def __init__(self, fileloc=None, config=None, **kwargs):
         """
         Create the Rpmlint object.
 

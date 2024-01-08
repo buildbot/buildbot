@@ -36,11 +36,10 @@ def waitFor(fn):
         res = yield fn()
         if res:
             return res
-        yield util.asyncSleep(.01)
+        yield util.asyncSleep(0.01)
 
 
 class Schedulers(RunMasterBase, www.RequiresWwwMixin):
-
     def setUp(self):
         self.master = None
         self.sch = None
@@ -69,6 +68,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
         def getSourceStamp(vctype, treetop, branch=None, repository=None):
             return defer.succeed(self.sourcestamp)
+
         self.patch(tryclient, 'getSourceStamp', getSourceStamp)
 
         self.output = []
@@ -81,6 +81,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             msg = ' '.join(map(str, msg))
             log.msg(f"output: {msg}")
             self.output.append(msg)
+
         self.patch(tryclient, 'output', output)
 
     def setupJobdir(self):
@@ -100,7 +101,6 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         from buildbot.process.factory import BuildFactory
 
         class MyBuildStep(BuildStep):
-
             def run(self):
                 return results.SUCCESS
 
@@ -135,12 +135,14 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
         # and, for Try_Userpass, until it's registered its port
         if isinstance(self.sch, trysched.Try_Userpass):
+
             def getSchedulerPort():
                 if not self.sch.registrations:
                     return None
                 self.serverPort = self.sch.registrations[0].getPort()
                 log.msg(f"Scheduler registered at port {self.serverPort}")
                 return True
+
             yield waitFor(getSchedulerPort)
 
     def runClient(self, config):
@@ -149,28 +151,29 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def test_userpass_no_wait(self):
-        yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
             'passwd': b'p',
         })
-        self.assertEqual(self.output, [
-            "using 'pb' connect method",
-            'job created',
-            'Delivering job; comment= None',
-            'job has been delivered',
-            'not waiting for builds to finish'
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'pb' connect method",
+                'job created',
+                'Delivering job; comment= None',
+                'job has been delivered',
+                'not waiting for builds to finish',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
     @defer.inlineCallbacks
     def test_userpass_wait(self):
-        yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -178,14 +181,17 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'passwd': b'p',
             'wait': True,
         })
-        self.assertEqual(self.output, [
-            "using 'pb' connect method",
-            'job created',
-            'Delivering job; comment= None',
-            'job has been delivered',
-            'All Builds Complete',
-            'a: success (build successful)',
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'pb' connect method",
+                'job created',
+                'Delivering job; comment= None',
+                'job has been delivered',
+                'All Builds Complete',
+                'a: success (build successful)',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
@@ -193,8 +199,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     def test_userpass_wait_bytes(self):
         self.sourcestamp = tryclient.SourceStamp(branch=b'br', revision=b'rr', patch=(0, b'++--'))
 
-        yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -202,21 +207,23 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'passwd': b'p',
             'wait': True,
         })
-        self.assertEqual(self.output, [
-            "using 'pb' connect method",
-            'job created',
-            'Delivering job; comment= None',
-            'job has been delivered',
-            'All Builds Complete',
-            'a: success (build successful)',
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'pb' connect method",
+                'job created',
+                'Delivering job; comment= None',
+                'job has been delivered',
+                'All Builds Complete',
+                'a: success (build successful)',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
     @defer.inlineCallbacks
     def test_userpass_wait_dryrun(self):
-        yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -225,26 +232,28 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'wait': True,
             'dryrun': True,
         })
-        self.assertEqual(self.output, [
-            "using 'pb' connect method",
-            'job created',
-            'Job:\n'
-            '\tRepository: \n'
-            '\tProject: \n'
-            '\tBranch: br\n'
-            '\tRevision: rr\n'
-            '\tBuilders: None\n'
-            '++--',
-            'job has been delivered',
-            'All Builds Complete',
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'pb' connect method",
+                'job created',
+                'Job:\n'
+                '\tRepository: \n'
+                '\tProject: \n'
+                '\tBranch: br\n'
+                '\tRevision: rr\n'
+                '\tBuilders: None\n'
+                '++--',
+                'job has been delivered',
+                'All Builds Complete',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 0)
 
     @defer.inlineCallbacks
     def test_userpass_list_builders(self):
-        yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
@@ -252,11 +261,14 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'username': 'u',
             'passwd': b'p',
         })
-        self.assertEqual(self.output, [
-            "using 'pb' connect method",
-            'The following builders are available for the try scheduler: ',
-            'a'
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'pb' connect method",
+                'The following builders are available for the try scheduler: ',
+                'a',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 0)
 
@@ -271,12 +283,15 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'passwd': b'p',
             'builders': 'a',  # appears to be required for ssh
         })
-        self.assertEqual(self.output, [
-            "using 'ssh' connect method",
-            'job created',
-            'job has been delivered',
-            'not waiting for builds to finish'
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'ssh' connect method",
+                'job created',
+                'job has been delivered',
+                'not waiting for builds to finish',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
@@ -292,11 +307,14 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'passwd': b'p',
             'builders': 'a',  # appears to be required for ssh
         })
-        self.assertEqual(self.output, [
-            "using 'ssh' connect method",
-            'job created',
-            'job has been delivered',
-            'waiting for builds with ssh is not supported'
-        ])
+        self.assertEqual(
+            self.output,
+            [
+                "using 'ssh' connect method",
+                'job created',
+                'job has been delivered',
+                'waiting for builds with ssh is not supported',
+            ],
+        )
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)

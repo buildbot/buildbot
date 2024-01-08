@@ -37,7 +37,6 @@ class LineBuffer:
 
 
 class LineProcessProtocol(protocol.ProcessProtocol):
-
     def __init__(self):
         self._out_buffer = LineBuffer()
         self._err_buffer = LineBuffer()

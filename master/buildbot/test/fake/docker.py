@@ -26,8 +26,7 @@ class Client:
         self.base_url = base_url
         self.call_args_create_container = []
         self.call_args_create_host_config = []
-        self._images = [
-            {'RepoTags': ['busybox:latest', 'worker:latest', 'tester:latest']}]
+        self._images = [{'RepoTags': ['busybox:latest', 'worker:latest', 'tester:latest']}]
         self._pullable = ['alpine:latest', 'tester:latest']
         self._pullCount = 0
         self._containers = {}
@@ -69,19 +68,10 @@ class Client:
     def containers(self, filters=None, *args, **kwargs):
         if filters is not None:
             if 'existing' in filters.get('name', ''):
-                self.create_container(
-                    image='busybox:latest',
-                    name="buildbot-existing-87de7e"
-                )
-                self.create_container(
-                    image='busybox:latest',
-                    name="buildbot-existing-87de7ef"
-                )
+                self.create_container(image='busybox:latest', name="buildbot-existing-87de7e")
+                self.create_container(image='busybox:latest', name="buildbot-existing-87de7ef")
 
-            return [
-                c for c in self._containers.values()
-                if c['name'].startswith(filters['name'])
-            ]
+            return [c for c in self._containers.values() if c['name'].startswith(filters['name'])]
         return self._containers.values()
 
     def create_host_config(self, *args, **kwargs):
@@ -96,9 +86,8 @@ class Client:
             if c['name'] == name:
                 raise RuntimeError('cannot create with same name')
         ret = {
-            'Id':
-            '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
-            'Warnings': None
+            'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
+            'Warnings': None,
         }
         self._containers[ret['Id']] = {
             'started': False,

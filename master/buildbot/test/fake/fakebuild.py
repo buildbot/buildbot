@@ -25,7 +25,6 @@ from buildbot.worker import base
 
 
 class FakeWorkerStatus(properties.PropertiesMixin):
-
     def __init__(self, name):
         self.name = name
         self.info = properties.Properties()
@@ -33,18 +32,15 @@ class FakeWorkerStatus(properties.PropertiesMixin):
 
 
 class FakeBuild(properties.PropertiesMixin):
-
     def __init__(self, props=None, master=None):
         self.builder = fakemaster.FakeBuilder(master)
-        self.workerforbuilder = mock.Mock(
-            spec=workerforbuilder.WorkerForBuilder)
+        self.workerforbuilder = mock.Mock(spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
         self.workerforbuilder.worker.info = properties.Properties()
         self.workerforbuilder.worker.workername = 'workername'
         self.builder.config = config.BuilderConfig(
-            name='bldr',
-            workernames=['a'],
-            factory=factory.BuildFactory())
+            name='bldr', workernames=['a'], factory=factory.BuildFactory()
+        )
         self.path_module = posixpath
         self.buildid = 92
         self.number = 13

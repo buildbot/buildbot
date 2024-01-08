@@ -21,7 +21,6 @@ from buildbot_worker.scripts import base
 
 
 class WorkerNotRunning(Exception):
-
     """
     raised when trying to stop worker process that is not running
     """

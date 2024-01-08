@@ -24,7 +24,6 @@ from buildbot.test.util import endpoint
 
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
 
@@ -48,6 +47,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
     def test_getEndpoints_classes(self):
         class MyEndpoint(base.Endpoint):
             pass
+
         cls = self.makeResourceTypeSubclass(endpoints=[MyEndpoint])
         master = mock.Mock()
         inst = cls(master)
@@ -57,13 +57,15 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
 
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
-            name='singular',
-            eventPathPatterns="/foo/:fooid/bar/:barid")
+            name='singular', eventPathPatterns="/foo/:fooid/bar/:barid"
+        )
         master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
-        inst.produceEvent({"fooid": 10, "barid": '20'},  # note integer vs. string
-                          'tested')
+        inst.produceEvent(
+            {"fooid": 10, "barid": '20'},  # note integer vs. string
+            'tested',
+        )
         master.mq.assertProductions([
             (('foo', '10', 'bar', '20', 'tested'), {"fooid": 10, "barid": '20'})
         ])
@@ -74,15 +76,14 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
                 /builder/:builderid/build/:number
                 /build/:buildid
             """
+
         master = fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = MyResourceType(master)
-        self.assertEqual(
-            inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
+        self.assertEqual(inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
 
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     class MyResourceType(base.ResourceType):
         name = "my"
 
@@ -105,7 +106,6 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class ListResult(unittest.TestCase):
-
     def test_constructor(self):
         lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         self.assertEqual(lr.data, [1, 2, 3])

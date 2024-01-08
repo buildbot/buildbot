@@ -42,7 +42,6 @@ class ChangeSourceMaster(Row):
 
 
 class FakeChangeSourcesComponent(FakeDBComponent):
-
     def setUp(self):
         self.changesources = {}
         self.changesource_masters = {}
@@ -70,7 +69,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
             rv = {
                 "id": changesourceid,
                 "name": self.changesources[changesourceid],
-                "masterid": None
+                "masterid": None,
             }
             # only set masterid if the relevant changesource master exists and
             # is active
@@ -79,9 +78,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
         return None
 
     def getChangeSources(self, active=None, masterid=None):
-        d = defer.DeferredList([
-            self.getChangeSource(id) for id in self.changesources
-        ])
+        d = defer.DeferredList([self.getChangeSource(id) for id in self.changesources])
 
         @d.addCallback
         def filter(results):
@@ -89,16 +86,14 @@ class FakeChangeSourcesComponent(FakeDBComponent):
             results = [r[1] for r in results]
             # filter for masterid
             if masterid is not None:
-                results = [r for r in results
-                           if r['masterid'] == masterid]
+                results = [r for r in results if r['masterid'] == masterid]
             # filter for active or inactive if necessary
             if active:
-                results = [r for r in results
-                           if r['masterid'] is not None]
+                results = [r for r in results if r['masterid'] is not None]
             elif active is not None:
-                results = [r for r in results
-                           if r['masterid'] is None]
+                results = [r for r in results if r['masterid'] is None]
             return results
+
         return d
 
     def setChangeSourceMaster(self, changesourceid, masterid):
@@ -122,5 +117,4 @@ class FakeChangeSourcesComponent(FakeDBComponent):
     # assertions
 
     def assertChangeSourceMaster(self, changesourceid, masterid):
-        self.t.assertEqual(self.changesource_masters.get(changesourceid),
-                           masterid)
+        self.t.assertEqual(self.changesource_masters.get(changesourceid), masterid)

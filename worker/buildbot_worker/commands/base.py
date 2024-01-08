@@ -72,7 +72,6 @@ command_version = "3.2"
 
 @implementer(IWorkerCommand)
 class Command(object):
-
     """This class defines one command that can be invoked by the build master.
     The command is executed on the worker side, and always sends back a
     completion message when it finishes. It may also send intermediate status
@@ -145,12 +144,13 @@ class Command(object):
 
         missingArgs = [arg for arg in self.requiredArgs if arg not in args]
         if missingArgs:
-            raise ValueError("{0} is missing args: {1}".format(
-                             self.__class__.__name__, ", ".join(missingArgs)))
+            raise ValueError(
+                "{0} is missing args: {1}".format(self.__class__.__name__, ", ".join(missingArgs))
+            )
         self.setup(args)
 
     def log_msg(self, msg, *args):
-        log.msg(u"(command {0}): {1}".format(self.command_id, msg), *args)
+        log.msg("(command {0}): {1}".format(self.command_id, msg), *args)
 
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
@@ -164,6 +164,7 @@ class Command(object):
             self.sendStatus([("elapsed", util.now(self._reactor) - self.startTime)])
             self.running = False
             return res
+
         d.addBoth(commandComplete)
         return d
 

@@ -27,7 +27,6 @@ from buildbot.test.util import interfaces
 
 
 class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = build_data.BuildDataNoValueEndpoint
     resourceTypeClass = build_data.BuildData
 
@@ -39,8 +38,9 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=88, name='b1'),
             fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
             fakedb.Master(id=88),
-            fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88, builderid=88,
-                         workerid=47),
+            fakedb.Build(
+                id=30, buildrequestid=41, number=7, masterid=88, builderid=88, workerid=47
+            ),
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
 
@@ -51,37 +51,46 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_existing_build_data_by_build_id(self):
         result = yield self.callGet(('builds', 30, 'data', 'name1'))
         self.validateData(result)
-        self.assertEqual(result, {
-            'buildid': 30,
-            'name': 'name1',
-            'value': None,
-            'source': 'source1',
-            'length': 6,
-        })
+        self.assertEqual(
+            result,
+            {
+                'buildid': 30,
+                'name': 'name1',
+                'value': None,
+                'source': 'source1',
+                'length': 6,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_existing_build_data_by_builder_name_build_number(self):
         result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1'))
         self.validateData(result)
-        self.assertEqual(result, {
-            'buildid': 30,
-            'name': 'name1',
-            'value': None,
-            'source': 'source1',
-            'length': 6,
-        })
+        self.assertEqual(
+            result,
+            {
+                'buildid': 30,
+                'name': 'name1',
+                'value': None,
+                'source': 'source1',
+                'length': 6,
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_existing_build_data_by_builder_id_build_number(self):
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1'))
         self.validateData(result)
-        self.assertEqual(result, {
-            'buildid': 30,
-            'name': 'name1',
-            'value': None,
-            'length': 6,
-            'source': 'source1',
-        })
+        self.assertEqual(
+            result,
+            {
+                'buildid': 30,
+                'name': 'name1',
+                'value': None,
+                'length': 6,
+                'source': 'source1',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_missing_by_build_id_missing_build(self):
@@ -125,7 +134,6 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = build_data.BuildDataEndpoint
     resourceTypeClass = build_data.BuildData
 
@@ -137,8 +145,9 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=88, name='b1'),
             fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
             fakedb.Master(id=88),
-            fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88, builderid=88,
-                         workerid=47),
+            fakedb.Build(
+                id=30, buildrequestid=41, number=7, masterid=88, builderid=88, workerid=47
+            ),
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
 
@@ -154,31 +163,40 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_existing_build_data_by_build_id(self):
         result = yield self.callGet(('builds', 30, 'data', 'name1', 'value'))
         self.validateData(result)
-        self.assertEqual(result, {
-            'raw': b'value1',
-            'mime-type': 'application/octet-stream',
-            'filename': 'name1',
-        })
+        self.assertEqual(
+            result,
+            {
+                'raw': b'value1',
+                'mime-type': 'application/octet-stream',
+                'filename': 'name1',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_existing_build_data_by_builder_name_build_number(self):
         result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1', 'value'))
         self.validateData(result)
-        self.assertEqual(result, {
-            'raw': b'value1',
-            'mime-type': 'application/octet-stream',
-            'filename': 'name1',
-        })
+        self.assertEqual(
+            result,
+            {
+                'raw': b'value1',
+                'mime-type': 'application/octet-stream',
+                'filename': 'name1',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_existing_build_data_by_builder_id_build_number(self):
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1', 'value'))
         self.validateData(result)
-        self.assertEqual(result, {
-            'raw': b'value1',
-            'mime-type': 'application/octet-stream',
-            'filename': 'name1',
-        })
+        self.assertEqual(
+            result,
+            {
+                'raw': b'value1',
+                'mime-type': 'application/octet-stream',
+                'filename': 'name1',
+            },
+        )
 
     @defer.inlineCallbacks
     def test_get_missing_by_build_id_missing_build(self):
@@ -192,8 +210,15 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_missing_by_builder_name_build_number_missing_builder(self):
-        result = yield self.callGet(('builders', 'b_missing', 'builds', 7, 'data', 'name1',
-                                     'value'))
+        result = yield self.callGet((
+            'builders',
+            'b_missing',
+            'builds',
+            7,
+            'data',
+            'name1',
+            'value',
+        ))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
@@ -203,8 +228,15 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_missing_by_builder_name_build_number_missing_name(self):
-        result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name_missing',
-                                     'value'))
+        result = yield self.callGet((
+            'builders',
+            'b1',
+            'builds',
+            7,
+            'data',
+            'name_missing',
+            'value',
+        ))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
@@ -224,7 +256,6 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
-
     endpointClass = build_data.BuildDatasNoValueEndpoint
     resourceTypeClass = build_data.BuildData
 
@@ -238,12 +269,15 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
             fakedb.BuildRequest(id=42, buildsetid=20, builderid=88),
             fakedb.BuildRequest(id=43, buildsetid=20, builderid=88),
-            fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88, builderid=88,
-                         workerid=47),
-            fakedb.Build(id=31, buildrequestid=42, number=8, masterid=88, builderid=88,
-                         workerid=47),
-            fakedb.Build(id=32, buildrequestid=42, number=9, masterid=88, builderid=88,
-                         workerid=47),
+            fakedb.Build(
+                id=30, buildrequestid=41, number=7, masterid=88, builderid=88, workerid=47
+            ),
+            fakedb.Build(
+                id=31, buildrequestid=42, number=8, masterid=88, builderid=88, workerid=47
+            ),
+            fakedb.Build(
+                id=32, buildrequestid=42, number=9, masterid=88, builderid=88, workerid=47
+            ),
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
             fakedb.BuildData(id=92, buildid=30, name='name2', value=b'value2', source='source2'),
             fakedb.BuildData(id=93, buildid=31, name='name3', value=b'value3', source='source3'),
@@ -293,15 +327,13 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
-
     def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = build_data.BuildData(self.master)
 
     def test_signature_set_build_data(self):
-        @self.assertArgSpecMatches(self.master.data.updates.setBuildData,
-                                   self.rtype.setBuildData)
+        @self.assertArgSpecMatches(self.master.data.updates.setBuildData, self.rtype.setBuildData)
         def setBuildData(self, buildid, name, value, source):
             pass
 
@@ -310,10 +342,13 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         yield self.rtype.setBuildData(buildid=2, name='name1', value=b'value1', source='source1')
 
         result = yield self.master.db.build_data.getBuildData(2, 'name1')
-        self.assertEqual(result, {
-            'buildid': 2,
-            'name': 'name1',
-            'value': b'value1',
-            'length': 6,
-            'source': 'source1',
-        })
+        self.assertEqual(
+            result,
+            {
+                'buildid': 2,
+                'name': 'name1',
+                'value': b'value1',
+                'length': 6,
+                'source': 'source1',
+            },
+        )

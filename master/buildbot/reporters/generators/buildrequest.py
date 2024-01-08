@@ -29,17 +29,19 @@ from .utils import BuildStatusGeneratorMixin
 
 @implementer(interfaces.IReportGenerator)
 class BuildRequestGenerator(BuildStatusGeneratorMixin):
-
-    wanted_event_keys = [
-        ('buildrequests', None, 'new'),
-        ('buildrequests', None, 'cancel')
-    ]
+    wanted_event_keys = [('buildrequests', None, 'new'), ('buildrequests', None, 'cancel')]
 
     compare_attrs = ['formatter']
 
-    def __init__(self, tags=None, builders=None, schedulers=None, branches=None,
-                 add_patch=False, formatter=None):
-
+    def __init__(
+        self,
+        tags=None,
+        builders=None,
+        schedulers=None,
+        branches=None,
+        add_patch=False,
+        formatter=None,
+    ):
         super().__init__('all', tags, builders, schedulers, branches, None, False, add_patch)
         self.formatter = formatter
         if self.formatter is None:
@@ -79,8 +81,9 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     def buildrequest_message(self, master, build):
         patches = self._get_patches_for_build(build)
         users = []
-        buildmsg = yield self.formatter.format_message_for_build(master, build, is_buildset=True,
-                                                                 mode=self.mode, users=users)
+        buildmsg = yield self.formatter.format_message_for_build(
+            master, build, is_buildset=True, mode=self.mode, users=users
+        )
 
         return {
             'body': buildmsg['body'],

@@ -23,7 +23,6 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
-
     def __init__(self, is_list_mkdir, is_list_rmdir):
         super().__init__()
         self.logEnviron = False
@@ -67,7 +66,7 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
             for path in paths:
                 yield self.runRmdir(path)
 
-        for path in (paths):
+        for path in paths:
             has_path = yield self.pathExists(path)
             if has_path:
                 return results.FAILURE
@@ -78,7 +77,6 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 # This integration test creates a master and worker environment,
 # and makes sure the composite step mixin is working.
 class CompositeStepMixinMaster(RunMasterBase):
-
     @defer.inlineCallbacks
     def setup_config(self, is_list_mkdir=True, is_list_rmdir=True):
         c = {}
@@ -86,16 +84,11 @@ class CompositeStepMixinMaster(RunMasterBase):
         from buildbot.plugins import schedulers
         from buildbot.process.factory import BuildFactory
 
-        c['schedulers'] = [
-            schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"])
-        ]
+        c['schedulers'] = [schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"])]
 
         f = BuildFactory()
-        f.addStep(TestCompositeMixinStep(is_list_mkdir=is_list_mkdir,
-                                         is_list_rmdir=is_list_rmdir))
-        c['builders'] = [
-            BuilderConfig(name="testy", workernames=["local1"], factory=f)
-        ]
+        f.addStep(TestCompositeMixinStep(is_list_mkdir=is_list_mkdir, is_list_rmdir=is_list_rmdir))
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
         yield self.setup_master(c)
 
@@ -118,10 +111,9 @@ class CompositeStepMixinMaster(RunMasterBase):
             "committer": "me@foo.com",
             "comments": "good stuff",
             "revision": "HEAD",
-            "project": "none"
+            "project": "none",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change,
-                                        wantLogs=True)
+        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], results.SUCCESS)
 

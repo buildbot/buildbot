@@ -64,12 +64,14 @@ class TestHttpAuthorization(unittest.TestCase):
 
     def test_decode(self):
         result = decode_http_authorization_header(
-            encode_http_authorization_header(b'name', b'pass'))
+            encode_http_authorization_header(b'name', b'pass')
+        )
         self.assertEqual(result, ('name', 'pass'))
 
         # password can contain a colon
         result = decode_http_authorization_header(
-            encode_http_authorization_header(b'name', b'pa:ss'))
+            encode_http_authorization_header(b'name', b'pa:ss')
+        )
         self.assertEqual(result, ('name', 'pa:ss'))
 
     def test_contains_no__basic(self):
@@ -94,7 +96,6 @@ class TestException(Exception):
 
 
 class FakeStep(object):
-
     "A fake master-side BuildStep that records its activities."
 
     def __init__(self):
@@ -168,7 +169,8 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
     def test_call_get_worker_info_success(self):
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo = mock.Mock()
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo.return_value = {
-            'test': 'data_about_worker'}
+            'test': 'data_about_worker'
+        }
 
         msg = {'op': 'get_worker_info', 'seq_number': 0}
         self.protocol.onMessage(msgpack.packb(msg), True)
@@ -211,69 +213,63 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @parameterized.expand([
         (
-            'start_command', {
+            'start_command',
+            {
                 'op': 'start_command',
                 'seq_number': 1,
                 'command_name': 'test_command',
-                'args': 'args'
+                'args': 'args',
             },
-            'command_id'
-        ), (
-            'start_command', {
+            'command_id',
+        ),
+        (
+            'start_command',
+            {
                 'op': 'start_command',
                 'seq_number': 1,
                 'command_id': '123',
                 'command_name': 'test_command',
             },
-            'args'
-        ), (
-            'start_command', {
-                'op': 'start_command',
-                'seq_number': 1,
-                'command_id': '123',
-                'args': 'args'
-            },
-            'command_name'
-        ), (
-            'interrupt_command', {
-                'op': 'interrupt_command',
-                'seq_number': 1,
-                'why': 'test_why'
-            },
-            'command_id'
-        ), (
-            'call_print', {
-                'op': 'print',
-                'seq_number': 1
-            },
-            'message'
-        ), (
-            'call_interrupt_command', {
-                'op': 'interrupt_command',
-                'seq_number': 1,
-                'command_id': '123'
-            },
-            'why'
-        ), (
-            'call_interrupt_command', {
-                'op': 'interrupt_command',
-                'seq_number': 1,
-                'why': 'test_reason'
-            },
-            'command_id'
-        )])
+            'args',
+        ),
+        (
+            'start_command',
+            {'op': 'start_command', 'seq_number': 1, 'command_id': '123', 'args': 'args'},
+            'command_name',
+        ),
+        (
+            'interrupt_command',
+            {'op': 'interrupt_command', 'seq_number': 1, 'why': 'test_why'},
+            'command_id',
+        ),
+        ('call_print', {'op': 'print', 'seq_number': 1}, 'message'),
+        (
+            'call_interrupt_command',
+            {'op': 'interrupt_command', 'seq_number': 1, 'command_id': '123'},
+            'why',
+        ),
+        (
+            'call_interrupt_command',
+            {'op': 'interrupt_command', 'seq_number': 1, 'why': 'test_reason'},
+            'command_id',
+        ),
+    ])
     @defer.inlineCallbacks
     def test_missing_parameter(self, command, msg, missing_parameter):
         self.protocol.onOpen()
         # we are not interested in list_send_message_args before onMessage was called by test
         self.list_send_message_args[:] = []
         yield self.send_message(msg)
-        self.assert_sent_messages([{
-            'op': 'response',
-            'seq_number': 1,
-            'result': '\'message did not contain obligatory "{0}" key\''.format(missing_parameter),
-            'is_exception': True
-        }])
+        self.assert_sent_messages([
+            {
+                'op': 'response',
+                'seq_number': 1,
+                'result': '\'message did not contain obligatory "{0}" key\''.format(
+                    missing_parameter
+                ),
+                'is_exception': True,
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_on_message_unrecognized_command(self):
@@ -283,19 +279,22 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         yield self.send_message({'op': 'test', 'seq_number': 0})
 
-        self.assert_sent_messages([{
-            'is_exception': True,
-            'op': 'response',
-            'result': 'Command test does not exist.',
-            'seq_number': 0
-        }])
+        self.assert_sent_messages([
+            {
+                'is_exception': True,
+                'op': 'response',
+                'result': 'Command test does not exist.',
+                'seq_number': 0,
+            }
+        ])
 
     def test_authorization_header(self):
         result = self.protocol.onConnecting('test')
 
-        self.assertEqual(result.headers, {
-            "Authorization": encode_http_authorization_header(b'test_username', b'test_password')
-        })
+        self.assertEqual(
+            result.headers,
+            {"Authorization": encode_http_authorization_header(b'test_username', b'test_password')},
+        )
 
     @defer.inlineCallbacks
     def test_call_print_success(self):
@@ -325,7 +324,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'seq_number': 0,
                 'command_id': '123',
                 'command_name': 'mkdir',
-                'args': {'paths': ['basedir/test_dir'], 'test1': 'value1', 'test2': 'value2'}
+                'args': {'paths': ['basedir/test_dir'], 'test1': 'value1', 'test2': 'value2'},
             })
             mkdir.assert_called()
 
@@ -343,7 +342,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'seq_number': 1,
                 'command_id': '123',
                 'command_name': 'mkdir',
-                'args': {'paths': [path], 'test1': 'value1', 'test2': 'value2'}
+                'args': {'paths': [path], 'test1': 'value1', 'test2': 'value2'},
             })
             mkdir.assert_called()
 
@@ -353,26 +352,18 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'args': [
                     ['rc', 1],
                     ['elapsed', 0],
-                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [123.0]]]
+                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [123.0]]],
                 ],
                 'command_id': '123',
-                'seq_number': 0
-            }, {
-                'op': 'complete',
-                'args': None,
-                'command_id': '123',
-                'seq_number': 1
+                'seq_number': 0,
             },
+            {'op': 'complete', 'args': None, 'command_id': '123', 'seq_number': 1},
             # response result is always None, even if the command failed
-            {'op': 'response', 'result': None, 'seq_number': 1}
+            {'op': 'response', 'result': None, 'seq_number': 1},
         ])
 
         def create_msg(seq_number):
-            return {
-                'op': 'response',
-                'seq_number': seq_number,
-                'result': None
-            }
+            return {'op': 'response', 'seq_number': seq_number, 'result': None}
 
         yield self.send_message(create_msg(0))
         yield self.send_message(create_msg(1))
@@ -393,14 +384,14 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             .update('stdout', 'hello\n')
             .update('rc', 0)
             .exit(0)
-            )
+        )
 
         yield self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
             'command_name': 'shell',
-            'args': {'command': ['echo'], 'workdir': workdir}
+            'args': {'command': ['echo'], 'workdir': workdir},
         })
 
         self.assert_sent_messages([
@@ -410,18 +401,13 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                     ['stdout', ['hello\n', [5], [123.0]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['header', ['headers\n', [7], [123.0]]]
+                    ['header', ['headers\n', [7], [123.0]]],
                 ],
                 'command_id': '123',
-                'seq_number': 0
-            }, {
-                'op': 'complete',
-                'args': None,
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'response', 'seq_number': 1, 'result': None
-            }
+                'seq_number': 0,
+            },
+            {'op': 'complete', 'args': None, 'command_id': '123', 'seq_number': 1},
+            {'op': 'response', 'seq_number': 1, 'result': None},
         ])
 
     @defer.inlineCallbacks
@@ -439,14 +425,14 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             .update('log', ('test_log3', ('hello3')))
             .update('rc', 0)
             .exit(0)
-            )
+        )
 
         yield self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
             'command_name': 'shell',
-            'args': {'command': ['echo'], 'workdir': workdir}
+            'args': {'command': ['echo'], 'workdir': workdir},
         })
 
         self.assert_sent_messages([
@@ -461,15 +447,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                     ['log', ['test_log3', ['hello3\n', [6], [123.0]]]],
                 ],
                 'command_id': '123',
-                'seq_number': 0
-            }, {
-                'op': 'complete',
-                'args': None,
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'response', 'seq_number': 1, 'result': None
-            }
+                'seq_number': 0,
+            },
+            {'op': 'complete', 'args': None, 'command_id': '123', 'seq_number': 1},
+            {'op': 'response', 'seq_number': 1, 'result': None},
         ])
 
     @defer.inlineCallbacks
@@ -483,14 +464,14 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             Expect(['echo'], workdir)
             .updates([('header', 'headers'), ('stdout', 'hello\n'), ('rc', 0)])
             .exit(0)
-            )
+        )
 
         yield self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
             'command_name': 'shell',
-            'args': {'command': ['echo'], 'workdir': workdir}
+            'args': {'command': ['echo'], 'workdir': workdir},
         })
 
         self.assert_sent_messages([
@@ -500,18 +481,13 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                     ['stdout', ['hello\n', [5], [123.0]]],
                     ['rc', 0],
                     ['elapsed', 0],
-                    ['header', ['headers\n', [7], [123.0]]]
+                    ['header', ['headers\n', [7], [123.0]]],
                 ],
                 'command_id': '123',
-                'seq_number': 0
-            }, {
-                'op': 'complete',
-                'args': None,
-                'command_id': '123',
-                'seq_number': 1
-            }, {
-                'op': 'response', 'seq_number': 1, 'result': None
-            }
+                'seq_number': 0,
+            },
+            {'op': 'complete', 'args': None, 'command_id': '123', 'seq_number': 1},
+            {'op': 'response', 'seq_number': 1, 'result': None},
         ])
 
     @defer.inlineCallbacks
@@ -533,10 +509,11 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'interrupt_command',
                 'seq_number': 1,
                 'command_id': '123',
-                'why': 'test_reason'
+                'why': 'test_reason',
             })
             mock_log.assert_any_call(
-                'asked to interrupt current command: {0}'.format('test_reason'))
+                'asked to interrupt current command: {0}'.format('test_reason')
+            )
             mock_log.assert_any_call(' .. but none was running')
 
         self.protocol.factory.command.doInterrupt.assert_not_called()
@@ -551,9 +528,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # except that we interrupt it)
         workdir = os.path.join('basedir', 'test_basedir')
         self.patch_runprocess(
-            Expect(['sleep', '10'], workdir)
-            .update('header', 'headers')
-            .update('wait', True)
+            Expect(['sleep', '10'], workdir).update('header', 'headers').update('wait', True)
         )
 
         yield self.send_message({
@@ -561,7 +536,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'seq_number': 1,
             'command_id': '123',
             'command_name': 'shell',
-            'args': {'command': ['sleep', '10'], 'workdir': workdir}
+            'args': {'command': ['sleep', '10'], 'workdir': workdir},
         })
 
         # wait a jiffy..
@@ -569,19 +544,13 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         reactor.callLater(0.01, d.callback, None)
         yield d
 
-        self.assert_sent_messages([
-            {
-                'op': 'response',
-                'seq_number': 1,
-                'result': None
-            }
-        ])
+        self.assert_sent_messages([{'op': 'response', 'seq_number': 1, 'result': None}])
 
         yield self.send_message({
             'op': 'interrupt_command',
             'seq_number': 1,
             'command_id': '123',
-            'why': 'test_reason'
+            'why': 'test_reason',
         })
 
         self.assert_sent_messages([
@@ -589,15 +558,14 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'op': 'update',
                 'seq_number': 0,
                 'command_id': '123',
-                'args': [['header', ['headers\n', [7], [123.0]]]]
-            }, {
+                'args': [['header', ['headers\n', [7], [123.0]]]],
+            },
+            {
                 'op': 'update',
                 'seq_number': 1,
                 'command_id': '123',
                 'args': [['rc', -1], ['header', ['killing\n', [7], [123.0]]]],
-            }, {
-                'op': 'complete', 'seq_number': 2, 'command_id': '123', 'args': None
-            }, {
-                'op': 'response', 'seq_number': 1, 'result': None
-            }
-    ])
+            },
+            {'op': 'complete', 'seq_number': 2, 'command_id': '123', 'args': None},
+            {'op': 'response', 'seq_number': 1, 'result': None},
+        ])

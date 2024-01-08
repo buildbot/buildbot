@@ -62,23 +62,33 @@ def _headerSet(headers):
 
 
 class HTTPStep(BuildStep):
-
     name = 'HTTPStep'
     description = 'Requesting'
     descriptionDone = 'Requested'
-    requestsParams = ["params", "data", "json", "headers",
-                      "cookies", "files", "auth",
-                      "timeout", "allow_redirects", "proxies",
-                      "hooks", "stream", "verify", "cert"]
+    requestsParams = [
+        "params",
+        "data",
+        "json",
+        "headers",
+        "cookies",
+        "files",
+        "auth",
+        "timeout",
+        "allow_redirects",
+        "proxies",
+        "hooks",
+        "stream",
+        "verify",
+        "cert",
+    ]
     renderables = requestsParams + ["method", "url"]
     session = None
 
-    def __init__(self, url, method,
-                 hide_request_headers=None, hide_response_headers=None,
-                 **kwargs):
+    def __init__(
+        self, url, method, hide_request_headers=None, hide_response_headers=None, **kwargs
+    ):
         if txrequests is None:
-            config.error(
-                "Need to install txrequest to use this step:\n\n pip install txrequests")
+            config.error("Need to install txrequest to use this step:\n\n pip install txrequests")
 
         if method not in ('POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'):
             config.error(f"Wrong method given: '{method}' is not known")
@@ -99,10 +109,7 @@ class HTTPStep(BuildStep):
         # create a new session if it doesn't exist
         self.session = getSession()
 
-        requestkwargs = {
-            'method': self.method,
-            'url': self.url
-        }
+        requestkwargs = {'method': self.method, 'url': self.url}
 
         for param in self.requestsParams:
             value = getattr(self, param, None)
@@ -153,7 +160,6 @@ class HTTPStep(BuildStep):
 
     @defer.inlineCallbacks
     def log_response(self, log, response):
-
         yield log.addHeader('Request Headers:\n')
         for k, v in response.request.headers.items():
             if k.casefold() in self.hide_request_headers:
@@ -179,36 +185,30 @@ class HTTPStep(BuildStep):
 
 
 class POST(HTTPStep):
-
     def __init__(self, url, **kwargs):
         super().__init__(url, method='POST', **kwargs)
 
 
 class GET(HTTPStep):
-
     def __init__(self, url, **kwargs):
         super().__init__(url, method='GET', **kwargs)
 
 
 class PUT(HTTPStep):
-
     def __init__(self, url, **kwargs):
         super().__init__(url, method='PUT', **kwargs)
 
 
 class DELETE(HTTPStep):
-
     def __init__(self, url, **kwargs):
         super().__init__(url, method='DELETE', **kwargs)
 
 
 class HEAD(HTTPStep):
-
     def __init__(self, url, **kwargs):
         super().__init__(url, method='HEAD', **kwargs)
 
 
 class OPTIONS(HTTPStep):
-
     def __init__(self, url, **kwargs):
         super().__init__(url, method='OPTIONS', **kwargs)

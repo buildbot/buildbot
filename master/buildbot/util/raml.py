@@ -37,14 +37,11 @@ def construct_mapping(loader, node):
     return OrderedDict(loader.construct_pairs(node))
 
 
-RamlLoader.add_constructor(
-    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-    construct_mapping)
+RamlLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
 RamlLoader.add_constructor('!include', construct_include)
 
 
 class RamlSpec:
-
     """
     This class loads the raml specification, and expose useful
     aspects of the spec
@@ -54,8 +51,7 @@ class RamlSpec:
     """
 
     def __init__(self):
-        fn = os.path.join(os.path.dirname(__file__),
-                          os.pardir, 'spec', 'api.raml')
+        fn = os.path.join(os.path.dirname(__file__), os.pardir, 'spec', 'api.raml')
         with open(fn, encoding='utf-8') as f:
             self.api = yaml.load(f, Loader=RamlLoader)
 
@@ -118,7 +114,7 @@ class RamlSpec:
         ACTIONS_MAGIC = '/actions/'
         for k, v in endpoint.items():
             if k.startswith(ACTIONS_MAGIC):
-                k = k[len(ACTIONS_MAGIC):]
+                k = k[len(ACTIONS_MAGIC) :]
                 v = v['post']
                 # simplify the raml tree for easier processing
                 v['body'] = v['body']['application/json'].get('properties', {})

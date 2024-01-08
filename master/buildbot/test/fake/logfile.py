@@ -20,7 +20,6 @@ from buildbot.util import lineboundaries
 
 
 class FakeLogFile:
-
     def __init__(self, name):
         self.name = name
         self.header = ''

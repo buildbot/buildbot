@@ -16,7 +16,6 @@
 BuildSteps that are specific to the Twisted source tree
 """
 
-
 import re
 
 from twisted.internet import defer
@@ -33,7 +32,6 @@ from buildbot.steps import shell
 
 
 class HLint(buildstep.ShellMixin, buildstep.BuildStep):
-
     """I run a 'lint' checker over a set of .xhtml files. Any deviations
     from recommended style is flagged and put in the output log.
 
@@ -53,8 +51,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
         super().__init__(**kwargs)
         self.python = python
         self.warningLines = []
-        self.addLogObserver(
-            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     @defer.inlineCallbacks
     def run(self):
@@ -108,13 +105,14 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
         super().__init__()
         self.numTests = 0
         self.finished = False
-        self.counts = {'total': None,
-                       'failures': 0,
-                       'errors': 0,
-                       'skips': 0,
-                       'expectedFailures': 0,
-                       'unexpectedSuccesses': 0,
-                       }
+        self.counts = {
+            'total': None,
+            'failures': 0,
+            'errors': 0,
+            'skips': 0,
+            'expectedFailures': 0,
+            'unexpectedSuccesses': 0,
+        }
 
     def outLineReceived(self, line):
         # different versions of Twisted emit different per-test lines with
@@ -138,9 +136,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
         out = re.search(r'Ran (\d+) tests', line)
         if out:
             self.counts['total'] = int(out.group(1))
-        if (line.startswith("OK") or
-            line.startswith("FAILED ") or
-                line.startswith("PASSED")):
+        if line.startswith("OK") or line.startswith("FAILED ") or line.startswith("PASSED"):
             # the extra space on FAILED_ is to distinguish the overall
             # status from an individual test which failed. The lack of a
             # space on the OK is because it may be printed without any
@@ -170,7 +166,6 @@ UNSPECIFIED = ()  # since None is a valid choice
 
 
 class Trial(buildstep.ShellMixin, buildstep.BuildStep):
-
     """
     There are some class attributes which may be usefully overridden
     by subclasses. 'trialMode' and 'trialArgs' can influence the trial
@@ -203,13 +198,21 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     description = 'testing'
     descriptionDone = 'tests'
 
-    def __init__(self, reactor=UNSPECIFIED, python=None, trial=None,
-                 testpath=UNSPECIFIED,
-                 tests=None, testChanges=None,
-                 recurse=None, randomly=None,
-                 trialMode=None, trialArgs=None, jobs=None,
-                 **kwargs):
-
+    def __init__(
+        self,
+        reactor=UNSPECIFIED,
+        python=None,
+        trial=None,
+        testpath=UNSPECIFIED,
+        tests=None,
+        testChanges=None,
+        recurse=None,
+        randomly=None,
+        trialMode=None,
+        trialArgs=None,
+        jobs=None,
+        **kwargs,
+    ):
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
@@ -393,8 +396,10 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         if counts['skips']:
             desc_parts += [str(counts['skips']), counts['skips'] == 1 and "skip" or "skips"]
         if counts['expectedFailures']:
-            desc_parts += [str(counts['expectedFailures']),
-                           "todo" if counts['expectedFailures'] == 1 else "todos"]
+            desc_parts += [
+                str(counts['expectedFailures']),
+                "todo" if counts['expectedFailures'] == 1 else "todos",
+            ]
 
         if self.reactor:
             desc_parts.append(self.rtext('({})'))
@@ -415,8 +420,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
                 # no source
                 warning = line  # TODO: consider stripping basedir prefix here
                 self.warnings[warning] = self.warnings.get(warning, 0) + 1
-            elif (line.find(" DeprecationWarning: ") != -1 or
-                  line.find(" UserWarning: ") != -1):
+            elif line.find(" DeprecationWarning: ") != -1 or line.find(" UserWarning: ") != -1:
                 # next line is the source
                 warning = line + "\n" + (yield)[1] + "\n"
                 self.warnings[warning] = self.warnings.get(warning, 0) + 1

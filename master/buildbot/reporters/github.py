@@ -41,10 +41,17 @@ HOSTED_BASE_URL = 'https://api.github.com'
 class GitHubStatusPush(ReporterBase):
     name = "GitHubStatusPush"
 
-    def checkConfig(self, token, context=None, baseURL=None, verbose=False,
-                    debug=None, verify=None, generators=None,
-                    **kwargs):
-
+    def checkConfig(
+        self,
+        token,
+        context=None,
+        baseURL=None,
+        verbose=False,
+        debug=None,
+        verify=None,
+        generators=None,
+        **kwargs,
+    ):
         if generators is None:
             generators = self._create_default_generators()
 
@@ -52,9 +59,17 @@ class GitHubStatusPush(ReporterBase):
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(self, token, context=None, baseURL=None, verbose=False,
-                        debug=None, verify=None, generators=None,
-                        **kwargs):
+    def reconfigService(
+        self,
+        token,
+        context=None,
+        baseURL=None,
+        verbose=False,
+        debug=None,
+        verify=None,
+        generators=None,
+        **kwargs,
+    ):
         token = yield self.renderSecrets(token)
         self.debug = debug
         self.verify = verify
@@ -72,11 +87,12 @@ class GitHubStatusPush(ReporterBase):
             baseURL = baseURL[:-1]
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers={
-                'Authorization': 'token ' + token,
-                'User-Agent': 'Buildbot'
-            },
-            debug=self.debug, verify=self.verify)
+            self.master,
+            baseURL,
+            headers={'Authorization': 'token ' + token, 'User-Agent': 'Buildbot'},
+            debug=self.debug,
+            verify=self.verify,
+        )
 
     def setup_context(self, context):
         return context or Interpolate('buildbot/%(prop:buildername)s')
@@ -88,13 +104,22 @@ class GitHubStatusPush(ReporterBase):
 
         return [
             BuildRequestGenerator(formatter=pending_formatter),
-            BuildStartEndStatusGenerator(start_formatter=start_formatter,
-                                         end_formatter=end_formatter)
+            BuildStartEndStatusGenerator(
+                start_formatter=start_formatter, end_formatter=end_formatter
+            ),
         ]
 
-    def createStatus(self,
-                     repo_user, repo_name, sha, state, target_url=None,
-                     context=None, issue=None, description=None):
+    def createStatus(
+        self,
+        repo_user,
+        repo_name,
+        sha,
+        state,
+        target_url=None,
+        context=None,
+        issue=None,
+        description=None,
+    ):
         """
         :param repo_user: GitHub user or organization
         :param repo_name: Name of the repository
@@ -122,8 +147,8 @@ class GitHubStatusPush(ReporterBase):
             payload['context'] = context
 
         return self._http.post(
-            '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
-            json=payload)
+            '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]), json=payload
+        )
 
     def is_status_2xx(self, code):
         return code // 100 == 2
@@ -169,7 +194,7 @@ class GitHubStatusPush(ReporterBase):
                 SKIPPED: 'success',
                 EXCEPTION: 'error',
                 RETRY: 'pending',
-                CANCELLED: 'error'
+                CANCELLED: 'error',
             }.get(build['results'], 'error')
         else:
             state = 'pending'
@@ -197,22 +222,26 @@ class GitHubStatusPush(ReporterBase):
             if not sha:
                 log.msg(
                     f"Skipped status update for codebase {sourcestamp['codebase']}, "
-                    f"context '{context}', issue {issue}.")
+                    f"context '{context}', issue {issue}."
+                )
                 continue
 
             try:
                 if self.verbose:
                     log.msg(
-                        f"Updating github status: repo_owner={repo_owner}, repo_name={repo_name}")
+                        f"Updating github status: repo_owner={repo_owner}, repo_name={repo_name}"
+                    )
 
-                response = yield self.createStatus(repo_user=repo_owner,
-                                                   repo_name=repo_name,
-                                                   sha=sha,
-                                                   state=state,
-                                                   target_url=build['url'],
-                                                   context=context,
-                                                   issue=issue,
-                                                   description=description)
+                response = yield self.createStatus(
+                    repo_user=repo_owner,
+                    repo_name=repo_name,
+                    sha=sha,
+                    state=state,
+                    target_url=build['url'],
+                    context=context,
+                    issue=issue,
+                    description=description,
+                )
 
                 if not response:
                     # the implementation of createStatus refused to post update due to missing data
@@ -224,7 +253,8 @@ class GitHubStatusPush(ReporterBase):
                 if self.verbose:
                     log.msg(
                         f'Updated status with "{state}" for {repo_owner}/{repo_name} '
-                        f'at {sha}, context "{context}", issue {issue}.')
+                        f'at {sha}, context "{context}", issue {issue}.'
+                    )
             except Exception as e:
                 if response:
                     content = yield response.content()
@@ -233,9 +263,12 @@ class GitHubStatusPush(ReporterBase):
                     content = code = "n/a"
                 log.err(
                     e,
-                    (f'Failed to update "{state}" for {repo_owner}/{repo_name} '
-                    f'at {sha}, context "{context}", issue {issue}. '
-                    f'http {code}, {content}'))
+                    (
+                        f'Failed to update "{state}" for {repo_owner}/{repo_name} '
+                        f'at {sha}, context "{context}", issue {issue}. '
+                        f'http {code}, {content}'
+                    ),
+                )
 
 
 class GitHubCommentPush(GitHubStatusPush):
@@ -249,8 +282,9 @@ class GitHubCommentPush(GitHubStatusPush):
         end_formatter = MessageFormatterRenderable('Build done.')
 
         return [
-            BuildStartEndStatusGenerator(start_formatter=start_formatter,
-                                         end_formatter=end_formatter)
+            BuildStartEndStatusGenerator(
+                start_formatter=start_formatter, end_formatter=end_formatter
+            )
         ]
 
     @defer.inlineCallbacks
@@ -261,9 +295,17 @@ class GitHubCommentPush(GitHubStatusPush):
         yield super().sendMessage(reports)
 
     @defer.inlineCallbacks
-    def createStatus(self,
-                     repo_user, repo_name, sha, state, target_url=None,
-                     context=None, issue=None, description=None):
+    def createStatus(
+        self,
+        repo_user,
+        repo_name,
+        sha,
+        state,
+        target_url=None,
+        context=None,
+        issue=None,
+        description=None,
+    ):
         """
         :param repo_user: GitHub user or organization
         :param repo_name: Name of the repository
@@ -281,7 +323,8 @@ class GitHubCommentPush(GitHubStatusPush):
 
         if issue is None:
             log.msg(
-                f'Skipped status update for repo {repo_name} sha {sha} as issue is not specified')
+                f'Skipped status update for repo {repo_name} sha {sha} as issue is not specified'
+            )
             return None
 
         url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])

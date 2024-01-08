@@ -15,7 +15,6 @@
 
 
 class State:
-
     """
     A simple class you can use to keep track of state throughout
     a test.  Just assign whatever you want to its attributes.  Its

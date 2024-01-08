@@ -19,7 +19,6 @@ from buildbot.test.util.db import get_trial_parallel_from_cwd
 
 
 class Tests(TestCase):
-
     def test_unknown(self):
         self.assertIsNone(get_trial_parallel_from_cwd(""))
         self.assertIsNone(get_trial_parallel_from_cwd("/"))

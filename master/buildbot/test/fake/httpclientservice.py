@@ -32,7 +32,6 @@ log = Logger()
 
 @implementer(IHttpResponse)
 class ResponseWrapper:
-
     def __init__(self, code, content, url=None):
         self._content = content
         self._code = code
@@ -55,19 +54,21 @@ class ResponseWrapper:
 
 
 class HTTPClientService(service.SharedService):
-    """ HTTPClientService is a SharedService class that fakes http requests for buildbot http
-        service testing.
+    """HTTPClientService is a SharedService class that fakes http requests for buildbot http
+    service testing.
 
-        This class is named the same as the real HTTPClientService so that it could replace the real
-        class in tests. If a test creates this class earlier than the real one, fake is going to be
-        used until the master is destroyed. Whenever a master wants to create real
-        HTTPClientService, it will find an existing fake service with the same name and use it
-        instead.
+    This class is named the same as the real HTTPClientService so that it could replace the real
+    class in tests. If a test creates this class earlier than the real one, fake is going to be
+    used until the master is destroyed. Whenever a master wants to create real
+    HTTPClientService, it will find an existing fake service with the same name and use it
+    instead.
     """
+
     quiet = False
 
-    def __init__(self, base_url, auth=None, headers=None, debug=None, verify=None,
-                 skipEncoding=None):
+    def __init__(
+        self, base_url, auth=None, headers=None, debug=None, verify=None, skipEncoding=None
+    ):
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
         self._base_url = base_url
@@ -86,8 +87,11 @@ class HTTPClientService(service.SharedService):
     @defer.inlineCallbacks
     def getService(cls, master, case, *args, **kwargs):
         def assertNotCalled(self, *_args, **_kwargs):
-            case.fail(f"HTTPClientService called with *{_args!r}, **{_kwargs!r} "
-                      f"while should be called *{args!r} **{kwargs!r}")
+            case.fail(
+                f"HTTPClientService called with *{_args!r}, **{_kwargs!r} "
+                f"while should be called *{args!r} **{kwargs!r}"
+            )
+
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
 
         service = yield super().getService(master, *args, **kwargs)
@@ -111,7 +115,7 @@ class HTTPClientService(service.SharedService):
         content_json=None,
         files=None,
         verify=None,
-        cert=None
+        cert=None,
     ):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
@@ -130,13 +134,14 @@ class HTTPClientService(service.SharedService):
             "content": content,
             "files": files,
             "verify": verify,
-            "cert": cert
+            "cert": cert,
         })
         return None
 
     def assertNoOutstanding(self):
-        self.case.assertEqual(0, len(self._expected),
-                              f"expected more http requests:\n {self._expected!r}")
+        self.case.assertEqual(
+            0, len(self._expected), f"expected more http requests:\n {self._expected!r}"
+        )
 
     def _doRequest(
         self,
@@ -149,7 +154,7 @@ class HTTPClientService(service.SharedService):
         files=None,
         timeout=None,
         verify=None,
-        cert=None
+        cert=None,
     ):
         if ep.startswith('http://') or ep.startswith('https://'):
             pass
@@ -157,8 +162,13 @@ class HTTPClientService(service.SharedService):
             assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
 
         if not self.quiet:
-            log.debug("{method} {ep} {params!r} <- {data!r}",
-                      method=method, ep=ep, params=params, data=data or json)
+            log.debug(
+                "{method} {ep} {params!r} <- {data!r}",
+                method=method,
+                ep=ep,
+                params=params,
+                data=data or json,
+            )
         if json is not None:
             # ensure that the json is really jsonable
             jsonmodule.dumps(json, default=toJson)
@@ -168,7 +178,8 @@ class HTTPClientService(service.SharedService):
             raise AssertionError(
                 f"Not expecting a request, while we got: method={method!r}, ep={ep!r}, "
                 f"params={params!r}, headers={headers!r}, data={data!r}, json={json!r}, "
-                f"files={files!r}")
+                f"files={files!r}"
+            )
         expect = self._expected.pop(0)
         # pylint: disable=too-many-boolean-expressions
         if (
@@ -205,8 +216,13 @@ class HTTPClientService(service.SharedService):
                 f"cert={cert!r}"
             )
         if not self.quiet:
-            log.debug("{method} {ep} -> {code} {content!r}",
-                      method=method, ep=ep, code=expect['code'], content=expect['content'])
+            log.debug(
+                "{method} {ep} -> {code} {content!r}",
+                method=method,
+                ep=ep,
+                code=expect['code'],
+                content=expect['content'],
+            )
         return defer.succeed(ResponseWrapper(expect['code'], expect['content']))
 
     # lets be nice to the auto completers, and don't generate that code

@@ -35,23 +35,18 @@ def mkconfig(**kwargs):
         "config": 'master.cfg',
         "db": 'sqlite:///state.sqlite',
         "basedir": os.path.abspath('basedir'),
-        "quiet": False, **{
-            'no-logrotate': False,
-            'log-size': 10000000,
-            'log-count': 10
-        }
+        "quiet": False,
+        **{'no-logrotate': False, 'log-size': 10000000, 'log-count': 10},
     }
     config.update(kwargs)
     return config
 
 
 class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
-
     def setUp(self):
         # createMaster is decorated with @in_reactor, so strip that decoration
         # since the master is already running
-        self.patch(create_master, 'createMaster',
-                   create_master.createMaster._orig)
+        self.patch(create_master, 'createMaster', create_master.createMaster._orig)
         self.setUpStdoutAssertions()
 
     # tests
@@ -60,16 +55,14 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
     def do_test_createMaster(self, config):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
-        functions = ['makeBasedir', 'makeTAC', 'makeSampleConfig',
-                     'createDB']
+        functions = ['makeBasedir', 'makeTAC', 'makeSampleConfig', 'createDB']
         repls = {}
         calls = []
         for fn in functions:
             repl = repls[fn] = mock.Mock(name=fn)
             repl.side_effect = lambda config, fn=fn: calls.append(fn)
             self.patch(create_master, fn, repl)
-        repls['createDB'].side_effect = (lambda config:
-                                         calls.append(fn) or defer.succeed(None))
+        repls['createDB'].side_effect = lambda config: calls.append(fn) or defer.succeed(None)
         rc = yield create_master.createMaster(config)
 
         self.assertEqual(rc, 0)
@@ -90,10 +83,13 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertInStdout('buildmaster configured in')
 
 
-class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
-                                misc.StdoutAssertionsMixin, TestReactorMixin,
-                                unittest.TestCase):
-
+class TestCreateMasterFunctions(
+    www.WwwTestMixin,
+    dirs.DirsMixin,
+    misc.StdoutAssertionsMixin,
+    TestReactorMixin,
+    unittest.TestCase,
+):
     def setUp(self):
         self.setup_test_reactor()
         self.setUpDirs('test')
@@ -113,8 +109,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
             content = f.read()
         self.assertNotIn(str, content)
 
-    def assertDBSetup(self, basedir=None, db_url='sqlite:///state.sqlite',
-                      verbose=True):
+    def assertDBSetup(self, basedir=None, db_url='sqlite:///state.sqlite', verbose=True):
         # mock out the database setup
         self.db = mock.Mock()
         self.db.setup.side_effect = lambda *a, **k: defer.succeed(None)
@@ -130,12 +125,8 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                 "db_url": self.DBConnector.call_args[0][0].mkconfig.db['db_url'],
                 "verbose": self.db.setup.call_args[1]['verbose'],
                 "check_version": self.db.setup.call_args[1]['check_version'],
-            }, {
-                "basedir": self.basedir,
-                "db_url": db_url,
-                "verbose": True,
-                "check_version": False
-            }
+            },
+            {"basedir": self.basedir, "db_url": db_url, "verbose": True, "check_version": False},
         )
 
     # tests
@@ -168,8 +159,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_no_logrotate(self):
-        create_master.makeTAC(
-            mkconfig(basedir='test', **{'no-logrotate': True}))
+        create_master.makeTAC(mkconfig(basedir='test', **{'no-logrotate': True}))
         self.assertNotInTacFile("import Log")
         self.assertWasQuiet()
 
@@ -180,8 +170,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
 
     def test_makeTAC_str_log_count(self):
         with self.assertRaises(TypeError):
-            create_master.makeTAC(mkconfig(basedir='test',
-                                  **{'log-count': '30'}))
+            create_master.makeTAC(mkconfig(basedir='test', **{'log-count': '30'}))
 
     def test_makeTAC_none_log_count(self):
         create_master.makeTAC(mkconfig(basedir='test', **{'log-count': None}))
@@ -195,16 +184,14 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
 
     def test_makeTAC_str_log_size(self):
         with self.assertRaises(TypeError):
-            create_master.makeTAC(mkconfig(basedir='test',
-                                  **{'log-size': '3000'}))
+            create_master.makeTAC(mkconfig(basedir='test', **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write('WRONG')
         create_master.makeTAC(mkconfig(basedir='test'))
         self.assertInTacFile("WRONG")
-        self.assertTrue(os.path.exists(
-            os.path.join('test', 'buildbot.tac.new')))
+        self.assertTrue(os.path.exists(os.path.join('test', 'buildbot.tac.new')))
         self.assertInStdout('not touching existing buildbot.tac')
 
     def test_makeTAC_existing_incorrect_quiet(self):
@@ -217,19 +204,16 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_makeTAC_existing_correct(self):
         create_master.makeTAC(mkconfig(basedir='test', quiet=True))
         create_master.makeTAC(mkconfig(basedir='test'))
-        self.assertFalse(os.path.exists(
-            os.path.join('test', 'buildbot.tac.new')))
+        self.assertFalse(os.path.exists(os.path.join('test', 'buildbot.tac.new')))
         self.assertInStdout('and is correct')
 
     def test_makeSampleConfig(self):
         create_master.makeSampleConfig(mkconfig(basedir='test'))
-        self.assertTrue(os.path.exists(
-            os.path.join('test', 'master.cfg.sample')))
+        self.assertTrue(os.path.exists(os.path.join('test', 'master.cfg.sample')))
         self.assertInStdout('creating ')
 
     def test_makeSampleConfig_db(self):
-        create_master.makeSampleConfig(mkconfig(basedir='test', db='XXYYZZ',
-                                                quiet=True))
+        create_master.makeSampleConfig(mkconfig(basedir='test', db='XXYYZZ', quiet=True))
         with open(os.path.join('test', 'master.cfg.sample'), 'rt', encoding='utf-8') as f:
             self.assertIn("XXYYZZ", f.read())
         self.assertWasQuiet()
