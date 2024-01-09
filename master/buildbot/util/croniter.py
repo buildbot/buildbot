@@ -95,7 +95,7 @@ class croniter:
 
     MAX_VALUE_PER_INDEX = (60, 24, 31, 12, 7, 60)
 
-    bad_length = 'Exactly 5 or 6 columns has to be specified for iteratorexpression.'
+    bad_length = 'Exactly 5 or 6 columns has to be specified for iterator expression.'
 
     def __init__(self, expr_format, start_time=time()):
         if isinstance(start_time, datetime):

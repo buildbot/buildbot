@@ -99,7 +99,7 @@ class TestStatsServicesConfiguration(TestStatsServicesBase):
         ]
         for s in new_storage_backends:
             if s not in registeredStorageServices:
-                raise AssertionError("reconfigService failed.Not all storage services registered.")
+                raise AssertionError("reconfigService failed. Not all storage services registered.")
 
 
 class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
