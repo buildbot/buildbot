@@ -102,7 +102,7 @@ ruamel.yaml==0.18.5
 ruamel.yaml.clib==0.2.8
 s3transfer==0.10.0
 scandir==1.10.0
-service-identity==23.1.0
+service-identity==24.1.0
 setuptools-trial==0.6.0
 singledispatch==4.1.0
 six==1.16.0
