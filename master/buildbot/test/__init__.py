@@ -22,11 +22,11 @@ import setuptools  # force import setuptools before any other distutils imports
 from sqlalchemy.exc import RemovedIn20Warning
 
 from buildbot import monkeypatches
-from buildbot.test.util.warnings import (
-    assertProducesWarning,  # noqa pylint: disable=wrong-import-position
+from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-position
+    assertProducesWarning,
 )
-from buildbot.test.util.warnings import (
-    assertProducesWarnings,  # noqa pylint: disable=wrong-import-position
+from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-position
+    assertProducesWarnings,
 )
 from buildbot.warnings import DeprecatedApiWarning  # noqa pylint: disable=wrong-import-position
 
