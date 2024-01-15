@@ -698,7 +698,7 @@ setup_args['tests_require'] = test_deps
 setup_args['extras_require'] = {
     'test': [
         'setuptools_trial',
-        'isort',
+        'ruff',
         # spellcheck introduced in version 1.4.0
         'pylint<1.7.0',
         'pyenchant',

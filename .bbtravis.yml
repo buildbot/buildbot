@@ -22,7 +22,7 @@ matrix:
   include:
     # flake8, isort, pylint, docs first as they're more likely to find issues
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=isort
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
@@ -181,11 +181,11 @@ script:
       export PATH=/tmp/bbvenv/bin/:$PATH
       make flake8
 
-  - title: isort
-    condition: TESTS == "isort"
+  - title: ruff
+    condition: TESTS == "ruff"
     cmd:  |
       export PATH=/tmp/bbvenv/bin/:$PATH
-      isort --check -df `git ls-files |grep '.py$'`
+      ruff check `git ls-files |grep '.py$'`
 
   # Build documentation
   - title: docs

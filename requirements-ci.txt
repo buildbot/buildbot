@@ -11,6 +11,7 @@ flake8==7.0.0;  python_version >= "3.8.1"
 msgpack==1.0.7
 Markdown==3.5.2
 pylint==3.0.3
+ruff==0.1.13
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -48,6 +49,7 @@ docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
 extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
+future==0.18.3
 graphql-core==3.3.0a3; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
@@ -59,6 +61,7 @@ importlib-metadata==7.0.1
 importlib-resources==6.1.1;  python_version < "3.9"
 incremental==22.10.0
 ipaddress==1.0.23
+iso8601==2.1.0
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
 Jinja2==3.1.3
 jmespath==1.0.1
@@ -82,8 +85,8 @@ Pillow==10.2.0
 platformdirs==4.1.0
 psutil==5.9.7
 pyaml==23.12.0
-pyasn1-modules==0.3.0
 pyasn1==0.5.1
+pyasn1-modules==0.3.0
 pycodestyle==2.11.1;  python_version >= "3.8.1"
 pycparser==2.21
 pyenchant==3.2.2
@@ -131,4 +134,5 @@ websocket-client==1.7.0
 Werkzeug==3.0.1
 wrapt==1.16.0
 xmltodict==0.13.0
+zipp==3.17.0
 zope.interface==6.1

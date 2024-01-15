@@ -178,14 +178,14 @@ check_relnotes || warning "$REVRANGE does not add release notes"
 
 if [ ${#py_files[@]} -ne 0 ]; then
     status "checking import module convention in modified files"
-    if [[ -z `command -v isort` ]]; then
-        warning "isort is not installed"
+    if [[ -z `command -v ruff` ]]; then
+        warning "ruff is not installed"
     else
-        if ! isort ${py_files[@]}; then
-            warning "unable to run isort on modified files"
+        if ! ruff --fix ${py_files[@]}; then
+            warning "unable to run ruff on modified files"
         else
             if ! git diff --quiet --exit-code ${py_files[@]}; then
-                not_ok "isort made changes"
+                not_ok "ruff made changes"
             fi
         fi
     fi
