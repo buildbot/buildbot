@@ -51,7 +51,7 @@ funcsigs==1.0.2
 graphql-core==3.3.0a3; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
-hvac==1.2.1
+hvac==2.1.0
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
