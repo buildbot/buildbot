@@ -7,7 +7,7 @@ buildbot-www==3.10.1
 autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
 boto3==1.34.19
-flake8==6.1.0;  python_version >= "3.8.1"
+flake8==7.0.0;  python_version >= "3.8.1"
 msgpack==1.0.7
 Markdown==3.5.1
 pylint==3.0.3
