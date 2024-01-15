@@ -15,7 +15,6 @@
 
 
 from packaging.version import parse as parse_version
-
 from twisted import __version__ as twistedVersion
 from twisted.internet import defer
 

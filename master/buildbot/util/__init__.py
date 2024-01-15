@@ -27,7 +27,6 @@ from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 
 import dateutil.tz
-
 from twisted.python import reflect
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version

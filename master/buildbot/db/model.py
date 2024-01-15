@@ -17,7 +17,6 @@
 import alembic
 import alembic.config
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python import util

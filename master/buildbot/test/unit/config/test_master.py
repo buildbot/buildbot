@@ -20,7 +20,6 @@ import textwrap
 from unittest import mock
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implementer

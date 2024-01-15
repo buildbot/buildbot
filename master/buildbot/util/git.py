@@ -16,7 +16,6 @@
 import re
 
 from packaging.version import parse as parse_version
-
 from twisted.internet import defer
 from twisted.python import log
 

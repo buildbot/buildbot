@@ -18,7 +18,6 @@ import os
 from unittest import mock
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest

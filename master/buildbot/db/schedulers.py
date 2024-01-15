@@ -15,7 +15,6 @@
 
 import sqlalchemy as sa
 import sqlalchemy.exc
-
 from twisted.internet import defer
 
 from buildbot.db import NULL

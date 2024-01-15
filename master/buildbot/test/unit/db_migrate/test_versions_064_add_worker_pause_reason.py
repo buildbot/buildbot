@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-
 from twisted.trial import unittest
 
 from buildbot.db.types.json import JsonObject

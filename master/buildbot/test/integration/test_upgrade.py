@@ -25,7 +25,6 @@ import sqlalchemy as sa
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from sqlalchemy.exc import DatabaseError
-
 from twisted.internet import defer
 from twisted.python import util
 from twisted.trial import unittest

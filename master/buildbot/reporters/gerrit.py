@@ -20,7 +20,6 @@ import time
 import warnings
 
 from packaging.version import parse as parse_version
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol

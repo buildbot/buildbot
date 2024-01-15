@@ -15,7 +15,6 @@
 
 
 import jinja2
-
 from twisted.internet import defer
 
 from buildbot import config

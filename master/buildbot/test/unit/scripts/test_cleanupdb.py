@@ -17,7 +17,6 @@ import os
 import textwrap
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.trial import unittest
 

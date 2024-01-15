@@ -24,7 +24,6 @@ import sys
 import textwrap
 
 import sqlalchemy as sa
-
 from twisted.python import reflect
 from twisted.python import usage
 

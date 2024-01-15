@@ -18,7 +18,6 @@ import os
 import queue
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 
 from buildbot import config as config_module

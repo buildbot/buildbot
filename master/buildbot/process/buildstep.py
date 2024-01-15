@@ -41,6 +41,7 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.process.locks import get_real_locks_from_accesses
+
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import ALL_RESULTS

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-
 from twisted.trial import unittest
 
 from buildbot.test.util import config

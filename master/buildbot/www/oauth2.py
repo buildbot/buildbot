@@ -22,7 +22,6 @@ from urllib.parse import urlencode
 
 import jinja2
 import requests
-
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.logger import Logger

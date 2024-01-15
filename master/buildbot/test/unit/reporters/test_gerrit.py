@@ -19,7 +19,6 @@ from unittest.mock import call
 
 from packaging.version import parse as parse_version
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor

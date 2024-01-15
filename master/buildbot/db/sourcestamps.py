@@ -17,7 +17,6 @@
 import base64
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.python import log
 

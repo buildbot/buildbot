@@ -17,7 +17,6 @@
 import itertools
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.python import log
 

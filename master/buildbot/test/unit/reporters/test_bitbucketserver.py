@@ -17,7 +17,6 @@ import datetime
 from unittest.mock import Mock
 
 from dateutil.tz import tzutc
-
 from twisted.internet import defer
 from twisted.trial import unittest
 

@@ -16,7 +16,6 @@
 from unittest import mock
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet.task import deferLater
