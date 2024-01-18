@@ -143,13 +143,13 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if ! $quick && ! $no_js; then
-    for module in www/base www/console_view www/grid_view www/waterfall_view www/codeparameter www/wsgi_dashboards;
+    for module in www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/badges;
     do
-        status "running 'setup.py develop' for $module"
-        if ! (cd $module; python setup.py develop >/dev/null ); then
-            warning "$module/setup.py failed; retrying with cleared libs/"
-            rm -rf "$module/libs"
-            (cd $module; python setup.py develop >/dev/null ) || not_ok "$module/setup.py failed"
+        status "running 'pip install -e' for $module"
+        if ! (cd $module; pip install -e . >/dev/null ); then
+            warning "pip install -e for $module failed; retrying with cleared build/ dist/"
+            rm -rf "$module/build" "$module/dist"
+            (cd $module; pip install -e . >/dev/null ) || not_ok "$module/setup.py failed"
         fi
     done
 else

@@ -67,7 +67,7 @@ flake8:
 
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
-	$(PIP) install wheel buildbot
+	$(PIP) install build wheel buildbot
 	for i in $(WWW_DEP_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile; $(YARN) run build); done
 
@@ -84,7 +84,7 @@ frontend: frontend_deps
 # build frontend wheels for installation elsewhere
 frontend_wheels: frontend_deps
 	for i in pkg $(WWW_PKGS); \
-		do (cd $$i; $(PYTHON) setup.py bdist_wheel || exit 1) || exit 1; done
+		do (cd $$i; $(PYTHON) -m build --no-isolation --wheel || exit 1) || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests: frontend_deps
@@ -114,7 +114,7 @@ docker-buildbot-master:
 
 $(VENV_NAME):
 	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
-	$(PIP) install -U pip setuptools wheel
+	$(PIP) install -U build pip setuptools wheel
 
 # helper for virtualenv creation
 virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4

@@ -39,15 +39,26 @@ If you plan to use TLS or SSL in master configuration (e.g. to fetch resources o
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot master and ``buildbot-worker`` are installed using the standard Python `distutils <http://docs.python.org/library/distutils.html>`_ process.
-For either component, after unpacking the tarball, the process is:
+Use pip to install ``buildbot`` master or ``buildbot-worker`` using tarball.
+
+.. note::
+
+    Support for installation using ``setup.py`` has been discontinued due to the deprecation of support in the ``distutils`` and ``setuptools`` packages.
+    For more details, see `Why you shouldn't invoke setup.py directly <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+
+If you have a tarball file named buildbot.tar.gz in your current directory, you can install it using:
 
 .. code-block:: bash
 
-    python setup.py build
-    python setup.py install
+    pip install buildbot.tar.gz
 
-where the install step may need to be done as root.
+Alternatively, you can provide a URL if the tarball is hosted online. Make sure to replace the URL with the actual URL of tarball you want to install.
+
+.. code-block:: bash
+
+    pip install https://github.com/buildbot/buildbot/releases/download/v3.10.1/buildbot-3.10.1.tar.gz
+
+Installation may need to be done as root.
 This will put the bulk of the code in somewhere like :file:`/usr/lib/pythonx.y/site-packages/buildbot`.
 It will also install the :command:`buildbot` command-line tool in :file:`/usr/bin/buildbot`.
 

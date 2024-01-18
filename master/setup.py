@@ -22,54 +22,35 @@ Standard setup script.
 from setuptools import setup  # isort:skip
 
 
-import glob
 import inspect
 import os
 import sys
-from distutils.command.install_data import install_data
-from distutils.command.sdist import sdist
+
+from setuptools import Command
+from setuptools.command.sdist import sdist
 
 from buildbot import version
 
 BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
 
-def include(d, e):
-    """Generate a pair of (directory, file-list) for installation.
+class install_data_twisted(Command):
+    """make sure VERSION file is installed in package."""
 
-    'd' -- A directory
-    'e' -- A glob pattern"""
-
-    return (d, [f for f in glob.glob(f'{d}/{e}') if os.path.isfile(f)])
-
-
-def include_statics(d):
-    r = []
-    for root, _, fs in os.walk(d):
-        r.append((root, [os.path.join(root, f) for f in fs]))
-    return r
-
-
-class install_data_twisted(install_data):
-    """make sure data files are installed in package.
-    this is evil.
-    copied from Twisted/setup.py.
-    """
+    def initialize_options(self):
+        self.install_dir = None
 
     def finalize_options(self):
         self.set_undefined_options(
             'install',
             ('install_lib', 'install_dir'),
         )
-        super().finalize_options()
 
     def run(self):
-        super().run()
         # ensure there's a buildbot/VERSION file
         fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
         with open(fn, 'w') as f:
             f.write(version)
-        self.outfiles.append(fn)
 
 
 class our_sdist(sdist):
@@ -166,6 +147,7 @@ setup_args = {
         "buildbot.config",
         "buildbot.data",
         "buildbot.db",
+        "buildbot.db.migrations",
         "buildbot.db.migrations.versions",
         "buildbot.db.types",
         "buildbot.machine",
@@ -180,6 +162,8 @@ setup_args = {
         "buildbot.scripts",
         "buildbot.secrets",
         "buildbot.secrets.providers",
+        "buildbot.spec",
+        "buildbot.spec.types",
         "buildbot.statistics",
         "buildbot.statistics.storage_backends",
         "buildbot.steps",
@@ -196,6 +180,10 @@ setup_args = {
         "buildbot.test.util",
         "buildbot.test.fake",
         "buildbot.test.fakedb",
+        "buildbot.test.integration.pki",
+        "buildbot.test.integration.pki.ca",
+        "buildbot.test.unit.test_templates_dir",
+        "buildbot.test.unit.test_templates_dir.plugin",
     ]
     + (
         []
@@ -208,30 +196,28 @@ setup_args = {
             "buildbot.test.unit",
         ]
     ),
-    'data_files': [
-        include("buildbot/reporters/templates", "*.txt"),
-        (
-            "buildbot/db/migrations",
-            [
-                "buildbot/db/migrations/alembic.ini",
-            ],
-        ),
-        include("buildbot/db/migrations/versions", "*.py"),
-        (
-            "buildbot/scripts",
-            [
-                "buildbot/scripts/sample.cfg",
-                "buildbot/scripts/buildbot_tac.tmpl",
-            ],
-        ),
-        include("buildbot/spec", "*.raml"),
-        include("buildbot/spec/types", "*.raml"),
-        include("buildbot/test/unit/test_templates_dir", "*.html"),
-        include("buildbot/test/unit/test_templates_dir/plugin", "*.*"),
-        include("buildbot/test/integration/pki", "*.*"),
-        include("buildbot/test/integration/pki/ca", "*.*"),
-    ]
-    + include_statics("buildbot/www/static"),
+    # mention data_files, even if empty, so install_data is called and
+    # VERSION gets copied
+    'data_files': [("buildbot", [])],
+    'package_data': {
+        "": ["VERSION"],
+        "buildbot.reporters.templates": ["*.txt"],
+        "buildbot.db.migrations": [
+            "alembic.ini",
+            "README",
+        ],
+        "buildbot.db.migrations.versions": ["*.py"],
+        "buildbot.scripts": [
+            "sample.cfg",
+            "buildbot_tac.tmpl",
+        ],
+        "buildbot.spec": ["*.raml"],
+        "buildbot.spec.types": ["*.raml"],
+        "buildbot.test.unit.test_templates_dir": ["*.html"],
+        "buildbot.test.unit.test_templates_dir.plugin": ["*.*"],
+        "buildbot.test.integration.pki": ["*.*"],
+        "buildbot.test.integration.pki.ca": ["*.*"],
+    },
     'cmdclass': {'install_data': install_data_twisted, 'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([

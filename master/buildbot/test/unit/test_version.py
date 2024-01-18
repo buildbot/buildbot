@@ -29,7 +29,7 @@ class VersioningUtilsTests(unittest.SynchronousTestCase):
             raise unittest.SkipTest(self.module_under_test + " package is not installed") from e
 
     def test_gitDescribeToPep440devVersion(self):
-        self.assertEqual(self.m.gitDescribeToPep440("v0.9.8-20-gf0f45ca"), "0.9.9-dev20")
+        self.assertEqual(self.m.gitDescribeToPep440("v0.9.8-20-gf0f45ca"), "0.9.9.dev20")
 
     def test_gitDescribeToPep440tag(self):
         self.assertEqual(self.m.gitDescribeToPep440("v0.9.8"), "0.9.8")
@@ -38,7 +38,7 @@ class VersioningUtilsTests(unittest.SynchronousTestCase):
         self.assertEqual(self.m.gitDescribeToPep440("v0.9.9.post1"), "0.9.9.post1")
 
     def test_gitDescribeToPep440p1dev(self):
-        self.assertEqual(self.m.gitDescribeToPep440("v0.9.9.post1-20-gf0f45ca"), "0.9.10-dev20")
+        self.assertEqual(self.m.gitDescribeToPep440("v0.9.9.post1-20-gf0f45ca"), "0.9.10.dev20")
 
     def test_getVersionFromArchiveIdNoTag(self):
         version = self.m.getVersionFromArchiveId("1514651968  (git-archive-version)")

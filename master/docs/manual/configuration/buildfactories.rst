@@ -323,6 +323,8 @@ Arguments:
 Distutils
 ~~~~~~~~~
 
+.. deprecated:: 4.0
+
 .. py:class:: buildbot.process.factory.Distutils
 
 Most Python modules use the ``distutils`` package to provide configuration and build services.
