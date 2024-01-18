@@ -70,11 +70,11 @@ class Git(Source, GitStepMixin):
 
     def __init__(
         self,
-        repourl=None,
+        repourl: str,
         branch='HEAD',
         mode='incremental',
         method=None,
-        reference=None,
+        reference: str | None = None,
         submodules=False,
         remoteSubmodules=False,
         tags=False,
@@ -86,8 +86,8 @@ class Git(Source, GitStepMixin):
         getDescription=False,
         config=None,
         origin=None,
-        sshPrivateKey=None,
-        sshHostKey=None,
+        sshPrivateKey: str | None=None,
+        sshHostKey: str | None=None,
         sshKnownHosts=None,
         **kwargs,
     ):
@@ -658,8 +658,8 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
     def __init__(
         self,
-        workdir=None,
-        tagName=None,
+        workdir: str | None = None,
+        tagName: str | None = None,
         annotated=False,
         messages=None,
         force=False,
