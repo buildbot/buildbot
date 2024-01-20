@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.31",
-    "vite": "^4.2.3",
+    "vite": "^4.5.2",
     "vite-plugin-dts": "^2.1.0"
   },
   "license": "MPL-2.0"
