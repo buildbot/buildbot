@@ -61,7 +61,7 @@ export interface ISettings {
   save(): void;
 };
 
-export type PluginRegistrationCallback = (registrationCallbacks: RegistrationCallbacks) => void;
+export type PluginRegistrationCallback = (registrationCallbacks: RegistrationCallbacks, config: any) => void;
 
 const pluginRegistrationCallbacks: PluginRegistrationCallback[] = [];
 const pluginRegistrationConsumers: ((callback: PluginRegistrationCallback) => void)[] = [];
