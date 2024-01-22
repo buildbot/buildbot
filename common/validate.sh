@@ -143,7 +143,7 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if ! $quick && ! $no_js; then
-    for module in www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/badges;
+    for module in www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/react-wsgi_dashboards www/badges;
     do
         status "running 'pip install -e' for $module"
         if ! (cd $module; pip install -e . >/dev/null ); then
