@@ -35,6 +35,7 @@ const buildPluginsPathsMap = () => {
   addPlugin('react_console_view', path.join(root, `react-console_view/buildbot_react_console_view/static/`))
   addPlugin('react_waterfall_view',
     path.join(root, `react-waterfall_view/buildbot_react_waterfall_view/static/`))
+  addPlugin('react_wsgi_dashboards', path.join(root, `react-wsgi_dashboards/buildbot_react_wsgi_dashboards/static/`))
 
   return aliases;
 }
