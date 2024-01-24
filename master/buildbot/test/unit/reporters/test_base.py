@@ -64,7 +64,8 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
         formatter.format_message_for_build.return_value = {
             "body": "body",
             "type": "text",
-            "subject": "subject"
+            "subject": "subject",
+            "extra_info": None,
         }
         formatter.want_properties = False
         formatter.want_steps = False
@@ -98,6 +99,7 @@ class TestReporterBase(ConfigErrorsMixin, TestReactorMixin, LoggingMixin,
             'body': 'body',
             'subject': 'subject',
             'type': 'text',
+            "extra_info": None,
             'results': FAILURE,
             'builds': [build],
             "buildset": buildset,

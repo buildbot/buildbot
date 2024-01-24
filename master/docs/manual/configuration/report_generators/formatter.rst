@@ -66,6 +66,12 @@ The constructor of the class takes the following arguments:
     This implies ``want_logs`` and ``wantSteps`` to be `True`.
     Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
 
+``extra_info_cb``
+    This parameter (defaults to ``None``) can be used to customize extra information that is passed
+    to reporters. If set, this argument must be a function that returns a dictionary of
+    dictionaries either directly or via a ``Deferred``. The interpretation of the return value
+    depends on the exact reporter being used.
+
 Context (build)
 ~~~~~~~~~~~~~~~
 

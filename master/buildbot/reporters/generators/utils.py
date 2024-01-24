@@ -161,6 +161,24 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 f'({type(body)} and {type(new_body)}). Ignoring')
         return body, False
 
+    def _merge_extra_info(self, info, new_info):
+        if info is None:
+            return new_info, True
+        if new_info is None:
+            return info, True
+
+        for key, new_value in new_info.items():
+            if key not in info:
+                info[key] = new_value
+                continue
+
+            value = info[key]
+            for vkey, vvalue in new_value.items():
+                if vkey not in value:
+                    value[vkey] = vvalue
+
+        return info, True
+
     def _get_patches_for_build(self, build):
         if not self.add_patch:
             return []
@@ -199,7 +217,8 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             "buildset": build["buildset"],
             'users': list(users),
             'patches': patches,
-            'logs': logs
+            'logs': logs,
+            "extra_info": buildmsg["extra_info"],
         }
 
     @defer.inlineCallbacks

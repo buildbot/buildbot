@@ -234,6 +234,8 @@ class MessageFormatterBase(util.ComparableMixin):
                   of dictionary, list or string. This must not change during all invocations of
                   a particular instance of the formatter.
 
+              - "extra_info" is an optional dictionary of dictionaries of extra information.
+
             In case of a report being created for multiple builds (e.g. in the case of a buildset),
             the values returned by message formatter are concatenated. If this is not possible
             (e.g. if the body is a dictionary), any subsequent messages are ignored.
@@ -241,16 +243,28 @@ class MessageFormatterBase(util.ComparableMixin):
         yield self.buildAdditionalContext(master, context)
         context.update(self.context)
 
+        body, subject, extra_info = yield defer.gatherResults(
+            [
+                defer.maybeDeferred(self.render_message_body, context),
+                defer.maybeDeferred(self.render_message_subject, context),
+                defer.maybeDeferred(self.render_message_extra_info, context),
+            ]
+        )
+
         return {
-            'body': (yield self.render_message_body(context)),
+            "body": body,
             'type': self.template_type,
-            'subject': (yield self.render_message_subject(context))
+            "subject": subject,
+            "extra_info": extra_info,
         }
 
     def render_message_body(self, context):
         return None
 
     def render_message_subject(self, context):
+        return None
+
+    def render_message_extra_info(self, context):
         return None
 
     def format_message_for_build(self, master, build, **kwargs):
@@ -267,7 +281,8 @@ class MessageFormatterEmpty(MessageFormatterBase):
         return {
             'body': None,
             'type': 'plain',
-            'subject': None
+            'subject': None,
+            "extra_info": None
         }
 
     def format_message_for_buildset(self, master, buildset, builds, **kwargs):
@@ -404,7 +419,14 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
     template_type = 'plain'
     uses_default_body_template = False
 
-    def __init__(self, template=None, subject=None, template_type=None, **kwargs):
+    def __init__(
+        self,
+        template=None,
+        subject=None,
+        template_type=None,
+        extra_info_cb=None,
+        **kwargs
+    ):
         if template_type is not None:
             self.template_type = template_type
 
@@ -426,6 +448,7 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
         self.body_template = jinja2.Template(template)
         self.subject_template = jinja2.Template(subject)
+        self.extra_info_cb = extra_info_cb
 
         super().__init__(**kwargs)
 
@@ -446,6 +469,11 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
     def render_message_subject(self, context):
         return self.subject_template.render(context)
+
+    def render_message_extra_info(self, context):
+        if self.extra_info_cb is None:
+            return None
+        return self.extra_info_cb(context)
 
 
 class MessageFormatter(MessageFormatterBaseJinja):

@@ -226,6 +226,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         self.assertEqual(res, {
             'type': 'plain',
             'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
+            "extra_info": None,
             'body': textwrap.dedent('''\
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
@@ -252,6 +253,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         self.assertEqual(res, {
             'type': 'plain',
             'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
+            "extra_info": None,
             'body': textwrap.dedent('''\
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
@@ -287,6 +289,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         self.assertEqual(res, {
             'type': 'html',
             'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
+            "extra_info": None,
             'body': textwrap.dedent('''\
                 <p>A passing build has been detected on builder
                 <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
@@ -315,6 +318,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         self.assertEqual(res, {
             'type': 'html',
             'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
+            "extra_info": None,
             'body': textwrap.dedent('''\
                 <p>A passing build has been detected on builder
                 <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
@@ -353,18 +357,39 @@ class TestMessageFormatter(MessageFormatterTestBase):
         })
 
     @defer.inlineCallbacks
-    def test_inline_template(self):
-        formatter = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
+    def test_inline_templates(self):
+        formatter = message.MessageFormatter(
+            template="URL: {{ build_url }} -- {{ summary }}",
+            subject="subject"
+        )
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
-        self.assertEqual(res['type'], "plain")
-        self.assertEqual(res['body'],
-                         "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!")
+        self.assertEqual(
+            res,
+            {
+                "type": "plain",
+                "subject": "subject",
+                "extra_info": None,
+                "body": "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!"
+            }
+        )
 
     @defer.inlineCallbacks
-    def test_inline_subject(self):
-        formatter = message.MessageFormatter(subject="subject")
+    def test_inline_templates_extra_info(self):
+        formatter = message.MessageFormatter(
+            template="URL: {{ build_url }} -- {{ summary }}",
+            subject="subject",
+            extra_info_cb=lambda ctx: {"key1", ctx["build"]["state_string"]}
+        )
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
-        self.assertEqual(res['subject'], "subject")
+        self.assertEqual(
+            res,
+            {
+                "type": "plain",
+                "subject": "subject",
+                "extra_info": {"key1", "test"},
+                "body": "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!"
+            }
+        )
 
     @defer.inlineCallbacks
     def test_message_failure(self):
@@ -413,6 +438,7 @@ class TestMessageFormatterRenderable(MessageFormatterTestBase):
             'body': 'templ_wrkr/because',
             'type': 'plain',
             'subject': 'subj_wrkr/because',
+            "extra_info": None,
         })
 
 
@@ -432,6 +458,7 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
             'body': {'key': 'value'},
             'type': 'json',
             'subject': None,
+            "extra_info": None,
         })
 
     @defer.inlineCallbacks
@@ -451,6 +478,7 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
             'body': {'key': 'value'},
             'type': 'json',
             'subject': None,
+            "extra_info": None,
         })
 
 
