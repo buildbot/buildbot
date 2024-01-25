@@ -348,6 +348,7 @@ setup_args = {
                 'MessageFormatter',
                 'MessageFormatterEmpty',
                 'MessageFormatterFunction',
+                "MessageFormatterFunctionRaw",
                 'MessageFormatterMissingWorker',
                 'MessageFormatterRenderable',
             ]),

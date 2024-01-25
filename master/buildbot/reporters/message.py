@@ -293,6 +293,43 @@ class MessageFormatterEmpty(MessageFormatterBase):
         }
 
 
+class MessageFormatterFunctionRaw(MessageFormatterBase):
+
+    def __init__(self, function, **kwargs):
+        super().__init__(**kwargs)
+        self._function = function
+
+    @defer.inlineCallbacks
+    def format_message_for_build(self, master, build, is_buildset=False, users=None, mode=None):
+        ctx = create_context_for_build(mode, build, is_buildset, master, users)
+        msgdict = yield self._function(master, ctx)
+        return {
+            "body": msgdict.get("body", None),
+            "type": msgdict.get("type", "plain"),
+            "subject": msgdict.get("subject", None),
+            "extra_info": msgdict.get("extra_info", None),
+        }
+
+    @defer.inlineCallbacks
+    def format_message_for_buildset(
+        self,
+        master,
+        buildset,
+        builds,
+        users=None,
+        mode=None,
+        **kwargs
+    ):
+        ctx = create_context_for_buildset(mode, buildset, builds, master, users)
+        msgdict = yield self._function(master, ctx)
+        return {
+            "body": msgdict.get("body", None),
+            "type": msgdict.get("type", "plain"),
+            "subject": msgdict.get("subject", None),
+            "extra_info": msgdict.get("extra_info", None),
+        }
+
+
 class MessageFormatterFunction(MessageFormatterBase):
 
     def __init__(self, function, template_type, **kwargs):
