@@ -14,12 +14,12 @@ PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/bin/python
 VENV_PY_VERSION ?= python3
 YARN := $(shell which yarnpkg || which yarn)
 
-WWW_PKGS := www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/badges
+WWW_PKGS := www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/react-wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
 WWW_DEP_PKGS := www/plugin_support www/react-data-module www/react-ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-ui www/react-grid_view, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-ui www/react-grid_view www/react-wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)

@@ -3,7 +3,7 @@ import './globals2';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import "./plugins/GlobalSetup";
+import {initializeGlobalSetup} from "./plugins/GlobalSetup";
 import "buildbot-plugin-support";
 import {App} from './App';
 import {
@@ -48,6 +48,8 @@ const doRender = (buildbotFrontendConfig: Config) => {
   const topbarStore = new TopbarStore();
   globalSettings.applyBuildbotConfig(buildbotFrontendConfig);
   globalSettings.load();
+
+  initializeGlobalSetup(buildbotFrontendConfig);
 
   for (const pluginKey in buildbotFrontendConfig.plugins) {
     // TODO: in production this could be added to the document by buildbot backend
