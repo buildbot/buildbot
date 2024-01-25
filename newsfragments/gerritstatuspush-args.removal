@@ -1,2 +1,0 @@
-The ``reviewCB``, ``reviewArg``, ``startCB``, ``startArg``, ``summaryCB``, ``summaryArg``,
-``builders`` , ``wantSteps``, ``wantLogs`` arguments of ``GerritStatusPush`` have been deprecated.
