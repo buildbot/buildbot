@@ -135,10 +135,10 @@ install:
 before_script:
   # create real database for tests
   - condition: '"mysql" in BUILDBOT_TEST_DB_URL'
-    cmd: sudo /prepare_mysql
+    cmd: /prepare_mysql
   - condition: '"postgresql" in BUILDBOT_TEST_DB_URL'
     cmd: |
-        sudo /prepare_postgres
+        /prepare_postgres
         # for pg8000 driver we can't use peer authentication or empty password, so set a dummy password
         # This also serves as a way to wait that the database is ready
         while ! psql -d bbtest -c 'ALTER USER "buildbot" WITH PASSWORD '"'x'"';' ; do sleep 1 ; done
