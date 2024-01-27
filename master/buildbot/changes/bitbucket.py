@@ -17,10 +17,9 @@
 import time
 from datetime import datetime
 
-from unidiff import PatchSet
-
 from twisted.internet import defer
 from twisted.python import log
+from unidiff import PatchSet
 
 from buildbot.changes import base
 from buildbot.util import bytes2unicode

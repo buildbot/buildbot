@@ -19,7 +19,6 @@ import os
 import posixpath
 
 import jinja2
-
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.error import Error

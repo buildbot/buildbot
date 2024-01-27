@@ -22,7 +22,6 @@ from urllib.parse import urlencode
 
 import jinja2
 import requests
-
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.logger import Logger
@@ -206,8 +205,7 @@ class GitHubAuth(OAuth2Auth):
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
-    getUserTeamsGraphqlTpl = textwrap.dedent(
-        r"""
+    getUserTeamsGraphqlTpl = textwrap.dedent(r"""
         {%- if organizations %}
         query getOrgTeamMembership {
           {%- for org_slug, org_name in organizations.items() %}
@@ -224,8 +222,7 @@ class GitHubAuth(OAuth2Auth):
           {%- endfor %}
         }
         {%- endif %}
-    """
-    )
+    """)
 
     def __init__(
         self,
@@ -312,8 +309,7 @@ class GitHubAuth(OAuth2Auth):
         return s
 
     def getUserInfoFromOAuthClient_v4(self, c):
-        graphql_query = textwrap.dedent(
-            """
+        graphql_query = textwrap.dedent("""
             query {
               viewer {
                 email
@@ -328,8 +324,7 @@ class GitHubAuth(OAuth2Auth):
                 }
               }
             }
-        """
-        )
+        """)
         data = self.post(c, graphql_query.strip())
         data = data['data']
         if self.debug:

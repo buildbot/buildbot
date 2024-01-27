@@ -58,23 +58,19 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                     first_line=0,
                     last_line=1,
                     compressed=0,
-                    content=textwrap.dedent(
-                        """\
+                    content=textwrap.dedent("""\
                         line zero
-                        line 1"""
-                    ),
+                        line 1"""),
                 ),
                 fakedb.LogChunk(
                     logid=60,
                     first_line=2,
                     last_line=4,
                     compressed=0,
-                    content=textwrap.dedent(
-                        """\
+                    content=textwrap.dedent("""\
                         line TWO
                         line 3
-                        line 2**2"""
-                    ),
+                        line 2**2"""),
                 ),
                 fakedb.LogChunk(
                     logid=60, first_line=5, last_line=5, compressed=0, content="another line"

@@ -16,7 +16,6 @@
 import re
 
 from parameterized import parameterized
-
 from twisted.trial import unittest
 
 from buildbot.changes.filter import ChangeFilter

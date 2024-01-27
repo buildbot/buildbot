@@ -15,7 +15,6 @@
 
 import sqlalchemy as sa
 from sqlalchemy.inspection import inspect
-
 from twisted.trial import unittest
 
 from buildbot.test.util import migration

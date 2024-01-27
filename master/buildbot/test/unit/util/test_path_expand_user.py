@@ -16,7 +16,6 @@
 import os
 
 from parameterized import parameterized
-
 from twisted.trial import unittest
 
 from buildbot.test.util.decorators import skipUnlessPlatformIs

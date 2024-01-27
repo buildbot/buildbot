@@ -106,7 +106,8 @@ disable=
   bad-string-format-type, # https://github.com/PyCQA/pylint/issues/2631
   duplicate-string-formatting-argument,
   cyclic-import,  # only happens when pylint is ran in non-parallel mode
-  wrong-import-order, # we use isort for import orders
+  wrong-import-order, # we use ruff for import orders
+  ungrouped-imports, # we use ruff for import orders
   arguments-renamed,
   not-context-manager,
   unspecified-encoding,

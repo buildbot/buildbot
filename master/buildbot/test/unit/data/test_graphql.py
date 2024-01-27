@@ -66,8 +66,7 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
         schema = self.graphql.get_schema()
         self.assertEqual(
             schema,
-            textwrap.dedent(
-                """
+            textwrap.dedent("""
         # custom scalar types for buildbot data model
         scalar Date   # stored as utc unix timestamp
         scalar Binary # arbitrary data stored as base85
@@ -107,8 +106,7 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
         type Test {
           testid: Int!
         }
-        """
-            ),
+        """),
         )
         schema = graphql.build_schema(schema)
 

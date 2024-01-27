@@ -19,9 +19,8 @@ import inspect
 import os
 import warnings
 
-from packaging.version import parse as parse_version
-
 import twisted
+from packaging.version import parse as parse_version
 from twisted.trial import unittest
 from twisted.trial.unittest import SkipTest
 from zope.interface.verify import verifyClass

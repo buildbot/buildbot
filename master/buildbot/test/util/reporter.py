@@ -201,7 +201,7 @@ class ReporterTestMixin:
                     first_line=0,
                     last_line=1,
                     compressed=0,
-                    content='Unicode log with non-ascii (\u00E5\u00E4\u00F6).',
+                    content='Unicode log with non-ascii (\u00e5\u00e4\u00f6).',
                 ),
                 fakedb.BuildProperty(buildid=20 + i, name="workername", value="wrk"),
                 fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),

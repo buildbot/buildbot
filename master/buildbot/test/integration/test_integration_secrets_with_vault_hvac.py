@@ -19,7 +19,6 @@ import time
 from unittest.case import SkipTest
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate

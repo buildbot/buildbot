@@ -19,7 +19,6 @@ import sys
 import time
 
 from parameterized import parameterized
-
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor

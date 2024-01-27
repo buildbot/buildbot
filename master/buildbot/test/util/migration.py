@@ -19,7 +19,6 @@ import os
 import sqlalchemy as sa
 from alembic.operations import Operations
 from alembic.runtime.migration import MigrationContext
-
 from twisted.internet import defer
 from twisted.python import log
 

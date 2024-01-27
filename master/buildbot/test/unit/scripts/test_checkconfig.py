@@ -73,8 +73,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     def test_success(self):
         len_sys_path = len(sys.path)
-        config = textwrap.dedent(
-            """\
+        config = textwrap.dedent("""\
                 c = BuildmasterConfig = {}
                 c['multiMaster'] = True
                 c['schedulers'] = []
@@ -89,19 +88,16 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     Worker('worker', 'pass'),
                 ]
                 c['protocols'] = {'pb': {'port': 9989}}
-                """
-        )
+                """)
         self.do_test_load(config=config, stdout_re=re.compile('Config file is good!'))
 
         # (regression) check that sys.path hasn't changed
         self.assertEqual(len(sys.path), len_sys_path)
 
     def test_failure_ImportError(self):
-        config = textwrap.dedent(
-            """\
+        config = textwrap.dedent("""\
                 import test_scripts_checkconfig_does_not_exist
-                """
-        )
+                """)
         # Python 3 displays this error:
         #   No module named 'test_scripts_checkconfig_does_not_exist'
         #
@@ -116,39 +112,33 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         self.flushLoggedErrors()
 
     def test_failure_no_workers(self):
-        config = textwrap.dedent(
-            """\
+        config = textwrap.dedent("""\
                 BuildmasterConfig={}
-                """
-        )
+                """)
         self.do_test_load(config=config, stderr_re=re.compile('no workers'))
         self.flushLoggedErrors()
 
     def test_success_imports(self):
-        config = textwrap.dedent(
-            """\
+        config = textwrap.dedent("""\
                 from othermodule import port
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
                 c['workers'] = []
                 c['protocols'] = {'pb': {'port': port}}
-                """
-        )
+                """)
         other_files = {'othermodule.py': 'port = 9989'}
         self.do_test_load(config=config, other_files=other_files)
 
     def test_success_import_package(self):
-        config = textwrap.dedent(
-            """\
+        config = textwrap.dedent("""\
                 from otherpackage.othermodule import port
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
                 c['workers'] = []
                 c['protocols'] = {'pb': {'port': 9989}}
-                """
-        )
+                """)
         other_files = {
             ('otherpackage', '__init__.py'): '',
             ('otherpackage', 'othermodule.py'): 'port = 9989',

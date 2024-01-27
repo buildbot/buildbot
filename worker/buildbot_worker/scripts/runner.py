@@ -38,12 +38,10 @@ class MakerBase(usage.Options):
         ["quiet", "q", "Do not emit the commands being run"],
     ]
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     Operates upon the specified <basedir> (or the current directory, if not
     specified).
-    """
-    )
+    """)
 
     # on tab completion, suggest directories as first argument
     if hasattr(usage, 'Completions'):
@@ -144,8 +142,7 @@ class CreateWorkerOptions(MakerBase):
         ["proxy-connection-string", None, None, "Address of HTTP proxy to tunnel through"],
     ]
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     This command creates a buildbot worker directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
@@ -156,8 +153,7 @@ class CreateWorkerOptions(MakerBase):
     The appropriate values for <name>, <passwd>, and <master> should be
     provided to you by the buildmaster administrator. You must choose <basedir>
     yourself.
-    """
-    )
+    """)
 
     def validateMasterArgument(self, master_arg):
         """

@@ -314,8 +314,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'type': 'plain',
                 'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
                 "extra_info": None,
-                'body': textwrap.dedent(
-                    """\
+                'body': textwrap.dedent("""\
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
                 Full details are available at:
@@ -330,8 +329,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 Steps:
 
                 - (no steps)
-                """
-                ),
+                """),
             },
         )
 
@@ -351,8 +349,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'type': 'plain',
                 'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
                 "extra_info": None,
-                'body': textwrap.dedent(
-                    """\
+                'body': textwrap.dedent("""\
                 A passing build has been detected on builder Builder1 while building Buildbot.
 
                 Full details are available at:
@@ -377,8 +374,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                     Logs:
                         - stdio: http://localhost:8080/#/builders/80/builds/1/steps/3/logs/stdio
 
-                """
-                ),
+                """),
             },
         )
 
@@ -392,8 +388,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'type': 'html',
                 'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
                 "extra_info": None,
-                'body': textwrap.dedent(
-                    """\
+                'body': textwrap.dedent("""\
                 <p>A passing build has been detected on builder
                 <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
                 while building Buildbot.</p>
@@ -410,8 +405,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
 
                     <li>No steps</li>
 
-                </ul>"""
-                ),
+                </ul>"""),
             },
         )
 
@@ -431,8 +425,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'type': 'html',
                 'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
                 "extra_info": None,
-                'body': textwrap.dedent(
-                    """\
+                'body': textwrap.dedent("""\
                 <p>A passing build has been detected on builder
                 <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
                 while building Buildbot.</p>
@@ -466,8 +459,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                     )
                     </li>
 
-                </ul>"""
-                ),  # noqa pylint: disable=line-too-long
+                </ul>"""),  # noqa pylint: disable=line-too-long
             },
         )
 

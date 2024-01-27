@@ -17,7 +17,6 @@ import datetime
 from unittest.mock import Mock
 
 from dateutil.tz import tzutc
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -262,7 +261,7 @@ class TestBitbucketServerCoreAPIStatusPush(
     def _check_start_and_finish_build(self, build, parentPlan=False):
         # we make sure proper calls to txrequests have been made
 
-        _name = "Builder_parent #1 \u00BB Builder0 #0" if parentPlan else "Builder0 #0"
+        _name = "Builder_parent #1 \u00bb Builder0 #0" if parentPlan else "Builder0 #0"
         _parent = "Builder_parent" if parentPlan else "Builder0"
 
         self._http.expect(
@@ -613,7 +612,7 @@ class TestBitbucketServerCoreAPIStatusPush(
         self.assertLogged('Status "INPROGRESS" sent for example.org/repo d34db33fd43db33f')
 
 
-UNICODE_BODY = "body: \u00E5\u00E4\u00F6 text"
+UNICODE_BODY = "body: \u00e5\u00e4\u00f6 text"
 EXPECTED_API = '/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments'
 PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 

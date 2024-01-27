@@ -18,7 +18,6 @@ import datetime
 from unittest import mock
 
 import jwt
-
 from twisted.cred import strcred
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer

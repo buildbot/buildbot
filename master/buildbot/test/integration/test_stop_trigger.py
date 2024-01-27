@@ -87,15 +87,13 @@ class TriggeringMaster(RunMasterBase):
             # starting from Windows 7).
             cmd = 'ping -t 127.0.0.1'.split()
         else:
-            cmd = textwrap.dedent(
-                """\
+            cmd = textwrap.dedent("""\
                 while :
                 do
                   echo "sleeping";
                   sleep 1;
                 done
-                """
-            )
+                """)
 
         f2.addStep(steps.ShellCommand(command=cmd))
 

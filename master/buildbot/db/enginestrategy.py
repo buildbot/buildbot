@@ -28,7 +28,6 @@ import os
 import sqlalchemy as sa
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
-
 from twisted.python import log
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html

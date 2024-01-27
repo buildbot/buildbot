@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-
 from twisted.python import log
 
 from buildbot.data import base

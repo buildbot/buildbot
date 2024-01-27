@@ -15,13 +15,12 @@
 
 from xml.sax.saxutils import escape
 
+import cairocffi as cairo
+import cairosvg
 import jinja2
-
 from klein import Klein
 from twisted.internet import defer
 
-import cairocffi as cairo
-import cairosvg
 from buildbot.process.results import Results
 from buildbot.util import bytes2unicode
 from buildbot.www.plugin import Application

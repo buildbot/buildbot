@@ -17,7 +17,6 @@ import os
 import textwrap
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -66,12 +65,10 @@ class TestCleanupDb(
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
             f.write(
-                textwrap.dedent(
-                    """
+                textwrap.dedent("""
                 from twisted.application import service
                 application = service.Application('buildmaster')
-            """
-                )
+            """)
             )
         self.setUpStdoutAssertions()
         self.ensureNoSqliteMemory()
@@ -94,16 +91,14 @@ class TestCleanupDb(
 
         with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
             f.write(
-                textwrap.dedent(
-                    f"""
+                textwrap.dedent(f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
                 c['db_url'] = {repr(db_url)}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
-            """
-                )
+            """)
             )
 
     @defer.inlineCallbacks

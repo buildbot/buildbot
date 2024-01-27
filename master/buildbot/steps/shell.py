@@ -22,6 +22,7 @@ from twisted.python.versions import Version
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
+
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
 from buildbot.process.properties import WithProperties

@@ -17,7 +17,6 @@ import datetime
 import textwrap
 
 from dateutil.tz import tzutc
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -32,12 +31,10 @@ from buildbot.test.util import logging
 
 
 class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
-    LOGCONTENT = textwrap.dedent(
-        """\
+    LOGCONTENT = textwrap.dedent("""\
         line zero
         line 1
-        """
-    )
+        """)
 
     def setUp(self):
         self.setup_test_reactor()

@@ -20,7 +20,6 @@ import textwrap
 import zlib
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -68,20 +67,17 @@ class Tests(interfaces.InterfaceTests):
             first_line=2,
             last_line=4,
             compressed=0,
-            content=textwrap.dedent(
-                """\
+            content=textwrap.dedent("""\
                     line TWO
 
-                    line 2**2"""
-            ),
+                    line 2**2"""),
         ),
         fakedb.LogChunk(logid=201, first_line=5, last_line=5, compressed=0, content="another line"),
         fakedb.LogChunk(
             logid=201, first_line=6, last_line=6, compressed=0, content="yet another line"
         ),
     ]
-    bug3101Content = base64.b64decode(
-        """
+    bug3101Content = base64.b64decode("""
         PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0
         9PT09PT09PT09PT09PT09PT09PT09PT09PT09PQpbU0tJUFBFRF0Kbm90IGEgd2luMz
         IgcGxhdGZvcm0KCmJ1aWxkc2xhdmUudGVzdC51bml0LnRlc3RfcnVucHJvY2Vzcy5UZ
@@ -89,8 +85,7 @@ class Tests(interfaces.InterfaceTests):
         LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0
         tLS0tLS0tClJhbiAyNjcgdGVzdHMgaW4gNS4zNzhzCgpQQVNTRUQgKHNraXBzPTEsIH
         N1Y2Nlc3Nlcz0yNjYpCnByb2dyYW0gZmluaXNoZWQgd2l0aCBleGl0IGNvZGUgMAplb
-        GFwc2VkVGltZT04LjI0NTcwMg=="""
-    )
+        GFwc2VkVGltZT04LjI0NTcwMg==""")
 
     bug3101Rows = [
         fakedb.Log(

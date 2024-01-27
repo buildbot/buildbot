@@ -46,8 +46,7 @@ from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
 
-upgrade_message = textwrap.dedent(
-    """\
+upgrade_message = textwrap.dedent("""\
 
     The Buildmaster database needs to be upgraded before this version of
     buildbot can run.  Use the following command-line
@@ -56,8 +55,7 @@ upgrade_message = textwrap.dedent(
 
     to upgrade the database, and try starting the buildmaster again.  You may
     want to make a backup of your buildmaster before doing so.
-    """
-).strip()
+    """).strip()
 
 
 class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):

@@ -171,20 +171,9 @@ To run locally, execute the following:
     pip install -r requirements-ci.txt
     make pylint
     make flake8
+    make ruff
 
 If you see spell check errors, but your words are perfectly correct, then you may need to add these words to a whitelist at `common/code_spelling_ignore_words.txt`.
-
-isort
-~~~~~
-
-Tests in this category sort the imports in the Python code.
-These tests are represented by **bb/isort/** test names in the Buildbot CI.
-To run locally, execute the following:
-
-.. code-block:: bash
-
-    pip install -r requirements-ci.txt
-    isort
 
 Documentation
 ~~~~~~~~~~~~~

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.python.failure import Failure
 from twisted.spread import pb

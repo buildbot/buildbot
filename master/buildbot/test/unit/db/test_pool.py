@@ -18,7 +18,6 @@ import os
 import time
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest

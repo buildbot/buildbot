@@ -17,9 +17,8 @@ import base64
 from unittest import mock
 
 import msgpack
-from parameterized import parameterized
-
 from autobahn.websocket.types import ConnectionDeny
+from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
 

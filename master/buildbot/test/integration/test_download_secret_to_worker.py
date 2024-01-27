@@ -16,7 +16,6 @@
 import os
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.trial.unittest import SkipTest
 

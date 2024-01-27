@@ -15,9 +15,8 @@
 #
 # Copyright Buildbot Team Members
 
-from setuptools import setup
-
 import buildbot_pkg
+from setuptools import setup
 
 setup(
     name='buildbot-pkg',

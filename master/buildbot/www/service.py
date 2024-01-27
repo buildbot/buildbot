@@ -19,9 +19,8 @@ import os
 from binascii import hexlify
 
 import jwt
-from packaging.version import parse as parse_version
-
 import twisted
+from packaging.version import parse as parse_version
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal

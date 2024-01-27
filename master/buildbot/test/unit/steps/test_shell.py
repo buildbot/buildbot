@@ -363,15 +363,13 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
             .stdout(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     Result: PASS
                     Tests: 10 Failed: 0
                     Tests: 10 Failed: 0
-                    Files=93, Tests=20"""
-                )
+                    Files=93, Tests=20""")
             )
             .exit(0)
         )
@@ -383,8 +381,7 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
             .stdout(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
                     This junk ignored
                     Test Summary Report
                     -------------------
@@ -393,8 +390,7 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                     OHNOES 1
                     OHNOES 2
                     Files=93, Tests=20,  0 wallclock secs ...
-                    Result: PASS"""
-                )
+                    Result: PASS""")
             )
             .exit(0)
         )
@@ -408,21 +404,16 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
             .stdout(
-                textwrap.dedent(
-                    """\
-                    foo.pl .. 1/4"""
-                )
+                textwrap.dedent("""\
+                    foo.pl .. 1/4""")
             )
             .stderr(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
                     # Failed test 2 in foo.pl at line 6
-                    #  foo.pl line 6 is: ok(0);"""
-                )
+                    #  foo.pl line 6 is: ok(0);""")
             )
             .stdout(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
                     foo.pl .. Failed 1/4 subtests
 
                     Test Summary Report
@@ -431,14 +422,11 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                       Failed test:  0
                     Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr
                     0.01 csys =  0.11 CPU)
-                    Result: FAIL"""
-                )
+                    Result: FAIL""")
             )
             .stderr(
-                textwrap.dedent(
-                    """\
-                    Failed 1/1 test programs. 1/4 subtests failed."""
-                )
+                textwrap.dedent("""\
+                    Failed 1/1 test programs. 1/4 subtests failed.""")
             )
             .exit(1)
         )
@@ -450,12 +438,10 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
             .stdout(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
                     This junk ignored
                     All tests successful
-                    Files=10, Tests=20, 100 wall blah blah"""
-                )
+                    Files=10, Tests=20, 100 wall blah blah""")
             )
             .exit(0)
         )
@@ -467,11 +453,9 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
             .stdout(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
                     This junk ignored
-                    Failed 1/1 test programs, 3/20 subtests failed."""
-                )
+                    Failed 1/1 test programs, 3/20 subtests failed.""")
             )
             .exit(1)
         )
@@ -645,16 +629,13 @@ class WarningCountingShellCommand(
 
     def test_suppressions(self):
         step = shell.WarningCountingShellCommand(command=['make'], suppressionFile='supps')
-        supps_file = textwrap.dedent(
-            """\
+        supps_file = textwrap.dedent("""\
             # example suppressions file
 
             amar.c : .*unused variable.*
             holding.c : .*invalid access to non-static.*
-            """
-        ).strip()
-        stdout = textwrap.dedent(
-            """\
+            """).strip()
+        stdout = textwrap.dedent("""\
             /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
             /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
             amar.c: In function 'write_record':
@@ -664,13 +645,10 @@ class WarningCountingShellCommand(
             /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
             holding.c: In function 'holding_thing':
             holding.c:984: warning: invalid access to non-static 'y'
-            """
-        )
-        exp_warning_log = textwrap.dedent(
-            """\
+            """)
+        exp_warning_log = textwrap.dedent("""\
             amar.c:164: warning: this should show up
-        """
-        )
+        """)
         return self.do_test_suppressions(step, supps_file, stdout, 1, exp_warning_log)
 
     def test_suppressions_directories(self):
@@ -680,19 +658,16 @@ class WarningCountingShellCommand(
         step = shell.WarningCountingShellCommand(
             command=['make'], suppressionFile='supps', warningExtractor=warningExtractor
         )
-        supps_file = textwrap.dedent(
-            """\
+        supps_file = textwrap.dedent("""\
             # these should be suppressed:
             amar-src/amar.c : XXX
             .*/server-src/.* : AAA
             # these should not, as the dirs do not match:
             amar.c : YYY
             server-src.* : BBB
-            """
-        ).strip()
+            """).strip()
         # note that this uses the unicode smart-quotes that gcc loves so much
-        stdout = textwrap.dedent(
-            """\
+        stdout = textwrap.dedent("""\
             make: Entering directory \u2019amar-src\u2019
             amar.c:164: warning: XXX
             amar.c:165: warning: YYY
@@ -702,14 +677,11 @@ class WarningCountingShellCommand(
             make: Entering directory `one-more-dir`
             holding.c:999: warning: BBB
             holding.c:1000: warning: AAA
-            """
-        )
-        exp_warning_log = textwrap.dedent(
-            """\
+            """)
+        exp_warning_log = textwrap.dedent("""\
             amar.c:165: warning: YYY
             holding.c:999: warning: BBB
-        """
-        )
+        """)
         return self.do_test_suppressions(step, supps_file, stdout, 2, exp_warning_log)
 
     def test_suppressions_directories_custom(self):
@@ -724,15 +696,13 @@ class WarningCountingShellCommand(
             directoryLeavePattern="^OUT:",
         )
         supps_file = "dir1/dir2/abc.c : .*"
-        stdout = textwrap.dedent(
-            """\
+        stdout = textwrap.dedent("""\
             IN: dir1
             IN: decoy
             OUT: decoy
             IN: dir2
             abc.c:123: warning: hello
-            """
-        )
+            """)
         return self.do_test_suppressions(step, supps_file, stdout, 0, '')
 
     def test_suppressions_linenos(self):
@@ -743,20 +713,16 @@ class WarningCountingShellCommand(
             command=['make'], suppressionFile='supps', warningExtractor=warningExtractor
         )
         supps_file = "abc.c:.*:100-199\ndef.c:.*:22"
-        stdout = textwrap.dedent(
-            """\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
-            """
-        )
-        exp_warning_log = textwrap.dedent(
-            """\
+            """)
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
-            """
-        )
+            """)
         return self.do_test_suppressions(step, supps_file, stdout, 2, exp_warning_log)
 
     @defer.inlineCallbacks
@@ -784,19 +750,15 @@ class WarningCountingShellCommand(
             return line.split(':', 2)
 
         step = MyWCSC(command=['make'], suppressionFile='supps', warningExtractor=warningExtractor)
-        stdout = textwrap.dedent(
-            """\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             abc.c:200: warning: seen 2
-            """
-        )
-        exp_warning_log = textwrap.dedent(
-            """\
+            """)
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
-            """
-        )
+            """)
         return self.do_test_suppressions(step, '', stdout, 2, exp_warning_log)
 
     def test_suppressions_suppressionsParameter(self):
@@ -810,20 +772,16 @@ class WarningCountingShellCommand(
         step = shell.WarningCountingShellCommand(
             command=['make'], suppressionList=supps, warningExtractor=warningExtractor
         )
-        stdout = textwrap.dedent(
-            """\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
-            """
-        )
-        exp_warning_log = textwrap.dedent(
-            """\
+            """)
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
-            """
-        )
+            """)
         return self.do_test_suppressions(step, None, stdout, 2, exp_warning_log)
 
     def test_suppressions_suppressionsRenderableParameter(self):
@@ -841,20 +799,16 @@ class WarningCountingShellCommand(
             warningExtractor=warningExtractor,
         )
 
-        stdout = textwrap.dedent(
-            """\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
-            """
-        )
-        exp_warning_log = textwrap.dedent(
-            """\
+            """)
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
-            """
-        )
+            """)
         return self.do_test_suppressions(
             step, None, stdout, 2, exp_warning_log, props={"suppressionsList": supps}
         )

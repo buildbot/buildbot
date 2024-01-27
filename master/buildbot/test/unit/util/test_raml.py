@@ -76,8 +76,7 @@ class TestRaml(unittest.TestCase):
     def test_json_example(self):
         self.assertEqual(
             textwrap.dedent(self.api.format_json(self.api.types["build"]['example'], 0)),
-            textwrap.dedent(
-                """
+            textwrap.dedent("""
             {
                 "builderid": 10,
                 "buildid": 100,
@@ -91,8 +90,7 @@ class TestRaml(unittest.TestCase):
                 "started_at": 1451001600,
                 "state_string": "created",
                 "properties": {}
-            }"""
-            ).strip(),
+            }""").strip(),
         )
 
     def test_endpoints_by_type(self):

@@ -20,7 +20,6 @@ import time
 import traceback
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log

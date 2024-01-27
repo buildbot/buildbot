@@ -90,8 +90,7 @@ class HTTPClientService(service.SharedService):
     that is suitable for use from buildbot services.
     """
 
-    TREQ_PROS_AND_CONS = textwrap.dedent(
-        """
+    TREQ_PROS_AND_CONS = textwrap.dedent("""
        txrequests is based on requests and is probably a bit more mature, but it requires threads
        to run, so has more overhead.
        treq is better integrated in twisted and is more and more feature equivalent
@@ -102,8 +101,7 @@ class HTTPClientService(service.SharedService):
        pip install txrequests
            or
        pip install treq
-    """
-    )
+    """)
     # Those could be in theory be overridden in master.cfg by using
     # import buildbot.util.httpclientservice.HTTPClientService.PREFER_TREQ = True
     # We prefer at the moment keeping it simple

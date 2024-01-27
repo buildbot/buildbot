@@ -239,14 +239,12 @@ class WampMQReal(TestReactorMixin, unittest.TestCase):
     a wamp router
     """
 
-    HOW_TO_RUN = textwrap.dedent(
-        """\
+    HOW_TO_RUN = textwrap.dedent("""\
         define WAMP_ROUTER_URL to a wamp router to run this test
         > crossbar init
         > crossbar start &
         > export WAMP_ROUTER_URL=ws://localhost:8080/ws
-        > trial buildbot.unit.test_mq_wamp"""
-    )
+        > trial buildbot.unit.test_mq_wamp""")
     # if connection is bad, this test can timeout easily
     # we reduce the timeout to help maintain the sanity of the developer
     timeout = 2

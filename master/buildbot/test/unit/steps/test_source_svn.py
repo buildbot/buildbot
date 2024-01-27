@@ -15,7 +15,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python.reflect import namedModule

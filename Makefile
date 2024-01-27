@@ -101,9 +101,8 @@ hooks:
 rmpyc:
 	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
 
-isort:
-	isort -rc worker master
-
+ruff:
+	ruff --fix .
 
 docker: docker-buildbot-worker docker-buildbot-master
 	echo done

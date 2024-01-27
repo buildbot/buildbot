@@ -16,7 +16,6 @@
 import hashlib
 
 import sqlalchemy as sa
-
 from twisted.trial import unittest
 
 from buildbot.test.util import migration

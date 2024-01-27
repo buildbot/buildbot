@@ -17,7 +17,6 @@
 from unittest.mock import Mock
 
 from parameterized import parameterized
-
 from twisted.internet import defer
 from twisted.trial import unittest
 

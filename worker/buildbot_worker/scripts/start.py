@@ -49,8 +49,7 @@ class Follower(object):
 
         if why.check(WorkerTimeoutError):
             print(
-                rewrap(
-                    """\
+                rewrap("""\
                 The worker took more than 10 seconds to start and/or connect
                 to the buildmaster, so we were unable to confirm that it
                 started and connected correctly.
@@ -63,17 +62,14 @@ class Follower(object):
                    'Failure: twisted.cred.error.UnauthorizedLogin'
                 then your worker might be using the wrong botname or password.
                 Please correct these problems and then restart the worker.
-                """
-                )
+                """)
             )
         else:
             print(
-                rewrap(
-                    """\
+                rewrap("""\
                 Unable to confirm that the worker started correctly.
                 You may need to stop it, fix the config file, and restart.
-                """
-                )
+                """)
             )
             print(why)
         self.rc = 1

@@ -48,43 +48,35 @@ class Follower:
     def _failure(self, why):
         if why.check(BuildmasterTimeoutError):
             print(
-                rewrap(
-                    f"""\
+                rewrap(f"""\
                 The buildmaster took more than {self._timeout} seconds to start, so we were
                 unable to confirm that it started correctly.
                 Please 'tail twistd.log' and look for a line that says
                 'BuildMaster is running' to verify correct startup.
-                """
-                )
+                """)
             )
         elif why.check(ReconfigError):
             print(
-                rewrap(
-                    """\
+                rewrap("""\
                 The buildmaster appears to have encountered an error in the
                 master.cfg config file during startup.
                 Please inspect and fix master.cfg, then restart the
                 buildmaster.
-                """
-                )
+                """)
             )
         elif why.check(BuildmasterStartupError):
             print(
-                rewrap(
-                    """\
+                rewrap("""\
                 The buildmaster startup failed. Please see 'twistd.log' for
                 possible reason.
-                """
-                )
+                """)
             )
         else:
             print(
-                rewrap(
-                    """\
+                rewrap("""\
                 Unable to confirm that the buildmaster started correctly.
                 You may need to stop it, fix the config file, and restart.
-                """
-                )
+                """)
             )
             print(why)
         self.rc = 1

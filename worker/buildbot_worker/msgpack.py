@@ -16,7 +16,6 @@
 import base64
 
 import msgpack
-
 from autobahn.twisted.websocket import WebSocketClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol
 from autobahn.websocket.types import ConnectingRequest

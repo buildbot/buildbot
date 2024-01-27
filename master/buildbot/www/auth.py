@@ -18,9 +18,8 @@ import re
 from abc import ABCMeta
 from abc import abstractmethod
 
-from packaging.version import parse as parse_version
-
 import twisted
+from packaging.version import parse as parse_version
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse

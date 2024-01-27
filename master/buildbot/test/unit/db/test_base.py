@@ -18,7 +18,6 @@ import hashlib
 from unittest import mock
 
 import sqlalchemy as sa
-
 from twisted.internet import defer
 from twisted.trial import unittest
 

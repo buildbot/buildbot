@@ -347,7 +347,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             status_name = f'{props.getProperty("buildername")} #{build_identifier}'
             if parent_name:
                 status_name = (
-                    f"{parent_name} #{build['parentbuild']['number']} \u00BB {status_name}"
+                    f"{parent_name} #{build['parentbuild']['number']} \u00bb {status_name}"
                 )
         if self.status_suffix:
             status_name = status_name + (yield props.render(self.status_suffix))

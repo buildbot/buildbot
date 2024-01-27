@@ -24,7 +24,6 @@ import sys
 import textwrap
 
 import sqlalchemy as sa
-
 from twisted.python import reflect
 from twisted.python import usage
 
@@ -71,8 +70,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot upgrade-master [options] [<basedir>]"
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     This command takes an existing buildmaster working directory and
     adds/modifies the files there to work with the current version of
     buildbot. When this command is finished, the buildmaster directory should
@@ -90,8 +88,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     When upgrading the database, this command uses the database specified in
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
-    """
-    )
+    """)
 
 
 class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -122,8 +119,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] [<basedir>]"
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     This command creates a buildmaster working directory and buildbot.tac file.
     The master will live in <basedir> (defaults to the current directory)
     and create various files there.
@@ -151,8 +147,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     The --db string is stored verbatim in the master.cfg.sample file, and
     evaluated at 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
-    """
-    )
+    """)
 
     def postOptions(self):
         super().postOptions()
@@ -580,12 +575,10 @@ class UserOptions(base.SubcommandOptions):
     ]
     requiredOptions = ['master']
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     Currently implemented types for --info= are:\n
     git, svn, hg, cvs, darcs, bzr, email
-    """
-    )
+    """)
 
     def __init__(self):
         super().__init__()
@@ -750,8 +743,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot cleanupdb [options] [<basedir>]"
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     This command takes an existing buildmaster working directory and
     do some optimization on the database.
 
@@ -763,8 +755,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     This command uses the database specified in
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
-    """
-    )
+    """)
 
 
 class CopyDBOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -785,8 +776,7 @@ class CopyDBOptions(base.BasedirMixin, base.SubcommandOptions):
         args = args[1:]
         super().parseArgs(*args)
 
-    longdesc = textwrap.dedent(
-        """
+    longdesc = textwrap.dedent("""
     This command copies all buildbot data from source database configured in the buildbot
     configuration file to the destination database. The URL of the destination database is
     specified on the command line.
@@ -796,8 +786,7 @@ class CopyDBOptions(base.BasedirMixin, base.SubcommandOptions):
 
     Source database must be already upgraded to the current Buildbot version by the "buildbot
     upgrade-master" command.
-    """
-    )
+    """)
 
 
 class Options(usage.Options):

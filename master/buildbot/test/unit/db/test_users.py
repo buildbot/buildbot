@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy
-
 from twisted.internet import defer
 from twisted.trial import unittest
 

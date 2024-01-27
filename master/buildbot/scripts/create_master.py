@@ -16,7 +16,6 @@
 import os
 
 import jinja2
-
 from twisted.internet import defer
 from twisted.python import util
 

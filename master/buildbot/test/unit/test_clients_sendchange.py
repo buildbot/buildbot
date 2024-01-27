@@ -239,14 +239,14 @@ class Sender(unittest.TestCase):
             '\N{DEGREE SIGN}',
             '\U0001f49e',
             '\N{POSTAL MARK FACE}',
-            ['\U0001F4C1'],
+            ['\U0001f4c1'],
             project='\N{SKULL AND CROSSBONES}',
             repository='\N{SNOWMAN}',
             who='\N{THAI CHARACTER KHOMUT}',
-            category='\U0001F640',
+            category='\U0001f640',
             when=1234,
             properties={'\N{LATIN SMALL LETTER A WITH MACRON}': 'b'},
-            revlink='\U0001F517',
+            revlink='\U0001f517',
         )
 
         self.assertProcess(
@@ -259,14 +259,14 @@ class Sender(unittest.TestCase):
                     "project": '\N{SKULL AND CROSSBONES}',
                     "repository": '\N{SNOWMAN}',
                     "who": '\N{THAI CHARACTER KHOMUT}',
-                    "files": ['\U0001F4C1'],  # FILE FOLDER
+                    "files": ['\U0001f4c1'],  # FILE FOLDER
                     "comments": '\N{POSTAL MARK FACE}',
                     "branch": '\N{DEGREE SIGN}',
                     "revision": '\U0001f49e',  # REVOLVING HEARTS
-                    "category": '\U0001F640',  # WEARY CAT FACE
+                    "category": '\U0001f640',  # WEARY CAT FACE
                     "when": 1234,
                     "properties": {'\N{LATIN SMALL LETTER A WITH MACRON}': 'b'},
-                    "revlink": '\U0001F517',  # LINK SYMBOL
+                    "revlink": '\U0001f517',  # LINK SYMBOL
                     "src": None,
                 }
             ],
@@ -280,14 +280,14 @@ class Sender(unittest.TestCase):
             '\N{DEGREE SIGN}'.encode('utf8'),
             '\U0001f49e'.encode('utf8'),
             '\N{POSTAL MARK FACE}'.encode('utf8'),
-            ['\U0001F4C1'.encode('utf8')],
+            ['\U0001f4c1'.encode('utf8')],
             project='\N{SKULL AND CROSSBONES}'.encode('utf8'),
             repository='\N{SNOWMAN}'.encode('utf8'),
             who='\N{THAI CHARACTER KHOMUT}'.encode('utf8'),
-            category='\U0001F640'.encode('utf8'),
+            category='\U0001f640'.encode('utf8'),
             when=1234,
             properties={'\N{LATIN SMALL LETTER A WITH MACRON}'.encode('utf8'): 'b'},
-            revlink='\U0001F517'.encode('utf8'),
+            revlink='\U0001f517'.encode('utf8'),
         )
 
         self.assertProcess(
@@ -300,15 +300,15 @@ class Sender(unittest.TestCase):
                     "project": '\N{SKULL AND CROSSBONES}',
                     "repository": '\N{SNOWMAN}',
                     "who": '\N{THAI CHARACTER KHOMUT}',
-                    "files": ['\U0001F4C1'],  # FILE FOLDER
+                    "files": ['\U0001f4c1'],  # FILE FOLDER
                     "comments": '\N{POSTAL MARK FACE}',
                     "branch": '\N{DEGREE SIGN}',
                     "revision": '\U0001f49e',  # REVOLVING HEARTS
-                    "category": '\U0001F640',  # WEARY CAT FACE
+                    "category": '\U0001f640',  # WEARY CAT FACE
                     "when": 1234,
                     # NOTE: not decoded!
                     "properties": {b'\xc4\x81': 'b'},
-                    "revlink": '\U0001F517',  # LINK SYMBOL
+                    "revlink": '\U0001f517',  # LINK SYMBOL
                     "src": None,
                 }
             ],
