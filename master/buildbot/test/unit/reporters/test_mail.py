@@ -102,14 +102,14 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
             expEncoding = 'base64'
         elif input_charset.body_encoding is None:
             expEncoding = '8bit'
-        return self.do_test_createEmail_cte("\U0001F4A7", expEncoding)
+        return self.do_test_createEmail_cte("\U0001f4a7", expEncoding)
 
     @defer.inlineCallbacks
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
         build = yield self.insert_build_finished(SUCCESS)
         msgdict = create_msgdict()
         mn = yield self.setupMailNotifier('from@example.org')
-        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build])
+        m = yield mn.createEmail(msgdict, 'project-n\u00e5me', SUCCESS, [build])
 
         try:
             m.as_string()
@@ -125,7 +125,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
             'from@example.org', extraHeaders={"hhh": properties.Property('hhh')}
         )
         # add some Unicode to detect encoding problems
-        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build])
+        m = yield mn.createEmail(msgdict, 'project-n\u00e5me', SUCCESS, [build])
 
         txt = m.as_string()
         # note that the headers *are* rendered
@@ -140,7 +140,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         builds[1]['builder']['name'] = 'builder2'
         msgdict = create_msgdict()
         mn = yield self.setupMailNotifier('from@example.org', extraHeaders={"hhh": 'vvv'})
-        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, builds)
+        m = yield mn.createEmail(msgdict, 'project-n\u00e5me', SUCCESS, builds)
 
         txt = m.as_string()
         # note that the headers are *not* rendered
@@ -150,7 +150,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
     def test_createEmail_message_with_patch_and_log_containing_unicode(self):
         build = yield self.insert_build_finished(SUCCESS)
         msgdict = create_msgdict()
-        patches = [{'body': '\u00E5\u00E4\u00F6'}]
+        patches = [{'body': '\u00e5\u00e4\u00f6'}]
         logs = yield self.master.data.get(("steps", 50, 'logs'))
         for l in logs:
             l['stepname'] = "fakestep"
@@ -160,7 +160,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
             'from@example.org', generators=[BuildStatusGenerator(add_logs=True)]
         )
 
-        m = yield mn.createEmail(msgdict, 'project-n\u00E5me', SUCCESS, [build], patches, logs)
+        m = yield mn.createEmail(msgdict, 'project-n\u00e5me', SUCCESS, [build], patches, logs)
 
         try:
             s = m.as_string()
@@ -471,7 +471,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         self.assertEqual(None, fakeSenderFactory.call_args.kwargs.get("hostname"))
 
 
-def create_msgdict(funny_chars='\u00E5\u00E4\u00F6'):
+def create_msgdict(funny_chars='\u00e5\u00e4\u00f6'):
     unibody = f'Unicode body with non-ascii ({funny_chars}).'
     msg_dict = {
         "body": unibody,

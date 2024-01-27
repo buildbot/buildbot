@@ -160,22 +160,18 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
             loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_eval_ConfigError(self):
-        self.install_config_file(
-            """\
+        self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = { 'multiMaster': True }
-                config.error('oh noes!')"""
-        )
+                config.error('oh noes!')""")
         with self.assertRaisesConfigError("oh noes"):
             loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_eval_otherError(self):
-        self.install_config_file(
-            """\
+        self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = { 'multiMaster': True }
-                raise ValueError('oh noes')"""
-        )
+                raise ValueError('oh noes')""")
         with self.assertRaisesConfigError(
             "error while parsing config file: oh noes (traceback in logfile)"
         ):
@@ -287,13 +283,11 @@ class MasterConfigTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         # We test a config that has embedded errors, as well
         # as semantic errors that get added later. If an exception is raised
         # prematurely, then the semantic errors wouldn't get reported.
-        self.install_config_file(
-            """\
+        self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = {}
                 config.error('oh noes!')
-                config.error('noes too!')"""
-        )
+                config.error('noes too!')""")
 
         with capture_config_errors() as errors:
             FileLoader(self.basedir, self.filename).loadConfig()
@@ -305,31 +299,25 @@ class MasterConfigTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_loadConfig_unknown_key(self):
         self.patch_load_helpers()
-        self.install_config_file(
-            """\
+        self.install_config_file("""\
                 BuildmasterConfig = dict(foo=10)
-                """
-        )
+                """)
         with self.assertRaisesConfigError("Unknown BuildmasterConfig key foo"):
             FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_unknown_keys(self):
         self.patch_load_helpers()
-        self.install_config_file(
-            """\
+        self.install_config_file("""\
                 BuildmasterConfig = dict(foo=10, bar=20)
-                """
-        )
+                """)
         with self.assertRaisesConfigError("Unknown BuildmasterConfig keys bar, foo"):
             FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_success(self):
         self.patch_load_helpers()
-        self.install_config_file(
-            """\
+        self.install_config_file("""\
                 BuildmasterConfig = dict()
-                """
-        )
+                """)
         rv = FileLoader(self.basedir, self.filename).loadConfig()
         self.assertIsInstance(rv, config.master.MasterConfig)
 

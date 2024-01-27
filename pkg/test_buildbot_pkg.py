@@ -28,8 +28,7 @@ class BuildbotWWWPkg(unittest.TestCase):
     pkgPaths = ["www", "react-base"]
     epName = "base_react"
 
-    loadTestScript = dedent(
-        """
+    loadTestScript = dedent("""
         from importlib.metadata import entry_points
         import re
         apps = {}
@@ -51,8 +50,7 @@ class BuildbotWWWPkg(unittest.TestCase):
         assert(expected_file in apps["%(epName)s"].resource.listNames())
         assert(re.match(r'\d+\.\d+\.\d+', apps["%(epName)s"].version) is not None)
         assert(apps["%(epName)s"].description is not None)
-        """
-    )
+        """)
 
     @property
     def path(self):

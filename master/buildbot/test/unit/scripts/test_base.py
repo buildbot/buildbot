@@ -124,12 +124,10 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         that reference points to C{buildbot.tac}.
         """
         self._createBuildbotTac(
-            textwrap.dedent(
-                """
+            textwrap.dedent("""
             from twisted.python.util import sibpath
             configfile = sibpath(__file__, "relative.cfg")
-            """
-            )
+            """)
         )
         foundConfigFile = base.getConfigFileFromTac(basedir=self.basedir)
         self.assertEqual(foundConfigFile, os.path.join(self.basedir, "relative.cfg"))

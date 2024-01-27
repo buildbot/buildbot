@@ -60,12 +60,10 @@ class Reconfigurator:
             print("Never saw reconfiguration finish.")
         except ReconfigError:
             print(
-                rewrap(
-                    """\
+                rewrap("""\
                 Reconfiguration failed. Please inspect the master.cfg file for
                 errors, correct them, then try 'buildbot reconfig' again.
-                """
-                )
+                """)
             )
         except IOError:
             # we were probably unable to open the file in the first place

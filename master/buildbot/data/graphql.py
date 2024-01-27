@@ -121,14 +121,12 @@ class GraphQLConnector(service.AsyncService):
     def get_schema(self):
         """Return the graphQL Schema of the buildbot data model"""
         types = {}
-        schema = textwrap.dedent(
-            """
+        schema = textwrap.dedent("""
         # custom scalar types for buildbot data model
         scalar Date   # stored as utc unix timestamp
         scalar Binary # arbitrary data stored as base85
         scalar JSON  # arbitrary json stored as string, mainly used for properties values
-        """
-        )
+        """)
 
         # type dependencies must be added recursively
         def add_dependent_types(ent):

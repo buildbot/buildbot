@@ -47,8 +47,7 @@ class TestBot(unittest.TestCase):
 
         # create test-release-file
         with open("{}/test-release-file".format(self.basedir), "w") as fout:
-            fout.write(
-                """
+            fout.write("""
 # unit test release file
 OS_NAME="Test"
 VERSION="1.0"
@@ -56,8 +55,7 @@ ID=test
 ID_LIKE=generic
 PRETTY_NAME="Test 1.0 Generic"
 VERSION_ID="1"
-"""
-            )
+""")
         self.real_bot = pb.BotPbLike(self.basedir, False)
         self.real_bot.setOsReleaseFile("{}/test-release-file".format(self.basedir))
         self.real_bot.startService()

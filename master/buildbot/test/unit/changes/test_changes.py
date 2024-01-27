@@ -144,8 +144,7 @@ class Change(unittest.TestCase, TestReactorMixin):
         text = self.change23.asText()
         self.assertTrue(
             re.match(
-                textwrap.dedent(
-                    """\
+                textwrap.dedent("""\
             Files:
              master/README.txt
              worker/README.txt
@@ -157,8 +156,7 @@ class Change(unittest.TestCase, TestReactorMixin):
             Comments: fix whitespaceProperties:.
               notest: no
 
-            """
-                ),
+            """),
                 text,
             ),
             text,

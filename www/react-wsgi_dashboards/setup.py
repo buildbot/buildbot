@@ -29,23 +29,15 @@ except ImportError:
 
 setup_www_plugin(
     name='buildbot-react-wsgi-dashboards',
-    description='Buildbot plugin to integrate flask or bottle'
-                'dashboards to buildbot UI (React)',
-    author=u'Buildbot maintainers',
-    author_email=u'devel@buildbot.net',
+    description='Buildbot plugin to integrate flask or bottle' 'dashboards to buildbot UI (React)',
+    author='Buildbot maintainers',
+    author_email='devel@buildbot.net',
     url='http://buildbot.net/',
     packages=['buildbot_react_wsgi_dashboards'],
-    package_data={
-        '': [
-            'VERSION',
-            'static/*'
-        ]
-    },
+    package_data={'': ['VERSION', 'static/*']},
     entry_points="""
         [buildbot.www]
         react_wsgi_dashboards = buildbot_react_wsgi_dashboards:ep
     """,
-    classifiers=[
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)'
-    ],
+    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
 )

@@ -481,8 +481,7 @@ class Repo(Source):
     # and mess up the stdio log
     def _getCleanupCommand(self):
         """also used by tests for expectations"""
-        return textwrap.dedent(
-            """\
+        return textwrap.dedent("""\
             set -v
             if [ -d .repo/manifests ]
             then
@@ -501,8 +500,7 @@ class Repo(Source):
              repo forall -c git clean -f -d -x 2>/dev/null
              repo forall -c git reset --hard HEAD 2>/dev/null
              rm -f %(workdir)s/.repo/project.list
-             """
-        ) % {
+             """) % {
             "manifestBranch": self.manifestBranch,
             "manifestFile": self.manifestFile,
             "workdir": self.workdir,
