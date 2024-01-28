@@ -22,7 +22,7 @@ The recommended upgrade procedure is as follows:
 Web frontend
 ------------
 
-Buildbot 4.0 removes the legacy web frontend written in AngularJS.
+Buildbot 4.0 replaces the AngularJS-based web frontend with a new React-based one.
 In simple Buildbot installations there is nothing that needs to be done except to install compatible versions of any www plugins that are used.
 The following plugins are maintained as part of Buildbot and can be upgraded seamlessly by just installing new, compatible version:
 
@@ -64,6 +64,39 @@ More specifically, the recommended approach is as follows:
  - Replace the production setup with what was tested in the development environment section above.
 
  - Upgrade to Buildbot 4.x series
+
+ - Buildbot plugins with the word ``react`` in the name are temporarily used for migration testing. After a successful migration
+   to Buildbot 4.x, you should replace them with plugins without the word ``react`` in the plugin name.
+
+     - Uninstall migration plugins
+
+       .. code-block:: none
+
+           pip uninstall buildbot-www-react buildbot-react-console-view buildbot-react-grid-view buildbot-react-waterfall-view  buildbot-react-wsgi-dashboards
+
+     - Install production plugins
+
+       .. code-block:: none
+
+           pip install buildbot-www buildbot-console-view buildbot-grid-view buildbot-waterfall-view buildbot-react-wsgi-dashboards
+
+     - Update the www plugin dictionary
+
+       Only update the ones you use in your installation.
+
+       Replace:
+
+         .. code-block:: python
+
+           c['www'] = dict(port=8010,
+               plugins=dict('base_react': {}, react_console_view={}, react_grid_view={}, react_waterfall_view={}, react_wsgi_dashboards={}))
+
+       With:
+
+         .. code-block:: python
+
+           c['www'] = dict(port=8010,
+               plugins=dict(console_view={}, grid_view={}, waterfall_view={}, wsgi_dashboards={}))
 
 GerritChangeSource and GerritEventLogPoller
 -------------------------------------------
