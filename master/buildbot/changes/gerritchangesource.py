@@ -546,7 +546,7 @@ class GerritHttpEventLogPollerConnector:
 
 
 def extract_gerrit_event_time(event):
-    return event.get("eventCreatedOn", None)
+    return event["eventCreatedOn"]
 
 
 class GerritChangeSource(GerritChangeSourceBase):
@@ -728,7 +728,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             this_last_event_ts = extract_gerrit_event_time(event)
             if last_event_ts is None:
                 last_event_ts = this_last_event_ts
-            elif this_last_event_ts is not None:
+            else:
                 last_event_ts = max(last_event_ts, this_last_event_ts)
 
         if last_event_ts is not None:
