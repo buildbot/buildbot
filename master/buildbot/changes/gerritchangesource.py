@@ -408,7 +408,7 @@ class GerritSshStreamEventsConnector:
 
     def start_stream_process(self):
         if self.debug:
-            log.msg(f"{self.connector.name}: starting 'gerrit stream-events'")
+            log.msg(f"{self.change_source.name}: starting 'gerrit stream-events'")
 
         cmd = self._build_gerrit_command("stream-events")
         self._last_stream_process_start = self.reactor.seconds()
@@ -431,12 +431,12 @@ class GerritSshStreamEventsConnector:
             ])
 
             log.msg(
-                f"{self.connector.name}: stream-events failed; restarting after "
+                f"{self.change_source.name}: stream-events failed; restarting after "
                 f"{round(self._stream_process_timeout)}s.\n"
                 f"{len(self._last_lines_for_debug)} log lines follow:\n{log_lines}"
             )
 
-            self.master.reactor.callLater(self._stream_process_timeout, self.start_stream_process)
+            self.reactor.callLater(self._stream_process_timeout, self.start_stream_process)
             self._stream_process_timeout *= self.STREAM_BACKOFF_EXPONENT
             if self._stream_process_timeout > self.STREAM_BACKOFF_MAX:
                 self._stream_process_timeout = self.STREAM_BACKOFF_MAX
@@ -446,7 +446,7 @@ class GerritSshStreamEventsConnector:
 
             # make sure we log the reconnection, so that it might be detected
             # and network connectivity fixed
-            log.msg(f"{self.connector.name}: stream-events lost connection. Reconnecting...")
+            log.msg(f"{self.change_source.name}: stream-events lost connection. Reconnecting...")
             self.start_stream_process()
             self._stream_process_timeout = self.STREAM_BACKOFF_MIN
 
@@ -458,7 +458,7 @@ class GerritSshStreamEventsConnector:
 
         if self.debug:
             log.msg(
-                f"{self.connector.name}: querying for changed files in change {change}/{patchset}: {cmd}"
+                f"{self.change_source.name}: querying for changed files in change {change}/{patchset}: {cmd}"
             )
 
         rc, out = yield runprocess.run_process(self.reactor, cmd, env=None, collect_stderr=False)
