@@ -16,11 +16,12 @@
 from unittest import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process.properties import Interpolate
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
 
 
@@ -92,7 +93,7 @@ class AsyncMultiService(unittest.TestCase):
         self.assertTrue(d.called)
 
 
-class ClusteredBuildbotService(unittest.TestCase):
+class ClusteredBuildbotService(unittest.TestCase, TestReactorMixin):
     SVC_NAME = 'myName'
     SVC_ID = 20
 
@@ -100,15 +101,18 @@ class ClusteredBuildbotService(unittest.TestCase):
         pass
 
     def setUp(self):
+        self.setup_test_reactor()
+        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
         self.svc = self.makeService()
 
     def tearDown(self):
         pass
 
-    def makeService(self, name=SVC_NAME, serviceid=SVC_ID):
+    def makeService(self, attach_to_master=True, name=SVC_NAME, serviceid=SVC_ID):
         svc = self.DummyService(name=name)
 
-        svc.clock = task.Clock()
+        if attach_to_master:
+            svc.setServiceParent(self.master)
 
         self.setServiceClaimable(svc, defer.succeed(False))
         self.setActivateToReturn(svc, defer.succeed(None))
@@ -154,10 +158,10 @@ class ClusteredBuildbotService(unittest.TestCase):
         self.assertEqual(svc.name, 'n')
 
     def test_compare(self):
-        a = self.makeService(name='a', serviceid=20)
-        b1 = self.makeService(name='b', serviceid=21)
-        b2 = self.makeService(name='b', serviceid=21)  # same args as 'b1'
-        b3 = self.makeService(name='b', serviceid=20)  # same id as 'a'
+        a = self.makeService(attach_to_master=False, name='a', serviceid=20)
+        b1 = self.makeService(attach_to_master=False, name='b', serviceid=21)
+        b2 = self.makeService(attach_to_master=False, name='b', serviceid=21)  # same args as 'b1'
+        b3 = self.makeService(attach_to_master=False, name='b', serviceid=20)  # same id as 'a'
 
         self.assertTrue(a == a)  # pylint: disable=comparison-with-itself
         self.assertTrue(a != b1)
@@ -202,7 +206,7 @@ class ClusteredBuildbotService(unittest.TestCase):
         self.svc.startService()
 
         # right before the poll interval, nothing has tried again yet
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 0.95)
+        self.reactor.advance(self.svc.POLL_INTERVAL_SEC * 0.95)
 
         self.assertEqual(0, self.svc.activate.call_count)
         self.assertEqual(1, self.svc._getServiceId.call_count)
@@ -218,7 +222,7 @@ class ClusteredBuildbotService(unittest.TestCase):
         yield self.svc.startService()
 
         # at the POLL time, it gets called again, but we're still inactive...
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 1.05)
+        self.reactor.advance(self.svc.POLL_INTERVAL_SEC * 1.05)
 
         self.assertEqual(0, self.svc.activate.call_count)
         self.assertEqual(1, self.svc._getServiceId.call_count)
@@ -235,7 +239,7 @@ class ClusteredBuildbotService(unittest.TestCase):
         self.svc.startService()
 
         for _ in range(NUMBER_OF_POLLS):
-            self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC)
+            self.reactor.advance(self.svc.POLL_INTERVAL_SEC)
 
         self.assertEqual(1, self.svc._getServiceId.call_count)
         self.assertEqual(1 + NUMBER_OF_POLLS, self.svc._claimService.call_count)
@@ -260,7 +264,7 @@ class ClusteredBuildbotService(unittest.TestCase):
         self.svc.startService()
 
         # another epoch shouldn't do anything further...
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
+        self.reactor.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc.activate.call_count)
         self.assertEqual(1, self.svc._getServiceId.call_count)
@@ -281,7 +285,7 @@ class ClusteredBuildbotService(unittest.TestCase):
         self.successResultOf(stopDeferred)
 
         # advance the clock, and nothing should happen
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
+        self.reactor.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc._claimService.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
