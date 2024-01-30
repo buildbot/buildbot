@@ -400,6 +400,7 @@ class P4(Source):
         yield self.runCommand(cmd)
 
         stdout = cmd.stdout.splitlines(keepends=False)
+        # pylint: disable=wrong-spelling-in-comment
         # Example output from p4 -ztag changes -m1
         # ... change 212798
         # ... time 1694770219
