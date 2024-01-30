@@ -68,6 +68,7 @@ class RepeatedActionHandler:
         self._enabled = False
         self._timer = None
         self._start_timer_after_action_completes = start_timer_after_action_completes
+        self._running = False
 
     def set_interval(self, interval):
         self._interval = interval
@@ -94,15 +95,25 @@ class RepeatedActionHandler:
             return
         self._timer.reset(self._interval)
 
+    def force(self):
+        if not self._enabled or self._running:
+            return
+
+        self._timer.cancel()
+        self._waiter.add(self._handle_action())
+
     def _start_timer(self):
         self._timer = self._reactor.callLater(self._interval, self._handle_timeout)
 
     @defer.inlineCallbacks
     def _do_action(self):
         try:
+            self._running = True
             yield self._action()
         except Exception as e:
             log.err(e, 'Got exception in RepeatedActionHandler')
+        finally:
+            self._running = False
 
     def _handle_timeout(self):
         self._waiter.add(self._handle_action())
