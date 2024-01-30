@@ -24,6 +24,7 @@
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.base import _ThreePhaseEvent
+from twisted.internet.error import ProcessDone
 from twisted.internet.interfaces import IReactorCore
 from twisted.internet.interfaces import IReactorThreads
 from twisted.internet.task import Clock
@@ -114,13 +115,139 @@ class NonReactor:
         return NonThreadPool()
 
 
-class TestReactor(NonReactor, CoreReactor, Clock):
+class ProcessTransport:
+    def __init__(self, pid, reactor):
+        self.pid = pid
+        self.reactor = reactor
+
+    def signalProcess(self, signal):
+        self.reactor.process_signalProcess(self.pid, signal)
+
+    def closeChildFD(self, descriptor):
+        self.reactor.process_closeChildFD(self.pid, descriptor)
+
+
+class ProcessReactor:
+    def __init__(self):
+        super().__init__()
+        self._expected_calls = []
+        self._processes = {}
+        self._next_pid = 0
+
+    def _check_call(self, call):
+        function = call["call"]
+        if not self._expected_calls:
+            raise AssertionError(f"Unexpected call to {function}(): {call!r}")
+        expected_call = self._expected_calls.pop(0)
+        self.testcase.assertEqual(call, expected_call, f"when calling to {function}()")
+
+    def spawnProcess(
+        self,
+        processProtocol,
+        executable,
+        args,
+        env=None,
+        path=None,
+        uid=None,
+        gid=None,
+        usePTY=False,
+        childFDs=None,
+    ):
+        call = {
+            "call": "spawnProcess",
+            "executable": executable,
+            "args": args,
+            "env": env,
+            "path": path,
+            "uid": uid,
+            "gid": gid,
+            "usePTY": usePTY,
+            "childFDs": childFDs,
+        }
+        self._check_call(call)
+
+        pid = self._next_pid
+        self._next_pid += 1
+
+        self._processes[pid] = processProtocol
+        return ProcessTransport(pid, self)
+
+    def process_signalProcess(self, pid, signal):
+        call = {
+            "call": "signalProcess",
+            "pid": pid,
+            "signal": signal,
+        }
+        self._check_call(call)
+
+    def process_closeChildFD(self, pid, descriptor):
+        call = {
+            "call": "closeChildFD",
+            "pid": pid,
+            "descriptor": descriptor,
+        }
+        self._check_call(call)
+
+    def process_done(self, pid, status):
+        reason = ProcessDone(status)
+        self._processes[pid].processEnded(reason)
+        self._processes[pid].processExited(reason)
+
+    def process_send_stdout(self, pid, data):
+        self._processes[pid].outReceived(data)
+
+    def process_send_stderr(self, pid, data):
+        self._processes[pid].errReceived(data)
+
+    def assert_no_remaining_calls(self):
+        if self._expected_calls:
+            msg = "The following expected calls are missing: "
+            for call in self._expected_calls:
+                copy = call.copy()
+                name = copy.pop("call")
+                msg += f"\nTo {name}(): {call!r}"
+            raise AssertionError(msg)
+
+    def expect_spawn(
+        self, executable, args, env=None, path=None, uid=None, gid=None, usePTY=False, childFDs=None
+    ):
+        self._expected_calls.append({
+            "call": "spawnProcess",
+            "executable": executable,
+            "args": args,
+            "env": env,
+            "path": path,
+            "uid": uid,
+            "gid": gid,
+            "usePTY": usePTY,
+            "childFDs": childFDs,
+        })
+
+    def expect_process_signalProcess(self, pid, signal):
+        self._expected_calls.append({
+            "call": "signalProcess",
+            "pid": pid,
+            "signal": signal,
+        })
+
+    def expect_process_closeChildFD(self, pid, descriptor):
+        self._expected_calls.append({
+            "call": "closeChildFD",
+            "pid": pid,
+            "descriptor": descriptor,
+        })
+
+
+class TestReactor(ProcessReactor, NonReactor, CoreReactor, Clock):
     def __init__(self):
         super().__init__()
 
         # whether there are calls that should run right now
         self._pendingCurrentCalls = False
         self.stop_called = False
+
+    def set_test_case(self, testcase):
+        self.testcase = testcase
 
     def _executeCurrentDelayedCalls(self):
         while self.getDelayedCalls():
