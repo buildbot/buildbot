@@ -82,11 +82,11 @@ class TestPBChangeSource(
         self.setChangeSourceToMaster(None)
 
         # not quite enough time to cause it to activate
-        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
+        self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
         self.assertNotRegistered()
 
         # there we go!
-        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
+        self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks

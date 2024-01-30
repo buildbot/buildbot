@@ -361,9 +361,7 @@ class ClusteredBuildbotService(BuildbotService):
 
     def _startActivityPolling(self):
         self._activityPollCall = task.LoopingCall(self._activityPoll)
-        # plug in a clock if we have one, for tests
-        if hasattr(self, 'clock'):
-            self._activityPollCall.clock = self.clock
+        self._activityPollCall.clock = self.master.reactor
 
         d = self._activityPollCall.start(self.POLL_INTERVAL_SEC, now=True)
         self._activityPollDeferred = d
