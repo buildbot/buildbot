@@ -18,7 +18,6 @@ import datetime
 import json
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import config
@@ -163,20 +162,6 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         self._get_files = get_files
         self.debug = debug
 
-    def lineReceived(self, line):
-        try:
-            event = json.loads(bytes2unicode(line))
-        except ValueError:
-            log.msg(f"bad json line: {line}")
-            return defer.succeed(None)
-
-        if not (isinstance(event, dict) and "type" in event):
-            if self.debug:
-                log.msg(f"no type in event {line}")
-            return defer.succeed(None)
-
-        return self.eventReceived(event)
-
     def build_properties(self, event):
         properties = self.extractProperties(event)
         properties["event.source"] = self.__class__.__name__
@@ -312,26 +297,263 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         )
 
 
+class GerritSshStreamEventsConnector:
+    class LocalPP(LineProcessProtocol):
+        MAX_STORED_OUTPUT_DEBUG_LINES = 20
+
+        def __init__(self, connector):
+            super().__init__()
+            self.connector = connector
+
+        @defer.inlineCallbacks
+        def outLineReceived(self, line):
+            if self.connector.debug:
+                log.msg(f"{self.connector.name} stdout: {line.decode('utf-8', errors='replace')}")
+
+            self.connector._append_line_for_debug(line)
+            yield self.connector.on_line_received_cb(line)
+
+        def errLineReceived(self, line):
+            if self.connector.debug:
+                log.msg(f"{self.connector.name} stderr: {line.decode('utf-8', errors='replace')}")
+            self.connector._append_line_for_debug(line)
+
+        def processEnded(self, status):
+            super().processEnded(status)
+            self.connector._stream_process_stopped()
+
+    # (seconds) connections longer than this are considered good, and reset the backoff timer
+    STREAM_GOOD_CONNECTION_TIME = 120
+
+    # (seconds) minimum, but nonzero, time to wait before retrying a failed connection
+    STREAM_BACKOFF_MIN = 0.5
+
+    # multiplier used to increase the backoff from MIN to MAX on repeated failures
+    STREAM_BACKOFF_EXPONENT = 1.5
+
+    # (seconds) maximum time to wait before retrying a failed connection
+    STREAM_BACKOFF_MAX = 60
+
+    # The number of gerrit output lines to print in case of a failure
+    MAX_STORED_OUTPUT_DEBUG_LINES = 20
+
+    debug = False
+
+    def __init__(
+        self,
+        reactor,
+        change_source,
+        gerritserver,
+        username,
+        gerritport=29418,
+        identity_file=None,
+        ssh_server_alive_interval_s=15,
+        ssh_server_alive_count_max=3,
+        on_process_restart_cb=None,
+        on_line_received_cb=None,
+    ):
+        self.reactor = reactor
+        self.change_source = change_source
+        self.gerritserver = gerritserver
+        self.username = username
+        self.gerritport = gerritport
+        self.identity_file = identity_file
+        self.ssh_server_alive_interval_s = ssh_server_alive_interval_s
+        self.ssh_server_alive_count_max = ssh_server_alive_count_max
+        self.on_process_restart_cb = on_process_restart_cb
+        self.on_line_received_cb = on_line_received_cb
+        self._process = None
+        self._stream_process_timeout = self.STREAM_BACKOFF_MIN
+        self._last_lines_for_debug = []
+
+    def start(self):
+        self._want_process = True
+        self.start_stream_process()
+
+    def stop(self):
+        self._want_process = False
+        if self._process:
+            self._process.signalProcess("KILL")
+        # TODO: if this occurs while the process is restarting, some exceptions
+        # may be logged, although things will settle down normally
+
+    def _append_line_for_debug(self, line):
+        self._last_lines_for_debug.append(line)
+        while len(self._last_lines_for_debug) > self.MAX_STORED_OUTPUT_DEBUG_LINES:
+            self._last_lines_for_debug.pop(0)
+
+    def _build_gerrit_command(self, *gerrit_args):
+        """Get an ssh command list which invokes gerrit with the given args on the
+        remote host"""
+
+        options = [
+            "-o",
+            "BatchMode=yes",
+        ]
+        if self.ssh_server_alive_interval_s is not None:
+            options += ["-o", f"ServerAliveInterval={self.ssh_server_alive_interval_s}"]
+        if self.ssh_server_alive_count_max is not None:
+            options += ["-o", f"ServerAliveCountMax={self.ssh_server_alive_count_max}"]
+
+        cmd = (
+            ["ssh"] + options + [f"{self.username}@{self.gerritserver}", "-p", str(self.gerritport)]
+        )
+
+        if self.identity_file is not None:
+            cmd.extend(["-i", self.identity_file])
+
+        cmd.append("gerrit")
+        cmd.extend(gerrit_args)
+        return cmd
+
+    def start_stream_process(self):
+        if self.debug:
+            log.msg(f"{self.connector.name}: starting 'gerrit stream-events'")
+
+        cmd = self._build_gerrit_command("stream-events")
+        self._last_stream_process_start = self.reactor.seconds()
+        self._process = self.reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
+        self._last_lines_for_debug = []
+
+    def _stream_process_stopped(self):
+        self._process = None
+
+        # if the service is stopped, don't try to restart the process
+        if not self._want_process or not self.change_source.running:
+            return
+
+        now = self.reactor.seconds()
+        if now - self._last_stream_process_start < self.STREAM_GOOD_CONNECTION_TIME:
+            # bad startup; start the stream process again after a timeout,
+            # and then increase the timeout
+            log_lines = "\n".join([
+                l.decode("utf-8", errors="ignore") for l in self._last_lines_for_debug
+            ])
+
+            log.msg(
+                f"{self.connector.name}: stream-events failed; restarting after "
+                f"{round(self._stream_process_timeout)}s.\n"
+                f"{len(self._last_lines_for_debug)} log lines follow:\n{log_lines}"
+            )
+
+            self.master.reactor.callLater(self._stream_process_timeout, self.start_stream_process)
+            self._stream_process_timeout *= self.STREAM_BACKOFF_EXPONENT
+            if self._stream_process_timeout > self.STREAM_BACKOFF_MAX:
+                self._stream_process_timeout = self.STREAM_BACKOFF_MAX
+        else:
+            # good startup, but lost connection; restart immediately,
+            # and set the timeout to its minimum
+
+            # make sure we log the reconnection, so that it might be detected
+            # and network connectivity fixed
+            log.msg(f"{self.connector.name}: stream-events lost connection. Reconnecting...")
+            self.start_stream_process()
+            self._stream_process_timeout = self.STREAM_BACKOFF_MIN
+
+    @defer.inlineCallbacks
+    def get_files(self, change, patchset):
+        cmd = self._build_gerrit_command(
+            "query", str(change), "--format", "JSON", "--files", "--patch-sets"
+        )
+
+        if self.debug:
+            log.msg(
+                f"{self.connector.name}: querying for changed files in change {change}/{patchset}: {cmd}"
+            )
+
+        rc, out = yield runprocess.run_process(self.reactor, cmd, env=None, collect_stderr=False)
+        if rc != 0:
+            return ["unknown"]
+
+        out = out.splitlines()[0]
+        res = json.loads(bytes2unicode(out))
+
+        if res.get("rowCount") == 0:
+            return ["unknown"]
+
+        patchsets = {i["number"]: i["files"] for i in res["patchSets"]}
+        return [i["file"] for i in patchsets[int(patchset)]]
+
+
+class GerritHttpEventLogPollerConnector:
+    FIRST_FETCH_LOOKBACK_DAYS = 30
+
+    debug = False
+
+    def __init__(
+        self,
+        reactor,
+        change_source,
+        base_url,
+        auth,
+        get_last_event_ts,
+        first_fetch_lookback=FIRST_FETCH_LOOKBACK_DAYS,
+        on_lines_received_cb=None,
+    ):
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
+        self._reactor = reactor
+        self._change_source = change_source
+        self._get_last_event_ts = get_last_event_ts
+        self._base_url = base_url
+        self._auth = auth
+        self._first_fetch_lookback = first_fetch_lookback
+        self._on_lines_received_cb = on_lines_received_cb
+        self._last_event_time = None
+
+    @defer.inlineCallbacks
+    def setup(self):
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self._change_source.master, self._base_url, auth=self._auth
+        )
+
+    @defer.inlineCallbacks
+    def poll(self):
+        last_event_ts = yield self._get_last_event_ts()
+        if last_event_ts is None:
+            # If there is not last event time stored in the database, then set
+            # the last event time to some historical look-back
+            last_event = datetime.datetime.fromtimestamp(
+                self._reactor.seconds(), datetime.timezone.utc
+            ) - datetime.timedelta(days=self._first_fetch_lookback)
+        else:
+            last_event = datetime.datetime.fromtimestamp(last_event_ts, datetime.timezone.utc)
+        last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
+
+        if self.debug:
+            log.msg(f"{self.change_source.name}: Polling gerrit: {last_event_formatted}")
+
+        res = yield self._http.get(
+            "/plugins/events-log/events/", params={"t1": last_event_formatted}
+        )
+        lines = yield res.content()
+        yield self._on_lines_received_cb(lines.splitlines())
+
+    @defer.inlineCallbacks
+    def get_files(self, change, patchset):
+        res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
+        res = yield res.content()
+
+        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
+        return list(json.loads(res))
+
+    @defer.inlineCallbacks
+    def do_poll(self):
+        try:
+            yield self.poll()
+        except Exception as e:
+            log.err(e, 'while polling for changes')
+
+
+def extract_gerrit_event_time(event):
+    return event["eventCreatedOn"]
+
+
 class GerritChangeSource(GerritChangeSourceBase):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
     compare_attrs = ("gerritserver", "gerritport")
-
-    STREAM_GOOD_CONNECTION_TIME = 120
-    "(seconds) connections longer than this are considered good, and reset the backoff timer"
-
-    STREAM_BACKOFF_MIN = 0.5
-    "(seconds) minimum, but nonzero, time to wait before retrying a failed connection"
-
-    STREAM_BACKOFF_EXPONENT = 1.5
-    "multiplier used to increase the backoff from MIN to MAX on repeated failures"
-
-    STREAM_BACKOFF_MAX = 60
-    "(seconds) maximum time to wait before retrying a failed connection"
-
-    # The number of gerrit output lines to print in case of a failure
-    MAX_STORED_OUTPUT_DEBUG_LINES = 20
 
     name = None
 
@@ -374,160 +596,51 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.gerritport = gerritport
         self.username = username
         self.identity_file = identity_file
-        self.process = None
-        self.wantProcess = False
-        self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
-        self.ssh_server_alive_interval_s = ssh_server_alive_interval_s
-        self.ssh_server_alive_count_max = ssh_server_alive_count_max
-        self._last_lines_for_debug = []
+        self._stream_connector = GerritSshStreamEventsConnector(
+            self.master.reactor,
+            self,
+            gerritserver,
+            username,
+            gerritport=gerritport,
+            identity_file=identity_file,
+            ssh_server_alive_interval_s=ssh_server_alive_interval_s,
+            ssh_server_alive_count_max=ssh_server_alive_count_max,
+            on_process_restart_cb=None,
+            on_line_received_cb=self.lineReceived,
+        )
         return super().reconfigService(**kwargs)
 
-    def _append_line_for_debug(self, line):
-        self._last_lines_for_debug.append(line)
-        while len(self._last_lines_for_debug) > self.MAX_STORED_OUTPUT_DEBUG_LINES:
-            self._last_lines_for_debug.pop(0)
-
-    class LocalPP(LineProcessProtocol):
-        MAX_STORED_OUTPUT_DEBUG_LINES = 20
-
-        def __init__(self, change_source):
-            super().__init__()
-            self.change_source = change_source
-
-        @defer.inlineCallbacks
-        def outLineReceived(self, line):
-            if self.change_source.debug:
-                log.msg(
-                    f"{self.change_source.name} "
-                    f"stdout: {line.decode('utf-8', errors='replace')}"
-                )
-
-            self.change_source._append_line_for_debug(line)
-            yield self.change_source.lineReceived(line)
-
-        def errLineReceived(self, line):
-            if self.change_source.debug:
-                log.msg(
-                    f"{self.change_source.name} "
-                    f"stderr: {line.decode('utf-8', errors='replace')}"
-                )
-            self.change_source._append_line_for_debug(line)
-
-        def processEnded(self, status):
-            super().processEnded(status)
-            self.change_source.streamProcessStopped()
-
-    def streamProcessStopped(self):
-        self.process = None
-
-        # if the service is stopped, don't try to restart the process
-        if not self.wantProcess or not self.running:
-            return
-
-        now = util.now()
-        if now - self.lastStreamProcessStart < self.STREAM_GOOD_CONNECTION_TIME:
-            # bad startup; start the stream process again after a timeout,
-            # and then increase the timeout
-            log_lines = "\n".join([
-                l.decode("utf-8", errors="ignore") for l in self._last_lines_for_debug
-            ])
-
-            log.msg(
-                f"{self.name}: stream-events failed; restarting after "
-                f"{round(self.streamProcessTimeout)}s.\n"
-                f"{len(self._last_lines_for_debug)} log lines follow:\n{log_lines}"
-            )
-
-            self.master.reactor.callLater(self.streamProcessTimeout, self.startStreamProcess)
-            self.streamProcessTimeout *= self.STREAM_BACKOFF_EXPONENT
-            if self.streamProcessTimeout > self.STREAM_BACKOFF_MAX:
-                self.streamProcessTimeout = self.STREAM_BACKOFF_MAX
-        else:
-            # good startup, but lost connection; restart immediately,
-            # and set the timeout to its minimum
-
-            # make sure we log the reconnection, so that it might be detected
-            # and network connectivity fixed
-            log.msg(f"{self.name}: stream-events lost connection. Reconnecting...")
-            self.startStreamProcess()
-            self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
-
-    def _buildGerritCommand(self, *gerrit_args):
-        """Get an ssh command list which invokes gerrit with the given args on the
-        remote host"""
-
-        options = [
-            "-o",
-            "BatchMode=yes",
-        ]
-        if self.ssh_server_alive_interval_s is not None:
-            options += ["-o", f"ServerAliveInterval={self.ssh_server_alive_interval_s}"]
-        if self.ssh_server_alive_count_max is not None:
-            options += ["-o", f"ServerAliveCountMax={self.ssh_server_alive_count_max}"]
-
-        cmd = (
-            ["ssh"] + options + [f"{self.username}@{self.gerritserver}", "-p", str(self.gerritport)]
-        )
-
-        if self.identity_file is not None:
-            cmd.extend(["-i", self.identity_file])
-
-        cmd.append("gerrit")
-        cmd.extend(gerrit_args)
-        return cmd
-
-    def startStreamProcess(self):
-        if self.debug:
-            log.msg(f"{self.name}: starting 'gerrit stream-events'")
-
-        cmd = self._buildGerritCommand("stream-events")
-        self.lastStreamProcessStart = util.now()
-        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
-        self._last_lines_for_debug = []
-
-    @defer.inlineCallbacks
-    def getFiles(self, change, patchset):
-        cmd = self._buildGerritCommand(
-            "query", str(change), "--format", "JSON", "--files", "--patch-sets"
-        )
-
-        if self.debug:
-            log.msg(f"{self.name}: querying for changed files in change {change}/{patchset}: {cmd}")
-
-        rc, out = yield runprocess.run_process(
-            self.master.reactor, cmd, env=None, collect_stderr=False
-        )
-        if rc != 0:
-            return ["unknown"]
-
-        out = out.splitlines()[0]
-        res = json.loads(bytes2unicode(out))
-
-        if res.get("rowCount") == 0:
-            return ["unknown"]
-
-        patchsets = {i["number"]: i["files"] for i in res["patchSets"]}
-        return [i["file"] for i in patchsets[int(patchset)]]
-
     def activate(self):
-        self.wantProcess = True
-        self.startStreamProcess()
+        self._stream_connector.start()
 
     def deactivate(self):
-        self.wantProcess = False
-        if self.process:
-            self.process.signalProcess("KILL")
-        # TODO: if this occurs while the process is restarting, some exceptions
-        # may be logged, although things will settle down normally
+        return self._stream_connector.stop()
 
     def describe(self):
         status = ""
-        if not self.process:
+        if not self._stream_connector._process:
             status = "[NOT CONNECTED - check log]"
         return (
             "GerritChangeSource watching the remote "
             f"Gerrit repository {self.username}@{self.gerritserver} {status}"
         )
+
+    def getFiles(self, change, patchset):
+        return self._stream_connector.get_files(change, patchset)
+
+    def lineReceived(self, line):
+        try:
+            event = json.loads(bytes2unicode(line))
+        except ValueError:
+            log.msg(f"bad json line: {line}")
+            return defer.succeed(None)
+
+        if not (isinstance(event, dict) and "type" in event):
+            if self.debug:
+                log.msg(f"no type in event {line}")
+            return defer.succeed(None)
+
+        return self.eventReceived(event)
 
 
 class GerritEventLogPoller(GerritChangeSourceBase):
@@ -558,78 +671,65 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         **kwargs,
     ):
         yield super().reconfigService(**kwargs)
-        if baseURL.endswith('/'):
-            baseURL = baseURL[:-1]
 
-        self._pollInterval = pollInterval
-        self._pollAtLaunch = pollAtLaunch
+        self._poll_interval = pollInterval
+        self._poll_at_launch = pollAtLaunch
+
         self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, auth=auth
+
+        def get_last_event_ts():
+            return self.master.db.state.getState(self._oid, 'last_event_ts', None)
+
+        self._connector = GerritHttpEventLogPollerConnector(
+            self.master.reactor,
+            self,
+            baseURL,
+            auth,
+            get_last_event_ts,
+            first_fetch_lookback=firstFetchLookback,
+            on_lines_received_cb=self._lines_received,
         )
+        yield self._connector.setup()
+        self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
 
-        self._first_fetch_lookback = firstFetchLookback
-        self._last_event_time = None
-
-    @staticmethod
-    def now():
-        """patchable now (datetime is not patchable as builtin)"""
-        return datetime.datetime.now(datetime.timezone.utc)
-
-    @defer.inlineCallbacks
-    def poll(self):
-        last_event_ts = yield self.master.db.state.getState(self._oid, 'last_event_ts', None)
-        if last_event_ts is None:
-            # If there is not last event time stored in the database, then set
-            # the last event time to some historical look-back
-            last_event = self.now() - datetime.timedelta(days=self._first_fetch_lookback)
-        else:
-            last_event = datetime.datetime.fromtimestamp(last_event_ts, datetime.timezone.utc)
-        last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
-
-        if self.debug:
-            log.msg(f"{self.name}: Polling gerrit: {last_event_formatted}".encode("utf-8"))
-
-        res = yield self._http.get(
-            "/plugins/events-log/events/", params={"t1": last_event_formatted}
-        )
-        lines = yield res.content()
-        for line in lines.splitlines():
-            yield self.lineReceived(line)
-
-    @defer.inlineCallbacks
-    def eventReceived(self, event):
-        res = yield super().eventReceived(event)
-        if 'eventCreatedOn' in event:
-            yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
-        return res
-
-    @defer.inlineCallbacks
     def getFiles(self, change, patchset):
-        res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
-        res = yield res.content()
-
-        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
-        return list(json.loads(res))
-
-    # FIXME this copy the code from PollingChangeSource
-    # but as PollingChangeSource and its subclasses need to be ported to reconfigurability
-    # we can't use it right now
-    @base.poll_method
-    def doPoll(self):
-        d = defer.maybeDeferred(self.poll)
-        d.addErrback(log.err, 'while polling for changes')
-        return d
+        return self._connector.get_files(change, patchset)
 
     def force(self):
-        self.doPoll()
+        self._poller()
 
     def activate(self):
-        self.doPoll.start(interval=self._pollInterval, now=self._pollAtLaunch)
+        self._poller.start(interval=self._poll_interval, now=self._poll_at_launch)
 
     def deactivate(self):
-        return self.doPoll.stop()
+        return self._poller.stop()
 
     def describe(self):
         msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
         return msg.format(self.name)
+
+    @defer.inlineCallbacks
+    def _lines_received(self, lines):
+        last_event_ts = None
+        for line in lines:
+            try:
+                event = json.loads(bytes2unicode(line))
+            except ValueError:
+                log.msg(f"bad json line: {line}")
+                continue
+
+            if not (isinstance(event, dict) and "type" in event):
+                if self.debug:
+                    log.msg(f"no type in event {line}")
+                continue
+
+            yield super().eventReceived(event)
+
+            this_last_event_ts = extract_gerrit_event_time(event)
+            if last_event_ts is None:
+                last_event_ts = this_last_event_ts
+            else:
+                last_event_ts = max(last_event_ts, this_last_event_ts)
+
+        if last_event_ts is not None:
+            yield self.master.db.state.setState(self._oid, "last_event_ts", last_event_ts)
