@@ -162,20 +162,6 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         self._get_files = get_files
         self.debug = debug
 
-    def lineReceived(self, line):
-        try:
-            event = json.loads(bytes2unicode(line))
-        except ValueError:
-            log.msg(f"bad json line: {line}")
-            return defer.succeed(None)
-
-        if not (isinstance(event, dict) and "type" in event):
-            if self.debug:
-                log.msg(f"no type in event {line}")
-            return defer.succeed(None)
-
-        return self.eventReceived(event)
-
     def build_properties(self, event):
         properties = self.extractProperties(event)
         properties["event.source"] = self.__class__.__name__
@@ -639,6 +625,20 @@ class GerritChangeSource(GerritChangeSourceBase):
     def getFiles(self, change, patchset):
         return self._stream_connector.get_files(change, patchset)
 
+    def lineReceived(self, line):
+        try:
+            event = json.loads(bytes2unicode(line))
+        except ValueError:
+            log.msg(f"bad json line: {line}")
+            return defer.succeed(None)
+
+        if not (isinstance(event, dict) and "type" in event):
+            if self.debug:
+                log.msg(f"no type in event {line}")
+            return defer.succeed(None)
+
+        return self.eventReceived(event)
+
 
 class GerritEventLogPoller(GerritChangeSourceBase):
     POLL_INTERVAL_SEC = 30
@@ -711,3 +711,17 @@ class GerritEventLogPoller(GerritChangeSourceBase):
     def describe(self):
         msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
         return msg.format(self.name)
+
+    def lineReceived(self, line):
+        try:
+            event = json.loads(bytes2unicode(line))
+        except ValueError:
+            log.msg(f"bad json line: {line}")
+            return defer.succeed(None)
+
+        if not (isinstance(event, dict) and "type" in event):
+            if self.debug:
+                log.msg(f"no type in event {line}")
+            return defer.succeed(None)
+
+        return self.eventReceived(event)
