@@ -129,3 +129,66 @@ class RepeatedActionHandler:
 
         if not self._start_timer_after_action_completes:
             yield self._do_action()
+
+
+class NonRepeatedActionHandler:
+    """This class handles a single action that can be issued on demand. It ensures that multiple
+    invocations of an action do not overlap.
+    """
+
+    def __init__(self, reactor, waiter, action):
+        self._reactor = reactor
+        self._waiter = waiter
+        self._action = action
+        self._timer = None
+        self._running = False
+        self._repeat_after_finished = False
+
+    def force(self, invoke_again_if_running=False):
+        if self._running:
+            if not invoke_again_if_running:
+                return
+            self._repeat_after_finished = True
+            return
+
+        if self._timer is not None:
+            self._timer.cancel()
+            self._timer = None
+
+        self._waiter.add(self._do_action())
+
+    def schedule(self, seconds_from_now, invoke_again_if_running=False):
+        if self._running and not invoke_again_if_running:
+            return
+
+        if self._timer is None:
+            self._timer = self._reactor.callLater(seconds_from_now, self._handle_timeout)
+            return
+
+        target_time = self._reactor.seconds() + seconds_from_now
+        if target_time > self._timer.getTime():
+            return
+
+        self._timer.reset(seconds_from_now)
+
+    def stop(self):
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
+
+    @defer.inlineCallbacks
+    def _do_action(self):
+        try:
+            self._running = True
+            yield self._action()
+        except Exception as e:
+            log.err(e, 'Got exception in NonRepeatedActionHandler')
+        finally:
+            self._running = False
+        if self._repeat_after_finished:
+            self._repeat_after_finished = False
+            self._waiter.add(self._do_action())
+
+    def _handle_timeout(self):
+        self._timer = None
+        self._waiter.add(self._do_action())

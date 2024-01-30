@@ -113,6 +113,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.croniter.croniter',
             'buildbot.util.debounce.Debouncer',
             'buildbot.util.deferwaiter.DeferWaiter',
+            "buildbot.util.deferwaiter.NonRepeatedActionHandler",
             'buildbot.util.deferwaiter.RepeatedActionHandler',
             'buildbot.util.git.GitMixin',
             'buildbot.util.git.GitStepMixin',
