@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.internet import task
 
 from buildbot.test.fake import fakemaster
 
@@ -67,10 +66,6 @@ class ChangeSourceMixin:
             yield self.changesource.configureService()
         except NotImplementedError:  # non-reconfigurable change sources can't reconfig
             pass
-
-        # also, now that changesources are ClusteredServices, setting up
-        # the clock here helps in the unit tests that check that behavior
-        self.changesource.clock = task.Clock()
         return cs
 
     def startChangeSource(self):
