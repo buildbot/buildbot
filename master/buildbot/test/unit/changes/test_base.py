@@ -51,9 +51,9 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         yield cs.startService()
-        cs.clock.advance(cs.POLL_INTERVAL_SEC / 2)
-        cs.clock.advance(cs.POLL_INTERVAL_SEC / 5)
-        cs.clock.advance(cs.POLL_INTERVAL_SEC / 5)
+        self.reactor.advance(cs.POLL_INTERVAL_SEC / 2)
+        self.reactor.advance(cs.POLL_INTERVAL_SEC / 5)
+        self.reactor.advance(cs.POLL_INTERVAL_SEC / 5)
         self.assertFalse(cs.activate.called)
         self.assertFalse(cs.deactivate.called)
         self.assertFalse(cs.active)
@@ -64,7 +64,7 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
         self.setChangeSourceToMaster(None)
 
         yield cs.startService()
-        cs.clock.advance(cs.POLL_INTERVAL_SEC)
+        self.reactor.advance(cs.POLL_INTERVAL_SEC)
         self.assertTrue(cs.activate.called)
         self.assertFalse(cs.deactivate.called)
         self.assertTrue(cs.active)
@@ -95,6 +95,18 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, 
 
     def tearDown(self):
         return self.tearDownChangeSource()
+
+    @defer.inlineCallbacks
+    def attachChangeSource(self, cs):
+        self.changesource = cs
+        yield self.changesource.setServiceParent(self.master)
+
+        # configure the service to let secret manager render the secrets
+        try:
+            yield self.changesource.configureService()
+        except NotImplementedError:  # non-reconfigurable change sources can't reconfig
+            pass
+        return cs
 
     @defer.inlineCallbacks
     def runClockFor(self, _, secs):
