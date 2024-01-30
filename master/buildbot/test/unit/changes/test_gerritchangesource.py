@@ -20,7 +20,6 @@ import types
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
 
@@ -518,9 +517,9 @@ class TestGerritChangeSource(
             so = error.ProcessDone(None)
             pp.processEnded(failure.Failure(so))
 
-        self.patch(reactor, 'spawnProcess', spawnProcess)
+        self.master.reactor.spawnProcess = spawnProcess
 
-        s.startStreamProcess()
+        s.activate()
 
     # -------------------------------------------------------------------------
     # Test data for getFiles()
