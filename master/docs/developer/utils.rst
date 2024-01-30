@@ -1315,7 +1315,7 @@ For example, a particular daily scheduler could be configured on multiple master
         It will make sure the original :py:class:`HTTPClientService` is not called, and assert that all expected http requests have been described in the test case.
 
 
-    .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200, content=None, content_json=None)
+    .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200, content=None, content_json=None, processing_delay_s=None)
 
         :param method: expected HTTP method
         :param ep: expected endpoint
@@ -1325,6 +1325,7 @@ For example, a particular daily scheduler could be configured on multiple master
         :param code: optional http code that will be received
         :param content: optional content that will be received
         :param content_json: optional content encoded in json that will be received
+        :param processing_delay_s: optional delay that the handling of the request will take
 
         Records an expectation of HTTP requests that will happen during the test.
         The order of the requests is important.
