@@ -660,12 +660,6 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
         yield self.changesource.setServiceParent(self.master)
         yield self.attachChangeSource(self.changesource)
 
-    # tests
-    @defer.inlineCallbacks
-    def test_now(self):
-        yield self.newChangeSource()
-        self.changesource.now()
-
     @defer.inlineCallbacks
     def test_describe(self):
         # describe is not used yet in buildbot nine, but it can still be useful in the future, so
@@ -688,11 +682,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             )
         ])
         yield self.newChangeSource(get_files=True)
-        self.changesource.now = lambda: datetime.datetime.fromtimestamp(
-            self.NOW_TIMESTAMP, datetime.timezone.utc
-        )
         thirty_days_ago = datetime.datetime.fromtimestamp(
-            self.NOW_TIMESTAMP, datetime.timezone.utc
+            self.reactor.seconds(), datetime.timezone.utc
         ) - datetime.timedelta(days=30)
         self._http.expect(
             method='get',
@@ -724,7 +715,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
         )
 
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource._connector.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -768,7 +759,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             content=self.change_revision_resp,
         )
 
-        yield self.changesource.poll()
+        yield self.changesource._connector.poll()
         self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
     change_revision_dict = {

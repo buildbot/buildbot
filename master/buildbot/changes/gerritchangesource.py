@@ -489,6 +489,77 @@ class GerritSshStreamEventsConnector:
         return [i["file"] for i in patchsets[int(patchset)]]
 
 
+class GerritHttpEventLogPollerConnector:
+    FIRST_FETCH_LOOKBACK_DAYS = 30
+
+    debug = False
+
+    def __init__(
+        self,
+        reactor,
+        change_source,
+        base_url,
+        auth,
+        get_last_event_ts,
+        first_fetch_lookback=FIRST_FETCH_LOOKBACK_DAYS,
+        on_line_received_cb=None,
+    ):
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
+        self._reactor = reactor
+        self._change_source = change_source
+        self._get_last_event_ts = get_last_event_ts
+        self._base_url = base_url
+        self._auth = auth
+        self._first_fetch_lookback = first_fetch_lookback
+        self._on_line_received_cb = on_line_received_cb
+        self._last_event_time = None
+
+    @defer.inlineCallbacks
+    def setup(self):
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self._change_source.master, self._base_url, auth=self._auth
+        )
+
+    @defer.inlineCallbacks
+    def poll(self):
+        last_event_ts = yield self._get_last_event_ts()
+        if last_event_ts is None:
+            # If there is not last event time stored in the database, then set
+            # the last event time to some historical look-back
+            last_event = datetime.datetime.fromtimestamp(
+                self._reactor.seconds(), datetime.timezone.utc
+            ) - datetime.timedelta(days=self._first_fetch_lookback)
+        else:
+            last_event = datetime.datetime.fromtimestamp(last_event_ts, datetime.timezone.utc)
+        last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
+
+        if self.debug:
+            log.msg(f"{self.change_source.name}: Polling gerrit: {last_event_formatted}")
+
+        res = yield self._http.get(
+            "/plugins/events-log/events/", params={"t1": last_event_formatted}
+        )
+        lines = yield res.content()
+        for line in lines.splitlines():
+            yield self._on_line_received_cb(line)
+
+    @defer.inlineCallbacks
+    def get_files(self, change, patchset):
+        res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
+        res = yield res.content()
+
+        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
+        return list(json.loads(res))
+
+    @defer.inlineCallbacks
+    def do_poll(self):
+        try:
+            yield self.poll()
+        except Exception as e:
+            log.err(e, 'while polling for changes')
+
+
 class GerritChangeSource(GerritChangeSourceBase):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
@@ -597,44 +668,26 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         **kwargs,
     ):
         yield super().reconfigService(**kwargs)
-        if baseURL.endswith('/'):
-            baseURL = baseURL[:-1]
 
-        self._pollInterval = pollInterval
-        self._pollAtLaunch = pollAtLaunch
+        self._poll_interval = pollInterval
+        self._poll_at_launch = pollAtLaunch
+
         self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, auth=auth
+
+        def get_last_event_ts():
+            return self.master.db.state.getState(self._oid, 'last_event_ts', None)
+
+        self._connector = GerritHttpEventLogPollerConnector(
+            self.master.reactor,
+            self,
+            baseURL,
+            auth,
+            get_last_event_ts,
+            first_fetch_lookback=firstFetchLookback,
+            on_line_received_cb=self.lineReceived,
         )
-
-        self._first_fetch_lookback = firstFetchLookback
-        self._last_event_time = None
-
-    @staticmethod
-    def now():
-        """patchable now (datetime is not patchable as builtin)"""
-        return datetime.datetime.now(datetime.timezone.utc)
-
-    @defer.inlineCallbacks
-    def poll(self):
-        last_event_ts = yield self.master.db.state.getState(self._oid, 'last_event_ts', None)
-        if last_event_ts is None:
-            # If there is not last event time stored in the database, then set
-            # the last event time to some historical look-back
-            last_event = self.now() - datetime.timedelta(days=self._first_fetch_lookback)
-        else:
-            last_event = datetime.datetime.fromtimestamp(last_event_ts, datetime.timezone.utc)
-        last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
-
-        if self.debug:
-            log.msg(f"{self.name}: Polling gerrit: {last_event_formatted}".encode("utf-8"))
-
-        res = yield self._http.get(
-            "/plugins/events-log/events/", params={"t1": last_event_formatted}
-        )
-        lines = yield res.content()
-        for line in lines.splitlines():
-            yield self.lineReceived(line)
+        yield self._connector.setup()
+        self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
 
     @defer.inlineCallbacks
     def eventReceived(self, event):
@@ -643,31 +696,17 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
         return res
 
-    @defer.inlineCallbacks
     def getFiles(self, change, patchset):
-        res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
-        res = yield res.content()
-
-        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
-        return list(json.loads(res))
-
-    # FIXME this copy the code from PollingChangeSource
-    # but as PollingChangeSource and its subclasses need to be ported to reconfigurability
-    # we can't use it right now
-    @base.poll_method
-    def doPoll(self):
-        d = defer.maybeDeferred(self.poll)
-        d.addErrback(log.err, 'while polling for changes')
-        return d
+        return self._connector.get_files(change, patchset)
 
     def force(self):
-        self.doPoll()
+        self._poller()
 
     def activate(self):
-        self.doPoll.start(interval=self._pollInterval, now=self._pollAtLaunch)
+        self._poller.start(interval=self._poll_interval, now=self._poll_at_launch)
 
     def deactivate(self):
-        return self.doPoll.stop()
+        return self._poller.stop()
 
     def describe(self):
         msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
