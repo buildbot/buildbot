@@ -693,12 +693,14 @@ class TestGerritChangeSource(
         yield d
 
         self.master.db.state.assertState(s._oid, last_event_ts=start_time + 42)
+        self.master.db.state.assertState(
+            s._oid, last_event_hashes=['f075e0927cab81dabee661a5aa3c65d502103a71']
+        )
 
         self.assert_events_received([
             {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 3, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 5, 'type': 'patchset-created'},
-            {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 42, 'type': 'patchset-created'},
         ])
@@ -816,11 +818,12 @@ class TestGerritChangeSource(
         yield d
 
         self.master.db.state.assertState(s._oid, last_event_ts=start_time + 42)
+        self.master.db.state.assertState(
+            s._oid, last_event_hashes=["f075e0927cab81dabee661a5aa3c65d502103a71"]
+        )
         self.assert_events_received([
             {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
-            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 2, 'type': 'patchset-created'},
-            {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 42, 'type': 'patchset-created'},
         ])
@@ -929,7 +932,6 @@ class TestGerritChangeSource(
 
         self.master.db.state.assertState(s._oid, last_event_ts=start_time + 257)
         self.assert_events_received([
-            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 2, 'type': 'patchset-created'},
             {'eventCreatedOn': start_time + 125, 'type': 'patchset-created'},

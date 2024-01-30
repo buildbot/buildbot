@@ -597,8 +597,11 @@ class GerritChangeSource(GerritChangeSourceBase):
     that historical events can be fetched to fill any gaps due to Buildbot or Gerrit restarts
     or internet connectivity problems.
 
-    Note that duplicate changes created by the change source are ignored at the database layer,
-    so this edge case does not need to be handled here.
+    Important considerations for filling gaps in processed events:
+     - Gerrit events do not have unique IDs, only eventCreateOn timestamp which is common between
+       events coming from the HTTP and SSH APIs
+     - Gerrit HTTP API does not provide any ordering guarantees.
+     - Gerrit HTTP and SSH APIs return events encoded identically
     """
 
     compare_attrs = ("gerritserver", "gerritport")
@@ -625,6 +628,14 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         # Used for polling if last event timestamp is unknown.
         self._start_ts = None
+
+        # Stores newest events that have been published for further processing and have identical
+        # timestamp. This is used to ensure that events are not duplicated across stream and
+        # polled sources.
+        self._last_second_events = []
+        # Contains hashes of self._last_second_events coming from previous run of this service.
+        # self._last_second_events is not stored directly because of size considerations.
+        self._last_second_event_hashes = []
 
         self._last_event_ts = None
         # Last event timestamp recorded to database. Equivalent to self._last_event_ts. Separate
@@ -709,6 +720,9 @@ class GerritChangeSource(GerritChangeSourceBase):
             self._last_event_ts = yield self.master.db.state.getState(
                 self._oid, 'last_event_ts', None
             )
+            self._last_second_event_hashes = yield self.master.db.state.getState(
+                self._oid, "last_event_hashes", None
+            )
 
         if self._poll_handler is not None:
             self._poll_handler.stop()
@@ -754,6 +768,15 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._poll_handler.stop()
         yield self._deferwaiter.wait()
 
+        if self._last_second_events:
+            yield self.master.db.state.setState(
+                self._oid,
+                "last_event_hashes",
+                [build_gerrit_event_hash(event) for event in self._last_second_events],
+            )
+        else:
+            yield self.master.db.state.setState(self._oid, "last_event_hashes", None)
+
     def getFiles(self, change, patchset):
         return self._stream_connector.get_files(change, patchset)
 
@@ -768,6 +791,13 @@ class GerritChangeSource(GerritChangeSourceBase):
             return
         self._is_synchronized = False
         self._poll_handler.force()
+
+    def _record_last_second_event(self, event, ts):
+        if self._last_event_ts != ts:
+            self._last_event_ts = ts
+            self._last_second_events.clear()
+            self._last_second_event_hashes = None
+        self._last_second_events.append(event)
 
     @defer.inlineCallbacks
     def _update_last_event_ts(self):
@@ -800,7 +830,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._stream_messages_timeout = False
         self._poll_handler.stop()
 
-        self._last_event_ts = extract_gerrit_event_time(event)
+        self._record_last_second_event(event, extract_gerrit_event_time(event))
         yield self._update_last_event_ts()
         yield self.eventReceived(event)
 
@@ -812,6 +842,13 @@ class GerritChangeSource(GerritChangeSourceBase):
         for ts, event in events:
             if ts < self._last_event_ts:
                 continue
+            if ts == self._last_event_ts:
+                if self._last_second_event_hashes is not None:
+                    if build_gerrit_event_hash(event) in self._last_second_event_hashes:
+                        continue
+
+                if event in self._last_second_events:
+                    continue
             filtered_events.append((ts, event))
         return filtered_events
 
@@ -866,9 +903,9 @@ class GerritChangeSource(GerritChangeSourceBase):
             # _is_synchronized as False.
 
             for ts, event in events:
+                self._record_last_second_event(event, ts)
                 yield self.eventReceived(event)
 
-            self._last_event_ts = max_event_ts
             yield self._update_last_event_ts()
             self._poll_handler.schedule(self._http_poll_interval, invoke_again_if_running=True)
             if needs_stream_restart:
@@ -883,13 +920,16 @@ class GerritChangeSource(GerritChangeSourceBase):
         # - starting with first_queued_ts (exclusive) the stream source has all events.
         for ts, event in events:
             if ts <= first_queued_ts:
-                self._last_event_ts = extract_gerrit_event_time(event)
+                self._record_last_second_event(event, ts)
                 yield self.eventReceived(event)
 
         i = 0
         while i < len(self._queued_stream_events):
             ts, event = self._queued_stream_events[i]
-            self._last_event_ts = ts
+            if ts == self._last_event_ts and event in self._last_second_events:
+                i += 1
+                continue
+            self._record_last_second_event(event, ts)
             yield self.eventReceived(event)
             i += 1
 
