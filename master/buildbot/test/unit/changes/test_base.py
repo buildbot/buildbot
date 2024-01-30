@@ -97,6 +97,18 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, 
         return self.tearDownChangeSource()
 
     @defer.inlineCallbacks
+    def attachChangeSource(self, cs):
+        self.changesource = cs
+        yield self.changesource.setServiceParent(self.master)
+
+        # configure the service to let secret manager render the secrets
+        try:
+            yield self.changesource.configureService()
+        except NotImplementedError:  # non-reconfigurable change sources can't reconfig
+            pass
+        return cs
+
+    @defer.inlineCallbacks
     def runClockFor(self, _, secs):
         yield self.reactor.pump([0] + [1.0] * secs)
 

@@ -54,12 +54,7 @@ class ChangeSourceMixin:
     def attachChangeSource(self, cs):
         self.changesource = cs
         yield self.changesource.setServiceParent(self.master)
-
-        # configure the service to let secret manager render the secrets
-        try:
-            yield self.changesource.configureService()
-        except NotImplementedError:  # non-reconfigurable change sources can't reconfig
-            pass
+        yield self.changesource.configureService()
         return cs
 
     def startChangeSource(self):
