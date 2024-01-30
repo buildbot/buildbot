@@ -104,7 +104,6 @@ class TestGerritChangeSource(
     def newChangeSource(self, host, user, *args, **kwargs):
         s = gerritchangesource.GerritChangeSource(host, user, *args, **kwargs)
         yield self.attachChangeSource(s)
-        s.configureService()
         return s
 
     def assert_changes(self, expected_changes, ignore_keys):
