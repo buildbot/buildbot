@@ -689,13 +689,6 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         yield self._connector.setup()
         self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
 
-    @defer.inlineCallbacks
-    def eventReceived(self, event):
-        res = yield super().eventReceived(event)
-        if 'eventCreatedOn' in event:
-            yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
-        return res
-
     def getFiles(self, change, patchset):
         return self._connector.get_files(change, patchset)
 
@@ -712,16 +705,19 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
         return msg.format(self.name)
 
+    @defer.inlineCallbacks
     def lineReceived(self, line):
         try:
             event = json.loads(bytes2unicode(line))
         except ValueError:
             log.msg(f"bad json line: {line}")
-            return defer.succeed(None)
+            return
 
         if not (isinstance(event, dict) and "type" in event):
             if self.debug:
                 log.msg(f"no type in event {line}")
-            return defer.succeed(None)
+            return
 
-        return self.eventReceived(event)
+        yield super().eventReceived(event)
+        if 'eventCreatedOn' in event:
+            yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
