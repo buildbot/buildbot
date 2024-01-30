@@ -408,18 +408,6 @@ class TestGerritChangeSource(
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_duplicate_events_ignored(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
-        yield s._line_received_stream(json.dumps(self.patchset_created_event))
-        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-
-        patchset_created_event = copy.deepcopy(self.patchset_created_event)
-        patchset_created_event['change']['project'] = {'name': 'test'}
-
-        yield s._line_received_stream(json.dumps(patchset_created_event))
-        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-
-    @defer.inlineCallbacks
     def test_duplicate_non_source_events_not_ignored(self):
         s = yield self.create_gerrit_synchronized(
             'somehost',

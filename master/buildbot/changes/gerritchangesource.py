@@ -187,41 +187,6 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
 
         return func(properties, event)
 
-    @defer.inlineCallbacks
-    def addChange(self, event_type, chdict):
-        stampdict = {
-            "branch": chdict["branch"],
-            "revision": chdict["revision"],
-            "patch_author": chdict["author"],
-            "patch_comment": chdict["comments"],
-            "repository": chdict["repository"],
-            "project": chdict["project"],
-            "codebase": '',
-        }
-
-        _, found_existing = yield self.master.db.sourcestamps.findOrCreateId(**stampdict)
-
-        if found_existing and event_type in ("patchset-created", "ref-updated"):
-            if self.debug:
-                eventstr = (
-                    f'{self.gitBaseURL}/{chdict["project"]} -- '
-                    f'{chdict["branch"]}:{chdict["revision"]}'
-                )
-                message = f"gerrit: duplicate change event {eventstr} by {self.__class__.__name__}"
-                log.msg(message.encode("utf-8"))
-            return
-
-        if self.debug:
-            eventstr = f'{chdict["repository"]} -- {chdict["branch"]}:{chdict["revision"]}'
-            message = f"gerrit: adding change from {eventstr} in {self.__class__.__name__}"
-            log.msg(message.encode("utf-8"))
-
-        try:
-            yield self.master.data.updates.addChange(**chdict)
-        except Exception:
-            # eat failures..
-            log.err('error adding change from GerritChangeSource')
-
     def get_branch_from_event(self, event):
         if event['type'] in ('patchset-created', 'comment-added'):
             return event["patchSet"]["ref"]
@@ -253,20 +218,17 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
                 change=event_change["number"], patchset=event["patchSet"]["number"]
             )
 
-        yield self.addChange(
-            event['type'],
-            {
-                'author': _gerrit_user_to_author(event_change["owner"]),
-                'project': util.bytes2unicode(event_change["project"]),
-                'repository': f'{self.gitBaseURL}/{event_change["project"]}',
-                'branch': self.get_branch_from_event(event),
-                'revision': event["patchSet"]["revision"],
-                'revlink': event_change["url"],
-                'comments': event_change["subject"],
-                'files': files,
-                'category': event["type"],
-                'properties': properties,
-            },
+        yield self.master.data.updates.addChange(
+            author=_gerrit_user_to_author(event_change["owner"]),
+            project=util.bytes2unicode(event_change["project"]),
+            repository=f'{self.gitBaseURL}/{event_change["project"]}',
+            branch=self.get_branch_from_event(event),
+            revision=event["patchSet"]["revision"],
+            revlink=event_change["url"],
+            comments=event_change["subject"],
+            files=files,
+            category=event["type"],
+            properties=properties,
         )
         return None
 
@@ -285,19 +247,16 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         if 'patchset-created' in self.handled_events and ref['refName'].startswith('refs/changes/'):
             return None
 
-        return self.addChange(
-            event['type'],
-            {
-                "author": author,
-                "project": ref["project"],
-                "repository": f'{self.gitBaseURL}/{ref["project"]}',
-                "branch": self.strip_refs_heads_from_branch(ref["refName"]),
-                "revision": ref["newRev"],
-                "comments": "Gerrit: commit(s) pushed.",
-                "files": ["unknown"],
-                "category": event["type"],
-                "properties": properties,
-            },
+        return self.master.data.updates.addChange(
+            author=author,
+            project=ref["project"],
+            repository=f'{self.gitBaseURL}/{ref["project"]}',
+            branch=self.strip_refs_heads_from_branch(ref["refName"]),
+            revision=ref["newRev"],
+            comments="Gerrit: commit(s) pushed.",
+            files=["unknown"],
+            category=event["type"],
+            properties=properties,
         )
 
 

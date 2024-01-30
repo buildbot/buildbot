@@ -1,0 +1,2 @@
+Events between ``GerritChangeSource`` and ``GerritEventLogPoller`` are no longer deduplicated.
+Use ``GerritChangeSource`` with both SSH and HTTP API configured as a replacement.

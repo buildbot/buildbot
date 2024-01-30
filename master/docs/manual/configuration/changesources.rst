@@ -1260,9 +1260,6 @@ Optionally it may use the `events-log plugin <https://gerrit.googlesource.com/pl
 to retrieve any events that occur while Buildbot is not connected. If events-log mechanism is not
 used any events that occur while buildbot is not connected to Gerrit will be lost.
 
-The ``patchset-created`` and ``ref-updated`` events will be deduplicated, that is, if multiple events related to the same revision are received, only the first will be acted upon.
-This allows ``GerritChangeSource`` to be used together with :bb:chsrc:`GerritEventLogPoller`.
-
 .. note::
 
     The :bb:chsrc:`GerritChangeSource` requires either the ``txrequest`` or the ``treq`` package for

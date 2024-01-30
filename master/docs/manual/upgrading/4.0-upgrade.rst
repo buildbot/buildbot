@@ -65,6 +65,14 @@ More specifically, the recommended approach is as follows:
 
  - Upgrade to Buildbot 4.x series
 
+GerritChangeSource and GerritEventLogPoller
+-------------------------------------------
+
+Events between ``GerritChangeSource`` and ``GerritEventLogPoller`` are no longer deduplicated.
+The equivalent is setting ``GerritChangeSource`` with both SSH and HTTP APIs. The ``http_url``
+should be set to ``baseURL`` of argument ``GerritEventLogPoller`` without the ``/a`` suffix included.
+``http_auth`` should be set to ``auth`` argument of ``GerritEventLogPoller``.
+
 Build status generators
 -----------------------
 
