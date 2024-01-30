@@ -15,6 +15,7 @@
 
 import copy
 import datetime
+import hashlib
 import json
 
 from twisted.internet import defer
@@ -24,10 +25,13 @@ from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
+from buildbot.config.checks import check_param_int
 from buildbot.config.checks import check_param_int_none
 from buildbot.util import bytes2unicode
+from buildbot.util import deferwaiter
 from buildbot.util import httpclientservice
 from buildbot.util import runprocess
+from buildbot.util import watchdog
 from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.pullrequest import PullRequestMixin
 
@@ -304,6 +308,8 @@ class GerritSshStreamEventsConnector:
         def __init__(self, connector):
             super().__init__()
             self.connector = connector
+            self._output_enabled = True
+            self._ended_deferred = defer.Deferred()
 
         @defer.inlineCallbacks
         def outLineReceived(self, line):
@@ -311,16 +317,25 @@ class GerritSshStreamEventsConnector:
                 log.msg(f"{self.connector.name} stdout: {line.decode('utf-8', errors='replace')}")
 
             self.connector._append_line_for_debug(line)
-            yield self.connector.on_line_received_cb(line)
+            if self._output_enabled:
+                yield self.connector.on_line_received_cb(line)
 
         def errLineReceived(self, line):
             if self.connector.debug:
                 log.msg(f"{self.connector.name} stderr: {line.decode('utf-8', errors='replace')}")
-            self.connector._append_line_for_debug(line)
+            if self._output_enabled:
+                self.connector._append_line_for_debug(line)
 
         def processEnded(self, status):
             super().processEnded(status)
+            self._ended_deferred.callback(None)
             self.connector._stream_process_stopped()
+
+        def disable_output(self):
+            self._output_enabled = False
+
+        def wait(self):
+            return self._ended_deferred
 
     # (seconds) connections longer than this are considered good, and reset the backoff timer
     STREAM_GOOD_CONNECTION_TIME = 120
@@ -349,7 +364,7 @@ class GerritSshStreamEventsConnector:
         identity_file=None,
         ssh_server_alive_interval_s=15,
         ssh_server_alive_count_max=3,
-        on_process_restart_cb=None,
+        on_process_start_cb=None,
         on_line_received_cb=None,
     ):
         self.reactor = reactor
@@ -360,7 +375,7 @@ class GerritSshStreamEventsConnector:
         self.identity_file = identity_file
         self.ssh_server_alive_interval_s = ssh_server_alive_interval_s
         self.ssh_server_alive_count_max = ssh_server_alive_count_max
-        self.on_process_restart_cb = on_process_restart_cb
+        self.on_process_start_cb = on_process_start_cb
         self.on_line_received_cb = on_line_received_cb
         self._process = None
         self._stream_process_timeout = self.STREAM_BACKOFF_MIN
@@ -370,12 +385,23 @@ class GerritSshStreamEventsConnector:
         self._want_process = True
         self.start_stream_process()
 
+    @defer.inlineCallbacks
     def stop(self):
         self._want_process = False
-        if self._process:
-            self._process.signalProcess("KILL")
-        # TODO: if this occurs while the process is restarting, some exceptions
-        # may be logged, although things will settle down normally
+        if self._process is not None:
+            self._process[0].disable_output()
+            self._process[1].signalProcess("KILL")
+            yield self._process[0].wait()
+
+    @defer.inlineCallbacks
+    def restart(self):
+        if self._process is not None:
+            self._process[0].disable_output()
+            # Process will restart automatically
+            self._process[1].signalProcess("KILL")
+            yield self._process[0].wait()
+        else:
+            self.start()
 
     def _append_line_for_debug(self, line):
         self._last_lines_for_debug.append(line)
@@ -407,12 +433,20 @@ class GerritSshStreamEventsConnector:
         return cmd
 
     def start_stream_process(self):
+        if self._process is not None:
+            return
+
         if self.debug:
             log.msg(f"{self.change_source.name}: starting 'gerrit stream-events'")
 
+        # Must be called before start of the process to ensure consistent ordering to avoid race
+        # conditions.
+        self.on_process_start_cb()
+
         cmd = self._build_gerrit_command("stream-events")
         self._last_stream_process_start = self.reactor.seconds()
-        self._process = self.reactor.spawnProcess(self.LocalPP(self), "ssh", cmd, env=None)
+        protocol = self.LocalPP(self)
+        self._process = (protocol, self.reactor.spawnProcess(protocol, "ssh", cmd, env=None))
         self._last_lines_for_debug = []
 
     def _stream_process_stopped(self):
@@ -549,13 +583,57 @@ def extract_gerrit_event_time(event):
     return event["eventCreatedOn"]
 
 
+def build_gerrit_event_hash(event):
+    return hashlib.sha1(json.dumps(event, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def is_event_valid(event):
+    return isinstance(event, dict) and "type" in event and "eventCreatedOn" in event
+
+
 class GerritChangeSource(GerritChangeSourceBase):
-    """This source will maintain a connection to gerrit ssh server
-    that will provide us gerrit events in json format."""
+    """This source will maintain a connection to gerrit ssh server that will provide us gerrit
+    events in json format. Additionally, connection to gerrit HTTP server may be setup so
+    that historical events can be fetched to fill any gaps due to Buildbot or Gerrit restarts
+    or internet connectivity problems.
+
+    Note that duplicate changes created by the change source are ignored at the database layer,
+    so this edge case does not need to be handled here.
+    """
 
     compare_attrs = ("gerritserver", "gerritport")
 
     name = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stream_connector = None
+        self._poll_connector = None
+
+        self._queued_stream_events = []
+
+        # Events are received from stream event source continuously. If HTTP API is not available,
+        # GerritChangeSource is always in this state.
+        self._is_synchronized = True
+
+        # True if SSH stream did not get events for a long time. It is unclear whether the
+        # connection broke or there were simply no activity, so the SSH connection should not be
+        # restarted. Note that _stream_activity_watchdog is disabled when
+        # _stream_messages_timeout is True and should be re-enabled when exiting out of this
+        # condition.
+        self._stream_messages_timeout = False
+
+        # Used for polling if last event timestamp is unknown.
+        self._start_ts = None
+
+        self._last_event_ts = None
+        # Last event timestamp recorded to database. Equivalent to self._last_event_ts. Separate
+        # variable is support single database transaction for message batches.
+        self._last_event_ts_saved = None
+
+        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._poll_handler = None
+        self._stream_activity_watchdog = None
 
     def checkConfig(
         self,
@@ -565,6 +643,9 @@ class GerritChangeSource(GerritChangeSourceBase):
         identity_file=None,
         ssh_server_alive_interval_s=15,
         ssh_server_alive_count_max=3,
+        http_url=None,
+        http_auth=None,
+        http_poll_interval=30,
         **kwargs,
     ):
         if self.name is None:
@@ -577,8 +658,10 @@ class GerritChangeSource(GerritChangeSourceBase):
         check_param_int_none(
             ssh_server_alive_count_max, self.__class__, "ssh_server_alive_count_max"
         )
+        check_param_int(http_poll_interval, self.__class__, "http_poll_interval")
         super().checkConfig(**kwargs)
 
+    @defer.inlineCallbacks
     def reconfigService(
         self,
         gerritserver,
@@ -588,6 +671,9 @@ class GerritChangeSource(GerritChangeSourceBase):
         name=None,
         ssh_server_alive_interval_s=15,
         ssh_server_alive_count_max=3,
+        http_url=None,
+        http_auth=None,
+        http_poll_interval=30,
         **kwargs,
     ):
         if 'gitBaseURL' not in kwargs:
@@ -596,51 +682,232 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.gerritport = gerritport
         self.username = username
         self.identity_file = identity_file
-        self._stream_connector = GerritSshStreamEventsConnector(
+        self._http_poll_interval = http_poll_interval
+
+        if self._stream_connector is None:
+            # TODO: this does not support reconfiguration at the moment
+            self._stream_connector = GerritSshStreamEventsConnector(
+                self.master.reactor,
+                self,
+                gerritserver,
+                username,
+                gerritport=gerritport,
+                identity_file=identity_file,
+                ssh_server_alive_interval_s=ssh_server_alive_interval_s,
+                ssh_server_alive_count_max=ssh_server_alive_count_max,
+                on_process_start_cb=self._stream_process_started,
+                on_line_received_cb=self._line_received_stream,
+            )
+        self._stream_messages_timeout = False
+
+        self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
+
+        if self._start_ts is None:
+            self._start_ts = self.master.reactor.seconds()
+
+        if self._last_event_ts is None:
+            self._last_event_ts = yield self.master.db.state.getState(
+                self._oid, 'last_event_ts', None
+            )
+
+        if self._poll_handler is not None:
+            self._poll_handler.stop()
+        self._poll_handler = deferwaiter.NonRepeatedActionHandler(
             self.master.reactor,
-            self,
-            gerritserver,
-            username,
-            gerritport=gerritport,
-            identity_file=identity_file,
-            ssh_server_alive_interval_s=ssh_server_alive_interval_s,
-            ssh_server_alive_count_max=ssh_server_alive_count_max,
-            on_process_restart_cb=None,
-            on_line_received_cb=self.lineReceived,
+            self._deferwaiter,
+            lambda: self._poll_connector.do_poll(),  # pylint: disable=unnecessary-lambda
         )
-        return super().reconfigService(**kwargs)
+
+        if http_url is not None:
+            if self._poll_connector is None:
+                # TODO: this does not support reconfiguration at the moment
+                self._poll_connector = GerritHttpEventLogPollerConnector(
+                    self.master.reactor,
+                    self,
+                    http_url + "/a",
+                    http_auth,
+                    lambda: self._last_event_ts or self._start_ts,
+                    first_fetch_lookback=0,
+                    on_lines_received_cb=self._lines_received_poll,
+                )
+                yield self._poll_connector.setup()
+            self._is_synchronized = False
+        else:
+            self._poll_connector = None
+            self._is_synchronized = True
+
+        self._stream_activity_watchdog = watchdog.Watchdog(
+            self.master.reactor, self._no_stream_activity_timed_out, self._http_poll_interval
+        )
+
+        yield super().reconfigService(**kwargs)
 
     def activate(self):
+        self._is_synchronized = self._poll_connector is None
         self._stream_connector.start()
+        self._stream_activity_watchdog.start()
 
+    @defer.inlineCallbacks
     def deactivate(self):
-        return self._stream_connector.stop()
+        self._stream_activity_watchdog.stop()
+        yield self._stream_connector.stop()  # Note that this immediately stops event acceptance
+        self._poll_handler.stop()
+        yield self._deferwaiter.wait()
+
+    def getFiles(self, change, patchset):
+        return self._stream_connector.get_files(change, patchset)
+
+    def _no_stream_activity_timed_out(self):
+        if self._poll_connector is None:
+            return
+        self._stream_messages_timeout = True
+        self._poll_handler.force()
+
+    def _stream_process_started(self):
+        if self._poll_connector is None:
+            return
+        self._is_synchronized = False
+        self._poll_handler.force()
+
+    @defer.inlineCallbacks
+    def _update_last_event_ts(self):
+        if self._last_event_ts != self._last_event_ts_saved:
+            self._last_event_ts_saved = self._last_event_ts
+            yield self.master.db.state.setState(self._oid, "last_event_ts", self._last_event_ts)
+
+    @defer.inlineCallbacks
+    def _line_received_stream(self, line):
+        self._stream_activity_watchdog.notify()
+        try:
+            event = json.loads(bytes2unicode(line))
+        except ValueError:
+            log.msg(f"bad json line: {line}")
+            return
+
+        if not is_event_valid(event):
+            if self.debug:
+                log.msg(f"no type in event {line}")
+            return
+
+        if not self._is_synchronized:
+            self._queued_stream_events.append((extract_gerrit_event_time(event), event))
+            if self._poll_connector is not None:
+                self._poll_handler.force()
+            return
+
+        if self._stream_messages_timeout:
+            self._stream_activity_watchdog.start()
+        self._stream_messages_timeout = False
+        self._poll_handler.stop()
+
+        self._last_event_ts = extract_gerrit_event_time(event)
+        yield self._update_last_event_ts()
+        yield self.eventReceived(event)
+
+    def _filter_out_already_received_events(self, events):
+        if self._last_event_ts is None:
+            return events
+
+        filtered_events = []
+        for ts, event in events:
+            if ts < self._last_event_ts:
+                continue
+            filtered_events.append((ts, event))
+        return filtered_events
+
+    @defer.inlineCallbacks
+    def _lines_received_poll(self, lines):
+        if self._is_synchronized and not self._stream_messages_timeout:
+            return
+
+        # The code below parses all retrieved events, ignores already received ones, submits the
+        # rest for processing and if it is detected that events from polling source are synchronized
+        # with queued events from streaming source, switches to the streaming source.
+
+        events = []
+        for line in lines:
+            try:
+                event = json.loads(bytes2unicode(line))
+            except ValueError:
+                log.msg(f"bad json line: {line}")
+                continue
+
+            if not is_event_valid(event):
+                if self.debug:
+                    log.msg(f"no type in event {line}")
+                continue
+            events.append((extract_gerrit_event_time(event), event))
+
+        events = sorted(self._filter_out_already_received_events(events), key=lambda e: e[0])
+
+        if not events:
+            self._poll_handler.schedule(self._http_poll_interval, invoke_again_if_running=True)
+            return
+
+        max_event_ts = events[-1][0]
+
+        got_newer_messages_unhandled_before = True
+        if self._last_event_ts is not None:
+            got_newer_messages_unhandled_before = max_event_ts > self._last_event_ts
+
+        needs_stream_restart = False
+        if self._stream_messages_timeout and got_newer_messages_unhandled_before:
+            # Stream connector has broken, because usually messages would come through the stream
+            # connector first. Now new messages were received through HTTP API.
+            #
+            # Note: there must not be any asynchronous code between this check and the start of
+            # the function to avoid race conditions.
+            self._is_synchronized = False
+            self._stream_messages_timeout = False
+            needs_stream_restart = True
+
+        if not self._queued_stream_events or max_event_ts <= self._queued_stream_events[0][0]:
+            # The events from stream source has not caught up - process all events and leave
+            # _is_synchronized as False.
+
+            for ts, event in events:
+                yield self.eventReceived(event)
+
+            self._last_event_ts = max_event_ts
+            yield self._update_last_event_ts()
+            self._poll_handler.schedule(self._http_poll_interval, invoke_again_if_running=True)
+            if needs_stream_restart:
+                self._deferwaiter.add(self._stream_connector.restart())
+                self._stream_activity_watchdog.start()
+            return
+
+        first_queued_ts = self._queued_stream_events[0][0]
+
+        # max_event_ts > first_queued_ts which means that:
+        # - events list is guaranteed to have all events up to first_queued_ts (inclusive)
+        # - starting with first_queued_ts (exclusive) the stream source has all events.
+        for ts, event in events:
+            if ts <= first_queued_ts:
+                self._last_event_ts = extract_gerrit_event_time(event)
+                yield self.eventReceived(event)
+
+        i = 0
+        while i < len(self._queued_stream_events):
+            ts, event = self._queued_stream_events[i]
+            self._last_event_ts = ts
+            yield self.eventReceived(event)
+            i += 1
+
+        self._queued_stream_events.clear()
+        self._is_synchronized = True
+        yield self._update_last_event_ts()
+        if needs_stream_restart:
+            self._deferwaiter.add(self._stream_connector.restart())
+            self._stream_activity_watchdog.start()
 
     def describe(self):
         status = ""
-        if not self._stream_connector._process:
+        if not self._stream_connector or not self._stream_connector._process:
             status = "[NOT CONNECTED - check log]"
         return (
             "GerritChangeSource watching the remote "
             f"Gerrit repository {self.username}@{self.gerritserver} {status}"
         )
-
-    def getFiles(self, change, patchset):
-        return self._stream_connector.get_files(change, patchset)
-
-    def lineReceived(self, line):
-        try:
-            event = json.loads(bytes2unicode(line))
-        except ValueError:
-            log.msg(f"bad json line: {line}")
-            return defer.succeed(None)
-
-        if not (isinstance(event, dict) and "type" in event):
-            if self.debug:
-                log.msg(f"no type in event {line}")
-            return defer.succeed(None)
-
-        return self.eventReceived(event)
 
 
 class GerritEventLogPoller(GerritChangeSourceBase):
@@ -718,7 +985,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                 log.msg(f"bad json line: {line}")
                 continue
 
-            if not (isinstance(event, dict) and "type" in event):
+            if not is_event_valid(event):
                 if self.debug:
                     log.msg(f"no type in event {line}")
                 continue

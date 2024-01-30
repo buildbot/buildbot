@@ -18,9 +18,8 @@ import datetime
 import json
 import types
 
+from parameterized import parameterized
 from twisted.internet import defer
-from twisted.internet import error
-from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.changes import gerritchangesource
@@ -31,6 +30,7 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
+from buildbot.util import datetime2epoch
 
 
 class TestGerritHelpers(unittest.TestCase):
@@ -95,15 +95,30 @@ class TestGerritChangeSource(
     def setUp(self):
         self.setup_test_reactor()
         self.setup_master_run_process()
+        self._got_events = []
         return self.setUpChangeSource()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownChangeSource()
+        if self.master.running:
+            yield self.master.stopService()
+        yield self.tearDownChangeSource()
 
     @defer.inlineCallbacks
-    def newChangeSource(self, host, user, *args, **kwargs):
+    def create_gerrit(self, host, user, *args, **kwargs):
+        http_url = kwargs.get("http_url", None)
+        if http_url:
+            self._http = yield fakehttpclientservice.HTTPClientService.getService(
+                self.master, self, http_url + "/a", auth=kwargs.pop("expected_auth", None)
+            )
         s = gerritchangesource.GerritChangeSource(host, user, *args, **kwargs)
         yield self.attachChangeSource(s)
+        return s
+
+    @defer.inlineCallbacks
+    def create_gerrit_synchronized(self, host, user, *args, **kwargs):
+        s = yield self.create_gerrit(host, user, *args, **kwargs)
+        s._is_synchronized = True
         return s
 
     def assert_changes(self, expected_changes, ignore_keys):
@@ -114,22 +129,26 @@ class TestGerritChangeSource(
                 del change[key]
             self.assertEqual(change, expected_change)
 
+    def override_event_received(self, s):
+        s.eventReceived = self._got_events.append
+
+    def assert_events_received(self, events):
+        self.assertEqual(self._got_events, events)
+
     # tests
 
     @defer.inlineCallbacks
     def test_describe(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
+        s = yield self.create_gerrit('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
 
     @defer.inlineCallbacks
     def test_name(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
+        s = yield self.create_gerrit('somehost', 'someuser')
         self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
 
-        s = yield self.newChangeSource('somehost', 'someuser', name="MyName")
+        s = yield self.create_gerrit('somehost', 'someuser', name="MyName")
         self.assertEqual("MyName", s.name)
-
-    # TODO: test the backoff algorithm
 
     patchset_created_event = {
         "uploader": {
@@ -195,16 +214,16 @@ class TestGerritChangeSource(
     }
 
     @defer.inlineCallbacks
-    def test_lineReceived_patchset_created(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps(self.patchset_created_event))
+    def test_line_received_patchset_created(self):
+        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
+        yield s._line_received_stream(json.dumps(self.patchset_created_event))
 
         self.assert_changes([self.expected_change_patchset_created], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
-    def test_lineReceived_patchset_created_props(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps(self.patchset_created_event))
+    def test_line_received_patchset_created_props(self):
+        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
+        yield s._line_received_stream(json.dumps(self.patchset_created_event))
 
         change = copy.deepcopy(self.expected_change_patchset_created)
         change['properties'] = {
@@ -244,7 +263,6 @@ class TestGerritChangeSource(
             'event.uploader.username': 'uploader',
             'target_branch': 'master',
         }
-        self.maxDiff = None
         self.assert_changes([change], ignore_keys=[])
 
     comment_added_event = {
@@ -307,16 +325,18 @@ class TestGerritChangeSource(
     }
 
     @defer.inlineCallbacks
-    def test_lineReceived_comment_added(self):
-        s = yield self.newChangeSource('somehost', 'someuser', handled_events=["comment-added"])
-        yield s.lineReceived(json.dumps(self.comment_added_event))
+    def test_line_received_comment_added(self):
+        s = yield self.create_gerrit_synchronized(
+            'somehost', 'someuser', handled_events=["comment-added"]
+        )
+        yield s._line_received_stream(json.dumps(self.comment_added_event))
 
         self.assert_changes([self.expected_change_comment_added], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
-    def test_lineReceived_ref_updated(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(
+    def test_line_received_ref_updated(self):
+        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
+        yield s._line_received_stream(
             json.dumps({
                 'type': 'ref-updated',
                 'submitter': {
@@ -366,9 +386,9 @@ class TestGerritChangeSource(
         )
 
     @defer.inlineCallbacks
-    def test_lineReceived_ref_updated_for_change(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(
+    def test_line_received_ref_updated_for_change(self):
+        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
+        yield s._line_received_stream(
             json.dumps({
                 'type': 'ref-updated',
                 'submitter': {
@@ -389,43 +409,44 @@ class TestGerritChangeSource(
 
     @defer.inlineCallbacks
     def test_duplicate_events_ignored(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
-        yield s.lineReceived(json.dumps(self.patchset_created_event))
+        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
+        yield s._line_received_stream(json.dumps(self.patchset_created_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
         patchset_created_event = copy.deepcopy(self.patchset_created_event)
         patchset_created_event['change']['project'] = {'name': 'test'}
 
-        yield s.lineReceived(json.dumps(patchset_created_event))
+        yield s._line_received_stream(json.dumps(patchset_created_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
     @defer.inlineCallbacks
     def test_duplicate_non_source_events_not_ignored(self):
-        s = yield self.newChangeSource(
+        s = yield self.create_gerrit_synchronized(
             'somehost',
             'someuser',
             handled_events=['patchset-created', 'ref-updated', 'change-merged', 'comment-added'],
         )
-        yield s.lineReceived(json.dumps(self.comment_added_event))
+        yield s._line_received_stream(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-        yield s.lineReceived(json.dumps(self.comment_added_event))
+        yield s._line_received_stream(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 2)
 
     @defer.inlineCallbacks
     def test_malformed_events_ignored(self):
-        s = yield self.newChangeSource('somehost', 'someuser')
+        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
         # "change" not in event
-        yield s.lineReceived(
+        yield s._line_received_stream(
             json.dumps({
                 "type": "patchset-created",
                 "patchSet": {"revision": 'abcdef', "number": '12'},
+                'eventCreatedOn': 1614528683,
             })
         )
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         # "patchSet" not in event
-        yield s.lineReceived(
+        yield s._line_received_stream(
             json.dumps({
                 "type": "patchset-created",
                 "change": {
@@ -437,6 +458,7 @@ class TestGerritChangeSource(
                     "url": "http://buildbot.net",
                     "subject": "fix 1234",
                 },
+                'eventCreatedOn': 1614528683,
             })
         )
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
@@ -452,14 +474,15 @@ class TestGerritChangeSource(
             "subject": "fix 1234",
         },
         "patchSet": {"revision": "abcdefj", "number": "13"},
+        'eventCreatedOn': 1614528683,
     }
 
     @defer.inlineCallbacks
     def test_handled_events_filter_true(self):
-        s = yield self.newChangeSource(
+        s = yield self.create_gerrit_synchronized(
             'somehost', 'some_choosy_user', handled_events=["change-merged"]
         )
-        yield s.lineReceived(json.dumps(self.change_merged_event))
+        yield s._line_received_stream(json.dumps(self.change_merged_event))
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
@@ -468,13 +491,13 @@ class TestGerritChangeSource(
 
     @defer.inlineCallbacks
     def test_handled_events_filter_false(self):
-        s = yield self.newChangeSource('somehost', 'some_choosy_user')
-        yield s.lineReceived(json.dumps(self.change_merged_event))
+        s = yield self.create_gerrit_synchronized('somehost', 'some_choosy_user')
+        yield s._line_received_stream(json.dumps(self.change_merged_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def test_custom_handler(self):
-        s = yield self.newChangeSource(
+        s = yield self.create_gerrit_synchronized(
             'somehost', 'some_choosy_user', handled_events=["change-merged"]
         )
 
@@ -484,41 +507,436 @@ class TestGerritChangeSource(
 
         # Patches class to not bother with the inheritance
         s.eventReceived_change_merged = types.MethodType(custom_handler, s)
-        yield s.lineReceived(json.dumps(self.change_merged_event))
+        yield s._line_received_stream(json.dumps(self.change_merged_event))
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(c['project'], "world")
 
+    somehost_someuser_ssh_args = [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ServerAliveInterval=15",
+        "-o",
+        "ServerAliveCountMax=3",
+        "someuser@somehost",
+        "-p",
+        "29418",
+        "gerrit",
+        "stream-events",
+    ]
+
     @defer.inlineCallbacks
-    def test_startStreamProcess_bytes_output(self):
-        s = yield self.newChangeSource('somehost', 'some_choosy_user', debug=True)
+    def test_activate(self):
+        s = yield self.create_gerrit("somehost", "someuser", debug=True)
 
-        exp_argv = [
-            "ssh",
-            "-o",
-            "BatchMode=yes",
-            "-o",
-            "ServerAliveInterval=15",
-            "-o",
-            "ServerAliveCountMax=3",
-            "some_choosy_user@somehost",
-            "-p",
-            "29418",
-            "gerrit",
-            "stream-events",
-        ]
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        def spawnProcess(pp, cmd, argv, env):
-            self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])
-            pp.errReceived(b'test stderr\n')
-            pp.outReceived(b'{"type":"dropped-output"}\n')
-            so = error.ProcessDone(None)
-            pp.processEnded(failure.Failure(so))
-
-        self.master.reactor.spawnProcess = spawnProcess
-
+        yield self.master.startService()
         s.activate()
+
+        self.reactor.process_send_stderr(0, b"test stderr\n")
+        self.reactor.process_send_stdout(0, b'{"type":"dropped-output", "eventCreatedOn": 123}\n')
+
+        self.reactor.expect_process_signalProcess(0, "KILL")
+        d = self.master.stopService()
+        self.reactor.process_done(0, None)
+        yield d
+
+    @defer.inlineCallbacks
+    def test_failure_backoff(self):
+        s = yield self.create_gerrit("somehost", "someuser", debug=True)
+
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+
+        yield self.master.startService()
+        s.activate()
+
+        pid = 0
+        self.reactor.process_done(pid, None)
+        pid += 1
+
+        # The check happens as follows:
+        #  - Advance reactor to just before required time (time - 0.05)
+        #  - setup expectation for spawnProcess at that moment which ensures that spawnProcess was
+        #    not called earlier,
+        #  - Advance past the timeout and kill process, which ensures that the process has been
+        #    created.
+        self.reactor.advance(0.05)
+        for time in [0.5, 0.5 * 1.5, 0.5 * 1.5 * 1.5, 0.5 * 1.5 * 1.5 * 1.5]:
+            self.reactor.advance(time - 0.1)
+            self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+            self.reactor.advance(0.1)
+            self.reactor.process_done(pid, None)
+            pid += 1
+            self.reactor.advance(0.05)
+
+    def _build_messages_to_bytes(self, timestamps):
+        messages = [
+            json.dumps({
+                "type": "patchset-created",
+                'eventCreatedOn': timestamp,
+            })
+            for timestamp in timestamps
+        ]
+        out = b""
+        for message in messages:
+            out += (message + "\n").encode("utf-8")
+        return out
+
+    def _set_time_to(self, year, month, day, hours, minutes, seconds):
+        self.reactor.advance(
+            datetime2epoch(datetime.datetime(year, month, day, hours, minutes, seconds))
+            - self.reactor.seconds()
+        )
+
+    @parameterized.expand([
+        ("has_ts_in_db", True),
+        ("has_no_ts_in_db", False),
+    ])
+    @defer.inlineCallbacks
+    def test_poll_after_broken_connection(self, name, has_ts_in_db):
+        self._set_time_to(2021, 1, 2, 3, 4, 5)
+        start_time = self.reactor.seconds()
+
+        s = yield self.create_gerrit(
+            "somehost",
+            "someuser",
+            expected_auth=("user", "pass"),
+            http_url="http://somehost",
+            http_auth=("user", "pass"),
+            http_poll_interval=30,
+        )
+
+        if has_ts_in_db:
+            # Cannot use set_fake_state because the timestamp has already been retrieved
+            s._last_event_ts = start_time - 124
+            first_time_str = "2021-01-02 03:02:01"
+        else:
+            first_time_str = "2021-01-02 03:04:05"
+
+        self.override_event_received(s)
+
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_process_signalProcess(0, "KILL")
+
+        # Initial poll
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": first_time_str},
+            content=b"",
+            processing_delay_s=1,
+        )
+
+        yield self.master.startService()
+        s.activate()
+
+        # Poll after timeout
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": first_time_str},
+            content=self._build_messages_to_bytes([
+                start_time + 1,
+                start_time + 3,
+                start_time + 5,
+            ]),
+        )
+        self.reactor.advance(40)
+
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_process_signalProcess(1, "KILL")
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:10"},
+            content=self._build_messages_to_bytes([]),
+        )
+
+        # This is what triggers process startup
+        self.reactor.process_done(0, None)
+
+        self.reactor.advance(2)
+
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:10"},
+            content=self._build_messages_to_bytes([]),
+        )
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:10"},
+            content=self._build_messages_to_bytes([
+                start_time + 41,
+                start_time + 42,
+                start_time + 43,  # ignored because data source switched to stream events
+            ]),
+        )
+
+        self.reactor.process_send_stdout(
+            1,
+            self._build_messages_to_bytes([
+                start_time + 41,
+                start_time + 42,
+            ]),
+        )
+
+        self.assertTrue(s._is_synchronized)
+
+        d = self.master.stopService()
+        self.reactor.process_done(1, None)
+        yield d
+
+        self.master.db.state.assertState(s._oid, last_event_ts=start_time + 42)
+
+        self.assert_events_received([
+            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 3, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 5, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 42, 'type': 'patchset-created'},
+        ])
+
+    @defer.inlineCallbacks
+    def test_poll_after_broken_connection_with_message_before(self):
+        self._set_time_to(2021, 1, 2, 3, 4, 5)
+        start_time = self.reactor.seconds()
+
+        s = yield self.create_gerrit(
+            "somehost",
+            "someuser",
+            expected_auth=("user", "pass"),
+            http_url="http://somehost",
+            http_auth=("user", "pass"),
+            http_poll_interval=30,
+        )
+
+        self.override_event_received(s)
+
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_process_signalProcess(0, "KILL")
+
+        # Initial poll
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=b"",
+        )
+
+        yield self.master.startService()
+        s.activate()
+
+        self.reactor.advance(2)
+
+        # Poll after messages below
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=self._build_messages_to_bytes([]),
+        )
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=self._build_messages_to_bytes([]),
+        )
+        self.reactor.process_send_stdout(
+            0,
+            self._build_messages_to_bytes([
+                start_time + 1,
+                start_time + 2,
+            ]),
+        )
+
+        # Poll after timeout
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=self._build_messages_to_bytes([
+                start_time + 1,
+                start_time + 2,
+            ]),
+        )
+
+        self.reactor.advance(40)
+
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_process_signalProcess(1, "KILL")
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:07"},
+            content=self._build_messages_to_bytes([]),
+        )
+
+        # This is what triggers process startup above
+        self.reactor.process_done(0, None)
+
+        self.reactor.advance(2)
+
+        # Poll after messages below
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:07"},
+            content=self._build_messages_to_bytes([]),
+        )
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:07"},
+            content=self._build_messages_to_bytes([
+                start_time + 41,
+                start_time + 42,
+                start_time + 43,  # ignored because data source switched to stream events
+            ]),
+        )
+
+        self.reactor.process_send_stdout(
+            1,
+            self._build_messages_to_bytes([
+                start_time + 41,
+                start_time + 42,
+            ]),
+        )
+
+        self.assertTrue(s._is_synchronized)
+
+        d = self.master.stopService()
+        self.reactor.process_done(1, None)
+        yield d
+
+        self.master.db.state.assertState(s._oid, last_event_ts=start_time + 42)
+        self.assert_events_received([
+            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 2, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 41, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 42, 'type': 'patchset-created'},
+        ])
+
+    @defer.inlineCallbacks
+    def test_poll_after_working_connection_but_no_messages(self):
+        self._set_time_to(2021, 1, 2, 3, 4, 5)
+        start_time = self.reactor.seconds()
+
+        s = yield self.create_gerrit(
+            "somehost",
+            "someuser",
+            expected_auth=("user", "pass"),
+            http_url="http://somehost",
+            http_auth=("user", "pass"),
+            http_poll_interval=30,
+        )
+
+        self.override_event_received(s)
+
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_process_signalProcess(0, "KILL")
+
+        # Initial poll
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=b"",
+        )
+
+        yield self.master.startService()
+        s.activate()
+
+        self.reactor.advance(2)
+
+        # Poll after messages below
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=self._build_messages_to_bytes([]),
+        )
+        self._http.expect(
+            "get",
+            "/plugins/events-log/events/",
+            params={"t1": "2021-01-02 03:04:05"},
+            content=self._build_messages_to_bytes([
+                start_time + 1,
+                start_time + 2,
+            ]),
+        )
+        self.reactor.process_send_stdout(
+            0,
+            self._build_messages_to_bytes([
+                start_time + 1,
+                start_time + 2,
+            ]),
+        )
+
+        self.assertTrue(s._is_synchronized)
+
+        for _ in range(3):
+            # Poll after timeout
+            self._http.expect(
+                "get",
+                "/plugins/events-log/events/",
+                params={"t1": "2021-01-02 03:04:07"},
+                content=self._build_messages_to_bytes([]),
+            )
+            self.reactor.advance(40)
+
+        self.reactor.advance(2)
+        self.reactor.process_send_stdout(
+            0,
+            self._build_messages_to_bytes([
+                start_time + 125,
+                start_time + 126,
+            ]),
+        )
+
+        for _ in range(3):
+            # Poll after timeout
+            self._http.expect(
+                "get",
+                "/plugins/events-log/events/",
+                params={"t1": "2021-01-02 03:06:11"},
+                content=self._build_messages_to_bytes([]),
+            )
+            self.reactor.advance(40)
+
+        self.reactor.advance(2)
+        self.reactor.process_send_stdout(
+            0,
+            self._build_messages_to_bytes([
+                start_time + 256,
+                start_time + 257,
+            ]),
+        )
+
+        self.assertTrue(s._is_synchronized)
+
+        d = self.master.stopService()
+        self.reactor.process_done(0, None)
+        yield d
+
+        self.master.db.state.assertState(s._oid, last_event_ts=start_time + 257)
+        self.assert_events_received([
+            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 1, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 2, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 125, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 126, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 256, 'type': 'patchset-created'},
+            {'eventCreatedOn': start_time + 257, 'type': 'patchset-created'},
+        ])
 
     # -------------------------------------------------------------------------
     # Test data for getFiles()
@@ -553,7 +971,7 @@ class TestGerritChangeSource(
 
     @defer.inlineCallbacks
     def test_getFiles(self):
-        s = yield self.newChangeSource('host', 'user', gerritport=2222)
+        s = yield self.create_gerrit_synchronized('host', 'user', gerritport=2222)
         exp_argv = [
             "ssh",
             "-o",
@@ -611,11 +1029,11 @@ class TestGerritChangeSource(
             ]).stdout(self.query_files_success)
         )
 
-        s = yield self.newChangeSource(
+        s = yield self.create_gerrit_synchronized(
             'host', 'user', get_files=True, handled_events=["change-merged"]
         )
 
-        yield s.lineReceived(json.dumps(self.change_merged_event))
+        yield s._line_received_stream(json.dumps(self.change_merged_event))
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(set(c['files']), {'/COMMIT_MSG', 'file1', 'file2'})
 
