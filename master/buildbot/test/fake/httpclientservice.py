@@ -21,6 +21,7 @@ from twisted.internet import defer
 from twisted.logger import Logger
 from zope.interface import implementer
 
+from buildbot import util
 from buildbot.interfaces import IHttpResponse
 from buildbot.util import httpclientservice
 from buildbot.util import service
@@ -116,6 +117,7 @@ class HTTPClientService(service.SharedService):
         files=None,
         verify=None,
         cert=None,
+        processing_delay_s=None,
     ):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
@@ -135,6 +137,7 @@ class HTTPClientService(service.SharedService):
             "files": files,
             "verify": verify,
             "cert": cert,
+            "processing_delay_s": processing_delay_s,
         })
         return None
 
@@ -143,6 +146,7 @@ class HTTPClientService(service.SharedService):
             0, len(self._expected), f"expected more http requests:\n {self._expected!r}"
         )
 
+    @defer.inlineCallbacks
     def _doRequest(
         self,
         method,
@@ -181,6 +185,8 @@ class HTTPClientService(service.SharedService):
                 f"files={files!r}"
             )
         expect = self._expected.pop(0)
+        processing_delay_s = expect.pop("processing_delay_s")
+
         # pylint: disable=too-many-boolean-expressions
         if (
             expect["method"] != method
@@ -223,7 +229,11 @@ class HTTPClientService(service.SharedService):
                 code=expect['code'],
                 content=expect['content'],
             )
-        return defer.succeed(ResponseWrapper(expect['code'], expect['content']))
+
+        if processing_delay_s is not None:
+            yield util.asyncSleep(1, reactor=self.master.reactor)
+
+        return ResponseWrapper(expect['code'], expect['content'])
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
