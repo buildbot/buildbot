@@ -100,7 +100,7 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         ('before_action', False),
     ])
     @defer.inlineCallbacks
-    def test_runs_action_with_timer(self, name, timer_after_action):
+    def test_runs_action(self, name, timer_after_action):
         w = DeferWaiter()
         times = []
 
@@ -150,6 +150,33 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
         yield d
 
+    @parameterized.expand([
+        ('after_action', True),
+        ('before_action', False),
+    ])
+    @defer.inlineCallbacks
+    def test_runs_action_with_delay(self, name, timer_after_action):
+        w = DeferWaiter()
+        times = []
+
+        def action():
+            times.append(self.reactor.seconds())
+
+        h = RepeatedActionHandler(
+            self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
+        )
+        h.start()
+        self.reactor.pump([1] * 15)
+        h.delay()
+        self.reactor.pump([1] * 35)
+
+        self.assertEqual(times, [10, 25, 35, 45])
+
+        h.stop()
+        d = w.wait()
+        self.assertTrue(d.called)
+        yield d
+
     @defer.inlineCallbacks
     def test_ignores_duplicate_start_or_stop(self):
         w = DeferWaiter()
@@ -182,7 +209,7 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h = RepeatedActionHandler(self.reactor, w, 1, action)
         h.start()
         self.reactor.pump([0.1] * 15)
-        h.setInterval(2)
+        h.set_interval(2)
         self.reactor.pump([0.1] * 50)
 
         self.assertEqual(times, [1.1, 2.1, 4.1, 6.2])
@@ -197,7 +224,7 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         ('before_action', False, [1.1, 2.1, 3.1, 4.1]),
     ])
     @defer.inlineCallbacks
-    def test_runs_action_with_timer_delay(self, name, timer_after_action, expected_times):
+    def test_runs_long_action(self, name, timer_after_action, expected_times):
         w = DeferWaiter()
         times = []
 
@@ -211,6 +238,66 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         )
         h.start()
         self.reactor.pump([0.1] * 47)
+
+        self.assertEqual(times, expected_times)
+
+        h.stop()
+        d = w.wait()
+        self.assertTrue(d.called)
+        yield d
+
+    @parameterized.expand([
+        ('after_action', True, [10, 25, 47, 62]),
+        ('before_action', False, [10, 20, 30, 47, 57, 67]),
+    ])
+    @defer.inlineCallbacks
+    def test_runs_long_action_with_delay(self, name, timer_after_action, expected_times):
+        w = DeferWaiter()
+        times = []
+
+        @defer.inlineCallbacks
+        def action():
+            times.append(self.reactor.seconds())
+            yield asyncSleep(5, reactor=self.reactor)
+
+        h = RepeatedActionHandler(
+            self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
+        )
+        h.start()
+        self.reactor.pump([1] * 37)
+        h.delay()
+        self.reactor.pump([1] * 39)
+
+        self.assertEqual(times, expected_times)
+
+        h.stop()
+        d = w.wait()
+        self.assertTrue(d.called)
+        yield d
+
+    @parameterized.expand([
+        ('after_action', True, [10, 25, 40]),
+        ('before_action', False, [10, 22, 32, 42]),
+    ])
+    @defer.inlineCallbacks
+    def test_runs_long_action_with_delay_when_running(
+        self, name, timer_after_action, expected_times
+    ):
+        w = DeferWaiter()
+        times = []
+
+        @defer.inlineCallbacks
+        def action():
+            times.append(self.reactor.seconds())
+            yield asyncSleep(5, reactor=self.reactor)
+
+        h = RepeatedActionHandler(
+            self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
+        )
+        h.start()
+        self.reactor.pump([1] * 12)
+        h.delay()
+        self.reactor.pump([1] * 39)
 
         self.assertEqual(times, expected_times)
 
