@@ -488,7 +488,7 @@ class GerritHttpEventLogPollerConnector:
         auth,
         get_last_event_ts,
         first_fetch_lookback=FIRST_FETCH_LOOKBACK_DAYS,
-        on_line_received_cb=None,
+        on_lines_received_cb=None,
     ):
         if base_url.endswith('/'):
             base_url = base_url[:-1]
@@ -498,7 +498,7 @@ class GerritHttpEventLogPollerConnector:
         self._base_url = base_url
         self._auth = auth
         self._first_fetch_lookback = first_fetch_lookback
-        self._on_line_received_cb = on_line_received_cb
+        self._on_lines_received_cb = on_lines_received_cb
         self._last_event_time = None
 
     @defer.inlineCallbacks
@@ -527,8 +527,7 @@ class GerritHttpEventLogPollerConnector:
             "/plugins/events-log/events/", params={"t1": last_event_formatted}
         )
         lines = yield res.content()
-        for line in lines.splitlines():
-            yield self._on_line_received_cb(line)
+        yield self._on_lines_received_cb(lines.splitlines())
 
     @defer.inlineCallbacks
     def get_files(self, change, patchset):
@@ -544,6 +543,10 @@ class GerritHttpEventLogPollerConnector:
             yield self.poll()
         except Exception as e:
             log.err(e, 'while polling for changes')
+
+
+def extract_gerrit_event_time(event):
+    return event.get("eventCreatedOn", None)
 
 
 class GerritChangeSource(GerritChangeSourceBase):
@@ -684,7 +687,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             auth,
             get_last_event_ts,
             first_fetch_lookback=firstFetchLookback,
-            on_line_received_cb=self.lineReceived,
+            on_lines_received_cb=self._lines_received,
         )
         yield self._connector.setup()
         self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
@@ -706,18 +709,27 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         return msg.format(self.name)
 
     @defer.inlineCallbacks
-    def lineReceived(self, line):
-        try:
-            event = json.loads(bytes2unicode(line))
-        except ValueError:
-            log.msg(f"bad json line: {line}")
-            return
+    def _lines_received(self, lines):
+        last_event_ts = None
+        for line in lines:
+            try:
+                event = json.loads(bytes2unicode(line))
+            except ValueError:
+                log.msg(f"bad json line: {line}")
+                continue
 
-        if not (isinstance(event, dict) and "type" in event):
-            if self.debug:
-                log.msg(f"no type in event {line}")
-            return
+            if not (isinstance(event, dict) and "type" in event):
+                if self.debug:
+                    log.msg(f"no type in event {line}")
+                continue
 
-        yield super().eventReceived(event)
-        if 'eventCreatedOn' in event:
-            yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
+            yield super().eventReceived(event)
+
+            this_last_event_ts = extract_gerrit_event_time(event)
+            if last_event_ts is None:
+                last_event_ts = this_last_event_ts
+            elif this_last_event_ts is not None:
+                last_event_ts = max(last_event_ts, this_last_event_ts)
+
+        if last_event_ts is not None:
+            yield self.master.db.state.setState(self._oid, "last_event_ts", last_event_ts)
