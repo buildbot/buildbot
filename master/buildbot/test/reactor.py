@@ -33,6 +33,8 @@ class TestReactorMixin:
     def setup_test_reactor(self, use_asyncio=False):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
+        self.reactor.set_test_case(self)
+
         _setReactor(self.reactor)
 
         def deferToThread(f, *args, **kwargs):
@@ -46,6 +48,7 @@ class TestReactorMixin:
         # set unset the reactor used for eventually() because any callbacks
         # that are run during reactor.stop() may use eventually() themselves.
         self.addCleanup(_setReactor, None)
+        self.addCleanup(self.reactor.assert_no_remaining_calls)
         self.addCleanup(self.reactor.stop)
 
         if use_asyncio:
