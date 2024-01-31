@@ -1,0 +1,2 @@
+Migrated off python-future which prevented installing Buildbot on distributions that do not provide
+that package.
