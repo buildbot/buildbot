@@ -169,7 +169,7 @@ Git
 
 Repo/Gerrit
 
-* :bb:chsrc:`GerritChangeSource` connects to Gerrit via SSH to get a live stream of changes
+* :bb:chsrc:`GerritChangeSource` connects to Gerrit via SSH and optionally HTTP to get a live stream of changes
 * :bb:chsrc:`GerritEventLogPoller` connects to Gerrit via HTTP with the help of the plugin events-log_
 
 Monotone
@@ -1256,11 +1256,14 @@ GerritChangeSource
 
 The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH interface and uses its event source mechanism, `gerrit stream-events <https://gerrit-documentation.storage.googleapis.com/Documentation/2.2.1/cmd-stream-events.html>`_.
 
-Note that the Gerrit event stream is stateless and any events that occur while buildbot is not connected to Gerrit will be lost.
-See :bb:chsrc:`GerritEventLogPoller` for a stateful change source.
+Optionally it may use the `events-log plugin <https://gerrit.googlesource.com/plugins/events-log/+/refs/heads/master/src/main/resources/Documentation/rest-api-events.md>`_
+to retrieve any events that occur while Buildbot is not connected. If events-log mechanism is not
+used any events that occur while buildbot is not connected to Gerrit will be lost.
 
-The ``patchset-created`` and ``ref-updated`` events will be deduplicated, that is, if multiple events related to the same revision are received, only the first will be acted upon.
-This allows ``GerritChangeSource`` to be used together with :bb:chsrc:`GerritEventLogPoller`.
+.. note::
+
+    The :bb:chsrc:`GerritChangeSource` requires either the ``txrequest`` or the ``treq`` package for
+    using the HTTP API.
 
 The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
@@ -1297,6 +1300,24 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
     If the server does not respond at least ``ssh_server_alive_count_max`` times, a reconnection is forced.
     This helps to avoid stuck connections in case network link is severed without notification in the TCP layer.
     Specifying ``None`` will omit the option from the ssh client command line.
+
+``http_url``
+    (optional) HTTP URL to use when fetching events from the Gerrit internal database. This is used
+    to fill in events that have occurred when Buildbot was not connected to the SSH API.
+    If the URL of the events-log endpoint for your server is
+    ``https://example.com/a/plugins/events-log/events/`` then the ``http_url`` is
+    ``https://example.com``.
+
+``http_auth``
+    (optional) authentication credentials for events-log plugin.
+    If Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``.
+    If Gerrit is configured with ``DigestAuth``, then it shall be
+    ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+    However, note that usage of ``requests.auth.HTTPDigestAuth`` is incompatible with ``treq``.
+
+``http_poll_interval``
+    (optional) frequency to poll the HTTP API when events are not being received through the SSH
+    connection. The default is 30 seconds.
 
 ``debug``
     Print Gerrit event in the log (default `False`).
@@ -1443,14 +1464,8 @@ GerritEventLogPoller
 
 .. py:class:: buildbot.changes.gerritchangesource.GerritEventLogPoller
 
-The :bb:chsrc:`GerritEventLogPoller` class is similar to :bb:chsrc:`GerritChangeSource` but connects to the Gerrit server by its HTTP interface and uses the events-log_ plugin.
-
-Note that the decision of whether to use :bb:chsrc:`GerritEventLogPoller` and :bb:chsrc:`GerritChangeSource` will depend on your needs. The trade off is:
-
-1. :bb:chsrc:`GerritChangeSource` is low-overhead and reacts instantaneously to events, but a broken connection to Gerrit will lead to missed changes
-2. :bb:chsrc:`GerritEventLogPoller` is subject to polling overhead and reacts only at it's polling rate, but is robust to a broken connection to Gerrit and missed changes will be discovered when a connection is restored.
-
-You can use both at the same time to get the advantages of each. They will coordinate through the database to avoid duplicate changes generated for buildbot.
+The :bb:chsrc:`GerritEventLogPoller` class is similar to :bb:chsrc:`GerritChangeSource` and
+connects to the Gerrit server only by its HTTP interface and uses the events-log_ plugin.
 
 .. note::
 
