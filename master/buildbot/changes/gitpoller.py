@@ -27,6 +27,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
 from buildbot.util.git import GitMixin
+from buildbot.util.git import ensureSshKeyNewline
 from buildbot.util.git import getSshKnownHostsContents
 from buildbot.util.misc import writeLocalFile
 from buildbot.util.state import StateMixin
@@ -423,7 +424,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         # We change the permissions of the key file to be user-readable only so
         # that ssh does not complain. This is not used for security because the
         # parent directory will have proper permissions.
-        writeLocalFile(keyPath, self.sshPrivateKey, mode=stat.S_IRUSR)
+        writeLocalFile(keyPath, ensureSshKeyNewline(self.sshPrivateKey), mode=stat.S_IRUSR)
 
     def _downloadSshKnownHosts(self, path):
         if self.sshKnownHosts is not None:
