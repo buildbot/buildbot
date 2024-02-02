@@ -1,0 +1,1 @@
+``GitPoller`` now ensure the SSH Private Key it uses has a trailing newline.
