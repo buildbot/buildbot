@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import inspect
 import sys
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -59,6 +62,10 @@ from buildbot.util import deferwaiter
 from buildbot.util import flatten
 from buildbot.util.test_result_submitter import TestResultSubmitter
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from buildbot.process.build import Build
+    from buildbot.worker.base import AbstractWorker
 
 
 class BuildStepFailed(Exception):
@@ -267,7 +274,7 @@ class BuildStep(
     _locks_to_acquire = []
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
-    build = None
+    build: Build | None = None
     step_status = None
     progress = None
     logEncoding = None
@@ -366,11 +373,11 @@ class BuildStep(
 
     __repr__ = __str__
 
-    def setBuild(self, build):
+    def setBuild(self, build: Build) -> None:
         self.build = build
         self.master = self.build.master
 
-    def setWorker(self, worker):
+    def setWorker(self, worker: AbstractWorker):
         self.worker = worker
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
