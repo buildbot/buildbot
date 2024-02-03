@@ -1567,7 +1567,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         self.assertEqual(temp_dir_mock.dirs,
                          [(temp_dir_path, 0o700),
                           (temp_dir_path, 0o700)])
-        write_local_file_mock.assert_called_with(key_path, 'ssh-key',
+        write_local_file_mock.assert_called_with(key_path, 'ssh-key\n',
                                                  mode=0o400)
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -1611,7 +1611,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         self.assertEqual(temp_dir_mock.dirs,
                          [(temp_dir_path, 0o700),
                           (temp_dir_path, 0o700)])
-        write_local_file_mock.assert_called_with(key_path, 'ssh-key',
+        write_local_file_mock.assert_called_with(key_path, 'ssh-key\n',
                                                  mode=0o400)
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -1647,7 +1647,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         self.assertEqual(temp_dir_mock.dirs,
                          [(temp_dir_path, 0o700),
                           (temp_dir_path, 0o700)])
-        write_local_file_mock.assert_called_with(key_path, 'ssh-key',
+        write_local_file_mock.assert_called_with(key_path, 'ssh-key\n',
                                                  mode=0o400)
 
 
@@ -1706,9 +1706,9 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
                           (temp_dir_path, 0o700)])
 
         expected_file_writes = [
-            mock.call(key_path, 'ssh-key', mode=0o400),
+            mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, '* ssh-host-key'),
-            mock.call(key_path, 'ssh-key', mode=0o400),
+            mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, '* ssh-host-key'),
         ]
 
@@ -1717,9 +1717,8 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
 
 
 class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
-
     def createPoller(self):
-        return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key',
+        return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key\n',
                                    sshKnownHosts='ssh-known-hosts')
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -1771,9 +1770,9 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
                           (temp_dir_path, 0o700)])
 
         expected_file_writes = [
-            mock.call(key_path, 'ssh-key', mode=0o400),
+            mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, 'ssh-known-hosts'),
-            mock.call(key_path, 'ssh-key', mode=0o400),
+            mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, 'ssh-known-hosts'),
         ]
 
