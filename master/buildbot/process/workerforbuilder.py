@@ -24,7 +24,9 @@ from twisted.python.constants import NamedConstant
 from twisted.python.constants import Names
 
 if TYPE_CHECKING:
+    from buildbot.process.builder import Builder
     from buildbot.worker.base import AbstractWorker
+    from buildbot.worker.latent import AbstractLatentWorker
 
 
 class States(Names):
@@ -37,11 +39,12 @@ class States(Names):
 
 
 class AbstractWorkerForBuilder:
-    def __init__(self):
-        self.ping_watchers = []
+    def __init__(self, builder: Builder):
+        self.ping_watchers: list[defer.Deferred] = []
         self.state = None  # set in subclass
         self.worker: AbstractWorker | None = None
-        self.builder_name = None
+        self.builder = builder
+        self.builder_name = builder.name
         self.locks = None
 
     def __repr__(self):
@@ -52,10 +55,6 @@ class AbstractWorkerForBuilder:
             r.extend([" worker=", repr(self.worker.workername)])
         r.extend([" state=", self.state.name, ">"])
         return ''.join(r)
-
-    def setBuilder(self, b):
-        self.builder = b
-        self.builder_name = b.name
 
     def getWorkerCommandVersion(self, command, oldversion=None):
         if self.remoteCommands is None:
@@ -179,8 +178,8 @@ class Ping:
 
 
 class WorkerForBuilder(AbstractWorkerForBuilder):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, builder: Builder):
+        super().__init__(builder)
         self.state = States.DETACHED
 
     @defer.inlineCallbacks
@@ -200,11 +199,10 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
 
 class LatentWorkerForBuilder(AbstractWorkerForBuilder):
-    def __init__(self, worker, builder):
-        super().__init__()
+    def __init__(self, worker: AbstractLatentWorker, builder: Builder):
+        super().__init__(builder)
         self.worker = worker
         self.state = States.AVAILABLE
-        self.setBuilder(builder)
         self.worker.addWorkerForBuilder(self)
         log.msg(f"Latent worker {worker.workername} attached to {self.builder_name}")
 
