@@ -36,7 +36,7 @@ class InterfaceTests:
             self.assertArgSpecMatches(obj.methodUnderTest, self.fakeMethod)
         """
 
-        def filter(signature):
+        def filter(signature: inspect.Signature):
             if len(signature.parameters) == 0:
                 return signature
 
@@ -53,7 +53,15 @@ class InterfaceTests:
             for name in delete_names:
                 parameters.pop(name)
 
-            signature = signature.replace(parameters=parameters.values())
+            # Remove all type annotations
+            # as they can be stored as str when quoted or when `__future__.annotations`
+            # is imported, we can't check whether the types are compatible.
+            # Type checking should be left to a static type checker
+            signature = signature.replace(return_annotation=inspect.Signature.empty)
+            for name, param in parameters.items():
+                parameters[name] = param.replace(annotation=inspect.Parameter.empty)
+
+            signature = signature.replace(parameters=list(parameters.values()))
             return signature
 
         def remove_decorators(func):
