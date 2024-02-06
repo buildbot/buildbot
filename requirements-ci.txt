@@ -40,7 +40,7 @@ constantly==23.10.4
 cookies==2.2.1
 coverage==7.4.0
 croniter==2.0.1
-cryptography==41.0.7
+cryptography==42.0.0
 decorator==5.1.1
 dicttoxml==1.7.16
 dill==0.3.7
