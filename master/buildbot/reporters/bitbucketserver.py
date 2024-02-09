@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
 import re
 from urllib.parse import urlparse
 
@@ -30,6 +31,7 @@ from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import bytes2unicode
+from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 
@@ -324,8 +326,13 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             if self.duration:
                 duration = yield props.render(self.duration)
             elif "complete_at" in build:
-                td = build['complete_at'] - build['started_at']
-                duration = int(td.seconds * 1000)
+                complete_at = build['complete_at']
+                started_at = build['started_at']
+                if isinstance(complete_at, datetime.datetime):
+                    complete_at = datetime2epoch(complete_at)
+                if isinstance(started_at, datetime.datetime):
+                    started_at = datetime2epoch(started_at)
+                duration = int(complete_at - started_at) * 1000
             if self.test_results:
                 test_results = yield props.render(self.test_results)
         else:
