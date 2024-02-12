@@ -223,7 +223,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_constructor_block_devices_missing(self):
         block_devices = [
-            {'source_type': 'image', 'uuid': '9fb2e6e8-110d-4388-8c23-0fcbd1e2fcc1'},
+            {'source_type': 'image', 'uuid': 'image-uuid'},
         ]
 
         lw = yield self.setupWorker(
