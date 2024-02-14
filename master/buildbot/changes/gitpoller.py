@@ -27,6 +27,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
 from buildbot.util.git import GitMixin
+from buildbot.util.git import check_ssh_config
 from buildbot.util.git import ensureSshKeyNewline
 from buildbot.util.git import getSshKnownHostsContents
 from buildbot.util.misc import writeLocalFile
@@ -103,7 +104,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
         self.sshKnownHosts = sshKnownHosts
-        self.setupGit(logname='GitPoller')  # check the configuration
+        check_ssh_config('GitPoller', self.sshPrivateKey, self.sshHostKey, self.sshKnownHosts)
 
         if fetch_refspec is not None:
             config.error(
@@ -181,7 +182,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
         self.sshKnownHosts = sshKnownHosts
-        self.setupGit(logname='GitPoller')
+        self.setupGit()
 
         if self.workdir is None:
             self.workdir = 'gitpoller-work'

@@ -18,6 +18,7 @@ from twisted.trial import unittest
 
 from buildbot.test.util import config
 from buildbot.util.git import GitMixin
+from buildbot.util.git import check_ssh_config
 from buildbot.util.git import ensureSshKeyNewline
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
@@ -53,7 +54,7 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
         self.assert_does_not_escape('--opt')
 
 
-class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
+class TestSetUpGit(unittest.TestCase, config.ConfigErrorsMixin):
     @parameterized.expand([
         ('no_keys', None, None, None, None),
         ('only_private_key', 'key', None, None, None),
@@ -82,14 +83,21 @@ class TestSetUpGit(GitMixin, unittest.TestCase, config.ConfigErrorsMixin):
         ),
     ])
     def test_config(self, name, private_key, host_key, known_hosts, config_error):
-        self.sshPrivateKey = private_key
-        self.sshHostKey = host_key
-        self.sshKnownHosts = known_hosts
         if config_error is None:
-            self.setupGit()
+            check_ssh_config(
+                'TestSetUpGit',
+                private_key,
+                host_key,
+                known_hosts,
+            )
         else:
             with self.assertRaisesConfigError(config_error):
-                self.setupGit()
+                check_ssh_config(
+                    'TestSetUpGit',
+                    private_key,
+                    host_key,
+                    known_hosts,
+                )
 
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):

@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -24,6 +27,9 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IRenderable
 
 RC_SUCCESS = 0
 
@@ -49,20 +55,24 @@ def getSshCommand(keyPath, knownHostsPath):
     return ' '.join(command)
 
 
+def check_ssh_config(
+    logname: str,
+    ssh_private_key: IRenderable | None,
+    ssh_host_key: IRenderable | None,
+    ssh_known_hosts: IRenderable | None,
+):
+    if ssh_host_key is not None and ssh_private_key is None:
+        config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
+
+    if ssh_known_hosts is not None and ssh_private_key is None:
+        config.error(f'{logname}: sshPrivateKey must be provided in order use sshKnownHosts')
+
+    if ssh_host_key is not None and ssh_known_hosts is not None:
+        config.error(f'{logname}: only one of sshKnownHosts and sshHostKey can be provided')
+
+
 class GitMixin:
-    def setupGit(self, logname=None):
-        if logname is None:
-            logname = 'GitMixin'
-
-        if self.sshHostKey is not None and self.sshPrivateKey is None:
-            config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
-
-        if self.sshKnownHosts is not None and self.sshPrivateKey is None:
-            config.error(f'{logname}: sshPrivateKey must be provided in order use sshKnownHosts')
-
-        if self.sshHostKey is not None and self.sshKnownHosts is not None:
-            config.error(f'{logname}: only one of sshKnownHosts and sshHostKey can be provided')
-
+    def setupGit(self):
         self.gitInstalled = False
         self.supportsBranch = False
         self.supportsProgress = False
@@ -139,7 +149,9 @@ def ensureSshKeyNewline(privateKey: str) -> str:
 class GitStepMixin(GitMixin):
     def setupGitStep(self):
         self.didDownloadSshPrivateKey = False
-        self.setupGit(logname='Git')
+        self.setupGit()
+
+        check_ssh_config('Git', self.sshPrivateKey, self.sshHostKey, self.sshKnownHosts)
 
         if not self.repourl:
             config.error("Git: must provide repourl.")
