@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from functools import reduce
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -40,6 +42,10 @@ from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
+
+if TYPE_CHECKING:
+    from buildbot.process.builder import Builder
+    from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
 
 
 class Build(properties.PropertiesMixin):
@@ -118,7 +124,7 @@ class Build(properties.PropertiesMixin):
     def getProperties(self):
         return self.properties
 
-    def setBuilder(self, builder):
+    def setBuilder(self, builder: Builder) -> None:
         """
         Set the given builder as our builder.
 
@@ -271,7 +277,8 @@ class Build(properties.PropertiesMixin):
             )
             self.setProperty("builddir", builddir, "Worker")
 
-    def setupWorkerForBuilder(self, workerforbuilder):
+    def setupWorkerForBuilder(self, workerforbuilder: AbstractWorkerForBuilder):
+        assert workerforbuilder.worker is not None
         self.path_module = workerforbuilder.worker.path_module
         self.workername = workerforbuilder.worker.workername
         self.worker_info = workerforbuilder.worker.info

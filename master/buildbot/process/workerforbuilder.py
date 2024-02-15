@@ -14,10 +14,17 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.constants import NamedConstant
 from twisted.python.constants import Names
+
+if TYPE_CHECKING:
+    from buildbot.worker.base import AbstractWorker
 
 
 class States(Names):
@@ -33,7 +40,7 @@ class AbstractWorkerForBuilder:
     def __init__(self):
         self.ping_watchers = []
         self.state = None  # set in subclass
-        self.worker = None
+        self.worker: AbstractWorker | None = None
         self.builder_name = None
         self.locks = None
 

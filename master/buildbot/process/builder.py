@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import warnings
 import weakref
+from typing import TYPE_CHECKING
 
 from twisted.application import service
 from twisted.internet import defer
@@ -33,6 +36,10 @@ from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
 from buildbot.util.render_description import render_description
+
+if TYPE_CHECKING:
+    from buildbot.config.builder import BuilderConfig
+    from buildbot.config.master import MasterConfig
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -79,7 +86,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         # Tracks config version for locks
         self.config_version = None
 
-    def _find_builder_config_by_name(self, new_config):
+    def _find_builder_config_by_name(self, new_config: MasterConfig) -> BuilderConfig | None:
         for builder_config in new_config.builders:
             if builder_config.name == self.name:
                 return builder_config
