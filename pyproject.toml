@@ -1,7 +1,15 @@
 [tool.ruff]
 line-length = 100
 target-version = "py38"
-select = ["I"]
+select = ["W", "E", "F", "I"]
+ignore = [
+   "E711", # comparison to None should be 'if cond is None:'
+   "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
+   "E721", # do not compare types, use 'isinstance()'
+   "E731", # do not assign a lambda expression, use a def
+   "E741", # ambiguous variable name
+   "E501"  # line too long (we rely on ruff format for that)
+]
 
 [tool.ruff.lint.isort]
 force-single-line = true
