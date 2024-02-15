@@ -258,7 +258,7 @@ class TestBitbucketServerCoreAPIStatusPush(
             yield self.master.stopService()
 
     @defer.inlineCallbacks
-    def _check_start_and_finish_build(self, build, parentPlan=False):
+    def _check_start_and_finish_build(self, build, parentPlan=False, epoch=False):
         # we make sure proper calls to txrequests have been made
 
         _name = "Builder_parent #1 \u00bb Builder0 #0" if parentPlan else "Builder0 #0"
@@ -315,10 +315,16 @@ class TestBitbucketServerCoreAPIStatusPush(
             },
             code=HTTP_PROCESSED,
         )
-        build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
+        if epoch:
+            build['started_at'] = 1554161913
+        else:
+            build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
-        build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
+        if epoch:
+            build["complete_at"] = 1554161923
+        else:
+            build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         build['complete'] = True
         yield self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
@@ -384,6 +390,12 @@ class TestBitbucketServerCoreAPIStatusPush(
         yield self.setupReporter()
         build = yield self.insert_build_finished(SUCCESS)
         yield self._check_start_and_finish_build(build)
+
+    @defer.inlineCallbacks
+    def test_basic_epoch(self):
+        yield self.setupReporter()
+        build = yield self.insert_build_finished(SUCCESS)
+        yield self._check_start_and_finish_build(build, epoch=True)
 
     @defer.inlineCallbacks
     def test_with_parent(self):
