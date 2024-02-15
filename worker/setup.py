@@ -178,7 +178,6 @@ setup_args['extras_require'] = {
         # spellcheck introduced in version 1.4.0
         'pylint>=1.4.0',
         'pyenchant',
-        'flake8~=3.9.0',
     ]
     + test_deps,
 }

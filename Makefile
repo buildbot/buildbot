@@ -5,7 +5,7 @@
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-.PHONY: docs pylint flake8 virtualenv
+.PHONY: docs pylint ruff virtualenv
 
 
 VENV_NAME := .venv$(VENV_PY_VERSION)
@@ -56,14 +56,6 @@ pylint:
 	$(MAKE) -C master pylint; master_res=$$?; \
 	$(MAKE) -C worker pylint; worker_res=$$?; \
 	if [ $$master_res != 0 ] || [ $$worker_res != 0 ]; then exit 1; fi
-
-# flake8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
-flake8:
-	$(MAKE) -C master flake8
-	$(MAKE) -C worker flake8
-	flake8 --config=common/flake8rc www/*/buildbot_*/
-	flake8 --config=common/flake8rc www/*/setup.py
-	flake8 --config=common/flake8rc common/*.py
 
 frontend_deps: $(VENV_NAME)
 	$(PIP) install -e pkg
