@@ -79,7 +79,6 @@ packaging==23.2
 parameterized==0.9.0
 pathlib2==2.3.7.post1
 pbr==6.0.0
-pep8==1.7.1
 Pillow==10.2.0
 platformdirs==4.2.0
 psutil==5.9.8

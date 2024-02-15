@@ -191,31 +191,6 @@ if [ ${#py_files[@]} -ne 0 ]; then
     fi
 fi
 
-status "running autopep8"
-if [[ -z `command -v autopep8` ]]; then
-    warning "autopep8 is not installed"
-elif [[ ! -f common/flake8rc ]]; then
-    warning "common/flake8rc not found"
-else
-    changes_made=false
-    for filename in ${py_files[@]}; do
-        LINEWIDTH=$(grep -E "max-line-length" common/flake8rc | sed 's/ //g' | cut -d'=' -f 2)
-        # even if we don't enforce errors, if they can be fixed automatically, that's better..
-        IGNORES=E123,E501,W6
-        # ignore is not None for SQLAlchemy code..
-        if [[ "$filename" =~ "/db/" ]]; then
-            IGNORES=$IGNORES,E711,E712
-        fi
-        autopep8 --in-place --max-line-length=$LINEWIDTH --ignore=$IGNORES "$filename"
-        if ! git diff --quiet --exit-code "$filename"; then
-            changes_made=true
-        fi
-    done
-    if ${changes_made}; then
-        not_ok "autopep8 made changes"
-    fi
-fi
-
 status "running pylint"
 if [[ -z `command -v pylint` ]]; then
     warning "pylint is not installed"
