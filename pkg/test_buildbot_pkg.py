@@ -28,7 +28,7 @@ class BuildbotWWWPkg(unittest.TestCase):
     pkgPaths = ["www", "react-base"]
     epName = "base_react"
 
-    loadTestScript = dedent("""
+    loadTestScript = dedent(r"""
         from importlib.metadata import entry_points
         import re
         apps = {}

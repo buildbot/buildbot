@@ -174,7 +174,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         return properties
 
     def eventReceived(self, event):
-        if not event['type'] in self.handled_events:
+        if event['type'] not in self.handled_events:
             if self.debug:
                 log.msg(f"the event type '{event['type']}' is not setup to handle")
             return defer.succeed(None)
