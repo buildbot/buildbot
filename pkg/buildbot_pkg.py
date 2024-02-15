@@ -223,8 +223,6 @@ class BuildJsCommand(Command):
 
             assert yarn_program is not None, "need nodejs and yarn installed in current PATH"
 
-            yarn_bin = check_output([yarn_program, "bin"], shell=shell).strip()
-
             commands = [
                 [yarn_program, 'install', '--pure-lockfile'],
                 [yarn_program, 'run', 'build'],
