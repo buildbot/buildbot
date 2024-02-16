@@ -79,14 +79,13 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             wc = None
             if _changesourceid:
                 wc = cs_tbl.c.id == _changesourceid
-            else:
-                # otherwise, filter with active, if necessary
-                if masterid is not None:
+            # otherwise, filter with active, if necessary
+            elif masterid is not None:
                     wc = cs_mst_tbl.c.masterid == masterid
-                elif active:
-                    wc = cs_mst_tbl.c.masterid != NULL
-                elif active is not None:
-                    wc = cs_mst_tbl.c.masterid == NULL
+            elif active:
+                wc = cs_mst_tbl.c.masterid != NULL
+            elif active is not None:
+                wc = cs_mst_tbl.c.masterid == NULL
 
             q = sa.select(
                 [cs_tbl.c.id, cs_tbl.c.name, cs_mst_tbl.c.masterid], from_obj=join, whereclause=wc

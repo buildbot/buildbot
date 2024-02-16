@@ -73,13 +73,12 @@ class BufferManager:
 
         if not is_log_message:
             len_data = 20
+        elif logname == "log":
+            # different data format, when logname is 'log'
+            # e.g. data = ('test_log', ('hello\n', [5], [0.0]))
+            len_data = len(data[1][0]) + 8 * (len(data[1][1]) + len(data[1][2]))
         else:
-            if logname == "log":
-                # different data format, when logname is 'log'
-                # e.g. data = ('test_log', ('hello\n', [5], [0.0]))
-                len_data = len(data[1][0]) + 8 * (len(data[1][1]) + len(data[1][2]))
-            else:
-                len_data = len(data[0]) + 8 * (len(data[1]) + len(data[2]))
+            len_data = len(data[0]) + 8 * (len(data[1]) + len(data[2]))
 
         space_left = self._buffer_size - self._buflen
 

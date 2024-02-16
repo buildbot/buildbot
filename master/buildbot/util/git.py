@@ -227,17 +227,16 @@ class GitStepMixin(GitMixin):
             # stick around for too long because this is on top of any timeout
             # we have hit.
             sigtermTime = 1
+        # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
+        # killing.  This should be safe.
+        elif self.workerVersionIsOlderThan("shell", "2.15"):
+            log.msg(
+                "NOTE: worker does not allow master to specify "
+                "interruptSignal. This may leave a stale lockfile around "
+                "if the command is interrupted/times out\n"
+            )
         else:
-            # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
-            # killing.  This should be safe.
-            if self.workerVersionIsOlderThan("shell", "2.15"):
-                log.msg(
-                    "NOTE: worker does not allow master to specify "
-                    "interruptSignal. This may leave a stale lockfile around "
-                    "if the command is interrupted/times out\n"
-                )
-            else:
-                interruptSignal = 'TERM'
+            interruptSignal = 'TERM'
 
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,

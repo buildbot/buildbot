@@ -22,12 +22,11 @@ def entry_points_get(entry_points, group):
     """
     if hasattr(entry_points, "select"):
         return entry_points.select(group=group)
+    elif isinstance(entry_points, list):
+        filtered_entry_points = []
+        for ep in entry_points:
+            if ep.group == group:
+                filtered_entry_points.append(ep)
+        return filtered_entry_points
     else:
-        if isinstance(entry_points, list):
-            filtered_entry_points = []
-            for ep in entry_points:
-                if ep.group == group:
-                    filtered_entry_points.append(ep)
-            return filtered_entry_points
-        else:
-            return entry_points.get(group, [])
+        return entry_points.get(group, [])

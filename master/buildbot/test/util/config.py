@@ -47,9 +47,8 @@ class ConfigErrorsMixin:
             if isinstance(substr_or_re, str):
                 if substr_or_re not in curr_error:
                     self.fail(f"non-matching error: {curr_error}, expected: {substr_or_re}")
-            else:
-                if not substr_or_re.search(curr_error):
-                    self.fail(f"non-matching error: {curr_error}")
+            elif not substr_or_re.search(curr_error):
+                self.fail(f"non-matching error: {curr_error}")
 
     def assertRaisesConfigError(self, substr_or_re, fn=None):
         context = _AssertRaisesConfigErrorContext(substr_or_re, self)

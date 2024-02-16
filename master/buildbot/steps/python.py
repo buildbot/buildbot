@@ -415,14 +415,13 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
                 self.success = True
             elif line.startswith('Warning, treated as error:'):
                 next_is_warning = True
+            elif next_is_warning:
+                self.warnings.append(line)
+                next_is_warning = False
             else:
-                if next_is_warning:
-                    self.warnings.append(line)
-                    next_is_warning = False
-                else:
-                    for msg in self._msgs:
-                        if msg in line:
-                            self.warnings.append(line)
+                for msg in self._msgs:
+                    if msg in line:
+                        self.warnings.append(line)
 
     def getResultSummary(self):
         summary = f'{self.name} {len(self.warnings)} warnings'

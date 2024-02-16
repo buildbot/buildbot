@@ -179,14 +179,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             wc = None
             if _schedulerid:
                 wc = sch_tbl.c.id == _schedulerid
-            else:
-                # otherwise, filter with active, if necessary
-                if masterid is not None:
-                    wc = sch_mst_tbl.c.masterid == masterid
-                elif active:
-                    wc = sch_mst_tbl.c.masterid != NULL
-                elif active is not None:
-                    wc = sch_mst_tbl.c.masterid == NULL
+            # otherwise, filter with active, if necessary
+            elif masterid is not None:
+                wc = sch_mst_tbl.c.masterid == masterid
+            elif active:
+                wc = sch_mst_tbl.c.masterid != NULL
+            elif active is not None:
+                wc = sch_mst_tbl.c.masterid == NULL
 
             q = sa.select(
                 [sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled, sch_mst_tbl.c.masterid],

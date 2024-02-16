@@ -370,21 +370,19 @@ class TelegramContact(Contact):
                 else:
                     prompt = f"@{username}, now {prompt}..."
                 kwargs['reply_markup'] = {'force_reply': True, 'selective': True}
+            elif greeting:
+                prompt = f"{greeting}, now reply to this message and {prompt}..."
             else:
-                if greeting:
-                    prompt = f"{greeting}, now reply to this message and {prompt}..."
-                else:
-                    prompt = f"Reply to this message and {prompt}..."
+                prompt = f"Reply to this message and {prompt}..."
+        elif greeting:
+            prompt = f"{greeting}, now {prompt}..."
         else:
-            if greeting:
-                prompt = f"{greeting}, now {prompt}..."
-            else:
-                prompt = prompt[0].upper() + prompt[1:] + "..."
-            # Telegram seems to have a bug, which causes reply request to pop sometimes again.
-            # So we do not force reply to avoid it...
-            # kwargs['reply_markup'] = {
-            #     'force_reply': True
-            # }
+            prompt = prompt[0].upper() + prompt[1:] + "..."
+        # Telegram seems to have a bug, which causes reply request to pop sometimes again.
+        # So we do not force reply to avoid it...
+        # kwargs['reply_markup'] = {
+        #     'force_reply': True
+        # }
         self.send(prompt, **kwargs)
 
     @defer.inlineCallbacks

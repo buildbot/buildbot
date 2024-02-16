@@ -529,11 +529,10 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         if not branch:
             if self.defaultBranch:
                 branch = self.defaultBranch
+            elif repository:
+                branch = 'lp:' + repository
             else:
-                if repository:
-                    branch = 'lp:' + repository
-                else:
-                    branch = None
+                branch = None
 
         if rev and author:
             return (

@@ -241,12 +241,10 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
                     if not old_filter_result:
                         return
-                else:
-                    if not new_filter_result:
-                        return
-            else:
-                if not change_filter.filter_change(change):
+                elif not new_filter_result:
                     return
+            elif not change_filter.filter_change(change):
+                return
 
         if change.codebase not in self.codebases:
             log.msg(

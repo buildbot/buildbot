@@ -73,15 +73,14 @@ class MasterShellCommand(BuildStep):
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
                 argv = ['/bin/sh', '-c', command]
+        elif runtime.platformType == 'win32':
+            # allow %COMSPEC% to have args
+            argv = os.environ['COMSPEC'].split()
+            if '/c' not in argv:
+                argv += ['/c']
+            argv += list(command)
         else:
-            if runtime.platformType == 'win32':
-                # allow %COMSPEC% to have args
-                argv = os.environ['COMSPEC'].split()
-                if '/c' not in argv:
-                    argv += ['/c']
-                argv += list(command)
-            else:
-                argv = command
+            argv = command
 
         self.stdio_log = yield self.addLog("stdio")
 

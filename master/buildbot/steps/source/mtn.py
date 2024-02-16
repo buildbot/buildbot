@@ -193,11 +193,10 @@ class Monotone(Source):
 
         if not files:
             rc = 0
+        elif self.workerVersionIsOlderThan('rmdir', '2.14'):
+            rc = yield self.removeFiles(files)
         else:
-            if self.workerVersionIsOlderThan('rmdir', '2.14'):
-                rc = yield self.removeFiles(files)
-            else:
-                rc = yield self.runRmdir(files, abandonOnFailure=False)
+            rc = yield self.runRmdir(files, abandonOnFailure=False)
 
         if rc != 0:
             log.msg("Failed removing files")

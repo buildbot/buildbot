@@ -928,11 +928,10 @@ class TestBuildStepMixin:
                 log.msg(f"Unexpected {log_type} log output:\n{exp}")
                 log.msg(f"Expected {log_type} to match:\n{got}")
                 raise AssertionError(f"Unexpected {log_type} log output; see logs")
-        else:
-            if got != exp:
-                log.msg(f"Unexpected {log_type} log output:\n{exp}")
-                log.msg(f"Expected {log_type} log output:\n{got}")
-                raise AssertionError(f"Unexpected {log_type} log output; see logs")
+        elif got != exp:
+            log.msg(f"Unexpected {log_type} log output:\n{exp}")
+            log.msg(f"Expected {log_type} log output:\n{got}")
+            raise AssertionError(f"Unexpected {log_type} log output; see logs")
 
     # callbacks from the running step
 

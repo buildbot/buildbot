@@ -492,17 +492,16 @@ class _Lookup(util.ComparableMixin):
         value, index = yield defer.gatherResults([value, index])
         if index not in value:
             rv = yield build.render(self.default)
-        else:
-            if self.defaultWhenFalse:
-                rv = yield build.render(value[index])
-                if not rv:
-                    rv = yield build.render(self.default)
-                elif self.hasKey != _notHasKey:
-                    rv = yield build.render(self.hasKey)
+        elif self.defaultWhenFalse:
+            rv = yield build.render(value[index])
+            if not rv:
+                rv = yield build.render(self.default)
             elif self.hasKey != _notHasKey:
                 rv = yield build.render(self.hasKey)
-            else:
-                rv = yield build.render(value[index])
+        elif self.hasKey != _notHasKey:
+            rv = yield build.render(self.hasKey)
+        else:
+            rv = yield build.render(value[index])
         if rv is None:
             rv = yield build.render(self.elideNoneAs)
         return rv

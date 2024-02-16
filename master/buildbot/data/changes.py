@@ -99,10 +99,9 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
                 changes = [change]
             else:
                 changes = []
-        else:
-            if resultSpec is not None:
-                resultSpec.fieldMapping = self.fieldMapping
-                changes = yield self.master.db.changes.getChanges(resultSpec=resultSpec)
+        elif resultSpec is not None:
+            resultSpec.fieldMapping = self.fieldMapping
+            changes = yield self.master.db.changes.getChanges(resultSpec=resultSpec)
         results = []
         for ch in changes:
             results.append((yield self._fixChange(ch, is_graphql='graphql' in kwargs)))
