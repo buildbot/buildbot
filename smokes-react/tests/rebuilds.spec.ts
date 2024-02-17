@@ -26,8 +26,7 @@ test.describe('rebuilds', function() {
   });
 
   test('should navigate to a dedicated build and to use the rebuild button',
-      async ({page, browserName}) => {
-    test.skip(browserName === 'webkit', 'https://github.com/buildbot/buildbot/issues/7308');
+      async ({page}) => {
     await BuilderPage.gotoBuildersList(page);
     await BuilderPage.goto(page, "runtests");
     const lastbuild = await BuilderPage.getLastFinishedBuildNumber(page);
