@@ -38,13 +38,15 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   descriptor!: IDataDescriptor<DataType>;
   webSocketClient!: WebSocketClient;
   isOpen: boolean = false;
+  internalId: number = 0;
 
   @observable resolved: boolean = false;
   @observable array: IObservableArray<DataType> = observable<DataType>([]);
   @observable byId: {[key: string]: DataType} = {};
 
-  constructor() {
+  constructor(internalId: number = 0) {
     makeObservable(this);
+    this.internalId = internalId;
   }
 
   listener(data: any) {
