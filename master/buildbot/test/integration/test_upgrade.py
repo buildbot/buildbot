@@ -122,7 +122,13 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         def comp(engine):
             # use compare_model_to_db, which gets everything but indexes
             with engine.connect() as conn:
-                diff = compare_metadata(MigrationContext.configure(conn), self.db.model.metadata)
+                opts = None
+                if engine.dialect.name == 'mysql':
+                    # Disable type comparisons for mysql. Since 1.12.0 it is enabled by default.
+                    # https://alembic.sqlalchemy.org/en/latest/changelog.html#change-1.12.0
+                    # There is issue with comparison MEDIUMBLOB() vs LargeBinary(length=65536) in logchunks table.
+                    opts = {"compare_type": False}
+                diff = compare_metadata(MigrationContext.configure(conn, opts=opts), self.db.model.metadata)
 
             if engine.dialect.name == 'mysql':
                 # MySQL/MyISAM does not support foreign keys, which is expected.
