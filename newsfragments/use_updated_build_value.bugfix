@@ -1,0 +1,1 @@
+Fix sporadic navigation to builders page when new build is started (:issue:`7307`).
