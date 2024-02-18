@@ -15,7 +15,10 @@
 
 from __future__ import annotations
 
+import os
 import re
+import stat
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from packaging.version import parse as parse_version
@@ -27,10 +30,13 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
 from buildbot.steps.worker import CompositeStepMixin
+from buildbot.util import ComparableMixin
 from buildbot.util import bytes2unicode
+from buildbot.util.misc import writeLocalFile
 
 if TYPE_CHECKING:
     from buildbot.interfaces import IRenderable
+    from buildbot.util.service import BuildbotService
 
 RC_SUCCESS = 0
 
@@ -129,7 +135,7 @@ def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
     return f'#!/bin/sh\n{ssh_command} "$@"\n'
 
 
-def getSshKnownHostsContents(hostKey):
+def getSshKnownHostsContents(hostKey: str) -> str:
     host_name = '*'
     return f'{host_name} {hostKey}'
 
@@ -251,7 +257,13 @@ class GitStepMixin(GitMixin):
         return self.gitInstalled
 
 
-class AbstractGitAuth:
+class AbstractGitAuth(ComparableMixin):
+
+    compare_attrs = (
+        "ssh_private_key",
+        "ssh_host_key",
+        "ssh_known_hosts",
+    )
 
     def __init__(
         self,
@@ -426,4 +438,74 @@ class GitStepAuth(AbstractGitAuth):
 
 
 class GitServiceAuth(AbstractGitAuth):
-    pass
+
+    def __init__(
+        self,
+        service: BuildbotService,
+        ssh_private_key: IRenderable | None = None,
+        ssh_host_key: IRenderable | None = None,
+        ssh_known_hosts: IRenderable | None = None,
+    ) -> None:
+        self._service = service
+
+        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts)
+
+    def adjust_git_command_params_for_auth(
+        self,
+        full_command: list[str],
+        full_env: dict[str, str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ) -> None:
+        key_path = self._get_ssh_private_key_path(os.path, workdir)
+        host_key_path = None
+        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+            host_key_path = self._get_ssh_host_key_path(os.path, workdir)
+
+        git_mixin.adjustCommandParamsForSshPrivateKey(
+            full_command, full_env, key_path, None, host_key_path,
+        )
+
+    @defer.inlineCallbacks
+    def download_auth_files_if_needed(self, workdir: str):
+        if self.ssh_private_key is None:
+            return RC_SUCCESS
+
+        p = Properties()
+        p.master = self._service.master
+        private_key = yield p.render(self.ssh_private_key)
+        host_key = yield p.render(self.ssh_host_key)
+        known_hosts = yield p.render(self.ssh_known_hosts)
+
+        key_path = self._get_ssh_private_key_path(os.path, workdir)
+        # We change the permissions of the key file to be user-readable only so
+        # that ssh does not complain. This is not used for security because the
+        # parent directory will have proper permissions.
+        writeLocalFile(key_path, ensureSshKeyNewline(private_key), mode=stat.S_IRUSR)
+
+        known_hosts_path = None
+        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+            known_hosts_path = self._get_ssh_host_key_path(os.path, workdir)
+
+            if known_hosts is not None:
+                known_hosts_contents = known_hosts
+            else:
+                known_hosts_contents = getSshKnownHostsContents(host_key)
+
+            writeLocalFile(known_hosts_path, known_hosts_contents)
+
+        self.did_download_auth_files = True
+        return RC_SUCCESS
+
+    def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
+        if not self.did_download_auth_files:
+            return defer.succeed(RC_SUCCESS)
+
+        Path(
+            self._get_ssh_private_key_path(os.path, workdir)
+        ).unlink(missing_ok=True)
+        Path(
+            self._get_ssh_host_key_path(os.path, workdir)
+        ).unlink(missing_ok=True)
+
+        return defer.succeed(RC_SUCCESS)
