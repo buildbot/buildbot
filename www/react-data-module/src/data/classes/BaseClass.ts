@@ -32,6 +32,10 @@ export class BaseClass {
     throw Error("Not implemented");
   }
 
+  toObject() {
+    throw Error("Not implemented");
+  }
+
   get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
                                   descriptor: IDataDescriptor<DataType>) {
     return this.accessor.get(this.endpoint + "/" + this.id + "/" + endpoint,
