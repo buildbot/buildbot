@@ -2005,9 +2005,9 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
 
         expected_file_writes = [
             mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, '* ssh-host-key'),
+            mock.call(known_hosts_path, '* ssh-host-key', mode=0o400),
             mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, '* ssh-host-key'),
+            mock.call(known_hosts_path, '* ssh-host-key', mode=0o400),
         ]
 
         self.assertEqual(expected_file_writes, write_local_file_mock.call_args_list)
@@ -2080,9 +2080,9 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
 
         expected_file_writes = [
             mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, 'ssh-known-hosts'),
+            mock.call(known_hosts_path, 'ssh-known-hosts', mode=0o400),
             mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, 'ssh-known-hosts'),
+            mock.call(known_hosts_path, 'ssh-known-hosts', mode=0o400),
         ]
 
         self.assertEqual(expected_file_writes, write_local_file_mock.call_args_list)

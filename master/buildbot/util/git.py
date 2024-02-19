@@ -299,6 +299,10 @@ class AbstractGitAuth(ComparableMixin):
     def _path_module(self):
         raise NotImplementedError()
 
+    @property
+    def _master(self):
+        raise NotImplementedError()
+
     def _get_ssh_private_key_path(self, ssh_data_path: str) -> str:
         return self._path_module.join(ssh_data_path, 'ssh-key')
 
@@ -338,8 +342,60 @@ class AbstractGitAuth(ComparableMixin):
             workdir=workdir, git_mixin=git_mixin,
         )
 
-    def download_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
+    def _download_file(
+        self, path: str, content: str, mode: int, workdir: str | None = None,
+    ) -> defer.Deferred[None]:
         raise NotImplementedError()
+
+    @defer.inlineCallbacks
+    def download_auth_files_if_needed(
+        self,
+        workdir: str,
+        download_wrapper_script: bool = False,
+    ):
+        if self.ssh_private_key is None:
+            return RC_SUCCESS
+
+        p = Properties()
+        p.master = self._master
+        private_key = yield p.render(self.ssh_private_key)
+        host_key = yield p.render(self.ssh_host_key)
+        known_hosts = yield p.render(self.ssh_known_hosts)
+
+        private_key_path = self._get_ssh_private_key_path(workdir)
+        private_key = ensureSshKeyNewline(private_key)
+        yield self._download_file(
+            private_key_path, private_key, mode=stat.S_IRUSR, workdir=workdir,
+        )
+
+        known_hosts_path = None
+        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+            known_hosts_path = self._get_ssh_host_key_path(workdir)
+
+            if known_hosts is not None:
+                known_hosts_contents = known_hosts
+            else:
+                known_hosts_contents = getSshKnownHostsContents(host_key)
+
+            yield self._download_file(
+                known_hosts_path, known_hosts_contents, mode=stat.S_IRUSR, workdir=workdir,
+            )
+
+        if download_wrapper_script:
+            private_key_path = self._get_ssh_private_key_path(workdir)
+            known_hosts_path = None
+            if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+                known_hosts_path = self._get_ssh_host_key_path(workdir)
+
+            script_path = self._get_ssh_wrapper_script_path(workdir)
+            script_contents = getSshWrapperScriptContents(private_key_path, known_hosts_path)
+
+            yield self._download_file(
+                script_path, script_contents, mode=stat.S_IRWXU, workdir=workdir,
+            )
+
+        self.did_download_auth_files = True
+        return RC_SUCCESS
 
     def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
         raise NotImplementedError()
@@ -407,53 +463,46 @@ class GitStepAuth(AbstractGitAuth):
         )
         return self.step.build.path_module
 
+    @property
+    def _master(self):
+        assert (
+            isinstance(self.step, buildstep.BuildStep) and
+            self.step.master is not None
+        )
+        return self.step.master
+
     @defer.inlineCallbacks
-    def download_auth_files_if_needed(self, workdir: str):
+    def _download_file(self, path: str, content: str, mode: int, workdir: str | None = None):
+        assert isinstance(self.step, CompositeStepMixin)
+        yield self.step.downloadFileContentToWorker(
+            path, content, mode=mode, workdir=workdir,
+        )
+
+    @defer.inlineCallbacks
+    def download_auth_files_if_needed(
+        self,
+        workdir: str,
+        download_wrapper_script: bool = False,
+    ):
         if self.ssh_private_key is None:
             return RC_SUCCESS
 
         assert (
-            isinstance(self.step, buildstep.BuildStep) and
             isinstance(self.step, CompositeStepMixin) and
-            isinstance(self.step, GitMixin) and
-            self.step.build is not None
+            isinstance(self.step, GitMixin)
         )
 
-        p = Properties()
-        p.master = self.step.master
-        private_key = yield p.render(self.ssh_private_key)
-        host_key = yield p.render(self.ssh_host_key)
-        known_hosts_contents = yield p.render(self.ssh_known_hosts)
+        workdir = self._get_auth_data_path(workdir)
+        yield self.step.runMkdir(workdir)
 
-        auth_data_path = self._get_auth_data_path(workdir)
-        yield self.step.runMkdir(auth_data_path)
-
-        private_key_path = self._get_ssh_private_key_path(auth_data_path)
-        private_key = ensureSshKeyNewline(private_key)
-        yield self.step.downloadFileContentToWorker(
-            private_key_path, private_key, workdir=workdir, mode=0o400
+        return_code = yield super().download_auth_files_if_needed(
+            workdir=workdir,
+            download_wrapper_script=(
+                download_wrapper_script or
+                not self.step.supportsSshPrivateKeyAsEnvOption
+            ),
         )
-
-        known_hosts_path = None
-        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
-            known_hosts_path = self._get_ssh_host_key_path(auth_data_path)
-
-            if self.ssh_host_key is not None:
-                known_hosts_contents = getSshKnownHostsContents(host_key)
-            yield self.step.downloadFileContentToWorker(
-                known_hosts_path, known_hosts_contents, workdir=workdir, mode=0o400
-            )
-
-        if not self.step.supportsSshPrivateKeyAsEnvOption:
-            script_path = self._get_ssh_wrapper_script_path(auth_data_path)
-            script_contents = getSshWrapperScriptContents(private_key_path, known_hosts_path)
-
-            yield self.step.downloadFileContentToWorker(
-                script_path, script_contents, workdir=workdir, mode=0o700
-            )
-
-        self.did_download_auth_files = True
-        return RC_SUCCESS
+        return return_code
 
     @defer.inlineCallbacks
     def remove_auth_files_if_needed(self, workdir: str):
@@ -482,36 +531,16 @@ class GitServiceAuth(AbstractGitAuth):
     def _path_module(self):
         return os.path
 
-    @defer.inlineCallbacks
-    def download_auth_files_if_needed(self, workdir: str):
-        if self.ssh_private_key is None:
-            return RC_SUCCESS
+    @property
+    def _master(self):
+        assert self._service.master is not None
+        return self._service.master
 
-        p = Properties()
-        p.master = self._service.master
-        private_key = yield p.render(self.ssh_private_key)
-        host_key = yield p.render(self.ssh_host_key)
-        known_hosts = yield p.render(self.ssh_known_hosts)
-
-        key_path = self._get_ssh_private_key_path(workdir)
-        # We change the permissions of the key file to be user-readable only so
-        # that ssh does not complain. This is not used for security because the
-        # parent directory will have proper permissions.
-        writeLocalFile(key_path, ensureSshKeyNewline(private_key), mode=stat.S_IRUSR)
-
-        known_hosts_path = None
-        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
-            known_hosts_path = self._get_ssh_host_key_path(workdir)
-
-            if known_hosts is not None:
-                known_hosts_contents = known_hosts
-            else:
-                known_hosts_contents = getSshKnownHostsContents(host_key)
-
-            writeLocalFile(known_hosts_path, known_hosts_contents)
-
-        self.did_download_auth_files = True
-        return RC_SUCCESS
+    def _download_file(
+        self, path: str, content: str, mode: int, workdir: str | None = None,
+    ) -> defer.Deferred[None]:
+        writeLocalFile(path, content, mode=mode)
+        return defer.succeed(None)
 
     def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
         if not self.did_download_auth_files:
