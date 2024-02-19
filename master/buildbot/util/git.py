@@ -198,6 +198,7 @@ class GitStepMixin(GitMixin):
             self._git_auth.adjust_git_command_params_for_auth(
                 full_command, full_env,
                 self._get_auth_data_workdir(),
+                self,
             )
 
         full_command.extend(command)
@@ -307,6 +308,36 @@ class AbstractGitAuth(ComparableMixin):
     def _get_ssh_wrapper_script_path(self, ssh_data_path: str) -> str:
         return self._path_module.join(ssh_data_path, 'ssh-wrapper.sh')
 
+    def _adjust_command_params_for_ssh_private_key(
+        self,
+        full_command: list[str],
+        full_env: dict[str, str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ) -> None:
+        key_path = self._get_ssh_private_key_path(workdir)
+        host_key_path = None
+        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+            host_key_path = self._get_ssh_host_key_path(workdir)
+
+        ssh_wrapper_path = self._get_ssh_wrapper_script_path(workdir)
+
+        git_mixin.adjustCommandParamsForSshPrivateKey(
+            full_command, full_env, key_path, ssh_wrapper_path, host_key_path,
+        )
+
+    def adjust_git_command_params_for_auth(
+        self,
+        full_command: list[str],
+        full_env: dict[str, str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ) -> None:
+        self._adjust_command_params_for_ssh_private_key(
+            full_command, full_env,
+            workdir=workdir, git_mixin=git_mixin,
+        )
+
     def download_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
         raise NotImplementedError()
 
@@ -358,18 +389,14 @@ class GitStepAuth(AbstractGitAuth):
         self,
         full_command: list[str],
         full_env: dict[str, str],
-        auth_data_workdir: str,
+        workdir: str,
+        git_mixin: GitMixin,
     ) -> None:
-        auth_data_path = self._get_auth_data_path(auth_data_workdir)
-        key_path = self._get_ssh_private_key_path(auth_data_path)
-        ssh_wrapper_path = self._get_ssh_wrapper_script_path(auth_data_path)
-        host_key_path = None
-        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
-            host_key_path = self._get_ssh_host_key_path(auth_data_path)
-
-        assert isinstance(self.step, GitMixin)
-        self.step.adjustCommandParamsForSshPrivateKey(
-            full_command, full_env, key_path, ssh_wrapper_path, host_key_path
+        auth_data_path = self._get_auth_data_path(workdir)
+        super().adjust_git_command_params_for_auth(
+            full_command, full_env,
+            workdir=auth_data_path,
+            git_mixin=git_mixin,
         )
 
     @property
@@ -450,22 +477,6 @@ class GitServiceAuth(AbstractGitAuth):
         self._service = service
 
         super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts)
-
-    def adjust_git_command_params_for_auth(
-        self,
-        full_command: list[str],
-        full_env: dict[str, str],
-        workdir: str,
-        git_mixin: GitMixin,
-    ) -> None:
-        key_path = self._get_ssh_private_key_path(workdir)
-        host_key_path = None
-        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
-            host_key_path = self._get_ssh_host_key_path(workdir)
-
-        git_mixin.adjustCommandParamsForSshPrivateKey(
-            full_command, full_env, key_path, None, host_key_path,
-        )
 
     @property
     def _path_module(self):
