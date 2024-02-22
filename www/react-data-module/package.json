@@ -66,7 +66,7 @@
     ]
   },
   "peerDependencies": {
-    "axios": "^0.27.2",
+    "axios": "^0.28.0",
     "mobx": "^6.6.1",
     "moment": "^2.29.4",
     "react": "^18.2.0"
@@ -75,7 +75,7 @@
     "@types/jest": "^29.5.0",
     "@types/react": "^18.0.32",
     "@vitejs/plugin-react": "^3.1.0",
-    "axios": "^0.27.2",
+    "axios": "^0.28.0",
     "axios-mock-adapter": "^1.21.1",
     "babel-preset-react-app": "^10.0.0",
     "jest": "26.6.0",
