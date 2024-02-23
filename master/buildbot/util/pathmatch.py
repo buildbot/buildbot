@@ -61,9 +61,8 @@ class Matcher:
                         except Exception:
                             break
                     kwargs[arg_name] = path_elt
-                else:
-                    if pattern_elt != path_elt:
-                        break
+                elif pattern_elt != path_elt:
+                    break
             else:
                 # complete match
                 return patterns[pattern], kwargs

@@ -177,13 +177,12 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             if kwargs.get('graphql'):
                 # let the graphql engine manage the properties
                 del data['properties']
-            else:
-                # Avoid to request DB for Build's properties if not specified
-                if filters:
-                    props = yield self.master.db.builds.getBuildProperties(data["buildid"])
-                    filtered_properties = self._generate_filtered_properties(props, filters)
-                    if filtered_properties:
-                        data["properties"] = filtered_properties
+            # Avoid to request DB for Build's properties if not specified
+            elif filters:
+              props = yield self.master.db.builds.getBuildProperties(data["buildid"])
+              filtered_properties = self._generate_filtered_properties(props, filters)
+              if filtered_properties:
+                  data["properties"] = filtered_properties
 
             buildscol.append(data)
         return buildscol

@@ -136,12 +136,10 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                     if claimed:
                         if not claim_row:
                             continue
-                    else:
-                        if br.complete or claim_row:
-                            continue
-                else:
-                    if not claim_row or claim_row.masterid != claimed:
+                    elif br.complete or claim_row:
                         continue
+                elif not claim_row or claim_row.masterid != claimed:
+                    continue
             if bsid is not None:
                 if br.buildsetid != bsid:
                     continue

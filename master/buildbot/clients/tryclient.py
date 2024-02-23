@@ -664,25 +664,24 @@ class Try(pb.Referenceable):
                 )
 
             argv = [ssh_commands[0]]
+        # Split the string on whitespace to allow passing options in
+        # ssh command too, but preserving whitespace inside quotes to
+        # allow using paths with spaces in them which is common under
+        # Windows. And because Windows uses backslashes in paths, we
+        # can't just use shlex.split there as it would interpret them
+        # specially, so do it by hand.
+        elif runtime.platformType == 'win32':
+          # Note that regex here matches the arguments, not the
+          # separators, as it's simpler to do it like this. And then we
+          # just need to get all of them together using the slice and
+          # also remove the quotes from those that were quoted.
+          argv = [
+              string.strip(a, '"')
+              for a in re.split(r"""([^" ]+|"[^"]+")""", ssh_command)[1::2]
+          ]
         else:
-            # Split the string on whitespace to allow passing options in
-            # ssh command too, but preserving whitespace inside quotes to
-            # allow using paths with spaces in them which is common under
-            # Windows. And because Windows uses backslashes in paths, we
-            # can't just use shlex.split there as it would interpret them
-            # specially, so do it by hand.
-            if runtime.platformType == 'win32':
-                # Note that regex here matches the arguments, not the
-                # separators, as it's simpler to do it like this. And then we
-                # just need to get all of them together using the slice and
-                # also remove the quotes from those that were quoted.
-                argv = [
-                    string.strip(a, '"')
-                    for a in re.split(r"""([^" ]+|"[^"]+")""", ssh_command)[1::2]
-                ]
-            else:
-                # Do use standard tokenization logic under POSIX.
-                argv = shlex.split(ssh_command)
+           # Do use standard tokenization logic under POSIX.
+           argv = shlex.split(ssh_command)
 
         if tryuser:
             argv += ["-l", tryuser]

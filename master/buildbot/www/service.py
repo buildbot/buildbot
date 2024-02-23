@@ -216,9 +216,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # if config params have changed, set need_new_site to True.
             # There are none right now.
             need_new_site = False
-        else:
-            if www['port']:
-                need_new_site = True
+        elif www['port']:
+            need_new_site = True
 
         if need_new_site:
             self.setupSite(new_config)

@@ -390,23 +390,22 @@ class BuildStep(
         # default the workdir appropriately
         if self._workdir is not None or self.build is None:
             return self._workdir
+        # see :ref:`Factory-Workdir-Functions` for details on how to
+        # customize this
+        elif callable(self.build.workdir):
+            try:
+                return self.build.workdir(self.build.sources)
+            except AttributeError as e:
+                # if the callable raises an AttributeError
+                # python thinks it is actually workdir that is not existing.
+                # python will then swallow the attribute error and call
+                # __getattr__ from worker_transition
+                _, _, traceback = sys.exc_info()
+                raise CallableAttributeError(e).with_traceback(traceback)
+                # we re-raise the original exception by changing its type,
+                # but keeping its stacktrace
         else:
-            # see :ref:`Factory-Workdir-Functions` for details on how to
-            # customize this
-            if callable(self.build.workdir):
-                try:
-                    return self.build.workdir(self.build.sources)
-                except AttributeError as e:
-                    # if the callable raises an AttributeError
-                    # python thinks it is actually workdir that is not existing.
-                    # python will then swallow the attribute error and call
-                    # __getattr__ from worker_transition
-                    _, _, traceback = sys.exc_info()
-                    raise CallableAttributeError(e).with_traceback(traceback)
-                    # we re-raise the original exception by changing its type,
-                    # but keeping its stacktrace
-            else:
-                return self.build.workdir
+            return self.build.workdir
 
     @workdir.setter
     def workdir(self, workdir):

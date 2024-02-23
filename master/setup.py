@@ -699,10 +699,6 @@ setup_args['extras_require'] = {
     'test': [
         'setuptools_trial',
         'ruff',
-        # spellcheck introduced in version 1.4.0
-        'pylint<1.7.0',
-        'pyenchant',
-        'flake8~=3.9.2',
     ]
     + test_deps,
     'bundle': [

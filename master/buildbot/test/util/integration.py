@@ -401,9 +401,8 @@ class RunMasterBase(unittest.TestCase):
             if is_regex:
                 if re.search(pattern, text):
                     patterns.remove(pattern)
-            else:
-                if pattern in text:
-                    patterns.remove(pattern)
+            elif pattern in text:
+                patterns.remove(pattern)
         return patterns
 
     @defer.inlineCallbacks

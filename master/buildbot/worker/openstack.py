@@ -101,10 +101,9 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
                     "Missing os_username / os_password for OpenStackLatentWorker "
                     "and os_auth_args not provided."
                 )
-        else:
-            # ensure that at least auth_url is provided
-            if os_auth_args.get('auth_url') is None:
-                config.error("Missing 'auth_url' from os_auth_args for OpenStackLatentWorker")
+        # ensure that at least auth_url is provided
+        elif os_auth_args.get('auth_url') is None:
+            config.error("Missing 'auth_url' from os_auth_args for OpenStackLatentWorker")
 
         super().checkConfig(name, password, **kwargs)
 

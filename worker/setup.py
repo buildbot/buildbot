@@ -172,16 +172,7 @@ if sys.version_info < (3, 3):
 
 setup_args['tests_require'] = test_deps
 
-setup_args['extras_require'] = {
-    'test': [
-        'pep8',
-        # spellcheck introduced in version 1.4.0
-        'pylint>=1.4.0',
-        'pyenchant',
-        'flake8~=3.9.0',
-    ]
-    + test_deps,
-}
+setup_args['extras_require'] = { 'test': test_deps }
 
 if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
     setup_args['setup_requires'] = [

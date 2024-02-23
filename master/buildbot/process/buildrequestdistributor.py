@@ -378,9 +378,8 @@ class BuildRequestDistributor(service.AsyncMultiService):
             if time is None:
                 # for builders that do not have pending buildrequest, we just use large number
                 time = math.inf
-            else:
-                if isinstance(time, datetime):
-                    time = time.timestamp()
+            elif isinstance(time, datetime):
+                time = time.timestamp()
             return (-priority, time, bldr.name)
 
         yield async_sort(builders, key)
