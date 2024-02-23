@@ -181,6 +181,8 @@ const BuildView = observer(() => {
   const project = projectsQuery.getNthOrNull(0);
 
   useEffect(() => {
+    // note that in case buildsQuery.array was updated, we have to recalculate build value
+    const build = findOrNull(buildsQuery.array, b => b.number === buildnumber);
     if (buildsQuery.resolved && build === null) {
       navigate(`/builders/${builderid}`);
     }
