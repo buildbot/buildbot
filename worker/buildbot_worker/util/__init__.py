@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import text_type
-
 import itertools
 import textwrap
 import time
+
+from six import text_type
 
 from ._hangcheck import HangCheckFactory
 from ._notifier import Notifier

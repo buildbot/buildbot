@@ -21,7 +21,8 @@ between Python 2 and Python 3.
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import text_type
+
+from six import text_type
 
 if str != bytes:
     # On Python 3 and higher, str and bytes
