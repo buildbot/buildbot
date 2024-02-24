@@ -13,7 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+import os
 import re
+import stat
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -23,7 +29,14 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
+from buildbot.steps.worker import CompositeStepMixin
+from buildbot.util import ComparableMixin
 from buildbot.util import bytes2unicode
+from buildbot.util.misc import writeLocalFile
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IRenderable
+    from buildbot.util.service import BuildbotService
 
 RC_SUCCESS = 0
 
@@ -49,20 +62,24 @@ def getSshCommand(keyPath, knownHostsPath):
     return ' '.join(command)
 
 
+def check_ssh_config(
+    logname: str,
+    ssh_private_key: IRenderable | None,
+    ssh_host_key: IRenderable | None,
+    ssh_known_hosts: IRenderable | None,
+):
+    if ssh_host_key is not None and ssh_private_key is None:
+        config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
+
+    if ssh_known_hosts is not None and ssh_private_key is None:
+        config.error(f'{logname}: sshPrivateKey must be provided in order use sshKnownHosts')
+
+    if ssh_host_key is not None and ssh_known_hosts is not None:
+        config.error(f'{logname}: only one of sshKnownHosts and sshHostKey can be provided')
+
+
 class GitMixin:
-    def setupGit(self, logname=None):
-        if logname is None:
-            logname = 'GitMixin'
-
-        if self.sshHostKey is not None and self.sshPrivateKey is None:
-            config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
-
-        if self.sshKnownHosts is not None and self.sshPrivateKey is None:
-            config.error(f'{logname}: sshPrivateKey must be provided in order use sshKnownHosts')
-
-        if self.sshHostKey is not None and self.sshKnownHosts is not None:
-            config.error(f'{logname}: only one of sshKnownHosts and sshHostKey can be provided')
-
+    def setupGit(self):
         self.gitInstalled = False
         self.supportsBranch = False
         self.supportsProgress = False
@@ -118,7 +135,7 @@ def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
     return f'#!/bin/sh\n{ssh_command} "$@"\n'
 
 
-def getSshKnownHostsContents(hostKey):
+def getSshKnownHostsContents(hostKey: str) -> str:
     host_name = '*'
     return f'{host_name} {hostKey}'
 
@@ -137,67 +154,32 @@ def ensureSshKeyNewline(privateKey: str) -> str:
 
 
 class GitStepMixin(GitMixin):
+    _git_auth: GitStepAuth
+
     def setupGitStep(self):
-        self.didDownloadSshPrivateKey = False
-        self.setupGit(logname='Git')
+        self.setupGit()
 
         if not self.repourl:
             config.error("Git: must provide repourl.")
 
-    def _isSshPrivateKeyNeededForGitCommand(self, command):
-        if not command or self.sshPrivateKey is None:
-            return False
+        if not hasattr(self, '_git_auth'):
+            self._git_auth = GitStepAuth(self)
 
-        gitCommandsThatNeedSshKey = ['clone', 'submodule', 'fetch', 'push']
-        if command[0] in gitCommandsThatNeedSshKey:
-            return True
-        return False
-
-    def _getSshDataPath(self):
-        # we can't use the workdir for temporary ssh-related files, because
-        # it's needed when cloning repositories and git does not like the
-        # destination directory being non-empty. We have to use separate
-        # temporary directory for that data to ensure the confidentiality of it.
-        # So instead of
-        # '{path}/{to}/{workerbuilddir}/{workdir}/.buildbot-ssh-key'
-        # we put the key in
-        # '{path}/{to}/.{workerbuilddir}.{workdir}.buildbot/ssh-key'.
-
-        # basename and dirname interpret the last element being empty for paths
-        # ending with a slash
-        path_module = self.build.path_module
-
-        workerbuilddir = bytes2unicode(self.build.builder.config.workerbuilddir)
-        workdir = self._getSshDataWorkDir().rstrip('/\\')
-
-        if path_module.isabs(workdir):
-            parent_path = path_module.dirname(workdir)
-        else:
-            parent_path = path_module.join(self.worker.worker_basedir, path_module.dirname(workdir))
-
-        basename = f'.{workerbuilddir}.{path_module.basename(workdir)}.buildbot'
-        return path_module.join(parent_path, basename)
-
-    def _getSshPrivateKeyPath(self, ssh_data_path):
-        return self.build.path_module.join(ssh_data_path, 'ssh-key')
-
-    def _getSshHostKeyPath(self, ssh_data_path):
-        return self.build.path_module.join(ssh_data_path, 'ssh-known-hosts')
-
-    def _getSshWrapperScriptPath(self, ssh_data_path):
-        return self.build.path_module.join(ssh_data_path, 'ssh-wrapper.sh')
-
-    def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
-        ssh_data_path = self._getSshDataPath()
-        key_path = self._getSshPrivateKeyPath(ssh_data_path)
-        ssh_wrapper_path = self._getSshWrapperScriptPath(ssh_data_path)
-        host_key_path = None
-        if self.sshHostKey is not None or self.sshKnownHosts is not None:
-            host_key_path = self._getSshHostKeyPath(ssh_data_path)
-
-        self.adjustCommandParamsForSshPrivateKey(
-            full_command, full_env, key_path, ssh_wrapper_path, host_key_path
+    def setup_git_auth(
+        self,
+        ssh_private_key: IRenderable | None,
+        ssh_host_key: IRenderable | None,
+        ssh_known_hosts: IRenderable | None,
+    ) -> None:
+        self._git_auth = GitStepAuth(
+            self,
+            ssh_private_key,
+            ssh_host_key,
+            ssh_known_hosts,
         )
+
+    def _get_auth_data_workdir(self) -> str:
+        raise NotImplementedError()
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -209,8 +191,15 @@ class GitStepMixin(GitMixin):
                 full_command.append('-c')
                 full_command.append(f'{name}={value}')
 
-        if self._isSshPrivateKeyNeededForGitCommand(command):
-            self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
+        if (
+            command and
+            self._git_auth.is_auth_needed_for_git_command(command[0])
+        ):
+            self._git_auth.adjust_git_command_params_for_auth(
+                full_command, full_env,
+                self._get_auth_data_workdir(),
+                self,
+            )
 
         full_command.extend(command)
 
@@ -268,55 +257,300 @@ class GitStepMixin(GitMixin):
 
         return self.gitInstalled
 
+
+class AbstractGitAuth(ComparableMixin):
+
+    compare_attrs = (
+        "ssh_private_key",
+        "ssh_host_key",
+        "ssh_known_hosts",
+    )
+
+    def __init__(
+        self,
+        ssh_private_key: IRenderable | None = None,
+        ssh_host_key: IRenderable | None = None,
+        ssh_known_hosts: IRenderable | None = None,
+    ) -> None:
+        self.did_download_auth_files = False
+
+        self.ssh_private_key = ssh_private_key
+        self.ssh_host_key = ssh_host_key
+        self.ssh_known_hosts = ssh_known_hosts
+
+        check_ssh_config('Git', self.ssh_private_key, self.ssh_host_key, self.ssh_known_hosts)
+
+    def is_auth_needed_for_git_command(self, git_command: str) -> bool:
+        if not git_command or self.ssh_private_key is None:
+            return False
+
+        git_commands_that_need_auth = [
+            'clone',
+            'fetch',
+            'ls-remote',
+            'push',
+            'submodule',
+        ]
+        if git_command in git_commands_that_need_auth:
+            return True
+        return False
+
+    @property
+    def _path_module(self):
+        raise NotImplementedError()
+
+    @property
+    def _master(self):
+        raise NotImplementedError()
+
+    def _get_ssh_private_key_path(self, ssh_data_path: str) -> str:
+        return self._path_module.join(ssh_data_path, 'ssh-key')
+
+    def _get_ssh_host_key_path(self, ssh_data_path: str) -> str:
+        return self._path_module.join(ssh_data_path, 'ssh-known-hosts')
+
+    def _get_ssh_wrapper_script_path(self, ssh_data_path: str) -> str:
+        return self._path_module.join(ssh_data_path, 'ssh-wrapper.sh')
+
+    def _adjust_command_params_for_ssh_private_key(
+        self,
+        full_command: list[str],
+        full_env: dict[str, str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ) -> None:
+        key_path = self._get_ssh_private_key_path(workdir)
+        host_key_path = None
+        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+            host_key_path = self._get_ssh_host_key_path(workdir)
+
+        ssh_wrapper_path = self._get_ssh_wrapper_script_path(workdir)
+
+        git_mixin.adjustCommandParamsForSshPrivateKey(
+            full_command, full_env, key_path, ssh_wrapper_path, host_key_path,
+        )
+
+    def adjust_git_command_params_for_auth(
+        self,
+        full_command: list[str],
+        full_env: dict[str, str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ) -> None:
+        self._adjust_command_params_for_ssh_private_key(
+            full_command, full_env,
+            workdir=workdir, git_mixin=git_mixin,
+        )
+
+    def _download_file(
+        self, path: str, content: str, mode: int, workdir: str | None = None,
+    ) -> defer.Deferred[None]:
+        raise NotImplementedError()
+
     @defer.inlineCallbacks
-    def _downloadSshPrivateKeyIfNeeded(self):
-        if self.sshPrivateKey is None:
+    def download_auth_files_if_needed(
+        self,
+        workdir: str,
+        download_wrapper_script: bool = False,
+    ):
+        if self.ssh_private_key is None:
             return RC_SUCCESS
 
         p = Properties()
-        p.master = self.master
-        private_key = yield p.render(self.sshPrivateKey)
-        host_key = yield p.render(self.sshHostKey)
-        known_hosts_contents = yield p.render(self.sshKnownHosts)
+        p.master = self._master
+        private_key = yield p.render(self.ssh_private_key)
+        host_key = yield p.render(self.ssh_host_key)
+        known_hosts = yield p.render(self.ssh_known_hosts)
 
-        # not using self.workdir because it may be changed depending on step
-        # options
-        workdir = self._getSshDataWorkDir()
-
-        ssh_data_path = self._getSshDataPath()
-        yield self.runMkdir(ssh_data_path)
-
-        private_key_path = self._getSshPrivateKeyPath(ssh_data_path)
+        private_key_path = self._get_ssh_private_key_path(workdir)
         private_key = ensureSshKeyNewline(private_key)
-        yield self.downloadFileContentToWorker(
-            private_key_path, private_key, workdir=workdir, mode=0o400
+        yield self._download_file(
+            private_key_path, private_key, mode=stat.S_IRUSR, workdir=workdir,
         )
 
         known_hosts_path = None
-        if self.sshHostKey is not None or self.sshKnownHosts is not None:
-            known_hosts_path = self._getSshHostKeyPath(ssh_data_path)
+        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+            known_hosts_path = self._get_ssh_host_key_path(workdir)
 
-            if self.sshHostKey is not None:
+            if known_hosts is not None:
+                known_hosts_contents = known_hosts
+            else:
                 known_hosts_contents = getSshKnownHostsContents(host_key)
-            yield self.downloadFileContentToWorker(
-                known_hosts_path, known_hosts_contents, workdir=workdir, mode=0o400
+
+            yield self._download_file(
+                known_hosts_path, known_hosts_contents, mode=stat.S_IRUSR, workdir=workdir,
             )
 
-        if not self.supportsSshPrivateKeyAsEnvOption:
-            script_path = self._getSshWrapperScriptPath(ssh_data_path)
+        if download_wrapper_script:
+            private_key_path = self._get_ssh_private_key_path(workdir)
+            known_hosts_path = None
+            if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
+                known_hosts_path = self._get_ssh_host_key_path(workdir)
+
+            script_path = self._get_ssh_wrapper_script_path(workdir)
             script_contents = getSshWrapperScriptContents(private_key_path, known_hosts_path)
 
-            yield self.downloadFileContentToWorker(
-                script_path, script_contents, workdir=workdir, mode=0o700
+            yield self._download_file(
+                script_path, script_contents, mode=stat.S_IRWXU, workdir=workdir,
             )
 
-        self.didDownloadSshPrivateKey = True
+        self.did_download_auth_files = True
         return RC_SUCCESS
+
+    def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
+        raise NotImplementedError()
+
+
+class GitStepAuth(AbstractGitAuth):
+
+    def __init__(
+        self,
+        # step must implement all these types
+        step: buildstep.BuildStep | GitStepMixin | CompositeStepMixin,
+        ssh_private_key: IRenderable | None = None,
+        ssh_host_key: IRenderable | None = None,
+        ssh_known_hosts: IRenderable | None = None,
+    ) -> None:
+        self.step = step
+
+        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts)
+
+    def _get_auth_data_path(self, data_workdir: str) -> str:
+        # we can't use the workdir for temporary ssh-related files, because
+        # it's needed when cloning repositories and git does not like the
+        # destination directory being non-empty. We have to use separate
+        # temporary directory for that data to ensure the confidentiality of it.
+        # So instead of
+        # '{path}/{to}/{workerbuilddir}/{workdir}/.buildbot-ssh-key'
+        # we put the key in
+        # '{path}/{to}/.{workerbuilddir}.{workdir}.buildbot/ssh-key'.
+
+        # basename and dirname interpret the last element being empty for paths
+        # ending with a slash
+        assert isinstance(self.step, buildstep.BuildStep) and self.step.build is not None
+
+        workerbuilddir = bytes2unicode(self.step.build.builder.config.workerbuilddir)
+        workdir = data_workdir.rstrip('/\\')
+
+        if self._path_module.isabs(workdir):
+            parent_path = self._path_module.dirname(workdir)
+        else:
+            assert self.step.worker is not None
+            parent_path = self._path_module.join(self.step.worker.worker_basedir, self._path_module.dirname(workdir))
+
+        basename = f'.{workerbuilddir}.{self._path_module.basename(workdir)}.buildbot'
+        return self._path_module.join(parent_path, basename)
+
+    def adjust_git_command_params_for_auth(
+        self,
+        full_command: list[str],
+        full_env: dict[str, str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ) -> None:
+        auth_data_path = self._get_auth_data_path(workdir)
+        super().adjust_git_command_params_for_auth(
+            full_command, full_env,
+            workdir=auth_data_path,
+            git_mixin=git_mixin,
+        )
+
+    @property
+    def _path_module(self):
+        assert (
+            isinstance(self.step, buildstep.BuildStep) and
+            self.step.build is not None
+        )
+        return self.step.build.path_module
+
+    @property
+    def _master(self):
+        assert (
+            isinstance(self.step, buildstep.BuildStep) and
+            self.step.master is not None
+        )
+        return self.step.master
 
     @defer.inlineCallbacks
-    def _removeSshPrivateKeyIfNeeded(self):
-        if not self.didDownloadSshPrivateKey:
+    def _download_file(self, path: str, content: str, mode: int, workdir: str | None = None):
+        assert isinstance(self.step, CompositeStepMixin)
+        yield self.step.downloadFileContentToWorker(
+            path, content, mode=mode, workdir=workdir,
+        )
+
+    @defer.inlineCallbacks
+    def download_auth_files_if_needed(
+        self,
+        workdir: str,
+        download_wrapper_script: bool = False,
+    ):
+        if self.ssh_private_key is None:
             return RC_SUCCESS
 
-        yield self.runRmdir(self._getSshDataPath())
+        assert (
+            isinstance(self.step, CompositeStepMixin) and
+            isinstance(self.step, GitMixin)
+        )
+
+        workdir = self._get_auth_data_path(workdir)
+        yield self.step.runMkdir(workdir)
+
+        return_code = yield super().download_auth_files_if_needed(
+            workdir=workdir,
+            download_wrapper_script=(
+                download_wrapper_script or
+                not self.step.supportsSshPrivateKeyAsEnvOption
+            ),
+        )
+        return return_code
+
+    @defer.inlineCallbacks
+    def remove_auth_files_if_needed(self, workdir: str):
+        if not self.did_download_auth_files:
+            return RC_SUCCESS
+
+        assert isinstance(self.step, CompositeStepMixin)
+        yield self.step.runRmdir(self._get_auth_data_path(workdir))
         return RC_SUCCESS
+
+
+class GitServiceAuth(AbstractGitAuth):
+
+    def __init__(
+        self,
+        service: BuildbotService,
+        ssh_private_key: IRenderable | None = None,
+        ssh_host_key: IRenderable | None = None,
+        ssh_known_hosts: IRenderable | None = None,
+    ) -> None:
+        self._service = service
+
+        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts)
+
+    @property
+    def _path_module(self):
+        return os.path
+
+    @property
+    def _master(self):
+        assert self._service.master is not None
+        return self._service.master
+
+    def _download_file(
+        self, path: str, content: str, mode: int, workdir: str | None = None,
+    ) -> defer.Deferred[None]:
+        writeLocalFile(path, content, mode=mode)
+        return defer.succeed(None)
+
+    def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
+        if not self.did_download_auth_files:
+            return defer.succeed(RC_SUCCESS)
+
+        Path(
+            self._get_ssh_private_key_path(workdir)
+        ).unlink(missing_ok=True)
+        Path(
+            self._get_ssh_host_key_path(workdir)
+        ).unlink(missing_ok=True)
+
+        return defer.succeed(RC_SUCCESS)

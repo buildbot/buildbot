@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import re
-import stat
 from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
@@ -27,9 +28,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
 from buildbot.util.git import GitMixin
-from buildbot.util.git import ensureSshKeyNewline
-from buildbot.util.git import getSshKnownHostsContents
-from buildbot.util.misc import writeLocalFile
+from buildbot.util.git import GitServiceAuth
+from buildbot.util.git import check_ssh_config
 from buildbot.util.state import StateMixin
 
 
@@ -52,16 +52,14 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         "project",
         "pollAtLaunch",
         "buildPushesWithNoCommits",
-        "sshPrivateKey",
-        "sshHostKey",
-        "sshKnownHosts",
         "pollRandomDelayMin",
         "pollRandomDelayMax",
+        "_git_auth",
     )
 
-    secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
+    def __init__(self, repourl, **kwargs) -> None:
+        self._git_auth = GitServiceAuth(self)
 
-    def __init__(self, repourl, **kwargs):
         name = kwargs.get("name", None)
         if name is None:
             kwargs["name"] = repourl
@@ -100,10 +98,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if branch and branches:
             config.error("GitPoller: can't specify both branch and branches")
 
-        self.sshPrivateKey = sshPrivateKey
-        self.sshHostKey = sshHostKey
-        self.sshKnownHosts = sshKnownHosts
-        self.setupGit(logname='GitPoller')  # check the configuration
+        check_ssh_config('GitPoller', sshPrivateKey, sshHostKey, sshKnownHosts)
 
         if fetch_refspec is not None:
             config.error(
@@ -178,10 +173,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
-        self.sshPrivateKey = sshPrivateKey
-        self.sshHostKey = sshHostKey
-        self.sshKnownHosts = sshKnownHosts
-        self.setupGit(logname='GitPoller')
+
+        self.setupGit()
+        self._git_auth = GitServiceAuth(self, sshPrivateKey, sshHostKey, sshKnownHosts)
 
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
@@ -208,8 +202,10 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if not self.gitInstalled:
             raise EnvironmentError('Git is not installed')
 
-        if self.sshPrivateKey is not None and not self.supportsSshPrivateKeyAsEnvOption:
-            raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
+        if not self.supportsSshPrivateKeyAsEnvOption:
+            has_ssh_private_key = (yield self.renderSecrets(self._git_auth.ssh_private_key)) is not None
+            if has_ssh_private_key:
+                raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
 
     @defer.inlineCallbacks
     def activate(self):
@@ -481,37 +477,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 src='git',
             )
 
-    def _isSshPrivateKeyNeededForCommand(self, command):
-        commandsThatNeedKey = [
-            'fetch',
-            'ls-remote',
-        ]
-        if self.sshPrivateKey is not None and command in commandsThatNeedKey:
-            return True
-        return False
-
-    def _downloadSshPrivateKey(self, keyPath):
-        # We change the permissions of the key file to be user-readable only so
-        # that ssh does not complain. This is not used for security because the
-        # parent directory will have proper permissions.
-        writeLocalFile(keyPath, ensureSshKeyNewline(self.sshPrivateKey), mode=stat.S_IRUSR)
-
-    def _downloadSshKnownHosts(self, path):
-        if self.sshKnownHosts is not None:
-            contents = self.sshKnownHosts
-        else:
-            contents = getSshKnownHostsContents(self.sshHostKey)
-        writeLocalFile(path, contents)
-
-    def _getSshPrivateKeyPath(self, ssh_data_path):
-        return os.path.join(ssh_data_path, 'ssh-key')
-
-    def _getSshKnownHostsPath(self, ssh_data_path):
-        return os.path.join(ssh_data_path, 'ssh-known-hosts')
-
     @defer.inlineCallbacks
     def _dovccmd(self, command, args, path=None):
-        if self._isSshPrivateKeyNeededForCommand(command):
+        if self._git_auth.is_auth_needed_for_git_command(command):
             with private_tempdir.PrivateTemporaryDirectory(
                 dir=self.workdir, prefix='.buildbot-ssh'
             ) as tmp_path:
@@ -521,21 +489,14 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return stdout
 
     @defer.inlineCallbacks
-    def _dovccmdImpl(self, command, args, path, ssh_workdir):
-        full_args = []
+    def _dovccmdImpl(self, command: str, args: list[str], path: str, ssh_workdir: str | None):
+        full_args: list[str] = []
         full_env = os.environ.copy()
 
-        if self._isSshPrivateKeyNeededForCommand(command):
-            key_path = self._getSshPrivateKeyPath(ssh_workdir)
-            self._downloadSshPrivateKey(key_path)
-
-            known_hosts_path = None
-            if self.sshHostKey is not None or self.sshKnownHosts is not None:
-                known_hosts_path = self._getSshKnownHostsPath(ssh_workdir)
-                self._downloadSshKnownHosts(known_hosts_path)
-
-            self.adjustCommandParamsForSshPrivateKey(
-                full_args, full_env, key_path, None, known_hosts_path
+        if ssh_workdir is not None:
+            yield self._git_auth.download_auth_files_if_needed(ssh_workdir)
+            self._git_auth.adjust_git_command_params_for_auth(
+                full_args, full_env, ssh_workdir, self,
             )
 
         full_args += [command] + args

@@ -108,9 +108,6 @@ class Git(Source, GitStepMixin):
         self.mode = mode
         self.prog = progress
         self.getDescription = getDescription
-        self.sshPrivateKey = sshPrivateKey
-        self.sshHostKey = sshHostKey
-        self.sshKnownHosts = sshKnownHosts
         self.config = config
         self.srcdir = 'source'
         self.origin = origin
@@ -118,6 +115,7 @@ class Git(Source, GitStepMixin):
         super().__init__(**kwargs)
 
         self.setupGitStep()
+        self.setup_git_auth(sshPrivateKey, sshHostKey, sshKnownHosts)
 
         if isinstance(self.mode, str):
             if not self._hasAttrGroupMember('mode', self.mode):
@@ -148,6 +146,8 @@ class Git(Source, GitStepMixin):
         self.method = self._getMethod()
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
+        auth_workdir = self._get_auth_data_workdir()
+
         try:
             gitInstalled = yield self.checkFeatureSupport()
 
@@ -159,7 +159,8 @@ class Git(Source, GitStepMixin):
             if patched:
                 yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
-            yield self._downloadSshPrivateKeyIfNeeded()
+            yield self._git_auth.download_auth_files_if_needed(auth_workdir)
+
             yield self._getAttrGroupMember('mode', self.mode)()
             if patch:
                 yield self.patch(patch)
@@ -167,7 +168,7 @@ class Git(Source, GitStepMixin):
             res = yield self.parseCommitDescription()
             return res
         finally:
-            yield self._removeSshPrivateKeyIfNeeded()
+            yield self._git_auth.remove_auth_files_if_needed(auth_workdir)
 
     @defer.inlineCallbacks
     def mode_full(self):
@@ -321,7 +322,7 @@ class Git(Source, GitStepMixin):
 
         return RC_SUCCESS
 
-    def _getSshDataWorkDir(self):
+    def _get_auth_data_workdir(self):
         if self.method == 'copy' and self.mode == 'full':
             return self.srcdir
         return self.workdir
@@ -605,38 +606,36 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.env = env
         self.timeout = timeout
         self.logEnviron = logEnviron
-        self.sshPrivateKey = sshPrivateKey
-        self.sshHostKey = sshHostKey
-        self.sshKnownHosts = sshKnownHosts
         self.config = config
 
         super().__init__(**kwargs)
 
         self.setupGitStep()
+        self.setup_git_auth(sshPrivateKey, sshHostKey, sshKnownHosts)
 
         if not self.branch:
             bbconfig.error('GitPush: must provide branch')
 
-    def _getSshDataWorkDir(self):
+    def _get_auth_data_workdir(self):
         return self.workdir
 
     @defer.inlineCallbacks
     def run(self):
         self.stdio_log = yield self.addLog("stdio")
+
+        auth_workdir = self._get_auth_data_workdir()
+
         try:
             gitInstalled = yield self.checkFeatureSupport()
 
             if not gitInstalled:
                 raise WorkerSetupError("git is not installed on worker")
 
-            yield self._downloadSshPrivateKeyIfNeeded()
+            yield self._git_auth.download_auth_files_if_needed(auth_workdir)
             ret = yield self._doPush()
-            yield self._removeSshPrivateKeyIfNeeded()
             return ret
-
-        except Exception as e:
-            yield self._removeSshPrivateKeyIfNeeded()
-            raise e
+        finally:
+            yield self._git_auth.remove_auth_files_if_needed(auth_workdir)
 
     @defer.inlineCallbacks
     def _doPush(self):
@@ -681,9 +680,6 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         # These attributes are required for GitStepMixin but not useful to tag
         self.repourl = " "
-        self.sshHostKey = None
-        self.sshPrivateKey = None
-        self.sshKnownHosts = None
 
         super().__init__(**kwargs)
 
@@ -762,12 +758,9 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self.config = config
         self.emptyCommits = emptyCommits
         self.no_verify = no_verify
-        # The repourl, sshPrivateKey and sshHostKey attributes are required by
-        # GitStepMixin, but aren't needed by git add and commit operations
+        # The repourl attribute is required by
+        # GitStepMixin, but isn't needed by git add and commit operations
         self.repourl = " "
-        self.sshPrivateKey = None
-        self.sshHostKey = None
-        self.sshKnownHosts = None
 
         super().__init__(**kwargs)
 
