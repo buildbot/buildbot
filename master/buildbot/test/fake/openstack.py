@@ -68,6 +68,12 @@ class ItemManager:
         else:
             raise NotFound
 
+    def find_image(self, name):
+        for item in self.list():
+            if name in (item.name, item.id):
+                return item
+        raise NotFound
+
 
 # This exists because Image needs an attribute that isn't supported by
 # namedtuple. And once the base code is there might as well have Volume and

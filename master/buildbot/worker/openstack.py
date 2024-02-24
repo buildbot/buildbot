@@ -242,12 +242,17 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def _getImage(self, build):
-        image_uuid = yield build.render(self.image)
-        # check if we got name instead of uuid
-        for image in self.novaclient.glance.list():
-            if image.name == image_uuid:
-                image_uuid = image.id
-        return image_uuid
+        image_name = yield build.render(self.image)
+        # There is images in block devices
+        if image_name is None:
+            return None
+        # find_image() can find by id as well
+        try:
+            image = self.novaclient.glance.find_image(image_name)
+        except NotFound as e:
+            unknown_image = f"Cannot find OpenStack image {image_name}"
+            raise ValueError(unknown_image) from e
+        return image.id
 
     @defer.inlineCallbacks
     def _getFlavor(self, build):

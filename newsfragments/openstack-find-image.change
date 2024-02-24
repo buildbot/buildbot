@@ -1,0 +1,1 @@
+Improved performance of ``OpenstackWorker`` startup when there are large number of images on the server.

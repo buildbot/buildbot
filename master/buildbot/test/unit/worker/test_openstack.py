@@ -40,7 +40,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
 
     os_auth_custom = {"token": 'openstack-token', "auth_type": 'token', "auth_url": 'auth'}
 
-    bs_image_args = {"flavor": 1, "image": 'image-uuid', **os_auth}
+    bs_image_args = {"flavor": 1, "image": '28a65eb4-f354-4420-97dc-253b826547f7', **os_auth}
 
     def setUp(self):
         self.setup_test_reactor()
@@ -83,7 +83,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
-        self.assertEqual(bs.image, 'image-uuid')
+        self.assertEqual(bs.image, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertEqual(bs.block_devices, None)
         self.assertIsInstance(bs.novaclient, novaclient.Client)
 
@@ -105,7 +105,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
-        self.assertEqual(bs.image, 'image-uuid')
+        self.assertEqual(bs.image, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertEqual(bs.block_devices, None)
         self.assertIsInstance(bs.novaclient, novaclient.Client)
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'test_oud')
@@ -119,7 +119,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
-        self.assertEqual(bs.image, 'image-uuid')
+        self.assertEqual(bs.image, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertEqual(bs.block_devices, None)
         self.assertIsInstance(bs.novaclient, novaclient.Client)
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'token')
@@ -223,7 +223,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_constructor_block_devices_missing(self):
         block_devices = [
-            {'source_type': 'image', 'uuid': '9fb2e6e8-110d-4388-8c23-0fcbd1e2fcc1'},
+            {'source_type': 'image', 'uuid': 'image-uuid'},
         ]
 
         lw = yield self.setupWorker(
@@ -243,7 +243,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
     def test_getImage_string(self):
         bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
         image_uuid = yield bs._getImage(self.build)
-        self.assertEqual('image-uuid', image_uuid)
+        self.assertEqual('28a65eb4-f354-4420-97dc-253b826547f7', image_uuid)
 
     @defer.inlineCallbacks
     def test_getImage_renderable(self):
@@ -319,7 +319,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertTrue(uuid)
-        self.assertEqual(image_uuid, 'image-uuid')
+        self.assertEqual(image_uuid, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertTrue(time_waiting)
 
     @defer.inlineCallbacks
@@ -402,7 +402,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertTrue(uuid)
-        self.assertEqual(image_uuid, 'image-uuid')
+        self.assertEqual(image_uuid, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertTrue(time_waiting)
 
     @defer.inlineCallbacks
