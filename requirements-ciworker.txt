@@ -8,7 +8,7 @@ Automat==22.10.0;  python_version >= "3.6"
 cffi==1.16.0;  python_version >= "3.6"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
-cryptography==41.0.7;  python_version >= "3.6"
+cryptography==42.0.2;  python_version >= "3.6"
 funcsigs==1.0.2
 future==0.18.3
 hyperlink==21.0.0
@@ -22,7 +22,7 @@ parameterized==0.9.0;  python_version >= "3.6"
 pbr==6.0.0
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
-psutil==5.9.7
+psutil==5.9.8
 pycparser==2.21;  python_version >= "3.6"
 six==1.16.0
 Twisted==23.10.0;  python_version >= "3.6"
