@@ -8,6 +8,19 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``3.11.1`` ( ``2024-02-24`` )
+======================================
+
+Bug fixes
+---------
+
+- ``GitPoller`` now ensures the SSH Private Key it uses has a trailing newline.
+- Migrated off python-future which prevented installing Buildbot on distributions that do not provide
+  that package.
+- Fix sporadic navigation to builders page when new build is started (:issue:`7307`).
+
+
 Buildbot ``3.11.0`` ( ``2024-01-25`` )
 ======================================
 
