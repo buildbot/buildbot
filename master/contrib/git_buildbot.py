@@ -29,7 +29,7 @@ from __future__ import print_function
 from future.utils import iteritems
 try:
     from future.utils import text_type
-except:
+except ImportError:
     from six import text_type
 
 import logging
