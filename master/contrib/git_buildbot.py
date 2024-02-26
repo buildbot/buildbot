@@ -33,7 +33,6 @@ except:
     from six import text_type
 
 import logging
-import os
 import re
 import subprocess
 import shlex
