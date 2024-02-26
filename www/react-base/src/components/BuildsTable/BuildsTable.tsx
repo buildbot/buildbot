@@ -35,6 +35,7 @@ import {
 import {Link} from "react-router-dom";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {TableHeading} from "../TableHeading/TableHeading";
+import {durationFormat} from "buildbot-ui";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
@@ -56,6 +57,18 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
       ? <span title={durationString}>{durationString}</span>
       : <></>;
 
+    const buildStartedCompletedElement = build.complete
+      ? (
+          <span title={dateFormat(build.complete_at!)}>
+            {durationFormat(build.complete_at! - build.started_at)}
+          </span>
+      )
+      : (
+          <span title={dateFormat(build.started_at)}>
+            {durationFromNowFormat(build.started_at, now)}
+          </span>
+      );
+
     return (
       <tr key={build.id}>
         {builderNameElement}
@@ -63,9 +76,7 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           <BuildLinkWithSummaryTooltip build={build}/>
         </td>
         <td>
-          <span title={dateFormat(build.started_at)}>
-            {durationFromNowFormat(build.started_at, now)}
-          </span>
+          {buildStartedCompletedElement}
         </td>
         <td>
           {buildCompleteInfoElement}
@@ -95,7 +106,7 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           <tr>
             { builders !== null ? <td width="200px">Builder</td> : <></> }
             <td width="100px">#</td>
-            <td width="150px">Started At</td>
+            <td width="150px">Completed At</td>
             <td width="150px">Duration</td>
             <td width="200px">Owners</td>
             <td width="150px">Worker</td>
