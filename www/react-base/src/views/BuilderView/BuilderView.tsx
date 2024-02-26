@@ -104,7 +104,7 @@ export const BuilderView = observer(() => {
   const buildsQuery = useDataApiQuery(() =>
     buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
         builderid: builder.builderid,
-        property: ["owners", "workername", "branch"],
+        property: ["owners", "workername", "branch", "revision"],
         limit: numBuilds,
         order: '-number'
       }
