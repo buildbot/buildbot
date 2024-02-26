@@ -159,7 +159,9 @@ export const HomeView = observer(() => {
   )
 });
 
-buildbotSetupPlugin((reg) => {
+buildbotSetupPlugin((reg, config) => {
+  let max_recent_builds= config.max_recent_builds;
+
   reg.registerMenuGroup({
     name: 'home',
     caption: 'Home',
@@ -175,6 +177,8 @@ buildbotSetupPlugin((reg) => {
     element: () => <HomeView/>,
   });
 
+  if (max_recent_builds == null) max_recent_builds = 20
+
   reg.registerSettingGroup({
     name: 'Home',
     caption: 'Home page related settings',
@@ -182,6 +186,6 @@ buildbotSetupPlugin((reg) => {
       type: 'integer',
       name: 'max_recent_builds',
       caption: 'Max recent builds',
-      defaultValue: 20
+      defaultValue: max_recent_builds
     }]});
 });
