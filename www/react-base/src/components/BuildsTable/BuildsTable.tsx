@@ -35,15 +35,44 @@ import {
 import {Link} from "react-router-dom";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {TableHeading} from "../TableHeading/TableHeading";
+import {durationFormat} from "buildbot-ui";
+import {buildbotGetSettings, buildbotSetupPlugin} from "../../../../plugin_support";
+import {FaHome} from "react-icons/fa";
+import {HomeView} from "../../views/HomeView/HomeView";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
   builders: DataCollection<Builder> | null;
 }
 
+const BUILD_TIME_BASE_START_TIME = 'Start time and duration';
+const BUILD_TIME_BASE_COMPLETE_TIME = 'Completion time';
+
+const getBuildTimeElement = (build: Build, buildTimeBase: string, now: number) =>
+{
+  if (buildTimeBase === BUILD_TIME_BASE_COMPLETE_TIME) {
+    return build.complete ? (
+        <span title={dateFormat(build.complete_at!)}>
+          {dateFormat(build.complete_at!)}
+        </span>
+      ) : (
+        <span title={dateFormat(build.started_at)}>
+          Started at {dateFormat(build.started_at)}
+        </span>
+      );
+  }
+  return (
+    <span title={dateFormat(build.started_at)}>
+      {durationFromNowFormat(build.started_at, now)}
+    </span>
+  )
+}
+
 export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
   const now = useCurrentTime();
   const sortedBuilds = builds.array.slice().sort((a, b) => b.started_at - a.started_at);
+
+  const buildTimeBase = buildbotGetSettings().getChoiceComboSetting("BuildsTable.build_time_base");
 
   const rowElements = sortedBuilds.map(build => {
     const builder = builders === null ? null : builders.getByIdOrNull(build.builderid.toString());
@@ -63,9 +92,7 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           <BuildLinkWithSummaryTooltip build={build}/>
         </td>
         <td>
-          <span title={dateFormat(build.started_at)}>
-            {durationFromNowFormat(build.started_at, now)}
-          </span>
+          {getBuildTimeElement(build, buildTimeBase, now)}
         </td>
         <td>
           {buildCompleteInfoElement}
@@ -95,7 +122,7 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
           <tr>
             { builders !== null ? <td width="200px">Builder</td> : <></> }
             <td width="100px">#</td>
-            <td width="150px">Started At</td>
+            <td width="150px">{buildTimeBase === BUILD_TIME_BASE_COMPLETE_TIME ? 'Completed At' : 'Started At'}</td>
             <td width="150px">Duration</td>
             <td width="200px">Owners</td>
             <td width="150px">Worker</td>
@@ -119,4 +146,17 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
       </>
     </div>
   );
+});
+
+buildbotSetupPlugin((reg) => {
+  reg.registerSettingGroup({
+    name: 'BuildsTable',
+    caption: 'Build tables related settings',
+    items: [{
+      type: 'choice_combo',
+      name: 'build_time_base',
+      caption: 'Build time information to display',
+      choices: [BUILD_TIME_BASE_START_TIME, BUILD_TIME_BASE_COMPLETE_TIME],
+      defaultValue: 'Start time and duration'
+    }]});
 });

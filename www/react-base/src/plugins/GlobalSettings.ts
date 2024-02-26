@@ -183,6 +183,10 @@ export class GlobalSettings implements ISettings {
     return this.getTypedSettingOrDefault(selector, 'boolean', false);
   }
 
+  getChoiceComboSetting(selector: string) {
+    return this.getTypedSettingOrDefault(selector, 'choice_combo', '');
+  }
+
   @action private setSettingItem(item: SettingItem, value: SettingValue) {
     switch (item.type) {
       case "string":
