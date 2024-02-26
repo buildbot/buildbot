@@ -133,7 +133,7 @@ def addChanges(remote, changei, src='git'):
         except StopIteration:
             remote.broker.transport.loseConnection()
             finished_d.callback(None)
-        except e:
+        except Exception as e:
             logging.error(e)
 
     iter()
