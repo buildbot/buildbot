@@ -220,6 +220,10 @@ This server is configured with the ``www`` configuration key, which specifies a 
             "bb-sidebar-stripe-current-color": "#8c5e10",
         }
 
+``max_recent_builds``
+
+    Configures of the number of builds displayed in the Home App; default number is 20.
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.
