@@ -224,6 +224,14 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
     Configures of the number of builds displayed in the Home App; default number is 20.
 
+``build_number_format``
+
+    Allows replacing the build number part of the build list for a builder or worker with a concatenated list of properties
+    retrieved from the build, e.g. a build version number.
+    
+    The option is specified as an array of one or more strings, e.g. ["foo", "bar"], which uses the build properties
+    "foo" and "bar" to present the build number, if all are present in the build properties.     
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.

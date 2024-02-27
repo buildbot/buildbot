@@ -31,6 +31,9 @@ import {useState} from "react";
 import {ChangeDetails} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {LoadingDiv} from "../../components/LoadingDiv/LoadingDiv";
+import {
+  GetBuildLinkExtraPropertiesList,  
+} from "buildbot-ui";
 
 
 export const ChangeBuildsView = observer(() => {
@@ -44,7 +47,7 @@ export const ChangeBuildsView = observer(() => {
 
   const buildsQuery = useDataApiSingleElementQuery(change,
     c => c.getBuilds({query: {
-        property: ["owners", "workername", "branch", "revision"],
+        property: ["owners", "workername", "branch", "revision", ...GetBuildLinkExtraPropertiesList()],
         limit: buildsFetchLimit
       }}));
 

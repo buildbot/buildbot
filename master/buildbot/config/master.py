@@ -710,6 +710,7 @@ class MasterConfig(util.ComparableMixin):
             'project_widgets',
             'graphql',
             'theme',
+            'build_number_format',
             'max_recent_builds',
         }
         unknown = set(list(www_cfg)) - allowed
