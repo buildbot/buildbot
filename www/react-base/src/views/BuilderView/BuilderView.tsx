@@ -39,6 +39,9 @@ import {FaStop, FaSpinner} from "react-icons/fa";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 import { Tab, Tabs } from "react-bootstrap";
 import { LoadingSpan } from "../../components/LoadingSpan/LoadingSpan";
+import {
+  GetBuildLinkExtraPropertiesList,  
+} from "buildbot-ui";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -104,7 +107,7 @@ export const BuilderView = observer(() => {
   const buildsQuery = useDataApiQuery(() =>
     buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
         builderid: builder.builderid,
-        property: ["owners", "workername", "branch", "revision"],
+        property: ["owners", "workername", "branch", "revision", ...GetBuildLinkExtraPropertiesList()],
         limit: numBuilds,
         order: '-number'
       }

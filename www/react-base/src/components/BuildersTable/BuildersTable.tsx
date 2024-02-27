@@ -31,6 +31,7 @@ import {
   BuildLinkWithSummaryTooltip,
   WorkerBadge,
   TagFilterManager,
+  GetBuildLinkExtraPropertiesList,  
 } from "buildbot-ui";
 import {computed} from "mobx";
 import {Table} from "react-bootstrap";
@@ -63,7 +64,7 @@ export const BuildersTable = observer(
             limit: buildFetchLimit,
             order: '-started_at',
             builderid__eq: builderIds,
-            property: 'branch',
+            property: ['branch', ...GetBuildLinkExtraPropertiesList()],
           }})
       });
 

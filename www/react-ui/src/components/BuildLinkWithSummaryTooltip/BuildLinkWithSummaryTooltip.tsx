@@ -29,6 +29,36 @@ type BuildLinkWithSummaryTooltipProps = {
   builder?: Builder | null;
 };
 
+let extra_properties : string[] | null  = null;
+
+export function SetBuildLinkExtraProperties(property_names: string[] | null) {
+  if (property_names == null || property_names.length == 0) {
+    extra_properties = null;
+    return;
+  }
+
+  extra_properties = property_names;
+}
+
+export function GetBuildLinkExtraPropertiesList() : string[] {
+  return extra_properties || [];
+}
+
+function ProduceBuildNumber(build: Build): string | number {
+  if (extra_properties == null) {
+    return build.number;
+  }
+
+  let build_number = "";
+  for (const property_name of extra_properties) {
+    if (!(property_name in build.properties)) {
+      return build.number;
+    }
+    build_number += build.properties[property_name][0];
+  }
+  return build_number;  
+}
+
 export const BuildLinkWithSummaryTooltip =
   observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {
 
@@ -42,11 +72,13 @@ export const BuildLinkWithSummaryTooltip =
       <BuildSummaryTooltip build={build}/>
     </Tooltip>
   );
+  
+  const build_number = ProduceBuildNumber(build);
 
   const buildText = ('branch' in build.properties) && (build.properties['branch'][0] !== null) &&
                     (build.properties['branch'][0] !== "")
-    ? `${build.properties['branch'][0]} (${build.number})`
-    : `${build.number}`;
+    ? `${build.properties['branch'][0]} (${build_number})`
+    : `${build_number}`;
 
   const linkText = builder !== undefined
     ? `${builder.name} / ${buildText}`

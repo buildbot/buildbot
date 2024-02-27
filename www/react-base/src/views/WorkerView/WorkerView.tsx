@@ -30,6 +30,9 @@ import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
+import {
+  GetBuildLinkExtraPropertiesList,  
+} from "buildbot-ui";
 
 export const WorkerView = observer(() => {
   const workerid = Number.parseInt(useParams<"workerid">().workerid ?? "");
@@ -40,7 +43,7 @@ export const WorkerView = observer(() => {
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
   const buildsQuery = useDataApiQuery(() =>
     Build.getAll(accessor, {query: {
-        property: ["owners", "workername", "branch", "revision"],
+        property: ["owners", "workername", "branch", "revision", ...GetBuildLinkExtraPropertiesList()],
         workerid__eq: workerid,
         limit: 100,
         order: "-buildid",
