@@ -2,6 +2,7 @@
 
 const common = require('buildbot-build-common');
 const env = require('yargs').argv.env;
+const path = require("path");
 const pkg = require('./package.json');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const WebpackCopyPlugin = require('copy-webpack-plugin');
@@ -40,7 +41,7 @@ module.exports = function() {
         }],
         extraPlugins: [
             new WebpackShellPlugin({
-                onBuildEnd:['./node_modules/.bin/pug src/app/index.jade -o buildbot_www/static/']
+                onBuildEnd:[path.join('.', 'node_modules', '.bin', 'pug') + ' src/app/index.jade -o buildbot_www/static/']
             }),
             new WebpackCopyPlugin([
                 {   from: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
