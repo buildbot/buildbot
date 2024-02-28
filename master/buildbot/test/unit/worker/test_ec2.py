@@ -22,9 +22,9 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 try:
-    from moto import mock_ec2
+    from moto import mock_aws
 
-    assert mock_ec2
+    assert mock_aws
     import boto3
 
     assert boto3
@@ -46,7 +46,7 @@ os.environ['AWS_ACCESS_KEY_ID'] = 'foobar_key'
 os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 
-# redefine the mock_ec2 decorator to skip the test if boto3 or moto
+# redefine the mock_aws decorator to skip the test if boto3 or moto
 # isn't installed
 def skip_ec2(f):
     f.skip = "boto3 or moto is not installed"
@@ -54,7 +54,7 @@ def skip_ec2(f):
 
 
 if boto3 is None:
-    mock_ec2 = skip_ec2
+    mock_aws = skip_ec2
 
 
 def anyImageId(c):
@@ -136,7 +136,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             fake_describe_spot_instance_requests,
         )
 
-    @mock_ec2
+    @mock_aws
     def test_constructor_minimal(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -155,7 +155,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.instance_type, 'm1.large')
         self.assertEqual(bs.ami, amis[0].id)
 
-    @mock_ec2
+    @mock_aws
     def test_constructor_tags(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -173,7 +173,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         )
         self.assertEqual(bs.tags, tags)
 
-    @mock_ec2
+    @mock_aws
     def test_constructor_region(self):
         _, r = self.botoSetup()
         amis = list(r.images.all())
@@ -190,7 +190,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         )
         self.assertEqual(bs.session.region_name, 'us-west-1')
 
-    @mock_ec2
+    @mock_aws
     def test_fail_mixing_classic_and_vpc_ec2_settings(self):
         _, r = self.botoSetup()
         amis = list(r.images.all())
@@ -211,7 +211,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_worker()
 
-    @mock_ec2
+    @mock_aws
     def test_start_vpc_instance(self):
         _, r = self.botoSetup()
 
@@ -245,7 +245,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].security_groups[0]['GroupId'], sg.id)
         self.assertEqual(instances[0].key_name, 'latent_buildbot_worker')
 
-    @mock_ec2
+    @mock_aws
     def test_start_instance(self):
         _, r = self.botoSetup()
         amis = list(r.images.all())
@@ -273,7 +273,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertIsNone(instances[0].tags)
         self.assertEqual(instances[0].id, bs.properties.getProperty('instance'))
 
-    @mock_ec2
+    @mock_aws
     def test_start_instance_volumes(self):
         _, r = self.botoSetup()
         block_device_map_arg = [
@@ -331,7 +331,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         # delete_on_termination default.
         self.assertEqual(block_device_map_res, bs.block_device_map)
 
-    @mock_ec2
+    @mock_aws
     def test_start_instance_attach_volume(self):
         _, r = self.botoSetup()
         vol = r.create_volume(Size=10, AvailabilityZone='us-east-1a')
@@ -358,7 +358,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         sdz = [bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz'][0]
         self.assertEqual(vol.id, sdz['Ebs']['VolumeId'])
 
-    @mock_ec2
+    @mock_aws
     def test_start_instance_tags(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -384,7 +384,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].id, id)
         self.assertEqual(instances[0].tags, [{'Value': 'bar', 'Key': 'foo'}])
 
-    @mock_ec2
+    @mock_aws
     def test_start_instance_ip(self):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -410,7 +410,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         addresses = c.describe_addresses()['Addresses']
         self.assertEqual(instances[0].id, addresses[0]['InstanceId'])
 
-    @mock_ec2
+    @mock_aws
     def test_start_vpc_spot_instance(self):
         c, r = self.botoSetup()
 
@@ -453,7 +453,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         # TODO: As of moto 2.0.2 GroupId is not handled in spot requests
         # self.assertEqual(instances[0].security_groups[0]['GroupId'], sg.id)
 
-    @mock_ec2
+    @mock_aws
     def test_start_spot_instance(self):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -487,7 +487,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].id, instance_id)
         self.assertIsNone(instances[0].tags)
 
-    @mock_ec2
+    @mock_aws
     def test_get_image_ami(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -506,7 +506,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertEqual(image.id, ami.id)
 
-    @mock_ec2
+    @mock_aws
     def test_get_image_owners(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -525,7 +525,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertEqual(image.owner_id, ami.owner_id)
 
-    @mock_ec2
+    @mock_aws
     def test_get_image_location(self):
         self.botoSetup('latent_buildbot_slave')
         bs = ec2.EC2LatentWorker(
@@ -542,7 +542,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertTrue(image.image_location.startswith("amazon/"))
 
-    @mock_ec2
+    @mock_aws
     def test_get_image_location_not_found(self):
         def create_worker():
             ec2.EC2LatentWorker(
@@ -559,7 +559,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_worker()
 
-    @mock_ec2
+    @mock_aws
     def test_fail_multiplier_and_max_are_none(self):
         """
         price_multiplier and max_spot_price may not be None at the same time.
@@ -613,7 +613,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         c.terminate_instances(InstanceIds=[instance.id])
         return c, r
 
-    @mock_ec2
+    @mock_aws
     def test_no_default_security_warning_when_security_group_ids(self):
         _, r = self.botoSetup()
         amis = list(r.images.all())
@@ -630,7 +630,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         )
         self.assertEqual(bs.security_name, None)
 
-    @mock_ec2
+    @mock_aws
     def test_use_non_default_keypair_security(self):
         _, r = self.botoSetup()
         amis = list(r.images.all())
