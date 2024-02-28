@@ -20,8 +20,7 @@ env:
 matrix:
   fast_finish: true
   include:
-    # flake8, isort, pylint, docs first as they're more likely to find issues
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=flake8
+    # isort, pylint, docs first as they're more likely to find issues
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
@@ -174,12 +173,6 @@ script:
     cmd:  |
       export PATH=/tmp/bbvenv/bin/:$PATH
       make pylint
-
-  - title: flake8
-    condition: TESTS == "flake8"
-    cmd:  |
-      export PATH=/tmp/bbvenv/bin/:$PATH
-      make flake8
 
   - title: ruff
     condition: TESTS == "ruff"
