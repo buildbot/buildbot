@@ -7,11 +7,19 @@ ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 .PHONY: docs pylint flake8 virtualenv
 
+ifeq ($(OS),Windows_NT)
+  VENV_BIN_DIR := Scripts
+  VENV_PY_VERSION ?= python
+  VENV_CREATE := python -m venv
+else
+  VENV_BIN_DIR := bin
+  VENV_PY_VERSION ?= python3
+  VENV_CREATE := virtualenv -p $(VENV_PY_VERSION)
+endif
 
 VENV_NAME := .venv$(VENV_PY_VERSION)
-PIP ?= $(ROOT_DIR)/$(VENV_NAME)/bin/pip
-PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/bin/python
-VENV_PY_VERSION ?= python3
+PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
+PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
 
 WWW_PKGS := www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/react-wsgi_dashboards www/badges
@@ -112,8 +120,9 @@ docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
 
 $(VENV_NAME):
-	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
-	$(PIP) install -U build pip setuptools wheel
+	$(VENV_CREATE) $(VENV_NAME)
+	$(PYTHON) -m pip install --upgrade pip 
+	$(PIP) install -U setuptools wheel
 
 # helper for virtualenv creation
 virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
@@ -122,13 +131,13 @@ virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 		-r requirements-cidocs.txt \
 		packaging towncrier
 	@echo now you can type following command  to activate your virtualenv
-	@echo . $(VENV_NAME)/bin/activate
+	@echo . $(VENV_NAME)/$(VENV_BIN_DIR)/activate
 
 TRIALOPTS?=buildbot
 
 .PHONY: trial
 trial: virtualenv
-	. $(VENV_NAME)/bin/activate && trial $(TRIALOPTS)
+	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && trial $(TRIALOPTS)
 
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
@@ -136,7 +145,7 @@ release_notes: $(VENV_NAME)
 	git commit -m "Release notes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
-	. $(VENV_NAME)/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
+	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
 	find master pkg worker www -name VERSION -exec rm {} \;
@@ -168,4 +177,4 @@ finishrelease:
 
 pyinstaller: virtualenv
 	$(PIP) install pyinstaller
-	$(VENV_NAME)/bin/pyinstaller pyinstaller/buildbot-worker.spec
+	$(VENV_NAME)/$(VENV_BIN_DIR)/pyinstaller pyinstaller/buildbot-worker.spec
