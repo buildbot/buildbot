@@ -1,1 +1,1 @@
-Update Makefile to handle Windows paths and Python. Also modified the webpack config file to handle Windows paths.
+Update `Makefile` to handle Windows paths and Python. Also modified the webpack config file to handle Windows paths.
