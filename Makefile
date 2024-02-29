@@ -16,7 +16,7 @@ endif
 
 VENV_NAME := .venv$(VENV_PY_VERSION)
 PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
-PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
+VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
 
 
@@ -93,7 +93,7 @@ frontend: frontend_deps
 # build frontend wheels for installation elsewhere
 frontend_wheels: frontend_deps
 	for i in pkg $(WWW_PKGS); \
-		do (cd $$i; $(PYTHON) setup.py bdist_wheel || exit 1) || exit 1; done
+		do (cd $$i; $(VENV_PYTHON) setup.py bdist_wheel || exit 1) || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests: frontend_deps
@@ -125,7 +125,7 @@ docker-buildbot-master:
 
 $(VENV_NAME):
 	$(VENV_CREATE) $(VENV_NAME)
-	$(PYTHON) -m pip install --upgrade pip 
+	$(VENV_PYTHON) -m pip install --upgrade pip 
 	$(PIP) install -U setuptools wheel
 
 # helper for virtualenv creation
