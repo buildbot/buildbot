@@ -27,6 +27,7 @@ class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
         self.builders = {}  # dictionary mapping worker names to builders
         self.buildsStartedForWorkers = []
         self.delayShutdown = False
+        self._starting_brid_to_cancel = {}
 
     def getBuildersForWorker(self, workername):
         return self.builders.get(workername, [])
@@ -46,3 +47,13 @@ class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
             self.shutdownDeferred = defer.Deferred()
             return self.shutdownDeferred
         return None
+
+    def add_in_progress_buildrequest(self, brid):
+        self._starting_brid_to_cancel[brid] = False
+
+    def remove_in_progress_buildrequest(self, brid):
+        return self._starting_brid_to_cancel.pop(brid, None)
+
+    def maybe_cancel_in_progress_buildrequest(self, brid, reason):
+        if brid in self._starting_brid_to_cancel:
+            self._starting_brid_to_cancel[brid] = reason
