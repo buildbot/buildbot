@@ -101,27 +101,28 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         return None
 
     def cancel_request(self, brid, args, kwargs):
+        reason = args.get('reason', 'no reason')
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
             b = yield self.master.db.buildrequests.claimBuildRequests(brids=[brid])
         except AlreadyClaimedError:
-            # XXX race condition
-            # - After a buildrequest was claimed, and
-            # - Before creating a build,
-            # the claiming master still
-            # needs to do some processing, (send a message to the message queue,
-            # call maybeStartBuild on the related builder).
-            # In that case we won't have the related builds here. We don't have
-            # an alternative to letting them run without stopping them for now.
+            self.master.botmaster.maybe_cancel_in_progress_buildrequest(brid, reason)
+
+            # In case the build request has been claimed on this master, the call to
+            # maybe_cancel_in_progress_buildrequest above will ensure that they are either visible
+            # to the data API call below, or canceled.
             builds = yield self.master.data.get(("buildrequests", brid, "builds"))
 
-            # Don't call the data API here, as the buildrequests might have been
-            # taken by another master. We just send the stop message and forget
-            # about those.
-            mqArgs = {'reason': args.get('reason', 'no reason')}
+            # Any other master will observe the buildrequest cancel messages and will try to
+            # cancel the buildrequest or builds internally.
+            #
+            # TODO: do not try to cancel builds that run on another master. Note that duplicate
+            # cancels do not have any downside.
             for b in builds:
-                self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"), mqArgs)
+                self.master.mq.produce(
+                    ("control", "builds", str(b['buildid']), "stop"), {'reason': reason}
+                )
             return None
 
         # then complete it with 'CANCELLED'; this is the closest we can get to

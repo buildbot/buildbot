@@ -340,6 +340,14 @@ class Build(properties.PropertiesMixin):
             self.controlStopBuild, ("control", "builds", str(self.buildid), "stop")
         )
 
+        # Check if buildrequest has been cancelled in the mean time. Must be done after subscription
+        # to stop control endpoint is established to avoid race condition.
+        for r in self.requests:
+            reason = self.master.botmaster.remove_in_progress_buildrequest(r.id)
+            if isinstance(reason, str):
+                yield self.stopBuild(reason=reason)
+                return
+
         # the preparation step counts the time needed for preparing the worker and getting the
         # locks.
         # we cannot use a real step as we don't have a worker yet.

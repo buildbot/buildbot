@@ -473,6 +473,8 @@ class BuildRequestDistributor(service.AsyncMultiService):
             brids = [br.id for br in breqs]
             claimed_at_epoch = self.master.reactor.seconds()
             claimed_at = epoch2datetime(claimed_at_epoch)
+
+            self._add_in_progress_brids(brids)
             if not (
                 yield self.master.data.updates.claimBuildRequests(brids, claimed_at=claimed_at)
             ):
@@ -483,9 +485,19 @@ class BuildRequestDistributor(service.AsyncMultiService):
             buildStarted = yield bldr.maybeStartBuild(worker, breqs)
             if not buildStarted:
                 yield self.master.data.updates.unclaimBuildRequests(brids)
+                self._remove_in_progress_brids(brids)
+
                 # try starting builds again.  If we still have a working worker,
                 # then this may re-claim the same buildrequests
                 self.botmaster.maybeStartBuildsForBuilder(self.name)
+
+    def _add_in_progress_brids(self, brids):
+        for brid in brids:
+            self.master.botmaster.add_in_progress_buildrequest(brid)
+
+    def _remove_in_progress_brids(self, brids):
+        for brid in brids:
+            self.master.botmaster.remove_in_progress_buildrequest(brid)
 
     def createBuildChooser(self, bldr, master):
         # just instantiate the build chooser requested

@@ -101,6 +101,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.brd = BuildRequestDistributor(self)
         self.brd.setServiceParent(self)
 
+        # Dictionary of build request ID to False or cancellation reason string in case cancellation
+        # has been requested.
+        self._starting_brid_to_cancel = {}
+
     @defer.inlineCallbacks
     def cleanShutdown(self, quickMode=False, stopReactor=True):
         """Shut down the entire process, once all currently-running builds are
@@ -318,6 +322,21 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
         return super().stopService()
+
+    # Used to track buildrequests that are in progress of being started on this master.
+    def add_in_progress_buildrequest(self, brid):
+        self._starting_brid_to_cancel[brid] = False
+
+    def remove_in_progress_buildrequest(self, brid):
+        return self._starting_brid_to_cancel.pop(brid, None)
+
+    def maybe_cancel_in_progress_buildrequest(self, brid, reason):
+        """
+        Ensures that after this call any builds resulting from build request will be visible or
+        cancelled.
+        """
+        if brid in self._starting_brid_to_cancel:
+            self._starting_brid_to_cancel[brid] = reason
 
     def maybeStartBuildsForBuilder(self, buildername):
         """
