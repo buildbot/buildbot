@@ -191,12 +191,10 @@ class GitStepMixin(GitMixin):
                 full_command.append('-c')
                 full_command.append(f'{name}={value}')
 
-        if (
-            command and
-            self._git_auth.is_auth_needed_for_git_command(command[0])
-        ):
+        if command and self._git_auth.is_auth_needed_for_git_command(command[0]):
             self._git_auth.adjust_git_command_params_for_auth(
-                full_command, full_env,
+                full_command,
+                full_env,
                 self._get_auth_data_workdir(),
                 self,
             )
@@ -259,7 +257,6 @@ class GitStepMixin(GitMixin):
 
 
 class AbstractGitAuth(ComparableMixin):
-
     compare_attrs = (
         "ssh_private_key",
         "ssh_host_key",
@@ -327,7 +324,11 @@ class AbstractGitAuth(ComparableMixin):
         ssh_wrapper_path = self._get_ssh_wrapper_script_path(workdir)
 
         git_mixin.adjustCommandParamsForSshPrivateKey(
-            full_command, full_env, key_path, ssh_wrapper_path, host_key_path,
+            full_command,
+            full_env,
+            key_path,
+            ssh_wrapper_path,
+            host_key_path,
         )
 
     def adjust_git_command_params_for_auth(
@@ -338,12 +339,18 @@ class AbstractGitAuth(ComparableMixin):
         git_mixin: GitMixin,
     ) -> None:
         self._adjust_command_params_for_ssh_private_key(
-            full_command, full_env,
-            workdir=workdir, git_mixin=git_mixin,
+            full_command,
+            full_env,
+            workdir=workdir,
+            git_mixin=git_mixin,
         )
 
     def _download_file(
-        self, path: str, content: str, mode: int, workdir: str | None = None,
+        self,
+        path: str,
+        content: str,
+        mode: int,
+        workdir: str | None = None,
     ) -> defer.Deferred[None]:
         raise NotImplementedError()
 
@@ -365,7 +372,10 @@ class AbstractGitAuth(ComparableMixin):
         private_key_path = self._get_ssh_private_key_path(workdir)
         private_key = ensureSshKeyNewline(private_key)
         yield self._download_file(
-            private_key_path, private_key, mode=stat.S_IRUSR, workdir=workdir,
+            private_key_path,
+            private_key,
+            mode=stat.S_IRUSR,
+            workdir=workdir,
         )
 
         known_hosts_path = None
@@ -378,7 +388,10 @@ class AbstractGitAuth(ComparableMixin):
                 known_hosts_contents = getSshKnownHostsContents(host_key)
 
             yield self._download_file(
-                known_hosts_path, known_hosts_contents, mode=stat.S_IRUSR, workdir=workdir,
+                known_hosts_path,
+                known_hosts_contents,
+                mode=stat.S_IRUSR,
+                workdir=workdir,
             )
 
         if download_wrapper_script:
@@ -391,7 +404,10 @@ class AbstractGitAuth(ComparableMixin):
             script_contents = getSshWrapperScriptContents(private_key_path, known_hosts_path)
 
             yield self._download_file(
-                script_path, script_contents, mode=stat.S_IRWXU, workdir=workdir,
+                script_path,
+                script_contents,
+                mode=stat.S_IRWXU,
+                workdir=workdir,
             )
 
         self.did_download_auth_files = True
@@ -402,7 +418,6 @@ class AbstractGitAuth(ComparableMixin):
 
 
 class GitStepAuth(AbstractGitAuth):
-
     def __init__(
         self,
         # step must implement all these types
@@ -436,7 +451,9 @@ class GitStepAuth(AbstractGitAuth):
             parent_path = self._path_module.dirname(workdir)
         else:
             assert self.step.worker is not None
-            parent_path = self._path_module.join(self.step.worker.worker_basedir, self._path_module.dirname(workdir))
+            parent_path = self._path_module.join(
+                self.step.worker.worker_basedir, self._path_module.dirname(workdir)
+            )
 
         basename = f'.{workerbuilddir}.{self._path_module.basename(workdir)}.buildbot'
         return self._path_module.join(parent_path, basename)
@@ -450,32 +467,30 @@ class GitStepAuth(AbstractGitAuth):
     ) -> None:
         auth_data_path = self._get_auth_data_path(workdir)
         super().adjust_git_command_params_for_auth(
-            full_command, full_env,
+            full_command,
+            full_env,
             workdir=auth_data_path,
             git_mixin=git_mixin,
         )
 
     @property
     def _path_module(self):
-        assert (
-            isinstance(self.step, buildstep.BuildStep) and
-            self.step.build is not None
-        )
+        assert isinstance(self.step, buildstep.BuildStep) and self.step.build is not None
         return self.step.build.path_module
 
     @property
     def _master(self):
-        assert (
-            isinstance(self.step, buildstep.BuildStep) and
-            self.step.master is not None
-        )
+        assert isinstance(self.step, buildstep.BuildStep) and self.step.master is not None
         return self.step.master
 
     @defer.inlineCallbacks
     def _download_file(self, path: str, content: str, mode: int, workdir: str | None = None):
         assert isinstance(self.step, CompositeStepMixin)
         yield self.step.downloadFileContentToWorker(
-            path, content, mode=mode, workdir=workdir,
+            path,
+            content,
+            mode=mode,
+            workdir=workdir,
         )
 
     @defer.inlineCallbacks
@@ -487,10 +502,7 @@ class GitStepAuth(AbstractGitAuth):
         if self.ssh_private_key is None:
             return RC_SUCCESS
 
-        assert (
-            isinstance(self.step, CompositeStepMixin) and
-            isinstance(self.step, GitMixin)
-        )
+        assert isinstance(self.step, CompositeStepMixin) and isinstance(self.step, GitMixin)
 
         workdir = self._get_auth_data_path(workdir)
         yield self.step.runMkdir(workdir)
@@ -498,8 +510,7 @@ class GitStepAuth(AbstractGitAuth):
         return_code = yield super().download_auth_files_if_needed(
             workdir=workdir,
             download_wrapper_script=(
-                download_wrapper_script or
-                not self.step.supportsSshPrivateKeyAsEnvOption
+                download_wrapper_script or not self.step.supportsSshPrivateKeyAsEnvOption
             ),
         )
         return return_code
@@ -515,7 +526,6 @@ class GitStepAuth(AbstractGitAuth):
 
 
 class GitServiceAuth(AbstractGitAuth):
-
     def __init__(
         self,
         service: BuildbotService,
@@ -537,7 +547,11 @@ class GitServiceAuth(AbstractGitAuth):
         return self._service.master
 
     def _download_file(
-        self, path: str, content: str, mode: int, workdir: str | None = None,
+        self,
+        path: str,
+        content: str,
+        mode: int,
+        workdir: str | None = None,
     ) -> defer.Deferred[None]:
         writeLocalFile(path, content, mode=mode)
         return defer.succeed(None)
@@ -546,11 +560,7 @@ class GitServiceAuth(AbstractGitAuth):
         if not self.did_download_auth_files:
             return defer.succeed(RC_SUCCESS)
 
-        Path(
-            self._get_ssh_private_key_path(workdir)
-        ).unlink(missing_ok=True)
-        Path(
-            self._get_ssh_host_key_path(workdir)
-        ).unlink(missing_ok=True)
+        Path(self._get_ssh_private_key_path(workdir)).unlink(missing_ok=True)
+        Path(self._get_ssh_host_key_path(workdir)).unlink(missing_ok=True)
 
         return defer.succeed(RC_SUCCESS)

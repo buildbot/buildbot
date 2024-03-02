@@ -203,7 +203,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             raise EnvironmentError('Git is not installed')
 
         if not self.supportsSshPrivateKeyAsEnvOption:
-            has_ssh_private_key = (yield self.renderSecrets(self._git_auth.ssh_private_key)) is not None
+            has_ssh_private_key = (
+                yield self.renderSecrets(self._git_auth.ssh_private_key)
+            ) is not None
             if has_ssh_private_key:
                 raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
 
@@ -496,7 +498,10 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if ssh_workdir is not None:
             yield self._git_auth.download_auth_files_if_needed(ssh_workdir)
             self._git_auth.adjust_git_command_params_for_auth(
-                full_args, full_env, ssh_workdir, self,
+                full_args,
+                full_env,
+                ssh_workdir,
+                self,
             )
 
         full_args += [command] + args
