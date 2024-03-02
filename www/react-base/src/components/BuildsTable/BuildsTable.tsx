@@ -60,12 +60,12 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
     const buildStartedCompletedElement = build.complete
       ? (
           <span title={dateFormat(build.complete_at!)}>
-            {durationFormat(build.complete_at! - build.started_at)}
+            {dateFormat(build.complete_at!)}
           </span>
       )
       : (
           <span title={dateFormat(build.started_at)}>
-            {durationFromNowFormat(build.started_at, now)}
+            Started at {dateFormat(build.started_at)}
           </span>
       );
 
