@@ -128,7 +128,9 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     # https://alembic.sqlalchemy.org/en/latest/changelog.html#change-1.12.0
                     # There is issue with comparison MEDIUMBLOB() vs LargeBinary(length=65536) in logchunks table.
                     opts = {"compare_type": False}
-                diff = compare_metadata(MigrationContext.configure(conn, opts=opts), self.db.model.metadata)
+                diff = compare_metadata(
+                    MigrationContext.configure(conn, opts=opts), self.db.model.metadata
+                )
 
             if engine.dialect.name == 'mysql':
                 # MySQL/MyISAM does not support foreign keys, which is expected.
