@@ -179,6 +179,7 @@ script:
     cmd:  |
       export PATH=/tmp/bbvenv/bin/:$PATH
       ruff check `git ls-files |grep '.py$'`
+      ruff format --check `git ls-files |grep '.py$'`
 
   # Build documentation
   - title: docs
