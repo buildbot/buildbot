@@ -18,6 +18,7 @@ from twisted.python import log
 
 from buildbot import locks
 from buildbot import util
+from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.process import metrics
 from buildbot.process.builder import Builder
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
@@ -97,6 +98,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         # subscription to new build requests
         self.buildrequest_consumer_new = None
         self.buildrequest_consumer_unclaimed = None
+        self.buildrequest_consumer_cancel = None
 
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
@@ -240,7 +242,45 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.buildrequest_consumer_unclaimed = yield startConsuming(
             buildRequestAdded, ('buildrequests', None, 'unclaimed')
         )
+        self.buildrequest_consumer_cancel = yield startConsuming(
+            self._buildrequest_canceled, ('control', 'buildrequests', None, 'cancel')
+        )
         yield super().startService()
+
+    @defer.inlineCallbacks
+    def _buildrequest_canceled(self, key, msg):
+        brid = int(key[2])
+        reason = msg.get('reason', 'no reason')
+
+        # first, try to claim the request; if this fails, then it's too late to
+        # cancel the build anyway
+        try:
+            b = yield self.master.db.buildrequests.claimBuildRequests(brids=[brid])
+        except AlreadyClaimedError:
+            self.maybe_cancel_in_progress_buildrequest(brid, reason)
+
+            # In case the build request has been claimed on this master, the call to
+            # maybe_cancel_in_progress_buildrequest above will ensure that they are either visible
+            # to the data API call below, or canceled.
+            builds = yield self.master.data.get(("buildrequests", brid, "builds"))
+
+            # Any other master will observe the buildrequest cancel messages and will try to
+            # cancel the buildrequest or builds internally.
+            #
+            # TODO: do not try to cancel builds that run on another master. Note that duplicate
+            # cancels do not have any downside.
+            for b in builds:
+                self.master.mq.produce(
+                    ("control", "builds", str(b['buildid']), "stop"), {'reason': reason}
+                )
+            return
+
+        # then complete it with 'CANCELLED'; this is the closest we can get to
+        # cancelling a request without running into trouble with dangling
+        # references.
+        yield self.master.data.updates.completeBuildRequests([brid], CANCELLED)
+        brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
+        self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -322,6 +362,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         if self.buildrequest_consumer_unclaimed:
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
+        if self.buildrequest_consumer_cancel:
+            self.buildrequest_consumer_cancel.stopConsuming()
+            self.buildrequest_consumer_cancel = None
         return super().stopService()
 
     # Used to track buildrequests that are in progress of being started on this master.

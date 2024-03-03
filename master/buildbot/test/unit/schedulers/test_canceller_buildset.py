@@ -97,13 +97,19 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
     def assert_cancelled(self, cancellations):
         expected_productions = []
-        for build_id in cancellations:
-            reason = 'Build has been cancelled because another build in the same buildset failed'
+        reason = 'Build has been cancelled because another build in the same buildset failed'
 
-            expected_productions.append((
-                ('control', 'builds', str(build_id), 'stop'),
-                {'reason': reason},
-            ))
+        for kind, id in cancellations:
+            if kind == 'build':
+                expected_productions.append((
+                    ('control', 'builds', str(id), 'stop'),
+                    {'reason': reason},
+                ))
+            elif kind == 'breq':
+                expected_productions.append((
+                    ('control', 'buildrequests', str(id), 'cancel'),
+                    {'reason': reason},
+                ))
 
         self.master.mq.assertProductions(expected_productions)
 
@@ -112,6 +118,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         build = yield self.master.data.get(('builds', str(id)))
         build['results'] = results
         self.master.mq.callConsumer(('builds', str(id), 'finished'), build)
+        yield self.master.mq.wait_consumed()
 
     @defer.inlineCallbacks
     def test_cancel_buildrequests_ss_filter_does_not_match(self):
@@ -175,7 +182,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         yield self.canceller.setServiceParent(self.master)
         yield self.send_build_finished(500, FAILURE)
-        self.assert_cancelled([501, 502])
+        # Buildrequest cancelling happens in BotMaster and this test uses a fake one that does
+        # not implement build cancelling after buildrequest cancels
+        self.assert_cancelled([('breq', 401), ('breq', 402)])
 
     @defer.inlineCallbacks
     def test_cancel_buildrequests_matches_any_builder(self):
@@ -187,4 +196,6 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         yield self.canceller.setServiceParent(self.master)
         yield self.send_build_finished(500, FAILURE)
-        self.assert_cancelled([501, 502])
+        # Buildrequest cancelling happens in BotMaster and this test uses a fake one that does
+        # not implement build cancelling after buildrequest cancels
+        self.assert_cancelled([('breq', 401), ('breq', 402)])
