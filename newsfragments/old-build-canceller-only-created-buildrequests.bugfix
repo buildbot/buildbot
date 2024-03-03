@@ -1,0 +1,3 @@
+``OldBuildCanceller`` will now cancel builds only if a superseding buildrequest is actually
+created. Previously it was enough to observe a superseding change even if it did not result in
+actually running builds.
