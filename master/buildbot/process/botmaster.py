@@ -95,7 +95,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.shuttingDown = False
 
         # subscription to new build requests
-        self.buildrequest_consumer = None
+        self.buildrequest_consumer_new = None
+        self.buildrequest_consumer_unclaimed = None
 
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
