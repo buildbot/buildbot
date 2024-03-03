@@ -5,7 +5,8 @@ OldBuildCanceller
 
 .. py:class:: buildbot.plugins.util.OldBuildCanceller
 
-The purpose of this service is to cancel builds on branches as soon as a new commit is detected on the branch.
+The purpose of this service is to cancel builds on branches as soon as a superseding build request
+is created from a new commit on the branch.
 
 This allows to reduce resource usage in projects that use Buildbot to run tests on pull request branches.
 For example, if a developer pushes new commits to the branch, notices and fixes a problem quickly and then pushes again, the builds that have been started on the older commit will be cancelled immediately instead of waiting for builds to finish.

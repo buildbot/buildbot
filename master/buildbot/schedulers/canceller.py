@@ -45,18 +45,20 @@ class _OldBuildFilterSet:
 
 
 class _TrackedBuildRequest:
-    def __init__(self, brid, ss_tuples):
+    def __init__(self, brid, start_time, ss_tuples):
+        self.start_time = start_time
         self.brid = brid
         self.ss_tuples = ss_tuples
 
     def __str__(self):
-        return f'_TrackedBuildRequest({self.brid}, {self.ss_tuples})'
+        return f'_TrackedBuildRequest({self.brid}, {self.start_time}, {self.ss_tuples})'
 
     __repr__ = __str__
 
 
 class _OldBuildrequestTracker:
-    def __init__(self, filter, branch_key, on_cancel):
+    def __init__(self, reactor, filter, branch_key, on_cancel):
+        self.reactor = reactor
         self.filter = filter
         self.branch_key = branch_key
         self.on_cancel = on_cancel
@@ -73,6 +75,8 @@ class _OldBuildrequestTracker:
         # (is_build, id) -> _TrackedBuildRequest
         self.br_by_id = {}
         self.br_by_ss = {}
+        self.change_time_by_ss = {}
+        self._change_count_since_clean = 0
 
     def reconfig(self, filter, branch_key):
         self.filter = filter
@@ -82,6 +86,12 @@ class _OldBuildrequestTracker:
         return br_id in self.br_by_id
 
     def on_new_buildrequest(self, brid, builder_name, sourcestamps):
+        self._maybe_cancel_new_obsoleted_buildrequest(sourcestamps)
+        self._add_new_buildrequest(brid, builder_name, sourcestamps)
+
+    def _add_new_buildrequest(self, brid, builder_name, sourcestamps):
+        now = self.reactor.seconds()
+
         matched_ss = []
 
         for ss in sourcestamps:
@@ -100,12 +110,67 @@ class _OldBuildrequestTracker:
             for ss in matched_ss
         ]
 
-        tracked_br = _TrackedBuildRequest(brid, ss_tuples)
+        tracked_br = _TrackedBuildRequest(brid, now, ss_tuples)
         self.br_by_id[brid] = tracked_br
 
         for ss_tuple in ss_tuples:
             br_dict = self.br_by_ss.setdefault(ss_tuple, {})
             br_dict[tracked_br.brid] = tracked_br
+
+    def _maybe_cancel_new_obsoleted_buildrequest(self, sourcestamps):
+        for sourcestamp in sourcestamps:
+            ss_tuple = (
+                sourcestamp['project'],
+                sourcestamp['codebase'],
+                sourcestamp['repository'],
+                self.branch_key(sourcestamp),
+            )
+
+            newest_change_time = self.change_time_by_ss.get(ss_tuple, None)
+            if newest_change_time is None:
+                # Don't cancel any buildrequests if the cancelling buildrequest does not come from
+                # a change.
+                continue
+
+            br_dict = self.br_by_ss.pop(ss_tuple, None)
+            if br_dict is None:
+                continue
+
+            brids_to_cancel = []
+            for tracked_br in br_dict.values():
+                if newest_change_time <= tracked_br.start_time:
+                    # The existing build request is newer than the change, thus change should not
+                    # be a reason to cancel it.
+                    continue
+
+                del self.br_by_id[tracked_br.brid]
+
+                if len(tracked_br.ss_tuples) == 1:
+                    # Majority of configurations will only contain single-codebase builds and for
+                    # these br_by_ss has been cleared above in `br_by_ss.pop()` already.
+                    brids_to_cancel.append(tracked_br.brid)
+                    continue
+
+                # Clear the canceled buildrequest from self.br_by_ss
+                for i_ss_tuple in tracked_br.ss_tuples:
+                    if i_ss_tuple == ss_tuple:
+                        continue  # the current sourcestamp, which has already been cleared
+
+                    other_br_dict = self.br_by_ss.get(i_ss_tuple, None)
+                    if other_br_dict is None:
+                        raise KeyError(
+                            f'{self.__class__.__name__}: Could not find running builds '
+                            f'by tuple {i_ss_tuple}'
+                        )
+
+                    del other_br_dict[tracked_br.brid]
+                    if not other_br_dict:
+                        del self.br_by_ss[i_ss_tuple]
+
+                brids_to_cancel.append(tracked_br.brid)
+
+            for brid in brids_to_cancel:
+                self.on_cancel(brid)
 
     def on_complete_buildrequest(self, brid):
         tracked_br = self.br_by_id.pop(brid, None)
@@ -125,6 +190,8 @@ class _OldBuildrequestTracker:
                 del self.br_by_ss[ss_tuple]
 
     def on_change(self, change):
+        now = self.reactor.seconds()
+
         ss_tuple = (
             change['project'],
             change['codebase'],
@@ -132,35 +199,17 @@ class _OldBuildrequestTracker:
             self.branch_key(change),
         )
 
-        br_dict = self.br_by_ss.pop(ss_tuple, None)
-        if br_dict is None:
-            return
+        # Note that now is monotonically increasing
+        self.change_time_by_ss[ss_tuple] = now
 
-        for tracked_br in br_dict.values():
-            del self.br_by_id[tracked_br.brid]
-
-            if len(tracked_br.ss_tuples) == 1:
-                # majority of configurations will only contain single-codebase builds and for these
-                # br_by_ss has been cleared above already.
-                continue
-
-            for i_ss_tuple in tracked_br.ss_tuples:
-                if i_ss_tuple == ss_tuple:
-                    continue  # the current sourcestamp, which has already been cleared
-
-                other_br_dict = self.br_by_ss.get(i_ss_tuple, None)
-                if other_br_dict is None:
-                    raise KeyError(
-                        f'{self.__class__.__name__}: Could not find running builds '
-                        f'by tuple {i_ss_tuple}'
-                    )
-
-                del other_br_dict[tracked_br.brid]
-                if not other_br_dict:
-                    del self.br_by_ss[i_ss_tuple]
-
-        for brid in br_dict.keys():
-            self.on_cancel(brid)
+        self._change_count_since_clean += 1
+        if self._change_count_since_clean >= 1000:
+            self.change_time_by_ss = {
+                ss_tuple: ss_now
+                for ss_tuple, ss_now in self.change_time_by_ss.items()
+                if now - ss_now < 60 * 10
+            }
+            self._change_count_since_clean = 0
 
 
 class OldBuildCanceller(BuildbotService):
@@ -197,7 +246,7 @@ class OldBuildCanceller(BuildbotService):
 
         if self._build_tracker is None:
             self._build_tracker = _OldBuildrequestTracker(
-                filter_set_object, branch_key, self._cancel_buildrequest
+                self.master.reactor, filter_set_object, branch_key, self._cancel_buildrequest
             )
         else:
             self._build_tracker.reconfig(filter_set_object, branch_key)
