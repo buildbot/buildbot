@@ -100,6 +100,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             return (yield self.db2data(buildrequest))
         return None
 
+    @defer.inlineCallbacks
     def cancel_request(self, brid, args, kwargs):
         reason = args.get('reason', 'no reason')
         # first, try to claim the request; if this fails, then it's too late to
@@ -133,20 +134,20 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
         return None
 
+    @defer.inlineCallbacks
     def set_request_priority(self, brid, args, kwargs):
         priority = args['priority']
         yield self.master.db.buildrequests.set_build_requests_priority(
             brids=[brid], priority=priority
         )
-        return None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         brid = kwargs['buildrequestid']
         if action == "cancel":
-            return self.cancel_request(brid, args, kwargs)
+            yield self.cancel_request(brid, args, kwargs)
         elif action == "set_priority":
-            return self.set_request_priority(brid, args, kwargs)
+            yield self.set_request_priority(brid, args, kwargs)
         else:
             raise ValueError(f"action: {action} is not supported")
 
