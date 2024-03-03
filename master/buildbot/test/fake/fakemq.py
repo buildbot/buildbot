@@ -102,6 +102,11 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
             self.testcase.assertEqual(sorted(self.productions), sorted(exp))
         self.productions = []
 
+    @defer.inlineCallbacks
+    def wait_consumed(self):
+        # waits until all messages have been consumed
+        yield self._deferwaiter.wait()
+
 
 class FakeQueueRef:
     def stopConsuming(self):

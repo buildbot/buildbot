@@ -19,7 +19,6 @@ from buildbot.data import base
 from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.db.buildrequests import NotClaimedError
-from buildbot.process import results
 from buildbot.process.results import RETRY
 
 
@@ -100,53 +99,23 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             return (yield self.db2data(buildrequest))
         return None
 
-    def cancel_request(self, brid, args, kwargs):
-        reason = args.get('reason', 'no reason')
-        # first, try to claim the request; if this fails, then it's too late to
-        # cancel the build anyway
-        try:
-            b = yield self.master.db.buildrequests.claimBuildRequests(brids=[brid])
-        except AlreadyClaimedError:
-            self.master.botmaster.maybe_cancel_in_progress_buildrequest(brid, reason)
-
-            # In case the build request has been claimed on this master, the call to
-            # maybe_cancel_in_progress_buildrequest above will ensure that they are either visible
-            # to the data API call below, or canceled.
-            builds = yield self.master.data.get(("buildrequests", brid, "builds"))
-
-            # Any other master will observe the buildrequest cancel messages and will try to
-            # cancel the buildrequest or builds internally.
-            #
-            # TODO: do not try to cancel builds that run on another master. Note that duplicate
-            # cancels do not have any downside.
-            for b in builds:
-                self.master.mq.produce(
-                    ("control", "builds", str(b['buildid']), "stop"), {'reason': reason}
-                )
-            return None
-
-        # then complete it with 'CANCELLED'; this is the closest we can get to
-        # cancelling a request without running into trouble with dangling
-        # references.
-        yield self.master.data.updates.completeBuildRequests([brid], results.CANCELLED)
-        brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
-        self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
-        return None
-
+    @defer.inlineCallbacks
     def set_request_priority(self, brid, args, kwargs):
         priority = args['priority']
         yield self.master.db.buildrequests.set_build_requests_priority(
             brids=[brid], priority=priority
         )
-        return None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         brid = kwargs['buildrequestid']
         if action == "cancel":
-            return self.cancel_request(brid, args, kwargs)
+            self.master.mq.produce(
+                ('control', 'buildrequests', str(brid), 'cancel'),
+                {'reason': args.get('reason', 'no reason')},
+            )
         elif action == "set_priority":
-            return self.set_request_priority(brid, args, kwargs)
+            yield self.set_request_priority(brid, args, kwargs)
         else:
             raise ValueError(f"action: {action} is not supported")
 
