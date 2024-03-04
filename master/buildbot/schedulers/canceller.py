@@ -323,6 +323,8 @@ class OldBuildCanceller(BuildbotService):
 
     def _default_branch_key(self, ss_or_change):
         branch = ss_or_change['branch']
+        if branch is None:
+            return None
 
         # On some VCS systems each iteration of a PR gets its own branch. We want to track all
         # iterations of the PR as a single unit.

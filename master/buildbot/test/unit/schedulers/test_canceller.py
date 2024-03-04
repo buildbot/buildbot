@@ -506,6 +506,35 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master.mq.assertProductions(expected_productions)
 
     @defer.inlineCallbacks
+    def test_buildrequest_no_branch(self):
+        yield self.setup_canceller_with_filters()
+
+        self.reactor.advance(1)
+
+        ss_dict = self.create_ss_dict('project1', 'codebase1', 'repository1', None)
+
+        self.master.db.insert_test_data([
+            fakedb.Buildset(id=99, results=None, reason='reason99'),
+            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
+            fakedb.SourceStamp(
+                id=240,
+                revision='revision1',
+                project='project1',
+                codebase='codebase1',
+                repository='repository1',
+                branch=None,
+            ),
+            fakedb.BuildRequest(id=14, buildsetid=99, builderid=79),
+        ])
+
+        self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
+        self.master.mq.callConsumer(
+            ('buildrequests', '14', 'new'),
+            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 99},
+        )
+        self.assert_cancelled([])
+
+    @defer.inlineCallbacks
     def test_cancel_buildrequest_after_new_commit_with_buildrequest(self):
         yield self.setup_canceller_with_filters()
 
