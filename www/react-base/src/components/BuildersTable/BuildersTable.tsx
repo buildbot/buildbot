@@ -31,6 +31,7 @@ import {
   BuildLinkWithSummaryTooltip,
   WorkerBadge,
   TagFilterManager,
+  GetBuildLinkExtraPropertiesList,  
 } from "buildbot-ui";
 import {computed} from "mobx";
 import {Table} from "react-bootstrap";
@@ -63,7 +64,7 @@ export const BuildersTable = observer(
             limit: buildFetchLimit,
             order: '-started_at',
             builderid__eq: builderIds,
-            property: 'branch',
+            property: ['branch', ...GetBuildLinkExtraPropertiesList()],
           }})
       });
 
@@ -129,10 +130,10 @@ export const BuildersTable = observer(
           <td>
             {buildElements}
           </td>
-          <td style={{width: "20%"}}>
+          <td>
             {filterManager.getElementsForTags(builder.tags)}
           </td>
-          <td style={{width: "20%"}}>
+          <td>
             {workerElements}
           </td>
         </tr>
@@ -154,11 +155,11 @@ export const BuildersTable = observer(
       <tr>
         <th>Builder Name</th>
         <th>Builds</th>
-        <th>
+        <th style={{maxWidth: "20%", minWidth: "70px"}}>
           {filterManager.getFiltersHelpElement()}
           {filterManager.getEnabledFiltersElements()}
         </th>
-        <th style={{width: "20%px"}}>Workers</th>
+        <th style={{width: "20%"}}>Workers</th>
       </tr>
       {builderRowElements}
       </tbody>
