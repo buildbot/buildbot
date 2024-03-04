@@ -45,13 +45,17 @@ class _OldBuildFilterSet:
 
 
 class _TrackedBuildRequest:
-    def __init__(self, brid, start_time, ss_tuples):
+    def __init__(self, brid, builder_name, start_time, ss_tuples):
         self.start_time = start_time
+        self.builder_name = builder_name
         self.brid = brid
         self.ss_tuples = ss_tuples
 
     def __str__(self):
-        return f'_TrackedBuildRequest({self.brid}, {self.start_time}, {self.ss_tuples})'
+        return (
+            f'_TrackedBuildRequest({self.brid}, {self.builder_name} '
+            f'{self.start_time}, {self.ss_tuples})'
+        )
 
     __repr__ = __str__
 
@@ -86,7 +90,7 @@ class _OldBuildrequestTracker:
         return br_id in self.br_by_id
 
     def on_new_buildrequest(self, brid, builder_name, sourcestamps):
-        self._maybe_cancel_new_obsoleted_buildrequest(sourcestamps)
+        self._maybe_cancel_new_obsoleted_buildrequest(builder_name, sourcestamps)
         self._add_new_buildrequest(brid, builder_name, sourcestamps)
 
     def _add_new_buildrequest(self, brid, builder_name, sourcestamps):
@@ -110,14 +114,14 @@ class _OldBuildrequestTracker:
             for ss in matched_ss
         ]
 
-        tracked_br = _TrackedBuildRequest(brid, now, ss_tuples)
+        tracked_br = _TrackedBuildRequest(brid, builder_name, now, ss_tuples)
         self.br_by_id[brid] = tracked_br
 
         for ss_tuple in ss_tuples:
             br_dict = self.br_by_ss.setdefault(ss_tuple, {})
             br_dict[tracked_br.brid] = tracked_br
 
-    def _maybe_cancel_new_obsoleted_buildrequest(self, sourcestamps):
+    def _maybe_cancel_new_obsoleted_buildrequest(self, builder_name, sourcestamps):
         for sourcestamp in sourcestamps:
             ss_tuple = (
                 sourcestamp['project'],
@@ -132,12 +136,15 @@ class _OldBuildrequestTracker:
                 # a change.
                 continue
 
-            br_dict = self.br_by_ss.pop(ss_tuple, None)
+            br_dict = self.br_by_ss.get(ss_tuple, None)
             if br_dict is None:
                 continue
 
             brids_to_cancel = []
-            for tracked_br in br_dict.values():
+            for tracked_br in list(br_dict.values()):
+                if tracked_br.builder_name != builder_name:
+                    continue
+
                 if newest_change_time <= tracked_br.start_time:
                     # The existing build request is newer than the change, thus change should not
                     # be a reason to cancel it.
@@ -145,17 +152,8 @@ class _OldBuildrequestTracker:
 
                 del self.br_by_id[tracked_br.brid]
 
-                if len(tracked_br.ss_tuples) == 1:
-                    # Majority of configurations will only contain single-codebase builds and for
-                    # these br_by_ss has been cleared above in `br_by_ss.pop()` already.
-                    brids_to_cancel.append(tracked_br.brid)
-                    continue
-
                 # Clear the canceled buildrequest from self.br_by_ss
                 for i_ss_tuple in tracked_br.ss_tuples:
-                    if i_ss_tuple == ss_tuple:
-                        continue  # the current sourcestamp, which has already been cleared
-
                     other_br_dict = self.br_by_ss.get(i_ss_tuple, None)
                     if other_br_dict is None:
                         raise KeyError(

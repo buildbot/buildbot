@@ -137,12 +137,14 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.tracker.on_new_buildrequest(2, 'bldr1', [ss_dict])
         self.assert_cancelled([1])
         self.assertFalse(self.tracker.is_buildrequest_tracked(1))
+        self.tracker.on_complete_buildrequest(1)
 
         self.reactor.advance(1)
 
         self.tracker.on_change(ss_dict)
         self.tracker.on_new_buildrequest(3, 'bldr1', [ss_dict])
         self.assert_cancelled([2])
+        self.tracker.on_complete_buildrequest(2)
 
     def test_cancel_buildrequest_identical_times(self):
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
@@ -182,6 +184,43 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.assert_cancelled([])
         self.assertFalse(self.tracker.is_buildrequest_tracked(1))
 
+    def test_not_cancel_buildrequest_too_new(self):
+        ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
+
+        self.tracker.on_change(ss_dict)
+        self.tracker.on_new_buildrequest(1, 'bldr1', [ss_dict])
+        self.assertTrue(self.tracker.is_buildrequest_tracked(1))
+
+        self.reactor.advance(1)
+
+        self.tracker.on_new_buildrequest(2, 'bldr1', [ss_dict])
+        self.assert_cancelled([])
+        self.assertTrue(self.tracker.is_buildrequest_tracked(2))
+
+        self.reactor.advance(1)
+
+        self.tracker.on_complete_buildrequest(1)
+        self.tracker.on_complete_buildrequest(2)
+
+    def test_not_cancel_buildrequest_different_builder(self):
+        ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
+
+        self.tracker.on_change(ss_dict)
+        self.tracker.on_new_buildrequest(1, 'bldr1', [ss_dict])
+        self.assertTrue(self.tracker.is_buildrequest_tracked(1))
+
+        self.reactor.advance(1)
+
+        self.tracker.on_change(ss_dict)
+        self.tracker.on_new_buildrequest(2, 'bldr2', [ss_dict])
+        self.assert_cancelled([])
+        self.assertTrue(self.tracker.is_buildrequest_tracked(2))
+
+        self.reactor.advance(1)
+
+        self.tracker.on_complete_buildrequest(1)
+        self.tracker.on_complete_buildrequest(2)
+
     @parameterized.expand([
         ('first', True),
         ('second', False),
@@ -207,6 +246,7 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.tracker.on_new_buildrequest(3, 'bldr1', [ss_dict1 if cancel_first_ss else ss_dict2])
         self.assert_cancelled([1])
         self.assertFalse(self.tracker.is_buildrequest_tracked(1))
+        self.tracker.on_complete_buildrequest(1)
 
         self.reactor.advance(1)
 
@@ -215,6 +255,7 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.tracker.on_change(ss_dict2)
         self.tracker.on_new_buildrequest(5, 'bldr1', [ss_dict2])
         self.assert_cancelled([3])
+        self.tracker.on_complete_buildrequest(3)
 
     def test_cancel_multi_codebase_buildrequest_ignores_non_matching_change_in_tracked_br(self):
         ss_dict1 = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
@@ -254,12 +295,15 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.assert_cancelled([1, 2])
         self.assertFalse(self.tracker.is_buildrequest_tracked(1))
         self.assertFalse(self.tracker.is_buildrequest_tracked(2))
+        self.tracker.on_complete_buildrequest(1)
+        self.tracker.on_complete_buildrequest(2)
 
         self.reactor.advance(1)
 
         self.tracker.on_change(ss_dict)
         self.tracker.on_new_buildrequest(5, 'bldr1', [ss_dict])
         self.assert_cancelled([4])
+        self.tracker.on_complete_buildrequest(4)
 
     def test_cancel_multi_codebase_multiple_buildrequests(self):
         ss_dict1 = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
@@ -282,12 +326,15 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.assertFalse(self.tracker.is_buildrequest_tracked(1))
         self.assertFalse(self.tracker.is_buildrequest_tracked(2))
         self.assertTrue(self.tracker.is_buildrequest_tracked(3))
+        self.tracker.on_complete_buildrequest(1)
+        self.tracker.on_complete_buildrequest(2)
 
         self.reactor.advance(1)
 
         self.tracker.on_change(ss_dict1)
         self.tracker.on_new_buildrequest(5, 'bldr1', [ss_dict1])
         self.assert_cancelled([4])
+        self.tracker.on_complete_buildrequest(4)
 
 
 class TestOldBuildCancellerUtils(ConfigErrorsMixin, unittest.TestCase):
@@ -468,9 +515,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
-            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=235),
+            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
             fakedb.SourceStamp(
-                id=235,
+                id=240,
                 revision='revision1',
                 project='project1',
                 codebase='codebase1',
@@ -491,9 +538,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.db.insert_test_data([
             fakedb.Buildset(id=100, results=None, reason='reason100'),
-            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=236),
+            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=241),
             fakedb.SourceStamp(
-                id=236,
+                id=241,
                 revision='revision1',
                 project='project1',
                 codebase='codebase1',
@@ -532,9 +579,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
-            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=235),
+            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
             fakedb.SourceStamp(
-                id=235,
+                id=240,
                 revision='revision2',
                 project='project2',
                 codebase='codebase2',
@@ -555,9 +602,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.db.insert_test_data([
             fakedb.Buildset(id=100, results=None, reason='reason100'),
-            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=236),
+            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=241),
             fakedb.SourceStamp(
-                id=236,
+                id=241,
                 revision='revision2',
                 project='project2',
                 codebase='codebase2',
@@ -620,9 +667,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.db.insert_test_data([
             fakedb.Buildset(id=100, results=None, reason='reason100'),
-            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=236),
+            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=240),
             fakedb.SourceStamp(
-                id=236,
+                id=240,
                 revision='revision1',
                 project='project1',
                 codebase='codebase1',
