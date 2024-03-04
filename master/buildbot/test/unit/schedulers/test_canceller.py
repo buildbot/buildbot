@@ -202,6 +202,25 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.tracker.on_complete_buildrequest(1)
         self.tracker.on_complete_buildrequest(2)
 
+    def test_not_cancel_buildrequest_different_builder(self):
+        ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
+
+        self.tracker.on_change(ss_dict)
+        self.tracker.on_new_buildrequest(1, 'bldr1', [ss_dict])
+        self.assertTrue(self.tracker.is_buildrequest_tracked(1))
+
+        self.reactor.advance(1)
+
+        self.tracker.on_change(ss_dict)
+        self.tracker.on_new_buildrequest(2, 'bldr2', [ss_dict])
+        self.assert_cancelled([])
+        self.assertTrue(self.tracker.is_buildrequest_tracked(2))
+
+        self.reactor.advance(1)
+
+        self.tracker.on_complete_buildrequest(1)
+        self.tracker.on_complete_buildrequest(2)
+
     @parameterized.expand([
         ('first', True),
         ('second', False),
