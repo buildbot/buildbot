@@ -134,7 +134,7 @@ class IRCContact(Contact):
 
     @dangerousCommand
     def command_LEAVE(self, args, **kwargs):
-        """join a channel"""
+        """leave a channel"""
         args = self.splitArgs(args)
         for channel in args:
             self.bot.leave(channel)
