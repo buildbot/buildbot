@@ -109,7 +109,7 @@ $(VENV_NAME):
 
 # helper for virtualenv creation
 virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
-	$(PIP) install -r requirements-ci.txt \
+	$(PIP) install -r requirements.txt \
 		-r requirements-ciworker.txt \
 		-r requirements-cidocs.txt \
 		packaging towncrier

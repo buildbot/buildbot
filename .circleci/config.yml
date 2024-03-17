@@ -16,7 +16,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - 37-dependencies-{{ checksum "requirements-ci.txt" }}-{{ checksum "requirements-cidocs.txt" }}
+            - 37-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "requirements-cidocs.txt" }}
             # fallback to using the latest cache if no exact match is found
             - 37-dependencies-
 
@@ -27,14 +27,14 @@ jobs:
             python3.8 -m venv .venv
             . .venv/bin/activate
             pip install -U pip setuptools wheel
-            pip install -r requirements-ci.txt
+            pip install -r requirements.txt
             pip install -r requirements-cidocs.txt
             pip install pyinstaller
 
       - save_cache:
           paths:
             - .venv
-          key: 3-dependencies-{{ checksum "requirements-ci.txt" }}-{{ checksum "requirements-cidocs.txt" }}
+          key: 3-dependencies-{{ checksum "requirements.txt" }}-{{ checksum "requirements-cidocs.txt" }}
       - run:
           name: run tests
           command: |

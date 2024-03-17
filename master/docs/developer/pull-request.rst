@@ -144,7 +144,7 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
+    pip install -r requirements.txt
     trial -j8 buildbot  # change -j parameter to fit the number of cores you have
 
 Worker unit tests
@@ -168,7 +168,7 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
+    pip install -r requirements.txt
     make pylint
     make ruff
 
@@ -183,7 +183,7 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
+    pip install -r requirements.txt
     pip install -r requirements-cidocs.txt
     make docs
 
@@ -199,6 +199,6 @@ To run locally, install a Chrome-compatible browser and execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
+    pip install -r requirements.txt
     make tarballs
     ./common/smokedist-react.sh whl

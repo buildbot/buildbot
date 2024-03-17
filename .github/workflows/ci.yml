@@ -23,6 +23,7 @@ jobs:
       - uses: "actions/setup-python@v2"
         with:
           python-version: "${{ matrix.python-version }}"
+          cache: 'pip'
       - name: "Install dependencies"
         run: |
           python -c "import sys; print(sys.prefix)"
@@ -30,7 +31,7 @@ jobs:
           python -c "import sys; print(sys.executable)"
           python -V -V
           python -m pip install -U pip setuptools wheel
-          python -m pip install -r requirements-ci.txt
+          python -m pip install -r requirements.txt
           python -m pip list
           # Check that pywin32 is properly installed
           python -c "import win32api"
