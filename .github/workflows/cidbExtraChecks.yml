@@ -1,9 +1,10 @@
-name: CI (DB)
+name: CI (DB) Extra
 on:
-  push:
-    branches:
-    - master
-    - release
+  release:
+    types: [prereleased]
+  schedule:
+    - cron: "0 0 1,15 * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,14 +18,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: MySQL 5
+            database: mysql:5
+            connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
+            check: mysqladmin ping
+
           - name: MySQL latest
             database: mysql:latest
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: mysqladmin ping
 
+          - name: PostgreSQL 9 / psycopg2
+            database: postgres:9
+            connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
+          - name: PostgreSQL 9 / pg8000
+            database: postgres:9
+            connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
           - name: PostgreSQL latest / psycopg2
             database: postgres:latest
             connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
+            check: pg_isready
+
+          - name: PostgreSQL latest / pg8000
+            database: postgres:latest
+            connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
     env:
