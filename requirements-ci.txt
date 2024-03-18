@@ -57,7 +57,7 @@ hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
 importlib-metadata==7.0.2
-importlib-resources==6.1.1;  python_version < "3.9"
+importlib-resources==6.3.1;  python_version < "3.9"
 incremental==22.10.0
 ipaddress==1.0.23
 iso8601==2.1.0
