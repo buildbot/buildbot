@@ -34,7 +34,7 @@ cffi==1.16.0
 chardet==5.2.0
 charset-normalizer==3.3.2
 click==8.1.7
-configparser==6.0.0
+configparser==6.0.1
 constantly==23.10.4
 cookies==2.2.1
 coverage==7.4.1
