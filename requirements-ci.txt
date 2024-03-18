@@ -133,4 +133,4 @@ Werkzeug==3.0.1
 wrapt==1.16.0
 xmltodict==0.13.0
 zipp==3.18.1
-zope.interface==6.1
+zope.interface==6.2
