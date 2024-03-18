@@ -10,7 +10,7 @@ constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
 cryptography==42.0.5;  python_version >= "3.6"
 funcsigs==1.0.2
-future==0.18.3
+future==1.0.0
 hyperlink==21.0.0
 idna==2.10  # pyup: ignore (conflicts with moto on master)
 incremental==22.10.0;  python_version >= "3.6"
