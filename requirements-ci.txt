@@ -48,7 +48,7 @@ docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
 extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
-future==0.18.3
+future==1.0.0
 graphql-core==3.3.0a3; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
