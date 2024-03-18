@@ -25,7 +25,7 @@ PyHamcrest==1.9.0  # pyup: ignore
 psutil==5.9.8
 pycparser==2.21;  python_version >= "3.6"
 six==1.16.0
-Twisted==23.10.0;  python_version >= "3.6"
+Twisted==24.3.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.6"  # pyup: ignore
 txaio==23.1.1;  python_version >= "3.6"
 typing-extensions==4.9.0;  python_version >= "3.7"
