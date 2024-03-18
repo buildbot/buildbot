@@ -1,4 +1,4 @@
 requests==2.31.0
 psycopg2==2.9.9
 txrequests==0.9.6
-pycairo==1.25.1
+pycairo==1.26.0
