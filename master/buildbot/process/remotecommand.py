@@ -262,8 +262,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                 self._finished(Failure())
                 # TODO: what if multiple updates arrive? should
                 # skip the rest but ack them all
-            if num > max_updatenum:
-                max_updatenum = num
+            max_updatenum = max(max_updatenum, num)
         return max_updatenum
 
     def remote_complete(self, failure=None):
