@@ -714,9 +714,8 @@ class AbstractWorker(service.BuildbotService):
         log.msg(f"{self.name} has been put in quarantine for {self.quarantine_timeout}s")
         # next we will wait twice as long
         self.quarantine_timeout *= 2
-        if self.quarantine_timeout > self.quarantine_max_timeout:
-            # unless we hit the max timeout
-            self.quarantine_timeout = self.quarantine_max_timeout
+        # unless we hit the max timeout
+        self.quarantine_timeout = min(self.quarantine_timeout, self.quarantine_max_timeout)
 
     def exitQuarantine(self):
         log.msg(f"{self.name} has left quarantine")
