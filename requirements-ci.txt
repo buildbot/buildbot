@@ -99,7 +99,7 @@ pytz==2024.1
 PyYAML==6.0.1
 requests==2.31.0
 responses==0.25.0
-ruamel.yaml==0.18.5
+ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
 s3transfer==0.10.0
 scandir==1.10.0
