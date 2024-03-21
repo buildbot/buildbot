@@ -355,7 +355,7 @@ Any output exceeding :bb:cfg:`logMaxSize` will be truncated, and a message to th
 
 If :bb:cfg:`logMaxSize` is set, and the output from a step exceeds the maximum, the :bb:cfg:`logMaxTailSize` parameter controls how much of the end of the build log will be kept.
 The effect of setting this parameter is that the log will contain the first :bb:cfg:`logMaxSize` bytes and the last :bb:cfg:`logMaxTailSize` bytes of output.
-Don't set this value too high, as the the tail of the log is kept in memory.
+Don't set this value too high, as the tail of the log is kept in memory.
 
 The :bb:cfg:`logEncoding` parameter specifies the character encoding to use to decode bytestrings provided as logs.
 It defaults to ``utf-8``, which should work in most cases, but can be overridden if necessary.
