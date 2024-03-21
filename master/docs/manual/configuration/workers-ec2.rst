@@ -274,7 +274,7 @@ If you want to attach existing volumes to an ec2 latent worker, use the volumes 
 This mechanism can be valuable if you want to maintain state on a conceptual worker across multiple start/terminate sequences.
 ``volumes`` expects a list of (volume_id, mount_point) tuples to attempt attaching when your instance has been created.
 
-If you want to attach new ephemeral volumes, use the the block_device_map attribute.
+If you want to attach new ephemeral volumes, use the block_device_map attribute.
 This follows the AWS API syntax, essentially acting as a passthrough.
 The only distinction is that the volumes default to deleting on termination to avoid leaking volume resources when workers are terminated.
 See boto documentation for further details.
