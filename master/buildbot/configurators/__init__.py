@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 #
 
-""" This module holds configurators, which helps setup schedulers, builders, steps,
-    for a very specific purpose.
-    Higher level interfaces to buildbot configurations components.
+"""This module holds configurators, which helps setup schedulers, builders, steps,
+for a very specific purpose.
+Higher level interfaces to buildbot configurations components.
 """
 
 from zope.interface import implementer

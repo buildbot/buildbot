@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-"""Base classes handy for use with PB clients.
-"""
+"""Base classes handy for use with PB clients."""
 
 from twisted.application.internet import backoffPolicy
 from twisted.cred import error
