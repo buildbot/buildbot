@@ -70,8 +70,7 @@ def flattened_iterator(l, types=(list, tuple)):
         return
 
     for element in l:
-        for sub_element in flattened_iterator(element, types):
-            yield sub_element
+        yield from flattened_iterator(element, types)
 
 
 def flatten(l, types=(list,)):
