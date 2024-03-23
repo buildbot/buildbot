@@ -77,8 +77,7 @@ class ReporterBase(service.BuildbotService):
             yield consumer.stopConsuming()
         self._event_consumers = {}
 
-        for pending_call in list(self._pending_got_event_calls.values()):
-            yield pending_call
+        yield from list(self._pending_got_event_calls.values())
         self._pending_got_event_calls = {}
 
         yield super().stopService()
