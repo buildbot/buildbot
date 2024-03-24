@@ -69,8 +69,7 @@ class FakeBuild(properties.PropertiesMixin):
 
     def allChanges(self):
         for s in self.sources.values():
-            for c in s.changes:
-                yield c
+            yield from s.changes
 
     def allFiles(self):
         files = []

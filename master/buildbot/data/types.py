@@ -91,8 +91,7 @@ class NoneOk(Type):
     def validate(self, name, object):
         if object is None:
             return
-        for msg in self.nestedType.validate(name, object):
-            yield msg
+        yield from self.nestedType.validate(name, object)
 
     def getSpec(self):
         r = self.nestedType.getSpec()
@@ -246,8 +245,7 @@ class List(Type):
             return
 
         for idx, elt in enumerate(object):
-            for msg in self.of.validate(f"{name}[{idx}]", elt):
-                yield msg
+            yield from self.of.validate(f"{name}[{idx}]", elt)
 
     def valueFromString(self, arg):
         # valueFromString is used to process URL args, which come one at
@@ -383,8 +381,7 @@ class Entity(Type):
 
         for k in gotNames & self.fieldNames:
             f = self.fields[k]
-            for msg in f.validate(f"{name}[{repr(k)}]", object[k]):
-                yield msg
+            yield from f.validate(f"{name}[{repr(k)}]", object[k])
 
     def getSpec(self):
         return {

@@ -431,8 +431,9 @@ class GerritSshStreamEventsConnector:
 
             self.reactor.callLater(self._stream_process_timeout, self.start_stream_process)
             self._stream_process_timeout *= self.STREAM_BACKOFF_EXPONENT
-            if self._stream_process_timeout > self.STREAM_BACKOFF_MAX:
-                self._stream_process_timeout = self.STREAM_BACKOFF_MAX
+            self._stream_process_timeout = min(
+                self._stream_process_timeout, self.STREAM_BACKOFF_MAX
+            )
         else:
             # good startup, but lost connection; restart immediately,
             # and set the timeout to its minimum

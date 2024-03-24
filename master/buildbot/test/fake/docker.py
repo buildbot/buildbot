@@ -56,8 +56,7 @@ class Client:
             pass
         else:
             logs = []
-            for line in logs:
-                yield line
+            yield from logs
             self._images.append({'RepoTags': [tag + ':latest']})
 
     def pull(self, image, *args, **kwargs):

@@ -121,7 +121,7 @@ class AvatarGitHub(AvatarBase):
         }
 
         query = f'{email} in:email'
-        url = f"/search/users?{urlencode({'q': query,})}"
+        url = f"/search/users?{urlencode({'q': query})}"
         http = yield self._get_http_client()
         res = yield http.get(url, headers=headers)
         if 200 <= res.code < 300:

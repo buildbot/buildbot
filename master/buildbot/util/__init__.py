@@ -70,8 +70,7 @@ def flattened_iterator(l, types=(list, tuple)):
         return
 
     for element in l:
-        for sub_element in flattened_iterator(element, types):
-            yield sub_element
+        yield from flattened_iterator(element, types)
 
 
 def flatten(l, types=(list,)):
@@ -116,14 +115,14 @@ def fuzzyInterval(seconds):
     if seconds < 20:
         return f"{seconds} seconds".format(seconds)
     if seconds < 55:
-        return f"{round(seconds / 10.) * 10} seconds"
+        return f"{round(seconds / 10.0) * 10} seconds"
     minutes = round(seconds / 60.0)
     if minutes == 1:
         return "a minute"
     if minutes < 20:
         return f"{minutes} minutes"
     if minutes < 55:
-        return f"{round(minutes / 10.) * 10} minutes"
+        return f"{round(minutes / 10.0) * 10} minutes"
     hours = round(minutes / 60.0)
     if hours == 1:
         return "an hour"

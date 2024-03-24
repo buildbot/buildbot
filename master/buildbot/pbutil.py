@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-"""Base classes handy for use with PB clients.
-"""
+"""Base classes handy for use with PB clients."""
 
 from twisted.internet import protocol
 from twisted.python import log

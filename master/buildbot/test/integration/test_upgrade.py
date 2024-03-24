@@ -217,8 +217,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         if pre_callbacks is None:
             pre_callbacks = []
 
-        for cb in pre_callbacks:
-            yield cb
+        yield from pre_callbacks
+
         try:
             yield self.db.model.upgrade()
         except Exception as e:
