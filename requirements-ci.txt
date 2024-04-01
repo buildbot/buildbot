@@ -9,7 +9,7 @@ autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
 boto3==1.34.74
 msgpack==1.0.8
 Markdown==3.6
-pylint==3.0.3
+pylint==3.1.0
 ruff==0.2.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
