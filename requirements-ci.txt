@@ -119,7 +119,7 @@ tomlkit==0.12.4
 towncrier==23.11.0
 treq==23.11.0;  python_version >= "3.9"
 treq==22.2.0;  python_version < "3.9" # pyup: ignore
-Twisted==23.10.0
+Twisted==24.3.0
 txaio==23.1.1
 txrequests==0.9.6
 types-PyYAML==6.0.12.12
