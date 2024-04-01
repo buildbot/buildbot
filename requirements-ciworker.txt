@@ -8,7 +8,7 @@ Automat==22.10.0;  python_version >= "3.6"
 cffi==1.16.0;  python_version >= "3.6"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
-cryptography==42.0.2;  python_version >= "3.6"
+cryptography==42.0.5;  python_version >= "3.6"
 funcsigs==1.0.2
 future==0.18.3
 hyperlink==21.0.0
