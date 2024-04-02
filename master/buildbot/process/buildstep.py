@@ -34,7 +34,11 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.config.checks import check_param_bool
 from buildbot.config.checks import check_param_length
+from buildbot.config.checks import check_param_number_none
+from buildbot.config.checks import check_param_str
+from buildbot.config.checks import check_param_str_none
 from buildbot.db.model import Model
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
@@ -955,24 +959,24 @@ class ShellMixin:
     initialStdin = None
     decodeRC = {0: SUCCESS}
 
-    _shellMixinArgs = [
-        'command',
-        'workdir',
-        'env',
-        'want_stdout',
-        'want_stderr',
-        'usePTY',
-        'logfiles',
-        'lazylogfiles',
-        'timeout',
-        'maxTime',
-        'logEnviron',
-        'interruptSignal',
-        'sigtermTime',
-        'initialStdin',
-        'decodeRC',
+    _shell_mixin_arg_config = [
+        ('command', None),
+        ('workdir', check_param_str),
+        ('env', None),
+        ('want_stdout', check_param_bool),
+        ('want_stderr', check_param_bool),
+        ('usePTY', check_param_bool),
+        ('logfiles', None),
+        ('lazylogfiles', check_param_bool),
+        ('timeout', check_param_number_none),
+        ('maxTime', check_param_number_none),
+        ('logEnviron', check_param_bool),
+        ('interruptSignal', check_param_str_none),
+        ('sigtermTime', check_param_number_none),
+        ('initialStdin', check_param_str_none),
+        ('decodeRC', None),
     ]
-    renderables = _shellMixinArgs
+    renderables = [arg for arg, _ in _shell_mixin_arg_config]
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=None):
         constructorArgs = constructorArgs.copy()
@@ -983,12 +987,16 @@ class ShellMixin:
         def bad(arg):
             config.error(f"invalid {self.__class__.__name__} argument {arg}")
 
-        for arg in self._shellMixinArgs:
+        for arg, check in self._shell_mixin_arg_config:
             if arg not in constructorArgs:
                 continue
             if arg in prohibitArgs:
                 bad(arg)
             else:
+                value = constructorArgs[arg]
+                if check is not None and not IRenderable.providedBy(value):
+                    check(value, self.__class__, arg)
+
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
         for arg in list(constructorArgs):
@@ -1001,7 +1009,7 @@ class ShellMixin:
     def makeRemoteShellCommand(
         self, collectStdout=False, collectStderr=False, stdioLogName='stdio', **overrides
     ):
-        kwargs = {arg: getattr(self, arg) for arg in self._shellMixinArgs}
+        kwargs = {arg: getattr(self, arg) for arg, _ in self._shell_mixin_arg_config}
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:

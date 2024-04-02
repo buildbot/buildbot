@@ -1244,6 +1244,13 @@ class TestShellMixin(
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
 
+    def test_bad_arg_type(self):
+        mixin = SimpleShellCommand()
+        with self.assertRaisesConfigError(
+            "SimpleShellCommand argument usePTY must be an instance of bool"
+        ):
+            mixin.setupShellMixin({'usePTY': 13})
+
     @defer.inlineCallbacks
     def test_no_default_workdir(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
