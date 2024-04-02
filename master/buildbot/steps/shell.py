@@ -189,7 +189,7 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 'decodeRC',
                 'stdioLogName',
                 'workdir',
-            ] + buildstep.BuildStep.parms
+            ] + buildstep.BuildStep._params_names
 
             invalid_args = []
             for arg in kwargs:

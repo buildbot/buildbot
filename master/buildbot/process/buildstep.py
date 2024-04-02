@@ -241,33 +241,35 @@ class BuildStep(
         'workdir',
     ]
 
-    # 'parms' holds a list of all the parameters we care about, to allow
+    # '_params_names' holds a list of all the parameters we care about, to allow
     # users to instantiate a subclass of BuildStep with a mixture of
     # arguments, some of which are for us, some of which are for the subclass
     # (or a delegate of the subclass, like how ShellCommand delivers many
     # arguments to the RemoteShellCommand that it creates). Such delegating
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
-    parms = [
-        'alwaysRun',
-        'description',
-        'descriptionDone',
-        'descriptionSuffix',
-        'doStepIf',
-        'flunkOnFailure',
-        'flunkOnWarnings',
-        'haltOnFailure',
-        'updateBuildSummaryPolicy',
-        'hideStepIf',
-        'locks',
-        'logEncoding',
-        'name',
-        'progressMetrics',
-        'useProgress',
-        'warnOnFailure',
-        'warnOnWarnings',
-        'workdir',
+    _params_config = [
+        ('alwaysRun', check_param_bool),
+        ('description', None),
+        ('descriptionDone', None),
+        ('descriptionSuffix', None),
+        ('doStepIf', None),
+        ('flunkOnFailure', check_param_bool),
+        ('flunkOnWarnings', check_param_bool),
+        ('haltOnFailure', check_param_bool),
+        ('updateBuildSummaryPolicy', None),
+        ('hideStepIf', None),
+        ('locks', None),
+        ('logEncoding', None),
+        ('name', check_param_str),
+        ('progressMetrics', None),
+        ('useProgress', None),
+        ('warnOnFailure', check_param_bool),
+        ('warnOnWarnings', check_param_bool),
+        ('workdir', check_param_str_none),
     ]
+
+    _params_names = [arg for arg, _ in _params_config]
 
     name = "generic"
     description = None  # set this to a list of short strings to override
@@ -290,20 +292,18 @@ class BuildStep(
     def __init__(self, **kwargs):
         self.worker = None
 
-        for p in self.__class__.parms:
+        for p, check in self.__class__._params_config:
             if p in kwargs:
-                setattr(self, p, kwargs.pop(p))
+                value = kwargs.pop(p)
+                if check is not None and not IRenderable.providedBy(value):
+                    check(value, self.__class__, p)
+                setattr(self, p, value)
 
         if kwargs:
             config.error(
                 f"{self.__class__}.__init__ got unexpected keyword argument(s) {list(kwargs)}"
             )
         self._pendingLogObservers = []
-
-        if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
-            config.error(
-                f"BuildStep name must be a string or a renderable object: {repr(self.name)}"
-            )
 
         check_param_length(
             self.name, f'Step {self.__class__.__name__} name', Model.steps.c.name.type.length
@@ -1000,7 +1000,7 @@ class ShellMixin:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
         for arg in list(constructorArgs):
-            if arg not in BuildStep.parms:
+            if arg not in BuildStep._params_names:
                 bad(arg)
                 del constructorArgs[arg]
         return constructorArgs
