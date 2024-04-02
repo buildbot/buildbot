@@ -60,7 +60,7 @@ The following parameters are accepted by this class:
 
 ``bot_username``
     (optional)
-    This should be set to the the bot unique username defined in BotFather. If this parameter is missing, it will be retrieved from the Telegram server. However, in case of the connection problems, configuration of the Buildbot will be interrupted. For this reason it is advised to set this parameter to the correct value.
+    This should be set to the bot unique username defined in BotFather. If this parameter is missing, it will be retrieved from the Telegram server. However, in case of the connection problems, configuration of the Buildbot will be interrupted. For this reason it is advised to set this parameter to the correct value.
 
 ``chat_ids``
     (optional)

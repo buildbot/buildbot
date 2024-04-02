@@ -134,7 +134,7 @@ docs/steps.xhtml for a description of all the new parameters.
 
 Thanks to the contributions of Kirill Lapshin, we can now produce .deb
 installer packages. These are still experimental, but they include init.d
-startup/shutdown scripts, which the the new /usr/bin/buildbot to invoke
+startup/shutdown scripts, which the new /usr/bin/buildbot to invoke
 twistd. Create your buildmasters in /var/lib/buildbot/master/FOO, and your
 slaves in /var/lib/buildbot/slave/BAR, then put FOO and BAR in the
 appropriate places in /etc/default/buildbot . After that, the buildmasters
