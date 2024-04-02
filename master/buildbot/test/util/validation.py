@@ -125,8 +125,7 @@ class NoneOk:
         if object is None:
             return
         else:
-            for msg in self.original.validate(name, object):
-                yield msg
+            yield from self.original.validate(name, object)
 
 
 class Any:
@@ -163,8 +162,7 @@ class DictValidator(Validator):
         if missing:
             yield f'{name} is missing keys {", ".join([repr(n) for n in missing])}'
         for k in gotNames & self.expectedNames:
-            for msg in self.keys[k].validate(f"{name}[{k!r}]", object[k]):
-                yield msg
+            yield from self.keys[k].validate(f"{name}[{k!r}]", object[k])
 
 
 class SequenceValidator(Validator):
@@ -179,8 +177,7 @@ class SequenceValidator(Validator):
             return
 
         for idx, elt in enumerate(object):
-            for msg in self.elementValidator.validate(f"{name}[{idx}]", elt):
-                yield msg
+            yield from self.elementValidator.validate(f"{name}[{idx}]", elt)
 
 
 class ListValidator(SequenceValidator):
@@ -244,8 +241,7 @@ class PatchValidator(Validator):
     )
 
     def validate(self, name, object):
-        for msg in self.validator.validate(name, object):
-            yield msg
+        yield from self.validator.validate(name, object)
 
 
 class MessageValidator(Validator):
@@ -270,8 +266,7 @@ class MessageValidator(Validator):
             if event not in self.events:
                 yield f"routing key event {event!r} is not valid"
 
-        for msg in self.messageValidator.validate(f"{routingKey[0]} message", message):
-            yield msg
+        yield from self.messageValidator.validate(f"{routingKey[0]} message", message)
 
 
 class Selector(Validator):
@@ -288,8 +283,7 @@ class Selector(Validator):
             yield f"{arg_object!r}: not a not data options and data dict: {e}"
         for selector, validator in self.selectors:
             if selector is None or selector(arg):
-                for msg in validator.validate(name, object):
-                    yield msg
+                yield from validator.validate(name, object)
                 return
         yield f"no match for selector argument {arg!r}"
 

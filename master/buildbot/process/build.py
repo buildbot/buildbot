@@ -159,8 +159,7 @@ class Build(properties.PropertiesMixin):
     @staticmethod
     def allChangesFromSources(sources):
         for s in sources:
-            for c in s.changes:
-                yield c
+            yield from s.changes
 
     def allChanges(self):
         return Build.allChangesFromSources(self.sources)
