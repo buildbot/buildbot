@@ -350,7 +350,7 @@ const BuildView = observer(() => {
           }
         </Tab>
         <Tab eventKey="debug" title="Debug">
-          <BuildViewDebugTab buildrequest={buildrequest} buildset={buildset}/>
+          <BuildViewDebugTab build={build} buildrequest={buildrequest} buildset={buildset}/>
         </Tab>
       </Tabs>
     </div>

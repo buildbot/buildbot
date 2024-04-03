@@ -17,18 +17,58 @@
 
 import {observer} from "mobx-react";
 import {Link} from "react-router-dom";
-import {Buildrequest, Buildset} from "buildbot-data-js";
+import {
+  Build,
+  Buildrequest,
+  Buildset, DataCollection,
+  useDataAccessor,
+  useDataApiDynamicQuery,
+} from "buildbot-data-js";
+import {BuildLinkWithSummaryTooltip} from "../../../../react-ui";
+import {LoadingDiv} from "../../components/LoadingDiv/LoadingDiv";
 import {RawData} from "../../components/RawData/RawData";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 export type BuildViewDebugTabProps = {
+  build: Build | null;
   buildset: Buildset | null;
   buildrequest : Buildrequest | null;
 };
 
-export const BuildViewDebugTab = observer(({buildset, buildrequest}: BuildViewDebugTabProps) => {
-  if (buildrequest === null || buildset === null) {
+export const BuildViewDebugTab = observer(({build, buildset, buildrequest}:
+                                             BuildViewDebugTabProps) => {
+  const accessor = useDataAccessor([build?.id ?? -1]);
+  const prevBuildsQuery = useDataApiDynamicQuery([build !== null],
+    () => build === null
+      ? new DataCollection<Build>()
+      : Build.getAll(accessor, {query: {
+          builderid: build.builderid,
+          workerid: build.workerid,
+          number__lt: build.number,
+          order: '-number',
+          limit: 5
+      }}
+    )
+  );
+
+  if (build === null || buildrequest === null || buildset === null) {
     return <TableHeading>Buildrequest:</TableHeading>;
+  }
+
+  const renderPrevBuildOnBuildDir = () => {
+    if (!prevBuildsQuery.resolved) {
+      return <LoadingDiv/>
+    }
+    if (prevBuildsQuery.array.length === 0) {
+      return <>None</>;
+    }
+    return <>
+      {
+        prevBuildsQuery.array.slice(0).reverse().map(prevBuild => (
+          <BuildLinkWithSummaryTooltip key={prevBuild.id} build={prevBuild}/>
+        ))
+      }
+    </>;
   }
 
   return (
@@ -39,6 +79,8 @@ export const BuildViewDebugTab = observer(({buildset, buildrequest}: BuildViewDe
       <RawData data={buildrequest.toObject()}/>
       <TableHeading>Buildset:</TableHeading>
       <RawData data={buildset.toObject()}/>
+      <TableHeading>Previous builds on the same build directory:</TableHeading>
+      {renderPrevBuildOnBuildDir()}
     </>
   );
 });
