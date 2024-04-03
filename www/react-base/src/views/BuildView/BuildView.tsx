@@ -62,6 +62,10 @@ import {Tab, Table, Tabs} from "react-bootstrap";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 import {BuildViewDebugTab} from "./BuildViewDebugTab";
 
+import {
+  SetBuildLinkExtraProperties,  
+} from "buildbot-ui";
+
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
   const actions: TopbarAction[] = [];
@@ -357,12 +361,17 @@ const BuildView = observer(() => {
   );
 });
 
-buildbotSetupPlugin((reg) => {
+buildbotSetupPlugin((reg, config) => {
+  const build_number_format = config.build_number_format;
+
+  SetBuildLinkExtraProperties(build_number_format);
+
   reg.registerRoute({
     route: "builders/:builderid/builds/:buildnumber",
     group: null,
     element: () => <BuildView/>,
   });
+
 
   reg.registerSettingGroup({
     name:'Build',
