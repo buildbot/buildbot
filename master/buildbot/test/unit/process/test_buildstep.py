@@ -134,7 +134,7 @@ class TestBuildStep(
         When BuildStep is passed a name that isn't a string, it reports
         a config error.
         """
-        with self.assertRaisesConfigError("BuildStep name must be a string"):
+        with self.assertRaisesConfigError("BuildStep argument name must be an instance of str"):
             buildstep.BuildStep(name=5)
 
     def test_name_too_long(self):
@@ -1243,6 +1243,13 @@ class TestShellMixin(
         self.expect_commands(ExpectShell(workdir='wkdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
+
+    def test_bad_arg_type(self):
+        mixin = SimpleShellCommand()
+        with self.assertRaisesConfigError(
+            "SimpleShellCommand argument usePTY must be an instance of bool"
+        ):
+            mixin.setupShellMixin({'usePTY': 13})
 
     @defer.inlineCallbacks
     def test_no_default_workdir(self):

@@ -34,7 +34,11 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.config.checks import check_param_bool
 from buildbot.config.checks import check_param_length
+from buildbot.config.checks import check_param_number_none
+from buildbot.config.checks import check_param_str
+from buildbot.config.checks import check_param_str_none
 from buildbot.db.model import Model
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
@@ -237,33 +241,35 @@ class BuildStep(
         'workdir',
     ]
 
-    # 'parms' holds a list of all the parameters we care about, to allow
+    # '_params_names' holds a list of all the parameters we care about, to allow
     # users to instantiate a subclass of BuildStep with a mixture of
     # arguments, some of which are for us, some of which are for the subclass
     # (or a delegate of the subclass, like how ShellCommand delivers many
     # arguments to the RemoteShellCommand that it creates). Such delegating
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
-    parms = [
-        'alwaysRun',
-        'description',
-        'descriptionDone',
-        'descriptionSuffix',
-        'doStepIf',
-        'flunkOnFailure',
-        'flunkOnWarnings',
-        'haltOnFailure',
-        'updateBuildSummaryPolicy',
-        'hideStepIf',
-        'locks',
-        'logEncoding',
-        'name',
-        'progressMetrics',
-        'useProgress',
-        'warnOnFailure',
-        'warnOnWarnings',
-        'workdir',
+    _params_config = [
+        ('alwaysRun', check_param_bool),
+        ('description', None),
+        ('descriptionDone', None),
+        ('descriptionSuffix', None),
+        ('doStepIf', None),
+        ('flunkOnFailure', check_param_bool),
+        ('flunkOnWarnings', check_param_bool),
+        ('haltOnFailure', check_param_bool),
+        ('updateBuildSummaryPolicy', None),
+        ('hideStepIf', None),
+        ('locks', None),
+        ('logEncoding', None),
+        ('name', check_param_str),
+        ('progressMetrics', None),
+        ('useProgress', None),
+        ('warnOnFailure', check_param_bool),
+        ('warnOnWarnings', check_param_bool),
+        ('workdir', check_param_str_none),
     ]
+
+    _params_names = [arg for arg, _ in _params_config]
 
     name = "generic"
     description = None  # set this to a list of short strings to override
@@ -286,20 +292,18 @@ class BuildStep(
     def __init__(self, **kwargs):
         self.worker = None
 
-        for p in self.__class__.parms:
+        for p, check in self.__class__._params_config:
             if p in kwargs:
-                setattr(self, p, kwargs.pop(p))
+                value = kwargs.pop(p)
+                if check is not None and not IRenderable.providedBy(value):
+                    check(value, self.__class__, p)
+                setattr(self, p, value)
 
         if kwargs:
             config.error(
                 f"{self.__class__}.__init__ got unexpected keyword argument(s) {list(kwargs)}"
             )
         self._pendingLogObservers = []
-
-        if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
-            config.error(
-                f"BuildStep name must be a string or a renderable object: {repr(self.name)}"
-            )
 
         check_param_length(
             self.name, f'Step {self.__class__.__name__} name', Model.steps.c.name.type.length
@@ -955,24 +959,24 @@ class ShellMixin:
     initialStdin = None
     decodeRC = {0: SUCCESS}
 
-    _shellMixinArgs = [
-        'command',
-        'workdir',
-        'env',
-        'want_stdout',
-        'want_stderr',
-        'usePTY',
-        'logfiles',
-        'lazylogfiles',
-        'timeout',
-        'maxTime',
-        'logEnviron',
-        'interruptSignal',
-        'sigtermTime',
-        'initialStdin',
-        'decodeRC',
+    _shell_mixin_arg_config = [
+        ('command', None),
+        ('workdir', check_param_str),
+        ('env', None),
+        ('want_stdout', check_param_bool),
+        ('want_stderr', check_param_bool),
+        ('usePTY', check_param_bool),
+        ('logfiles', None),
+        ('lazylogfiles', check_param_bool),
+        ('timeout', check_param_number_none),
+        ('maxTime', check_param_number_none),
+        ('logEnviron', check_param_bool),
+        ('interruptSignal', check_param_str_none),
+        ('sigtermTime', check_param_number_none),
+        ('initialStdin', check_param_str_none),
+        ('decodeRC', None),
     ]
-    renderables = _shellMixinArgs
+    renderables = [arg for arg, _ in _shell_mixin_arg_config]
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=None):
         constructorArgs = constructorArgs.copy()
@@ -983,16 +987,20 @@ class ShellMixin:
         def bad(arg):
             config.error(f"invalid {self.__class__.__name__} argument {arg}")
 
-        for arg in self._shellMixinArgs:
+        for arg, check in self._shell_mixin_arg_config:
             if arg not in constructorArgs:
                 continue
             if arg in prohibitArgs:
                 bad(arg)
             else:
+                value = constructorArgs[arg]
+                if check is not None and not IRenderable.providedBy(value):
+                    check(value, self.__class__, arg)
+
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
         for arg in list(constructorArgs):
-            if arg not in BuildStep.parms:
+            if arg not in BuildStep._params_names:
                 bad(arg)
                 del constructorArgs[arg]
         return constructorArgs
@@ -1001,7 +1009,7 @@ class ShellMixin:
     def makeRemoteShellCommand(
         self, collectStdout=False, collectStderr=False, stdioLogName='stdio', **overrides
     ):
-        kwargs = {arg: getattr(self, arg) for arg in self._shellMixinArgs}
+        kwargs = {arg: getattr(self, arg) for arg, _ in self._shell_mixin_arg_config}
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:
