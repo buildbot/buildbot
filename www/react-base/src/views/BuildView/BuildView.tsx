@@ -316,7 +316,7 @@ const BuildView = observer(() => {
       <nav>
         {renderPager(build)}
       </nav>
-      <Tabs>
+      <Tabs mountOnEnter={true}>
         <Tab eventKey="build-steps" title="Build steps">
           { build !== null
             ? <BuildSummary build={build} condensed={false} parentBuild={parentBuild}
