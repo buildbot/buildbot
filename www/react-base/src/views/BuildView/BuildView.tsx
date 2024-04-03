@@ -48,7 +48,6 @@ import {
   BadgeRound,
   ChangeUserAvatar,
   TopbarAction,
-  TopbarItem,
   dateFormat,
   durationFromNowFormat,
   useCurrentTime,
@@ -56,13 +55,12 @@ import {
   useTopbarItems,
   useTopbarActions,
 } from "buildbot-ui";
-import {RawData} from "../../components/RawData/RawData";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
 import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {Tab, Table, Tabs} from "react-bootstrap";
-import {TableHeading} from "../../components/TableHeading/TableHeading";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
+import {BuildViewDebugTab} from "./BuildViewDebugTab";
 
 const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
                             doRebuild: () => void, doStop: () => void) => {
@@ -312,30 +310,13 @@ const BuildView = observer(() => {
     ));
   };
 
-  const renderDebugInfo = () => {
-    if (buildrequest === null || buildset === null) {
-      return <TableHeading>Buildrequest:</TableHeading>;
-    }
-
-    return (
-      <>
-        <TableHeading>
-          <Link to={`/buildrequests/${buildrequest.id}`}>Buildrequest:</Link>
-        </TableHeading>
-        <RawData data={buildrequest.toObject()}/>
-        <TableHeading>Buildset:</TableHeading>
-        <RawData data={buildset.toObject()}/>
-      </>
-    );
-  }
-
   return (
     <div className="container bb-build-view">
       <AlertNotification text={errorMsg}/>
       <nav>
         {renderPager(build)}
       </nav>
-      <Tabs>
+      <Tabs mountOnEnter={true}>
         <Tab eventKey="build-steps" title="Build steps">
           { build !== null
             ? <BuildSummary build={build} condensed={false} parentBuild={parentBuild}
@@ -369,7 +350,7 @@ const BuildView = observer(() => {
           }
         </Tab>
         <Tab eventKey="debug" title="Debug">
-          {renderDebugInfo()}
+          <BuildViewDebugTab build={build} buildrequest={buildrequest} buildset={buildset}/>
         </Tab>
       </Tabs>
     </div>
