@@ -25,6 +25,10 @@ import {
   SettingGroup,
   SettingItem, SettingValue
 } from "../../plugins/GlobalSettings";
+import {FieldBoolean} from "./Fields/FieldBoolean";
+import {FieldFloat} from "./Fields/FieldFloat";
+import {FieldInteger} from "./Fields/FieldInteger";
+import {FieldString} from "./Fields/FieldString";
 
 const computeMasterCfgSnippet = (settings: GlobalSettings) => {
   let code = "c['www']['ui_default_config'] = { \n";
@@ -58,38 +62,19 @@ export const SettingsView = observer(() => {
     };
 
     if (item.type === 'boolean') {
-      return (
-        <div className="form-group">
-          <label className="checkbox-inline">
-            <input data-bb-test-id={`settings-field-${item.name}`}
-                   type="checkbox" name={item.name} checked={item.value as boolean}
-                   onChange={event => setSetting(event.target.checked)}
-            /> {item.caption}
-          </label>
-        </div>
-      );
+      return <FieldBoolean item={item} setSetting={setSetting}/>;
     }
 
-    if (item.type === 'integer' || item.type === 'float') {
-      return (
-        <div className="form-group">
-          <label>{item.caption}</label>
-          <input data-bb-test-id={`settings-field-${item.name}`}
-                 type="number" name={item.name} className="form-control" value={item.value as number}
-                 onChange={event => setSetting(event.target.value)}/>
-        </div>
-      );
+    if (item.type === 'integer') {
+      return <FieldInteger item={item} setSetting={setSetting}/>
+    }
+
+    if (item.type === 'float') {
+      return <FieldFloat item={item} setSetting={setSetting}/>
     }
 
     if (item.type === 'string') {
-      return (
-        <div className="form-group">
-          <label>{item.caption}</label>
-          <input data-bb-test-id={`settings-field-${item.name}`}
-                 type="text" name={item.name} className="form-control" value={item.value as string}
-                 onChange={event => setSetting(event.target.value)}/>
-        </div>
-      );
+      return <FieldString item={item} setSetting={setSetting}/>;
     }
     return (
       <div className="alert alert-danger">
