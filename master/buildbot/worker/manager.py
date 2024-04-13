@@ -157,6 +157,9 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         self.connections[workerName] = conn
 
         def remove():
+            assert (
+                self.connections.get(workerName, None) == conn
+            ), f"Attempt to remove non-connection entry for {workerName}"
             del self.connections[workerName]
 
         conn.notifyOnDisconnect(remove)
