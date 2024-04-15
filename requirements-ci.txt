@@ -28,7 +28,7 @@ Automat==22.10.0
 Babel==2.14.0
 backports.functools-lru-cache==2.0.0
 boto==2.49.0
-botocore==1.34.74
+botocore==1.34.84
 certifi==2024.2.2
 cffi==1.16.0
 chardet==5.2.0
