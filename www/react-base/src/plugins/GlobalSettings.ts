@@ -20,13 +20,14 @@ import {Config} from "buildbot-ui";
 import {ISettings, registerBuildbotSettingsSingleton} from "buildbot-plugin-support";
 
 export type SettingValue = string | number | boolean;
-export type SettingType = "string" | "integer" | "float" | "boolean";
+export type SettingType = "string" | "integer" | "float" | "boolean" | "choice_combo";
 
 export type SettingItemConfig = {
   name: string;
   type: SettingType;
   caption: string;
   defaultValue: SettingValue;
+  choices?: string[]; // only when type == "choice_combo"
 }
 
 export type SettingGroupConfig = {
@@ -40,6 +41,7 @@ export type SettingItem = {
   type: string;
   value: SettingValue;
   defaultValue: SettingValue;
+  choices?: string[]; // only when type == "choice_combo"
   caption: string;
 }
 
@@ -107,15 +109,16 @@ export class GlobalSettings implements ISettings {
       const storedGroups = JSON.parse(settings) as StoredSettingGroups;
       for (const [groupName, storedGroup] of Object.entries(storedGroups)) {
         if (!(groupName in this.groups)) {
-          console.log(`Ignoring unknown loaded setting group ${groupName}`);
+          console.log(`Ignoring unknown loaded setting group ${groupName} ${JSON.stringify(this.groups)}`);
           continue;
         }
         const group = this.groups[groupName];
         for (const [itemName, item] of Object.entries(storedGroup)) {
           if (!(itemName in group.items)) {
-            console.log(`Ignoring unknown loaded setting ${groupName}.${itemName}`);
+            console.log(`Ignoring unknown loaded setting ${groupName}.${itemName} ${group.items}`);
             continue;
           }
+          console.log(`qQQ2 ${itemName} ${item}`)
           this.setSettingItem(group.items[itemName], item);
         }
       }
@@ -184,6 +187,7 @@ export class GlobalSettings implements ISettings {
   @action private setSettingItem(item: SettingItem, value: SettingValue) {
     switch (item.type) {
       case "string":
+      case "choice_combo":
         item.value = value.toString();
         break;
       case "integer": {
@@ -250,6 +254,7 @@ export class GlobalSettings implements ISettings {
           value: item.defaultValue,
           defaultValue: item.defaultValue,
           caption: item.caption,
+          choices: item.choices,
         };
       }
       return;
@@ -263,6 +268,7 @@ export class GlobalSettings implements ISettings {
         value: item.defaultValue,
         defaultValue: item.defaultValue,
         caption: item.caption,
+        choices: item.choices,
       };
     }
     this.groups[config.name] = {
