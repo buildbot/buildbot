@@ -76,16 +76,16 @@ class BuildbotWWWPkg(unittest.TestCase):
 
     def test_wheel(self):
         self.run_build("wheel")
-        check_call("pip install dist/*.whl", shell=True, cwd=self.path)
+        check_call("pip install build dist/*.whl", shell=True, cwd=self.path)
         self.check_correct_installation()
 
     def test_develop_via_pip(self):
-        check_call("pip install -e .", shell=True, cwd=self.path)
+        check_call("pip install build -e .", shell=True, cwd=self.path)
         self.check_correct_installation()
 
     def test_sdist(self):
         self.run_build("sdist")
-        check_call("pip install dist/*.tar.gz", shell=True, cwd=self.path)
+        check_call("pip install build dist/*.tar.gz", shell=True, cwd=self.path)
         self.check_correct_installation()
 
 
