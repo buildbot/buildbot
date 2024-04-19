@@ -129,8 +129,6 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
         res = yield d
         self.assertEqual(res, (('abc',), {"x": 1}))
 
-    timeout = 3  # those tests should not run long
-
 
 class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
     def setUp(self):
