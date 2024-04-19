@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import axios, {AxiosRequestConfig} from 'axios';
+import axios, {AxiosRequestConfig, ParamsSerializerOptions} from 'axios';
 import {CancellablePromise} from "../util/CancellablePromise";
 
 // Axios 1.0.0 will provide an easier way to disable emission of braces, for now we use a modified
@@ -66,7 +66,7 @@ const axiosForEach = (obj: any, fn: (obj: any, key: any) => void) => {
   }
 }
 
-const axiosParamsSerializerWithoutBraces = (params: any[]) => {
+const axiosParamsSerializerWithoutBraces = (params: Record<string, any>, options?: ParamsSerializerOptions) => {
   let parts: string[] = [];
 
   axiosForEach(params, (val, key) => {
