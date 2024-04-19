@@ -44,7 +44,7 @@ export const ChangeBuildsView = observer(() => {
 
   const buildsQuery = useDataApiSingleElementQuery(change,
     c => c.getBuilds({query: {
-        property: ["owners", "workername"],
+        property: ["owners", "workername", "branch", "revision"],
         limit: buildsFetchLimit
       }}));
 
