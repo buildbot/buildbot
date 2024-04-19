@@ -12,7 +12,7 @@ cryptography==42.0.5;  python_version >= "3.6"
 funcsigs==1.0.2
 future==1.0.0
 hyperlink==21.0.0
-idna==2.10  # pyup: ignore (conflicts with moto on master)
+idna==3.7  # pyup: ignore (conflicts with moto on master)
 incremental==22.10.0;  python_version >= "3.6"
 incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
 mock==3.0.5;  python_version < "3.6"  # pyup: ignore
