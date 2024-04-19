@@ -180,6 +180,10 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
 class RunMasterBase(unittest.TestCase):
     proto = "null"
 
+    # All tests that start master need higher timeout due to test runtime variability on
+    # oversubscribed hosts.
+    timeout = 20
+
     if Worker is None:
         skip = "buildbot-worker package is not installed"
 
