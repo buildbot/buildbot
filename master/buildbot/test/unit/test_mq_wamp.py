@@ -244,9 +244,6 @@ class WampMQReal(TestReactorMixin, unittest.TestCase):
         > crossbar start &
         > export WAMP_ROUTER_URL=ws://localhost:8080/ws
         > trial buildbot.unit.test_mq_wamp""")
-    # if connection is bad, this test can timeout easily
-    # we reduce the timeout to help maintain the sanity of the developer
-    timeout = 2
 
     @defer.inlineCallbacks
     def setUp(self):
