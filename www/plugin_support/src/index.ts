@@ -31,12 +31,13 @@ export type RouteConfig = {
 }
 
 export type SettingValue = string | number | boolean;
-export type SettingType = "string" | "integer" | "float" | "boolean";
+export type SettingType = "string" | "integer" | "float" | "boolean" | "choice_combo";
 
 export type SettingItemConfig = {
   name: string;
   type: SettingType;
   caption: string;
+  choices?: string[];
   defaultValue: SettingValue;
 }
 
