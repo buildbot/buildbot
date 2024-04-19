@@ -66,8 +66,7 @@ pylint:
 	if [ $$master_res != 0 ] || [ $$worker_res != 0 ]; then exit 1; fi
 
 frontend_deps: $(VENV_NAME)
-	$(PIP) install -e pkg
-	$(PIP) install build wheel buildbot
+	$(PIP) install build wheel -r requirements-ci.txt
 	for i in $(WWW_DEP_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile; $(YARN) run build); done
 
@@ -113,7 +112,7 @@ docker-buildbot-master:
 
 $(VENV_NAME):
 	$(VENV_CREATE) $(VENV_NAME)
-	$(VENV_PYTHON) -m pip install --upgrade pip 
+	$(VENV_PYTHON) -m pip install --upgrade pip
 	$(PIP) install -U setuptools wheel
 
 # helper for virtualenv creation
