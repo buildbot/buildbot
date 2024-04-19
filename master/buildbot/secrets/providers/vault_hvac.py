@@ -200,7 +200,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         if len(parts) > 2:
             raise KeyError(
                 f"Multiple separators ('{self.path_delimiter}') found in vault "
-                f"path '{entry}'. All occurences of '{self.path_delimiter}' in path or "
+                f"path '{entry}'. All occurrences of '{self.path_delimiter}' in path or "
                 f"attribute name must be escaped using '{self.path_escape}'"
             )
 

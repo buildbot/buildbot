@@ -1,4 +1,4 @@
-// this file is not transpiled and included direcly to index.html because we must show the browser
+// this file is not transpiled and included directly to index.html because we must show the browser
 // warning even on ancient browsers. The browser list here must correspond to the browser list in
 // babel config which is located at TODO
 outdatedBrowserRework({

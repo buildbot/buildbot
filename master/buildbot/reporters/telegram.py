@@ -106,7 +106,7 @@ class TelegramContact(Contact):
 
     ACCESS_DENIED_MESSAGES = [
         "🧙‍♂️ You shall not pass! 👹",
-        "😨 Oh NO! You are simply not allowed to to this! 😢",
+        "😨 Oh NO! You are simply not allowed to this! 😢",
         "⛔ You cannot do this. Better go outside and relax... 🌳",
         "⛔ ACCESS DENIED! This incident has ben reported to NSA, KGB, and George Soros! 🕵",
         "🚫 Unauthorized access detected! Your device will explode in 3... 2... 1... 💣",

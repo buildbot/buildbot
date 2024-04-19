@@ -88,7 +88,7 @@ Authentication
     * ``name``: Name of the oauth plugin
     * ``faIcon``: Font awesome class to use for login button logo
     * ``resourceEndpoint``: URI of the resource where the authentication token is used
-    * ``authUri``: URI the browser is pointed to to let the user enter creds
+    * ``authUri``: URI the browser is pointed to let the user enter creds
     * ``tokenUri``: URI to verify the browser code and get auth token
     * ``authUriAdditionalParams``: Additional parameters for the authUri
     * ``tokenUriAdditionalParams``: Additional parameters for the tokenUri

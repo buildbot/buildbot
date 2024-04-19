@@ -793,7 +793,7 @@ Deprecations and Removals
   get them exposed.
 - Removed support of old slave APIs from pre-0.9 days. Using old APIs may fail
   silently. To avoid weird errors when upgrading a Buildbot installation that
-  may use old APIs, first upgrade to to 1.8.0 and make sure there are no
+  may use old APIs, first upgrade to 1.8.0 and make sure there are no
   deprecated API warnings.
 - Remove deprecated default value handling of the ``keypair_name`` and
   ``security_name`` attributes of ``EC2LatentWorker``.
