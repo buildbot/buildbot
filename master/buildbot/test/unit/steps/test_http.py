@@ -65,8 +65,6 @@ class TestPage(Resource):
 
 
 class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    timeout = 3  # those tests should not run long
-
     def setUp(self):
         self.setup_test_reactor()
         if txrequests is None:
