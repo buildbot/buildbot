@@ -52,14 +52,16 @@ describe('GlobalSettings', () => {
           "defaultValue": "default1",
           "name": "setting1",
           "type": "string",
-          "value": "default1"
+          "value": "default1",
+          "valueIsSet": false,
         },
         "setting2": {
           "caption": "caption2",
           "defaultValue": "default2",
           "name": "setting2",
           "type": "string",
-          "value": "default2"
+          "value": "default2",
+          "valueIsSet": false,
         }
       },
       "name": "Group"
@@ -93,7 +95,8 @@ describe('GlobalSettings', () => {
           "defaultValue": "default2",
           "name": "setting2",
           "type": "string",
-          "value": "default2"
+          "value": "default2",
+          "valueIsSet": false,
         }
       },
       "name": "Group"
@@ -128,7 +131,8 @@ describe('GlobalSettings', () => {
           "defaultValue": "default1",
           "name": "setting1",
           "type": "string",
-          "value": "default1"
+          "value": "default1",
+          "valueIsSet": false,
         },
       },
       "name": "Group"
@@ -176,6 +180,89 @@ describe('GlobalSettings', () => {
     expect(settings.getSetting("Group.setting_boolean")).toEqual(false);
     settings.setSetting("Group.setting_boolean", "string");
     expect(settings.getSetting("Group.setting_boolean")).toEqual(false);
+  });
+
+  it('setting retrieval with overridden default value', () => {
+    const settings = new GlobalSettings();
+    settings.addGroup({
+      name: 'Group',
+      caption: 'group caption',
+      items: [{
+        type: 'string',
+        name: 'setting_string',
+        caption: 'caption1',
+        defaultValue: "default1"
+      }, {
+        type: 'integer',
+        name: 'setting_integer',
+        caption: 'caption2',
+        defaultValue: 123
+      }, {
+        type: 'boolean',
+        name: 'setting_boolean',
+        caption: 'caption3',
+        defaultValue: true
+      }],
+    });
+    settings.fillDefaults({
+      "Group.setting_string": "default1_override",
+      "Group.setting_integer": 321,
+      "Group.setting_boolean": false,
+    });
+    expect(settings.getSetting("Group.setting_string")).toEqual("default1_override");
+    settings.setSetting("Group.setting_string", 123);
+    expect(settings.getSetting("Group.setting_string")).toEqual("123");
+    settings.setSetting("Group.setting_string", "321");
+    expect(settings.getSetting("Group.setting_string")).toEqual("321");
+
+    expect(settings.getSetting("Group.setting_integer")).toEqual(321);
+    settings.setSetting("Group.setting_integer", "567");
+    expect(settings.getSetting("Group.setting_integer")).toEqual(567);
+    settings.setSetting("Group.setting_integer", "str");
+    expect(settings.getSetting("Group.setting_integer")).toEqual(567);
+    settings.setSetting("Group.setting_integer", "321");
+    expect(settings.getSetting("Group.setting_integer")).toEqual(321);
+
+    expect(settings.getSetting("Group.setting_boolean")).toEqual(false);
+    settings.setSetting("Group.setting_boolean", true);
+    expect(settings.getSetting("Group.setting_boolean")).toEqual(true);
+    settings.setSetting("Group.setting_boolean", "string");
+    expect(settings.getSetting("Group.setting_boolean")).toEqual(true);
+  });
+
+  it('setting saving does not save default', () => {
+    localStorage.clear();
+    const settings = new GlobalSettings();
+    settings.addGroup({
+      name: 'Group',
+      caption: 'group caption',
+      items: [{
+        type: 'string',
+        name: 'setting_string',
+        caption: 'caption1',
+        defaultValue: "default1"
+      }, {
+        type: 'integer',
+        name: 'setting_integer',
+        caption: 'caption2',
+        defaultValue: 123
+      }, {
+        type: 'boolean',
+        name: 'setting_boolean',
+        caption: 'caption3',
+        defaultValue: true
+      }],
+    });
+
+    settings.fillDefaults({
+      "Group.setting_string": "default1_override"
+    });
+    settings.save();
+
+    expect(localStorage.getItem("settings")).toEqual(
+        "{\"Group\":{}}"
+    );
+    localStorage.clear();
   });
 
   it('setting saving', () => {
@@ -249,6 +336,41 @@ describe('GlobalSettings', () => {
     expect(settings.getSetting("Group.setting_string")).toEqual("value1");
     expect(settings.getSetting("Group.setting_integer")).toEqual(345);
     expect(settings.getSetting("Group.setting_boolean")).toEqual(false);
+    localStorage.clear();
+  });
+
+  it('setting loading unset values roundtrip', () => {
+    localStorage.clear();
+    const settings = new GlobalSettings();
+    settings.addGroup({
+      name: 'Group',
+      caption: 'group caption',
+      items: [{
+        type: 'string',
+        name: 'setting_string',
+        caption: 'caption1',
+        defaultValue: "default1"
+      }, {
+        type: 'integer',
+        name: 'setting_integer',
+        caption: 'caption2',
+        defaultValue: 123
+      }, {
+        type: 'boolean',
+        name: 'setting_boolean',
+        caption: 'caption3',
+        defaultValue: true
+      }],
+    });
+
+    localStorage.setItem("settings",
+        "{\"Group\":{}}");
+    settings.load();
+    localStorage.clear();
+    settings.save();
+    expect(localStorage.getItem("settings")).toEqual(
+        "{\"Group\":{}}"
+    );
     localStorage.clear();
   });
 });

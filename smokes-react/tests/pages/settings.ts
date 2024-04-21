@@ -33,6 +33,11 @@ export class SettingsPage {
     await SettingsPage.getItem(page, "Waterfall", "scaling_waterfall").fill(value);
   }
 
+  static async checkBuildersBuildFetchLimit(page: Page, value: number) {
+    expect(await SettingsPage.getItem(page, "Builders", "buildFetchLimit").getAttribute("value"))
+      .toEqual(value.toString());
+  }
+
   static async checkScallingFactor(page: Page, value: string) {
     expect(await SettingsPage.getItem(page, "Waterfall", "scaling_waterfall").getAttribute("value"))
       .toEqual(value);
