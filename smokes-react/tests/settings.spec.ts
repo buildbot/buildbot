@@ -20,6 +20,14 @@ import {BuilderPage} from './pages/builder';
 import {SettingsPage} from './pages/settings';
 
 test.describe('manage settings', function() {
+  test.describe('base', () => {
+    test('Builders.buildFetchLimit uses default value from config', async ({page}) => {
+      await BuilderPage.gotoBuildersList(page);
+      await SettingsPage.goto(page);
+      await SettingsPage.checkBuildersBuildFetchLimit(page, 201);
+    })
+  });
+
   test.describe('waterfall', () => {
     test('change the "scalling factor" and check it', async ({page}) => {
       const scalingFactor = '10';
