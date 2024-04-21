@@ -26,6 +26,7 @@ import {
   SettingItem, SettingValue
 } from "../../plugins/GlobalSettings";
 import {FieldBoolean} from "./Fields/FieldBoolean";
+import {FieldChoiceCombo} from "./Fields/FieldChoiceCombo";
 import {FieldFloat} from "./Fields/FieldFloat";
 import {FieldInteger} from "./Fields/FieldInteger";
 import {FieldString} from "./Fields/FieldString";
@@ -76,6 +77,11 @@ export const SettingsView = observer(() => {
     if (item.type === 'string') {
       return <FieldString item={item} setSetting={setSetting}/>;
     }
+
+    if (item.type === 'choice_combo') {
+      return <FieldChoiceCombo item={item} setSetting={setSetting}/>;
+    }
+
     return (
       <div className="alert alert-danger">
         bad item type: {item.type} should be one of: bool, choices, integer, text
