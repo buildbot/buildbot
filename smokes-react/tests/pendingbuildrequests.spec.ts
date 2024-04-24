@@ -44,7 +44,11 @@ test.describe('pending build requests', function() {
     }).toBeGreaterThan(0);
 
     const br = await PendingBuildrequestsPage.getAllBuildrequestRows(page).first();
-    expect(await br.locator('td').nth(1).locator('a').textContent()).toMatch('slowruntests');
+    await expect.poll(async () => {
+      return (await br.locator('td').nth(1).locator('a').textContent());
+    }, {
+      message: "found at least one buildrequest with correct name"
+    }).toMatch('slowruntests');
 
     // kill remaining builds
     let gotAlert = false;
