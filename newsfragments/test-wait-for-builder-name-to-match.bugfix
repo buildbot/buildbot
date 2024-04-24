@@ -1,0 +1,1 @@
+Fix test to actually wait for updated text to match a builder name (:isue:`7410`).
