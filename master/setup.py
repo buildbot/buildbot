@@ -565,6 +565,10 @@ setup_args = {
                     ),
                     ('buildbot.steps.shellsequence', ['ShellArg']),
                     (
+                        'buildbot.util.git_credential',
+                        ['GitCredentialInputRenderer', 'GitCredentialOptions'],
+                    ),
+                    (
                         'buildbot.util.kubeclientservice',
                         [
                             'KubeHardcodedConfig',

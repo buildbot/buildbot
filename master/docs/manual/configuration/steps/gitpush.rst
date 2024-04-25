@@ -60,3 +60,13 @@ The GitPush step takes the following arguments:
    This may be either a :ref:`Secret` or just a string.
    `sshPrivateKey` must be specified in order to use this option.
    `sshHostKey` must not be specified in order to use this option.
+
+``auth_credentials``
+
+    (optional) An username/password tuple to use when running git for push operations.
+    The worker's git version needs to be at least 1.7.9.
+
+``git_credentials``
+
+    (optional) See :ref:`GitCredentialOptions`.
+    The worker's git version needs to be at least 1.7.9.
