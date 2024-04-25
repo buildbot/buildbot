@@ -89,6 +89,7 @@ class GitMixin:
         self.supportsSshPrivateKeyAsConfigOption = False
         self.supportsFilters = False
         self.supports_lsremote_symref = False
+        self.supports_credential_store = False
 
     def parseGitFeatures(self, version_stdout):
         match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
@@ -106,6 +107,8 @@ class GitMixin:
             self.supportsSubmoduleForce = True
         if version >= parse_version("1.7.8"):
             self.supportsSubmoduleCheckout = True
+        if version >= parse_version("1.7.9"):
+            self.supports_credential_store = True
         if version >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
         if version >= parse_version("2.8.0"):
