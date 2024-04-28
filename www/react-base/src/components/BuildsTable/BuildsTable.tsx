@@ -73,6 +73,9 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
         <td>
           {buildCompleteInfoElement}
         </td>
+        <td>
+          {getPropertyValueOrDefault(build.properties, "revision", "(unknown)")}
+        </td>
         <td>{getPropertyValueArrayOrEmpty(build.properties, 'owners').map((owner, index) => (
           <span key={index}>{owner}</span>
         ))}
@@ -100,6 +103,7 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
             <td width="100px">#</td>
             <td width="150px">Started At</td>
             <td width="150px">Duration</td>
+            <td width='150px'>Revision</td>
             <td width="200px">Owners</td>
             <td width="150px">Worker</td>
             <td>Status</td>

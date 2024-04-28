@@ -40,7 +40,7 @@ export const WorkerView = observer(() => {
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
   const buildsQuery = useDataApiQuery(() =>
     Build.getAll(accessor, {query: {
-        property: ["owners", "workername"],
+        property: ["owners", "workername", "branch", "revision"],
         workerid__eq: workerid,
         limit: 100,
         order: "-buildid",
