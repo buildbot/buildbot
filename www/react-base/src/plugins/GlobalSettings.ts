@@ -109,16 +109,15 @@ export class GlobalSettings implements ISettings {
       const storedGroups = JSON.parse(settings) as StoredSettingGroups;
       for (const [groupName, storedGroup] of Object.entries(storedGroups)) {
         if (!(groupName in this.groups)) {
-          console.log(`Ignoring unknown loaded setting group ${groupName} ${JSON.stringify(this.groups)}`);
+          console.log(`Ignoring unknown loaded setting group ${groupName}`);
           continue;
         }
         const group = this.groups[groupName];
         for (const [itemName, item] of Object.entries(storedGroup)) {
           if (!(itemName in group.items)) {
-            console.log(`Ignoring unknown loaded setting ${groupName}.${itemName} ${group.items}`);
+            console.log(`Ignoring unknown loaded setting ${groupName}.${itemName}`);
             continue;
           }
-          console.log(`qQQ2 ${itemName} ${item}`)
           this.setSettingItem(group.items[itemName], item);
         }
       }
@@ -182,6 +181,10 @@ export class GlobalSettings implements ISettings {
 
   getBooleanSetting(selector: string) {
     return this.getTypedSettingOrDefault(selector, 'boolean', false);
+  }
+
+  getChoiceComboSetting(selector: string) {
+    return this.getTypedSettingOrDefault(selector, 'choice_combo', '');
   }
 
   @action private setSettingItem(item: SettingItem, value: SettingValue) {

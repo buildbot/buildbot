@@ -57,6 +57,7 @@ export interface ISettings {
   getIntegerSetting(selector: string): number;
   getFloatSetting(selector: string): number;
   getStringSetting(selector: string): string;
+  getChoiceComboSetting(selector: string): string;
   getBooleanSetting(selector: string): boolean;
   setSetting(selector: string, value: SettingValue): void;
   save(): void;
