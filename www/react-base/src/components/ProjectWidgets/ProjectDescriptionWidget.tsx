@@ -39,13 +39,13 @@ export const ProjectDescriptionWidget = observer(({projectid}: ProjectDescriptio
   const renderDescription = (project: Project) => {
     if (project.description_format !== null && project.description_html !== null) {
       return (
-          <div><TableHeading>Description:</TableHeading>
+          <div>
             <div dangerouslySetInnerHTML={{__html: project.description_html}}/>
           </div>
       )
     } else {
       return (
-          <div><TableHeading>Description:</TableHeading>{project.description}</div>
+          <div>{project.description}</div>
       );
     }
   };
