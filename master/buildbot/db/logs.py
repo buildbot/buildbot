@@ -23,21 +23,15 @@ from twisted.python import log
 from buildbot.db import base
 
 try:
-    # lz4 > 0.9.0
     from lz4.block import compress as dumps_lz4
     from lz4.block import decompress as read_lz4
 except ImportError:
-    try:
-        # lz4 < 0.9.0
-        from lz4 import dumps as dumps_lz4
-        from lz4 import loads as read_lz4
-    except ImportError:  # pragma: no cover
-        # config.py actually forbid this code path
-        def dumps_lz4(data):
-            return data
+    # config.py actually forbid this code path
+    def dumps_lz4(data):
+        return data
 
-        def read_lz4(data):
-            return data
+    def read_lz4(data):
+        return data
 
 
 def dumps_gzip(data):
