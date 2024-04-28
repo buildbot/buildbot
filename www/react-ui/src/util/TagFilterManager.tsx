@@ -191,7 +191,7 @@ export class TagFilterManager {
         enabledTagsElements.push((
           <>
             <Badge variant="success"
-                   onClick={() => this.toggleTag(tag)}>{tag}</Badge>
+                   onClick={() => this.toggleTag(tag)} className="clickable">{tag}</Badge>
             &nbsp;
           </>
         ));
