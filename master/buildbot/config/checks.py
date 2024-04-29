@@ -62,7 +62,9 @@ def check_param_int_none(value, class_inst, name):
 
 
 def check_param_number_none(value, class_inst, name):
-    return check_param_type(value, 0, class_inst, name, (int, float, None), "int or float or None")
+    return check_param_type(
+        value, 0, class_inst, name, (int, float, type(None)), "int or float or None"
+    )
 
 
 def check_markdown_support(class_inst):
