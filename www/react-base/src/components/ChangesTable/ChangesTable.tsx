@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './ChangesTable.scss';
 import {action, makeObservable, observable} from "mobx";
 import {FaMinus, FaPlus} from "react-icons/fa";
 import {Link} from "react-router-dom";
@@ -82,7 +83,7 @@ export const ChangesTable = observer(({changes}: ChangesTableProps) => {
           </div>
         </div>
       </div>
-      <ul className="list-group">
+      <ul className="bb-changes-table-list list-group">
         {changeElements}
       </ul>
     </div>
