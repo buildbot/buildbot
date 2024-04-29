@@ -28,10 +28,11 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             logid = kwargs['logid']
             dbdict = None
         else:
-            stepid = yield self.getStepid(kwargs)
-            if stepid is None:
+            retriever = base.NestedBuildDataRetriever(self.master, kwargs)
+            step_dict = yield retriever.get_step_dict()
+            if step_dict is None:
                 return (None, None)
-            dbdict = yield self.master.db.logs.getLogBySlug(stepid, kwargs.get('log_slug'))
+            dbdict = yield self.master.db.logs.getLogBySlug(step_dict['id'], kwargs.get('log_slug'))
             if not dbdict:
                 return (None, None)
             logid = dbdict['id']
