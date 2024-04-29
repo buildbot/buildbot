@@ -189,6 +189,8 @@ class NestedBuildDataRetriever:
         - build_number
         - builderid
         - buildername
+        - logid
+        - log_slug
     """
 
     __slots__ = (
@@ -197,6 +199,7 @@ class NestedBuildDataRetriever:
         'step_dict',
         'build_dict',
         'builder_dict',
+        'log_dict',
     )
 
     def __init__(self, master, args):
@@ -207,6 +210,7 @@ class NestedBuildDataRetriever:
         self.step_dict = False
         self.build_dict = False
         self.builder_dict = False
+        self.log_dict = False
 
     @async_to_deferred
     async def get_step_dict(self):
@@ -298,6 +302,34 @@ class NestedBuildDataRetriever:
         if builder_dict is None:
             return None
         return builder_dict['id']
+
+    @async_to_deferred
+    async def get_log_dict(self):
+        if self.log_dict is not False:
+            return self.log_dict
+
+        if 'logid' in self.args:
+            self.log_dict = await self.master.db.logs.getLog(self.args['logid'])
+            return self.log_dict
+
+        step_dict = await self.get_step_dict()
+        if step_dict is None:
+            self.log_dict = None
+            return None
+        self.log_dict = await self.master.db.logs.getLogBySlug(
+            step_dict['id'], self.args.get('log_slug')
+        )
+        return self.log_dict
+
+    @async_to_deferred
+    async def get_log_id(self):
+        if 'logid' in self.args:
+            return self.args['logid']
+
+        log_dict = await self.get_log_dict()
+        if log_dict is None:
+            return None
+        return log_dict['id']
 
 
 class BuildNestingMixin:

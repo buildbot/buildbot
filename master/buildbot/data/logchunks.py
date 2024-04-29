@@ -22,41 +22,20 @@ from buildbot.data import types
 
 class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
-    def getLogIdAndDbDictFromKwargs(self, kwargs):
-        # calculate the logid
-        if 'logid' in kwargs:
-            logid = kwargs['logid']
-            dbdict = None
-        else:
-            retriever = base.NestedBuildDataRetriever(self.master, kwargs)
-            step_dict = yield retriever.get_step_dict()
-            if step_dict is None:
-                return (None, None)
-            dbdict = yield self.master.db.logs.getLogBySlug(step_dict['id'], kwargs.get('log_slug'))
-            if not dbdict:
-                return (None, None)
-            logid = dbdict['id']
-
-        return (logid, dbdict)
-
-    @defer.inlineCallbacks
     def get_log_lines_raw_data(self, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
-        if logid is None:
+        retriever = base.NestedBuildDataRetriever(self.master, kwargs)
+        log_dict = yield retriever.get_log_dict()
+        if log_dict is None:
             return None, None, None
 
-        if not dbdict:
-            dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
-                return None
-        lastline = max(0, dbdict['num_lines'] - 1)
+        lastline = max(0, log_dict['num_lines'] - 1)
 
-        log_lines = yield self.master.db.logs.getLogLines(logid, 0, lastline)
+        log_lines = yield self.master.db.logs.getLogLines(log_dict['id'], 0, lastline)
 
-        if dbdict['type'] == 's':
+        if log_dict['type'] == 's':
             log_lines = "\n".join([line[1:] for line in log_lines.splitlines()])
 
-        return log_lines, dbdict['type'], dbdict['slug']
+        return log_lines, log_dict['type'], log_dict['slug']
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
@@ -77,20 +56,21 @@ class LogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
+        retriever = base.NestedBuildDataRetriever(self.master, kwargs)
+        logid = yield retriever.get_log_id()
         if logid is None:
             return None
+
         firstline = int(resultSpec.offset or 0)
         lastline = None if resultSpec.limit is None else firstline + int(resultSpec.limit) - 1
         resultSpec.removePagination()
 
         # get the number of lines, if necessary
         if lastline is None:
-            if not dbdict:
-                dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
+            log_dict = yield retriever.get_log_dict()
+            if not log_dict:
                 return None
-            lastline = int(max(0, dbdict['num_lines'] - 1))
+            lastline = int(max(0, log_dict['num_lines'] - 1))
 
         # bounds checks
         if firstline < 0 or lastline < 0 or firstline > lastline:
