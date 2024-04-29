@@ -54,7 +54,7 @@ graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
 hvac==2.1.0
 hyperlink==21.0.0
-idna==2.10  # pyup: ignore (conflicts with moto on master)
+idna==3.7  # pyup: ignore (conflicts with moto on master)
 imagesize==1.4.1
 importlib-metadata==7.1.0
 importlib-resources==6.4.0;  python_version < "3.9"
