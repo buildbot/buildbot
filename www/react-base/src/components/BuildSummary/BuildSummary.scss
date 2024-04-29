@@ -5,7 +5,7 @@
     color: #333333;
     background-color: #f5f5f5;
     border-color: #ddd;
-    padding: 10px 15px;
+    padding: 0.375rem 1rem;
     border-bottom: 1px solid transparent;
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
@@ -36,7 +36,11 @@
 }
 
 .bb-build-summary-step-line {
-  position:relative;
+  position: relative;
+
+  &.list-group-item {
+    padding: 0.375rem 1rem;
+  }
 
   &.list-group-item.bb-anchor-target {
     border: 2px solid #ffff00;
