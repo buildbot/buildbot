@@ -22,6 +22,7 @@ from collections import UserList
 from twisted.internet import defer
 
 from buildbot.data import exceptions
+from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 
@@ -177,6 +178,196 @@ class Endpoint:
         return "endpoint for " + ",".join(self.pathPatterns.split())
 
 
+class NestedBuildDataRetriever:
+    """
+    Efficiently retrieves data about various entities without repeating same queries over and over.
+    The following arg keys are supported:
+        - stepid
+        - step_name
+        - step_number
+        - buildid
+        - build_number
+        - builderid
+        - buildername
+        - logid
+        - log_slug
+    """
+
+    __slots__ = (
+        'master',
+        'args',
+        'step_dict',
+        'build_dict',
+        'builder_dict',
+        'log_dict',
+        'worker_dict',
+    )
+
+    def __init__(self, master, args):
+        self.master = master
+        self.args = args
+        # False is used as special value as "not set". None is used as "not exists". This solves
+        # the problem of multiple database queries in case entity does not exist.
+        self.step_dict = False
+        self.build_dict = False
+        self.builder_dict = False
+        self.log_dict = False
+        self.worker_dict = False
+
+    @async_to_deferred
+    async def get_step_dict(self):
+        if self.step_dict is not False:
+            return self.step_dict
+
+        if 'stepid' in self.args:
+            self.step_dict = await self.master.db.steps.getStep(stepid=self.args['stepid'])
+            return self.step_dict
+
+        if 'step_name' in self.args or 'step_number' in self.args:
+            build_dict = await self.get_build_dict()
+            if build_dict is None:
+                self.step_dict = None
+                return None
+
+            self.step_dict = await self.master.db.steps.getStep(
+                buildid=build_dict['id'],
+                number=self.args.get('step_number'),
+                name=self.args.get('step_name'),
+            )
+            return self.step_dict
+
+        # fallback when there's only indirect information
+        if 'logid' in self.args:
+            log_dict = await self.get_log_dict()
+            if log_dict is not None:
+                self.step_dict = await self.master.db.steps.getStep(stepid=log_dict['stepid'])
+                return self.step_dict
+
+        self.step_dict = None
+        return self.step_dict
+
+    @async_to_deferred
+    async def get_build_dict(self):
+        if self.build_dict is not False:
+            return self.build_dict
+
+        if 'buildid' in self.args:
+            self.build_dict = await self.master.db.builds.getBuild(self.args['buildid'])
+            return self.build_dict
+
+        if 'build_number' in self.args:
+            builder_dict = await self.get_builder_dict()
+
+            if builder_dict is None:
+                self.build_dict = None
+                return None
+
+            self.build_dict = await self.master.db.builds.getBuildByNumber(
+                builderid=builder_dict['id'], number=self.args['build_number']
+            )
+            return self.build_dict
+
+        # fallback when there's only indirect information
+        step_dict = await self.get_step_dict()
+        if step_dict is not None:
+            self.build_dict = await self.master.db.builds.getBuild(step_dict['buildid'])
+            return self.build_dict
+
+        self.build_dict = None
+        return None
+
+    @async_to_deferred
+    async def get_build_id(self):
+        if 'buildid' in self.args:
+            return self.args['buildid']
+
+        build_dict = await self.get_build_dict()
+        if build_dict is None:
+            return None
+        return build_dict['id']
+
+    @async_to_deferred
+    async def get_builder_dict(self):
+        if self.builder_dict is not False:
+            return self.builder_dict
+
+        if 'builderid' in self.args:
+            self.builder_dict = await self.master.db.builders.getBuilder(self.args['builderid'])
+            return self.builder_dict
+
+        if 'buildername' in self.args:
+            builder_id = await self.master.db.builders.findBuilderId(
+                self.args['buildername'], autoCreate=False
+            )
+            builder_dict = None
+            if builder_id is not None:
+                builder_dict = await self.master.db.builders.getBuilder(builder_id)
+            self.builder_dict = builder_dict
+            return self.builder_dict
+
+        # fallback when there's only indirect information
+        build_dict = await self.get_build_dict()
+        if build_dict is not None:
+            self.builder_dict = await self.master.db.builders.getBuilder(build_dict['builderid'])
+            return self.builder_dict
+
+        self.builder_dict = None
+        return None
+
+    @async_to_deferred
+    async def get_builder_id(self):
+        if 'builderid' in self.args:
+            return self.args['builderid']
+
+        builder_dict = await self.get_builder_dict()
+        if builder_dict is None:
+            return None
+        return builder_dict['id']
+
+    @async_to_deferred
+    async def get_log_dict(self):
+        if self.log_dict is not False:
+            return self.log_dict
+
+        if 'logid' in self.args:
+            self.log_dict = await self.master.db.logs.getLog(self.args['logid'])
+            return self.log_dict
+
+        step_dict = await self.get_step_dict()
+        if step_dict is None:
+            self.log_dict = None
+            return None
+        self.log_dict = await self.master.db.logs.getLogBySlug(
+            step_dict['id'], self.args.get('log_slug')
+        )
+        return self.log_dict
+
+    @async_to_deferred
+    async def get_log_id(self):
+        if 'logid' in self.args:
+            return self.args['logid']
+
+        log_dict = await self.get_log_dict()
+        if log_dict is None:
+            return None
+        return log_dict['id']
+
+    @async_to_deferred
+    async def get_worker_dict(self):
+        if self.worker_dict is not False:
+            return self.worker_dict
+
+        build_dict = await self.get_build_dict()
+        if build_dict is not None:
+            workerid = build_dict.get('workerid', None)
+            if workerid is not None:
+                self.worker_dict = await self.master.db.workers.getWorker(workerid=workerid)
+                return self.worker_dict
+
+        self.worker_dict = None
+        return None
+
+
 class BuildNestingMixin:
     """
     A mixin for methods to decipher the many ways a various entities can be specified.
@@ -184,41 +375,13 @@ class BuildNestingMixin:
 
     @defer.inlineCallbacks
     def getBuildid(self, kwargs):
-        # need to look in the context of a step, specified by build or
-        # builder or whatever
-        if 'buildid' in kwargs:
-            return kwargs['buildid']
-        else:
-            builderid = yield self.getBuilderId(kwargs)
-            if builderid is None:
-                return None
-            build = yield self.master.db.builds.getBuildByNumber(
-                builderid=builderid, number=kwargs['build_number']
-            )
-            if not build:
-                return None
-            return build['id']
+        retriever = NestedBuildDataRetriever(self.master, kwargs)
+        return (yield retriever.get_build_id())
 
     @defer.inlineCallbacks
-    def getStepid(self, kwargs):
-        if 'stepid' in kwargs:
-            return kwargs['stepid']
-        else:
-            buildid = yield self.getBuildid(kwargs)
-            if buildid is None:
-                return None
-
-            dbdict = yield self.master.db.steps.getStep(
-                buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
-            )
-            if not dbdict:
-                return None
-            return dbdict['id']
-
     def getBuilderId(self, kwargs):
-        if 'buildername' in kwargs:
-            return self.master.db.builders.findBuilderId(kwargs['buildername'], autoCreate=False)
-        return defer.succeed(kwargs['builderid'])
+        retriever = NestedBuildDataRetriever(self.master, kwargs)
+        return (yield retriever.get_builder_id())
 
     # returns Deferred that yields a number
     def get_project_id(self, kwargs):

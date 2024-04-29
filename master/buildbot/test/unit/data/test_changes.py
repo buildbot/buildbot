@@ -93,7 +93,8 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 project='world-domination',
                 sourcestampid=144,
             ),
-            fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1),
+            fakedb.Builder(id=1, name='builder'),
+            fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1, number=1),
         ])
 
     def tearDown(self):
@@ -130,14 +131,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
         self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
 
-        fake_build = yield {'id': 1}
-        mockGetBuildByNumber = mock.Mock(
-            spec=self.db.builds.getBuildByNumber, return_value=fake_build
-        )
-        self.patch(self.db.builds, 'getBuildByNumber', mockGetBuildByNumber)
-
         changes = yield self.callGet(('builders', '1', 'builds', '1', 'changes'))
-
         self.validateData(changes[0])
         self.assertEqual(changes[0]['changeid'], 14)
 

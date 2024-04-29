@@ -22,21 +22,51 @@ from buildbot.data import types
 
 class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
-    def getLogIdAndDbDictFromKwargs(self, kwargs):
-        # calculate the logid
-        if 'logid' in kwargs:
-            logid = kwargs['logid']
-            dbdict = None
-        else:
-            stepid = yield self.getStepid(kwargs)
-            if stepid is None:
-                return (None, None)
-            dbdict = yield self.master.db.logs.getLogBySlug(stepid, kwargs.get('log_slug'))
-            if not dbdict:
-                return (None, None)
-            logid = dbdict['id']
+    def get_log_lines_raw_data(self, kwargs):
+        retriever = base.NestedBuildDataRetriever(self.master, kwargs)
+        log_dict = yield retriever.get_log_dict()
+        if log_dict is None:
+            return None, None, None
 
-        return (logid, dbdict)
+        lastline = max(0, log_dict['num_lines'] - 1)
+
+        @defer.inlineCallbacks
+        def get_info():
+            # The following should be run sequentially instead of in gatherResults(), so that
+            # they don't all start a query on step dict each.
+            step_dict = yield retriever.get_step_dict()
+            build_dict = yield retriever.get_build_dict()
+            builder_dict = yield retriever.get_builder_dict()
+            worker_dict = yield retriever.get_worker_dict()
+            return step_dict, build_dict, builder_dict, worker_dict
+
+        log_lines, (step_dict, build_dict, builder_dict, worker_dict) = yield defer.gatherResults([
+            self.master.db.logs.getLogLines(log_dict['id'], 0, lastline),
+            get_info(),
+        ])
+
+        if log_dict['type'] == 's':
+            log_prefix = ''
+            if builder_dict is not None:
+                log_prefix += f'Builder: {builder_dict["name"]}\n'
+            if build_dict is not None:
+                log_prefix += f'Build number: {build_dict["number"]}\n'
+            if worker_dict is not None:
+                log_prefix += f'Worker name: {worker_dict["name"]}\n'
+
+            log_lines = log_prefix + "\n".join([line[1:] for line in log_lines.splitlines()])
+
+        informative_parts = []
+        if builder_dict is not None:
+            informative_parts += [builder_dict['name']]
+        if build_dict is not None:
+            informative_parts += ['build', str(build_dict['number'])]
+        if step_dict is not None:
+            informative_parts += ['step', step_dict['name']]
+        informative_parts += ['log', log_dict['slug']]
+        informative_slug = '_'.join(informative_parts)
+
+        return log_lines, log_dict['type'], informative_slug
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
@@ -57,20 +87,21 @@ class LogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
+        retriever = base.NestedBuildDataRetriever(self.master, kwargs)
+        logid = yield retriever.get_log_id()
         if logid is None:
             return None
+
         firstline = int(resultSpec.offset or 0)
         lastline = None if resultSpec.limit is None else firstline + int(resultSpec.limit) - 1
         resultSpec.removePagination()
 
         # get the number of lines, if necessary
         if lastline is None:
-            if not dbdict:
-                dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
+            log_dict = yield retriever.get_log_dict()
+            if not log_dict:
                 return None
-            lastline = int(max(0, dbdict['num_lines'] - 1))
+            lastline = int(max(0, log_dict['num_lines'] - 1))
 
         # bounds checks
         if firstline < 0 or lastline < 0 or firstline > lastline:
@@ -100,25 +131,15 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
-        if logid is None:
+        log_lines, log_type, log_slug = yield self.get_log_lines_raw_data(kwargs)
+
+        if log_lines is None:
             return None
 
-        if not dbdict:
-            dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
-                return None
-        lastline = max(0, dbdict['num_lines'] - 1)
-
-        logLines = yield self.master.db.logs.getLogLines(logid, 0, lastline)
-
-        if dbdict['type'] == 's':
-            logLines = "\n".join([line[1:] for line in logLines.splitlines()])
-
         return {
-            'raw': logLines,
-            'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
-            'filename': dbdict['slug'],
+            'raw': log_lines,
+            'mime-type': 'text/html' if log_type == 'h' else 'text/plain',
+            'filename': log_slug,
         }
 
 
@@ -137,24 +158,14 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
-        if logid is None:
+        log_lines, log_type, _ = yield self.get_log_lines_raw_data(kwargs)
+
+        if log_lines is None:
             return None
 
-        if not dbdict:
-            dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
-                return None
-        lastline = max(0, dbdict['num_lines'] - 1)
-
-        logLines = yield self.master.db.logs.getLogLines(logid, 0, lastline)
-
-        if dbdict['type'] == 's':
-            logLines = "\n".join([line[1:] for line in logLines.splitlines()])
-
         return {
-            'raw': logLines,
-            'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
+            'raw': log_lines,
+            'mime-type': 'text/html' if log_type == 'h' else 'text/plain',
         }
 
 

@@ -776,7 +776,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             fulllog = yield self.master.data.get(("logs", str(_log['logid']), "raw"))
             logs_by_name[fulllog['filename']] = fulllog['raw']
 
-        for i in ["err_text", "err_html"]:
+        for i in [
+            'testy_build_1_step_worker_preparation_log_err_text',
+            "testy_build_1_step_worker_preparation_log_err_html",
+        ]:
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn(
@@ -825,7 +828,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             fulllog = yield self.master.data.get(("logs", str(_log['logid']), "raw"))
             logs_by_name[fulllog['filename']] = fulllog['raw']
 
-        for i in ["err_text", "err_html"]:
+        for i in [
+            'testy_build_1_step_worker_preparation_log_err_text',
+            "testy_build_1_step_worker_preparation_log_err_html",
+        ]:
             self.assertIn("can't ping", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn(
