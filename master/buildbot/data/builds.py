@@ -79,8 +79,8 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builds/n:buildid
-        /builders/n:builderid/builds/n:number
-        /builders/i:buildername/builds/n:number
+        /builders/n:builderid/builds/n:build_number
+        /builders/i:buildername/builds/n:build_number
     """
 
     @defer.inlineCallbacks
@@ -91,7 +91,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             bldr = yield self.getBuilderId(kwargs)
             if bldr is None:
                 return None
-            num = kwargs['number']
+            num = kwargs['build_number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
 
         data = yield self.db2data(dbdict) if dbdict else None
@@ -114,7 +114,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         buildid = kwargs.get('buildid')
         if buildid is None:
             bldr = kwargs['builderid']
-            num = kwargs['number']
+            num = kwargs['build_number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
             buildid = dbdict['id']
         self.master.mq.produce(
