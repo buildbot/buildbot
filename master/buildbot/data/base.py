@@ -234,6 +234,13 @@ class NestedBuildDataRetriever:
             )
             return self.step_dict
 
+        # fallback when there's only indirect information
+        if 'logid' in self.args:
+            log_dict = await self.get_log_dict()
+            if log_dict is not None:
+                self.step_dict = await self.master.db.steps.getStep(stepid=log_dict['stepid'])
+                return self.step_dict
+
         self.step_dict = None
         return self.step_dict
 
@@ -256,6 +263,12 @@ class NestedBuildDataRetriever:
             self.build_dict = await self.master.db.builds.getBuildByNumber(
                 builderid=builder_dict['id'], number=self.args['build_number']
             )
+            return self.build_dict
+
+        # fallback when there's only indirect information
+        step_dict = await self.get_step_dict()
+        if step_dict is not None:
+            self.build_dict = await self.master.db.builds.getBuild(step_dict['buildid'])
             return self.build_dict
 
         self.build_dict = None
@@ -288,6 +301,12 @@ class NestedBuildDataRetriever:
             if builder_id is not None:
                 builder_dict = await self.master.db.builders.getBuilder(builder_id)
             self.builder_dict = builder_dict
+            return self.builder_dict
+
+        # fallback when there's only indirect information
+        build_dict = await self.get_build_dict()
+        if build_dict is not None:
+            self.builder_dict = await self.master.db.builders.getBuilder(build_dict['builderid'])
             return self.builder_dict
 
         self.builder_dict = None

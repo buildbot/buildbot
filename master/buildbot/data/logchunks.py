@@ -30,12 +30,34 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
 
         lastline = max(0, log_dict['num_lines'] - 1)
 
-        log_lines = yield self.master.db.logs.getLogLines(log_dict['id'], 0, lastline)
+        @defer.inlineCallbacks
+        def get_info():
+            # The following should be run sequentially instead of in gatherResults(), so that
+            # they don't all start a query on step dict each.
+            step_dict = yield retriever.get_step_dict()
+            build_dict = yield retriever.get_build_dict()
+            builder_dict = yield retriever.get_builder_dict()
+            return step_dict, build_dict, builder_dict
+
+        log_lines, (step_dict, build_dict, builder_dict) = yield defer.gatherResults([
+            self.master.db.logs.getLogLines(log_dict['id'], 0, lastline),
+            get_info(),
+        ])
 
         if log_dict['type'] == 's':
             log_lines = "\n".join([line[1:] for line in log_lines.splitlines()])
 
-        return log_lines, log_dict['type'], log_dict['slug']
+        informative_parts = []
+        if builder_dict is not None:
+            informative_parts += [builder_dict['name']]
+        if build_dict is not None:
+            informative_parts += ['build', str(build_dict['number'])]
+        if step_dict is not None:
+            informative_parts += ['step', step_dict['name']]
+        informative_parts += ['log', log_dict['slug']]
+        informative_slug = '_'.join(informative_parts)
+
+        return log_lines, log_dict['type'], informative_slug
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
