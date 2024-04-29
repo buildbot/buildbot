@@ -38,6 +38,25 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
 
         return (logid, dbdict)
 
+    @defer.inlineCallbacks
+    def get_log_lines_raw_data(self, kwargs):
+        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
+        if logid is None:
+            return None, None, None
+
+        if not dbdict:
+            dbdict = yield self.master.db.logs.getLog(logid)
+            if not dbdict:
+                return None
+        lastline = max(0, dbdict['num_lines'] - 1)
+
+        log_lines = yield self.master.db.logs.getLogLines(logid, 0, lastline)
+
+        if dbdict['type'] == 's':
+            log_lines = "\n".join([line[1:] for line in log_lines.splitlines()])
+
+        return log_lines, dbdict['type'], dbdict['slug']
+
 
 class LogChunkEndpoint(LogChunkEndpointBase):
     # Note that this is a singular endpoint, even though it overrides the
@@ -100,25 +119,15 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
-        if logid is None:
+        log_lines, log_type, log_slug = yield self.get_log_lines_raw_data(kwargs)
+
+        if log_lines is None:
             return None
 
-        if not dbdict:
-            dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
-                return None
-        lastline = max(0, dbdict['num_lines'] - 1)
-
-        logLines = yield self.master.db.logs.getLogLines(logid, 0, lastline)
-
-        if dbdict['type'] == 's':
-            logLines = "\n".join([line[1:] for line in logLines.splitlines()])
-
         return {
-            'raw': logLines,
-            'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
-            'filename': dbdict['slug'],
+            'raw': log_lines,
+            'mime-type': 'text/html' if log_type == 'h' else 'text/plain',
+            'filename': log_slug,
         }
 
 
@@ -137,24 +146,14 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
-        if logid is None:
+        log_lines, log_type, _ = yield self.get_log_lines_raw_data(kwargs)
+
+        if log_lines is None:
             return None
 
-        if not dbdict:
-            dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
-                return None
-        lastline = max(0, dbdict['num_lines'] - 1)
-
-        logLines = yield self.master.db.logs.getLogLines(logid, 0, lastline)
-
-        if dbdict['type'] == 's':
-            logLines = "\n".join([line[1:] for line in logLines.splitlines()])
-
         return {
-            'raw': logLines,
-            'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
+            'raw': log_lines,
+            'mime-type': 'text/html' if log_type == 'h' else 'text/plain',
         }
 
 
