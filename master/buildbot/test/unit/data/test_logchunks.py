@@ -222,7 +222,8 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         logchunk = yield self.callGet(path)
         self.validateData(logchunk)
         if logid == 60:
-            expContent = '\n'.join([line[1:] for line in expLines])
+            expContent = 'Builder: some:builder\nBuild number: 3\nWorker name: wrk\n'
+            expContent += '\n'.join([line[1:] for line in expLines])
             expFilename = "some:builder_build_3_step_make_log_stdio"
         else:
             expContent = '\n'.join(expLines) + '\n'

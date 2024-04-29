@@ -37,15 +37,24 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             step_dict = yield retriever.get_step_dict()
             build_dict = yield retriever.get_build_dict()
             builder_dict = yield retriever.get_builder_dict()
-            return step_dict, build_dict, builder_dict
+            worker_dict = yield retriever.get_worker_dict()
+            return step_dict, build_dict, builder_dict, worker_dict
 
-        log_lines, (step_dict, build_dict, builder_dict) = yield defer.gatherResults([
+        log_lines, (step_dict, build_dict, builder_dict, worker_dict) = yield defer.gatherResults([
             self.master.db.logs.getLogLines(log_dict['id'], 0, lastline),
             get_info(),
         ])
 
         if log_dict['type'] == 's':
-            log_lines = "\n".join([line[1:] for line in log_lines.splitlines()])
+            log_prefix = ''
+            if builder_dict is not None:
+                log_prefix += f'Builder: {builder_dict["name"]}\n'
+            if build_dict is not None:
+                log_prefix += f'Build number: {build_dict["number"]}\n'
+            if worker_dict is not None:
+                log_prefix += f'Worker name: {worker_dict["name"]}\n'
+
+            log_lines = log_prefix + "\n".join([line[1:] for line in log_lines.splitlines()])
 
         informative_parts = []
         if builder_dict is not None:

@@ -200,6 +200,7 @@ class NestedBuildDataRetriever:
         'build_dict',
         'builder_dict',
         'log_dict',
+        'worker_dict',
     )
 
     def __init__(self, master, args):
@@ -211,6 +212,7 @@ class NestedBuildDataRetriever:
         self.build_dict = False
         self.builder_dict = False
         self.log_dict = False
+        self.worker_dict = False
 
     @async_to_deferred
     async def get_step_dict(self):
@@ -349,6 +351,21 @@ class NestedBuildDataRetriever:
         if log_dict is None:
             return None
         return log_dict['id']
+
+    @async_to_deferred
+    async def get_worker_dict(self):
+        if self.worker_dict is not False:
+            return self.worker_dict
+
+        build_dict = await self.get_build_dict()
+        if build_dict is not None:
+            workerid = build_dict.get('workerid', None)
+            if workerid is not None:
+                self.worker_dict = await self.master.db.workers.getWorker(workerid=workerid)
+                return self.worker_dict
+
+        self.worker_dict = None
+        return None
 
 
 class BuildNestingMixin:
