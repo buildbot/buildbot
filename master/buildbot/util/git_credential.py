@@ -17,11 +17,11 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot.interfaces import IRenderable
 from buildbot.util import ComparableMixin
+from buildbot.util.twisted import async_to_deferred
 
 
 @implementer(IRenderable)
@@ -31,8 +31,8 @@ class GitCredentialInputRenderer(ComparableMixin):
     def __init__(self, **credential_attributes) -> None:
         self._credential_attributes: dict[str, IRenderable | str] = credential_attributes
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, build):
+    @async_to_deferred
+    async def getRenderingFor(self, build):
         props = build.getProperties()
 
         rendered_attributes = []
@@ -46,7 +46,7 @@ class GitCredentialInputRenderer(ComparableMixin):
             attributes.sort(key=lambda e: e[0] != "url")
 
         for key, value in attributes:
-            rendered_value = yield props.render(value)
+            rendered_value = await props.render(value)
             if rendered_value is not None:
                 rendered_attributes.append(f"{key}={rendered_value}\n")
 
