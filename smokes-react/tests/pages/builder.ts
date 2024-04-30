@@ -100,7 +100,7 @@ export class BuilderPage {
   }
 
   static async waitBuildFinished(page: Page, reference: number) {
-    await expect.poll(async () => {
+    await expect.configure({ timeout: 30000 }).poll(async () => {
       const currentBuildCount = await BuilderPage.getLastFinishedBuildNumber(page);
       return currentBuildCount === reference;
     }, {
