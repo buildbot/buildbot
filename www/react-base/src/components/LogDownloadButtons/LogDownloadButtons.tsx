@@ -31,11 +31,11 @@ export const LogDownloadButtons = ({log}: LogDownloadButtonsProps) => {
 
   return (
     <ButtonGroup>
-      <Button href={`${apiRootUrl}/logs/${log.id}/raw`} variant="default" title="download log"
+      <Button href={new URL(`logs/${log.id}/raw`, apiRootUrl).toString()} variant="default" title="download log"
         className="bb-log-download-button btn-sm">
         <FaDownload/>
       </Button>
-      <Button href={`${apiRootUrl}/logs/${log.id}/raw_inline`} variant="default"
+      <Button href={new URL(`logs/${log.id}/raw_inline`, apiRootUrl).toString()} variant="default"
               title="show log"
               className="bb-log-download-button btn-sm">
         Raw
