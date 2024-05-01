@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
@@ -31,6 +32,10 @@ from buildbot.util.git import GitMixin
 from buildbot.util.git import GitServiceAuth
 from buildbot.util.git import check_ssh_config
 from buildbot.util.state import StateMixin
+
+if TYPE_CHECKING:
+    from typing import Callable
+    from typing import Literal
 
 
 class GitError(Exception):
@@ -65,11 +70,11 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             kwargs["name"] = repourl
         super().__init__(repourl, **kwargs)
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         repourl,
-        branches=None,
-        branch=None,
+        branches: list[str] | Literal[True] | Callable[[str], bool] | None = None,
+        branch: str | None = None,
         workdir=None,
         pollInterval=10 * 60,
         gitbin="git",
@@ -97,6 +102,17 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             config.error("GitPoller: can't specify only_tags and branch/branches")
         if branch and branches:
             config.error("GitPoller: can't specify both branch and branches")
+        if branch and not isinstance(branch, str):
+            config.error("GitPoller: 'branch' argument must be a str")
+        if branches is not None and not (
+            (isinstance(branches, list) and all(isinstance(e, str) for e in branches))
+            or branches is True
+            or callable(branches)
+        ):
+            config.error(
+                "GitPoller: 'branches' argument must be one of "
+                "list of str, True, or Callable[[str], bool]"
+            )
 
         check_ssh_config('GitPoller', sshPrivateKey, sshHostKey, sshKnownHosts)
 
