@@ -13,14 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from functools import wraps
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import Callable
+    from typing import Coroutine
+    from typing import TypeVar
 
-def async_to_deferred(fn):
+    _T = TypeVar('_T')
+
+
+def async_to_deferred(fn: Callable[[Any, Any], Coroutine[Any, Any, _T]]):
     @wraps(fn)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> defer.Deferred[_T]:
         try:
             return defer.ensureDeferred(fn(*args, **kwargs))
         except Exception as e:
