@@ -46,6 +46,7 @@ import {FaStop, FaSpinner} from "react-icons/fa";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 import { Tab, Tabs } from "react-bootstrap";
 import { LoadingSpan } from "../../components/LoadingSpan/LoadingSpan";
+import { UrlNotFoundView } from "../UrlNotFoundView/UrlNotFoundView";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -100,7 +101,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 }
 
 export const BuilderView = observer(() => {
-  const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
+  const builderid = useParams<"builderid">().builderid
   const navigate = useNavigate();
 
   const accessor = useDataAccessor([builderid]);
@@ -109,7 +110,7 @@ export const BuilderView = observer(() => {
   const [buildsFetchLimit, onLoadMoreBuilds] =
       useLoadMoreItemsState(initialBuildsFetchLimit, initialBuildsFetchLimit);
 
-  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
+  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid}));
   const buildsQuery = useDataApiDynamicQuery([buildsFetchLimit], () =>
     buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
         builderid: builder.builderid,
@@ -140,11 +141,11 @@ export const BuilderView = observer(() => {
   })));
 
   const builder = buildersQuery.getNthOrNull(0);
-  const builds = buildsQuery.getParentCollectionOrEmpty(builderid.toString());
-  const buildrequests = buildrequestsQuery.getParentCollectionOrEmpty(builderid.toString());
-  const forceschedulers = forceSchedulersQuery.getParentCollectionOrEmpty(builderid.toString());
+  const builds = buildsQuery.getParentCollectionOrEmpty(builder?.id ?? "");
+  const buildrequests = buildrequestsQuery.getParentCollectionOrEmpty(builder?.id ?? "");
+  const forceschedulers = forceSchedulersQuery.getParentCollectionOrEmpty(builder?.id ?? "");
   const project = projectsQuery.getNthOrNull(0);
-  const workers = workersQuery.getParentCollectionOrEmpty(builderid.toString());
+  const workers = workersQuery.getParentCollectionOrEmpty(builder?.id ?? "");
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -221,6 +222,13 @@ export const BuilderView = observer(() => {
     </ul>);
   };
 
+  if (!buildersQuery.isResolved()) {
+    return <LoadingSpan />
+  }
+  if (builder === null) {
+    return <UrlNotFoundView />
+  }
+
   return (
     <div className="container">
       <AlertNotification text={errorMsg}/>
@@ -243,7 +251,7 @@ export const BuilderView = observer(() => {
       </div>
 
       {shownForceScheduler !== null
-        ? <ForceBuildModal scheduler={shownForceScheduler} builderid={builderid}
+        ? <ForceBuildModal scheduler={shownForceScheduler} builderid={builder.builderid}
                            onClose={onForceBuildModalClose}/>
         : <></>
       }
