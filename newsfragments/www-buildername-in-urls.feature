@@ -1,0 +1,1 @@
+allow to pass `buildername` as `builderid` in `builders/:builderid`, `builders/:builderid/builds/:buildnumber`, and `builders/:builderid/builds/:buildnumber/steps/:stepnumber/logs/:logslug` website URLs.
