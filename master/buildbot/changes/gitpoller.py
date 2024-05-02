@@ -32,6 +32,7 @@ from buildbot.util.git import GitMixin
 from buildbot.util.git import GitServiceAuth
 from buildbot.util.git import check_ssh_config
 from buildbot.util.state import StateMixin
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -250,25 +251,21 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         return str
 
-    def _getBranches(self):
-        d = self._dovccmd('ls-remote', ['--refs', self.repourl])
+    @async_to_deferred
+    async def _get_refs(self, refs: list[str] | None = None) -> list[str]:
+        rows: str = await self._dovccmd(
+            'ls-remote', ['--refs', self.repourl] + (refs if refs is not None else [])
+        )
 
-        @d.addCallback
-        def parseRemote(rows):
-            branches = []
-            for row in rows.splitlines():
-                if '\t' not in row:
-                    # Not a useful line
-                    continue
-                _, ref = row.split("\t")
-                branches.append(ref)
-            return branches
+        branches: list[str] = []
+        for row in rows.splitlines():
+            if '\t' not in row:
+                # Not a useful line
+                continue
+            _, ref = row.split("\t")
+            branches.append(ref)
 
-        return d
-
-    def _headsFilter(self, branch):
-        """Filter out remote references that don't begin with 'refs/heads'."""
-        return branch.startswith("refs/heads/")
+        return branches
 
     def _removeHeads(self, branch):
         """Remove 'refs/heads/' prefix from remote references."""
@@ -295,20 +292,24 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             log.msg(e.args[0])
             return
 
-        branches = self.branches if self.branches else []
-        remote_refs = yield self._getBranches()
+        branches: list[str] = []
+        if callable(self.branches):
+            # Get all refs and let callback filter them
+            remote_refs = yield self._get_refs()
+            branches = [b for b in remote_refs if self.branches(b)]
+        elif self.branches is True:
+            # Get all branch refs
+            branches = yield self._get_refs(["refs/heads/*"])
+        elif self.branches:
+            refs = yield self._get_refs([f"refs/heads/{b}" for b in self.branches])
+            branches = [self._removeHeads(b) for b in refs]
+
+        # Nothing to fetch and process.
+        if not branches:
+            return
 
         if self.poll_should_exit():
             return
-
-        if branches is True or callable(branches):
-            if callable(self.branches):
-                branches = [b for b in remote_refs if self.branches(b)]
-            else:
-                branches = [b for b in remote_refs if self._headsFilter(b)]
-        elif branches and remote_refs:
-            remote_branches = [self._removeHeads(b) for b in remote_refs]
-            branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
             f'+{self._removeHeads(branch)}:{self._trackerBranch(branch)}' for branch in branches
