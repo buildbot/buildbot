@@ -267,6 +267,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         return branches
 
+    @staticmethod
+    def _trim_prefix(value: str, prefix: str) -> str:
+        """Remove prefix from value."""
+        if value.startswith(prefix):
+            return value[len(prefix) :]
+        return value
+
     def _removeHeads(self, branch):
         """Remove 'refs/heads/' prefix from remote references."""
         if branch.startswith("refs/heads/"):
@@ -275,7 +282,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
     def _trackerBranch(self, branch):
         url = urlquote(self.repourl, '').replace('~', '%7E')
-        return f"refs/buildbot/{url}/{self._removeHeads(branch)}"
+        return f"refs/buildbot/{url}/{self._trim_prefix(branch, 'refs/')}"
 
     def poll_should_exit(self):
         # A single gitpoller loop may take a while on a loaded master, which would block
@@ -292,38 +299,40 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             log.msg(e.args[0])
             return
 
-        branches: list[str] = []
+        refs: list[str] = []
+        trim_ref_head = False
         if callable(self.branches):
             # Get all refs and let callback filter them
             remote_refs = yield self._get_refs()
-            branches = [b for b in remote_refs if self.branches(b)]
+            refs = [b for b in remote_refs if self.branches(b)]
         elif self.branches is True:
             # Get all branch refs
-            branches = yield self._get_refs(["refs/heads/*"])
+            refs = yield self._get_refs(["refs/heads/*"])
         elif self.branches:
             refs = yield self._get_refs([f"refs/heads/{b}" for b in self.branches])
-            branches = [self._removeHeads(b) for b in refs]
+            trim_ref_head = True
 
         # Nothing to fetch and process.
-        if not branches:
+        if not refs:
             return
 
         if self.poll_should_exit():
             return
 
-        refspecs = [
-            f'+{self._removeHeads(branch)}:{self._trackerBranch(branch)}' for branch in branches
-        ]
+        refspecs = [f'+{ref}:{self._trackerBranch(ref)}' for ref in refs]
 
         try:
-            yield self._dovccmd('fetch', ['--progress', self.repourl] + refspecs, path=self.workdir)
+            yield self._dovccmd(
+                'fetch', ['--progress', self.repourl] + refspecs + ['--'], path=self.workdir
+            )
         except GitError as e:
             log.msg(e.args[0])
             return
 
         revs = {}
         log.msg(f'gitpoller: processing changes from "{self.repourl}"')
-        for branch in branches:
+        for ref in refs:
+            branch = ref if not trim_ref_head else self._trim_prefix(ref, 'refs/heads/')
             try:
                 if self.poll_should_exit():  # pragma: no cover
                     # Note that we still want to update the last known revisions for the branches
@@ -331,10 +340,10 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     break
 
                 rev = yield self._dovccmd(
-                    'rev-parse', [self._trackerBranch(branch)], path=self.workdir
+                    'rev-parse', [self._trackerBranch(ref), '--'], path=self.workdir
                 )
-                revs[branch] = bytes2unicode(rev, self.encoding)
-                yield self._process_changes(revs[branch], branch)
+                revs[branch] = rev
+                yield self._process_changes(rev, branch)
             except Exception:
                 log.err(_why=f"trying to poll branch {branch} of {self.repourl}")
 

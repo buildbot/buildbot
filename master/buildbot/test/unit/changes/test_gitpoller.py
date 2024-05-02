@@ -236,12 +236,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -322,12 +324,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .exit(1),
@@ -357,12 +361,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -439,14 +445,16 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'no interesting output'),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -499,20 +507,23 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -555,13 +566,15 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -585,7 +598,8 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -719,12 +733,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -772,12 +788,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -874,12 +892,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -978,12 +998,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1076,12 +1098,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1186,14 +1210,16 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'no interesting output'),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1235,13 +1261,15 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
-                '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '+refs/heads/release:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1265,7 +1293,8 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/release',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -1369,12 +1398,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1479,12 +1510,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+refs/pull/410/head:refs/buildbot/' + self.REPOURL_QUOTED + '/refs/pull/410/head',
+                '+refs/pull/410/head:refs/buildbot/' + self.REPOURL_QUOTED + '/pull/410/head',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/refs/pull/410/head',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/pull/410/head',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -1582,14 +1615,16 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'no interesting output'),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1705,12 +1740,14 @@ class TestGitPoller(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1870,12 +1907,14 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -1922,14 +1961,16 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .env({'GIT_SSH_COMMAND': f'ssh -o "BatchMode=yes" -i "{key_path}"'}),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -1981,7 +2022,8 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .exit(1),
@@ -2034,12 +2076,14 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -2110,12 +2154,14 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
                 'fetch',
                 '--progress',
                 self.REPOURL,
-                '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ]).workdir(self.POLLER_WORKDIR),
             ExpectMasterShell([
                 'git',
                 'rev-parse',
-                'refs/buildbot/' + self.REPOURL_QUOTED + '/master',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
