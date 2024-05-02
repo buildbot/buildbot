@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.process.builder import Builder
 from twisted.trial.unittest import TestCase
 
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
@@ -37,8 +38,9 @@ class TestAbstractWorkerForBuilder(TestCase):
             def buildStarted(self, workerforbuilder):
                 self._buildStartedCalls.append(workerforbuilder)
 
+        fake_builder = Builder("fake_builder")
         worker = ConcreteWorker("worker", "pass")
-        workerforbuilder = AbstractWorkerForBuilder()
+        workerforbuilder = AbstractWorkerForBuilder(fake_builder)
         # FIXME: This should call attached, instead of setting the attribute
         # directly
         workerforbuilder.worker = worker
@@ -56,8 +58,9 @@ class TestAbstractWorkerForBuilder(TestCase):
         class ConcreteWorker(AbstractWorker):
             pass
 
+        fake_builder = Builder("fake_builder")
         worker = ConcreteWorker("worker", "pass")
-        workerforbuilder = AbstractWorkerForBuilder()
+        workerforbuilder = AbstractWorkerForBuilder(fake_builder)
         # FIXME: This should call attached, instead of setting the attribute
         # directly
         workerforbuilder.worker = worker

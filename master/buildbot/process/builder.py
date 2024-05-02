@@ -273,8 +273,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
                 # just ignore it.
                 return self
 
-        wfb = workerforbuilder.WorkerForBuilder()
-        wfb.setBuilder(self)
+        wfb = workerforbuilder.WorkerForBuilder(self)
         self.attaching_workers.append(wfb)
 
         try:
