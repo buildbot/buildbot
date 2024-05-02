@@ -370,11 +370,13 @@ class RemoteBuild(pb.Referenceable):
             if key[-1] == 'finished':
                 d.callback(None)
 
-        consumer = yield self.master.mq.startConsuming(
-            buildEvent, ('builds', str(self.builddict['buildid']), None)
-        )
+        buildid = self.builddict['buildid']
+        consumer = yield self.master.mq.startConsuming(buildEvent, ('builds', str(buildid), None))
+        builddict = yield self.master.data.get(('builds', buildid))
+        # build might have finished before we called startConsuming
+        if not builddict.get('complete', False):
+            yield d  # wait for event
 
-        yield d  # wait for event
         consumer.stopConsuming()
         return self  # callers expect result=self
 
