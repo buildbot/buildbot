@@ -431,9 +431,8 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             # but at once to avoid impact from later errors
             yield self._setCurrentRev(new_rev, branch)
 
-    def _stopOnFailure(self, f):
+    def _stopOnFailure(self):
         "utility method to stop the service when a failure occurs"
         if self.running:
             d = defer.maybeDeferred(self.stopService)
             d.addErrback(log.err, 'while stopping broken HgPoller service')
-        return f
