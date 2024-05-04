@@ -89,6 +89,9 @@ export default defineConfig({
     serveBuildbotPlugins(),
     visualizer(),
   ],
+  // this makes all path references into relative paths, thus Buildbot can be hosted at a custom
+  // path prefix, like my-domain.com/custom-buildbot-path/
+  base: './',
   build: {
     target: ['es2015'],
     outDir: outDir,
