@@ -8,6 +8,27 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.11.2`` ( ``2024-05-04`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed an error in HgPoller when repository initialization fails (:issue:`7488`)
+- Updated `Makefile` to handle Windows paths and Python.
+- Added a web configuration setting to select whether build completion or start times are displayed.
+- Added revision info column in the web frontend.
+- Fixed steps raw log download button.
+- Fixed a regression in React UI that prevented hosting Buildbot at a custom URL prefix. This allows
+  to support multiple Buildbot instances on a single server.
+
+Improved Documentation
+----------------------
+
+- Documented that ``ChangeSource`` does not support secrets (or any other renderables), best
+  practice of not encoding secret values in changes and alternative solutions when secret values in
+  changes are unavoidable. ``ChangeSource`` accidentally supported renderable arguments up until
+  Buildbot 3.7, but this was not documented behavior.
 
 Buildbot ``3.11.1`` ( ``2024-02-24`` )
 ======================================
