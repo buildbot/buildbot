@@ -1,2 +1,0 @@
-Fixed a regression in React UI that prevented hosting Buildbot at a custom URL prefix. This allows
-to support multiple Buildbot instances on a single server.
