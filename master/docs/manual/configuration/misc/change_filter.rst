@@ -66,6 +66,23 @@ The following parameters are supported by the :py:class:`ChangeFilter`:
     It is expected to return ``True`` if the change is matched, ``False`` otherwise.
     In case of a match, all other conditions will still be evaluated.
 
+Secrets in conditions
+~~~~~~~~~~~~~~~~~~~~~
+
+:class:`ChangeFilter` does not support renderables. Accordingly, secrets cannot be used to
+construct the conditions that will later be used to filter changes.
+
+This does not reduce security of the system because in order for secret values to be useful for
+filtering, they will need to be present in the changes themselves. The change information is stored
+in the database and frequently appears in the logs.
+
+Best practice is to make sure secret values are not encoded in changes such as in repository URLs.
+Most of the source steps support passing authentication information separately from repository URL.
+
+If encoding secrets is unavoidable, then changes should be filtered using regex (e.g. via
+``repository_re`` argument) or custom callback functions (e.g. via ``repository_fn`` or
+``filter_fn`` arguments).
+
 Examples
 ~~~~~~~~
 
