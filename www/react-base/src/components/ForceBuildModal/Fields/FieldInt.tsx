@@ -34,7 +34,7 @@ export const FieldInt = observer(({field, fieldsState}: FieldIntProps) => {
       <div className="col-sm-10">
         <input data-bb-test-id={`force-field-${field.fullName}`}
                type="text" className="form-control" value={state.value}
-               onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
+               onChange={event => fieldsState.setValue(field.fullName, Number.parseInt(event.target.value))}/>
       </div>
     </FieldBase>
   );

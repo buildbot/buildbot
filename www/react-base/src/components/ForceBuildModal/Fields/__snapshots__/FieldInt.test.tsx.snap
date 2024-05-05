@@ -25,7 +25,7 @@ exports[`ForceFieldInt component change state on click 1`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="-150"
+        value={-150}
       />
     </div>
   </div>
@@ -57,7 +57,7 @@ exports[`ForceFieldInt component render default value 1`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="0"
+        value={0}
       />
     </div>
   </div>
@@ -89,7 +89,7 @@ exports[`ForceFieldInt component render default value 2`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="0"
+        value={-0}
       />
     </div>
   </div>
@@ -121,7 +121,7 @@ exports[`ForceFieldInt component render default value 3`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="150"
+        value={150}
       />
     </div>
   </div>
@@ -153,7 +153,7 @@ exports[`ForceFieldInt component render default value 4`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="-150"
+        value={-150}
       />
     </div>
   </div>
@@ -185,7 +185,7 @@ exports[`ForceFieldInt component render non-default value 1`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="0"
+        value={-0}
       />
     </div>
   </div>
@@ -217,7 +217,7 @@ exports[`ForceFieldInt component render non-default value 2`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="150"
+        value={150}
       />
     </div>
   </div>
@@ -249,7 +249,7 @@ exports[`ForceFieldInt component render non-default value 3`] = `
         data-bb-test-id="force-field-fullDummy"
         onChange={[Function]}
         type="text"
-        value="-150"
+        value={-150}
       />
     </div>
   </div>

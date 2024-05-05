@@ -20,7 +20,7 @@ import { FieldBoolean } from "./FieldBoolean";
 import { ForceSchedulerFieldBoolean } from 'buildbot-data-js';
 import { ForceBuildModalFieldsState } from '../ForceBuildModalFieldsState';
 
-function assertRenderToSnapshot(defaultValue: 'true' | 'false', stateValue?: 'true' | 'false', updateValue: boolean = false) {
+function assertRenderToSnapshot(defaultValue: boolean, stateValue?: boolean, updateValue: boolean = false) {
   const field: ForceSchedulerFieldBoolean = {
     name: 'dummy',
     fullName: 'fullDummy',
@@ -47,12 +47,12 @@ function assertRenderToSnapshot(defaultValue: 'true' | 'false', stateValue?: 'tr
 
   if (updateValue) {
     const previousState = state.getValue(field.fullName);
-    const expectedState = previousState === "true" ? "false" : "true";
+    const expectedState = !previousState;
     renderer.act(() => {
       const elements = component.root.findAllByProps({'data-bb-test-id': `force-field-${field.fullName}`}, {deep: true});
       expect(elements.length).toBe(1);
       const checkbox = elements[0];
-      checkbox.props.onChange({target: {checked: expectedState === "true"}});
+      checkbox.props.onChange({target: {checked: expectedState}});
     });
     expect(state.getValue(field.fullName)).toBe(expectedState);
   }
@@ -60,22 +60,22 @@ function assertRenderToSnapshot(defaultValue: 'true' | 'false', stateValue?: 'tr
 
 describe('ForceFieldBoolean component', function () {
   it('render default value False', () => {
-    assertRenderToSnapshot('false');
+    assertRenderToSnapshot(false);
   });
 
   it('render default value True', () => {
-    assertRenderToSnapshot('true');
+    assertRenderToSnapshot(true);
   });
 
   it('render non-default value False', () => {
-    assertRenderToSnapshot('true', 'false');
+    assertRenderToSnapshot(true, false);
   });
 
   it('render non-default value True', () => {
-    assertRenderToSnapshot('false', 'true');
+    assertRenderToSnapshot(false, true);
   });
 
   it('change state on click', () => {
-    assertRenderToSnapshot('true', 'true', true);
+    assertRenderToSnapshot(true, true, true);
   });
 });

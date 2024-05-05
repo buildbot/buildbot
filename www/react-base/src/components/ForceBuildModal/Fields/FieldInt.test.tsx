@@ -27,7 +27,7 @@ function assertRenderToSnapshot(defaultValue: number, stateValue?: number, updat
     label: 'dummyLabel',
     tablabel: 'dummyTabLabel',
     type: 'int',
-    default: defaultValue.toString(),
+    default: defaultValue,
     multiple: false,
     regex: null,
     hide: false,
@@ -38,7 +38,7 @@ function assertRenderToSnapshot(defaultValue: number, stateValue?: number, updat
   const state = new ForceBuildModalFieldsState();
   state.createNewField(field.fullName, field.default);
   if (stateValue !== undefined) {
-    state.setValue(field.fullName, stateValue.toString());
+    state.setValue(field.fullName, stateValue);
   }
 
   const component = renderer.create(
@@ -47,7 +47,7 @@ function assertRenderToSnapshot(defaultValue: number, stateValue?: number, updat
   expect(component.toJSON()).toMatchSnapshot();
 
   if (updateValue !== undefined) {
-    const expectedState = updateValue.toString();
+    const expectedState = updateValue;
     renderer.act(() => {
       const elements = component.root.findAllByProps({'data-bb-test-id': `force-field-${field.fullName}`}, {deep: true});
       expect(elements.length).toBe(1);
