@@ -1,0 +1,348 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ForceFieldChoiceString component change multiple state on click 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={true}
+        onChange={[Function]}
+        value={
+          Array [
+            "B",
+            "C",
+          ]
+        }
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component change state on click 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={false}
+        onChange={[Function]}
+        value="B"
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component render default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={false}
+        onChange={[Function]}
+        value="A"
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component render default value 2`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={false}
+        onChange={[Function]}
+        value="B"
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component render multiple default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={true}
+        onChange={[Function]}
+        value={
+          Array [
+            "A",
+          ]
+        }
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component render multiple default value 2`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={true}
+        onChange={[Function]}
+        value={
+          Array [
+            "A",
+            "B",
+          ]
+        }
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component render multiple non-default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={true}
+        onChange={[Function]}
+        value={
+          Array [
+            "B",
+            "C",
+          ]
+        }
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldChoiceString component render non-default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="col-sm-10 form-label"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <select
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        multiple={false}
+        onChange={[Function]}
+        value="B"
+      >
+        <option>
+          A
+        </option>
+        <option>
+          B
+        </option>
+        <option>
+          C
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+`;
