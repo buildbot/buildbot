@@ -18,15 +18,15 @@
 import {action, makeObservable, observable} from "mobx";
 
 export class ForceBuildfieldsState {
-  @observable value: string = '';
+  @observable value: any = undefined;
   @observable errors: string[] = [];
 
-  constructor(value: string) {
+  constructor(value: any) {
     makeObservable(this);
     this.setValue(value);
   }
 
-  @action setValue(value: string) {
+  @action setValue(value: any) {
     this.value = value;
   }
 
@@ -42,17 +42,17 @@ export class ForceBuildfieldsState {
 export class ForceBuildModalFieldsState {
   fields = observable.map<string, ForceBuildfieldsState>();
 
-  setupField(name: string, defaultValue: string) {
+  setupField(name: string, defaultValue: any) {
     if (!this.fields.has(name)) {
       this.createNewField(name, defaultValue);
     }
   }
 
-  @action createNewField(name: string, defaultValue: string) {
+  @action createNewField(name: string, defaultValue: any) {
     this.fields.set(name, new ForceBuildfieldsState(defaultValue));
   }
 
-  @action setValue(name: string, value: string) {
+  @action setValue(name: string, value: any) {
     const field = this.fields.get(name);
     if (field === undefined) {
       throw Error(`Field with name ${name} does not exist`)
@@ -60,7 +60,7 @@ export class ForceBuildModalFieldsState {
     field.setValue(value);
   }
 
-  getValue(name: string): string | null {
+  getValue(name: string): any | null {
     const field = this.fields.get(name);
     if (field === undefined) {
       return null;
