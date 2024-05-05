@@ -22,8 +22,6 @@ from buildbot.changes import base
 from buildbot.config import ConfigErrors
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase):
@@ -74,128 +72,6 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
         self.assertTrue(cs.activate.called)
         self.assertTrue(cs.deactivate.called)
         self.assertFalse(cs.active)
-
-
-class TestPollingChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase):
-    timeout = 120
-
-    class Subclass(base.PollingChangeSource):
-        pass
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        self.setup_test_reactor()
-        yield self.setUpChangeSource()
-
-        with assertProducesWarnings(
-            DeprecatedApiWarning, message_pattern="use ReconfigurablePollingChangeSource"
-        ):
-            cs = self.Subclass(name="DummyCS")
-        yield self.attachChangeSource(cs)
-
-    def tearDown(self):
-        return self.tearDownChangeSource()
-
-    @defer.inlineCallbacks
-    def attachChangeSource(self, cs):
-        self.changesource = cs
-        yield self.changesource.setServiceParent(self.master)
-
-        # configure the service to let secret manager render the secrets
-        try:
-            yield self.changesource.configureService()
-        except NotImplementedError:  # non-reconfigurable change sources can't reconfig
-            pass
-        return cs
-
-    @defer.inlineCallbacks
-    def runClockFor(self, _, secs):
-        yield self.reactor.pump([0] + [1.0] * secs)
-
-    def test_loop_loops(self):
-        # track when poll() gets called
-        loops = []
-        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
-
-        self.changesource.pollInterval = 5
-        self.startChangeSource()
-        d = defer.Deferred()
-        d.addCallback(self.runClockFor, 12)
-
-        @d.addCallback
-        def check(_):
-            # note that it does *not* poll at time 0
-            self.assertEqual(loops, [5.0, 10.0])
-
-        self.reactor.callWhenRunning(d.callback, None)
-        return d
-
-    def test_loop_exception(self):
-        # track when poll() gets called
-        loops = []
-
-        def poll():
-            loops.append(self.reactor.seconds())
-            raise RuntimeError("oh noes")
-
-        self.changesource.poll = poll
-
-        self.changesource.pollInterval = 5
-        self.startChangeSource()
-
-        d = defer.Deferred()
-        d.addCallback(self.runClockFor, 12)
-
-        @d.addCallback
-        def check(_):
-            # note that it keeps looping after error
-            self.assertEqual(loops, [5.0, 10.0])
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
-
-        self.reactor.callWhenRunning(d.callback, None)
-        return d
-
-    def test_poll_only_if_activated(self):
-        """The polling logic only applies if the source actually starts!"""
-
-        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
-
-        loops = []
-        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
-
-        self.changesource.pollInterval = 5
-        self.startChangeSource()
-
-        d = defer.Deferred()
-        d.addCallback(self.runClockFor, 12)
-
-        @d.addCallback
-        def check(_):
-            # it doesn't do anything because it was already claimed
-            self.assertEqual(loops, [])
-
-        self.reactor.callWhenRunning(d.callback, None)
-        return d
-
-    def test_pollAtLaunch(self):
-        # track when poll() gets called
-        loops = []
-        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
-
-        self.changesource.pollInterval = 5
-        self.changesource.pollAtLaunch = True
-        self.startChangeSource()
-
-        d = defer.Deferred()
-        d.addCallback(self.runClockFor, 12)
-
-        @d.addCallback
-        def check(_):
-            # note that it *does* poll at time 0
-            self.assertEqual(loops, [0.0, 5.0, 10.0])
-
-        self.reactor.callWhenRunning(d.callback, None)
-        return d
 
 
 class TestReconfigurablePollingChangeSource(

@@ -65,7 +65,6 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         known_not_exported = {
             'buildbot.changes.gerritchangesource.GerritChangeSourceBase',
             'buildbot.changes.base.ReconfigurablePollingChangeSource',
-            'buildbot.changes.base.PollingChangeSource',
             'buildbot.changes.base.ChangeSource',
         }
         self.verify_plugins_registered(

@@ -25,11 +25,3 @@ ReconfigurablePollingChangeSource
     Subclasses should override the ``poll`` method.
     This method may return a Deferred.
     Calls to ``poll`` will not overlap.
-
-PollingChangeSource
--------------------
-
-.. py:class:: PollingChangeSource
-
-    This is a legacy class for polling change sources not yet ported to the :py:class:`BuildbotService` component lifecycle.
-    Do not use for new code.
