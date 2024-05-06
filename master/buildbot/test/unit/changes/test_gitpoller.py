@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import re
 from unittest import mock
@@ -30,6 +32,7 @@ from buildbot.test.util import config
 from buildbot.test.util import logging
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
@@ -64,6 +67,17 @@ class TestGitPollerBase(
     def tearDown(self):
         yield self.master.stopService()
         yield self.tearDownChangeSource()
+
+    @async_to_deferred
+    async def set_last_rev(self, state: dict[str, str]) -> None:
+        await self.poller.setState('lastRev', state)
+        self.poller.lastRev = state
+
+    @async_to_deferred
+    async def assert_last_rev(self, state: dict[str, str]) -> None:
+        last_rev = await self.poller.getState('lastRev', None)
+        self.assertEqual(last_rev, state)
+        self.assertEqual(self.poller.lastRev, state)
 
 
 class TestGitPoller(TestGitPollerBase):
@@ -253,14 +267,7 @@ class TestGitPoller(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'}
-        )
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'},
-        )
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
     @defer.inlineCallbacks
     def test_poll_initial_poller_not_running(self):
@@ -280,7 +287,7 @@ class TestGitPoller(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(self.poller.lastRev, {})
+        yield self.assert_last_rev(None)
 
     def test_poll_failInit(self):
         self.expect_commands(
@@ -342,7 +349,7 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assert_all_commands_ran()
         self.assertEqual(len(self.flushLoggedErrors()), 1)
-        self.assertEqual(self.poller.lastRev, {})
+        yield self.assert_last_rev({})
 
     @defer.inlineCallbacks
     def test_poll_failLog(self):
@@ -386,16 +393,14 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         # do the poll
-        self.poller.lastRev = {'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'}
+        yield self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
 
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
         self.assertEqual(len(self.flushLoggedErrors()), 1)
-        self.assertEqual(
-            self.poller.lastRev, {'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
     @defer.inlineCallbacks
     def test_poll_GitError(self):
@@ -471,17 +476,13 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        self.poller.lastRev = {'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
+        yield self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'},
-        )
+        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
     @defer.inlineCallbacks
     def test_poll_multipleBranches_initial(self):
@@ -535,13 +536,10 @@ class TestGitPoller(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev,
-            {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
-            },
-        )
+        yield self.assert_last_rev({
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+        })
 
     @defer.inlineCallbacks
     def test_poll_multipleBranches(self):
@@ -646,21 +644,18 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['master', 'release']
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev,
-            {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
-            },
-        )
+        yield self.assert_last_rev({
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+        })
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -759,16 +754,14 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
@@ -841,18 +834,14 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        self.poller.lastRev = {
-            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-        }
+        yield self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
         self.poller.buildPushesWithNoCommits = True
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -946,19 +935,17 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
-        }
+        })
 
         self.poller.buildPushesWithNoCommits = True
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -1051,18 +1038,14 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        self.poller.lastRev = {
-            'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
-        }
+        yield self.set_last_rev({'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c'})
 
         self.poller.buildPushesWithNoCommits = True
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -1156,19 +1139,16 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = True
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev,
-            {
-                'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-            },
-        )
+        yield self.assert_last_rev({
+            'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
 
         added = self.master.data.updates.changesAdded
         self.assertEqual(len(added), 2)
@@ -1236,14 +1216,12 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        self.poller.lastRev = {'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
+        yield self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
     @defer.inlineCallbacks
     def test_poll_allBranches_multiple(self):
@@ -1341,21 +1319,18 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = True
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev,
-            {
-                'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'refs/heads/release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
-            },
-        )
+        yield self.assert_last_rev({
+            'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'refs/heads/release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+        })
 
         added = self.master.data.updates.changesAdded
         self.assertEqual(len(added), 3)
@@ -1461,10 +1436,10 @@ class TestGitPoller(TestGitPollerBase):
                 return branch == "refs/heads/master"
 
         self.poller.branches = TestCallable()
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
@@ -1472,9 +1447,9 @@ class TestGitPoller(TestGitPollerBase):
 
         # The release branch id should remain unchanged,
         # because it was ignored.
-        self.assertEqual(
-            self.poller.lastRev, {'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({
+            'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+        })
 
         added = self.master.data.updates.changesAdded
         self.assertEqual(len(added), 2)
@@ -1571,17 +1546,17 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = pullFilter
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/pull/410/head': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'refs/pull/410/head': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'}
-        )
+        yield self.assert_last_rev({
+            'refs/pull/410/head': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+        })
 
         added = self.master.data.updates.changesAdded
         self.assertEqual(len(added), 1)
@@ -1674,14 +1649,12 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
-        self.poller.lastRev = {'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'}
+        yield self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         # check the results
-        self.assertEqual(
-            self.poller.lastRev, {'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'}
-        )
+        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -1720,12 +1693,6 @@ class TestGitPoller(TestGitPollerBase):
             ],
         )
         self.assert_all_commands_ran()
-
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'},
-        )
 
     @defer.inlineCallbacks
     def test_poll_callableCategory(self):
@@ -1804,19 +1771,16 @@ class TestGitPoller(TestGitPollerBase):
 
         self.poller.category = callableCategory
 
-        self.poller.lastRev = {
+        yield self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
-        }
+        })
         self.poller.doPoll.running = True
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev,
-            {
-                'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-            },
-        )
+        yield self.assert_last_rev({
+            'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
 
         added = self.master.data.updates.changesAdded
         self.assertEqual(len(added), 2)
@@ -1838,9 +1802,10 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[1]['src'], 'git')
         self.assertEqual(added[1]['category'], '64a5dc')
 
-    def test_startService(self):
+    @async_to_deferred
+    async def test_startService(self):
         self.assertEqual(self.poller.workdir, self.POLLER_WORKDIR)
-        self.assertEqual(self.poller.lastRev, {})
+        await self.assert_last_rev(None)
 
     @defer.inlineCallbacks
     def test_startService_loadLastRev(self):
@@ -1852,9 +1817,48 @@ class TestGitPoller(TestGitPollerBase):
 
         yield self.poller.startService()
 
-        self.assertEqual(
-            self.poller.lastRev, {"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"}
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell([
+                'git',
+                'ls-remote',
+                '--refs',
+                self.REPOURL,
+                "refs/heads/master",
+            ]).stdout(b'fa3ae8ed68e664d4db24798611b352e3c6509930\trefs/heads/master\n'),
+            ExpectMasterShell([
+                'git',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                f'+refs/heads/master:refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                f'refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
+                '--',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'fa3ae8ed68e664d4db24798611b352e3c6509930\n'),
+            ExpectMasterShell([
+                'git',
+                'log',
+                '--ignore-missing',
+                '--format=%H',
+                'fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
         )
+
+        yield self.poller.poll()
+
+        self.assert_all_commands_ran()
+
+        yield self.assert_last_rev({"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"})
 
 
 class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
@@ -1924,14 +1928,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'}
-        )
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'},
-        )
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
@@ -1980,14 +1977,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'}
-        )
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'},
-        )
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
@@ -2093,14 +2083,7 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'}
-        )
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'},
-        )
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
@@ -2171,14 +2154,7 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        self.assertEqual(
-            self.poller.lastRev, {'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'}
-        )
-        self.master.db.state.assertStateByClass(
-            name=bytes2unicode(self.REPOURL),
-            class_name='GitPoller',
-            lastRev={'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'},
-        )
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
