@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import re
-from collections import namedtuple
+from typing import NamedTuple
 
 # The regex is matching more than it should and is not intended to be an url validator.
 # It is intended to efficiently and reliably extract information from the various examples
@@ -27,10 +28,17 @@ _giturlmatcher = re.compile(
     r'(?P<domain>[^\/:]+)(:((?P<port>[0-9]+)/)?|/)'
     r'((?P<owner>.+)/)?(?P<repo>[^/]+?)(\.git)?$')
 
-GitUrl = namedtuple('GitUrl', ['proto', 'user', 'domain', 'port', 'owner', 'repo'])
+
+class GitUrl(NamedTuple):
+    proto: str
+    user: str | None
+    domain: str
+    port: int | None
+    owner: str | None
+    repo: str
 
 
-def giturlparse(url):
+def giturlparse(url: str) -> GitUrl | None:
     res = _giturlmatcher.match(url)
     if res is None:
         return None
@@ -43,5 +51,11 @@ def giturlparse(url):
         proto = proto[:-3]
     else:
         proto = 'ssh'  # implicit proto is ssh
-    return GitUrl(proto, res.group('user'), res.group("domain"),
-                  port, res.group('owner'), res.group('repo'))
+    return GitUrl(
+        proto=proto,
+        user=res.group('user'),
+        domain=res.group("domain"),
+        port=port,
+        owner=res.group('owner'),
+        repo=res.group('repo'),
+    )
