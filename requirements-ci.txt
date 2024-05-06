@@ -129,7 +129,7 @@ unidiff==0.7.5
 urllib3==1.26.18  # pyup: ignore
 webcolors==1.13
 websocket-client==1.7.0
-Werkzeug==3.0.1
+Werkzeug==3.0.3
 wrapt==1.16.0
 xmltodict==0.13.0
 zipp==3.18.1
