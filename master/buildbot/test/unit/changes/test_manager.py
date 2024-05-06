@@ -23,8 +23,6 @@ from buildbot.changes import base
 from buildbot.changes import manager
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestChangeManager(unittest.TestCase, TestReactorMixin):
@@ -83,26 +81,3 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
         self.assertTrue(src1.running)
         self.assertFalse(src2.running)
         self.assertEqual(src1.pollInterval, 2)
-
-    @defer.inlineCallbacks
-    def test_reconfigService_change_legacy(self):
-        with assertProducesWarnings(
-            DeprecatedApiWarning, message_pattern="use ReconfigurablePollingChangeSource"
-        ):
-            (src1,) = self.make_sources(1, base.PollingChangeSource, pollInterval=1)
-        yield src1.setServiceParent(self.cm)
-
-        with assertProducesWarnings(
-            DeprecatedApiWarning, message_pattern="use ReconfigurablePollingChangeSource"
-        ):
-            (src2,) = self.make_sources(1, base.PollingChangeSource, pollInterval=2)
-
-        self.new_config.change_sources = [src2]
-
-        self.assertTrue(src1.running)
-        self.assertEqual(src1.pollInterval, 1)
-        yield self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
-
-        self.assertFalse(src1.running)
-        self.assertTrue(src2.running)
-        self.assertEqual(src2.pollInterval, 2)

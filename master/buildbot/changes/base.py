@@ -22,7 +22,6 @@ from buildbot import config
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
-from buildbot.warnings import warn_deprecated
 
 
 @implementer(IChangeSource)
@@ -128,42 +127,3 @@ class ReconfigurablePollingChangeSource(ChangeSource):
 
     def deactivate(self):
         return self.doPoll.stop()
-
-
-class PollingChangeSource(ReconfigurablePollingChangeSource):
-    # Legacy code will be very painful to port to BuildbotService life cycle
-    # because the unit tests keep doing shortcuts for the Service life cycle (i.e by no calling
-    # startService) instead of porting everything at once, we make a class to support legacy
-
-    def checkConfig(
-        self,
-        name=None,
-        pollInterval=60 * 10,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-        **kwargs,
-    ):
-        super().checkConfig(
-            name=name,
-            pollInterval=60 * 10,
-            pollAtLaunch=False,
-            pollRandomDelayMin=0,
-            pollRandomDelayMax=0,
-        )
-
-        warn_deprecated(
-            '3.3.0',
-            'PollingChangeSource has been deprecated: '
-            + 'please use ReconfigurablePollingChangeSource',
-        )
-
-        self.pollInterval = pollInterval
-        self.pollAtLaunch = pollAtLaunch
-        self.pollRandomDelayMin = pollRandomDelayMin
-        self.pollRandomDelayMax = pollRandomDelayMax
-
-    def reconfigService(self, *args, **kwargs):
-        # BuildbotServiceManager will detect such exception and swap old service with new service,
-        # instead of just reconfiguring
-        raise NotImplementedError()
