@@ -66,6 +66,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     def __init__(self, repourl, **kwargs) -> None:
         self._git_auth = GitServiceAuth(self)
 
+        self.lastRev: dict[str, str] | None = None
+
         name = kwargs.get("name", None)
         if name is None:
             kwargs["name"] = repourl
@@ -189,7 +191,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         )
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
-        self.lastRev = {}
+        self.lastRev = None
 
         self.setupGit()
         self._git_auth = GitServiceAuth(self, sshPrivateKey, sshHostKey, sshKnownHosts)
@@ -226,10 +228,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             if has_ssh_private_key:
                 raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
 
-    @defer.inlineCallbacks
     def activate(self):
         try:
-            self.lastRev = yield self.getState('lastRev', {})
+            self.lastRev = None
 
             super().activate()
         except Exception as e:
@@ -328,6 +329,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         except GitError as e:
             log.msg(e.args[0])
             return
+
+        if self.lastRev is None:
+            self.lastRev = yield self.getState('lastRev', {})
 
         revs = {}
         log.msg(f'gitpoller: processing changes from "{self.repourl}"')
