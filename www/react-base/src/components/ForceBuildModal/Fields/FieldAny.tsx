@@ -56,7 +56,7 @@ export const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
   if (field.type === 'username') {
     return <FieldUserName field={field as ForceSchedulerFieldUserName} fieldsState={fieldsState}/>
   }
-  if (field.type === 'choices') {
+  if (field.type === 'list') {
     return <FieldChoiceString field={field as ForceSchedulerFieldChoiceString}
                               fieldsState={fieldsState}/>
   }

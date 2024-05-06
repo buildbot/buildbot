@@ -55,7 +55,7 @@ export type ForceSchedulerFieldUserName = ForceSchedulerFieldString & {
 }
 
 export type ForceSchedulerFieldChoiceString = ForceSchedulerFieldBase & {
-  // type: 'choices'
+  // type: 'list'
   choices: string[];
   strict: boolean;
 }
