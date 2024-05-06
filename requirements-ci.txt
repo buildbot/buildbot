@@ -6,11 +6,11 @@ buildbot-www==3.11.1
 
 autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
-boto3==1.34.74
+boto3==1.34.98
 msgpack==1.0.8
 Markdown==3.6
 pylint==3.1.0
-ruff==0.3.4
+ruff==0.4.3
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -25,21 +25,21 @@ asn1crypto==1.5.1
 astroid==3.1.0
 attrs==23.2.0
 Automat==22.10.0
-Babel==2.14.0
+Babel==2.15.0
 backports.functools-lru-cache==2.0.0
 boto==2.49.0
-botocore==1.34.74
+botocore==1.34.98
 certifi==2024.2.2
 cffi==1.16.0
 chardet==5.2.0
 charset-normalizer==3.3.2
 click==8.1.7
-configparser==6.0.1
+configparser==7.0.0
 constantly==23.10.4
 cookies==2.2.1
-coverage==7.4.4
-croniter==2.0.3
-cryptography==42.0.5
+coverage==7.5.1
+croniter==2.0.5
+cryptography==42.0.6
 decorator==5.1.1
 dicttoxml==1.7.16
 dill==0.3.8
@@ -52,7 +52,7 @@ future==1.0.0
 graphql-core==3.3.0a4; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
-hvac==2.1.0
+hvac==2.2.0
 hyperlink==21.0.0
 idna==3.7
 imagesize==1.4.1
@@ -62,27 +62,27 @@ incremental==22.10.0
 ipaddress==1.0.23
 iso8601==2.1.0
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
-Jinja2==3.1.3
+Jinja2==3.1.4
 jmespath==1.0.1
 jsonref==1.1.0
 lazy-object-proxy==1.9.0  # pyup: ignore (required by astroid)
 ldap3==2.9.1
 lz4==4.3.3
-Mako==1.3.2
+Mako==1.3.3
 markdown2==2.4.13
 MarkupSafe==2.1.5
 mccabe==0.7.0
 more-itertools==10.2.0
-moto==5.0.4
+moto==5.0.6
 olefile==0.47
 packaging==24.0
 parameterized==0.9.0
 pathlib2==2.3.7.post1
 pbr==6.0.0
 Pillow==10.3.0
-platformdirs==4.2.0
+platformdirs==4.2.1
 psutil==5.9.8
-pyaml==23.12.0
+pyaml==24.4.0
 pyasn1==0.6.0
 pyasn1-modules==0.4.0
 pycodestyle==2.11.1;  python_version >= "3.8.1"
@@ -123,14 +123,14 @@ Twisted==24.3.0
 txaio==23.1.1
 txrequests==0.9.6
 types-PyYAML==6.0.12.20240311
-typing_extensions==4.10.0
+typing_extensions==4.11.0
 unidiff==0.7.5
 # botocore depends on urllib3<1.27
 urllib3==1.26.18  # pyup: ignore
 webcolors==1.13
-websocket-client==1.7.0
-Werkzeug==3.0.1
+websocket-client==1.8.0
+Werkzeug==3.0.3
 wrapt==1.16.0
 xmltodict==0.13.0
 zipp==3.18.1
-zope.interface==6.2
+zope.interface==6.3
