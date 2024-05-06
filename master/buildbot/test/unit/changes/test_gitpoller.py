@@ -75,7 +75,7 @@ class TestGitPollerBase(
 
     @async_to_deferred
     async def assert_last_rev(self, state: dict[str, str]) -> None:
-        last_rev = await self.poller.getState('lastRev', {})
+        last_rev = await self.poller.getState('lastRev', None)
         self.assertEqual(last_rev, state)
         self.assertEqual(self.poller.lastRev, state)
 
@@ -287,7 +287,7 @@ class TestGitPoller(TestGitPollerBase):
         yield self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({})
+        yield self.assert_last_rev(None)
 
     def test_poll_failInit(self):
         self.expect_commands(
@@ -1802,9 +1802,10 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[1]['src'], 'git')
         self.assertEqual(added[1]['category'], '64a5dc')
 
+    @async_to_deferred
     async def test_startService(self):
         self.assertEqual(self.poller.workdir, self.POLLER_WORKDIR)
-        await self.assert_last_rev({})
+        await self.assert_last_rev(None)
 
     @defer.inlineCallbacks
     def test_startService_loadLastRev(self):
@@ -1815,6 +1816,47 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         yield self.poller.startService()
+
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell([
+                'git',
+                'ls-remote',
+                '--refs',
+                self.REPOURL,
+                "refs/heads/master",
+            ]).stdout(b'fa3ae8ed68e664d4db24798611b352e3c6509930\trefs/heads/master\n'),
+            ExpectMasterShell([
+                'git',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                f'+refs/heads/master:refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                f'refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
+                '--',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'fa3ae8ed68e664d4db24798611b352e3c6509930\n'),
+            ExpectMasterShell([
+                'git',
+                'log',
+                '--ignore-missing',
+                '--format=%H',
+                'fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+        )
+
+        yield self.poller.poll()
+
+        self.assert_all_commands_ran()
 
         yield self.assert_last_rev({"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"})
 
