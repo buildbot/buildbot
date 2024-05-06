@@ -62,7 +62,7 @@ incremental==22.10.0
 ipaddress==1.0.23
 iso8601==2.1.0
 isort==4.3.21   # pyup: ignore (until https://github.com/PyCQA/pylint/pull/3725 is merged)
-Jinja2==3.1.3
+Jinja2==3.1.4
 jmespath==1.0.1
 jsonref==1.1.0
 lazy-object-proxy==1.9.0  # pyup: ignore (required by astroid)
