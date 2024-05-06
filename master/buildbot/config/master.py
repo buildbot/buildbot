@@ -39,7 +39,6 @@ from buildbot.util import ComparableMixin
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import service as util_service
 from buildbot.warnings import ConfigWarning
-from buildbot.warnings import warn_deprecated
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -209,8 +208,6 @@ class MasterConfig(util.ComparableMixin):
         "multiMaster",
         "prioritizeBuilders",
         "projects",
-        "projectName",
-        "projectURL",
         "properties",
         "protocols",
         "revlink",
@@ -295,17 +292,9 @@ class MasterConfig(util.ComparableMixin):
             interfaces.IConfigurator(configurator).configure(config_dict)
 
     def load_global(self, filename, config_dict):
-        def copy_param(
-            name, alt_key=None, check_type=None, check_type_name=None, can_be_callable=False
-        ):
+        def copy_param(name, check_type=None, check_type_name=None, can_be_callable=False):
             if name in config_dict:
                 v = config_dict[name]
-            elif alt_key and alt_key in config_dict:
-                warn_deprecated(
-                    "3.9.0",
-                    f"Configuration dictionary key {alt_key} is deprecated. Use {name} instead.",
-                )
-                v = config_dict[alt_key]
             else:
                 return
             if (
@@ -317,13 +306,13 @@ class MasterConfig(util.ComparableMixin):
             else:
                 setattr(self, name, v)
 
-        def copy_int_param(name, alt_key=None):
-            copy_param(name, alt_key=alt_key, check_type=int, check_type_name='an int')
+        def copy_int_param(name):
+            copy_param(name, check_type=int, check_type_name='an int')
 
-        def copy_str_param(name, alt_key=None):
-            copy_param(name, alt_key=alt_key, check_type=(str,), check_type_name='a string')
+        def copy_str_param(name):
+            copy_param(name, check_type=(str,), check_type_name='a string')
 
-        copy_str_param('title', alt_key='projectName')
+        copy_str_param('title')
 
         max_title_len = 18
         if len(self.title) > max_title_len:
@@ -334,13 +323,12 @@ class MasterConfig(util.ComparableMixin):
                 category=ConfigWarning,
             )
 
-        copy_str_param('titleURL', alt_key='projectURL')
+        copy_str_param('titleURL')
         copy_str_param('buildbotURL')
 
-        def copy_str_or_callable_param(name, alt_key=None):
+        def copy_str_or_callable_param(name):
             copy_param(
                 name,
-                alt_key=alt_key,
                 check_type=(str,),
                 check_type_name='a string or callable',
                 can_be_callable=True,

@@ -422,20 +422,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         with assertProducesWarning(ConfigWarning, message_pattern=r"Title is too long"):
             self.do_test_load_global({"title": "Very very very very very long title"})
 
-    def test_load_global_projectName(self):
-        with assertProducesWarning(
-            DeprecatedApiWarning,
-            message_pattern=r"Configuration dictionary key projectName is deprecated",
-        ):
-            self.do_test_load_global({"projectName": 'hey'}, title='hey')
-
-    def test_load_global_projectURL(self):
-        with assertProducesWarning(
-            DeprecatedApiWarning,
-            message_pattern=r"Configuration dictionary key projectURL is deprecated",
-        ):
-            self.do_test_load_global({"projectURL": 'hey'}, titleURL='hey')
-
     def test_load_global_titleURL(self):
         self.do_test_load_global({"titleURL": 'hi'}, titleURL='hi')
 
