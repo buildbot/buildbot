@@ -24,7 +24,7 @@ from typing import NamedTuple
 
 _giturlmatcher = re.compile(
     r'(?P<proto>(https?://|ssh://|git://|))'
-    r'((?P<user>.*)@)?'
+    r'((?P<user>[^:@]*)(:(?P<password>.*))?@)?'
     r'(?P<domain>[^\/:]+)(:((?P<port>[0-9]+)/)?|/)'
     r'((?P<owner>.+)/)?(?P<repo>[^/]+?)(\.git)?$'
 )
@@ -33,6 +33,7 @@ _giturlmatcher = re.compile(
 class GitUrl(NamedTuple):
     proto: str
     user: str | None
+    password: str | None
     domain: str
     port: int | None
     owner: str | None
@@ -55,6 +56,7 @@ def giturlparse(url: str) -> GitUrl | None:
     return GitUrl(
         proto=proto,
         user=res.group('user'),
+        password=res.group('password'),
         domain=res.group("domain"),
         port=port,
         owner=res.group('owner'),

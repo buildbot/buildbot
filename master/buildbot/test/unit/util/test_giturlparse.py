@@ -111,3 +111,16 @@ class Tests(unittest.TestCase):
         self.assertEqual(giturlparse("git://bitbucket.org/org/repo.git").proto, "git")
         self.assertEqual(giturlparse("ssh://git@bitbucket.org:org/repo.git").proto, "ssh")
         self.assertEqual(giturlparse("git@bitbucket.org:org/repo.git").proto, "ssh")
+
+    def test_user_password(self):
+        for u, expected_user, expected_password in [
+            ("https://user@github.com/buildbot/buildbot", "user", None),
+            ("https://user:password@github.com/buildbot/buildbot", "user", "password"),
+        ]:
+            u = giturlparse(u)
+            self.assertEqual(u.user, expected_user)
+            self.assertEqual(u.password, expected_password)
+            self.assertEqual(u.domain, "github.com")
+            self.assertEqual(u.owner, "buildbot")
+            self.assertEqual(u.repo, "buildbot")
+            self.assertIsNone(u.port)
