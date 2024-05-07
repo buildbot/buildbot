@@ -470,11 +470,6 @@ class FakeUpdates(service.AsyncService):
     def schedulerEnable(self, schedulerid, v):
         return self.master.db.schedulers.enable(schedulerid, v)
 
-    @defer.inlineCallbacks
-    def setWorkerState(self, workerid, paused, graceful):
-        yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
-        yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
-
     def set_worker_paused(self, workerid, paused, pause_reason=None):
         return self.master.db.workers.set_worker_paused(workerid, paused, pause_reason=pause_reason)
 
