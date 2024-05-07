@@ -23,7 +23,6 @@ from twisted.internet import defer
 
 from buildbot.data import exceptions
 from buildbot.util.twisted import async_to_deferred
-from buildbot.warnings import warn_deprecated
 
 
 class EndpointKind(enum.Enum):
@@ -117,24 +116,6 @@ class Endpoint:
     def __init__(self, rtype, master):
         self.rtype = rtype
         self.master = master
-        if hasattr(self, "isRaw"):
-            warn_deprecated(
-                "3.10.0",
-                "Endpoint.isRaw has been deprecated, "
-                "please set \"kind\" attribute instead. "
-                "isRaw = True is equivalent to kind = EndpointKind.RAW",
-            )
-            if self.isRaw:
-                self.kind = EndpointKind.RAW
-        if hasattr(self, "isCollection"):
-            warn_deprecated(
-                "3.10.0",
-                "Endpoint.isCollection has been deprecated, "
-                "please set \"kind\" attribute instead. "
-                "isCollection = True is equivalent to kind = EndpointKind.COLLECTION",
-            )
-            if self.isCollection:
-                self.kind = EndpointKind.COLLECTION
 
     def get(self, resultSpec, kwargs):
         raise NotImplementedError

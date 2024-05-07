@@ -20,16 +20,13 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.data.base import Endpoint
 from buildbot.data.base import EndpointKind
 from buildbot.data.exceptions import InvalidQueryParameter
 from buildbot.test.fake import endpoint
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
-from buildbot.warnings import DeprecatedApiWarning
 from buildbot.www import authz
 from buildbot.www import graphql
 from buildbot.www import rest
@@ -1041,25 +1038,3 @@ class ContentTypeParser(unittest.TestCase):
         self.assertEqual(
             rest.ContentTypeParser(b"text/plain; Charset=UTF-8").gettype(), "text/plain"
         )
-
-
-class EndpointKindMigrationTest(unittest.TestCase):
-    def test_is_raw(self):
-        class TestEndpoint(Endpoint):
-            isRaw = True
-
-        with assertProducesWarning(
-            DeprecatedApiWarning, message_pattern=r"Endpoint.isRaw has been deprecated"
-        ):
-            ep = TestEndpoint(mock.Mock(), mock.Mock())
-        self.assertEqual(ep.kind, EndpointKind.RAW)
-
-    def test_is_collection(self):
-        class TestEndpoint(Endpoint):
-            isCollection = True
-
-        with assertProducesWarning(
-            DeprecatedApiWarning, message_pattern=r"Endpoint.isCollection has been deprecated"
-        ):
-            ep = TestEndpoint(mock.Mock(), mock.Mock())
-        self.assertEqual(ep.kind, EndpointKind.COLLECTION)
