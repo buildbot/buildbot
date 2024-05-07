@@ -183,7 +183,6 @@ class MessageFormatterBase(util.ComparableMixin):
         ctx=None,
         want_properties=True,
         want_steps=False,
-        wantSteps=None,
         wantLogs=None,
         want_logs=False,
         want_logs_content=False,
@@ -192,14 +191,7 @@ class MessageFormatterBase(util.ComparableMixin):
             ctx = {}
         self.context = ctx
         self.want_properties = want_properties
-        if wantSteps is not None:
-            warn_deprecated(
-                '3.4.0',
-                f'{self.__class__.__name__}: wantSteps has been deprecated, ' + 'use want_steps',
-            )
-            self.want_steps = wantSteps
-        else:
-            self.want_steps = want_steps
+        self.want_steps = want_steps
         if wantLogs is not None:
             warn_deprecated(
                 '3.4.0',
