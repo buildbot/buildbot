@@ -370,22 +370,6 @@ See that module's description for details.
                     "mime-type": "<mime-type>"
                 }
 
-    .. py:attribute:: isCollection
-
-        :type: boolean
-
-        If true, then this endpoint returns collections of resources.
-
-        This attribute is deprecated, use ``kind`` attribute instead.
-
-    .. py:attribute:: isRaw
-
-        :type: boolean
-
-        If true, then this endpoint returns a raw resource.
-
-        This attribute is deprecated, use ``kind`` attribute instead.
-
     .. py:method:: get(options, resultSpec, kwargs)
 
         :param dict options: model-specific options
