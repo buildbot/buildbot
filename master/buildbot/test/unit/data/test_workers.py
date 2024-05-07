@@ -176,14 +176,6 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker, None)
 
     @defer.inlineCallbacks
-    def test_setWorkerState(self):
-        yield self.master.data.updates.setWorkerState(2, True, False)
-        worker = yield self.callGet(('workers', 2))
-        self.validateData(worker)
-        self.assertEqual(worker['paused'], True)
-        self.assertEqual(worker['graceful'], False)
-
-    @defer.inlineCallbacks
     def test_set_worker_paused(self):
         yield self.master.data.updates.set_worker_paused(2, True, "reason")
         worker = yield self.callGet(('workers', 2))

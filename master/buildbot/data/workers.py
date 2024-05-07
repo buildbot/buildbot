@@ -20,7 +20,6 @@ from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import types
 from buildbot.util import identifiers
-from buildbot.warnings import warn_deprecated
 
 
 class Db2DataMixin:
@@ -170,19 +169,6 @@ class Worker(base.ResourceType):
         bs['last_connection'] = last_connection
         bs['notify'] = notify
         self.produceEvent(bs, 'missing')
-
-    @base.updateMethod
-    @defer.inlineCallbacks
-    def setWorkerState(self, workerid, paused, graceful):
-        warn_deprecated(
-            "3.10.0",
-            "setWorkerState() has been deprecated, "
-            "please use set_worker_paused() and/or set_worker_graceful()",
-        )
-        yield self.master.db.workers.set_worker_paused(workerid=workerid, paused=paused)
-        yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
-        bs = yield self.master.data.get(('workers', workerid))
-        self.produceEvent(bs, 'state_updated')
 
     @base.updateMethod
     @defer.inlineCallbacks

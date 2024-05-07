@@ -93,16 +93,6 @@ Workers connector
         Unregister all the workers configured to a master for given builders.
         This shall happen when master is disabled or before reconfiguration.
 
-    .. py:method:: setWorkerState(workerid, paused, graceful)
-
-        :param integer workerid: the ID of the worker whose state is being changed
-        :param integer paused: the paused state
-        :param integer graceful: the graceful state
-        :returns: Deferred
-
-        Change the state of a worker (see definition of states above in worker dict description).
-
-        This method is deprecated.
 
     .. py:method:: set_worker_paused(workerid, paused, pause_reason=None)
 
