@@ -48,7 +48,7 @@ class TestGitPollerBase(
     unittest.TestCase,
 ):
     REPOURL = 'git@example.com:~foo/baz.git'
-    REPOURL_QUOTED = 'git%40example.com%3A%7Efoo%2Fbaz.git'
+    REPOURL_QUOTED = 'ssh/example.com/%7Efoo/baz'
 
     POLLER_WORKDIR = os.path.join('basedir', 'gitpoller-work')
 
@@ -2254,3 +2254,59 @@ class TestGitPollerConstructor(
     def test_gitbin_default(self):
         poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git"))
         self.assertEqual(poller.gitbin, "git")
+
+
+class TestGitPollerUtils(unittest.TestCase):
+    def test_tracker_ref_protos(self):
+        for url, expected_tracker in [
+            (
+                "https://example.org/owner/repo.git",
+                "refs/buildbot/https/example.org/owner/repo/heads/branch_name",
+            ),
+            ("ssh://example.org:repo.git", "refs/buildbot/ssh/example.org/repo/heads/branch_name"),
+            ("git@example.org:repo.git", "refs/buildbot/ssh/example.org/repo/heads/branch_name"),
+        ]:
+            self.assertEqual(
+                gitpoller.GitPoller._tracker_ref(url, "refs/heads/branch_name"),
+                expected_tracker,
+            )
+
+    def test_tracker_ref_with_port(self):
+        self.assertEqual(
+            gitpoller.GitPoller._tracker_ref(
+                "https://example.org:1234/owner/repo.git", "refs/heads/branch_name"
+            ),
+            "refs/buildbot/https/example.org:1234/owner/repo/heads/branch_name",
+        )
+
+    def test_tracker_ref_tag(self):
+        self.assertEqual(
+            gitpoller.GitPoller._tracker_ref(
+                "https://example.org:1234/owner/repo.git", "refs/tags/v1"
+            ),
+            "refs/buildbot/https/example.org:1234/owner/repo/tags/v1",
+        )
+
+    def test_tracker_ref_with_credentials(self):
+        self.assertEqual(
+            gitpoller.GitPoller._tracker_ref(
+                "https://user:password@example.org:1234/owner/repo.git", "refs/heads/branch_name"
+            ),
+            "refs/buildbot/https/example.org:1234/owner/repo/heads/branch_name",
+        )
+
+    def test_tracker_ref_sub_branch(self):
+        self.assertEqual(
+            gitpoller.GitPoller._tracker_ref(
+                "https://user:password@example.org:1234/owner/repo.git", "refs/heads/branch_name"
+            ),
+            "refs/buildbot/https/example.org:1234/owner/repo/heads/branch_name",
+        )
+
+    def test_tracker_ref_not_ref_collision(self):
+        self.assertNotEqual(
+            gitpoller.GitPoller._tracker_ref("https://example.org/repo.git", "heads/branch_name"),
+            gitpoller.GitPoller._tracker_ref(
+                "https://example.org/repo.git", "refs/heads/branch_name"
+            ),
+        )

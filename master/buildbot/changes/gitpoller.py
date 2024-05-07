@@ -26,6 +26,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
+from buildbot.util import giturlparse
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
 from buildbot.util.git import GitMixin
@@ -283,9 +284,30 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             branch = branch[11:]
         return branch
 
-    def _trackerBranch(self, branch):
-        url = urlquote(self.repourl, '').replace('~', '%7E')
-        return f"refs/buildbot/{url}/{self._trim_prefix(branch, 'refs/')}"
+    @staticmethod
+    def _tracker_ref(repourl: str, ref: str) -> str:
+        def _sanitize(value: str) -> str:
+            return urlquote(value, '').replace('~', '%7E')
+
+        tracker_prefix = "refs/buildbot"
+        # if ref is not a Git ref, store under a different path to avoid collision
+        if not ref.startswith('refs/'):
+            tracker_prefix += "/raw"
+
+        git_url = giturlparse(repourl)
+        if git_url is None:
+            # fallback to using the whole repourl
+            url_identifier = _sanitize(repourl)
+        else:
+            url_identifier = f"{git_url.proto}/{_sanitize(git_url.domain)}"
+            if git_url.port is not None:
+                url_identifier += f":{git_url.port}"
+
+            if git_url.owner is not None:
+                url_identifier += f"/{_sanitize(git_url.owner)}"
+            url_identifier += f"/{_sanitize(git_url.repo)}"
+
+        return f"{tracker_prefix}/{url_identifier}/{GitPoller._trim_prefix(ref, 'refs/')}"
 
     def poll_should_exit(self):
         # A single gitpoller loop may take a while on a loaded master, which would block
@@ -322,7 +344,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if self.poll_should_exit():
             return
 
-        refspecs = [f'+{ref}:{self._trackerBranch(ref)}' for ref in refs]
+        refspecs = [f'+{ref}:{self._tracker_ref(self.repourl, ref)}' for ref in refs]
 
         try:
             yield self._dovccmd(
@@ -346,7 +368,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     break
 
                 rev = yield self._dovccmd(
-                    'rev-parse', [self._trackerBranch(ref), '--'], path=self.workdir
+                    'rev-parse', [self._tracker_ref(self.repourl, ref), '--'], path=self.workdir
                 )
                 revs[branch] = rev
                 yield self._process_changes(rev, branch)
