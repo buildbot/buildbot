@@ -100,9 +100,6 @@ If you don't, buildbot won't be able to find a VM to start.
 ``password``
     A password for the buildbot to login to the master with.
 
-``connection``
-    :class:`Connection` instance wrapping connection to libvirt. (deprecated, use ``uri``).
-
 ``hd_image``
     The path to a libvirt disk image, normally in qcow2 format when using KVM.
 

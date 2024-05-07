@@ -26,8 +26,6 @@ from buildbot.test.fake import libvirt as libvirtfake
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.warnings import DeprecatedApiWarning
 from buildbot.worker import libvirt as libvirtworker
 
 
@@ -100,21 +98,6 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.patch(libvirtworker, "libvirt", None)
         with self.assertRaises(config.ConfigErrors):
             self.create_worker('bot', 'pass', None, 'path', 'path')
-
-    def test_deprecated_connection(self):
-        with assertProducesWarnings(
-            DeprecatedApiWarning, message_pattern='connection argument has been deprecated'
-        ):
-            self.create_worker('bot', 'pass', libvirtworker.Connection('test'), 'path', 'path')
-
-    def test_deprecated_connection_and_uri(self):
-        with self.assertRaises(config.ConfigErrors):
-            with assertProducesWarnings(
-                DeprecatedApiWarning, message_pattern='connection argument has been deprecated'
-            ):
-                self.create_worker(
-                    'bot', 'pass', libvirtworker.Connection('test'), 'path', 'path', uri='custom'
-                )
 
     @defer.inlineCallbacks
     def test_get_domain_id(self):
