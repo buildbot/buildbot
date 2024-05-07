@@ -23,6 +23,7 @@ from buildbot.config.master import FileLoader
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
 from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.warnings import DeprecatedApiWarning
 
 
@@ -43,7 +44,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
     def test_0_9_0b5_api_renamed_config(self):
         with open(self.filename, "w", encoding='utf-8') as f:
             f.write(sample_0_9_0b5_api_renamed)
-        with assertNotProducesWarnings(DeprecatedApiWarning):
+        with assertProducesWarning(DeprecatedApiWarning):
             FileLoader(self.basedir, self.filename).loadConfig()
 
 

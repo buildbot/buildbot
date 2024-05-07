@@ -33,6 +33,7 @@ from buildbot.util.git import GitServiceAuth
 from buildbot.util.git import check_ssh_config
 from buildbot.util.state import StateMixin
 from buildbot.util.twisted import async_to_deferred
+from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -100,6 +101,10 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated(
+                '3.11.2',
+                'pollinterval has been deprecated: please use pollInterval'
+            )
 
         if only_tags and (branch or branches):
             config.error("GitPoller: can't specify only_tags and branch/branches")

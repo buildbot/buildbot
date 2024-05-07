@@ -33,6 +33,8 @@ from buildbot.test.util import logging
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.twisted import async_to_deferred
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
@@ -2191,9 +2193,12 @@ class TestGitPollerConstructor(
             )
 
     @defer.inlineCallbacks
-    def test_oldPollInterval(self):
-        poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", pollinterval=10))
-        self.assertEqual(poller.pollInterval, 10)
+    def test_deprecatedPollInterval(self):
+        with assertProducesWarning(DeprecatedApiWarning, 'pollinterval has been deprecated: '
+            + 'please use pollInterval'
+        ):
+            poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", pollinterval=10))
+            self.assertEqual(poller.pollInterval, 10)
 
     @defer.inlineCallbacks
     def test_branches_default(self):
