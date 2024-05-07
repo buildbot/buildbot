@@ -9,7 +9,7 @@ This formatter is used to format messages in :ref:`Reportgen-WorkerMissingGenera
 
 It formats a message using the Jinja2_ templating language and picks the template either from a string or from a file.
 
-The constructor to that class takes the same arguments as MessageFormatter, minus ``wantLogs``, ``want_logs``, ``want_logs_content``, ``wantProperties``, ``want_properties``, ``wantSteps``, ``want_steps``.
+The constructor to that class takes the same arguments as MessageFormatter, minus ``wantLogs``, ``want_logs``, ``want_logs_content``, ``want_properties``, ``wantSteps``, ``want_steps``.
 
 ``template``
     The content of the template used to generate the body of the mail as string.

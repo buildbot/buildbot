@@ -284,11 +284,6 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
 
 
 class TestMessageFormatter(MessageFormatterTestBase):
-    def test_want_properties_deprecated(self):
-        with assertProducesWarning(DeprecatedApiWarning, "wantProperties has been deprecated"):
-            formatter = message.MessageFormatter(wantProperties=True)
-        self.assertEqual(formatter.want_properties, True)
-
     def test_want_steps_deprecated(self):
         with assertProducesWarning(DeprecatedApiWarning, "wantSteps has been deprecated"):
             formatter = message.MessageFormatter(wantSteps=True)
