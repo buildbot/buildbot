@@ -24,7 +24,6 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import runprocess
 from buildbot.util.queue import ConnectableThreadQueue
-from buildbot.warnings import warn_deprecated
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -128,7 +127,6 @@ class LibVirtWorker(AbstractLatentWorker):
         self,
         name,
         password,
-        connection=None,
         hd_image=None,
         base_image=None,
         uri="system:///",
@@ -139,15 +137,6 @@ class LibVirtWorker(AbstractLatentWorker):
         super().__init__(name, password, **kwargs)
         if not libvirt:
             config.error("The python module 'libvirt' is needed to use a LibVirtWorker")
-
-        if connection is not None:
-            warn_deprecated(
-                '3.2.0',
-                'LibVirtWorker connection argument has been deprecated: ' + 'please use uri',
-            )
-            if uri != "system:///":
-                config.error('connection and uri arguments cannot be used together')
-            uri = connection.uri
 
         self.uri = uri
         self.image = hd_image
