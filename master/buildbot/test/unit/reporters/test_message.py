@@ -34,8 +34,6 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import BuildDictLookAlike
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestMessageFormatting(unittest.TestCase):
@@ -284,13 +282,6 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
 
 
 class TestMessageFormatter(MessageFormatterTestBase):
-
-    def test_want_logs_deprecated(self):
-        with assertProducesWarning(DeprecatedApiWarning, "wantLogs has been deprecated"):
-            formatter = message.MessageFormatter(wantLogs=True)
-        self.assertEqual(formatter.want_logs, True)
-        self.assertEqual(formatter.want_logs_content, True)
-
     def test_unknown_template_type_for_default_message(self):
         with self.assertRaises(config.ConfigErrors):
             message.MessageFormatter(template_type='unknown')

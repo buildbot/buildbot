@@ -10,7 +10,7 @@ This formatter can be used to generate arbitrary messages bodies according to ar
 As opposed to :ref:`MessageFormatterRenderable`, more information is made available to this reporter.
 As opposed to :ref:`MessageFormatterFunctionRaw`, only the message body can be customized.
 
-.. py:class:: MessageFormatterFunction(function, template_type, want_properties=True, want_steps=False, wantLogs=None, want_logs=False, want_logs_content=False)
+.. py:class:: MessageFormatterFunction(function, template_type, want_properties=True, want_steps=False, want_logs=False, want_logs_content=False)
 
     :param callable function: A callable that will be called with a dictionary.
 

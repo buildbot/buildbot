@@ -30,7 +30,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
-from buildbot.warnings import warn_deprecated
 
 
 def get_detected_status_text(mode, results, previous_results):
@@ -183,7 +182,6 @@ class MessageFormatterBase(util.ComparableMixin):
         ctx=None,
         want_properties=True,
         want_steps=False,
-        wantLogs=None,
         want_logs=False,
         want_logs_content=False,
     ):
@@ -192,17 +190,8 @@ class MessageFormatterBase(util.ComparableMixin):
         self.context = ctx
         self.want_properties = want_properties
         self.want_steps = want_steps
-        if wantLogs is not None:
-            warn_deprecated(
-                '3.4.0',
-                f'{self.__class__.__name__}: wantLogs has been deprecated, '
-                + 'use want_logs and want_logs_content',
-            )
-        else:
-            wantLogs = False
-
-        self.want_logs = want_logs or wantLogs
-        self.want_logs_content = want_logs_content or wantLogs
+        self.want_logs = want_logs
+        self.want_logs_content = want_logs_content
 
     def buildAdditionalContext(self, master, ctx):
         pass
