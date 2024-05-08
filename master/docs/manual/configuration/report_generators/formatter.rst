@@ -43,18 +43,9 @@ The constructor of the class takes the following arguments:
 ``want_properties``
     This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
 
-``wantProperties``
-    Deprecated, use ``want_properties`` set to the same value.
-
 ``want_steps``
     This parameter (defaults to False) will extend the content of the given ``build`` object with information about the steps of the build.
     Use it only when necessary as this increases the overhead in terms of CPU and memory on the master.
-
-``wantSteps``
-    Deprecated, use ``want_steps`` set to the same value.
-
-``wantLogs``
-    Deprecated, use ``want_logs`` and ``want_logs_content`` set to the same value.
 
 ``want_logs``
     This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the log metadata of each steps from the build.
