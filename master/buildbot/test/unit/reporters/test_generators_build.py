@@ -28,8 +28,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin):
@@ -131,11 +129,6 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
                 'logs': [],
             },
         )
-
-    @defer.inlineCallbacks
-    def test_build_subject_deprecated(self):
-        with assertProducesWarning(DeprecatedApiWarning, "subject parameter"):
-            yield self.setup_generator(subject='subject')
 
     @defer.inlineCallbacks
     def test_build_message_no_result_formatter_no_subject(self):
