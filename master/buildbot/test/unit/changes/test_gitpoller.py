@@ -30,7 +30,7 @@ from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import logging
-from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.twisted import async_to_deferred
@@ -2193,9 +2193,11 @@ class TestGitPollerConstructor(
             )
 
     @defer.inlineCallbacks
-    def test_deprecatedPollInterval(self):
-        with assertProducesWarning(
-            DeprecatedApiWarning, 'pollinterval has been deprecated: ' + 'please use pollInterval'
+    def test_deprecated_pollinterval(self):
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            2,
+            message_pattern='pollinterval has been deprecated: ' + 'please use pollInterval',
         ):
             poller = yield self.attachChangeSource(
                 gitpoller.GitPoller("/tmp/git.git", pollinterval=10)
