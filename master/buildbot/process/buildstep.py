@@ -740,10 +740,6 @@ class BuildStep(
     def run(self):
         raise NotImplementedError("A custom build step must implement run()")
 
-    def isNewStyle(self):
-        warn_deprecated('3.0.0', 'BuildStep.isNewStyle() always returns True')
-        return True
-
     @defer.inlineCallbacks
     def _maybe_interrupt_cmd(self, reason):
         if not self.cmd:
