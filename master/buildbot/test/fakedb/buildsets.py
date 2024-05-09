@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -23,6 +26,9 @@ from buildbot.test.fakedb.buildrequests import BuildRequest
 from buildbot.test.fakedb.row import Row
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    from buildbot.db.sourcestamps import SourceStampModel
 
 
 class Buildset(Row):
@@ -226,10 +232,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     # no sourcestamps -> no match
                     ok = False
                 for ssid in bs['sourcestamps']:
-                    ss = yield self.db.sourcestamps.getSourceStamp(ssid)
-                    if branch and ss['branch'] != branch:
+                    ss: SourceStampModel = yield self.db.sourcestamps.getSourceStamp(ssid)
+                    if branch and ss.branch != branch:
                         ok = False
-                    if repository and ss['repository'] != repository:
+                    if repository and ss.repository != repository:
                         ok = False
             else:
                 ok = True

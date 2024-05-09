@@ -13,24 +13,65 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
+from twisted.python import deprecate
 from twisted.python import log
+from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import unicode2bytes
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    import datetime
 
 
-class SsDict(dict):
-    pass
+@dataclass
+class SourceStampModel:
+    ssid: int
+    branch: str | None
+    revision: str | None
+    repository: str
+    created_at: datetime.datetime
+    codebase: str = ''
+    project: str = ''
+    patchid: int | None = None
+
+    patch_body: bytes | None = None
+    patch_level: int | None = None
+    patch_author: str | None = None
+    patch_comment: str | None = None
+    patch_subdir: str | None = None
+
+    # For backward compatibility from when SsDict inherited from Dict
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '3.12.0',
+            (
+                'SourceStampsConnectorComponent '
+                'getSourceStamp, get_sourcestamps_for_buildset, '
+                'getSourceStampsForBuild, and getSourceStamps'
+                'no longer return SourceStamp as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+        raise KeyError(key)
 
 
-class SsList(list):
+@deprecate.deprecated(versions.Version("buildbot", 3, 12, 0), SourceStampModel)
+class SsDict(SourceStampModel):
     pass
 
 
@@ -128,23 +169,23 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     @base.cached("ssdicts")
-    def getSourceStamp(self, ssid):
-        def thd(conn):
+    def getSourceStamp(self, ssid) -> defer.Deferred[SourceStampModel | None]:
+        def thd(conn) -> SourceStampModel | None:
             tbl = self.db.model.sourcestamps
             q = tbl.select().where(tbl.c.id == ssid)
             res = conn.execute(q)
             row = res.fetchone()
             if not row:
                 return None
-            ssdict = self._rowToSsdict_thd(conn, row)
+            model = self._rowToModel_thd(conn, row)
             res.close()
-            return ssdict
+            return model
 
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def get_sourcestamps_for_buildset(self, buildsetid):
-        def thd(conn):
+    def get_sourcestamps_for_buildset(self, buildsetid) -> defer.Deferred[list[SourceStampModel]]:
+        def thd(conn) -> list[SourceStampModel]:
             bsets_tbl = self.db.model.buildsets
             bsss_tbl = self.db.model.buildset_sourcestamps
             sstamps_tbl = self.db.model.sourcestamps
@@ -156,15 +197,15 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             q = sa.select(sstamps_tbl).select_from(from_clause).where(bsets_tbl.c.id == buildsetid)
 
             res = conn.execute(q)
-            return [self._rowToSsdict_thd(conn, row) for row in res.fetchall()]
+            return [self._rowToModel_thd(conn, row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def getSourceStampsForBuild(self, buildid):
+    def getSourceStampsForBuild(self, buildid) -> defer.Deferred[list[SourceStampModel]]:
         assert buildid > 0
 
-        def thd(conn):
+        def thd(conn) -> list[SourceStampModel]:
             # Get SourceStamps for the build
             builds_tbl = self.db.model.builds
             reqs_tbl = self.db.model.buildrequests
@@ -181,32 +222,26 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
             q = sa.select(sstamps_tbl).select_from(from_clause).where(builds_tbl.c.id == buildid)
             res = conn.execute(q)
-            return [self._rowToSsdict_thd(conn, row) for row in res.fetchall()]
+            return [self._rowToModel_thd(conn, row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def getSourceStamps(self):
-        def thd(conn):
+    def getSourceStamps(self) -> defer.Deferred[list[SourceStampModel]]:
+        def thd(conn) -> list[SourceStampModel]:
             tbl = self.db.model.sourcestamps
             q = tbl.select()
             res = conn.execute(q)
-            return [self._rowToSsdict_thd(conn, row) for row in res.fetchall()]
+            return [self._rowToModel_thd(conn, row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
-    def _rowToSsdict_thd(self, conn, row):
+    def _rowToModel_thd(self, conn, row) -> SourceStampModel:
         ssid = row.id
-        ssdict = SsDict(
+        model = SourceStampModel(
             ssid=ssid,
             branch=row.branch,
             revision=row.revision,
-            patchid=None,
-            patch_body=None,
-            patch_level=None,
-            patch_author=None,
-            patch_comment=None,
-            patch_subdir=None,
             repository=row.repository,
             codebase=row.codebase,
             project=row.project,
@@ -222,13 +257,13 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if row:
                 # note the subtle renaming here
-                ssdict['patchid'] = patchid
-                ssdict['patch_level'] = row.patchlevel
-                ssdict['patch_subdir'] = row.subdir
-                ssdict['patch_author'] = row.patch_author
-                ssdict['patch_comment'] = row.patch_comment
-                ssdict['patch_body'] = base64.b64decode(row.patch_base64)
+                model.patchid = patchid
+                model.patch_level = row.patchlevel
+                model.patch_subdir = row.subdir
+                model.patch_author = row.patch_author
+                model.patch_comment = row.patch_comment
+                model.patch_body = base64.b64decode(row.patch_base64)
             else:
                 log.msg(f'patchid {patchid}, referenced from ssid {ssid}, not found')
             res.close()
-        return ssdict
+        return model

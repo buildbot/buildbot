@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -20,14 +22,13 @@ from buildbot.db import sourcestamps
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
 
 CREATED_AT = 927845299
 
 
-def sourceStampKey(sourceStamp):
-    return (sourceStamp['repository'], sourceStamp['branch'], sourceStamp['created_at'])
+def sourceStampKey(sourceStamp: sourcestamps.SourceStampModel):
+    return (sourceStamp.repository, sourceStamp.branch, sourceStamp.created_at)
 
 
 class Tests(interfaces.InterfaceTests):
@@ -79,24 +80,23 @@ class Tests(interfaces.InterfaceTests):
             project='stamper',
         )
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
-        validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(
             ssdict,
-            {
-                'branch': 'production',
-                'codebase': 'cb',
-                'patchid': None,
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'project': 'stamper',
-                'repository': 'test://repo',
-                'revision': 'abdef',
-                'ssid': ssid,
-                'created_at': epoch2datetime(CREATED_AT),
-            },
+            sourcestamps.SourceStampModel(
+                branch='production',
+                codebase='cb',
+                patchid=None,
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                project='stamper',
+                repository='test://repo',
+                revision='abdef',
+                ssid=ssid,
+                created_at=epoch2datetime(CREATED_AT),
+            ),
         )
 
     @defer.inlineCallbacks
@@ -170,24 +170,23 @@ class Tests(interfaces.InterfaceTests):
             patch_comment="comment",
         )
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
-        validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(
             ssdict,
-            {
-                'branch': 'production',
-                'codebase': 'cb',
-                'patchid': 1,
-                'patch_author': 'me',
-                'patch_body': b'my patch',
-                'patch_comment': 'comment',
-                'patch_level': 3,
-                'patch_subdir': 'master/',
-                'project': 'stamper',
-                'repository': 'test://repo',
-                'revision': 'abdef',
-                'created_at': epoch2datetime(CREATED_AT),
-                'ssid': ssid,
-            },
+            sourcestamps.SourceStampModel(
+                branch='production',
+                codebase='cb',
+                patchid=1,
+                patch_author='me',
+                patch_body=b'my patch',
+                patch_comment='comment',
+                patch_level=3,
+                patch_subdir='master/',
+                project='stamper',
+                repository='test://repo',
+                revision='abdef',
+                created_at=epoch2datetime(CREATED_AT),
+                ssid=ssid,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -205,24 +204,23 @@ class Tests(interfaces.InterfaceTests):
         ])
         ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
-        validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(
             ssdict,
-            {
-                'ssid': 234,
-                'created_at': epoch2datetime(CREATED_AT),
-                'branch': 'br',
-                'revision': 'rv',
-                'repository': 'rep',
-                'codebase': 'cb',
-                'project': 'prj',
-                'patchid': None,
-                'patch_body': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patch_author': None,
-                'patch_comment': None,
-            },
+            sourcestamps.SourceStampModel(
+                ssid=234,
+                created_at=epoch2datetime(CREATED_AT),
+                branch='br',
+                revision='rv',
+                repository='rep',
+                codebase='cb',
+                project='prj',
+                patchid=None,
+                patch_body=None,
+                patch_level=None,
+                patch_subdir=None,
+                patch_author=None,
+                patch_comment=None,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -235,8 +233,8 @@ class Tests(interfaces.InterfaceTests):
         ])
         ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
-        validation.verifyDbDict(self, 'ssdict', ssdict)
-        self.assertEqual((ssdict['branch'], ssdict['revision']), (None, None))
+        self.assertIsInstance(ssdict, sourcestamps.SourceStampModel)
+        self.assertEqual((ssdict.branch, ssdict.revision), (None, None))
 
     @defer.inlineCallbacks
     def test_getSourceStamp_patch(self):
@@ -251,19 +249,14 @@ class Tests(interfaces.InterfaceTests):
             ),
             fakedb.SourceStamp(id=234, patchid=99),
         ])
-        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
+        ssdict: sourcestamps.SourceStampModel = yield self.db.sourcestamps.getSourceStamp(234)
 
-        validation.verifyDbDict(self, 'ssdict', ssdict)
-        self.assertEqual(
-            {k: v for k, v in ssdict.items() if k.startswith('patch_')},
-            {
-                "patch_body": b'hello, world',
-                "patch_level": 3,
-                "patch_author": 'bar',
-                "patch_comment": 'foo',
-                "patch_subdir": '/foo',
-            },
-        )
+        self.assertIsInstance(ssdict, sourcestamps.SourceStampModel)
+        self.assertEqual(ssdict.patch_body, b'hello, world')
+        self.assertEqual(ssdict.patch_level, 3)
+        self.assertEqual(ssdict.patch_author, 'bar')
+        self.assertEqual(ssdict.patch_comment, 'foo')
+        self.assertEqual(ssdict.patch_subdir, '/foo')
 
     @defer.inlineCallbacks
     def test_getSourceStamp_nosuch(self):
@@ -303,42 +296,42 @@ class Tests(interfaces.InterfaceTests):
                 created_at=CREATED_AT + 10,
             ),
         ])
-        sourcestamps = yield self.db.sourcestamps.getSourceStamps()
+        db_sourcestamps = yield self.db.sourcestamps.getSourceStamps()
 
         self.assertEqual(
-            sorted(sourcestamps, key=sourceStampKey),
+            sorted(db_sourcestamps, key=sourceStampKey),
             sorted(
                 [
-                    {
-                        'branch': 'b',
-                        'codebase': 'c',
-                        'patch_author': 'bar',
-                        'patchid': 99,
-                        'patch_body': b'hello, world',
-                        'patch_comment': 'foo',
-                        'patch_level': 3,
-                        'patch_subdir': '/foo',
-                        'project': 'p',
-                        'repository': 'rep',
-                        'revision': 'r',
-                        'created_at': epoch2datetime(CREATED_AT),
-                        'ssid': 234,
-                    },
-                    {
-                        'branch': 'b2',
-                        'codebase': 'c2',
-                        'patchid': None,
-                        'patch_author': None,
-                        'patch_body': None,
-                        'patch_comment': None,
-                        'patch_level': None,
-                        'patch_subdir': None,
-                        'project': 'p2',
-                        'repository': 'rep2',
-                        'revision': 'r2',
-                        'created_at': epoch2datetime(CREATED_AT + 10),
-                        'ssid': 235,
-                    },
+                    sourcestamps.SourceStampModel(
+                        branch='b',
+                        codebase='c',
+                        patch_author='bar',
+                        patchid=99,
+                        patch_body=b'hello, world',
+                        patch_comment='foo',
+                        patch_level=3,
+                        patch_subdir='/foo',
+                        project='p',
+                        repository='rep',
+                        revision='r',
+                        created_at=epoch2datetime(CREATED_AT),
+                        ssid=234,
+                    ),
+                    sourcestamps.SourceStampModel(
+                        branch='b2',
+                        codebase='c2',
+                        patchid=None,
+                        patch_author=None,
+                        patch_body=None,
+                        patch_comment=None,
+                        patch_level=None,
+                        patch_subdir=None,
+                        project='p2',
+                        repository='rep2',
+                        revision='r2',
+                        created_at=epoch2datetime(CREATED_AT + 10),
+                        ssid=235,
+                    ),
                 ],
                 key=sourceStampKey,
             ),
@@ -361,28 +354,28 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
         ])
 
-        sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
+        db_sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
 
         expected = [
-            {
-                "branch": "master",
-                "codebase": "A",
-                "created_at": epoch2datetime(CREATED_AT),
-                "patch_author": None,
-                "patch_body": None,
-                "patch_comment": None,
-                "patch_level": None,
-                "patch_subdir": None,
-                "patchid": None,
-                "project": "proj",
-                "repository": "repo",
-                "revision": "aaa",
-                "ssid": 234,
-            }
+            sourcestamps.SourceStampModel(
+                branch="master",
+                codebase="A",
+                created_at=epoch2datetime(CREATED_AT),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project="proj",
+                repository="repo",
+                revision="aaa",
+                ssid=234,
+            )
         ]
 
         self.assertEqual(
-            sorted(sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
+            sorted(db_sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
         )
 
     @defer.inlineCallbacks
@@ -400,58 +393,58 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=30),
         ])
 
-        sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
+        db_sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
 
         expected = [
-            {
-                "branch": "master",
-                "codebase": "A",
-                "created_at": epoch2datetime(CREATED_AT),
-                "patch_author": None,
-                "patch_body": None,
-                "patch_comment": None,
-                "patch_level": None,
-                "patch_subdir": None,
-                "patchid": None,
-                "project": "proj",
-                "repository": "repo",
-                "revision": "aaa",
-                "ssid": 234,
-            },
-            {
-                "branch": "master",
-                "codebase": "B",
-                "created_at": epoch2datetime(CREATED_AT + 10),
-                "patch_author": None,
-                "patch_body": None,
-                "patch_comment": None,
-                "patch_level": None,
-                "patch_subdir": None,
-                "patchid": None,
-                "project": "proj",
-                "repository": "repo",
-                "revision": "bbb",
-                "ssid": 235,
-            },
-            {
-                "branch": "master",
-                "codebase": "C",
-                "created_at": epoch2datetime(CREATED_AT + 20),
-                "patch_author": None,
-                "patch_body": None,
-                "patch_comment": None,
-                "patch_level": None,
-                "patch_subdir": None,
-                "patchid": None,
-                "project": "proj",
-                "repository": "repo",
-                "revision": "ccc",
-                "ssid": 236,
-            },
+            sourcestamps.SourceStampModel(
+                branch="master",
+                codebase="A",
+                created_at=epoch2datetime(CREATED_AT),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project="proj",
+                repository="repo",
+                revision="aaa",
+                ssid=234,
+            ),
+            sourcestamps.SourceStampModel(
+                branch="master",
+                codebase="B",
+                created_at=epoch2datetime(CREATED_AT + 10),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project="proj",
+                repository="repo",
+                revision="bbb",
+                ssid=235,
+            ),
+            sourcestamps.SourceStampModel(
+                branch="master",
+                codebase="C",
+                created_at=epoch2datetime(CREATED_AT + 20),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project="proj",
+                repository="repo",
+                revision="ccc",
+                ssid=236,
+            ),
         ]
 
         self.assertEqual(
-            sorted(sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
+            sorted(db_sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
         )
 
     @defer.inlineCallbacks
@@ -489,21 +482,21 @@ class Tests(interfaces.InterfaceTests):
         ]
 
         expected = [
-            {
-                'branch': 'master',
-                'codebase': 'A',
-                'created_at': epoch2datetime(CREATED_AT),
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patchid': None,
-                'project': 'proj',
-                'repository': 'repo',
-                'revision': 'aaa',
-                'ssid': 234,
-            }
+            sourcestamps.SourceStampModel(
+                branch='master',
+                codebase='A',
+                created_at=epoch2datetime(CREATED_AT),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project='proj',
+                repository='repo',
+                revision='aaa',
+                ssid=234,
+            )
         ]
 
         return self.do_test_getSourceStampsForBuild(rows, 50, expected)
@@ -537,51 +530,51 @@ class Tests(interfaces.InterfaceTests):
         ]
 
         expected = [
-            {
-                'branch': 'master',
-                'codebase': 'A',
-                'created_at': epoch2datetime(CREATED_AT),
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patchid': None,
-                'project': 'proj',
-                'repository': 'repo',
-                'revision': 'aaa',
-                'ssid': 234,
-            },
-            {
-                'branch': 'master',
-                'codebase': 'B',
-                'created_at': epoch2datetime(CREATED_AT + 10),
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patchid': None,
-                'project': 'proj',
-                'repository': 'repo',
-                'revision': 'bbb',
-                'ssid': 235,
-            },
-            {
-                'branch': 'master',
-                'codebase': 'C',
-                'created_at': epoch2datetime(CREATED_AT + 20),
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patchid': None,
-                'project': 'proj',
-                'repository': 'repo',
-                'revision': 'ccc',
-                'ssid': 236,
-            },
+            sourcestamps.SourceStampModel(
+                branch='master',
+                codebase='A',
+                created_at=epoch2datetime(CREATED_AT),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project='proj',
+                repository='repo',
+                revision='aaa',
+                ssid=234,
+            ),
+            sourcestamps.SourceStampModel(
+                branch='master',
+                codebase='B',
+                created_at=epoch2datetime(CREATED_AT + 10),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project='proj',
+                repository='repo',
+                revision='bbb',
+                ssid=235,
+            ),
+            sourcestamps.SourceStampModel(
+                branch='master',
+                codebase='C',
+                created_at=epoch2datetime(CREATED_AT + 20),
+                patch_author=None,
+                patch_body=None,
+                patch_comment=None,
+                patch_level=None,
+                patch_subdir=None,
+                patchid=None,
+                project='proj',
+                repository='repo',
+                revision='ccc',
+                ssid=236,
+            ),
         ]
         return self.do_test_getSourceStampsForBuild(rows, 50, expected)
 
