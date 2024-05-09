@@ -23,6 +23,8 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 LINESEP_BYTES = os.linesep.encode("ascii")
@@ -378,3 +380,40 @@ class HgPollerNoTimestamp(TestHgPoller):
     """ Test HgPoller() without parsing revision commit timestamp """
 
     usetimestamps = False
+
+
+class TestHgPollerPollIntervalDeprecated(
+    MasterRunProcessMixin, changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
+):
+    usetimestamps = True
+    branches = None
+    bookmarks = None
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor()
+        self.setup_master_run_process()
+        yield self.setUpChangeSource()
+        self.remote_repo = 'ssh://example.com/foo/baz'
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+        yield self.tearDownChangeSource()
+
+    @defer.inlineCallbacks
+    def test_deprecatedPollInterval(self):
+        with assertProducesWarning(
+            DeprecatedApiWarning,
+            message_pattern='pollinterval has been deprecated: ' + 'please use pollInterval',
+        ):
+            self.poller = hgpoller.HgPoller(
+                self.remote_repo,
+                usetimestamps=self.usetimestamps,
+                workdir='/some/dir',
+                branches=self.branches,
+                bookmarks=self.bookmarks,
+                revlink=lambda branch, revision: self.remote_hgweb.format(revision),
+                pollinterval=10,
+            )
+            yield self.master.startService()

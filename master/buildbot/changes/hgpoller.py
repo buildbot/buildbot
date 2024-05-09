@@ -25,6 +25,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
 from buildbot.util import runprocess
 from buildbot.util.state import StateMixin
+from buildbot.warnings import warn_deprecated
 
 
 class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
@@ -57,6 +58,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated('3.11.3', 'pollinterval has been deprecated: please use pollInterval')
 
         if branch and branches:
             config.error("HgPoller: can't specify both branch and branches")
@@ -83,6 +85,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated('3.11.3', 'pollinterval has been deprecated: please use pollInterval')
 
         self.repourl = repourl
 
