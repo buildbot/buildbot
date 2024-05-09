@@ -30,7 +30,9 @@ from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.util import datetime2epoch
+from buildbot.warnings import DeprecatedApiWarning
 
 first_p4changes = b"""Change 1 on 2006/04/13 by slamb@testclient 'first rev'
 """
