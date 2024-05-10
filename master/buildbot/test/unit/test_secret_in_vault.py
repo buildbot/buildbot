@@ -23,6 +23,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
@@ -215,3 +217,14 @@ class TestSecretInVaultV2(TestSecretInVaultHttpFakeBase):
             content_json={"data": {"data": {"valueNotFound": "value1"}}},
         )
         yield self.assertFailure(self.srvcVault.get("valueNotFound"), KeyError)
+
+class TestSecretInVaultDeprecated(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
+    def test_HashiCorpVaultSecretProvider_deprecated(self):
+        with assertProducesWarning(
+            DeprecatedApiWarning,
+            "Use of HashiCorpVaultSecretProvider is deprecated and will be "
+            "removed in future releases. Use HashiCorpVaultKvSecretProvider instead",
+        ):
+            HashiCorpVaultSecretProvider(
+            vaultServer="http://vaultServer", vaultToken="someToken", apiVersion=1
+            )
