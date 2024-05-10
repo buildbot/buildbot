@@ -488,6 +488,23 @@ class TestP4Poller(changesource.ChangeSourceMixin, MasterRunProcessMixin,
                 "You need to provide a valid callable for resolvewho"):
             P4Source(resolvewho=None)
 
+    @defer.inlineCallbacks
+    def test_deprecated_pollinterval(self):
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            2,
+            message_pattern='pollinterval has been deprecated: ' + 'please use pollInterval',
+        ):
+            yield self.attachChangeSource(
+                P4Source(
+                    p4port=None,
+                    p4user=None,
+                    p4base='//depot/myproject/',
+                    split_file=lambda x: x.split('/', 1),
+                    pollinterval=10,
+                )
+            )
+
 
 class TestSplit(unittest.TestCase):
 
