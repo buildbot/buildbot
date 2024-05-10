@@ -417,7 +417,7 @@ class RealTests(Tests):
         def thd(conn):
             res = conn.execute(
                 self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -462,7 +462,7 @@ class RealTests(Tests):
         def thd(conn):
             res = conn.execute(
                 self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -483,7 +483,7 @@ class RealTests(Tests):
         def thd(conn):
             res = conn.execute(
                 self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -510,7 +510,7 @@ class RealTests(Tests):
         def thd(conn):
             res = conn.execute(
                 self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -537,7 +537,7 @@ class RealTests(Tests):
         def thd(conn):
             res = conn.execute(
                 self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -569,7 +569,7 @@ class RealTests(Tests):
         def thd(conn):
             res = conn.execute(
                 self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)

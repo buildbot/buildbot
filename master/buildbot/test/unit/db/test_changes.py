@@ -498,7 +498,7 @@ class RealTests(Tests):
 
         def thd_change_sourcestamps(conn):
             query = self.db.model.sourcestamps.select()
-            r = conn.execute(query)
+            r = conn.execute(query).mappings()
             self.assertEqual(
                 [dict(row) for row in r.fetchall()],
                 [

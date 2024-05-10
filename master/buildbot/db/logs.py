@@ -70,7 +70,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def _getLog(self, whereclause):
         def thd_getLog(conn):
             q = self.db.model.logs.select(whereclause=whereclause)
-            res = conn.execute(q)
+            res = conn.execute(q).mappings()
             row = res.fetchone()
 
             rv = None
@@ -96,7 +96,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if stepid is not None:
                 q = q.where(tbl.c.stepid == stepid)
             q = q.order_by(tbl.c.id)
-            res = conn.execute(q)
+            res = conn.execute(q).mappings()
             return [self._logdictFromRow(row) for row in res.fetchall()]
 
         return self.db.pool.do(thdGetLogs)
