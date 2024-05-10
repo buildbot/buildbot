@@ -658,7 +658,7 @@ class RealTests(Tests):
             results = {}
             for tbl_name in ('scheduler_changes', 'change_files', 'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
-                res = conn.execute(sa.select([tbl.c.changeid]))
+                res = conn.execute(sa.select(tbl.c.changeid))
                 results[tbl_name] = sorted([row[0] for row in res.fetchall()])
             self.assertEqual(
                 results,
@@ -687,7 +687,7 @@ class RealTests(Tests):
             results = {}
             for tbl_name in ('scheduler_changes', 'change_files', 'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
-                res = conn.execute(sa.select([sa.func.count()]).select_from(tbl))
+                res = conn.execute(sa.select(sa.func.count()).select_from(tbl))
                 results[tbl_name] = res.fetchone()[0]
                 res.close()
             self.assertEqual(

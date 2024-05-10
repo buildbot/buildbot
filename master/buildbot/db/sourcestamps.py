@@ -131,7 +131,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     def getSourceStamp(self, ssid):
         def thd(conn):
             tbl = self.db.model.sourcestamps
-            q = tbl.select(whereclause=tbl.c.id == ssid)
+            q = tbl.select().where(tbl.c.id == ssid)
             res = conn.execute(q)
             row = res.fetchone()
             if not row:
@@ -153,11 +153,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 sstamps_tbl, bsss_tbl.c.sourcestampid == sstamps_tbl.c.id
             )
 
-            q = (
-                sa.select([sstamps_tbl])
-                .select_from(from_clause)
-                .where(bsets_tbl.c.id == buildsetid)
-            )
+            q = sa.select(sstamps_tbl).select_from(from_clause).where(bsets_tbl.c.id == buildsetid)
 
             res = conn.execute(q)
             return [self._rowToSsdict_thd(conn, row) for row in res.fetchall()]
@@ -183,7 +179,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 sstamps_tbl, bsss_tbl.c.sourcestampid == sstamps_tbl.c.id
             )
 
-            q = sa.select([sstamps_tbl]).select_from(from_clause).where(builds_tbl.c.id == buildid)
+            q = sa.select(sstamps_tbl).select_from(from_clause).where(builds_tbl.c.id == buildid)
             res = conn.execute(q)
             return [self._rowToSsdict_thd(conn, row) for row in res.fetchall()]
 
@@ -221,7 +217,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         # fetch the patch, if necessary
         if patchid is not None:
             tbl = self.db.model.patches
-            q = tbl.select(whereclause=tbl.c.id == patchid)
+            q = tbl.select().where(tbl.c.id == patchid)
             res = conn.execute(q)
             row = res.fetchone()
             if row:

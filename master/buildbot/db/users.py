@@ -15,7 +15,6 @@
 
 
 import sqlalchemy as sa
-from sqlalchemy.sql.expression import and_
 
 from buildbot.db import base
 from buildbot.util import identifiers
@@ -40,11 +39,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # try to find the user
             q = sa.select(
-                [tbl_info.c.uid],
-                whereclause=and_(
-                    tbl_info.c.attr_type == attr_type, tbl_info.c.attr_data == attr_data
-                ),
-            )
+                tbl_info.c.uid,
+            ).where(tbl_info.c.attr_type == attr_type, tbl_info.c.attr_data == attr_data)
             rows = conn.execute(q).fetchall()
 
             if rows:
@@ -97,14 +93,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            q = tbl.select(whereclause=tbl.c.uid == uid)
+            q = tbl.select().where(tbl.c.uid == uid)
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=tbl_info.c.uid == uid)
+            q = tbl_info.select().where(tbl_info.c.uid == uid)
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -132,14 +128,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            q = tbl.select(whereclause=tbl.c.bb_username == username)
+            q = tbl.select().where(tbl.c.bb_username == username)
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=tbl_info.c.uid == users_row.uid)
+            q = tbl_info.select().where(tbl_info.c.uid == users_row.uid)
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -245,7 +241,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.users
 
-            q = tbl.select(whereclause=tbl.c.identifier == identifier)
+            q = tbl.select().where(tbl.c.identifier == identifier)
             row = conn.execute(q).fetchone()
             if not row:
                 return None

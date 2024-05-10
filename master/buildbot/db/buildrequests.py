@@ -54,14 +54,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         from_clause = from_clause.join(sstamps_tbl, bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
         from_clause = from_clause.join(builder_tbl, reqs_tbl.c.builderid == builder_tbl.c.id)
 
-        return sa.select([
+        return sa.select(
             reqs_tbl,
             claims_tbl,
             sstamps_tbl.c.branch,
             sstamps_tbl.c.repository,
             sstamps_tbl.c.codebase,
             builder_tbl.c.name.label('buildername'),
-        ]).select_from(from_clause)
+        ).select_from(from_clause)
 
     # returns a Deferred that returns a value
     def getBuildRequest(self, brid):

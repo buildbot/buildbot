@@ -107,7 +107,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 for w in extra_wheres:
                     wc &= w
 
-            q = sa.select([sch_ch_tbl.c.changeid, sch_ch_tbl.c.important], whereclause=wc)
+            q = sa.select(sch_ch_tbl.c.changeid, sch_ch_tbl.c.important).where(wc)
             return {r.changeid: bool(r.important) for r in conn.execute(q)}
 
         return self.db.pool.do(thd)
@@ -142,10 +142,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     sch_mst_tbl, (self.db.model.masters.c.id == sch_mst_tbl.c.masterid)
                 )
 
-                q = sa.select(
-                    [self.db.model.masters.c.name, sch_mst_tbl.c.masterid],
-                    from_obj=join,
-                    whereclause=(sch_mst_tbl.c.schedulerid == schedulerid),
+                q = (
+                    sa.select(
+                        self.db.model.masters.c.name,
+                        sch_mst_tbl.c.masterid,
+                    )
+                    .select_from(join)
+                    .where(sch_mst_tbl.c.schedulerid == schedulerid)
                 )
                 row = conn.execute(q).fetchone()
                 # ok, that was us, so we just do nothing
@@ -189,10 +192,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     wc = sch_mst_tbl.c.masterid == NULL
 
             q = sa.select(
-                [sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled, sch_mst_tbl.c.masterid],
-                from_obj=join,
-                whereclause=wc,
-            )
+                sch_tbl.c.id,
+                sch_tbl.c.name,
+                sch_tbl.c.enabled,
+                sch_mst_tbl.c.masterid,
+            ).select_from(join)
+            if wc is not None:
+                q = q.where(wc)
 
             return [
                 {

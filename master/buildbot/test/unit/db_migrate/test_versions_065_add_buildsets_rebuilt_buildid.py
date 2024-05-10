@@ -89,9 +89,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             buildsets = sautils.Table('buildsets', metadata, autoload=True)
             self.assertIsInstance(buildsets.c.rebuilt_buildid.type, sa.Integer)
 
-            q = sa.select([
+            q = sa.select(
                 buildsets.c.rebuilt_buildid,
-            ])
+            )
 
             all_fk_info = inspect(conn).get_foreign_keys("buildsets")
             fk_in_search = []

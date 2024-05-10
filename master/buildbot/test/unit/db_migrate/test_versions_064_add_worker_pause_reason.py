@@ -67,10 +67,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             workers = sautils.Table('workers', metadata, autoload=True)
             self.assertIsInstance(workers.c.pause_reason.type, sa.Text)
 
-            q = sa.select([
+            q = sa.select(
                 workers.c.name,
                 workers.c.pause_reason,
-            ])
+            )
 
             num_rows = 0
             for row in conn.execute(q):

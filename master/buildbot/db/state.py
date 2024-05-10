@@ -54,11 +54,9 @@ class StateConnectorComponent(base.DBConnectorComponent):
         self.checkLength(objects_tbl.c.class_name, class_name)
 
         def select():
-            q = sa.select(
-                [objects_tbl.c.id],
-                whereclause=(
-                    (objects_tbl.c.name == name) & (objects_tbl.c.class_name == class_name)
-                ),
+            q = sa.select(objects_tbl.c.id).where(
+                objects_tbl.c.name == name,
+                objects_tbl.c.class_name == class_name,
             )
             res = conn.execute(q)
             row = res.fetchone()
@@ -102,10 +100,10 @@ class StateConnectorComponent(base.DBConnectorComponent):
         object_state_tbl = self.db.model.object_state
 
         q = sa.select(
-            [object_state_tbl.c.value_json],
-            whereclause=(
-                (object_state_tbl.c.objectid == objectid) & (object_state_tbl.c.name == name)
-            ),
+            object_state_tbl.c.value_json,
+        ).where(
+            object_state_tbl.c.objectid == objectid,
+            object_state_tbl.c.name == name,
         )
         res = conn.execute(q)
         row = res.fetchone()

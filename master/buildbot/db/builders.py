@@ -131,8 +131,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None:
                 limiting_bm_tbl = bm_tbl.alias('limiting_bm')
                 j = j.join(limiting_bm_tbl, onclause=bldr_tbl.c.id == limiting_bm_tbl.c.builderid)
-            q = sa.select(
-                [
+            q = (
+                sa.select(
                     bldr_tbl.c.id,
                     bldr_tbl.c.name,
                     bldr_tbl.c.description,
@@ -140,9 +140,9 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                     bldr_tbl.c.description_html,
                     bldr_tbl.c.projectid,
                     bm_tbl.c.masterid,
-                ],
-                from_obj=[j],
-                order_by=[bldr_tbl.c.id, bm_tbl.c.masterid],
+                )
+                .select_from(j)
+                .order_by(bldr_tbl.c.id, bm_tbl.c.masterid)
             )
             if masterid is not None:
                 # filter the masterid from the limiting table
@@ -154,7 +154,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             # build up a intermediate builder id -> tag names map (fixes performance issue #3396)
             bldr_id_to_tags = defaultdict(list)
-            bldr_q = sa.select([builders_tags_tbl.c.builderid, tags_tbl.c.name])
+            bldr_q = sa.select(builders_tags_tbl.c.builderid, tags_tbl.c.name)
             bldr_q = bldr_q.select_from(tags_tbl.join(builders_tags_tbl))
 
             for bldr_id, tag in conn.execute(bldr_q).fetchall():

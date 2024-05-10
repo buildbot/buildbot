@@ -93,12 +93,12 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             build_data_table = self.db.model.build_data
 
-            q = sa.select([
+            q = sa.select(
                 build_data_table.c.buildid,
                 build_data_table.c.name,
                 build_data_table.c.length,
                 build_data_table.c.source,
-            ])
+            )
             q = q.where((build_data_table.c.buildid == buildid) & (build_data_table.c.name == name))
             res = conn.execute(q)
             row = res.fetchone()
@@ -114,12 +114,12 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             build_data_table = self.db.model.build_data
 
-            q = sa.select([
+            q = sa.select(
                 build_data_table.c.buildid,
                 build_data_table.c.name,
                 build_data_table.c.length,
                 build_data_table.c.source,
-            ])
+            )
             q = q.where(build_data_table.c.buildid == buildid)
 
             return [self._row2dict_novalue(conn, row) for row in conn.execute(q).fetchall()]
@@ -133,7 +133,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         builds = self.db.model.builds
 
         def count_build_datum(conn):
-            res = conn.execute(sa.select([sa.func.count(build_data.c.id)]))
+            res = conn.execute(sa.select(sa.func.count(build_data.c.id)))
             count = res.fetchone()[0]
             res.close()
             return count
@@ -145,7 +145,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                 # sqlite does not support delete with a join, so for this case we use a subquery,
                 # which is much slower
 
-                q = sa.select([builds.c.id])
+                q = sa.select(builds.c.id)
                 q = q.where(
                     (builds.c.complete_at >= older_than_timestamp) | (builds.c.complete_at == NULL)
                 )

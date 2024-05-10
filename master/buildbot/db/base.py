@@ -89,7 +89,9 @@ class DBConnectorComponent:
 
         def thd(conn, no_recurse=False):
             # try to find the master
-            q = sa.select([tbl.c.id], whereclause=whereclause)
+            q = sa.select(tbl.c.id)
+            if whereclause is not None:
+                q = q.where(whereclause)
             r = conn.execute(q)
             row = r.fetchone()
             r.close()

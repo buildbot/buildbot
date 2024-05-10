@@ -40,7 +40,7 @@ def test_unicode(migrate_engine):
     migrate_engine.execute(ins)
 
     # see if the data is intact
-    row = migrate_engine.execute(sa.select([test_unicode])).fetchall()[0]
+    row = migrate_engine.execute(test_unicode.select()).fetchall()[0]
     assert isinstance(row['u'], str)
     assert row['u'] == u
     assert isinstance(row['b'], bytes)

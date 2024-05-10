@@ -48,7 +48,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             whereclause = tbl.c.id == masterid
 
             # get the old state
-            r = conn.execute(sa.select([tbl.c.active], whereclause=whereclause))
+            r = conn.execute(sa.select(tbl.c.active).where(whereclause))
             rows = r.fetchall()
             r.close()
             if not rows:
@@ -78,7 +78,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
     def getMaster(self, masterid):
         def thd(conn):
             tbl = self.db.model.masters
-            res = conn.execute(tbl.select(whereclause=tbl.c.id == masterid))
+            res = conn.execute(tbl.select().where(tbl.c.id == masterid))
             row = res.fetchone()
 
             rv = None

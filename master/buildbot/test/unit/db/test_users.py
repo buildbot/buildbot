@@ -214,8 +214,10 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
         def thd(conn):
             users_tbl = self.db.model.users
             users_info_tbl = self.db.model.users_info
-            users = conn.execute(users_tbl.select(order_by=users_tbl.c.identifier)).fetchall()
-            infos = conn.execute(users_info_tbl.select(users_info_tbl.c.uid == uid)).fetchall()
+            users = conn.execute(users_tbl.select().order_by(users_tbl.c.identifier)).fetchall()
+            infos = conn.execute(
+                users_info_tbl.select().where(users_info_tbl.c.uid == uid)
+            ).fetchall()
             self.assertEqual(len(users), 2)
             self.assertEqual(users[1].uid, uid)
             self.assertEqual(users[1].identifier, 'soap_2')  # unique'd

@@ -66,20 +66,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # check that projects table has been added
             projects = sautils.Table('projects', metadata, autoload=True)
 
-            q = sa.select([
+            q = sa.select(
                 projects.c.id,
                 projects.c.name,
                 projects.c.name_hash,
                 projects.c.slug,
                 projects.c.description,
-            ])
+            )
             self.assertEqual(conn.execute(q).fetchall(), [])
 
             # check that builders.projectid has been added
             builders = sautils.Table('builders', metadata, autoload=True)
             self.assertIsInstance(builders.c.projectid.type, sa.Integer)
 
-            q = sa.select([builders.c.name, builders.c.projectid])
+            q = sa.select(builders.c.name, builders.c.projectid)
             num_rows = 0
             for row in conn.execute(q):
                 # verify that the default value was set correctly

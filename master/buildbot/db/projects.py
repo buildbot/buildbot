@@ -36,8 +36,8 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def get_project(self, projectid):
         def thd(conn):
-            q = self.db.model.projects.select(
-                whereclause=(self.db.model.projects.c.id == projectid)
+            q = self.db.model.projects.select().where(
+                self.db.model.projects.c.id == projectid,
             )
             res = conn.execute(q)
             row = res.fetchone()

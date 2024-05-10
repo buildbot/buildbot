@@ -28,7 +28,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     # returns a Deferred that returns a value
     def _getBuild(self, whereclause):
         def thd(conn):
-            q = self.db.model.builds.select(whereclause=whereclause)
+            q = self.db.model.builds.select()
+            if whereclause is not None:
+                q = q.where(whereclause)
             res = conn.execute(q)
             row = res.fetchone()
 
@@ -54,11 +56,18 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
 
-            q = tbl.select(
-                whereclause=whereclause,
-                order_by=[sa.desc(tbl.c.complete_at)],
-                offset=offset,
-                limit=limit,
+            q = tbl.select()
+            if whereclause is not None:
+                q = q.where(
+                    whereclause,
+                )
+
+            q = (
+                q.order_by(
+                    sa.desc(tbl.c.complete_at),
+                )
+                .offset(offset)
+                .limit(limit)
             )
 
             res = conn.execute(q)
@@ -118,7 +127,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             from_clause = from_clause.join(builds_tbl, reqs_tbl.c.id == builds_tbl.c.buildrequestid)
 
             q = (
-                sa.select([builds_tbl])
+                sa.select(builds_tbl)
                 .select_from(from_clause)
                 .where(changes_tbl.c.changeid == changeid)
             )
@@ -164,7 +173,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             # get the highest current number
             r = conn.execute(
-                sa.select([sa.func.max(tbl.c.number)], whereclause=tbl.c.builderid == builderid)
+                sa.select(sa.func.max(tbl.c.number)).where(tbl.c.builderid == builderid)
             )
             number = r.scalar()
             new_number = 1 if number is None else number + 1
@@ -222,9 +231,10 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             bp_tbl = self.db.model.build_properties
             q = sa.select(
-                [bp_tbl.c.name, bp_tbl.c.value, bp_tbl.c.source],
-                whereclause=bp_tbl.c.buildid == bid,
-            )
+                bp_tbl.c.name,
+                bp_tbl.c.value,
+                bp_tbl.c.source,
+            ).where(bp_tbl.c.buildid == bid)
             props = []
             if resultSpec is not None:
                 data = resultSpec.thd_execute(conn, q, lambda x: x)
@@ -247,7 +257,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             self.checkLength(bp_tbl.c.name, name)
             self.checkLength(bp_tbl.c.source, source)
             whereclause = sa.and_(bp_tbl.c.buildid == bid, bp_tbl.c.name == name)
-            q = sa.select([bp_tbl.c.value, bp_tbl.c.source], whereclause=whereclause)
+            q = sa.select(bp_tbl.c.value, bp_tbl.c.source).where(whereclause)
             prop = conn.execute(q).fetchone()
             value_js = json.dumps(value)
             if prop is None:

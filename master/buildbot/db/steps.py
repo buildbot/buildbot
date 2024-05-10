@@ -43,7 +43,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             wc = wc & (tbl.c.buildid == buildid)
 
         def thd(conn):
-            q = self.db.model.steps.select(whereclause=wc)
+            q = self.db.model.steps.select().where(wc)
             res = conn.execute(q)
             row = res.fetchone()
 
@@ -72,9 +72,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             # get the highest current number
-            r = conn.execute(
-                sa.select([sa.func.max(tbl.c.number)], whereclause=tbl.c.buildid == buildid)
-            )
+            r = conn.execute(sa.select(sa.func.max(tbl.c.number)).where(tbl.c.buildid == buildid))
             number = r.scalar()
             number = 0 if number is None else number + 1
 
@@ -103,7 +101,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # we didn't get an id, so calculate a unique name and use that
             # instead.  Because names are truncated at the right to fit in a
             # 50-character identifier, this isn't a simple query.
-            res = conn.execute(sa.select([tbl.c.name], whereclause=(tbl.c.buildid == buildid)))
+            res = conn.execute(sa.select(tbl.c.name).where(tbl.c.buildid == buildid))
             names = {row[0] for row in res}
             num = 1
             while True:
@@ -164,7 +162,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             wc = tbl.c.id == stepid
-            q = sa.select([tbl.c.urls_json], whereclause=wc)
+            q = sa.select(tbl.c.urls_json).where(wc)
             res = conn.execute(q)
             row = res.fetchone()
             if _racehook is not None:

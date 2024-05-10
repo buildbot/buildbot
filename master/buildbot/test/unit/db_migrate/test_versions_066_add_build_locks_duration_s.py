@@ -86,7 +86,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             )
 
             durations = []
-            for row in conn.execute(sa.select([builds.c.locks_duration_s])):
+            for row in conn.execute(sa.select(builds.c.locks_duration_s)):
                 durations.append(row.locks_duration_s)
             self.assertEqual(durations, [0, 12])
 

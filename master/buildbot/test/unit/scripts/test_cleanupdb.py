@@ -187,7 +187,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
             # retrieve the actual data size in db using raw sqlalchemy
             def thd(conn):
                 tbl = self.master.db.model.logchunks
-                q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
+                q = sa.select(sa.func.sum(sa.func.length(tbl.c.content)))
                 q = q.where(tbl.c.logid == logid)
                 return conn.execute(q).fetchone()[0]
 

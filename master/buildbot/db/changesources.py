@@ -89,8 +89,12 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                     wc = cs_mst_tbl.c.masterid == NULL
 
             q = sa.select(
-                [cs_tbl.c.id, cs_tbl.c.name, cs_mst_tbl.c.masterid], from_obj=join, whereclause=wc
-            )
+                cs_tbl.c.id,
+                cs_tbl.c.name,
+                cs_mst_tbl.c.masterid,
+            ).select_from(join)
+            if wc is not None:
+                q = q.where(wc)
 
             return [
                 {"id": row.id, "name": row.name, "masterid": row.masterid}

@@ -73,11 +73,11 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertIsInstance(projects.c.description_format.type, sa.Text)
             self.assertIsInstance(projects.c.description_html.type, sa.Text)
 
-            q = sa.select([
+            q = sa.select(
                 projects.c.name,
                 projects.c.description_format,
                 projects.c.description_html,
-            ])
+            )
 
             num_rows = 0
             for row in conn.execute(q):
