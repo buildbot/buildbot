@@ -84,7 +84,7 @@ Jinja2: http://jinja.pocoo.org/
 
 SQLAlchemy: http://www.sqlalchemy.org/
 
-  Buildbot requires SQLAlchemy version 1.3.0 or higher.
+  Buildbot requires SQLAlchemy version 1.4.0 or higher.
   SQLAlchemy allows Buildbot to build database schemas and queries for a wide variety of database systems.
 
 Alembic: https://alembic.sqlalchemy.org/en/latest/
