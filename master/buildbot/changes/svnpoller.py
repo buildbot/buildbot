@@ -27,6 +27,7 @@ from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
+from buildbot.warnings import warn_deprecated
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
@@ -96,6 +97,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated('3.11.3', 'pollinterval has been deprecated: please use pollInterval')
 
         if name is None:
             name = repourl
@@ -114,6 +116,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated('3.11.3', 'pollinterval has been deprecated: please use pollInterval')
 
         if name is None:
             name = repourl
