@@ -178,7 +178,7 @@ class RealDatabaseMixin:
             # SQLAlchemy wouldn't be able to break circular references.
             # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during
             # that operation, even though we made our possible to use use_alter
-            with withoutSqliteForeignKeys(conn.engine, conn):
+            with withoutSqliteForeignKeys(conn):
                 meta.drop_all(bind=conn)
 
         except Exception:

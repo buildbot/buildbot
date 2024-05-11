@@ -74,8 +74,8 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         def upgrade_thd(engine):
             with querylog.log_queries():
-                with sautils.withoutSqliteForeignKeys(engine):
-                    with engine.connect() as conn:
+                with engine.connect() as conn:
+                    with sautils.withoutSqliteForeignKeys(conn):
 
                         def upgrade(rev, context):
                             log.msg(f'Upgrading from {rev} to {target_revision}')
@@ -105,8 +105,8 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         yield self.db.pool.do(check_table_charsets_thd)
 
-        def verify_thd(engine):
-            with sautils.withoutSqliteForeignKeys(engine):
-                verify_thd_cb(engine)
+        def verify_thd(conn):
+            with sautils.withoutSqliteForeignKeys(conn):
+                verify_thd_cb(conn)
 
         yield self.db.pool.do(verify_thd)
