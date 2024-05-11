@@ -9,6 +9,9 @@ jobs:
       # use the same build image as we use for metabuildbot
       - image: buildbot/metabbotcfg
     working_directory: ~/repo
+    environment:
+      # Needed to ignore specific warns, otherwise, it'll warn a generic message
+      SQLALCHEMY_WARN_20: 1
 
     steps:
       - checkout
