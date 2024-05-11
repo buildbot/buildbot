@@ -136,10 +136,8 @@ class StateConnectorComponent(base.DBConnectorComponent):
         name = self.ensureLength(object_state_tbl.c.name, name)
 
         def update():
-            q = object_state_tbl.update(
-                whereclause=(
-                    (object_state_tbl.c.objectid == objectid) & (object_state_tbl.c.name == name)
-                )
+            q = object_state_tbl.update().where(
+                object_state_tbl.c.objectid == objectid, object_state_tbl.c.name == name
             )
             res = conn.execute(q.values(value_json=value_json))
 

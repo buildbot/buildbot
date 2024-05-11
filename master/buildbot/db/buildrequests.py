@@ -181,9 +181,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     break  # success!
 
                 try:
-                    q = claims_tbl.delete(
-                        (claims_tbl.c.brid.in_(batch))
-                        & (claims_tbl.c.masterid == self.db.master.masterid)
+                    q = claims_tbl.delete().where(
+                        claims_tbl.c.brid.in_(batch),
+                        claims_tbl.c.masterid == self.db.master.masterid,
                     )
                     conn.execute(q)
                 except Exception:

@@ -79,9 +79,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         self, projectid, slug, description, description_format, description_html
     ):
         def thd(conn):
-            q = self.db.model.projects.update(
-                whereclause=(self.db.model.projects.c.id == projectid)
-            )
+            q = self.db.model.projects.update().where(self.db.model.projects.c.id == projectid)
             conn.execute(
                 q.values(
                     slug=slug,

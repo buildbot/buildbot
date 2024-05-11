@@ -160,10 +160,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.buildsets
 
-            q = tbl.update(
-                whereclause=(
-                    (tbl.c.id == bsid) & ((tbl.c.complete == NULL) | (tbl.c.complete != 1))
-                )
+            q = tbl.update().where(
+                (tbl.c.id == bsid) & ((tbl.c.complete == NULL) | (tbl.c.complete != 1))
             )
             res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at))
 

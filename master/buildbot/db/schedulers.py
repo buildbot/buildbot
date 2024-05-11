@@ -30,7 +30,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
-            q = tbl.update(whereclause=tbl.c.id == schedulerid)
+            q = tbl.update().where(tbl.c.id == schedulerid)
             conn.execute(q.values(enabled=int(v)))
 
         return self.db.pool.do(thd)
@@ -40,11 +40,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
-            upd_q = tbl.update(
-                (
-                    (tbl.c.schedulerid == schedulerid)
-                    & (tbl.c.changeid == sa.bindparam('wc_changeid'))
-                )
+            upd_q = tbl.update().where(
+                tbl.c.schedulerid == schedulerid, tbl.c.changeid == sa.bindparam('wc_changeid')
             )
             for changeid, important in classifications.items():
                 transaction = conn.begin()
@@ -72,7 +69,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             wc = sch_ch_tbl.c.schedulerid == schedulerid
             if less_than is not None:
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
-            q = sch_ch_tbl.delete(whereclause=wc)
+            q = sch_ch_tbl.delete().where(wc)
             conn.execute(q).close()
 
         return self.db.pool.do(thd)
@@ -128,7 +125,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
             # handle the masterid=None case to get it out of the way
             if masterid is None:
-                q = sch_mst_tbl.delete(whereclause=sch_mst_tbl.c.schedulerid == schedulerid)
+                q = sch_mst_tbl.delete().where(sch_mst_tbl.c.schedulerid == schedulerid)
                 conn.execute(q).close()
                 return None
 

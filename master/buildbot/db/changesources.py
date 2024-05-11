@@ -42,7 +42,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
             # handle the masterid=None case to get it out of the way
             if masterid is None:
-                q = cs_mst_tbl.delete(whereclause=cs_mst_tbl.c.changesourceid == changesourceid)
+                q = cs_mst_tbl.delete().where(cs_mst_tbl.c.changesourceid == changesourceid)
                 conn.execute(q)
                 return
 

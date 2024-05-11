@@ -212,7 +212,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
 
-            q = tbl.update(whereclause=tbl.c.id == buildid)
+            q = tbl.update().where(tbl.c.id == buildid)
             conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do(thd)
@@ -221,7 +221,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     def finishBuild(self, buildid, results):
         def thd(conn):
             tbl = self.db.model.builds
-            q = tbl.update(whereclause=tbl.c.id == buildid)
+            q = tbl.update().where(tbl.c.id == buildid)
             conn.execute(q.values(complete_at=int(self.master.reactor.seconds()), results=results))
 
         return self.db.pool.do(thd)
@@ -267,7 +267,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 )
             elif (prop.value != value_js) or (prop.source != source):
                 conn.execute(
-                    bp_tbl.update(whereclause=whereclause), {"value": value_js, "source": source}
+                    bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
                 )
 
         yield self.db.pool.do(thd)
@@ -277,9 +277,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             builds_tbl = self.db.model.builds
             conn.execute(
-                builds_tbl.update(builds_tbl.c.id == buildid).values(
-                    locks_duration_s=builds_tbl.c.locks_duration_s + duration_s
-                )
+                builds_tbl.update()
+                .where(builds_tbl.c.id == buildid)
+                .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
             )
 
         yield self.db.pool.do(thd)

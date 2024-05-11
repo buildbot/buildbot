@@ -189,7 +189,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # update the users table if it needs to be updated
             if update_dict:
-                q = tbl.update(whereclause=tbl.c.uid == uid)
+                q = tbl.update().where(tbl.c.uid == uid)
                 res = conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
@@ -201,8 +201,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 self.checkLength(tbl_info.c.attr_data, attr_data)
 
                 # first update, then insert
-                q = tbl_info.update(
-                    whereclause=(tbl_info.c.uid == uid) & (tbl_info.c.attr_type == attr_type)
+                q = tbl_info.update().where(
+                    tbl_info.c.uid == uid,
+                    tbl_info.c.attr_type == attr_type,
                 )
                 res = conn.execute(q.values(attr_data=attr_data))
                 if res.rowcount == 0:
@@ -234,7 +235,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 self.db.model.users_info,
                 self.db.model.users,
             ]:
-                conn.execute(tbl.delete(whereclause=tbl.c.uid == uid))
+                conn.execute(tbl.delete().where(tbl.c.uid == uid))
 
         return self.db.pool.do(thd)
 

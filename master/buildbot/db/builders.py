@@ -58,7 +58,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             builders_tags_tbl = self.db.model.builders_tags
             transaction = conn.begin()
 
-            q = builders_tbl.update(whereclause=builders_tbl.c.id == builderid)
+            q = builders_tbl.update().where(builders_tbl.c.id == builderid)
             conn.execute(
                 q.values(
                     description=description,
@@ -69,7 +69,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             ).close()
             # remove previous builders_tags
             conn.execute(
-                builders_tags_tbl.delete(whereclause=(builders_tags_tbl.c.builderid == builderid))
+                builders_tags_tbl.delete().where(builders_tags_tbl.c.builderid == builderid)
             ).close()
 
             # add tag ids
@@ -111,9 +111,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
             conn.execute(
-                tbl.delete(
-                    whereclause=((tbl.c.builderid == builderid) & (tbl.c.masterid == masterid))
-                )
+                tbl.delete().where(tbl.c.builderid == builderid, tbl.c.masterid == masterid)
             )
 
         return self.db.pool.do(thd)

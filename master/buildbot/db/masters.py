@@ -59,11 +59,11 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 # if we're marking inactive, then delete any links to this
                 # master
                 sch_mst_tbl = self.db.model.scheduler_masters
-                q = sch_mst_tbl.delete(whereclause=sch_mst_tbl.c.masterid == masterid)
+                q = sch_mst_tbl.delete().where(sch_mst_tbl.c.masterid == masterid)
                 conn.execute(q)
 
             # set the state (unconditionally, just to be safe)
-            q = tbl.update(whereclause=whereclause)
+            q = tbl.update().where(whereclause)
             q = q.values(active=1 if active else 0)
             if active:
                 q = q.values(last_active=int(self.master.reactor.seconds()))
