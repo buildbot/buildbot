@@ -40,7 +40,7 @@ def upgrade():
         "builds", metadata, sa.Column("locks_duration_s", sa.Integer, nullable=True)
     )
 
-    op.execute(builds_tbl.update(values={builds_tbl.c.locks_duration_s: 0}))
+    op.execute(builds_tbl.update().values({builds_tbl.c.locks_duration_s: 0}))
 
     with op.batch_alter_table("builds") as batch_op:
         batch_op.alter_column("locks_duration_s", existing_type=sa.Integer, nullable=False)
