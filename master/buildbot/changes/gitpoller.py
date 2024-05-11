@@ -181,7 +181,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             if only_tags:
                 branches = lambda ref: ref.startswith('refs/tags/')  # noqa: E731
             else:
-                branches = ['master']
+                branches = None
 
         self.repourl = repourl
         self.branches = branches
@@ -255,6 +255,37 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             str += " [STOPPED - check log]"
 
         return str
+
+    @async_to_deferred
+    async def _resolve_head_ref(self) -> str | None:
+        if self.supports_lsremote_symref:
+            rows: str = await self._dovccmd('ls-remote', ['--symref', self.repourl, 'HEAD'])
+            # simple parse of output which should have format:
+            # ref: refs/heads/{branch}	HEAD
+            # {hash}	HEAD
+            parts = rows.split(maxsplit=3)
+            # sanity just in case
+            if len(parts) >= 3 and parts[0] == 'ref:' and parts[2] == 'HEAD':
+                return parts[1]
+            return None
+
+        # naive fallback if git version does not support --symref
+        rows = await self._dovccmd('ls-remote', [self.repourl, 'HEAD', 'refs/heads/*'])
+        refs = [row.split('\t') for row in rows.splitlines() if '\t' in row]
+        # retrieve hash that HEAD points to
+        head_hash = next((hash for hash, ref in refs if ref == 'HEAD'), None)
+        if head_hash is None:
+            return None
+
+        # get refs that points to the same hash as HEAD
+        candidates = [ref for hash, ref in refs if ref != 'HEAD' and hash == head_hash]
+        # Found default branch
+        if len(candidates) == 1:
+            return candidates[0]
+
+        # If multiple ref points to the same hash as HEAD,
+        # we have no way to know which one is the default
+        return None
 
     @async_to_deferred
     async def _get_refs(self, refs: list[str] | None = None) -> list[str]:
@@ -337,6 +368,14 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         elif self.branches:
             refs = yield self._get_refs([f"refs/heads/{b}" for b in self.branches])
             trim_ref_head = True
+        else:
+            head_ref = yield self._resolve_head_ref()
+            if head_ref is not None:
+                refs = [head_ref]
+            else:
+                # unlikely, but if we can't find HEAD here, something weird happen,
+                # but not a critical error. Just use HEAD as the ref to use
+                refs = ['HEAD']
 
         # Nothing to fetch and process.
         if not refs:

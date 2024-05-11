@@ -885,6 +885,8 @@ It accepts the following arguments:
     * a callable which takes a single argument.
       It should take a remote refspec (such as ``'refs/heads/master'``), and return a boolean indicating whether that branch should be fetched.
 
+    If not provided, :bb:chsrc:`GitPoller` will use ``HEAD`` to fetch the remote default branch.
+
 ``branch``
     Accepts a single branch name to fetch.
     Exists for backwards compatibility with old configurations.
