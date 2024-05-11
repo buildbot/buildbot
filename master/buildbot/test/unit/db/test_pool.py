@@ -209,6 +209,6 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         yield self.pool.do(ddl)
 
         def access(conn):
-            native_tests.insert(bind=conn).execute([{'name': 'foo'}])
+            conn.execute(native_tests.insert().values({'name': 'foo'}))
 
         yield self.pool.do(access)

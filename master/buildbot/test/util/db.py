@@ -270,7 +270,7 @@ class RealDatabaseMixin:
                 for row in [r for r in rows if r.table == tbl.name]:
                     tbl = model.Model.metadata.tables[row.table]
                     try:
-                        tbl.insert(bind=conn).execute(row.values)
+                        conn.execute(tbl.insert().values(row.values))
                     except Exception:
                         log.msg(f"while inserting {row} - {row.values}")
                         raise
