@@ -86,7 +86,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             # check that builsets.rebuilt_buildid has been added
-            buildsets = sautils.Table('buildsets', metadata, autoload=True)
+            buildsets = sautils.Table('buildsets', metadata, autoload_with=conn)
             self.assertIsInstance(buildsets.c.rebuilt_buildid.type, sa.Integer)
 
             q = sa.select(

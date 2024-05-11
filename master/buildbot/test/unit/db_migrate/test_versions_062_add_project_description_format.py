@@ -69,7 +69,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            projects = sautils.Table('projects', metadata, autoload=True)
+            projects = sautils.Table('projects', metadata, autoload_with=conn)
             self.assertIsInstance(projects.c.description_format.type, sa.Text)
             self.assertIsInstance(projects.c.description_html.type, sa.Text)
 

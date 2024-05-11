@@ -67,7 +67,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            builds = sautils.Table('builds', metadata, autoload=True)
+            builds = sautils.Table('builds', metadata, autoload_with=conn)
             self.assertIsInstance(builds.c.locks_duration_s.type, sa.Integer)
 
             conn.execute(
