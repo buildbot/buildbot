@@ -197,8 +197,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             ).close()
             chunk_first_line = last_line + 1
         conn.execute(
-            self.db.model.logs.update(whereclause=self.db.model.logs.c.id == logid),
-            num_lines=last_line + 1,
+            self.db.model.logs.update(whereclause=self.db.model.logs.c.id == logid).values(
+                num_lines=last_line + 1
+            )
         ).close()
         return first_line, last_line
 
@@ -263,7 +264,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thdfinishLog(conn):
             tbl = self.db.model.logs
             q = tbl.update(whereclause=tbl.c.id == logid)
-            conn.execute(q, complete=1)
+            conn.execute(q.values(complete=1))
 
         return self.db.pool.do(thdfinishLog)
 

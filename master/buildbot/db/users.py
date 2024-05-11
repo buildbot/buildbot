@@ -204,7 +204,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 q = tbl_info.update(
                     whereclause=(tbl_info.c.uid == uid) & (tbl_info.c.attr_type == attr_type)
                 )
-                res = conn.execute(q, attr_data=attr_data)
+                res = conn.execute(q.values(attr_data=attr_data))
                 if res.rowcount == 0:
                     if _race_hook is not None:
                         _race_hook(conn)
@@ -212,7 +212,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     # the update hit 0 rows, so try inserting a new one
                     try:
                         q = tbl_info.insert()
-                        res = conn.execute(q, uid=uid, attr_type=attr_type, attr_data=attr_data)
+                        res = conn.execute(
+                            q.values(uid=uid, attr_type=attr_type, attr_data=attr_data)
+                        )
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # someone else beat us to the punch inserting this row;
                         # let them win.

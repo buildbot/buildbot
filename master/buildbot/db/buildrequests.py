@@ -218,7 +218,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q, complete=1, results=results, complete_at=complete_at)
+                res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at))
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):

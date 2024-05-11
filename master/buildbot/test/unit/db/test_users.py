@@ -166,12 +166,13 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             # This is the case for DB engines that support transactions, but
             # not for MySQL.  so this test does not detect the potential MySQL
             # failure, which will generally result in a spurious failure.
-            conn.execute(self.db.model.users.insert(), uid=99, identifier='soap')
+            conn.execute(self.db.model.users.insert().values(uid=99, identifier='soap'))
             conn.execute(
-                self.db.model.users_info.insert(),
-                uid=99,
-                attr_type='subspace_net_handle',
-                attr_data='Durden0924',
+                self.db.model.users_info.insert().values(
+                    uid=99,
+                    attr_type='subspace_net_handle',
+                    attr_data='Durden0924',
+                )
             )
 
         uid = yield self.db.users.findUserByAttr(
@@ -385,7 +386,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             conn = self.db.pool.engine.connect()
             try:
                 r = conn.execute(
-                    self.db.model.users_info.insert(), uid=1, attr_type='IPv4', attr_data='8.8.8.8'
+                    self.db.model.users_info.insert().values(
+                        uid=1, attr_type='IPv4', attr_data='8.8.8.8'
+                    )
                 )
                 r.close()
             except sqlalchemy.exc.OperationalError:

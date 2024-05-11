@@ -165,7 +165,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     (tbl.c.id == bsid) & ((tbl.c.complete == NULL) | (tbl.c.complete != 1))
                 )
             )
-            res = conn.execute(q, complete=1, results=results, complete_at=complete_at)
+            res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at))
 
             if res.rowcount != 1:
                 # happens when two buildrequests finish at the same time

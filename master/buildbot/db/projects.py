@@ -83,11 +83,12 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
                 whereclause=(self.db.model.projects.c.id == projectid)
             )
             conn.execute(
-                q,
-                slug=slug,
-                description=description,
-                description_format=description_format,
-                description_html=description_html,
+                q.values(
+                    slug=slug,
+                    description=description,
+                    description_format=description_format,
+                    description_html=description_html,
+                )
             ).close()
 
         return self.db.pool.do(thd)

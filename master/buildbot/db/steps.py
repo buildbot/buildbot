@@ -123,9 +123,9 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
             if locks_acquired:
-                conn.execute(q, started_at=started_at, locks_acquired_at=started_at)
+                conn.execute(q.values(started_at=started_at, locks_acquired_at=started_at))
             else:
-                conn.execute(q, started_at=started_at)
+                conn.execute(q.values(started_at=started_at))
 
         yield self.db.pool.do(thd)
 
@@ -134,7 +134,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
-            conn.execute(q, locks_acquired_at=locks_acquired_at)
+            conn.execute(q.values(locks_acquired_at=locks_acquired_at))
 
         yield self.db.pool.do(thd)
 
@@ -143,7 +143,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
-            conn.execute(q, state_string=state_string)
+            conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do(thd)
 
@@ -174,7 +174,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             if url_item not in urls:
                 urls.append(url_item)
                 q = tbl.update(whereclause=wc)
-                conn.execute(q, urls_json=json.dumps(urls))
+                conn.execute(q.values(urls_json=json.dumps(urls)))
 
         return self.url_lock.run(lambda: self.db.pool.do(thd))
 
@@ -184,10 +184,11 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=tbl.c.id == stepid)
             conn.execute(
-                q,
-                complete_at=int(self.master.reactor.seconds()),
-                results=results,
-                hidden=1 if hidden else 0,
+                q.values(
+                    complete_at=int(self.master.reactor.seconds()),
+                    results=results,
+                    hidden=1 if hidden else 0,
+                )
             )
 
         return self.db.pool.do(thd)

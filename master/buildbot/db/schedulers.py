@@ -31,7 +31,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.schedulers
             q = tbl.update(whereclause=tbl.c.id == schedulerid)
-            conn.execute(q, enabled=int(v))
+            conn.execute(q.values(enabled=int(v)))
 
         return self.db.pool.do(thd)
 
@@ -53,13 +53,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 imp_int = int(bool(important))
                 try:
                     conn.execute(
-                        ins_q, schedulerid=schedulerid, changeid=changeid, important=imp_int
+                        ins_q.values(schedulerid=schedulerid, changeid=changeid, important=imp_int)
                     ).close()
                 except (sqlalchemy.exc.ProgrammingError, sqlalchemy.exc.IntegrityError):
                     transaction.rollback()
                     transaction = conn.begin()
                     # insert failed, so try an update
-                    conn.execute(upd_q, wc_changeid=changeid, important=imp_int).close()
+                    conn.execute(upd_q, {'wc_changeid': changeid, 'important': imp_int}).close()
 
                 transaction.commit()
 

@@ -213,7 +213,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
 
             q = tbl.update(whereclause=tbl.c.id == buildid)
-            conn.execute(q, state_string=state_string)
+            conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do(thd)
 
@@ -222,7 +222,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.update(whereclause=tbl.c.id == buildid)
-            conn.execute(q, complete_at=int(self.master.reactor.seconds()), results=results)
+            conn.execute(q.values(complete_at=int(self.master.reactor.seconds()), results=results))
 
         return self.db.pool.do(thd)
 

@@ -60,11 +60,12 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             q = builders_tbl.update(whereclause=builders_tbl.c.id == builderid)
             conn.execute(
-                q,
-                description=description,
-                description_format=description_format,
-                description_html=description_html,
-                projectid=projectid,
+                q.values(
+                    description=description,
+                    description_format=description_format,
+                    description_html=description_html,
+                    projectid=projectid,
+                )
             ).close()
             # remove previous builders_tags
             conn.execute(
@@ -99,7 +100,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             try:
                 tbl = self.db.model.builder_masters
                 q = tbl.insert()
-                conn.execute(q, builderid=builderid, masterid=masterid)
+                conn.execute(q.values(builderid=builderid, masterid=masterid))
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 pass
 
