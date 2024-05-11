@@ -193,4 +193,5 @@ class BuildbotEngineStrategy(unittest.TestCase):
 
     def test_create_engine(self):
         engine = enginestrategy.create_engine('sqlite://', basedir="/base")
-        self.assertEqual(engine.scalar(sa.text("SELECT 13 + 14")), 27)
+        with engine.connect() as conn:
+            self.assertEqual(conn.scalar(sa.text("SELECT 13 + 14")), 27)
