@@ -1134,7 +1134,7 @@ class Model(base.DBConnectorComponent):
         return inspector.has_table(table)
 
     def migrate_get_version(self, conn):
-        r = conn.execute("select version from migrate_version limit 1")
+        r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         r.close()
         return version
@@ -1193,7 +1193,7 @@ class Model(base.DBConnectorComponent):
                     raise UpgradeFromBefore3p0Error()
 
                 self.alembic_stamp(conn, alembic_scripts, alembic_scripts.get_base())
-                conn.execute('drop table migrate_version')
+                conn.execute(sa.text('drop table migrate_version'))
 
             if not self.table_exists(conn, 'alembic_version'):
                 log.msg("Initializing empty database")

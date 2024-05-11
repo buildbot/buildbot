@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
 from twisted.python import runtime
@@ -192,4 +193,4 @@ class BuildbotEngineStrategy(unittest.TestCase):
 
     def test_create_engine(self):
         engine = enginestrategy.create_engine('sqlite://', basedir="/base")
-        self.assertEqual(engine.scalar("SELECT 13 + 14"), 27)
+        self.assertEqual(engine.scalar(sa.text("SELECT 13 + 14")), 27)

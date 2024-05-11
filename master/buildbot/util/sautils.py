@@ -74,12 +74,12 @@ def withoutSqliteForeignKeys(engine, connection=None):
         # This context is not re-entrant. Ensure it.
         assert not getattr(engine, 'fk_disabled', False)
         engine.fk_disabled = True
-        conn.execute('pragma foreign_keys=OFF')
+        conn.exec_driver_sql('pragma foreign_keys=OFF')
     try:
         yield
     finally:
         if engine.dialect.name == 'sqlite':
             engine.fk_disabled = False
-            conn.execute('pragma foreign_keys=ON')
+            conn.exec_driver_sql('pragma foreign_keys=ON')
             if connection is None:
                 conn.close()

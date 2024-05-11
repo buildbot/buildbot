@@ -93,9 +93,9 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
             # charsets are only a problem for MySQL
             if engine.dialect.name != 'mysql':
                 return
-            dbs = [r[0] for r in engine.execute("show tables")]
+            dbs = [r[0] for r in engine.exec_driver_sql("show tables")]
             for tbl in dbs:
-                r = engine.execute(f"show create table {tbl}")
+                r = engine.exec_driver_sql(f"show create table {tbl}")
                 create_table = r.fetchone()[1]
                 self.assertIn(
                     'DEFAULT CHARSET=utf8',
