@@ -23,7 +23,6 @@ from buildbot.config.master import FileLoader
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.warnings import DeprecatedApiWarning
 
 
@@ -44,8 +43,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
     def test_0_9_0b5_api_renamed_config(self):
         with open(self.filename, "w", encoding='utf-8') as f:
             f.write(sample_0_9_0b5_api_renamed)
-        with assertProducesWarning(DeprecatedApiWarning):
-            FileLoader(self.basedir, self.filename).loadConfig()
+        FileLoader(self.basedir, self.filename).loadConfig()
 
 
 # sample.cfg from various versions, with comments stripped.  Adjustments made
@@ -65,7 +63,7 @@ c['change_source'] = []
 c['change_source'].append(changes.GitPoller(
         'https://github.com/buildbot/hello-world.git',
         workdir='gitpoller-workdir', branch='master',
-        pollinterval=300))
+        pollInterval=300))
 
 c['schedulers'] = []
 c['schedulers'].append(schedulers.SingleBranchScheduler(
