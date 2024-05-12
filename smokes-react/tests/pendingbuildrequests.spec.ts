@@ -27,14 +27,11 @@ test.describe('pending build requests', function() {
   });
 
   test('shows', async ({page}) => {
+    const testBuildername = "neverruntests";
     await BuilderPage.gotoBuildersList(page);
-    await BuilderPage.gotoForce(page, "slowruntests", "force");
-    await ForcePage.clickStartButtonAndWait(page);
-    await BuilderPage.gotoForce(page, "slowruntests", "force");
+    await BuilderPage.gotoForce(page, testBuildername, "force-neverruntests");
     await ForcePage.clickStartButtonAndWait(page);
 
-    // hopefully we'll see at least one buildrequest by the time we get to
-    // the pending build requests page
     await PendingBuildrequestsPage.goto(page);
 
     await expect.poll(async () => {
@@ -43,12 +40,12 @@ test.describe('pending build requests', function() {
       message: "found at least one buildrequest"
     }).toBeGreaterThan(0);
 
-    const br = await PendingBuildrequestsPage.getAllBuildrequestRows(page).first();
+    const br = PendingBuildrequestsPage.getAllBuildrequestRows(page).first();
     await expect.poll(async () => {
       return (await br.locator('td').nth(1).locator('a').textContent());
     }, {
       message: "found at least one buildrequest with correct name"
-    }).toMatch('slowruntests');
+    }).toMatch(testBuildername);
 
     // kill remaining builds
     let gotAlert = false;
@@ -57,7 +54,7 @@ test.describe('pending build requests', function() {
       await dialog.accept()
     });
 
-    await BuilderPage.goto(page, "slowruntests");
+    await BuilderPage.goto(page, testBuildername);
     await ForcePage.clickCancelWholeQueue(page);
     await expect.poll(() => gotAlert, {
       message: "found confirmation alert"
