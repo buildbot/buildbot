@@ -220,7 +220,7 @@ To complete our example, here's a change source that polls a SVN repository ever
     svnpoller = changes.SVNPoller(repourl="svn://myrepo/projects/coolproject",
                                   svnuser="foo",
                                   svnpasswd="bar",
-                                  pollinterval=120,
+                                  pollInterval=120,
                                   split_file=util.svn.split_file_branches)
 
     c['change_source'] = svnpoller

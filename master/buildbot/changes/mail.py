@@ -40,7 +40,7 @@ from buildbot.util.maildir import MaildirService
 class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
 
-    compare_attrs = ("basedir", "pollinterval", "prefix")
+    compare_attrs = ("basedir", "pollInterval", "prefix")
     name = 'MaildirSource'
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
