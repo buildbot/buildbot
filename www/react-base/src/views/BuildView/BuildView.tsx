@@ -20,7 +20,7 @@ import {observer} from "mobx-react";
 import {FaSpinner} from "react-icons/fa";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {useEffect, useState} from "react";
-import {Link, useNavigate, useParams} from "react-router-dom";
+import {Link, NavigateFunction, useNavigate, useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
@@ -64,19 +64,35 @@ import {Tab, Table, Tabs} from "react-bootstrap";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
-const buildTopbarActions = (build: Build | null, isRebuilding: boolean, isStopping: boolean,
-                            doRebuild: () => void, doStop: () => void) => {
+const buildTopbarActions = (
+  build: Build | null,
+  isRebuilding: boolean, rebuiltBuildRequest: Buildrequest | null,
+  isStopping: boolean,
+  doRebuild: () => void, doStop: () => void,
+  navigate: NavigateFunction,
+) => {
   const actions: TopbarAction[] = [];
   if (build === null) {
     return actions;
   }
 
   if (build.complete) {
-    if (isRebuilding) {
+    if (rebuiltBuildRequest !== null) {
+      const caption = rebuiltBuildRequest.complete ? "Rebuilt" : (rebuiltBuildRequest.claimed ? "Rebuilding..." : "Rebuild pending");
+      actions.push({
+        caption: caption,
+        icon: (rebuiltBuildRequest.complete ? undefined : <FaSpinner />),
+        action: () => {
+          navigate(`/buildrequests/${rebuiltBuildRequest.id}?redirect_to_build=true`);
+        }
+      })
+    }
+    else if (isRebuilding) {
       actions.push({
         caption: "Rebuilding...",
-        icon: <FaSpinner/>,
-        action: doRebuild
+        icon: <FaSpinner />,
+        // do nothing, wait for 'rebuiltBuildRequest'
+        action: () => { },
       });
     } else {
       actions.push({
@@ -174,11 +190,49 @@ const BuildView = observer(() => {
       : Project.getAll(accessor, {id: builder.projectid.toString()})
   }));
 
-  const buildrequest = buildrequestsQuery.getNthOrNull(0);
   const buildset = buildsetsQuery.getNthOrNull(0);
+
+  // Get rebuilt Build if it exists
+  const rebuiltBuildsetQuery = useDataApiDynamicQuery(
+    [buildset ?? build],
+    () => {
+      const rebuilt_buildid = buildset?.rebuilt_buildid ?? build?.buildid;
+      if (rebuilt_buildid === undefined) {
+        return new DataCollection<Buildset>();
+      }
+      return Buildset.getAll(
+      accessor,
+        {
+          query: {
+            rebuilt_buildid: rebuilt_buildid,
+            // don't query the same buildset, use gt as we only want newests
+            bsid__gt: buildset !== null ? buildset.bsid : null,
+            // only get the most recent one
+            // NOTE: this will navigate straight to the newest rebuild
+            // we can flip the 'order' here to go to the first rebuild
+            limit: 1, order: '-bsid',
+          }
+        }
+      );
+    }
+  );
+  const rebuiltBuildRequestQuery = useDataApiSingleElementQuery(
+    rebuiltBuildsetQuery.getNthOrNull(0),
+    (bs: Buildset) => Buildrequest.getAll(
+      accessor, {
+      query: {
+        buildsetid: bs.bsid,
+        // newest only
+        limit: 1, order: '-buildsetid',
+      }
+    })
+  );
+
+  const buildrequest = buildrequestsQuery.getNthOrNull(0);
   const parentBuild = parentBuildQuery.getNthOrNull(0);
   const worker = workersQuery.getNthOrNull(0);
   const project = projectsQuery.getNthOrNull(0);
+  const rebuiltBuildRequest = rebuiltBuildRequestQuery.getNthOrNull(0);
 
   useEffect(() => {
     // note that in case buildsQuery.array was updated, we have to recalculate build value
@@ -224,7 +278,7 @@ const BuildView = observer(() => {
     {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`}
   ]));
 
-  const actions = buildTopbarActions(build, isRebuilding, isStopping, doRebuild, doStop);
+  const actions = buildTopbarActions(build, isRebuilding, rebuiltBuildRequest, isStopping, doRebuild, doStop, navigate);
 
   useTopbarActions(actions);
   useFavIcon(getBuildOrStepResults(build, UNKNOWN));
