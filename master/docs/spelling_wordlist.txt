@@ -98,6 +98,7 @@ builddir
 buildDict
 builderid
 builderids
+BuilderModel
 buildername
 builderName
 buildid
@@ -233,6 +234,7 @@ daemonization
 daemonize
 daemonizing
 Darcs
+dataclass
 dataService
 dataset
 datastream

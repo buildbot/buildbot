@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from twisted.internet import defer
 
+from buildbot.db import builders
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
@@ -126,25 +128,21 @@ class FakeBuildersComponent(FakeDBComponent):
                 break
         return defer.succeed(None)
 
-    def getBuilder(self, builderid):
+    def getBuilder(self, builderid: int) -> defer.Deferred[builders.BuilderModel | None]:
         if builderid in self.builders:
-            masterids = [bm[1] for bm in self.builder_masters.values() if bm[0] == builderid]
-            bldr = self.builders[builderid].copy()
-            bldr['masterids'] = sorted(masterids)
-            return defer.succeed(self._row2dict(bldr))
+            return defer.succeed(self._row2builder(self.builders[builderid]))
         return defer.succeed(None)
 
-    def getBuilders(self, masterid=None, projectid=None):
-        rv = []
-        for builderid, bldr in self.builders.items():
-            masterids = [bm[1] for bm in self.builder_masters.values() if bm[0] == builderid]
-            bldr = bldr.copy()
-            bldr['masterids'] = sorted(masterids)
-            rv.append(self._row2dict(bldr))
+    def getBuilders(
+        self, masterid: int | None = None, projectid: int | None = None
+    ) -> defer.Deferred[list[builders.BuilderModel]]:
+        rv: list[builders.BuilderModel] = [
+            self._row2builder(bldr) for bldr in self.builders.values()
+        ]
         if masterid is not None:
-            rv = [bd for bd in rv if masterid in bd['masterids']]
+            rv = [bd for bd in rv if masterid in bd.masterids]
         if projectid is not None:
-            rv = [bd for bd in rv if bd['projectid'] == projectid]
+            rv = [bd for bd in rv if bd.projectid == projectid]
         return defer.succeed(rv)
 
     def addTestBuilder(self, builderid, name=None):
@@ -173,9 +171,21 @@ class FakeBuildersComponent(FakeDBComponent):
                 tagids.append(tag)
             self.builders_tags[builderid] = tagids
 
-    def _row2dict(self, row):
-        row = row.copy()
-        row['tags'] = [
-            self.db.tags.tags[tagid]['name'] for tagid in self.builders_tags.get(row['id'], [])
-        ]
-        return row
+    def _row2builder(self, row):
+        return builders.BuilderModel(
+            id=row['id'],
+            name=row['name'],
+            projectid=row['projectid'],
+            description=row['description'],
+            description_format=row['description_format'],
+            masterids=self._builder_masters(row['id']),
+            tags=self._builder_tags(row['id']),
+        )
+
+    def _builder_tags(self, builderid: int) -> list[str]:
+        return sorted(
+            self.db.tags.tags[tagid]['name'] for tagid in self.builders_tags.get(builderid, [])
+        )
+
+    def _builder_masters(self, builderid: int) -> list[int]:
+        return sorted(bm[1] for bm in self.builder_masters.values() if bm[0] == builderid)

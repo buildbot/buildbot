@@ -20,6 +20,7 @@ from twisted.trial import unittest
 
 from buildbot.data import builders
 from buildbot.data import resultspec
+from buildbot.db.builders import BuilderModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -231,16 +232,11 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             sorted((yield self.master.db.builders.getBuilders())),
             sorted([
-                {
-                    "id": 1,
-                    "masterids": [13],
-                    "name": "somebuilder",
-                    "description": None,
-                    "description_html": None,
-                    "description_format": None,
-                    "projectid": None,
-                    "tags": [],
-                },
+                BuilderModel(
+                    id=1,
+                    masterids=[13],
+                    name="somebuilder",
+                ),
             ]),
         )
         self.master.mq.assertProductions([
@@ -250,33 +246,23 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         # add another
         yield self.rtype.updateBuilderList(13, ['somebuilder', 'another'])
 
-        def builderKey(builder):
-            return builder['id']
+        def builderKey(builder: BuilderModel):
+            return builder.id
 
         self.assertEqual(
             sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
             sorted(
                 [
-                    {
-                        "id": 1,
-                        "masterids": [13],
-                        "name": "somebuilder",
-                        "description": None,
-                        "description_html": None,
-                        "description_format": None,
-                        "projectid": None,
-                        "tags": [],
-                    },
-                    {
-                        "id": 2,
-                        "masterids": [13],
-                        "name": "another",
-                        "description": None,
-                        "description_html": None,
-                        "description_format": None,
-                        "projectid": None,
-                        "tags": [],
-                    },
+                    BuilderModel(
+                        id=1,
+                        masterids=[13],
+                        name="somebuilder",
+                    ),
+                    BuilderModel(
+                        id=2,
+                        masterids=[13],
+                        name="another",
+                    ),
                 ],
                 key=builderKey,
             ),
@@ -291,26 +277,16 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
             sorted(
                 [
-                    {
-                        "id": 1,
-                        "masterids": [13],
-                        "name": "somebuilder",
-                        "description": None,
-                        "description_html": None,
-                        "description_format": None,
-                        "projectid": None,
-                        "tags": [],
-                    },
-                    {
-                        "id": 2,
-                        "masterids": [13, 14],
-                        "name": "another",
-                        "description": None,
-                        "description_html": None,
-                        "description_format": None,
-                        "projectid": None,
-                        "tags": [],
-                    },
+                    BuilderModel(
+                        id=1,
+                        masterids=[13],
+                        name="somebuilder",
+                    ),
+                    BuilderModel(
+                        id=2,
+                        masterids=[13, 14],
+                        name="another",
+                    ),
                 ],
                 key=builderKey,
             ),
@@ -325,26 +301,15 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
             sorted(
                 [
-                    {
-                        "id": 1,
-                        "masterids": [],
-                        "name": "somebuilder",
-                        "description": None,
-                        "description_html": None,
-                        "description_format": None,
-                        "projectid": None,
-                        "tags": [],
-                    },
-                    {
-                        "id": 2,
-                        "masterids": [14],
-                        "name": "another",
-                        "description": None,
-                        "description_html": None,
-                        "description_format": None,
-                        "projectid": None,
-                        "tags": [],
-                    },
+                    BuilderModel(
+                        id=1,
+                        name="somebuilder",
+                    ),
+                    BuilderModel(
+                        id=2,
+                        masterids=[14],
+                        name="another",
+                    ),
                 ],
                 key=builderKey,
             ),

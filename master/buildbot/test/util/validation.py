@@ -383,17 +383,6 @@ message['builders'].add(
     ),
 )
 
-dbdict['builderdict'] = DictValidator(
-    id=IntValidator(),
-    masterids=ListValidator(IntValidator()),
-    name=StringValidator(),
-    description=NoneOk(StringValidator()),
-    description_format=NoneOk(StringValidator()),
-    description_html=NoneOk(StringValidator()),
-    projectid=NoneOk(IntValidator()),
-    tags=ListValidator(StringValidator()),
-)
-
 # worker
 
 dbdict['workerdict'] = DictValidator(

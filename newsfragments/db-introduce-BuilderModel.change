@@ -1,0 +1,1 @@
+:class:`BuildersConnectorComponent` `getBuilder` and `getBuilders` now return a :class`BuilderModel` instead of a dictionary of Builder data

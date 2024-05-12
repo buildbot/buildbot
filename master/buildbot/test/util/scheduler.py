@@ -198,8 +198,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         builders = yield self.db.builders.getBuilders()
         for builderName in builderNames:
             for bldrDict in builders:
-                if builderName == bldrDict["name"]:
-                    builderids.append(bldrDict["id"])
+                if builderName == bldrDict.name:
+                    builderids.append(bldrDict.id)
                     break
 
         assert len(builderids) == len(builderNames)

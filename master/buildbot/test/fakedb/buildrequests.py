@@ -96,7 +96,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             else:
                 row.claimed_at = None
             builder = yield self.db.builders.getBuilder(row.builderid)
-            row.buildername = builder["name"]
+            row.buildername = builder.name
             return self._brdictFromRow(row)
         else:
             return None
@@ -155,7 +155,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 if repository and not any(repository == s['repository'] for s in sourcestamps):
                     continue
             builder = yield self.db.builders.getBuilder(br.builderid)
-            br.buildername = builder["name"]
+            br.buildername = builder.name
             rv.append(self._brdictFromRow(br))
         if resultSpec is not None:
             rv = self.applyResultSpec(rv, resultSpec)

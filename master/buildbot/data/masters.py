@@ -50,7 +50,7 @@ class MasterEndpoint(base.Endpoint):
         # this builder
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(builderid=kwargs['builderid'])
-            if not builder or kwargs['masterid'] not in builder['masterids']:
+            if not builder or kwargs['masterid'] not in builder.masterids:
                 return None
         m = yield self.master.db.masters.getMaster(kwargs['masterid'])
         return _db2data(m) if m else None
@@ -70,7 +70,7 @@ class MastersEndpoint(base.Endpoint):
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(builderid=kwargs['builderid'])
             if builder:
-                masterids = set(builder['masterids'])
+                masterids = set(builder.masterids)
                 masterlist = [m for m in masterlist if m['id'] in masterids]
             else:
                 masterlist = []

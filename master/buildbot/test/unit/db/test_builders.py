@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,11 +23,10 @@ from buildbot.db import tags
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
-def builderKey(builder):
-    return builder['id']
+def builderKey(builder: builders.Builder):
+    return builder.id
 
 
 class Tests(interfaces.InterfaceTests):
@@ -85,36 +86,26 @@ class Tests(interfaces.InterfaceTests):
             8, 'a string which describe the builder', None, None, 124, []
         )
         builderdict7 = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict7)
-        builderdict7['tags'].sort()  # order is unspecified
         self.assertEqual(
             builderdict7,
-            {
-                "id": 7,
-                "name": 'some:builder7',
-                "tags": ["cat1", "cat2"],
-                "masterids": [],
-                "description": "a string which describe the builder",
-                "description_format": None,
-                "description_html": None,
-                "projectid": 123,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder7',
+                tags=["cat1", "cat2"],
+                description="a string which describe the builder",
+                projectid=123,
+            ),
         )
 
         builderdict8 = yield self.db.builders.getBuilder(8)
-        validation.verifyDbDict(self, 'builderdict', builderdict8)
         self.assertEqual(
             builderdict8,
-            {
-                "id": 8,
-                "name": 'some:builder8',
-                "tags": [],
-                "masterids": [],
-                "description": "a string which describe the builder",
-                "description_format": None,
-                "description_html": None,
-                "projectid": 124,
-            },
+            builders.BuilderModel(
+                id=8,
+                name='some:builder8',
+                description="a string which describe the builder",
+                projectid=124,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -126,20 +117,15 @@ class Tests(interfaces.InterfaceTests):
 
         yield self.db.builders.updateBuilderInfo(7, 'builder_desc', None, None, 107, ['Cat', 'cat'])
         builder_dict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builder_dict)
-        builder_dict['tags'].sort()  # order is unspecified
         self.assertEqual(
             builder_dict,
-            {
-                'id': 7,
-                'name': 'some:builder7',
-                'tags': ['Cat', 'cat'],
-                'masterids': [],
-                'description': 'builder_desc',
-                'description_format': None,
-                'description_html': None,
-                'projectid': 107,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder7',
+                tags=['Cat', 'cat'],
+                description='builder_desc',
+                projectid=107,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -148,16 +134,10 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(id)
         self.assertEqual(
             builderdict,
-            {
-                "id": id,
-                "name": 'some:builder',
-                "tags": [],
-                "masterids": [],
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-                "projectid": None,
-            },
+            builders.BuilderModel(
+                id=id,
+                name='some:builder',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -183,19 +163,13 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             builderdict,
-            {
-                "id": 7,
-                "name": 'some:builder',
-                "tags": [],
-                "masterids": [9, 10],
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-                "projectid": None,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder',
+                masterids=[9, 10],
+            ),
         )
 
     @defer.inlineCallbacks
@@ -208,19 +182,13 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             builderdict,
-            {
-                "id": 7,
-                "name": 'some:builder',
-                "tags": [],
-                "masterids": [9],
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-                "projectid": None,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder',
+                masterids=[9],
+            ),
         )
 
     @defer.inlineCallbacks
@@ -234,19 +202,13 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.builders.removeBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             builderdict,
-            {
-                "id": 7,
-                "name": 'some:builder',
-                "tags": [],
-                "masterids": [10],
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-                "projectid": None,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder',
+                masterids=[10],
+            ),
         )
 
     @defer.inlineCallbacks
@@ -255,19 +217,12 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Builder(id=7, name='some:builder'),
         ])
         builderdict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             builderdict,
-            {
-                "id": 7,
-                "name": 'some:builder',
-                "tags": [],
-                "masterids": [],
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-                "projectid": None,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -280,19 +235,13 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuilderMaster(builderid=7, masterid=4),
         ])
         builderdict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             builderdict,
-            {
-                "id": 7,
-                "name": 'some:builder',
-                "tags": [],
-                "masterids": [3, 4],
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-                "projectid": None,
-            },
+            builders.BuilderModel(
+                id=7,
+                name='some:builder',
+                masterids=[3, 4],
+            ),
         )
 
     @defer.inlineCallbacks
@@ -313,42 +262,24 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuilderMaster(builderid=8, masterid=4),
         ])
         builderlist = yield self.db.builders.getBuilders()
-        for builderdict in builderlist:
-            validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             sorted(builderlist, key=builderKey),
             sorted(
                 [
-                    {
-                        "id": 7,
-                        "name": 'some:builder',
-                        "tags": [],
-                        "masterids": [3],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": None,
-                    },
-                    {
-                        "id": 8,
-                        "name": 'other:builder',
-                        "tags": [],
-                        "masterids": [3, 4],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": None,
-                    },
-                    {
-                        "id": 9,
-                        "name": 'third:builder',
-                        "tags": [],
-                        "masterids": [],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": None,
-                    },
+                    builders.BuilderModel(
+                        id=7,
+                        name='some:builder',
+                        masterids=[3],
+                    ),
+                    builders.BuilderModel(
+                        id=8,
+                        name='other:builder',
+                        masterids=[3, 4],
+                    ),
+                    builders.BuilderModel(
+                        id=9,
+                        name='third:builder',
+                    ),
                 ],
                 key=builderKey,
             ),
@@ -367,32 +298,20 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuilderMaster(builderid=8, masterid=4),
         ])
         builderlist = yield self.db.builders.getBuilders(masterid=3)
-        for builderdict in builderlist:
-            validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             sorted(builderlist, key=builderKey),
             sorted(
                 [
-                    {
-                        "id": 7,
-                        "name": 'some:builder',
-                        "tags": [],
-                        "masterids": [3],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": None,
-                    },
-                    {
-                        "id": 8,
-                        "name": 'other:builder',
-                        "tags": [],
-                        "masterids": [3, 4],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": None,
-                    },
+                    builders.BuilderModel(
+                        id=7,
+                        name='some:builder',
+                        masterids=[3],
+                    ),
+                    builders.BuilderModel(
+                        id=8,
+                        name='other:builder',
+                        masterids=[3, 4],
+                    ),
                 ],
                 key=builderKey,
             ),
@@ -415,32 +334,22 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuilderMaster(builderid=104, masterid=4),
         ])
         builderlist = yield self.db.builders.getBuilders(projectid=201)
-        for builderdict in builderlist:
-            validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(
             sorted(builderlist, key=builderKey),
             sorted(
                 [
-                    {
-                        "id": 102,
-                        "name": "b102",
-                        "masterids": [3],
-                        "tags": [],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": 201,
-                    },
-                    {
-                        "id": 103,
-                        "name": "b103",
-                        "masterids": [4],
-                        "tags": [],
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                        "projectid": 201,
-                    },
+                    builders.BuilderModel(
+                        id=102,
+                        name="b102",
+                        masterids=[3],
+                        projectid=201,
+                    ),
+                    builders.BuilderModel(
+                        id=103,
+                        name="b103",
+                        masterids=[4],
+                        projectid=201,
+                    ),
                 ],
                 key=builderKey,
             ),
