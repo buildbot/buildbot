@@ -64,13 +64,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            workers = sautils.Table('workers', metadata, autoload=True)
+            workers = sautils.Table('workers', metadata, autoload_with=conn)
             self.assertIsInstance(workers.c.pause_reason.type, sa.Text)
 
-            q = sa.select([
+            q = sa.select(
                 workers.c.name,
                 workers.c.pause_reason,
-            ])
+            )
 
             num_rows = 0
             for row in conn.execute(q):

@@ -154,11 +154,11 @@ class RealDatabaseMixin:
         # pylint: disable=too-many-nested-blocks
 
         try:
-            meta = MetaData(bind=conn)
+            meta = MetaData()
 
             # Reflect database contents. May fail, e.g. if table references
             # non-existent table in SQLite.
-            meta.reflect()
+            meta.reflect(bind=conn)
 
             # Restore `use_alter` settings to break known reference cycles.
             # Main goal of this part is to remove SQLAlchemy warning
@@ -178,8 +178,8 @@ class RealDatabaseMixin:
             # SQLAlchemy wouldn't be able to break circular references.
             # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during
             # that operation, even though we made our possible to use use_alter
-            with withoutSqliteForeignKeys(conn.engine, conn):
-                meta.drop_all()
+            with withoutSqliteForeignKeys(conn):
+                meta.drop_all(bind=conn)
 
         except Exception:
             # sometimes this goes badly wrong; being able to see the schema
@@ -270,7 +270,7 @@ class RealDatabaseMixin:
                 for row in [r for r in rows if r.table == tbl.name]:
                     tbl = model.Model.metadata.tables[row.table]
                     try:
-                        tbl.insert(bind=conn).execute(row.values)
+                        conn.execute(tbl.insert().values(row.values))
                     except Exception:
                         log.msg(f"while inserting {row} - {row.values}")
                         raise

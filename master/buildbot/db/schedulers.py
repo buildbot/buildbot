@@ -30,8 +30,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
-            q = tbl.update(whereclause=tbl.c.id == schedulerid)
-            conn.execute(q, enabled=int(v))
+            q = tbl.update().where(tbl.c.id == schedulerid)
+            conn.execute(q.values(enabled=int(v)))
 
         return self.db.pool.do(thd)
 
@@ -40,11 +40,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
-            upd_q = tbl.update(
-                (
-                    (tbl.c.schedulerid == schedulerid)
-                    & (tbl.c.changeid == sa.bindparam('wc_changeid'))
-                )
+            upd_q = tbl.update().where(
+                tbl.c.schedulerid == schedulerid, tbl.c.changeid == sa.bindparam('wc_changeid')
             )
             for changeid, important in classifications.items():
                 transaction = conn.begin()
@@ -53,13 +50,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 imp_int = int(bool(important))
                 try:
                     conn.execute(
-                        ins_q, schedulerid=schedulerid, changeid=changeid, important=imp_int
+                        ins_q.values(schedulerid=schedulerid, changeid=changeid, important=imp_int)
                     ).close()
                 except (sqlalchemy.exc.ProgrammingError, sqlalchemy.exc.IntegrityError):
                     transaction.rollback()
                     transaction = conn.begin()
                     # insert failed, so try an update
-                    conn.execute(upd_q, wc_changeid=changeid, important=imp_int).close()
+                    conn.execute(upd_q, {'wc_changeid': changeid, 'important': imp_int}).close()
 
                 transaction.commit()
 
@@ -72,7 +69,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             wc = sch_ch_tbl.c.schedulerid == schedulerid
             if less_than is not None:
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
-            q = sch_ch_tbl.delete(whereclause=wc)
+            q = sch_ch_tbl.delete().where(wc)
             conn.execute(q).close()
 
         return self.db.pool.do(thd)
@@ -107,7 +104,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 for w in extra_wheres:
                     wc &= w
 
-            q = sa.select([sch_ch_tbl.c.changeid, sch_ch_tbl.c.important], whereclause=wc)
+            q = sa.select(sch_ch_tbl.c.changeid, sch_ch_tbl.c.important).where(wc)
             return {r.changeid: bool(r.important) for r in conn.execute(q)}
 
         return self.db.pool.do(thd)
@@ -128,7 +125,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
             # handle the masterid=None case to get it out of the way
             if masterid is None:
-                q = sch_mst_tbl.delete(whereclause=sch_mst_tbl.c.schedulerid == schedulerid)
+                q = sch_mst_tbl.delete().where(sch_mst_tbl.c.schedulerid == schedulerid)
                 conn.execute(q).close()
                 return None
 
@@ -142,10 +139,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     sch_mst_tbl, (self.db.model.masters.c.id == sch_mst_tbl.c.masterid)
                 )
 
-                q = sa.select(
-                    [self.db.model.masters.c.name, sch_mst_tbl.c.masterid],
-                    from_obj=join,
-                    whereclause=(sch_mst_tbl.c.schedulerid == schedulerid),
+                q = (
+                    sa.select(
+                        self.db.model.masters.c.name,
+                        sch_mst_tbl.c.masterid,
+                    )
+                    .select_from(join)
+                    .where(sch_mst_tbl.c.schedulerid == schedulerid)
                 )
                 row = conn.execute(q).fetchone()
                 # ok, that was us, so we just do nothing
@@ -189,10 +189,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     wc = sch_mst_tbl.c.masterid == NULL
 
             q = sa.select(
-                [sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled, sch_mst_tbl.c.masterid],
-                from_obj=join,
-                whereclause=wc,
-            )
+                sch_tbl.c.id,
+                sch_tbl.c.name,
+                sch_tbl.c.enabled,
+                sch_mst_tbl.c.masterid,
+            ).select_from(join)
+            if wc is not None:
+                q = q.where(wc)
 
             return [
                 {

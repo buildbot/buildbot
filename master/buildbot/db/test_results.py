@@ -233,7 +233,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
             j = results_table.outerjoin(code_paths_table).outerjoin(names_table)
 
-            q = sa.select([results_table, code_paths_table.c.path, names_table.c.name])
+            q = sa.select(results_table, code_paths_table.c.path, names_table.c.name)
             q = q.select_from(j).where(results_table.c.id == test_resultid)
 
             res = conn.execute(q)
@@ -267,7 +267,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 & (names_table.c.builderid == builderid),
             )
 
-            q = sa.select([results_table, code_paths_table.c.path, names_table.c.name])
+            q = sa.select(results_table, code_paths_table.c.path, names_table.c.name)
             q = q.select_from(j).where(
                 (results_table.c.builderid == builderid)
                 & (results_table.c.test_result_setid == test_result_setid)

@@ -71,7 +71,7 @@ class SqlLiteStrategy(Strategy):
 
             log.msg("setting database journal mode to 'wal'")
             try:
-                engine.execute("pragma journal_mode = wal")
+                engine.exec_driver_sql("pragma journal_mode = wal")
             except Exception:
                 log.msg("failed to set journal mode - database may fail")
 

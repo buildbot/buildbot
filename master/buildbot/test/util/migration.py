@@ -65,7 +65,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                 sa.Column("version_num", sa.String(32), nullable=False),
             )
             table.create(bind=conn)
-            conn.execute(table.insert(), version_num=base_revision)
+            conn.execute(table.insert().values(version_num=base_revision))
             setup_thd_cb(conn)
 
         yield self.db.pool.do(setup_thd)
@@ -74,8 +74,8 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         def upgrade_thd(engine):
             with querylog.log_queries():
-                with sautils.withoutSqliteForeignKeys(engine):
-                    with engine.connect() as conn:
+                with engine.connect() as conn:
+                    with sautils.withoutSqliteForeignKeys(conn):
 
                         def upgrade(rev, context):
                             log.msg(f'Upgrading from {rev} to {target_revision}')
@@ -93,9 +93,9 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
             # charsets are only a problem for MySQL
             if engine.dialect.name != 'mysql':
                 return
-            dbs = [r[0] for r in engine.execute("show tables")]
+            dbs = [r[0] for r in engine.exec_driver_sql("show tables")]
             for tbl in dbs:
-                r = engine.execute(f"show create table {tbl}")
+                r = engine.exec_driver_sql(f"show create table {tbl}")
                 create_table = r.fetchone()[1]
                 self.assertIn(
                     'DEFAULT CHARSET=utf8',
@@ -105,8 +105,8 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         yield self.db.pool.do(check_table_charsets_thd)
 
-        def verify_thd(engine):
-            with sautils.withoutSqliteForeignKeys(engine):
-                verify_thd_cb(engine)
+        def verify_thd(conn):
+            with sautils.withoutSqliteForeignKeys(conn):
+                verify_thd_cb(conn)
 
         yield self.db.pool.do(verify_thd)

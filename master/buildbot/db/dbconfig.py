@@ -61,7 +61,8 @@ class DbConfig:
         db.model = model.Model(db)
         db.state = state.StateConnectorComponent(db)
         try:
-            self.objectid = db.state.thdGetObjectId(db_engine, self.name, "DbConfig")['id']
+            with db_engine.connect() as conn:
+                self.objectid = db.state.thdGetObjectId(conn, self.name, "DbConfig")['id']
         except (ProgrammingError, OperationalError):
             # ProgrammingError: mysql&pg, OperationalError: sqlite
             # assume db is not initialized
@@ -72,7 +73,8 @@ class DbConfig:
     def get(self, name, default=state.StateConnectorComponent.Thunk):
         db = self.getDb()
         if db is not None:
-            ret = db.state.thdGetState(db.pool.engine, self.objectid, name, default=default)
+            with db.pool.engine.connect() as conn:
+                ret = db.state.thdGetState(conn, self.objectid, name, default=default)
             db.pool.engine.dispose()
         else:
             if default is not state.StateConnectorComponent.Thunk:
@@ -83,5 +85,6 @@ class DbConfig:
     def set(self, name, value):
         db = self.getDb()
         if db is not None:
-            db.state.thdSetState(db.pool.engine, self.objectid, name, value)
+            with db.pool.engine.connect() as conn:
+                db.state.thdSetState(conn, self.objectid, name, value)
             db.pool.engine.dispose()

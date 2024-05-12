@@ -54,14 +54,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         from_clause = from_clause.join(sstamps_tbl, bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
         from_clause = from_clause.join(builder_tbl, reqs_tbl.c.builderid == builder_tbl.c.id)
 
-        return sa.select([
+        return sa.select(
             reqs_tbl,
             claims_tbl,
             sstamps_tbl.c.branch,
             sstamps_tbl.c.repository,
             sstamps_tbl.c.codebase,
             builder_tbl.c.name.label('buildername'),
-        ]).select_from(from_clause)
+        ).select_from(from_clause)
 
     # returns a Deferred that returns a value
     def getBuildRequest(self, brid):
@@ -181,9 +181,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     break  # success!
 
                 try:
-                    q = claims_tbl.delete(
-                        (claims_tbl.c.brid.in_(batch))
-                        & (claims_tbl.c.masterid == self.db.master.masterid)
+                    q = claims_tbl.delete().where(
+                        claims_tbl.c.brid.in_(batch),
+                        claims_tbl.c.masterid == self.db.master.masterid,
                     )
                     conn.execute(q)
                 except Exception:
@@ -218,7 +218,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q, complete=1, results=results, complete_at=complete_at)
+                res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at))
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):

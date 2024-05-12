@@ -97,7 +97,9 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
 
         def race_thd(conn):
             conn.execute(
-                tbl.insert(), id=5, name='somemaster', name_hash=hash, active=1, last_active=1
+                tbl.insert().values(
+                    id=5, name='somemaster', name_hash=hash, active=1, last_active=1
+                )
             )
 
         id = yield self.db.base.findSomethingId(

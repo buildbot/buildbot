@@ -37,16 +37,20 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getParentChangeIds(self, branch, repository, project, codebase):
         def thd(conn):
             changes_tbl = self.db.model.changes
-            q = sa.select(
-                [changes_tbl.c.changeid],
-                whereclause=(
-                    (changes_tbl.c.branch == branch)
-                    & (changes_tbl.c.repository == repository)
-                    & (changes_tbl.c.project == project)
-                    & (changes_tbl.c.codebase == codebase)
-                ),
-                order_by=sa.desc(changes_tbl.c.changeid),
-                limit=1,
+            q = (
+                sa.select(
+                    changes_tbl.c.changeid,
+                )
+                .where(
+                    changes_tbl.c.branch == branch,
+                    changes_tbl.c.repository == repository,
+                    changes_tbl.c.project == project,
+                    changes_tbl.c.codebase == codebase,
+                )
+                .order_by(
+                    sa.desc(changes_tbl.c.changeid),
+                )
+                .limit(1)
             )
             parent_id = conn.scalar(q)
             return [parent_id] if parent_id else []
@@ -173,7 +177,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = changes_tbl.select(whereclause=changes_tbl.c.changeid == changeid)
+            q = changes_tbl.select().where(changes_tbl.c.changeid == changeid)
             rp = conn.execute(q)
             row = rp.fetchone()
             if not row:
@@ -233,7 +237,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = changes_tbl.select(whereclause=changes_tbl.c.sourcestampid == sourcestampid)
+            q = changes_tbl.select().where(changes_tbl.c.sourcestampid == sourcestampid)
             # if there are multiple changes for this ssid, get the most recent one
             q = q.order_by(changes_tbl.c.changeid.desc())
             q = q.limit(1)
@@ -252,7 +256,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             cu_tbl = self.db.model.change_users
-            q = cu_tbl.select(whereclause=cu_tbl.c.changeid == changeid)
+            q = cu_tbl.select().where(cu_tbl.c.changeid == changeid)
             res = conn.execute(q)
             rows = res.fetchall()
             row_uids = [row.uid for row in rows]
@@ -272,7 +276,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 q = changes_tbl.select()
                 return reversed(resultSpec.thd_execute(conn, q, self._getDataFromRow))
 
-            q = sa.select([changes_tbl.c.changeid])
+            q = sa.select(changes_tbl.c.changeid)
             rp = conn.execute(q)
             changeids = [self._getDataFromRow(row) for row in rp]
             rp.close()
@@ -291,7 +295,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getChangesCount(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
-            q = sa.select([sa.func.count()]).select_from(changes_tbl)
+            q = sa.select(sa.func.count()).select_from(changes_tbl)
             rp = conn.execute(q)
             r = 0
             for row in rp:
@@ -305,8 +309,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getLatestChangeid(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
-            q = sa.select(
-                [changes_tbl.c.changeid], order_by=sa.desc(changes_tbl.c.changeid), limit=1
+            q = (
+                sa.select(
+                    changes_tbl.c.changeid,
+                )
+                .order_by(
+                    sa.desc(changes_tbl.c.changeid),
+                )
+                .limit(1)
             )
             return conn.scalar(q)
 
@@ -332,10 +342,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # table, which is very inefficient; also, MySQL's subquery support
             # leaves much to be desired, and doesn't support this particular
             # form.
-            q = sa.select(
-                [changes_tbl.c.changeid],
-                order_by=[sa.desc(changes_tbl.c.changeid)],
-                offset=changeHorizon,
+            q = (
+                sa.select(
+                    changes_tbl.c.changeid,
+                )
+                .order_by(
+                    sa.desc(changes_tbl.c.changeid),
+                )
+                .offset(changeHorizon)
             )
             res = conn.execute(q)
             ids_to_delete = [r.changeid for r in res]
@@ -353,7 +367,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     batch = remaining[:100]
                     remaining = remaining[100:]
                     table = self.db.model.metadata.tables[table_name]
-                    conn.execute(table.delete(table.c.changeid.in_(batch)))
+                    conn.execute(table.delete().where(table.c.changeid.in_(batch)))
 
         yield self.db.pool.do(thd)
 
@@ -387,7 +401,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             sourcestampid=int(ch_row.sourcestampid),
         )
 
-        query = change_files_tbl.select(whereclause=change_files_tbl.c.changeid == ch_row.changeid)
+        query = change_files_tbl.select().where(change_files_tbl.c.changeid == ch_row.changeid)
         rows = conn.execute(query)
         for r in rows:
             chdict['files'].append(r.filename)
@@ -404,8 +418,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 v, s = vs, "Change"
             return v, s
 
-        query = change_properties_tbl.select(
-            whereclause=change_properties_tbl.c.changeid == ch_row.changeid
+        query = change_properties_tbl.select().where(
+            change_properties_tbl.c.changeid == ch_row.changeid
         )
         rows = conn.execute(query)
         for r in rows:

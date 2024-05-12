@@ -65,15 +65,15 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            builders = sautils.Table('builders', metadata, autoload=True)
+            builders = sautils.Table('builders', metadata, autoload_with=conn)
             self.assertIsInstance(builders.c.description_format.type, sa.Text)
             self.assertIsInstance(builders.c.description_html.type, sa.Text)
 
-            q = sa.select([
+            q = sa.select(
                 builders.c.name,
                 builders.c.description_format,
                 builders.c.description_html,
-            ])
+            )
 
             num_rows = 0
             for row in conn.execute(q):

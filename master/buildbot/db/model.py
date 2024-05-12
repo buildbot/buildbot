@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import alembic
 import alembic.config
@@ -25,6 +28,10 @@ from buildbot.db import base
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine.base import Connectable as SQLAConnection
+    from sqlalchemy.engine.reflection import Inspector
 
 
 class UpgradeFromBefore0p9Error(Exception):
@@ -1122,16 +1129,12 @@ class Model(base.DBConnectorComponent):
 
     config_path = util.sibpath(__file__, "migrations/alembic.ini")
 
-    def table_exists(self, conn, table):
-        try:
-            r = conn.execute(f"select * from {table} limit 1")
-            r.close()
-            return True
-        except Exception:
-            return False
+    def table_exists(self, conn: SQLAConnection, table: str):
+        inspector: Inspector = sa.inspect(conn.engine)
+        return inspector.has_table(table)
 
     def migrate_get_version(self, conn):
-        r = conn.execute("select version from migrate_version limit 1")
+        r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         r.close()
         return version
@@ -1190,7 +1193,7 @@ class Model(base.DBConnectorComponent):
                     raise UpgradeFromBefore3p0Error()
 
                 self.alembic_stamp(conn, alembic_scripts, alembic_scripts.get_base())
-                conn.execute('drop table migrate_version')
+                conn.execute(sa.text('drop table migrate_version'))
 
             if not self.table_exists(conn, 'alembic_version'):
                 log.msg("Initializing empty database")

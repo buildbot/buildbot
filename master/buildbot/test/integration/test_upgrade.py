@@ -285,7 +285,7 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
         return self.do_test_upgrade()
 
     def verify_thd(self, conn):
-        r = conn.execute("select version from migrate_version limit 1")
+        r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         self.assertEqual(version, 44)
 
@@ -300,7 +300,7 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
         self.flushLoggedErrors(UpgradeFromBefore0p9Error)
 
     def verify_thd(self, conn):
-        r = conn.execute("select version from migrate_version limit 1")
+        r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         self.assertEqual(version, 22)
 

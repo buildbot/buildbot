@@ -36,8 +36,8 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def get_project(self, projectid):
         def thd(conn):
-            q = self.db.model.projects.select(
-                whereclause=(self.db.model.projects.c.id == projectid)
+            q = self.db.model.projects.select().where(
+                self.db.model.projects.c.id == projectid,
             )
             res = conn.execute(q)
             row = res.fetchone()
@@ -79,15 +79,14 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         self, projectid, slug, description, description_format, description_html
     ):
         def thd(conn):
-            q = self.db.model.projects.update(
-                whereclause=(self.db.model.projects.c.id == projectid)
-            )
+            q = self.db.model.projects.update().where(self.db.model.projects.c.id == projectid)
             conn.execute(
-                q,
-                slug=slug,
-                description=description,
-                description_format=description_format,
-                description_html=description_html,
+                q.values(
+                    slug=slug,
+                    description=description,
+                    description_format=description_format,
+                    description_html=description_html,
+                )
             ).close()
 
         return self.db.pool.do(thd)

@@ -416,8 +416,8 @@ class RealTests(Tests):
 
         def thd(conn):
             res = conn.execute(
-                self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -461,8 +461,8 @@ class RealTests(Tests):
 
         def thd(conn):
             res = conn.execute(
-                self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -482,8 +482,8 @@ class RealTests(Tests):
 
         def thd(conn):
             res = conn.execute(
-                self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -509,8 +509,8 @@ class RealTests(Tests):
 
         def thd(conn):
             res = conn.execute(
-                self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -536,8 +536,8 @@ class RealTests(Tests):
 
         def thd(conn):
             res = conn.execute(
-                self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -568,8 +568,8 @@ class RealTests(Tests):
 
         def thd(conn):
             res = conn.execute(
-                self.db.model.logchunks.select(whereclause=self.db.model.logchunks.c.first_line > 6)
-            )
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
             row = res.fetchone()
             res.close()
             return dict(row)
@@ -625,7 +625,7 @@ class RealTests(Tests):
 
         def countChunk(conn):
             tbl = self.db.model.logchunks
-            q = sa.select([sa.func.count(tbl.c.content)])
+            q = sa.select(sa.func.count(tbl.c.content))
             q = q.where(tbl.c.logid == 201)
             return conn.execute(q).fetchone()[0]
 

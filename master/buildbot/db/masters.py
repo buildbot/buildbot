@@ -48,7 +48,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             whereclause = tbl.c.id == masterid
 
             # get the old state
-            r = conn.execute(sa.select([tbl.c.active], whereclause=whereclause))
+            r = conn.execute(sa.select(tbl.c.active).where(whereclause))
             rows = r.fetchall()
             r.close()
             if not rows:
@@ -59,11 +59,11 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 # if we're marking inactive, then delete any links to this
                 # master
                 sch_mst_tbl = self.db.model.scheduler_masters
-                q = sch_mst_tbl.delete(whereclause=sch_mst_tbl.c.masterid == masterid)
+                q = sch_mst_tbl.delete().where(sch_mst_tbl.c.masterid == masterid)
                 conn.execute(q)
 
             # set the state (unconditionally, just to be safe)
-            q = tbl.update(whereclause=whereclause)
+            q = tbl.update().where(whereclause)
             q = q.values(active=1 if active else 0)
             if active:
                 q = q.values(last_active=int(self.master.reactor.seconds()))
@@ -78,7 +78,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
     def getMaster(self, masterid):
         def thd(conn):
             tbl = self.db.model.masters
-            res = conn.execute(tbl.select(whereclause=tbl.c.id == masterid))
+            res = conn.execute(tbl.select().where(tbl.c.id == masterid))
             row = res.fetchone()
 
             rv = None

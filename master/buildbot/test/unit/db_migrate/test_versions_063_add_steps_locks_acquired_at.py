@@ -74,13 +74,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            steps = sautils.Table('steps', metadata, autoload=True)
+            steps = sautils.Table('steps', metadata, autoload_with=conn)
             self.assertIsInstance(steps.c.locks_acquired_at.type, sa.Integer)
 
-            q = sa.select([
+            q = sa.select(
                 steps.c.name,
                 steps.c.locks_acquired_at,
-            ])
+            )
 
             num_rows = 0
             for row in conn.execute(q):

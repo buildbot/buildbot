@@ -61,7 +61,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
         # the select.
         def hook(conn):
             conn.execute(
-                self.db.model.objects.insert(), id=27, name='someobj', class_name='someclass'
+                self.db.model.objects.insert().values(id=27, name='someobj', class_name='someclass')
             )
 
         self.db.state._test_timing_hook = hook
@@ -164,7 +164,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
     def test_setState_conflict(self):
         def hook(conn):
             conn.execute(
-                self.db.model.object_state.insert(), objectid=10, name='x', value_json='22'
+                self.db.model.object_state.insert().values(objectid=10, name='x', value_json='22')
             )
 
         self.db.state._test_timing_hook = hook
@@ -199,7 +199,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
 
         def hook(conn):
             conn.execute(
-                self.db.model.object_state.insert(), objectid=10, name='x', value_json='22'
+                self.db.model.object_state.insert().values(objectid=10, name='x', value_json='22')
             )
 
         self.db.state._test_timing_hook = hook

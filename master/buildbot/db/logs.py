@@ -69,8 +69,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     # returns a Deferred that returns a value
     def _getLog(self, whereclause):
         def thd_getLog(conn):
-            q = self.db.model.logs.select(whereclause=whereclause)
-            res = conn.execute(q)
+            q = self.db.model.logs.select()
+            if whereclause is not None:
+                q = q.where(whereclause)
+            res = conn.execute(q).mappings()
             row = res.fetchone()
 
             rv = None
@@ -96,7 +98,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if stepid is not None:
                 q = q.where(tbl.c.stepid == stepid)
             q = q.order_by(tbl.c.id)
-            res = conn.execute(q)
+            res = conn.execute(q).mappings()
             return [self._logdictFromRow(row) for row in res.fetchall()]
 
         return self.db.pool.do(thdGetLogs)
@@ -106,7 +108,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thdGetLogLines(conn):
             # get a set of chunks that completely cover the requested range
             tbl = self.db.model.logchunks
-            q = sa.select([tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
+            q = sa.select(tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed)
             q = q.where(tbl.c.logid == logid)
             q = q.where(tbl.c.first_line <= last_line)
             q = q.where(tbl.c.last_line >= first_line)
@@ -195,8 +197,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             ).close()
             chunk_first_line = last_line + 1
         conn.execute(
-            self.db.model.logs.update(whereclause=self.db.model.logs.c.id == logid),
-            num_lines=last_line + 1,
+            self.db.model.logs.update()
+            .where(self.db.model.logs.c.id == logid)
+            .values(num_lines=last_line + 1)
         ).close()
         return first_line, last_line
 
@@ -206,7 +209,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         assert content[-1] == '\n'
         # Note that row.content is stored as bytes, and our caller is sending unicode
         content = content[:-1].encode('utf-8')
-        q = sa.select([self.db.model.logs.c.num_lines])
+        q = sa.select(self.db.model.logs.c.num_lines)
         q = q.where(self.db.model.logs.c.id == logid)
         res = conn.execute(q)
         num_lines = res.fetchone()
@@ -260,8 +263,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def finishLog(self, logid):
         def thdfinishLog(conn):
             tbl = self.db.model.logs
-            q = tbl.update(whereclause=tbl.c.id == logid)
-            conn.execute(q, complete=1)
+            q = tbl.update().where(tbl.c.id == logid)
+            conn.execute(q.values(complete=1))
 
         return self.db.pool.do(thdfinishLog)
 
@@ -269,12 +272,12 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def compressLog(self, logid, force=False):
         def thdcompressLog(conn):
             tbl = self.db.model.logchunks
-            q = sa.select([
+            q = sa.select(
                 tbl.c.first_line,
                 tbl.c.last_line,
                 sa.func.length(tbl.c.content),
                 tbl.c.compressed,
-            ])
+            )
             q = q.where(tbl.c.logid == logid)
             q = q.order_by(tbl.c.first_line)
 
@@ -319,7 +322,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for todo_first_line, todo_last_line in todo_gather_list:
                 # decompress this group of chunks. Note that the content is binary bytes.
                 # no need to decode anything as we are going to put in back stored as bytes anyway
-                q = sa.select([tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
+                q = sa.select(tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed)
                 q = q.where(tbl.c.logid == logid)
                 q = q.where(tbl.c.first_line >= todo_first_line)
                 q = q.where(tbl.c.last_line <= todo_last_line)
@@ -357,7 +360,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 transaction.commit()
 
             # calculate how many bytes we saved
-            q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
+            q = sa.select(sa.func.sum(sa.func.length(tbl.c.content)))
             q = q.where(tbl.c.logid == logid)
             newsize = conn.execute(q).fetchone()[0]
             return totlength - newsize
@@ -369,7 +372,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def deleteOldLogChunks(self, older_than_timestamp):
         def thddeleteOldLogs(conn):
             model = self.db.model
-            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
+            res = conn.execute(sa.select(sa.func.count(model.logchunks.c.logid)))
             count1 = res.fetchone()[0]
             res.close()
 
@@ -383,7 +386,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY
             # steps.id DESC LIMIT 1;
             res = conn.execute(
-                sa.select([model.steps.c.id])
+                sa.select(model.steps.c.id)
                 .where(model.steps.c.started_at < older_than_timestamp)
                 .order_by(model.steps.c.id.desc())
                 .limit(1)
@@ -407,7 +410,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if self.db._engine.dialect.name == 'sqlite':
                 # sqlite does not support delete with a join, so for this case we use a subquery,
                 # which is much slower
-                q = sa.select([model.logs.c.id])
+                q = sa.select(model.logs.c.id)
                 q = q.select_from(model.logs)
                 q = q.where(model.logs.c.type == 'd')
 
@@ -420,7 +423,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
             res = conn.execute(q)
             res.close()
-            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.logid)]))
+            res = conn.execute(sa.select(sa.func.count(model.logchunks.c.logid)))
             count2 = res.fetchone()[0]
             res.close()
             return count1 - count2

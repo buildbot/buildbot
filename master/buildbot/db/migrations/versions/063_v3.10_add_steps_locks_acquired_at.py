@@ -43,7 +43,7 @@ def upgrade():
         sa.Column("locks_acquired_at", sa.Integer),
     )
 
-    op.execute(steps_tbl.update(values={steps_tbl.c.locks_acquired_at: steps_tbl.c.started_at}))
+    op.execute(steps_tbl.update().values({steps_tbl.c.locks_acquired_at: steps_tbl.c.started_at}))
 
 
 def downgrade():

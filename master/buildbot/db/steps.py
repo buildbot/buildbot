@@ -43,7 +43,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             wc = wc & (tbl.c.buildid == buildid)
 
         def thd(conn):
-            q = self.db.model.steps.select(whereclause=wc)
+            q = self.db.model.steps.select().where(wc)
             res = conn.execute(q)
             row = res.fetchone()
 
@@ -72,9 +72,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             # get the highest current number
-            r = conn.execute(
-                sa.select([sa.func.max(tbl.c.number)], whereclause=tbl.c.buildid == buildid)
-            )
+            r = conn.execute(sa.select(sa.func.max(tbl.c.number)).where(tbl.c.buildid == buildid))
             number = r.scalar()
             number = 0 if number is None else number + 1
 
@@ -103,7 +101,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # we didn't get an id, so calculate a unique name and use that
             # instead.  Because names are truncated at the right to fit in a
             # 50-character identifier, this isn't a simple query.
-            res = conn.execute(sa.select([tbl.c.name], whereclause=(tbl.c.buildid == buildid)))
+            res = conn.execute(sa.select(tbl.c.name).where(tbl.c.buildid == buildid))
             names = {row[0] for row in res}
             num = 1
             while True:
@@ -123,11 +121,11 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def startStep(self, stepid, started_at, locks_acquired):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=tbl.c.id == stepid)
+            q = tbl.update().where(tbl.c.id == stepid)
             if locks_acquired:
-                conn.execute(q, started_at=started_at, locks_acquired_at=started_at)
+                conn.execute(q.values(started_at=started_at, locks_acquired_at=started_at))
             else:
-                conn.execute(q, started_at=started_at)
+                conn.execute(q.values(started_at=started_at))
 
         yield self.db.pool.do(thd)
 
@@ -135,8 +133,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def set_step_locks_acquired_at(self, stepid, locks_acquired_at):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=tbl.c.id == stepid)
-            conn.execute(q, locks_acquired_at=locks_acquired_at)
+            q = tbl.update().where(tbl.c.id == stepid)
+            conn.execute(q.values(locks_acquired_at=locks_acquired_at))
 
         yield self.db.pool.do(thd)
 
@@ -144,8 +142,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def setStepStateString(self, stepid, state_string):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=tbl.c.id == stepid)
-            conn.execute(q, state_string=state_string)
+            q = tbl.update().where(tbl.c.id == stepid)
+            conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do(thd)
 
@@ -164,7 +162,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.steps
             wc = tbl.c.id == stepid
-            q = sa.select([tbl.c.urls_json], whereclause=wc)
+            q = sa.select(tbl.c.urls_json).where(wc)
             res = conn.execute(q)
             row = res.fetchone()
             if _racehook is not None:
@@ -175,8 +173,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
             if url_item not in urls:
                 urls.append(url_item)
-                q = tbl.update(whereclause=wc)
-                conn.execute(q, urls_json=json.dumps(urls))
+                q = tbl.update().where(wc)
+                conn.execute(q.values(urls_json=json.dumps(urls)))
 
         return self.url_lock.run(lambda: self.db.pool.do(thd))
 
@@ -184,12 +182,13 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def finishStep(self, stepid, results, hidden):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=tbl.c.id == stepid)
+            q = tbl.update().where(tbl.c.id == stepid)
             conn.execute(
-                q,
-                complete_at=int(self.master.reactor.seconds()),
-                results=results,
-                hidden=1 if hidden else 0,
+                q.values(
+                    complete_at=int(self.master.reactor.seconds()),
+                    results=results,
+                    hidden=1 if hidden else 0,
+                )
             )
 
         return self.db.pool.do(thd)

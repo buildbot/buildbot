@@ -13,13 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine.base import Connection
 
 # from http:
 # //www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long
@@ -66,20 +71,17 @@ def Table(*args, **kwargs):
 
 
 @contextmanager
-def withoutSqliteForeignKeys(engine, connection=None):
-    conn = connection
-    if engine.dialect.name == 'sqlite':
-        if conn is None:
-            conn = engine.connect()
-        # This context is not re-entrant. Ensure it.
-        assert not getattr(engine, 'fk_disabled', False)
-        engine.fk_disabled = True
-        conn.execute('pragma foreign_keys=OFF')
+def withoutSqliteForeignKeys(connection: Connection):
+    if connection.engine.dialect.name != 'sqlite':
+        yield
+        return
+
+    # This context is not re-entrant. Ensure it.
+    assert not getattr(connection.engine, 'fk_disabled', False)
+    connection.fk_disabled = True
+    connection.exec_driver_sql('pragma foreign_keys=OFF')
     try:
         yield
     finally:
-        if engine.dialect.name == 'sqlite':
-            engine.fk_disabled = False
-            conn.execute('pragma foreign_keys=ON')
-            if connection is None:
-                conn.close()
+        connection.fk_disabled = False
+        connection.exec_driver_sql('pragma foreign_keys=ON')

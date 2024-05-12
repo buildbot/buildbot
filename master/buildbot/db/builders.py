@@ -58,17 +58,18 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             builders_tags_tbl = self.db.model.builders_tags
             transaction = conn.begin()
 
-            q = builders_tbl.update(whereclause=builders_tbl.c.id == builderid)
+            q = builders_tbl.update().where(builders_tbl.c.id == builderid)
             conn.execute(
-                q,
-                description=description,
-                description_format=description_format,
-                description_html=description_html,
-                projectid=projectid,
+                q.values(
+                    description=description,
+                    description_format=description_format,
+                    description_html=description_html,
+                    projectid=projectid,
+                )
             ).close()
             # remove previous builders_tags
             conn.execute(
-                builders_tags_tbl.delete(whereclause=(builders_tags_tbl.c.builderid == builderid))
+                builders_tags_tbl.delete().where(builders_tags_tbl.c.builderid == builderid)
             ).close()
 
             # add tag ids
@@ -99,7 +100,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             try:
                 tbl = self.db.model.builder_masters
                 q = tbl.insert()
-                conn.execute(q, builderid=builderid, masterid=masterid)
+                conn.execute(q.values(builderid=builderid, masterid=masterid))
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 pass
 
@@ -110,9 +111,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
             conn.execute(
-                tbl.delete(
-                    whereclause=((tbl.c.builderid == builderid) & (tbl.c.masterid == masterid))
-                )
+                tbl.delete().where(tbl.c.builderid == builderid, tbl.c.masterid == masterid)
             )
 
         return self.db.pool.do(thd)
@@ -131,8 +130,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None:
                 limiting_bm_tbl = bm_tbl.alias('limiting_bm')
                 j = j.join(limiting_bm_tbl, onclause=bldr_tbl.c.id == limiting_bm_tbl.c.builderid)
-            q = sa.select(
-                [
+            q = (
+                sa.select(
                     bldr_tbl.c.id,
                     bldr_tbl.c.name,
                     bldr_tbl.c.description,
@@ -140,9 +139,9 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                     bldr_tbl.c.description_html,
                     bldr_tbl.c.projectid,
                     bm_tbl.c.masterid,
-                ],
-                from_obj=[j],
-                order_by=[bldr_tbl.c.id, bm_tbl.c.masterid],
+                )
+                .select_from(j)
+                .order_by(bldr_tbl.c.id, bm_tbl.c.masterid)
             )
             if masterid is not None:
                 # filter the masterid from the limiting table
@@ -154,7 +153,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             # build up a intermediate builder id -> tag names map (fixes performance issue #3396)
             bldr_id_to_tags = defaultdict(list)
-            bldr_q = sa.select([builders_tags_tbl.c.builderid, tags_tbl.c.name])
+            bldr_q = sa.select(builders_tags_tbl.c.builderid, tags_tbl.c.name)
             bldr_q = bldr_q.select_from(tags_tbl.join(builders_tags_tbl))
 
             for bldr_id, tag in conn.execute(bldr_q).fetchall():

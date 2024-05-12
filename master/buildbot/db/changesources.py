@@ -42,7 +42,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
             # handle the masterid=None case to get it out of the way
             if masterid is None:
-                q = cs_mst_tbl.delete(whereclause=cs_mst_tbl.c.changesourceid == changesourceid)
+                q = cs_mst_tbl.delete().where(cs_mst_tbl.c.changesourceid == changesourceid)
                 conn.execute(q)
                 return
 
@@ -89,8 +89,12 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                     wc = cs_mst_tbl.c.masterid == NULL
 
             q = sa.select(
-                [cs_tbl.c.id, cs_tbl.c.name, cs_mst_tbl.c.masterid], from_obj=join, whereclause=wc
-            )
+                cs_tbl.c.id,
+                cs_tbl.c.name,
+                cs_mst_tbl.c.masterid,
+            ).select_from(join)
+            if wc is not None:
+                q = q.where(wc)
 
             return [
                 {"id": row.id, "name": row.name, "masterid": row.masterid}
