@@ -19,6 +19,7 @@ import base64
 
 from twisted.internet import defer
 
+from buildbot.db.sourcestamps import PatchModel
 from buildbot.db.sourcestamps import SourceStampModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
@@ -219,12 +220,14 @@ class FakeSourceStampsComponent(FakeDBComponent):
         patchid = sourcestamp['patchid']
         patch = self.patches.get(patchid)
         if patch is not None:
-            ssdict.patchid = patchid
-            ssdict.patch_level = patch["patch_level"]
-            ssdict.patch_subdir = patch["patch_subdir"]
-            ssdict.patch_author = patch["patch_author"]
-            ssdict.patch_comment = patch["patch_comment"]
-            ssdict.patch_body = patch["patch_body"]
+            ssdict.patch = PatchModel(
+                patchid=patchid,
+                body=patch["patch_body"],
+                level=patch["patch_level"],
+                author=patch["patch_author"],
+                comment=patch["patch_comment"],
+                subdir=patch["patch_subdir"],
+            )
 
         return ssdict
 

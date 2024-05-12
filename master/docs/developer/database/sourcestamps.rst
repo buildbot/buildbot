@@ -31,12 +31,18 @@ Source stamps connector
     * ``created_at`` (timestamp when this stamp was first created)
     * ``codebase`` (codebase this stamp is in; never ``None``)
     * ``project`` (project this source is for; never ``None``)
+    * ``patch`` (a ``PatchModel`` or ``None``, see below)
+
+    .. index:: patch
+
+    :class:`PatchModel`
+
     * ``patchid`` (ID of the patch)
-    * ``patch_body`` (body of the patch, or ``None``)
-    * ``patch_level`` (directory stripping level of the patch, or ``None``)
-    * ``patch_subdir`` (subdirectory in which to apply the patch, or ``None``)
-    * ``patch_author`` (author of the patch, or ``None``)
-    * ``patch_comment`` (comment for the patch, or ``None``)
+    * ``body`` (body of the patch, or ``None``)
+    * ``level`` (directory stripping level of the patch, or ``None``)
+    * ``subdir`` (subdirectory in which to apply the patch, or ``None``)
+    * ``author`` (author of the patch, or ``None``)
+    * ``comment`` (comment for the patch, or ``None``)
 
     Note that the patch body is a bytestring, not a unicode string.
 

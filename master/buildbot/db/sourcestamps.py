@@ -36,6 +36,16 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class PatchModel:
+    patchid: int
+    body: bytes
+    level: int
+    author: str
+    comment: str
+    subdir: str | None = None
+
+
+@dataclass
 class SourceStampModel:
     ssid: int
     branch: str | None
@@ -44,13 +54,8 @@ class SourceStampModel:
     created_at: datetime.datetime
     codebase: str = ''
     project: str = ''
-    patchid: int | None = None
 
-    patch_body: bytes | None = None
-    patch_level: int | None = None
-    patch_author: str | None = None
-    patch_comment: str | None = None
-    patch_subdir: str | None = None
+    patch: PatchModel | None = None
 
     # For backward compatibility from when SsDict inherited from Dict
     def __getitem__(self, key: str):
@@ -67,6 +72,22 @@ class SourceStampModel:
 
         if hasattr(self, key):
             return getattr(self, key)
+
+        # moved to PatchModel object
+        patch_key = {
+            'patchid': 'patchid',
+            'patch_body': 'body',
+            'patch_level': 'level',
+            'patch_author': 'author',
+            'patch_comment': 'comment',
+            'patch_subdir': 'subdir',
+        }.get(key)
+        if patch_key is not None:
+            if self.patch is None:
+                return None
+
+            return getattr(self.patch, patch_key)
+
         raise KeyError(key)
 
 
@@ -256,13 +277,14 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             row = res.fetchone()
             if row:
-                # note the subtle renaming here
-                model.patchid = patchid
-                model.patch_level = row.patchlevel
-                model.patch_subdir = row.subdir
-                model.patch_author = row.patch_author
-                model.patch_comment = row.patch_comment
-                model.patch_body = base64.b64decode(row.patch_base64)
+                model.patch = PatchModel(
+                    patchid=patchid,
+                    body=base64.b64decode(row.patch_base64),
+                    level=row.patchlevel,
+                    author=row.patch_author,
+                    comment=row.patch_comment,
+                    subdir=row.subdir,
+                )
             else:
                 log.msg(f'patchid {patchid}, referenced from ssid {ssid}, not found')
             res.close()
