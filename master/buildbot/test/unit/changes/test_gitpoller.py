@@ -54,7 +54,7 @@ class TestGitPollerBase(
 
     def createPoller(self):
         # this is overridden in TestGitPollerWithSshPrivateKey
-        return gitpoller.GitPoller(self.REPOURL)
+        return gitpoller.GitPoller(self.REPOURL, branches=['master'])
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -1863,9 +1863,175 @@ class TestGitPoller(TestGitPollerBase):
         yield self.assert_last_rev({"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"})
 
 
+class TestGitPollerDefaultBranch(TestGitPollerBase):
+    def createPoller(self):
+        return gitpoller.GitPoller(self.REPOURL, branches=None)
+
+    @async_to_deferred
+    async def test_resolve_head_ref_with_symref(self):
+        self.patch(self.poller, 'supports_lsremote_symref', True)
+
+        self.expect_commands(
+            ExpectMasterShell(['git', 'ls-remote', '--symref', self.REPOURL, 'HEAD'])
+            .exit(0)
+            .stdout(
+                b'ref: refs/heads/default_branch	HEAD\n'
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	HEAD\n'
+            ),
+        )
+
+        result = await self.poller._resolve_head_ref()
+
+        self.assert_all_commands_ran()
+        self.assertEqual(result, 'refs/heads/default_branch')
+
+    @async_to_deferred
+    async def test_resolve_head_ref_without_symref(self):
+        self.patch(self.poller, 'supports_lsremote_symref', False)
+
+        self.expect_commands(
+            ExpectMasterShell(['git', 'ls-remote', self.REPOURL, 'HEAD', 'refs/heads/*'])
+            .exit(0)
+            .stdout(
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	HEAD\n'
+                b'274ec17f8bfb56adc0035b12735785097df488fc	refs/heads/3.10.x\n'
+                b'972a389242fd15a59f2d2840d1be4c0fc7b97109	refs/heads/3.11.x\n'
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	refs/heads/master\n'
+            ),
+        )
+
+        result = await self.poller._resolve_head_ref()
+
+        self.assert_all_commands_ran()
+        self.assertEqual(result, 'refs/heads/master')
+
+    @async_to_deferred
+    async def test_resolve_head_ref_without_symref_multiple_head_candidates(self):
+        self.patch(self.poller, 'supports_lsremote_symref', False)
+
+        self.expect_commands(
+            ExpectMasterShell(['git', 'ls-remote', self.REPOURL, 'HEAD', 'refs/heads/*'])
+            .exit(0)
+            .stdout(
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	HEAD\n'
+                b'274ec17f8bfb56adc0035b12735785097df488fc	refs/heads/3.10.x\n'
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	refs/heads/3.11.x\n'
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	refs/heads/master\n'
+            ),
+        )
+
+        result = await self.poller._resolve_head_ref()
+
+        self.assert_all_commands_ran()
+        self.assertEqual(result, None)
+
+    @async_to_deferred
+    async def test_poll_found_head(self):
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 2.10.0\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell([
+                'git',
+                'ls-remote',
+                '--symref',
+                self.REPOURL,
+                'HEAD',
+            ]).stdout(
+                b'ref: refs/heads/default_branch	HEAD\n'
+                b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09	HEAD\n'
+            ),
+            ExpectMasterShell([
+                'git',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                f'+refs/heads/default_branch:refs/buildbot/{self.REPOURL_QUOTED}/heads/default_branch',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                f'refs/buildbot/{self.REPOURL_QUOTED}/heads/default_branch',
+                '--',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09\n'),
+            ExpectMasterShell([
+                'git',
+                'log',
+                '--ignore-missing',
+                '--format=%H',
+                '737b94eca1ddde3dd4a0040b25c8a25fe973fe09',
+                '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+        )
+
+        await self.set_last_rev({
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
+        self.poller.doPoll.running = True
+        await self.poller.poll()
+
+        self.assert_all_commands_ran()
+        await self.assert_last_rev({
+            'refs/heads/default_branch': '737b94eca1ddde3dd4a0040b25c8a25fe973fe09'
+        })
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+    @async_to_deferred
+    async def test_poll_found_head_not_found(self):
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 2.10.0\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell([
+                'git',
+                'ls-remote',
+                '--symref',
+                self.REPOURL,
+                'HEAD',
+            ]).stdout(b'malformed output'),
+            ExpectMasterShell([
+                'git',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                f'+HEAD:refs/buildbot/raw/{self.REPOURL_QUOTED}/HEAD',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                f'refs/buildbot/raw/{self.REPOURL_QUOTED}/HEAD',
+                '--',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'737b94eca1ddde3dd4a0040b25c8a25fe973fe09\n'),
+            ExpectMasterShell([
+                'git',
+                'log',
+                '--ignore-missing',
+                '--format=%H',
+                '737b94eca1ddde3dd4a0040b25c8a25fe973fe09',
+                '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+        )
+
+        await self.set_last_rev({
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
+        self.poller.doPoll.running = True
+        await self.poller.poll()
+
+        self.assert_all_commands_ran()
+        await self.assert_last_rev({'HEAD': '737b94eca1ddde3dd4a0040b25c8a25fe973fe09'})
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+
 class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
     def createPoller(self):
-        return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key')
+        return gitpoller.GitPoller(self.REPOURL, branches=['master'], sshPrivateKey='ssh-key')
 
     @mock.patch(
         'buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -2033,7 +2199,9 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
 class TestGitPollerWithSshHostKey(TestGitPollerBase):
     def createPoller(self):
-        return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key', sshHostKey='ssh-host-key')
+        return gitpoller.GitPoller(
+            self.REPOURL, branches=['master'], sshPrivateKey='ssh-key', sshHostKey='ssh-host-key'
+        )
 
     @mock.patch(
         'buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -2103,7 +2271,10 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
 class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
     def createPoller(self):
         return gitpoller.GitPoller(
-            self.REPOURL, sshPrivateKey='ssh-key\n', sshKnownHosts='ssh-known-hosts'
+            self.REPOURL,
+            branches=['master'],
+            sshPrivateKey='ssh-key\n',
+            sshKnownHosts='ssh-known-hosts',
         )
 
     @mock.patch(
@@ -2207,7 +2378,7 @@ class TestGitPollerConstructor(
     @defer.inlineCallbacks
     def test_branches_default(self):
         poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git"))
-        self.assertEqual(poller.branches, ["master"])
+        self.assertEqual(poller.branches, None)
 
     @defer.inlineCallbacks
     def test_branches_oldBranch(self):
@@ -2311,4 +2482,10 @@ class TestGitPollerUtils(unittest.TestCase):
             gitpoller.GitPoller._tracker_ref(
                 "https://example.org/repo.git", "refs/heads/branch_name"
             ),
+        )
+
+    def test_tracker_ref_HEAD(self):
+        self.assertNotEqual(
+            gitpoller.GitPoller._tracker_ref("https://example.org/repo.git", "HEAD"),
+            gitpoller.GitPoller._tracker_ref("https://example.org/repo.git", "refs/raw/HEAD"),
         )

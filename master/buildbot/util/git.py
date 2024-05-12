@@ -88,6 +88,7 @@ class GitMixin:
         self.supportsSshPrivateKeyAsEnvOption = False
         self.supportsSshPrivateKeyAsConfigOption = False
         self.supportsFilters = False
+        self.supports_lsremote_symref = False
 
     def parseGitFeatures(self, version_stdout):
         match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
@@ -107,6 +108,9 @@ class GitMixin:
             self.supportsSubmoduleCheckout = True
         if version >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
+        if version >= parse_version("2.8.0"):
+            # https://github.com/git/git/blob/v2.8.0/Documentation/RelNotes/2.8.0.txt#L72-L73
+            self.supports_lsremote_symref = True
         if version >= parse_version("2.10.0"):
             self.supportsSshPrivateKeyAsConfigOption = True
         if version >= parse_version("2.27.0"):

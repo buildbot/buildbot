@@ -1435,6 +1435,7 @@ svnversion
 sw
 swartz
 symlink
+symref
 syncallbranches
 syncmail
 syncQuietly
