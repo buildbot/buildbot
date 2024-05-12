@@ -171,65 +171,6 @@ Example use:
 
     passwd = util.Secret('path/to/secret:password')
 
-.. _HashiCorpVaultSecretProvider:
-
-HashiCorpVaultSecretProvider
-````````````````````````````
-
-.. note:: Use of ``HashiCorpVaultSecretProvider`` is deprecated in favor of newer :ref:`HashiCorpVaultKvSecretProvider` and will be removed in future releases.
-
-.. code-block:: python
-
-    c['secretsProviders'] = [secrets.HashiCorpVaultSecretProvider(
-                            vaultToken=open('VAULT_TOKEN').read().strip(),
-                            vaultServer="http://localhost:8200",
-                            secretsmount="secret",
-                            apiVersion=2
-    )]
-
-Vault secures, stores, and tightly controls access to secrets.
-Vault presents a unified API to access multiple backends.
-At the moment, Buildbot supports KV v1 and v2 backends via the apiVersion argument.
-
-Buildbot's Vault authentication/authorisation is via a token.
-The "Initial Root Token", generated on Vault initialization, can be used but has ‘root’ authorization.
-Vault policies, and subsequent tokens assigned to them, provide for a more restrictive approach.
-
-In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the Vault server address and the Vault token.
-The provider SecretInVault allows Buildbot to read secrets in Vault.
-
-The secret identifiers that need to be passed to, e.g. :ref:`Interpolate`, accept one of the following
-formats:
-
- - ``key``: The provider will fetch the secret with name ``key`` and return the value of ``value`` attribute stored therein.
-
- - ``key/attr``: The provider will fetch the secret with name ``key`` and return the value of ``attr`` attribute stored therein.
-
-Vault stores secrets in form of key-value pairs.
-
-- Simple keys
-
-.. image:: ../_images/vault_simple_key.png
-
-The key value with key name ``keyname`` can be read like:
-
-.. code-block:: python
-
-    text = Interpolate("your key equals %(secret:folder1/folder2/secretname/keyname)s")
-
-- Multipart keys
-
-.. image:: ../_images/vault_multipart_key.png
-
-Each part of a multipart value can be read like
-
-.. code-block:: python
-
-    url = Interpolate("site url is %(secret:folder1/folde2/folde3/secretname/url)s")
-    pass = Interpolate("your password is %(secret:folder1/folde2/folde3/secretname/pass)s")
-    cert = Interpolate("your cert is %(secret:folder1/folde2/folde3/secretname/ssh-cert)s")
-
-
 .. _SecretInPass:
 
 SecretInPass
