@@ -30,9 +30,7 @@ from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
-from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.util import datetime2epoch
-from buildbot.warnings import DeprecatedApiWarning
 
 first_p4changes = b"""Change 1 on 2006/04/13 by slamb@testclient 'first rev'
 """
@@ -545,23 +543,6 @@ class TestP4Poller(
     def test_resolveWho_callable(self):
         with self.assertRaisesConfigError("You need to provide a valid callable for resolvewho"):
             P4Source(resolvewho=None)
-
-    @defer.inlineCallbacks
-    def test_deprecated_pollinterval(self):
-        with assertProducesWarnings(
-            DeprecatedApiWarning,
-            2,
-            message_pattern='pollinterval has been deprecated: ' + 'please use pollInterval',
-        ):
-            yield self.attachChangeSource(
-                P4Source(
-                    p4port=None,
-                    p4user=None,
-                    p4base='//depot/myproject/',
-                    split_file=lambda x: x.split('/', 1),
-                    pollinterval=10,
-                )
-            )
 
 
 class TestSplit(unittest.TestCase):
