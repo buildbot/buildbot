@@ -262,7 +262,6 @@ setup_args = {
                 [
                     ('buildbot.secrets.providers.file', ['SecretInAFile']),
                     ('buildbot.secrets.providers.passwordstore', ['SecretInPass']),
-                    ('buildbot.secrets.providers.vault', ['HashiCorpVaultSecretProvider']),
                     (
                         'buildbot.secrets.providers.vault_hvac',
                         [
