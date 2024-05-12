@@ -37,9 +37,6 @@ class InterfaceTests:
         """
 
         def filter(signature: inspect.Signature):
-            if len(signature.parameters) == 0:
-                return signature
-
             parameters = OrderedDict(signature.parameters)
             for name in parameters:
                 if name == 'self':
