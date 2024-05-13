@@ -1,0 +1,1 @@
+:class:`BuildRequestsConnectorComponent` `getBuildRequest`, and `getBuildRequests` now return a :class`BuildRequestModel` instead of a dictionary of BuildRequest data

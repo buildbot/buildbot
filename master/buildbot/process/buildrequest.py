@@ -13,13 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import calendar
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import resultspec
 from buildbot.process import properties
 from buildbot.process.results import SKIPPED
+
+if TYPE_CHECKING:
+    from buildbot.db.buildrequests import BuildRequestModel
 
 
 class BuildRequestCollapser:
@@ -63,12 +69,14 @@ class BuildRequestCollapser:
             bldrdict = yield self.master.data.get(('builders', builderid))
             # Get the builder object
             bldr = self.master.botmaster.builders.get(bldrdict['name'])
+            if not bldr:
+                continue
             # Get the Collapse BuildRequest function (from the configuration)
-            collapseRequestsFn = bldr.getCollapseRequestsFn() if bldr else None
+            collapseRequestsFn = bldr.getCollapseRequestsFn()
             unclaim_brs = yield self._getUnclaimedBrs(builderid)
 
             # short circuit if there is no merging to do
-            if not collapseRequestsFn or not unclaim_brs:
+            if not unclaim_brs:
                 continue
 
             for unclaim_br in unclaim_brs:
@@ -193,9 +201,9 @@ class BuildRequest:
     sources = {}
 
     @classmethod
-    def fromBrdict(cls, master, brdict):
+    def fromBrdict(cls, master, brdict: BuildRequestModel):
         """
-        Construct a new L{BuildRequest} from a dictionary as returned by
+        Construct a new L{BuildRequest} from a L{BuildRequestModel} as returned by
         L{BuildRequestsConnectorComponent.getBuildRequest}.
 
         This method uses a cache, which may result in return of stale objects;
@@ -208,30 +216,29 @@ class BuildRequest:
         @returns: L{BuildRequest}, via Deferred
         """
         cache = master.caches.get_cache("BuildRequests", cls._make_br)
-        return cache.get(brdict['buildrequestid'], brdict=brdict, master=master)
+        return cache.get(brdict.buildrequestid, brdict=brdict, master=master)
 
     @classmethod
     @defer.inlineCallbacks
-    def _make_br(cls, brid, brdict, master):
+    def _make_br(cls, brid: int, brdict: BuildRequestModel, master):
         buildrequest = cls()
         buildrequest.id = brid
-        buildrequest.bsid = brdict['buildsetid']
-        builder = yield master.db.builders.getBuilder(brdict['builderid'])
-        buildrequest.buildername = builder.name
-        buildrequest.builderid = brdict['builderid']
-        buildrequest.priority = brdict['priority']
-        dt = brdict['submitted_at']
+        buildrequest.bsid = brdict.buildsetid
+        buildrequest.buildername = brdict.buildername
+        buildrequest.builderid = brdict.builderid
+        buildrequest.priority = brdict.priority
+        dt = brdict.submitted_at
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
-        buildrequest.waitedFor = brdict['waited_for']
+        buildrequest.waitedFor = brdict.waited_for
 
         # fetch the buildset to get the reason
-        buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
+        buildset = yield master.db.buildsets.getBuildset(brdict.buildsetid)
         assert buildset  # schema should guarantee this
         buildrequest.reason = buildset['reason']
 
         # fetch the buildset properties, and convert to Properties
-        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict['buildsetid'])
+        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict.buildsetid)
 
         buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 

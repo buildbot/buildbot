@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+import dataclasses
 from collections import UserList
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
@@ -22,6 +26,9 @@ from buildbot.data import resultspec
 from buildbot.process.properties import renderer
 from buildbot.process.results import RETRY
 from buildbot.util import flatten
+
+if TYPE_CHECKING:
+    from buildbot.db.buildrequests import BuildRequestModel
 
 
 @defer.inlineCallbacks
@@ -119,15 +126,15 @@ def getDetailsForBuild(
 
 
 @defer.inlineCallbacks
-def get_details_for_buildrequest(master, buildrequest, build):
-    buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
-    builder = yield master.data.get(("builders", buildrequest['builderid']))
+def get_details_for_buildrequest(master, buildrequest: BuildRequestModel, build):
+    buildset = yield master.data.get(("buildsets", buildrequest.buildsetid))
+    builder = yield master.data.get(("builders", buildrequest.builderid))
 
-    build['buildrequest'] = buildrequest
+    build['buildrequest'] = dataclasses.asdict(buildrequest)
     build['buildset'] = buildset
-    build['builderid'] = buildrequest['builderid']
+    build['builderid'] = buildrequest.builderid
     build['builder'] = builder
-    build['url'] = getURLForBuildrequest(master, buildrequest['buildrequestid'])
+    build['url'] = getURLForBuildrequest(master, buildrequest.buildrequestid)
     build['results'] = None
     build['complete'] = False
 

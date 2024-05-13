@@ -84,21 +84,20 @@ class Tests(interfaces.InterfaceTests):
 
         yield self.assertEqual(
             brdict,
-            {
-                "buildrequestid": 44,
-                "buildsetid": self.BSID,
-                "builderid": self.BLDRID1,
-                "buildername": "builder1",
-                "priority": 7,
-                "claimed": True,
-                "claimed_by_masterid": self.MASTER_ID,
-                "complete": True,
-                "results": 75,
-                "claimed_at": self.CLAIMED_AT,
-                "submitted_at": self.SUBMITTED_AT,
-                "complete_at": self.COMPLETE_AT,
-                "waited_for": False,
-            },
+            buildrequests.BuildRequestModel(
+                buildrequestid=44,
+                buildsetid=self.BSID,
+                builderid=self.BLDRID1,
+                buildername="builder1",
+                priority=7,
+                claimed_by_masterid=self.MASTER_ID,
+                complete=True,
+                results=75,
+                claimed_at=self.CLAIMED_AT,
+                submitted_at=self.SUBMITTED_AT,
+                complete_at=self.COMPLETE_AT,
+                waited_for=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -128,7 +127,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         brlist = yield self.db.buildrequests.getBuildRequests(**kwargs)
 
-        self.assertEqual(sorted([br['buildrequestid'] for br in brlist]), sorted(expected))
+        self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
     def test_getBuildRequests_no_claimed_arg(self):
         return self.do_test_getBuildRequests_claim_args(expected=[50, 51, 52, 53])
@@ -155,7 +154,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         brlist = yield self.db.buildrequests.getBuildRequests(**kwargs)
 
-        self.assertEqual(sorted([br['buildrequestid'] for br in brlist]), sorted(expected))
+        self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
     @defer.inlineCallbacks
     def do_test_getBuildRequests_complete_arg(self, **kwargs):
@@ -188,7 +187,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         brlist = yield self.db.buildrequests.getBuildRequests(**kwargs)
 
-        self.assertEqual(sorted([br['buildrequestid'] for br in brlist]), sorted(expected))
+        self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
     def test_getBuildRequests_complete_none(self):
         return self.do_test_getBuildRequests_complete_arg(expected=[70, 80, 81, 82])
@@ -220,7 +219,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         brlist = yield self.db.buildrequests.getBuildRequests(bsid=self.BSID)
 
-        self.assertEqual(sorted([br['buildrequestid'] for br in brlist]), sorted([70, 72]))
+        self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted([70, 72]))
 
     @defer.inlineCallbacks
     def test_getBuildRequests_combo(self):
@@ -299,7 +298,7 @@ class Tests(interfaces.InterfaceTests):
             builderid=self.BLDRID1, claimed=self.MASTER_ID, complete=True, bsid=self.BSID
         )
 
-        self.assertEqual([br['buildrequestid'] for br in brlist], [44])
+        self.assertEqual([br.buildrequestid for br in brlist], [44])
 
     @defer.inlineCallbacks
     def do_test_getBuildRequests_branch_arg(self, **kwargs):
@@ -323,7 +322,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         brlist = yield self.db.buildrequests.getBuildRequests(**kwargs)
 
-        self.assertEqual(sorted([br['buildrequestid'] for br in brlist]), sorted(expected))
+        self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
     def test_getBuildRequests_branch(self):
         return self.do_test_getBuildRequests_branch_arg(branch='branch_A', expected=[70, 90])
@@ -368,10 +367,7 @@ class Tests(interfaces.InterfaceTests):
 
             self.assertNotEqual(expected, None, "unexpected success from claimBuildRequests")
             self.assertEqual(
-                sorted([
-                    (r['buildrequestid'], r['claimed_at'], r['claimed_by_masterid'])
-                    for r in results
-                ]),
+                sorted([(r.buildrequestid, r.claimed_at, r.claimed_by_masterid) for r in results]),
                 sorted(expected),
             )
         except Exception as e:
@@ -461,9 +457,7 @@ class Tests(interfaces.InterfaceTests):
 
         # check that [1,1000) were not claimed, and 1000 is still claimed
         self.assertEqual(
-            [(r['buildrequestid'], r['claimed_by_masterid'], r['claimed_at']) for r in results][
-                :10
-            ],
+            [(r.buildrequestid, r.claimed_by_masterid, r.claimed_at) for r in results][:10],
             [(1000, self.OTHER_MASTER_ID, epoch2datetime(1300103810))],
         )
 
@@ -499,10 +493,7 @@ class Tests(interfaces.InterfaceTests):
 
             self.assertNotEqual(expected, None, "unexpected success from completeBuildRequests")
             self.assertEqual(
-                sorted(
-                    (r['buildrequestid'], r['complete'], r['results'], r['complete_at'])
-                    for r in results
-                ),
+                sorted((r.buildrequestid, r.complete, r.results, r.complete_at) for r in results),
                 sorted(expected),
             )
 
@@ -664,7 +655,7 @@ class Tests(interfaces.InterfaceTests):
         # just select the unclaimed requests
         results = yield self.db.buildrequests.getBuildRequests(claimed=False)
 
-        self.assertEqual(sorted([r['buildrequestid'] for r in results]), sorted(expected))
+        self.assertEqual(sorted([r.buildrequestid for r in results]), sorted(expected))
 
     def test_unclaimBuildRequests(self):
         to_unclaim = [

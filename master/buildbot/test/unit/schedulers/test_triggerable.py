@@ -17,6 +17,7 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
 
+from buildbot.db.buildrequests import BuildRequestModel
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
 from buildbot.test import fakedb
@@ -107,21 +108,20 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,
-                {
-                    'buildrequestid': brid,
-                    'buildername': 'b',
-                    'builderid': 77,
-                    'buildsetid': bsid,
-                    'claimed': False,
-                    'claimed_at': None,
-                    'complete': False,
-                    'complete_at': None,
-                    'claimed_by_masterid': None,
-                    'priority': 0,
-                    'results': -1,
-                    'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
-                    'waited_for': waited_for,
-                },
+                BuildRequestModel(
+                    buildrequestid=brid,
+                    buildername='b',
+                    builderid=77,
+                    buildsetid=bsid,
+                    claimed_at=None,
+                    complete=False,
+                    complete_at=None,
+                    claimed_by_masterid=None,
+                    priority=0,
+                    results=-1,
+                    submitted_at=datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
+                    waited_for=waited_for,
+                ),
             )
 
     def sendCompletionMessage(self, bsid, results=3):

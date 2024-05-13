@@ -25,9 +25,8 @@ Buildrequests connector
 
     .. index:: brdict, brid
 
-    Build requests are indexed by an ID referred to as a *brid*.  The contents
-    of a request are represented as build request dictionaries (brdicts) with
-    keys
+    Build requests are indexed by an ID referred to as a *brid*.  The contents of a
+    request are represented by a :class:`BuildRequestModel` dataclass with the following fields:
 
     * ``buildrequestid``
     * ``buildsetid``
@@ -46,7 +45,7 @@ Buildrequests connector
     .. py:method:: getBuildRequest(brid)
 
         :param brid: build request id to look up
-        :returns: brdict or ``None``, via Deferred
+        :returns: :class:`BuildRequestModel` or ``None``, via Deferred
 
         Get a single BuildRequest, in the format described above.  This method
         returns ``None`` if there is no such buildrequest.  Note that build
@@ -65,7 +64,7 @@ Buildrequests connector
         :param branch: the branch associated with the sourcestamps originating the requests
         :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
             If possible, the db layer can optimize the SQL query using this information.
-        :returns: list of brdicts, via Deferred
+        :returns: list of :class:`BuildRequestModel`, via Deferred
 
         Get a list of build requests matching the given characteristics.
 

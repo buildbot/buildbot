@@ -246,7 +246,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
     def getSourceStampsForBuild(self, buildid):
         build = yield self.db.builds.getBuild(buildid)
         breq = yield self.db.buildrequests.getBuildRequest(build['buildrequestid'])
-        bset = yield self.db.buildsets.getBuildset(breq['buildsetid'])
+        bset = yield self.db.buildsets.getBuildset(breq.buildsetid)
 
         results = []
         for ssid in bset['sourcestamps']:

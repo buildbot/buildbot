@@ -29,22 +29,23 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from buildbot.data.resultspec import ResultSpec
+    from buildbot.db.buildrequests import BuildRequestModel
 
 
-def _db2data(dbdict: dict, properties: dict | None):
+def _db2data(dbmodel: BuildRequestModel, properties: dict | None):
     return {
-        'buildrequestid': dbdict['buildrequestid'],
-        'buildsetid': dbdict['buildsetid'],
-        'builderid': dbdict['builderid'],
-        'priority': dbdict['priority'],
-        'claimed': dbdict['claimed'],
-        'claimed_at': dbdict['claimed_at'],
-        'claimed_by_masterid': dbdict['claimed_by_masterid'],
-        'complete': dbdict['complete'],
-        'results': dbdict['results'],
-        'submitted_at': dbdict['submitted_at'],
-        'complete_at': dbdict['complete_at'],
-        'waited_for': dbdict['waited_for'],
+        'buildrequestid': dbmodel.buildrequestid,
+        'buildsetid': dbmodel.buildsetid,
+        'builderid': dbmodel.builderid,
+        'priority': dbmodel.priority,
+        'claimed': dbmodel.claimed,
+        'claimed_at': dbmodel.claimed_at,
+        'claimed_by_masterid': dbmodel.claimed_by_masterid,
+        'complete': dbmodel.complete,
+        'results': dbmodel.results,
+        'submitted_at': dbmodel.submitted_at,
+        'complete_at': dbmodel.complete_at,
+        'waited_for': dbmodel.waited_for,
         'properties': properties,
     }
 
@@ -104,9 +105,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             return None
 
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
-        properties = yield self.get_buildset_properties_filtered(
-            buildrequest['buildsetid'], filters
-        )
+        properties = yield self.get_buildset_properties_filtered(buildrequest.buildsetid, filters)
         return _db2data(buildrequest, properties)
 
     @defer.inlineCallbacks
@@ -163,7 +162,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         results = []
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
         for br in buildrequests:
-            properties = yield self.get_buildset_properties_filtered(br['buildsetid'], filters)
+            properties = yield self.get_buildset_properties_filtered(br.buildsetid, filters)
             results.append(_db2data(br, properties))
         return results
 
@@ -261,7 +260,7 @@ class BuildRequest(base.ResourceType):
             brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
 
             if brdict:
-                bsid = brdict['buildsetid']
+                bsid = brdict.buildsetid
                 if bsid in seen_bsids:
                     continue
                 seen_bsids.add(bsid)
