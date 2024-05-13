@@ -28,7 +28,6 @@ from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
-from buildbot.warnings import warn_deprecated
 from buildbot.worker.base import AbstractWorker
 
 
@@ -469,18 +468,8 @@ class AbstractLatentWorker(AbstractWorker):
             yield self._start_stop_lock.acquire()
             message = "latent worker crashed before connecting"
             try:
-                value = yield self.check_instance()
-                if isinstance(value, bool):
-                    is_good = value
-                    warn_deprecated(
-                        "3.10.0",
-                        "check_instance() must return a two element tuple "
-                        "with second element containing error message, if any",
-                    )
-
-                else:
-                    is_good, message_append = value
-                    message += ": " + message_append
+                is_good, message_append = yield self.check_instance()
+                message += ": " + message_append
             except Exception as e:
                 message += ": " + str(e)
                 is_good = False
