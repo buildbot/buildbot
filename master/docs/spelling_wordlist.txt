@@ -233,6 +233,7 @@ daemonization
 daemonize
 daemonizing
 Darcs
+dataclass
 dataService
 dataset
 datastream
@@ -780,6 +781,7 @@ sourcestamp
 sourceStamp
 sourcestampid
 sourcestamps
+SourceStampModel
 spambots
 spdy
 splitter

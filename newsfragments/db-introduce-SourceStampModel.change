@@ -1,0 +1,1 @@
+:class:`SourceStampsConnectorComponent` `getSourceStamp`, `get_sourcestamps_for_buildset`, `getSourceStampsForBuild`, and `getSourceStamps` now return a :class`SourceStampModel` instead of a dictionary of SourceStamp data
