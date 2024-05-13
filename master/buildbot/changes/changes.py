@@ -42,7 +42,7 @@ class Change:
         by L{ChangesConnectorComponent.getChange}.
 
         @param master: build master instance
-        @param ssdict: change dictionary
+        @param chdict: change dictionary
 
         @returns: L{Change} via Deferred
         """
