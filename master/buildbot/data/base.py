@@ -13,16 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import enum
 import functools
 import re
 from collections import UserList
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import exceptions
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from buildbot.db.builders import BuilderModel
 
 
 class EndpointKind(enum.Enum):
@@ -184,14 +190,14 @@ class NestedBuildDataRetriever:
         'worker_dict',
     )
 
-    def __init__(self, master, args):
+    def __init__(self, master, args) -> None:
         self.master = master
         self.args = args
         # False is used as special value as "not set". None is used as "not exists". This solves
         # the problem of multiple database queries in case entity does not exist.
         self.step_dict = False
         self.build_dict = False
-        self.builder_dict = False
+        self.builder_dict: BuilderModel | None | False = False
         self.log_dict = False
         self.worker_dict = False
 
@@ -244,7 +250,7 @@ class NestedBuildDataRetriever:
                 return None
 
             self.build_dict = await self.master.db.builds.getBuildByNumber(
-                builderid=builder_dict['id'], number=self.args['build_number']
+                builderid=builder_dict.id, number=self.args['build_number']
             )
             return self.build_dict
 
@@ -268,7 +274,7 @@ class NestedBuildDataRetriever:
         return build_dict['id']
 
     @async_to_deferred
-    async def get_builder_dict(self):
+    async def get_builder_dict(self) -> BuilderModel | None:
         if self.builder_dict is not False:
             return self.builder_dict
 
@@ -296,14 +302,14 @@ class NestedBuildDataRetriever:
         return None
 
     @async_to_deferred
-    async def get_builder_id(self):
+    async def get_builder_id(self) -> int | None:
         if 'builderid' in self.args:
             return self.args['builderid']
 
         builder_dict = await self.get_builder_dict()
         if builder_dict is None:
             return None
-        return builder_dict['id']
+        return builder_dict.id
 
     @async_to_deferred
     async def get_log_dict(self):

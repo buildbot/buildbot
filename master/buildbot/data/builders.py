@@ -13,11 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+
+if TYPE_CHECKING:
+    from buildbot.db.builders import BuilderModel
+
+
+def _db2data(builder: BuilderModel):
+    return {
+        "builderid": builder.id,
+        "name": builder.name,
+        "masterids": builder.masterids,
+        "description": builder.description,
+        "description_format": builder.description_format,
+        "description_html": builder.description_html,
+        "projectid": builder.projectid,
+        "tags": builder.tags,
+    }
 
 
 class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
@@ -34,22 +53,13 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
         if builderid is None:
             return None
 
-        bdict = yield self.master.db.builders.getBuilder(builderid)
-        if not bdict:
+        builder = yield self.master.db.builders.getBuilder(builderid)
+        if not builder:
             return None
         if 'masterid' in kwargs:
-            if kwargs['masterid'] not in bdict['masterids']:
+            if kwargs['masterid'] not in builder.masterids:
                 return None
-        return {
-            "builderid": builderid,
-            "name": bdict['name'],
-            "masterids": bdict['masterids'],
-            "description": bdict['description'],
-            "description_format": bdict["description_format"],
-            "description_html": bdict["description_html"],
-            "projectid": bdict['projectid'],
-            "tags": bdict['tags'],
-        }
+        return _db2data(builder)
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -66,19 +76,7 @@ class BuildersEndpoint(base.Endpoint):
         bdicts = yield self.master.db.builders.getBuilders(
             masterid=kwargs.get('masterid', None), projectid=kwargs.get('projectid', None)
         )
-        return [
-            {
-                "builderid": bd['id'],
-                "name": bd['name'],
-                "masterids": bd['masterids'],
-                "description": bd['description'],
-                "description_format": bd['description_format'],
-                "description_html": bd['description_html'],
-                "projectid": bd['projectid'],
-                "tags": bd['tags'],
-            }
-            for bd in bdicts
-        ]
+        return [_db2data(bd) for bd in bdicts]
 
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
         if parent is not None:
@@ -139,17 +137,17 @@ class Builder(base.ResourceType):
         # figure out what to remove and remove it
         builderNames_set = set(builderNames)
         for bldr in builders:
-            if bldr['name'] not in builderNames_set:
-                builderid = bldr['id']
+            if bldr.name not in builderNames_set:
+                builderid = bldr.id
                 yield self.master.db.builders.removeBuilderMaster(
                     masterid=masterid, builderid=builderid
                 )
                 self.master.mq.produce(
                     ('builders', str(builderid), 'stopped'),
-                    {"builderid": builderid, "masterid": masterid, "name": bldr['name']},
+                    {"builderid": builderid, "masterid": masterid, "name": bldr.name},
                 )
             else:
-                builderNames_set.remove(bldr['name'])
+                builderNames_set.remove(bldr.name)
 
         # now whatever's left in builderNames_set is new
         for name in builderNames_set:

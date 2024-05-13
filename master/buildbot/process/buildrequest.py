@@ -217,7 +217,7 @@ class BuildRequest:
         buildrequest.id = brid
         buildrequest.bsid = brdict['buildsetid']
         builder = yield master.db.builders.getBuilder(brdict['builderid'])
-        buildrequest.buildername = builder['name']
+        buildrequest.buildername = builder.name
         buildrequest.builderid = brdict['builderid']
         buildrequest.priority = brdict['priority']
         dt = brdict['submitted_at']

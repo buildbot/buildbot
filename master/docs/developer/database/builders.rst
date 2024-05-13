@@ -9,10 +9,15 @@ Builders connector
 
     This class handles the relationship between builder names and their IDs, as well as tracking which masters are configured for this builder.
 
-    Builders are represented by master dictionaries with the following keys:
+    Builders are represented by a :class:`BuilderModel` dataclass with the following fields:
 
     * ``id`` -- the ID of this builder
     * ``name``  -- the builder name, a 20-character :ref:`identifier <type-identifier>`
+    * ``description`` -- the builder's description (optional)
+    * ``description_format`` -- the format of builder's description (optional)
+    * ``description_html`` -- the builder description rendered as html (optional, depends on ``description_format``)
+    * ``projectid`` -- the builder's project
+    * ``tags`` -- the builder's tags
     * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
 
     .. py:method:: findBuilderId(name, autoCreate=True)
@@ -47,7 +52,7 @@ Builders connector
     .. py:method:: getBuilder(builderid)
 
         :param integer builderid: the builder to check in
-        :returns: Builder dict or None via Deferred
+        :returns: :class:`BuilderModel` or None via Deferred
 
         Get the indicated builder.
 
@@ -55,7 +60,7 @@ Builders connector
 
         :param integer masterid: ID of the master to which the results should be limited
         :param integer masterid: ID of the project to which the results should be limited
-        :returns: list of Builder dicts via Deferred
+        :returns: list of :class:`BuilderModel` via Deferred
 
         Get all builders (in unspecified order).
         If ``masterid`` is specified, then only builders configured on that master are returned.

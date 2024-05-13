@@ -98,6 +98,7 @@ builddir
 buildDict
 builderid
 builderids
+BuilderModel
 buildername
 builderName
 buildid
