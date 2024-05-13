@@ -16,16 +16,13 @@
 
 import re
 
-from twisted.internet import defer
 from twisted.logger import Logger
-
-from buildbot.warnings import warn_deprecated
 
 log = Logger()
 
 
 class LineBoundaryFinder:
-    __slots__ = ['partialLine', 'callback', 'warned']
+    __slots__ = ['partialLine', 'warned']
     # split at reasonable line length.
     # too big lines will fill master's memory, and slow down the UI too much.
     MAX_LINELENGTH = 4096
@@ -36,10 +33,7 @@ class LineBoundaryFinder:
     newline_re = re.compile(r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)')
 
     def __init__(self, callback=None):
-        if callback is not None:
-            warn_deprecated('3.6.0', f'{self.__class__.__name__} does not accept callback anymore')
         self.partialLine = None
-        self.callback = callback
         self.warned = False
 
     def adjust_line(self, text):
@@ -81,17 +75,9 @@ class LineBoundaryFinder:
         return None
 
     def append(self, text):
-        lines = self.adjust_line(text)
-        if self.callback is None:
-            return lines
-
-        if lines is None:
-            return defer.succeed(None)
-        return self.callback(lines)
+        return self.adjust_line(text)
 
     def flush(self):
         if self.partialLine is not None:
             return self.append('\n')
-        if self.callback is not None:
-            return defer.succeed(None)
         return None
