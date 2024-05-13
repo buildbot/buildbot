@@ -850,43 +850,25 @@ This module makes it easy to manipulate identifiers.
     This class accepts a sequence of arbitrary strings and computes newline-terminated substrings.
     Input strings are accepted in append function, and newline-terminated substrings are returned.
 
-    Alternatively, a callback maybe provided into class constructor.
-    This callback is invoked with complete (newline-terminated) substrings.
-    This method of returning results is deprecated.
-
     The class buffers any partial lines until a subsequent newline is seen.
     It considers any of ``\r``, ``\n``, and ``\r\n`` to be newlines.
     Because of the ambiguity of an append operation ending in the character ``\r`` (it may be a bare ``\r`` or half of ``\r\n``), the last line of such an append operation will be buffered until the next append or flush.
 
-    :param callback: (optional and deprecated) asynchronous function to call with newline-terminated strings
-
     .. py:method:: append(text)
 
         :param text: text to append to the boundary finder
-        :returns: Deferred (deprecated) or newline-terminated substring
+        :returns: a newline-terminated substring or None
 
         Add additional text to the boundary finder.
         If the addition of this text completes at least one line, as many complete lines as possible are selected as a result.
         If no lines are completed, the result will be ``None``.
 
-        If the class constructor did not receive ``callback`` argument, then result is returned.
-        Otherwise, if result is not ``None``, ``callback`` will be invoked with it.
-        Otherwise, ``defer.succeed(None)`` is returned.
-
-
     .. py:method:: flush()
 
-        :returns: Deferred (deprecated), newline-terminated substring or None
+        :returns: a newline-terminated substring or None
 
         Flush any remaining partial line by adding a newline.
 
-        Function works differently depending on whether class constructor received ``callback`` argument.
-
-        If ``callback`` was not received, and  there was a remaining partial line, its result is returned.
-        Otherwise, ``None`` is returned.
-
-        If ``callback`` was received, and there was a remaining partial line, callback is invoked with it.
-        Otherwise, ``defer.succeed(None)`` is returned.
 
 :py:mod:`buildbot.util.service`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
