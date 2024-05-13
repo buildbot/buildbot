@@ -419,8 +419,7 @@ class ResultSpec:
                     Do a multi-level sort by passing in the keys
                     to sort by.
 
-                    @param elem: each item in the list to sort.  It must be
-                              a C{dict}
+                    @param elem: each item in the list to sort.
                     @param order: a list of keys to sort by, such as:
                                 ('lastName', 'firstName', 'age')
                     @return: a key used by sorted(). This will be a
@@ -436,7 +435,8 @@ class ResultSpec:
                             # it means sort by 'lastName' in reverse.
                             k = k[1:]
                             doReverse = True
-                        val = NoneComparator(elem[k])
+                        val = elem[k] if isinstance(elem, dict) else getattr(elem, k)
+                        val = NoneComparator(val)
                         if doReverse:
                             val = ReverseComparator(val)
                         compareKey.append(val)
