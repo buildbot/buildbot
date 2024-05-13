@@ -20,7 +20,6 @@ from buildbot import interfaces
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.message import MessageFormatterRenderable
-from buildbot.warnings import warn_deprecated
 
 from .utils import BuildStatusGeneratorMixin
 
@@ -40,21 +39,12 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         builders=None,
         schedulers=None,
         branches=None,
-        subject=None,
         add_logs=False,
         add_patch=False,
         report_new=False,
         message_formatter=None,
     ):
-        if subject is not None:
-            warn_deprecated(
-                '3.5.0',
-                'BuildStatusGenerator subject parameter has been '
-                + 'deprecated: please configure subject in the message formatter',
-            )
-        else:
-            subject = "Buildbot %(result)s in %(title)s on %(builder)s"
-
+        subject = "Buildbot %(result)s in %(title)s on %(builder)s"
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
         self.formatter = message_formatter
         if self.formatter is None:
