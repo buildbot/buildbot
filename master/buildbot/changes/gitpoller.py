@@ -34,7 +34,6 @@ from buildbot.util.git import GitServiceAuth
 from buildbot.util.git import check_ssh_config
 from buildbot.util.state import StateMixin
 from buildbot.util.twisted import async_to_deferred
-from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -86,7 +85,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         usetimestamps=True,
         category=None,
         project=None,
-        pollinterval=-2,
         fetch_refspec=None,
         encoding="utf-8",
         name=None,
@@ -99,11 +97,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
     ):
-        # for backward compatibility; the parameter used to be spelled with 'i'
-        if pollinterval != -2:
-            pollInterval = pollinterval
-            warn_deprecated('3.11.2', 'pollinterval has been deprecated: please use pollInterval')
-
         if only_tags and (branch or branches):
             config.error("GitPoller: can't specify only_tags and branch/branches")
         if branch and branches:
@@ -151,7 +144,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         usetimestamps=True,
         category=None,
         project=None,
-        pollinterval=-2,
         fetch_refspec=None,
         encoding="utf-8",
         name=None,
@@ -164,11 +156,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
     ):
-        # for backward compatibility; the parameter used to be spelled with 'i'
-        if pollinterval != -2:
-            pollInterval = pollinterval
-            warn_deprecated('3.11.2', 'pollinterval has been deprecated: please use pollInterval')
-
         if name is None:
             name = repourl
 

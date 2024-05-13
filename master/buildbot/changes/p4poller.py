@@ -32,7 +32,6 @@ from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
-from buildbot.warnings import warn_deprecated
 
 debug_logging = False
 
@@ -144,7 +143,6 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         split_file=lambda branchfile: (None, branchfile),
         pollInterval=60 * 10,
         histmax=None,
-        pollinterval=-2,
         encoding="utf8",
         project=None,
         name=None,
@@ -157,11 +155,6 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
     ):
-        # for backward compatibility; the parameter used to be spelled with 'i'
-        if pollinterval != -2:
-            pollInterval = pollinterval
-            warn_deprecated('3.11.2', 'pollinterval has been deprecated: please use pollInterval')
-
         name = self.build_name(name, p4port, p4base)
 
         if use_tickets and not p4passwd:
@@ -195,7 +188,6 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         split_file=lambda branchfile: (None, branchfile),
         pollInterval=60 * 10,
         histmax=None,
-        pollinterval=-2,
         encoding="utf8",
         project=None,
         name=None,
@@ -208,11 +200,6 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
     ):
-        # for backward compatibility; the parameter used to be spelled with 'i'
-        if pollinterval != -2:
-            pollInterval = pollinterval
-            warn_deprecated('3.11.2', 'pollinterval has been deprecated: please use pollInterval')
-
         name = self.build_name(name, p4port, p4base)
 
         if project is None:
