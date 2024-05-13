@@ -19,24 +19,30 @@ Source stamps connector
 
     An instance of this class is available at ``master.db.sourcestamps``.
 
-    Sourcestamps are represented by dictionaries with the following keys:
+    Sourcestamps are represented by a :class:`SourceStampModel` dataclass with the following fields:
 
     .. index:: ssid, ssdict
 
     * ``ssid``
     * ``branch`` (branch, or ``None`` for default branch)
     * ``revision`` (revision, or ``None`` to indicate the latest revision, in
-      which case this is a relative source stamp)
-    * ``patchid`` (ID of the patch)
-    * ``patch_body`` (body of the patch, or ``None``)
-    * ``patch_level`` (directory stripping level of the patch, or ``None``)
-    * ``patch_subdir`` (subdirectory in which to apply the patch, or ``None``)
-    * ``patch_author`` (author of the patch, or ``None``)
-    * ``patch_comment`` (comment for the patch, or ``None``)
+        which case this is a relative source stamp)
     * ``repository`` (repository containing the source; never ``None``)
-    * ``project`` (project this source is for; never ``None``)
-    * ``codebase`` (codebase this stamp is in; never ``None``)
     * ``created_at`` (timestamp when this stamp was first created)
+    * ``codebase`` (codebase this stamp is in; never ``None``)
+    * ``project`` (project this source is for; never ``None``)
+    * ``patch`` (a ``PatchModel`` or ``None``, see below)
+
+    .. index:: patch
+
+    :class:`PatchModel`
+
+    * ``patchid`` (ID of the patch)
+    * ``body`` (body of the patch, or ``None``)
+    * ``level`` (directory stripping level of the patch, or ``None``)
+    * ``subdir`` (subdirectory in which to apply the patch, or ``None``)
+    * ``author`` (author of the patch, or ``None``)
+    * ``comment`` (comment for the patch, or ``None``)
 
     Note that the patch body is a bytestring, not a unicode string.
 
@@ -66,7 +72,7 @@ Source stamps connector
 
         Create a new SourceStamp instance with the given attributes, or find an existing one.
         In either case, return its ssid.
-        The arguments all have the same meaning as in an ssdict.
+        The arguments all have the same meaning as in an :class:`SourceStampModel`.
 
         If a new SourceStamp is created, its ``created_at`` is set to the current time.
 
@@ -75,14 +81,14 @@ Source stamps connector
         :param ssid: sourcestamp to get
         :param no_cache: bypass cache and always fetch from database
         :type no_cache: boolean
-        :returns: ssdict, or ``None``, via Deferred
+        :returns: :class:`SourceStampModel`, or ``None``, via Deferred
 
-        Get an ssdict representing the given source stamp, or ``None`` if no
+        Get an :class:`SourceStampModel` representing the given source stamp, or ``None`` if no
         such source stamp exists.
 
     .. py:method:: getSourceStamps()
 
-        :returns: list of ssdict, via Deferred
+        :returns: list of :class:`SourceStampModel`, via Deferred
 
         Get all sourcestamps in the database.
         You probably don't want to do this!
@@ -91,13 +97,13 @@ Source stamps connector
     .. py:method:: get_sourcestamps_for_buildset(buildsetid)
 
         :param buildsetid: buildset ID
-        :returns: list of ssdict, via Deferred
+        :returns: list of :class:`SourceStampModel`, via Deferred
 
         Get sourcestamps related to a buildset.
 
     .. py:method:: getSourceStampsForBuild(buildid)
 
         :param buildid: build ID
-        :returns: list of ssdict, via Deferred
+        :returns: list of :class:`SourceStampModel`, via Deferred
 
         Get sourcestamps related to a build.

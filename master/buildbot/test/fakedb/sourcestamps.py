@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
 
 from twisted.internet import defer
 
+from buildbot.db.sourcestamps import PatchModel
+from buildbot.db.sourcestamps import SourceStampModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.util import epoch2datetime
@@ -199,23 +203,33 @@ class FakeSourceStampsComponent(FakeDBComponent):
     def getSourceStamps(self):
         return defer.succeed([self._getSourceStamp_sync(ssid) for ssid in self.sourcestamps])
 
-    def _getSourceStamp_sync(self, ssid):
-        if ssid in self.sourcestamps:
-            ssdict = self.sourcestamps[ssid].copy()
-            ssdict['ssid'] = ssid
-            patchid = ssdict['patchid']
-            if patchid:
-                ssdict.update(self.patches[patchid])
-                ssdict['patchid'] = patchid
-            else:
-                ssdict['patch_body'] = None
-                ssdict['patch_level'] = None
-                ssdict['patch_subdir'] = None
-                ssdict['patch_author'] = None
-                ssdict['patch_comment'] = None
-            return ssdict
-        else:
+    def _getSourceStamp_sync(self, ssid) -> SourceStampModel | None:
+        sourcestamp = self.sourcestamps.get(ssid)
+        if sourcestamp is None:
             return None
+
+        ssdict = SourceStampModel(
+            ssid=ssid,
+            branch=sourcestamp["branch"],
+            revision=sourcestamp["revision"],
+            repository=sourcestamp["repository"],
+            codebase=sourcestamp["codebase"],
+            project=sourcestamp["project"],
+            created_at=sourcestamp["created_at"],
+        )
+        patchid = sourcestamp['patchid']
+        patch = self.patches.get(patchid)
+        if patch is not None:
+            ssdict.patch = PatchModel(
+                patchid=patchid,
+                body=patch["patch_body"],
+                level=patch["patch_level"],
+                author=patch["patch_author"],
+                comment=patch["patch_comment"],
+                subdir=patch["patch_subdir"],
+            )
+
+        return ssdict
 
     @defer.inlineCallbacks
     def get_sourcestamps_for_buildset(self, buildsetid):

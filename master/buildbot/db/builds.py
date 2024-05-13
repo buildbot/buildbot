@@ -82,7 +82,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         tbl = self.db.model.builds
         offset = 0
         increment = 1000
-        matchssBuild = {(ss['repository'], ss['branch'], ss['codebase']) for ss in ssBuild}
+        matchssBuild = {(ss.repository, ss.branch, ss.codebase) for ss in ssBuild}
         while rv is None:
             # Get some recent successful builds on the same builder
             prevBuilds = yield self._getRecentBuilds(
@@ -96,8 +96,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 break
             for prevBuild in prevBuilds:
                 prevssBuild = {
-                    (ss['repository'], ss['branch'], ss['codebase'])
-                    for ss in (yield gssfb(prevBuild['id']))
+                    (ss.repository, ss.branch, ss.codebase) for ss in (yield gssfb(prevBuild['id']))
                 }
                 if prevssBuild == matchssBuild:
                     # A successful build with the same

@@ -1,0 +1,1 @@
+:class:`buildbot.db.sourcestamps.SsDict` is deprecated in favor of :class:`buildbot.db.sourcestamps.SourceStampModel`

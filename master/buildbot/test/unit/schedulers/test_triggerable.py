@@ -99,13 +99,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         self.assertEqual(len(sourcestamps), len(actual_sourcestamps))
         for expected_ss, actual_ss in zip(sourcestamps, actual_sourcestamps):
-            actual_ss = actual_ss.copy()
             # We don't care if the actual sourcestamp has *more* attributes
             # than expected.
-            for key in list(actual_ss.keys()):
-                if key not in expected_ss:
-                    del actual_ss[key]
-            self.assertEqual(expected_ss, actual_ss)
+            self.assertEqual(expected_ss, {k: getattr(actual_ss, k) for k in expected_ss.keys()})
 
         for brid in brids.values():
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)

@@ -342,22 +342,6 @@ _sourcestamp = {
 message['sourcestamps'] = Selector()
 message['sourcestamps'].add(None, DictValidator(**_sourcestamp))
 
-dbdict['ssdict'] = DictValidator(
-    ssid=IntValidator(),
-    branch=NoneOk(StringValidator()),
-    revision=NoneOk(StringValidator()),
-    patchid=NoneOk(IntValidator()),
-    patch_body=NoneOk(BinaryValidator()),
-    patch_level=NoneOk(IntValidator()),
-    patch_subdir=NoneOk(StringValidator()),
-    patch_author=NoneOk(StringValidator()),
-    patch_comment=NoneOk(StringValidator()),
-    codebase=StringValidator(),
-    repository=StringValidator(),
-    project=StringValidator(),
-    created_at=DateTimeValidator(),
-)
-
 # project
 dbdict['projectdict'] = DictValidator(
     id=IntValidator(),
