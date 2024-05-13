@@ -99,7 +99,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = resultspec.OptimisedResultSpec(
-            properties=[resultspec.Property(b'property', 'eq', 'reason')]
+            properties=[resultspec.Property(b'property', 'eq', ['reason'])]
         )
         build = yield self.callGet(('builders', 77, 'builds', 3), resultSpec=resultSpec)
         self.validateData(build)
@@ -285,7 +285,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = resultspec.OptimisedResultSpec(
-            properties=[resultspec.Property(b'property', 'eq', 'reason')]
+            properties=[resultspec.Property(b'property', 'eq', ['reason'])]
         )
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
 

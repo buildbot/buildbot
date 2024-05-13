@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import sqlalchemy as sa
 from twisted.python import log
 
@@ -71,10 +73,12 @@ class FieldBase:
         # only support string values, because currently there are no queries against lists in SQL
     }
 
-    def __init__(self, field, op, values):
+    # can't type `values` as `Sequence` as `str` is one as well...
+    def __init__(self, field: bytes, op: str, values: list | tuple):
         self.field = field
         self.op = op
         self.values = values
+        assert isinstance(values, (list, tuple))
 
     def getOperator(self, sqlMode=False):
         v = self.values
