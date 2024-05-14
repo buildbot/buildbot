@@ -24,6 +24,7 @@ from twisted.python import log
 from twisted.trial import unittest
 
 from buildbot import locks
+from buildbot.config import ConfigErrors
 from buildbot.interfaces import WorkerSetupError
 from buildbot.plugins import util
 from buildbot.process import buildstep
@@ -52,9 +53,7 @@ from buildbot.test.steps import ExpectStat
 from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class NewStyleStep(buildstep.BuildStep):
@@ -200,18 +199,22 @@ class TestBuildStep(
 
     @defer.inlineCallbacks
     def test_arg_changes(self):
-        recorded_arg = []
+        try:
+            recorded_arg = []
 
-        step = self.RecordingBuildStep(record_target=recorded_arg, arg="orig")
-        self.setup_step(step)
+            step = self.RecordingBuildStep(record_target=recorded_arg, arg="orig")
+            self.setup_step(step)
 
-        with assertProducesWarning(DeprecatedApiWarning):
-            step.arg = "changed"
+            self.expect_outcome(result=SUCCESS)
+            yield self.run_step()
 
-        self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
-
-        self.assertEqual(recorded_arg, ["orig"])
+            self.assertEqual(recorded_arg, ["orig"])
+        except ConfigErrors as e:
+            self.assertEqual(
+                "Changes to attributes of a BuildStep instance are ignored, this is a bug. "
+                "Use set_step_arg(name, value) for that.",
+                e.errors[0],
+            )
 
     @defer.inlineCallbacks
     def test_arg_changes_set_step_arg(self):
