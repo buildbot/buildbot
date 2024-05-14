@@ -113,6 +113,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsEnvOption)
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
         self.assertFalse(self.supports_lsremote_symref)
+        self.assertFalse(self.supports_credential_store)
 
     def test_git_noversion(self):
         self.parseGitFeatures('git')
@@ -123,6 +124,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsEnvOption)
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
         self.assertFalse(self.supports_lsremote_symref)
+        self.assertFalse(self.supports_credential_store)
 
     def test_git_zero_version(self):
         self.parseGitFeatures('git version 0.0.0')
@@ -133,6 +135,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSshPrivateKeyAsEnvOption)
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
         self.assertFalse(self.supports_lsremote_symref)
+        self.assertFalse(self.supports_credential_store)
 
     def test_git_2_10_0(self):
         self.parseGitFeatures('git version 2.10.0')
@@ -143,6 +146,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertTrue(self.supportsSshPrivateKeyAsEnvOption)
         self.assertTrue(self.supportsSshPrivateKeyAsConfigOption)
         self.assertTrue(self.supports_lsremote_symref)
+        self.assertTrue(self.supports_credential_store)
 
 
 class TestAdjustCommandParamsForSshPrivateKey(GitMixin, unittest.TestCase):

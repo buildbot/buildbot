@@ -32,7 +32,9 @@ from buildbot.process.properties import Properties
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import ComparableMixin
 from buildbot.util import bytes2unicode
+from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.misc import writeLocalFile
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from buildbot.interfaces import IRenderable
@@ -89,6 +91,7 @@ class GitMixin:
         self.supportsSshPrivateKeyAsConfigOption = False
         self.supportsFilters = False
         self.supports_lsremote_symref = False
+        self.supports_credential_store = False
 
     def parseGitFeatures(self, version_stdout):
         match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
@@ -106,6 +109,8 @@ class GitMixin:
             self.supportsSubmoduleForce = True
         if version >= parse_version("1.7.8"):
             self.supportsSubmoduleCheckout = True
+        if version >= parse_version("1.7.9"):
+            self.supports_credential_store = True
         if version >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
         if version >= parse_version("2.8.0"):
@@ -174,12 +179,14 @@ class GitStepMixin(GitMixin):
         ssh_private_key: IRenderable | None,
         ssh_host_key: IRenderable | None,
         ssh_known_hosts: IRenderable | None,
+        git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self._git_auth = GitStepAuth(
             self,
             ssh_private_key,
             ssh_host_key,
             ssh_known_hosts,
+            git_credential_options=git_credential_options,
         )
 
     def _get_auth_data_workdir(self) -> str:
@@ -265,6 +272,7 @@ class AbstractGitAuth(ComparableMixin):
         "ssh_private_key",
         "ssh_host_key",
         "ssh_known_hosts",
+        "git_credential_options",
     )
 
     def __init__(
@@ -272,6 +280,7 @@ class AbstractGitAuth(ComparableMixin):
         ssh_private_key: IRenderable | None = None,
         ssh_host_key: IRenderable | None = None,
         ssh_known_hosts: IRenderable | None = None,
+        git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self.did_download_auth_files = False
 
@@ -279,14 +288,20 @@ class AbstractGitAuth(ComparableMixin):
         self.ssh_host_key = ssh_host_key
         self.ssh_known_hosts = ssh_known_hosts
 
+        self.git_credential_options = git_credential_options
+
         check_ssh_config('Git', self.ssh_private_key, self.ssh_host_key, self.ssh_known_hosts)
 
     def is_auth_needed_for_git_command(self, git_command: str) -> bool:
-        if not git_command or self.ssh_private_key is None:
+        if not git_command:
+            return False
+
+        if self.ssh_private_key is None and self.git_credential_options is None:
             return False
 
         git_commands_that_need_auth = [
             'clone',
+            'credential',
             'fetch',
             'ls-remote',
             'push',
@@ -313,6 +328,9 @@ class AbstractGitAuth(ComparableMixin):
     def _get_ssh_wrapper_script_path(self, ssh_data_path: str) -> str:
         return self._path_module.join(ssh_data_path, 'ssh-wrapper.sh')
 
+    def _get_credential_store_file_path(self, ssh_data_path):
+        return self._path_module.join(ssh_data_path, '.git-credentials')
+
     def _adjust_command_params_for_ssh_private_key(
         self,
         full_command: list[str],
@@ -320,6 +338,9 @@ class AbstractGitAuth(ComparableMixin):
         workdir: str,
         git_mixin: GitMixin,
     ) -> None:
+        if self.ssh_private_key is None:
+            return
+
         key_path = self._get_ssh_private_key_path(workdir)
         host_key_path = None
         if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
@@ -335,6 +356,43 @@ class AbstractGitAuth(ComparableMixin):
             host_key_path,
         )
 
+    def _adjust_command_params_for_credential_store(
+        self,
+        full_command: list[str],
+        workdir: str,
+        git_mixin: GitMixin,
+    ):
+        if self.git_credential_options is None:
+            return
+
+        if not git_mixin.supports_credential_store:
+            raise RuntimeError('git credential-store is not supported')
+
+        credentials_path = self._get_credential_store_file_path(workdir)
+
+        # This will unset the `credential.helper` config for this command
+        # so that system/global credential store is not used
+        # NOTE: This could be optional allowing credential retrieval from system sources
+        # However, it would need the store process (`credential approve`) to pass it
+        # as `credential approve` will store the credential in ALL credential helpers
+        full_command.extend([
+            '-c',
+            'credential.helper=',
+        ])
+
+        full_command.extend([
+            '-c',
+            f'credential.helper=store "--file={credentials_path}"',
+        ])
+
+        if self.git_credential_options.use_http_path is not None:
+            # Whether or not to only use domain for credential lookup
+            value = 'true' if self.git_credential_options.use_http_path else 'false'
+            full_command.extend([
+                '-c',
+                f'credential.useHttpPath={value}',
+            ])
+
     def adjust_git_command_params_for_auth(
         self,
         full_command: list[str],
@@ -348,50 +406,57 @@ class AbstractGitAuth(ComparableMixin):
             workdir=workdir,
             git_mixin=git_mixin,
         )
+        self._adjust_command_params_for_credential_store(
+            full_command,
+            workdir=workdir,
+            git_mixin=git_mixin,
+        )
 
-    def _download_file(
+    @async_to_deferred
+    async def _dovccmd(
+        self,
+        command: list[str],
+        initial_stdin: str | None = None,
+        workdir: str | None = None,
+    ) -> None:
+        raise NotImplementedError()
+
+    async def _download_file(
         self,
         path: str,
         content: str,
         mode: int,
         workdir: str | None = None,
-    ) -> defer.Deferred[None]:
+    ) -> None:
         raise NotImplementedError()
 
-    @defer.inlineCallbacks
-    def download_auth_files_if_needed(
+    @async_to_deferred
+    async def _download_ssh_files(
         self,
+        private_key: str,
+        host_key: str | None,
+        known_hosts: str | None,
         workdir: str,
         download_wrapper_script: bool = False,
-    ):
-        if self.ssh_private_key is None:
-            return RC_SUCCESS
-
-        p = Properties()
-        p.master = self._master
-        private_key = yield p.render(self.ssh_private_key)
-        host_key = yield p.render(self.ssh_host_key)
-        known_hosts = yield p.render(self.ssh_known_hosts)
-
+    ) -> None:
         private_key_path = self._get_ssh_private_key_path(workdir)
         private_key = ensureSshKeyNewline(private_key)
-        yield self._download_file(
+        await self._download_file(
             private_key_path,
             private_key,
             mode=stat.S_IRUSR,
             workdir=workdir,
         )
 
-        known_hosts_path = None
-        if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
-            known_hosts_path = self._get_ssh_host_key_path(workdir)
+        known_hosts_path = self._get_ssh_host_key_path(workdir)
+        known_hosts_contents = None
+        if known_hosts is not None:
+            known_hosts_contents = known_hosts
+        elif host_key is not None:
+            known_hosts_contents = getSshKnownHostsContents(host_key)
 
-            if known_hosts is not None:
-                known_hosts_contents = known_hosts
-            else:
-                known_hosts_contents = getSshKnownHostsContents(host_key)
-
-            yield self._download_file(
+        if known_hosts_contents is not None:
+            await self._download_file(
                 known_hosts_path,
                 known_hosts_contents,
                 mode=stat.S_IRUSR,
@@ -399,25 +464,73 @@ class AbstractGitAuth(ComparableMixin):
             )
 
         if download_wrapper_script:
-            private_key_path = self._get_ssh_private_key_path(workdir)
-            known_hosts_path = None
-            if self.ssh_host_key is not None or self.ssh_known_hosts is not None:
-                known_hosts_path = self._get_ssh_host_key_path(workdir)
-
             script_path = self._get_ssh_wrapper_script_path(workdir)
-            script_contents = getSshWrapperScriptContents(private_key_path, known_hosts_path)
+            script_contents = getSshWrapperScriptContents(
+                private_key_path,
+                (known_hosts_path if known_hosts_contents is not None else None),
+            )
 
-            yield self._download_file(
+            await self._download_file(
                 script_path,
                 script_contents,
                 mode=stat.S_IRWXU,
                 workdir=workdir,
             )
 
-        self.did_download_auth_files = True
+    @async_to_deferred
+    async def _download_credentials(
+        self,
+        credentials: list[str],
+        workdir: str,
+    ) -> None:
+        for creds in credentials:
+            # Using credential approve here instead of directly writing to the file
+            # as recommended by Git doc (https://git-scm.com/docs/git-credential-store#_storage_format)
+            # "Do not view or edit the file with editors."
+            await self._dovccmd(
+                ['credential', 'approve'],
+                initial_stdin=creds,
+                workdir=workdir,
+            )
+
+    @async_to_deferred
+    async def download_auth_files_if_needed(
+        self,
+        workdir: str,
+        download_wrapper_script: bool = False,
+    ) -> int:
+        p = Properties()
+        p.master = self._master
+
+        private_key: str | None = await p.render(self.ssh_private_key)
+        host_key: str | None = await p.render(self.ssh_host_key)
+        known_hosts: str | None = await p.render(self.ssh_known_hosts)
+
+        if private_key is not None:
+            await self._download_ssh_files(
+                private_key,
+                host_key,
+                known_hosts,
+                workdir,
+                download_wrapper_script,
+            )
+            self.did_download_auth_files = True
+
+        if self.git_credential_options is not None:
+            credentials: list[str] = []
+            for creds in self.git_credential_options.credentials:
+                rendered: str | None = await p.render(creds)
+                if rendered:
+                    credentials.append(rendered)
+
+            if credentials:
+                await self._download_credentials(credentials, workdir)
+                self.did_download_auth_files = True
+
         return RC_SUCCESS
 
-    def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
+    @async_to_deferred
+    async def remove_auth_files_if_needed(self, workdir: str) -> int:
         raise NotImplementedError()
 
 
@@ -429,10 +542,11 @@ class GitStepAuth(AbstractGitAuth):
         ssh_private_key: IRenderable | None = None,
         ssh_host_key: IRenderable | None = None,
         ssh_known_hosts: IRenderable | None = None,
+        git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self.step = step
 
-        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts)
+        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts, git_credential_options)
 
     def _get_auth_data_path(self, data_workdir: str) -> str:
         # we can't use the workdir for temporary ssh-related files, because
@@ -487,31 +601,50 @@ class GitStepAuth(AbstractGitAuth):
         assert isinstance(self.step, buildstep.BuildStep) and self.step.master is not None
         return self.step.master
 
-    @defer.inlineCallbacks
-    def _download_file(self, path: str, content: str, mode: int, workdir: str | None = None):
+    @async_to_deferred
+    async def _download_file(
+        self,
+        path: str,
+        content: str,
+        mode: int,
+        workdir: str | None = None,
+    ) -> None:
         assert isinstance(self.step, CompositeStepMixin)
-        yield self.step.downloadFileContentToWorker(
+        await self.step.downloadFileContentToWorker(
             path,
             content,
             mode=mode,
             workdir=workdir,
         )
 
-    @defer.inlineCallbacks
-    def download_auth_files_if_needed(
+    @async_to_deferred
+    async def _dovccmd(
+        self,
+        command: list[str],
+        initial_stdin: str | None = None,
+        workdir: str | None = None,
+    ) -> None:
+        assert isinstance(self.step, GitStepMixin)
+        await self.step._dovccmd(
+            command=command,
+            initialStdin=initial_stdin,
+        )
+
+    @async_to_deferred
+    async def download_auth_files_if_needed(
         self,
         workdir: str,
         download_wrapper_script: bool = False,
-    ):
-        if self.ssh_private_key is None:
+    ) -> int:
+        if self.ssh_private_key is None and self.git_credential_options is None:
             return RC_SUCCESS
 
         assert isinstance(self.step, CompositeStepMixin) and isinstance(self.step, GitMixin)
 
         workdir = self._get_auth_data_path(workdir)
-        yield self.step.runMkdir(workdir)
+        await self.step.runMkdir(workdir)
 
-        return_code = yield super().download_auth_files_if_needed(
+        return_code = await super().download_auth_files_if_needed(
             workdir=workdir,
             download_wrapper_script=(
                 download_wrapper_script or not self.step.supportsSshPrivateKeyAsEnvOption
@@ -519,13 +652,13 @@ class GitStepAuth(AbstractGitAuth):
         )
         return return_code
 
-    @defer.inlineCallbacks
-    def remove_auth_files_if_needed(self, workdir: str):
+    @async_to_deferred
+    async def remove_auth_files_if_needed(self, workdir: str) -> int:
         if not self.did_download_auth_files:
             return RC_SUCCESS
 
         assert isinstance(self.step, CompositeStepMixin)
-        yield self.step.runRmdir(self._get_auth_data_path(workdir))
+        await self.step.runRmdir(self._get_auth_data_path(workdir))
         return RC_SUCCESS
 
 
@@ -550,21 +683,22 @@ class GitServiceAuth(AbstractGitAuth):
         assert self._service.master is not None
         return self._service.master
 
-    def _download_file(
+    @async_to_deferred
+    async def _download_file(
         self,
         path: str,
         content: str,
         mode: int,
         workdir: str | None = None,
-    ) -> defer.Deferred[None]:
+    ) -> None:
         writeLocalFile(path, content, mode=mode)
-        return defer.succeed(None)
 
-    def remove_auth_files_if_needed(self, workdir: str) -> defer.Deferred[int]:
+    @async_to_deferred
+    async def remove_auth_files_if_needed(self, workdir: str) -> int:
         if not self.did_download_auth_files:
-            return defer.succeed(RC_SUCCESS)
+            return RC_SUCCESS
 
         Path(self._get_ssh_private_key_path(workdir)).unlink(missing_ok=True)
         Path(self._get_ssh_host_key_path(workdir)).unlink(missing_ok=True)
 
-        return defer.succeed(RC_SUCCESS)
+        return RC_SUCCESS

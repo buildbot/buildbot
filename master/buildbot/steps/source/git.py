@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -25,6 +29,12 @@ from buildbot.steps.source.base import Source
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util.git import RC_SUCCESS
 from buildbot.util.git import GitStepMixin
+from buildbot.util.git_credential import GitCredentialOptions
+from buildbot.util.git_credential import add_user_password_to_credentials
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IRenderable
+
 
 GIT_HASH_LENGTH = 40
 
@@ -89,6 +99,8 @@ class Git(Source, GitStepMixin):
         sshPrivateKey=None,
         sshHostKey=None,
         sshKnownHosts=None,
+        auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
+        git_credentials: GitCredentialOptions | None = None,
         **kwargs,
     ):
         if not getDescription and not isinstance(getDescription, dict):
@@ -115,7 +127,19 @@ class Git(Source, GitStepMixin):
         super().__init__(**kwargs)
 
         self.setupGitStep()
-        self.setup_git_auth(sshPrivateKey, sshHostKey, sshKnownHosts)
+        if auth_credentials is not None:
+            git_credentials = add_user_password_to_credentials(
+                auth_credentials,
+                repourl,
+                git_credentials,
+            )
+
+        self.setup_git_auth(
+            sshPrivateKey,
+            sshHostKey,
+            sshKnownHosts,
+            git_credentials,
+        )
 
         if isinstance(self.mode, str):
             if not self._hasAttrGroupMember('mode', self.mode):
@@ -596,6 +620,8 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         sshPrivateKey=None,
         sshHostKey=None,
         sshKnownHosts=None,
+        auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
+        git_credentials: GitCredentialOptions | None = None,
         config=None,
         **kwargs,
     ):
@@ -611,7 +637,19 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         super().__init__(**kwargs)
 
         self.setupGitStep()
-        self.setup_git_auth(sshPrivateKey, sshHostKey, sshKnownHosts)
+        if auth_credentials is not None:
+            git_credentials = add_user_password_to_credentials(
+                auth_credentials,
+                repourl,
+                git_credentials,
+            )
+
+        self.setup_git_auth(
+            sshPrivateKey,
+            sshHostKey,
+            sshKnownHosts,
+            git_credentials,
+        )
 
         if not self.branch:
             bbconfig.error('GitPush: must provide branch')

@@ -39,6 +39,7 @@ from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 from buildbot.util import unicode2bytes
+from buildbot.util.git_credential import GitCredentialOptions
 
 
 class TestGit(
@@ -3891,6 +3892,268 @@ class TestGit(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
+    @parameterized.expand([
+        ('', None),
+        ('use_http_path', True),
+        ('dont_use_http_path', False),
+    ])
+    def test_mode_full_clean_auth_credential(self, name, use_http_path):
+        self.setup_step(
+            self.stepClass(
+                repourl='https://example.com/test/test.git',
+                mode='full',
+                method='clean',
+                auth_credentials=('username', 'token'),
+                git_credentials=GitCredentialOptions(
+                    credentials=[],
+                    use_http_path=use_http_path,
+                ),
+            )
+        )
+
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+
+        use_http_path_arg = []
+        if use_http_path is not None:
+            use_http_path_arg.append('-c')
+            if use_http_path:
+                use_http_path_arg.append('credential.useHttpPath=true')
+            else:
+                use_http_path_arg.append('credential.useHttpPath=false')
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.10.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectMkdir(dir=ssh_workdir, log_environ=True).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                ]
+                + use_http_path_arg
+                + [
+                    'credential',
+                    'approve',
+                ],
+                initial_stdin=(
+                    "url=https://example.com/test/test.git\n"
+                    "username=username\n"
+                    "password=token\n"
+                ),
+            ).exit(0),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                ]
+                + use_http_path_arg
+                + [
+                    'fetch',
+                    '-f',
+                    '-t',
+                    'https://example.com/test/test.git',
+                    'HEAD',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+            ExpectRmdir(dir=ssh_workdir, log_environ=True).exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
+        )
+        return self.run_step()
+
+    def test_mode_full_clean_git_credential(self):
+        self.setup_step(
+            self.stepClass(
+                repourl='https://example.com/test/test.git',
+                mode='full',
+                method='clean',
+                git_credentials=GitCredentialOptions(
+                    credentials=[
+                        (
+                            "url=https://example.com/test/test.git\n"
+                            "username=username\n"
+                            "password=token\n"
+                        ),
+                    ],
+                ),
+            )
+        )
+
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.10.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectMkdir(dir=ssh_workdir, log_environ=True).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    'credential',
+                    'approve',
+                ],
+                initial_stdin=(
+                    "url=https://example.com/test/test.git\n"
+                    "username=username\n"
+                    "password=token\n"
+                ),
+            ).exit(0),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    'fetch',
+                    '-f',
+                    '-t',
+                    'https://example.com/test/test.git',
+                    'HEAD',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+            ExpectRmdir(dir=ssh_workdir, log_environ=True).exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
+        )
+        return self.run_step()
+
+    def test_mode_full_clean_auth_and_git_credential(self):
+        self.setup_step(
+            self.stepClass(
+                repourl='https://example.com/test/test.git',
+                mode='full',
+                method='clean',
+                auth_credentials=('auth_username', 'auth_token'),
+                git_credentials=GitCredentialOptions(
+                    credentials=[
+                        (
+                            "url=https://example.com/test/submodule_test.git\n"
+                            "username=username\n"
+                            "password=token\n"
+                        ),
+                    ],
+                    use_http_path=True,
+                ),
+            )
+        )
+
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.10.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectMkdir(dir=ssh_workdir, log_environ=True).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    '-c',
+                    'credential.useHttpPath=true',
+                    'credential',
+                    'approve',
+                ],
+                initial_stdin=(
+                    "url=https://example.com/test/test.git\n"
+                    "username=auth_username\n"
+                    "password=auth_token\n"
+                ),
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    '-c',
+                    'credential.useHttpPath=true',
+                    'credential',
+                    'approve',
+                ],
+                initial_stdin=(
+                    "url=https://example.com/test/submodule_test.git\n"
+                    "username=username\n"
+                    "password=token\n"
+                ),
+            ).exit(0),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    '-c',
+                    'credential.useHttpPath=true',
+                    'fetch',
+                    '-f',
+                    '-t',
+                    'https://example.com/test/test.git',
+                    'HEAD',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+            ExpectRmdir(dir=ssh_workdir, log_environ=True).exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
+        )
+        return self.run_step()
+
 
 class TestGitPush(
     TestBuildStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
@@ -4240,6 +4503,145 @@ class TestGitPush(
     def test_config_fail_no_branch(self):
         with self.assertRaisesConfigError("GitPush: must provide branch"):
             self.stepClass(workdir='wkdir', repourl="url")
+
+    @parameterized.expand([
+        ('', None),
+        ('use_http_path', True),
+        ('dont_use_http_path', False),
+    ])
+    def test_push_auth_credential(self, name, use_http_path):
+        url = 'https://example.com/test/test.git'
+        self.setup_step(
+            self.stepClass(
+                workdir='wkdir',
+                repourl=url,
+                branch='testbranch',
+                auth_credentials=('username', 'token'),
+                git_credentials=GitCredentialOptions(
+                    credentials=[],
+                    use_http_path=use_http_path,
+                ),
+            )
+        )
+
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+
+        use_http_path_arg = []
+        if use_http_path is not None:
+            use_http_path_arg.append('-c')
+            if use_http_path:
+                use_http_path_arg.append('credential.useHttpPath=true')
+            else:
+                use_http_path_arg.append('credential.useHttpPath=false')
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 1.7.9')
+            .exit(0),
+            ExpectMkdir(dir=ssh_workdir, log_environ=True).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                ]
+                + use_http_path_arg
+                + [
+                    'credential',
+                    'approve',
+                ],
+                initial_stdin=(
+                    "url=https://example.com/test/test.git\n"
+                    "username=username\n"
+                    "password=token\n"
+                ),
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                ]
+                + use_http_path_arg
+                + [
+                    'push',
+                    url,
+                    'testbranch',
+                ],
+            ).exit(0),
+            ExpectRmdir(dir=ssh_workdir, log_environ=True).exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_push_git_credential(self):
+        url = 'https://example.com/test/test.git'
+        self.setup_step(
+            self.stepClass(
+                workdir='wkdir',
+                repourl=url,
+                branch='testbranch',
+                git_credentials=GitCredentialOptions(
+                    credentials=[
+                        (
+                            "url=https://example.com/test/test.git\n"
+                            "username=username\n"
+                            "password=token\n"
+                        ),
+                    ]
+                ),
+            )
+        )
+
+        ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
+        git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 1.7.9')
+            .exit(0),
+            ExpectMkdir(dir=ssh_workdir, log_environ=True).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    'credential',
+                    'approve',
+                ],
+                initial_stdin=(
+                    "url=https://example.com/test/test.git\n"
+                    "username=username\n"
+                    "password=token\n"
+                ),
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    '-c',
+                    'credential.helper=',
+                    '-c',
+                    f'credential.helper=store "--file={git_credential_path}"',
+                    'push',
+                    url,
+                    'testbranch',
+                ],
+            ).exit(0),
+            ExpectRmdir(dir=ssh_workdir, log_environ=True).exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
 
 
 class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
