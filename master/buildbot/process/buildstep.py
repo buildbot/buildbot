@@ -65,7 +65,6 @@ from buildbot.util import debounce
 from buildbot.util import deferwaiter
 from buildbot.util import flatten
 from buildbot.util.test_result_submitter import TestResultSubmitter
-from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from buildbot.process.build import Build
@@ -192,10 +191,9 @@ class BuildStepWrapperMixin:
 
     def __setattr__(self, name, value):
         if self.__init_completed:
-            warn_deprecated(
-                "3.10.0",
+            config.error(
                 "Changes to attributes of a BuildStep instance are ignored, this is a bug. "
-                "Use set_step_arg(name, value) for that.",
+                "Use set_step_arg(name, value) for that."
             )
         super().__setattr__(name, value)
 
