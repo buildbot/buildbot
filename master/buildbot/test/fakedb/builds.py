@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from twisted.internet import defer
 
+from buildbot.db.builds import BuildModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.util import validation
@@ -90,37 +92,37 @@ class FakeBuildsComponent(FakeDBComponent):
             id += 1
         return id
 
-    def _row2dict(self, row):
-        return {
-            "id": row['id'],
-            "number": row['number'],
-            "buildrequestid": row['buildrequestid'],
-            "builderid": row['builderid'],
-            "masterid": row['masterid'],
-            "workerid": row['workerid'],
-            "started_at": epoch2datetime(row['started_at']),
-            "complete_at": epoch2datetime(row['complete_at']),
-            "locks_duration_s": row["locks_duration_s"],
-            "state_string": row['state_string'],
-            "results": row['results'],
-        }
+    def _model_from_row(self, row):
+        return BuildModel(
+            id=row['id'],
+            number=row['number'],
+            buildrequestid=row['buildrequestid'],
+            builderid=row['builderid'],
+            masterid=row['masterid'],
+            workerid=row['workerid'],
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
+            locks_duration_s=row["locks_duration_s"],
+            state_string=row['state_string'],
+            results=row['results'],
+        )
 
-    def getBuild(self, buildid):
+    def getBuild(self, buildid) -> defer.Deferred[BuildModel | None]:
         row = self.builds.get(buildid)
         if not row:
             return defer.succeed(None)
 
-        return defer.succeed(self._row2dict(row))
+        return defer.succeed(self._model_from_row(row))
 
-    def getBuildByNumber(self, builderid, number):
+    def getBuildByNumber(self, builderid, number) -> defer.Deferred[BuildModel | None]:
         for row in self.builds.values():
             if row['builderid'] == builderid and row['number'] == number:
-                return defer.succeed(self._row2dict(row))
+                return defer.succeed(self._model_from_row(row))
         return defer.succeed(None)
 
     def getBuilds(
         self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None
-    ):
+    ) -> defer.Deferred[list[BuildModel]]:
         ret = []
         for row in self.builds.values():
             if builderid is not None and row['builderid'] != builderid:
@@ -131,7 +133,7 @@ class FakeBuildsComponent(FakeDBComponent):
                 continue
             if complete is not None and complete != (row['complete_at'] is not None):
                 continue
-            ret.append(self._row2dict(row))
+            ret.append(self._model_from_row(row))
         if resultSpec is not None:
             ret = self.applyResultSpec(ret, resultSpec)
         return defer.succeed(ret)
@@ -209,7 +211,7 @@ class FakeBuildsComponent(FakeDBComponent):
         ]
 
         builds = yield self.db.builds.getBuilds()
-        return [build for build in builds if build['buildrequestid'] in change_breqids]
+        return [build for build in builds if build.buildrequestid in change_breqids]
 
     def add_build_locks_duration(self, buildid, duration_s):
         b = self.builds.get(buildid)

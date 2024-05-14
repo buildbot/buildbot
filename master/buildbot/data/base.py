@@ -29,6 +29,7 @@ from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from buildbot.db.builders import BuilderModel
+    from buildbot.db.builds import BuildModel
 
 
 class EndpointKind(enum.Enum):
@@ -196,7 +197,7 @@ class NestedBuildDataRetriever:
         # False is used as special value as "not set". None is used as "not exists". This solves
         # the problem of multiple database queries in case entity does not exist.
         self.step_dict = False
-        self.build_dict = False
+        self.build_dict: BuildModel | None | False = False
         self.builder_dict: BuilderModel | None | False = False
         self.log_dict = False
         self.worker_dict = False
@@ -217,7 +218,7 @@ class NestedBuildDataRetriever:
                 return None
 
             self.step_dict = await self.master.db.steps.getStep(
-                buildid=build_dict['id'],
+                buildid=build_dict.id,
                 number=self.args.get('step_number'),
                 name=self.args.get('step_name'),
             )
@@ -234,7 +235,7 @@ class NestedBuildDataRetriever:
         return self.step_dict
 
     @async_to_deferred
-    async def get_build_dict(self):
+    async def get_build_dict(self) -> BuilderModel | None:
         if self.build_dict is not False:
             return self.build_dict
 
@@ -271,7 +272,7 @@ class NestedBuildDataRetriever:
         build_dict = await self.get_build_dict()
         if build_dict is None:
             return None
-        return build_dict['id']
+        return build_dict.id
 
     @async_to_deferred
     async def get_builder_dict(self) -> BuilderModel | None:
@@ -295,7 +296,7 @@ class NestedBuildDataRetriever:
         # fallback when there's only indirect information
         build_dict = await self.get_build_dict()
         if build_dict is not None:
-            self.builder_dict = await self.master.db.builders.getBuilder(build_dict['builderid'])
+            self.builder_dict = await self.master.db.builders.getBuilder(build_dict.builderid)
             return self.builder_dict
 
         self.builder_dict = None
@@ -346,7 +347,7 @@ class NestedBuildDataRetriever:
 
         build_dict = await self.get_build_dict()
         if build_dict is not None:
-            workerid = build_dict.get('workerid', None)
+            workerid = build_dict.workerid
             if workerid is not None:
                 self.worker_dict = await self.master.db.workers.getWorker(workerid=workerid)
                 return self.worker_dict

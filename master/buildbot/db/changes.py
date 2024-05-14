@@ -201,10 +201,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # Get the last successful build on the same builder
         previousBuild = yield self.master.db.builds.getPrevSuccessfulBuild(
-            currentBuild['builderid'], currentBuild['number'], ssBuild
+            currentBuild.builderid, currentBuild.number, ssBuild
         )
         if previousBuild:
-            for ss in (yield gssfb(previousBuild['id'])):
+            for ss in (yield gssfb(previousBuild.id)):
                 toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
         else:
             # If no successful previous build, then we need to catch all

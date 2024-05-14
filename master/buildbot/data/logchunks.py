@@ -50,7 +50,7 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             if builder_dict is not None:
                 log_prefix += f'Builder: {builder_dict.name}\n'
             if build_dict is not None:
-                log_prefix += f'Build number: {build_dict["number"]}\n'
+                log_prefix += f'Build number: {build_dict.number}\n'
             if worker_dict is not None:
                 log_prefix += f'Worker name: {worker_dict["name"]}\n'
 
@@ -60,7 +60,7 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         if builder_dict is not None:
             informative_parts += [builder_dict.name]
         if build_dict is not None:
-            informative_parts += ['build', str(build_dict['number'])]
+            informative_parts += ['build', str(build_dict.number)]
         if step_dict is not None:
             informative_parts += ['step', step_dict['name']]
         informative_parts += ['log', log_dict['slug']]

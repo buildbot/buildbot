@@ -13,11 +13,36 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.data.resultspec import ResultSpec
+
+if TYPE_CHECKING:
+    from buildbot.db.builds import BuildModel
+
+
+def _db2data(model: BuildModel):
+    return {
+        'buildid': model.id,
+        'number': model.number,
+        'builderid': model.builderid,
+        'buildrequestid': model.buildrequestid,
+        'workerid': model.workerid,
+        'masterid': model.masterid,
+        'started_at': model.started_at,
+        'complete_at': model.complete_at,
+        "locks_duration_s": model.locks_duration_s,
+        'complete': model.complete_at is not None,
+        'state_string': model.state_string,
+        'results': model.results,
+        'properties': {},
+    }
 
 
 class Db2DataMixin:
@@ -41,24 +66,6 @@ class Db2DataMixin:
                 else dict(((k, v) for k, v in props.items() if k in filters))
             )
         return None
-
-    def db2data(self, dbdict):
-        data = {
-            'buildid': dbdict['id'],
-            'number': dbdict['number'],
-            'builderid': dbdict['builderid'],
-            'buildrequestid': dbdict['buildrequestid'],
-            'workerid': dbdict['workerid'],
-            'masterid': dbdict['masterid'],
-            'started_at': dbdict['started_at'],
-            'complete_at': dbdict['complete_at'],
-            "locks_duration_s": dbdict["locks_duration_s"],
-            'complete': dbdict['complete_at'] is not None,
-            'state_string': dbdict['state_string'],
-            'results': dbdict['results'],
-            'properties': {},
-        }
-        return defer.succeed(data)
 
     fieldMapping = {
         'buildid': 'builds.id',
@@ -94,7 +101,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             num = kwargs['build_number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
 
-        data = yield self.db2data(dbdict) if dbdict else None
+        data = _db2data(dbdict) if dbdict else None
         # In some cases, data could be None
         if data:
             filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
@@ -116,7 +123,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             bldr = kwargs['builderid']
             num = kwargs['build_number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
-            buildid = dbdict['id']
+            buildid = dbdict.id
         self.master.mq.produce(
             ("control", "builds", str(buildid), 'stop'),
             {"reason": kwargs.get('reason', args.get('reason', 'no reason'))},
@@ -173,7 +180,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
         buildscol = []
         for b in builds:
-            data = yield self.db2data(b)
+            data = _db2data(b)
             if kwargs.get('graphql'):
                 # let the graphql engine manage the properties
                 del data['properties']
