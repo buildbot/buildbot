@@ -195,39 +195,21 @@ class FakeBuildsComponent(FakeDBComponent):
     def getBuildsForChange(self, changeid):
         change = yield self.db.changes.getChange(changeid)
         bsets = yield self.db.buildsets.getBuildsets()
+        change_ssid = change['sourcestampid']
+
+        change_buildsetids = set(
+            bset['bsid']
+            for bset in bsets
+            if any(change_ssid == ssid for ssid in bset['sourcestamps'])
+        )
+
         breqs = yield self.db.buildrequests.getBuildRequests()
+        change_breqids = [
+            breq.buildrequestid for breq in breqs if breq.buildsetid in change_buildsetids
+        ]
+
         builds = yield self.db.builds.getBuilds()
-
-        results = []
-        for bset in bsets:
-            for ssid in bset['sourcestamps']:
-                if change['sourcestampid'] == ssid:
-                    bset['changeid'] = changeid
-                    results.append({'buildsetid': bset['bsid']})
-
-        for breq in breqs:
-            for result in results:
-                if result['buildsetid'] == breq.buildsetid:
-                    result['buildrequestid'] = breq.buildrequestid
-
-        for build in builds:
-            for result in results:
-                if result['buildrequestid'] == build['buildrequestid']:
-                    result['id'] = build['id']
-                    result['number'] = build['number']
-                    result['builderid'] = build['builderid']
-                    result['workerid'] = build['workerid']
-                    result['masterid'] = build['masterid']
-                    result['started_at'] = epoch2datetime(1304262222)
-                    result['complete_at'] = build['complete_at']
-                    result["locks_duration_s"] = build["locks_duration_s"]
-                    result['state_string'] = build['state_string']
-                    result['results'] = build['results']
-
-        for result in results:
-            del result['buildsetid']
-
-        return results
+        return [build for build in builds if build['buildrequestid'] in change_breqids]
 
     def add_build_locks_duration(self, buildid, duration_s):
         b = self.builds.get(buildid)
