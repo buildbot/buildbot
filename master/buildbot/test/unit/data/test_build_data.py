@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import build_data
+from buildbot.db.build_data import BuildDataModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -343,11 +344,11 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         result = yield self.master.db.build_data.getBuildData(2, 'name1')
         self.assertEqual(
             result,
-            {
-                'buildid': 2,
-                'name': 'name1',
-                'value': b'value1',
-                'length': 6,
-                'source': 'source1',
-            },
+            BuildDataModel(
+                buildid=2,
+                name='name1',
+                value=b'value1',
+                length=6,
+                source='source1',
+            ),
         )

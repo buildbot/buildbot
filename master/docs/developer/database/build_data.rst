@@ -14,12 +14,12 @@ Build data connector
 
     An instance of this class is available at ``master.db.build_data``.
 
-    Builds are indexed by *build_dataid* and their contents represented as *build_datadicts* (build data dictionaries), with the following keys:
+    Builds are indexed by *build_dataid* and their contents represented as :class:`BuildDataModel` dataclass, with the following fields:
 
     * ``id`` (the build data ID, globally unique)
     * ``buildid`` (the ID of the build that the data is attached to)
     * ``name`` (the name of the data)
-    * ``value`` (the value of the data. It must be an instance of ``bytes``)
+    * ``value`` (the value of the data. It must be an instance of ``bytes``. Can be ``None`` when queried with ``getBuildDataNoValue``)
     * ``source`` (an string identifying the source of this value)
 
     .. py:method:: setBuildData(buildid, name, value, source)
@@ -36,7 +36,7 @@ Build data connector
 
         :param integer buildid: build id retrieve data for
         :param unicode name: the name of the data
-        :returns: Build data dictionary as above or ``None``, via Deferred
+        :returns: :class:`BuildDataModel` or ``None``, via Deferred
 
         Get a single build data, in the format described above, specified by build and by name.
         Returns ``None`` if build has no data with such name.
@@ -45,7 +45,7 @@ Build data connector
 
         :param integer buildid: build id retrieve data for
         :param unicode name: the name of the data
-        :returns: Build data dictionary as above or ``None``, via Deferred
+        :returns: :class:`BuildDataModel` or ``None``, via Deferred
 
         Get a single build data, in the format described above, specified by build and by name.
         The ``value`` field is omitted.
@@ -55,7 +55,7 @@ Build data connector
 
         :param integer buildid: build id retrieve data for
         :param unicode name: the name of the data
-        :returns: a list of build data dictionaries
+        :returns: a list of :class:`BuildDataModel`
 
         Returns all data for a specific build.
         The values are not loaded.
@@ -68,4 +68,3 @@ Build data connector
 
         Delete old build data (helper for the ``build_data_horizon`` policy).
         Old logs have their build data deleted from the database as they are only useful while build is running and shortly afterwards.
-

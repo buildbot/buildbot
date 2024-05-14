@@ -13,14 +13,48 @@
 #
 # Copyright Buildbot Team Members
 
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 import sqlalchemy as sa
 from twisted.internet import defer
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
 
 
-class BuildDataDict(dict):
+@dataclass
+class BuildDataModel:
+    buildid: int
+    name: str
+    length: int
+    source: str
+    value: bytes | None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '3.12.0',
+            (
+                'BuildDataConnectorComponent getBuildData, getBuildDataNoValue, and getAllBuildDataNoValues '
+                'no longer return BuildData as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 3, 12, 0), BuildDataModel)
+class BuildDataDict(BuildDataModel):
     pass
 
 
@@ -73,7 +107,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def getBuildData(self, buildid, name):
-        def thd(conn):
+        def thd(conn) -> BuildDataModel | None:
             build_data_table = self.db.model.build_data
 
             q = build_data_table.select().where(
@@ -83,14 +117,14 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            return self._row2dict(conn, row)
+            return self._model_from_row(row, value=row.value)
 
         res = yield self.db.pool.do(thd)
         return res
 
     @defer.inlineCallbacks
     def getBuildDataNoValue(self, buildid, name):
-        def thd(conn):
+        def thd(conn) -> BuildDataModel | None:
             build_data_table = self.db.model.build_data
 
             q = sa.select(
@@ -104,14 +138,14 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            return self._row2dict_novalue(conn, row)
+            return self._model_from_row(row, value=None)
 
         res = yield self.db.pool.do(thd)
         return res
 
     @defer.inlineCallbacks
     def getAllBuildDataNoValues(self, buildid):
-        def thd(conn):
+        def thd(conn) -> list[BuildDataModel]:
             build_data_table = self.db.model.build_data
 
             q = sa.select(
@@ -122,7 +156,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
             )
             q = q.where(build_data_table.c.buildid == buildid)
 
-            return [self._row2dict_novalue(conn, row) for row in conn.execute(q).fetchall()]
+            return [self._model_from_row(row, value=None) for row in conn.execute(q).fetchall()]
 
         res = yield self.db.pool.do(thd)
         return res
@@ -166,16 +200,11 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         res = yield self.db.pool.do(thd)
         return res
 
-    def _row2dict(self, conn, row):
-        return BuildDataDict(
+    def _model_from_row(self, row, value: bytes | None):
+        return BuildDataModel(
             buildid=row.buildid,
             name=row.name,
-            value=row.value,
             length=row.length,
             source=row.source,
-        )
-
-    def _row2dict_novalue(self, conn, row):
-        return BuildDataDict(
-            buildid=row.buildid, name=row.name, value=None, length=row.length, source=row.source
+            value=value,
         )
