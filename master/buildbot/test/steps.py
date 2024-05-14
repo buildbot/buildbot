@@ -24,6 +24,7 @@ from twisted.python.reflect import namedModule
 
 from buildbot.process import buildstep
 from buildbot.process.results import EXCEPTION
+from buildbot.process.results import statusToString
 from buildbot.test.fake import connection
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
@@ -873,7 +874,11 @@ class TestBuildStepMixin:
         # in case of unexpected result, display logs in stdout for
         # debugging failing tests
         if result != self.exp_result:
-            msg = f"unexpected result from step; expected {self.exp_result}, got {result}"
+            msg = (
+                "unexpected result from step; "
+                f"expected {self.exp_result} ({statusToString(self.exp_result)}), "
+                f"got {result} ({statusToString(result)})"
+            )
             log.msg(f"{msg}; dumping logs")
             self._dump_logs()
             raise AssertionError(f"{msg}; see logs")
