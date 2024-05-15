@@ -118,31 +118,6 @@ def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
     return result
 
 
-def legacyTestReviewCB(builderName, build, result, status, arg):
-    msg = str({'name': builderName, 'result': result})
-    return (msg, 1 if result == SUCCESS else -1, 0)
-
-
-def legacyTestSummaryCB(buildInfoList, results, status, arg):
-    success = False
-    failure = False
-
-    for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
-            success = True
-        else:
-            failure = True
-
-    if failure:
-        verified = -1
-    elif success:
-        verified = 1
-    else:
-        verified = 0
-
-    return (str(buildInfoList), verified, 0)
-
-
 class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     def setUp(self):
         self.setup_test_reactor()
@@ -210,10 +185,6 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
             )
         return str(info)
 
-    # check_summary_build and check_summary_build_legacy differ in two things:
-    #   * the callback used
-    #   * the expected result
-
     @defer.inlineCallbacks
     def check_summary_build_deferred(self, buildResults, finalResult, resultText, verifiedScore):
         with assertProducesWarnings(DeprecatedApiWarning, message_pattern="Use generators instead"):
@@ -240,22 +211,6 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
             self.reporter_test_revision,
             msg,
             {GERRIT_LABEL_VERIFIED: verifiedScore},
-        )
-
-    @defer.inlineCallbacks
-    def check_summary_build_legacy(self, buildResults, finalResult, resultText, verifiedScore):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern="Use generators instead"):
-            gsp = yield self.setupGerritStatusPush(summaryCB=legacyTestSummaryCB)
-
-        msg = yield self.run_fake_summary_build(
-            gsp, buildResults, finalResult, resultText, expWarning=True
-        )
-
-        gsp.send_code_review.assert_called_once_with(
-            self.reporter_test_project,
-            self.reporter_test_revision,
-            msg,
-            {GERRIT_LABEL_VERIFIED: verifiedScore, GERRIT_LABEL_REVIEWED: 0},
         )
 
     @defer.inlineCallbacks
@@ -322,33 +277,6 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
 
     def test_buildsetComplete_mixed_sends_summary_review(self):
         d = self.check_summary_build(
-            buildResults=[SUCCESS, FAILURE],
-            finalResult=FAILURE,
-            resultText=["succeeded", "failed"],
-            verifiedScore=-1,
-        )
-        return d
-
-    def test_buildsetComplete_success_sends_summary_review_legacy(self):
-        d = self.check_summary_build_legacy(
-            buildResults=[SUCCESS, SUCCESS],
-            finalResult=SUCCESS,
-            resultText=["succeeded", "succeeded"],
-            verifiedScore=1,
-        )
-        return d
-
-    def test_buildsetComplete_failure_sends_summary_review_legacy(self):
-        d = self.check_summary_build_legacy(
-            buildResults=[FAILURE, FAILURE],
-            finalResult=FAILURE,
-            resultText=["failed", "failed"],
-            verifiedScore=-1,
-        )
-        return d
-
-    def test_buildsetComplete_mixed_sends_summary_review_legacy(self):
-        d = self.check_summary_build_legacy(
             buildResults=[SUCCESS, FAILURE],
             finalResult=FAILURE,
             resultText=["succeeded", "failed"],
@@ -443,41 +371,11 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ]
         gsp.send_code_review.assert_has_calls(calls)
 
-    @defer.inlineCallbacks
-    def check_single_build_legacy(self, buildResult, verifiedScore):
-        with assertProducesWarnings(DeprecatedApiWarning, message_pattern="Use generators instead"):
-            gsp = yield self.setupGerritStatusPush(
-                reviewCB=legacyTestReviewCB, startCB=sampleStartCB
-            )
-
-        msg = yield self.run_fake_single_build(gsp, buildResult, expWarning=True)
-        calls = [
-            call(
-                self.reporter_test_project,
-                self.reporter_test_revision,
-                str({'name': self.reporter_test_builder_name}),
-                {GERRIT_LABEL_REVIEWED: 0},
-            ),
-            call(
-                self.reporter_test_project,
-                self.reporter_test_revision,
-                msg,
-                {GERRIT_LABEL_VERIFIED: verifiedScore, GERRIT_LABEL_REVIEWED: 0},
-            ),
-        ]
-        gsp.send_code_review.assert_has_calls(calls)
-
     def test_buildComplete_success_sends_review(self):
         return self.check_single_build(SUCCESS, 1)
 
     def test_buildComplete_failure_sends_review(self):
         return self.check_single_build(FAILURE, -1)
-
-    def test_buildComplete_success_sends_review_legacy(self):
-        return self.check_single_build_legacy(SUCCESS, 1)
-
-    def test_buildComplete_failure_sends_review_legacy(self):
-        return self.check_single_build_legacy(FAILURE, -1)
 
     # same goes for check_single_build and check_single_build_legacy
     @parameterized.expand([
