@@ -245,7 +245,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def getSourceStampsForBuild(self, buildid):
         build = yield self.db.builds.getBuild(buildid)
-        breq = yield self.db.buildrequests.getBuildRequest(build['buildrequestid'])
+        breq = yield self.db.buildrequests.getBuildRequest(build.buildrequestid)
         bset = yield self.db.buildsets.getBuildset(breq.buildsetid)
 
         results = []

@@ -207,7 +207,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         buildFinished = self.contact.channel.subscribed[1].callback
         for buildid in (13, 14, 16):
             self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
-            build = yield self.master.db.builds.getBuild(buildid)
+            build = yield self.master.data.get(('builds', buildid))
             buildStarted("somekey", build)
             buildFinished("somekey", build)
 
@@ -576,7 +576,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def sendBuildFinishedMessage(self, buildid, results=0):
         self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
-        build = yield self.master.db.builds.getBuild(buildid)
+        build = yield self.master.data.get(('builds', buildid))
         self.master.mq.callConsumer(
             ('builds', str(buildid), 'complete'),
             {
@@ -705,7 +705,7 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_buildStarted(self):
         self.setupSomeBuilds()
         self.patch_send()
-        build = yield self.master.db.builds.getBuild(13)
+        build = yield self.master.data.get(('builds', 13))
 
         self.bot.tags = None
         self.contact.channel.notify_for = lambda _: True

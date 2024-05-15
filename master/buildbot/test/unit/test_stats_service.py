@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -32,6 +34,9 @@ from buildbot.test.fake import fakestats
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import logging
+
+if TYPE_CHECKING:
+    from buildbot.db.builds import BuildModel
 
 
 class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
@@ -202,17 +207,17 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.fake_storage_service.captures = captures
         yield self.stats_service.reconfigService([self.fake_storage_service])
 
-    def get_dict(self, build):
+    def get_dict(self, build: BuildModel):
         return {
             "buildid": 1,
-            "number": build['number'],
-            "builderid": build['builderid'],
-            "buildrequestid": build['buildrequestid'],
-            "workerid": build['workerid'],
-            "masterid": build['masterid'],
-            "started_at": build['started_at'],
+            "number": build.number,
+            "builderid": build.builderid,
+            "buildrequestid": build.buildrequestid,
+            "workerid": build.workerid,
+            "masterid": build.masterid,
+            "started_at": build.started_at,
             "complete": True,
-            "complete_at": build['complete_at'],
+            "complete_at": build.complete_at,
             "state_string": '',
             "results": 0,
         }

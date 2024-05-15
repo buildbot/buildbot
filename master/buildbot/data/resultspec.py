@@ -99,7 +99,7 @@ class FieldBase:
         fld = self.field
         v = self.values
         f = self.getOperator()
-        return (d for d in data if f(d[fld], v))
+        return (d for d in data if f((d[fld] if isinstance(d, dict) else getattr(d, fld)), v))
 
     def __repr__(self):
         return f"resultspec.{self.__class__.__name__}('{self.field}','{self.op}',{self.values})"

@@ -54,7 +54,7 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
             build_dbdict = yield self.master.db.builds.getBuild(step_dbdict['buildid'])
 
             sets = yield self.master.db.test_result_sets.getTestResultSets(
-                build_dbdict['builderid'],
+                build_dbdict.builderid,
                 buildid=step_dbdict['buildid'],
                 stepid=kwargs['stepid'],
                 complete=complete,
@@ -64,7 +64,7 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
             build_dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
 
             sets = yield self.master.db.test_result_sets.getTestResultSets(
-                build_dbdict['builderid'],
+                build_dbdict.builderid,
                 buildid=kwargs['buildid'],
                 complete=complete,
                 result_spec=resultSpec,

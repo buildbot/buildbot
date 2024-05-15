@@ -1,0 +1,1 @@
+:class:`BuildsConnectorComponent` `getBuild`, `getBuildByNumber`, `getPrevSuccessfulBuild`, `getBuildsForChange`, `getBuilds`, `_getRecentBuilds`, and `_getBuild` now return a :class`BuildModel` instead of a dictionary of Build data

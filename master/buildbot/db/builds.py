@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import json
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -22,12 +26,53 @@ from twisted.internet import defer
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    import datetime
+    from typing import Sequence
+
+    from buildbot.data.resultspec import ResultSpec
+    from buildbot.db.sourcestamps import SourceStampModel
+
+
+@dataclass
+class BuildModel:
+    id: int
+    number: int
+    builderid: int
+    buildrequestid: int
+    workerid: int | None
+    masterid: int
+    started_at: datetime.datetime
+    complete_at: datetime.datetime | None
+    locks_duration_s: int | None
+    state_string: str
+    results: int | None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'BuildsConnectorComponent getBuild, '
+                'getBuildByNumber, getPrevSuccessfulBuild, '
+                'getBuildsForChange, getBuilds, '
+                '_getRecentBuilds, and _getBuild '
+                'no longer return Build as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
-    # returns a Deferred that returns a value
-    def _getBuild(self, whereclause):
-        def thd(conn):
+    def _getBuild(self, whereclause) -> defer.Deferred[BuildModel | None]:
+        def thd(conn) -> BuildModel | None:
             q = self.db.model.builds.select()
             if whereclause is not None:
                 q = q.where(whereclause)
@@ -36,24 +81,23 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._builddictFromRow(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
         return self.db.pool.do(thd)
 
-    def getBuild(self, buildid):
+    def getBuild(self, buildid: int) -> defer.Deferred[BuildModel | None]:
         return self._getBuild(self.db.model.builds.c.id == buildid)
 
-    def getBuildByNumber(self, builderid, number):
+    def getBuildByNumber(self, builderid: int, number: int) -> defer.Deferred[BuildModel | None]:
         return self._getBuild(
             (self.db.model.builds.c.builderid == builderid)
             & (self.db.model.builds.c.number == number)
         )
 
-    # returns a Deferred that returns a value
-    def _getRecentBuilds(self, whereclause, offset=0, limit=1):
-        def thd(conn):
+    def _getRecentBuilds(self, whereclause, offset=0, limit=1) -> defer.Deferred[list[BuildModel]]:
+        def thd(conn) -> list[BuildModel]:
             tbl = self.db.model.builds
 
             q = tbl.select()
@@ -71,12 +115,14 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             )
 
             res = conn.execute(q)
-            return list(self._builddictFromRow(row) for row in res.fetchall())
+            return list(self._model_from_row(row) for row in res.fetchall())
 
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getPrevSuccessfulBuild(self, builderid, number, ssBuild):
+    def getPrevSuccessfulBuild(
+        self, builderid: int, number: int, ssBuild: Sequence[SourceStampModel]
+    ):
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
         rv = None
         tbl = self.db.model.builds
@@ -96,7 +142,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 break
             for prevBuild in prevBuilds:
                 prevssBuild = {
-                    (ss.repository, ss.branch, ss.codebase) for ss in (yield gssfb(prevBuild['id']))
+                    (ss.repository, ss.branch, ss.codebase) for ss in (yield gssfb(prevBuild.id))
                 }
                 if prevssBuild == matchssBuild:
                     # A successful build with the same
@@ -107,10 +153,10 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return rv
 
-    def getBuildsForChange(self, changeid):
+    def getBuildsForChange(self, changeid: int) -> defer.Deferred[list[BuildModel]]:
         assert changeid > 0
 
-        def thd(conn):
+        def thd(conn) -> list[BuildModel]:
             # Get builds for the change
             changes_tbl = self.db.model.changes
             bsets_tbl = self.db.model.buildsets
@@ -131,15 +177,19 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 .where(changes_tbl.c.changeid == changeid)
             )
             res = conn.execute(q)
-            return [self._builddictFromRow(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
     def getBuilds(
-        self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None
-    ):
-        def thd(conn):
+        self,
+        builderid: int | None = None,
+        buildrequestid: int | None = None,
+        workerid: int | None = None,
+        complete: bool | None = None,
+        resultSpec: ResultSpec | None = None,
+    ) -> defer.Deferred[list[BuildModel]]:
+        def thd(conn) -> list[BuildModel]:
             tbl = self.db.model.builds
             q = tbl.select()
             if builderid is not None:
@@ -155,10 +205,10 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete_at == NULL)
 
             if resultSpec is not None:
-                return resultSpec.thd_execute(conn, q, self._builddictFromRow)
+                return resultSpec.thd_execute(conn, q, self._model_from_row)
 
             res = conn.execute(q)
-            return [self._builddictFromRow(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
@@ -283,17 +333,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    def _builddictFromRow(self, row):
-        return {
-            "id": row.id,
-            "number": row.number,
-            "builderid": row.builderid,
-            "buildrequestid": row.buildrequestid,
-            "workerid": row.workerid,
-            "masterid": row.masterid,
-            "started_at": epoch2datetime(row.started_at),
-            "complete_at": epoch2datetime(row.complete_at),
-            "locks_duration_s": row.locks_duration_s,
-            "state_string": row.state_string,
-            "results": row.results,
-        }
+    def _model_from_row(self, row):
+        return BuildModel(
+            id=row.id,
+            number=row.number,
+            builderid=row.builderid,
+            buildrequestid=row.buildrequestid,
+            workerid=row.workerid,
+            masterid=row.masterid,
+            started_at=epoch2datetime(row.started_at),
+            complete_at=epoch2datetime(row.complete_at),
+            locks_duration_s=row.locks_duration_s,
+            state_string=row.state_string,
+            results=row.results,
+        )

@@ -106,6 +106,7 @@ buildid
 buildmaster
 Buildmaster
 buildmasters
+BuildModel
 buildnumber
 buildrequest
 buildrequestid
