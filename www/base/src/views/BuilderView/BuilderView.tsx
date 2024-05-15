@@ -28,7 +28,7 @@ import {
   useDataAccessor,
   useDataApiQuery
 } from "buildbot-data-js";
-import {TopbarAction, useTopbarItems, useTopbarActions, WorkerBadge} from "buildbot-ui";
+import {getBuildLinkDisplayProperties, TopbarAction, useTopbarItems, useTopbarActions, WorkerBadge} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {useNavigate, useParams} from "react-router-dom";
@@ -104,7 +104,7 @@ export const BuilderView = observer(() => {
   const buildsQuery = useDataApiQuery(() =>
     buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
         builderid: builder.builderid,
-        property: ["owners", "workername", "branch", "revision"],
+        property: ["owners", "workername", "branch", "revision", ...getBuildLinkDisplayProperties()],
         limit: numBuilds,
         order: '-number'
       }
