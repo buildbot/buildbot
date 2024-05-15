@@ -24,6 +24,7 @@ from twisted.python import log
 from twisted.python.failure import Failure
 
 from buildbot.data import resultspec
+from buildbot.db.buildrequests import BuildRequestModel
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.util import deferwaiter
@@ -91,15 +92,43 @@ class BuildChooserBase:
         return self.unclaimedBrdicts
 
     @defer.inlineCallbacks
-    def _getBuildRequestForBrdict(self, brdict):
+    def _getBuildRequestForBrdict(self, brdict: dict):
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
         breq = self.breqCache.get(brdict['buildrequestid'])
         if not breq:
-            breq = yield BuildRequest.fromBrdict(self.master, brdict)
+            builder = yield self.master.data.get(
+                ('builders', brdict['builderid']), [resultspec.ResultSpec(fields=['name'])]
+            )
+            if not builder:
+                return None
+
+            model = BuildRequestModel(
+                buildrequestid=brdict['buildrequestid'],
+                buildsetid=brdict['buildsetid'],
+                builderid=brdict['builderid'],
+                buildername=builder['name'],
+                submitted_at=brdict['submitted_at'],
+            )
+            if 'complete_at' in brdict:
+                model.complete_at = brdict['complete_at']
+            if 'complete' in brdict:
+                model.complete = brdict['complete']
+            if 'results' in brdict:
+                model.results = brdict['results']
+            if 'waited_for' in brdict:
+                model.waited_for = brdict['waited_for']
+            if 'priority' in brdict:
+                model.priority = brdict['priority']
+            if 'claimed_at' in brdict:
+                model.claimed_at = brdict['claimed_at']
+            if 'claimed_by_masterid' in brdict:
+                model.claimed_by_masterid = brdict['claimed_by_masterid']
+
+            breq = yield BuildRequest.fromBrdict(self.master, model)
             if breq:
-                self.breqCache[brdict['buildrequestid']] = breq
+                self.breqCache[model.buildrequestid] = breq
         return breq
 
     def _getBrdictForBuildRequest(self, breq):

@@ -98,7 +98,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetProperty(self):
-        prop = resultspec.Property(b'property', 'eq', 'prop1')
+        prop = resultspec.Property(b'property', 'eq', ['prop1'])
         buildrequest = yield self.callGet(
             ('buildrequests', 44), resultSpec=resultspec.ResultSpec(properties=[prop])
         )
@@ -107,7 +107,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetProperties(self):
-        prop = resultspec.Property(b'property', 'eq', '*')
+        prop = resultspec.Property(b'property', 'eq', ['*'])
         buildrequest = yield self.callGet(
             ('buildrequests', 44), resultSpec=resultspec.ResultSpec(properties=[prop])
         )
@@ -190,7 +190,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 buildsetid=8822, property_name='prop2', property_value='["two", "fake2"]'
             ),
         ])
-        prop = resultspec.Property(b'property', 'eq', '*')
+        prop = resultspec.Property(b'property', 'eq', ['*'])
         buildrequests = yield self.callGet(
             ('builders', 78, 'buildrequests'), resultSpec=resultspec.ResultSpec(properties=[prop])
         )

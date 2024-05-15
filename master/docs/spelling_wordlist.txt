@@ -109,6 +109,7 @@ buildnumber
 buildrequest
 buildrequestid
 buildrequests
+BuildRequestModel
 buildset
 Buildset
 buildsetid

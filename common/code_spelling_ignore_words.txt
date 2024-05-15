@@ -204,6 +204,7 @@ buildrequestid
 buildrequestresults
 buildrequests
 buildrequestsconnectorcomponent
+buildrequestmodel
 buildresult
 buildroot
 build's

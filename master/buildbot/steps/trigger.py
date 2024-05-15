@@ -249,7 +249,7 @@ class Trigger(BuildStep):
         @defer.inlineCallbacks
         def _is_buildrequest_complete(brid):
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
-            return buildrequest['complete']
+            return buildrequest.complete
 
         event = ('buildrequests', str(brid), 'complete')
         yield self.master.mq.waitUntilEvent(event, lambda: _is_buildrequest_complete(brid))

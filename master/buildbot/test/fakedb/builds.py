@@ -207,8 +207,8 @@ class FakeBuildsComponent(FakeDBComponent):
 
         for breq in breqs:
             for result in results:
-                if result['buildsetid'] == breq['buildsetid']:
-                    result['buildrequestid'] = breq['buildrequestid']
+                if result['buildsetid'] == breq.buildsetid:
+                    result['buildrequestid'] = breq.buildrequestid
 
         for build in builds:
             for result in results:

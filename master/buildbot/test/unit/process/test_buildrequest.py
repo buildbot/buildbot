@@ -742,7 +742,6 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         Merge cannot be performed and raises error:
           Merging requests requires both requests to have the same codebases
         """
-        brDicts = []  # list of buildrequests dictionary
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
         master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
@@ -787,14 +786,8 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=239),
             fakedb.BuildRequest(id=289, buildsetid=540, builderid=77),
         ])
-        # use getBuildRequest to minimize the risk from changes to the format
-        # of the brdict
-        req = yield master.db.buildrequests.getBuildRequest(288)
-        brDicts.append(req)
-        req = yield master.db.buildrequests.getBuildRequest(289)
-        brDicts.append(req)
-        can_collapse = yield buildrequest.BuildRequest.canBeCollapsed(
-            master, brDicts[0], brDicts[1]
-        )
+        old_br = yield master.data.get(('buildrequests', 288))
+        new_br = yield master.data.get(('buildrequests', 289))
+        can_collapse = yield buildrequest.BuildRequest.canBeCollapsed(master, new_br, old_br)
 
         self.assertEqual(can_collapse, False)

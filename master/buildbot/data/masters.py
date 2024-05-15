@@ -170,7 +170,7 @@ class Master(base.ResourceType):
             complete=False, claimed=masterid
         )
         yield self.master.db.buildrequests.unclaimBuildRequests(
-            brids=[br['buildrequestid'] for br in buildrequests]
+            brids=[br.buildrequestid for br in buildrequests]
         )
 
     @defer.inlineCallbacks

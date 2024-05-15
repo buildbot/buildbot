@@ -54,7 +54,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
 
         props = Properties()
         buildrequest = yield BuildRequest.fromBrdict(master, brdict)
-        builder = yield master.botmaster.getBuilderById(brdict['builderid'])
+        builder = yield master.botmaster.getBuilderById(brdict.builderid)
 
         yield Build.setup_properties_known_before_build_starts(props, [buildrequest], builder)
         Build.setupBuildProperties(props, [buildrequest])
