@@ -53,23 +53,6 @@ def makeReviewResult(message, *labels):
     return {"message": message, "labels": dict(labels)}
 
 
-def _handleLegacyResult(result):
-    """
-    make sure the result is backward compatible
-    """
-    if not isinstance(result, dict):
-        warnings.warn(
-            'The Gerrit status callback uses the old way to '
-            'communicate results.  The outcome might be not what is '
-            'expected.'
-        )
-        message, verified, reviewed = result
-        result = makeReviewResult(
-            message, (GERRIT_LABEL_VERIFIED, verified), (GERRIT_LABEL_REVIEWED, reviewed)
-        )
-    return result
-
-
 def _old_add_label(label, value):
     if label == GERRIT_LABEL_VERIFIED:
         return [f"--verified {int(value)}"]
@@ -264,8 +247,6 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
             build_info_list, Results[buildset["results"]], master, self.callback_arg
         )
 
-        result = _handleLegacyResult(result)
-
         return {
             "body": result.get("message", None),
             "extra_info": {
@@ -293,8 +274,6 @@ class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
             return None
 
         result = yield self.callback(build["builder"]["name"], build, self.callback_arg)
-
-        result = _handleLegacyResult(result)
 
         return {
             "body": result.get("message", None),
@@ -325,8 +304,6 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
         result = yield self.callback(
             build['builder']['name'], build, build['results'], master, self.callback_arg
         )
-
-        result = _handleLegacyResult(result)
 
         return {
             "body": result.get("message", None),

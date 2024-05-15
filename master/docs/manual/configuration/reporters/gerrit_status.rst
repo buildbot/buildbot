@@ -17,8 +17,8 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param reviewCB: (optional) Called each time a build finishes. Build properties are available. Can be a deferred.
    :param reviewArg: (optional) Argument passed to the review callback.
 
-                    :: If :py:func:`reviewCB` callback is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
-                    It should return a dictionary:
+                    :: If :py:func:`reviewCB` callback is specified, it must return a dictionary.
+                    If no message is specified in the dictionary, nothing will be sent to Gerrit.
 
                     .. code-block:: python
 
@@ -42,8 +42,8 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param startCB: (optional) Called each time a build is started. Build properties are available. Can be a deferred.
    :param startArg: (optional) Argument passed to the start callback.
 
-                    If :py:func:`startCB` is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
-                    It should return a dictionary:
+                    If :py:func:`startCB` is specified, it must return a dictionary.
+                    If no message is specified in the dictionary, nothing will be sent to Gerrit.
 
                     .. code-block:: python
 
@@ -61,9 +61,9 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param summaryCB: (optional) Called each time a buildset finishes. Each build in the buildset has properties available. Can be a deferred.
    :param summaryArg: (optional) Argument passed to the summary callback.
 
-                      If :py:func:`summaryCB` callback is specified, it must return a message and optionally labels. If no message is specified, nothing will be sent to Gerrit.
+                      If :py:func:`summaryCB` callback is specified, it must return a dictionary.
+                      If no message is specified in the dictionary, nothing will be sent to Gerrit.
                       The message and labels should be a summary of all the builds within the buildset.
-                      It should return a dictionary:
 
                       .. code-block:: python
 
