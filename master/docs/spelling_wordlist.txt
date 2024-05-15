@@ -95,6 +95,7 @@ buildbot
 Buildbot
 buildCacheSize
 builddir
+BuildDataModel
 buildDict
 builderid
 builderids

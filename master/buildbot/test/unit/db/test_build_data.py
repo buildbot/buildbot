@@ -21,7 +21,6 @@ from buildbot.db import build_data
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
 class Tests(interfaces.InterfaceTests):
@@ -66,16 +65,16 @@ class Tests(interfaces.InterfaceTests):
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
         )
         data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
-        validation.verifyDbDict(self, 'build_datadict', data_dict)
+        self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
-            {
-                'buildid': 30,
-                'name': 'mykey',
-                'value': b'myvalue',
-                'length': 7,
-                'source': 'mysource',
-            },
+            build_data.BuildDataModel(
+                buildid=30,
+                name='mykey',
+                value=b'myvalue',
+                length=7,
+                source='mysource',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -95,16 +94,16 @@ class Tests(interfaces.InterfaceTests):
         )
 
         data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
-        validation.verifyDbDict(self, 'build_datadict', data_dict)
+        self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
-            {
-                'buildid': 30,
-                'name': 'mykey',
-                'value': b'myvalue2',
-                'length': 8,
-                'source': 'mysource2',
-            },
+            build_data.BuildDataModel(
+                buildid=30,
+                name='mykey',
+                value=b'myvalue2',
+                length=8,
+                source='mysource2',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -130,16 +129,16 @@ class Tests(interfaces.InterfaceTests):
         )
 
         data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
-        validation.verifyDbDict(self, 'build_datadict', data_dict)
+        self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
-            {
-                'buildid': 30,
-                'name': 'mykey',
-                'value': b'myvalue',
-                'length': 7,
-                'source': 'mysource',
-            },
+            build_data.BuildDataModel(
+                buildid=30,
+                name='mykey',
+                value=b'myvalue',
+                length=7,
+                source='mysource',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -149,10 +148,12 @@ class Tests(interfaces.InterfaceTests):
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
         )
         data_dict = yield self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
-        validation.verifyDbDict(self, 'build_datadict', data_dict)
+        self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
-            {'buildid': 30, 'name': 'mykey', 'value': None, 'length': 7, 'source': 'mysource'},
+            build_data.BuildDataModel(
+                buildid=30, name='mykey', value=None, length=7, source='mysource'
+            ),
         )
 
     @defer.inlineCallbacks
@@ -179,20 +180,22 @@ class Tests(interfaces.InterfaceTests):
         )
 
         data_dicts = yield self.db.build_data.getAllBuildDataNoValues(30)
-        self.assertEqual([d['name'] for d in data_dicts], ['name1', 'name2'])
+        self.assertEqual([d.name for d in data_dicts], ['name1', 'name2'])
         for d in data_dicts:
-            validation.verifyDbDict(self, 'build_datadict', d)
+            self.assertIsInstance(d, build_data.BuildDataModel)
 
         # note that value is not in dict, but length is
         self.assertEqual(
             data_dicts[0],
-            {'buildid': 30, 'name': 'name1', 'value': None, 'length': 6, 'source': 'source1'},
+            build_data.BuildDataModel(
+                buildid=30, name='name1', value=None, length=6, source='source1'
+            ),
         )
 
         data_dicts = yield self.db.build_data.getAllBuildDataNoValues(31)
-        self.assertEqual([d['name'] for d in data_dicts], ['name3'])
+        self.assertEqual([d.name for d in data_dicts], ['name3'])
         data_dicts = yield self.db.build_data.getAllBuildDataNoValues(32)
-        self.assertEqual([d['name'] for d in data_dicts], [])
+        self.assertEqual([d.name for d in data_dicts], [])
 
     @parameterized.expand([
         (1000000, 0, ['name1', 'name2', 'name3', 'name4', 'name5', 'name6']),
@@ -260,7 +263,7 @@ class Tests(interfaces.InterfaceTests):
         remaining_names = []
         for buildid in [50, 51, 52, 53]:
             data_dicts = yield self.db.build_data.getAllBuildDataNoValues(buildid)
-            remaining_names += [d['name'] for d in data_dicts]
+            remaining_names.extend(d.name for d in data_dicts)
 
         self.assertEqual(sorted(remaining_names), sorted(exp_remaining_names))
 

@@ -1,0 +1,1 @@
+:class:`buildbot.db.build_data.BuildDataDict` is deprecated in favor of :class:`buildbot.db.build_data.BuildDataModel`

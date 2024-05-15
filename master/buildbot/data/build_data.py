@@ -13,26 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
-
-class Db2DataMixin:
-    def db2data(self, dbdict):
-        data = {
-            'buildid': dbdict['buildid'],
-            'name': dbdict['name'],
-            'value': dbdict['value'],
-            'length': dbdict['length'],
-            'source': dbdict['source'],
-        }
-        return defer.succeed(data)
+if TYPE_CHECKING:
+    from buildbot.db.build_data import BuildDataModel
 
 
-class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+def _db2data(model: BuildDataModel):
+    return {
+        'buildid': model.buildid,
+        'name': model.name,
+        'value': model.value,
+        'length': model.length,
+        'source': model.source,
+    }
+
+
+class BuildDatasNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data
@@ -48,11 +52,11 @@ class BuildDatasNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpo
 
         results = []
         for dbdict in build_datadicts:
-            results.append((yield self.db2data(dbdict)))
+            results.append(_db2data(dbdict))
         return results
 
 
-class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class BuildDataNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name
@@ -67,7 +71,7 @@ class BuildDataNoValueEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoi
 
         build_datadict = yield self.master.db.build_data.getBuildDataNoValue(buildid, name)
 
-        return (yield self.db2data(build_datadict)) if build_datadict else None
+        return _db2data(build_datadict) if build_datadict else None
 
 
 class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
@@ -88,9 +92,9 @@ class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
             return None
 
         return {
-            'raw': dbdict['value'],
+            'raw': dbdict.value,
             'mime-type': 'application/octet-stream',
-            'filename': dbdict['name'],
+            'filename': dbdict.name,
         }
 
 

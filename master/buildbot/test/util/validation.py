@@ -574,14 +574,6 @@ _build_data_msgdict = DictValidator(
 message['build_data'] = Selector()
 message['build_data'].add(None, MessageValidator(events=[], messageValidator=_build_data_msgdict))
 
-dbdict['build_datadict'] = DictValidator(
-    buildid=IntValidator(),
-    name=StringValidator(),
-    value=NoneOk(BinaryValidator()),
-    length=IntValidator(),
-    source=StringValidator(),
-)
-
 # steps
 
 _step = {

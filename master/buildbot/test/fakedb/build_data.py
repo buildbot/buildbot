@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 
+from buildbot.db.build_data import BuildDataModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
@@ -68,26 +71,26 @@ class FakeBuildDataComponent(FakeDBComponent):
         }
 
     # returns a Deferred
-    def getBuildData(self, buildid, name):
+    def getBuildData(self, buildid, name) -> defer.Deferred[BuildDataModel | None]:
         row = self._get_build_data_row(buildid, name)
         if row is not None:
-            return defer.succeed(self._row2dict(row))
+            return defer.succeed(self._model_from_row(row, value=row.get('value')))
         return defer.succeed(None)
 
     # returns a Deferred
-    def getBuildDataNoValue(self, buildid, name):
+    def getBuildDataNoValue(self, buildid, name) -> defer.Deferred[BuildDataModel | None]:
         row = self._get_build_data_row(buildid, name)
         if row is not None:
-            return defer.succeed(self._row2dict_novalue(row))
+            return defer.succeed(self._model_from_row(row, value=None))
         return defer.succeed(None)
 
     # returns a Deferred
-    def getAllBuildDataNoValues(self, buildid):
+    def getAllBuildDataNoValues(self, buildid) -> defer.Deferred[list[BuildDataModel]]:
         ret = []
         for row in self.build_data.values():
             if row['buildid'] != buildid:
                 continue
-            ret.append(self._row2dict_novalue(row))
+            ret.append(self._model_from_row(row, value=None))
 
         return defer.succeed(ret)
 
@@ -115,13 +118,11 @@ class FakeBuildDataComponent(FakeDBComponent):
 
         return defer.succeed(count_before - count_after)
 
-    def _row2dict(self, row):
-        ret = row.copy()
-        del ret['id']
-        return ret
-
-    def _row2dict_novalue(self, row):
-        ret = row.copy()
-        del ret['id']
-        ret['value'] = None
-        return ret
+    def _model_from_row(self, row, value: bytes | None):
+        return BuildDataModel(
+            buildid=row['buildid'],
+            name=row['name'],
+            length=row['length'],
+            source=row['source'],
+            value=value,
+        )
