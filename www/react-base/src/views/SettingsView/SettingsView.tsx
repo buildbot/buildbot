@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import './SettingsView.scss';
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaSlidersH} from "react-icons/fa";
@@ -112,7 +113,7 @@ export const SettingsView = observer(() => {
   }
 
   return (
-    <div className="container">
+    <div className="bb-settings-view container">
       {Object.values(globalSettings.groups).map(group => renderGroup(group))}
       <Card>
         <Card.Header>
