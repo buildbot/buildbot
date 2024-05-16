@@ -1,0 +1,1 @@
+GerritStatusPush now does not accept deprecated arguments: reviewCB, startCB, reviewArg, startArg, summaryCB, summaryArg, builders, wantSteps, wantLogs.
