@@ -76,7 +76,7 @@ class BuildRequestCollapser:
             unclaim_brs = yield self._getUnclaimedBrs(builderid)
 
             # short circuit if there is no merging to do
-            if not unclaim_brs:
+            if not collapseRequestsFn or not unclaim_brs:
                 continue
 
             for unclaim_br in unclaim_brs:
