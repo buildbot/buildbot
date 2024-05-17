@@ -40,7 +40,7 @@ class BuilderModel:
     # For backward compatibility
     def __getitem__(self, key: str):
         warn_deprecated(
-            '3.12.0',
+            '4.1.0',
             (
                 'BuildersConnectorComponent getBuilder and getBuilders '
                 'no longer return Builder as dictionnaries. '
