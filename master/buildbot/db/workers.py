@@ -268,20 +268,18 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 )
                 .select_from(j)
                 .order_by(conn_tbl.c.workerid)
+                .where(conn_tbl.c.workerid.in_(rv.keys()))
             )
 
-            if _workerid is not None:
-                q = q.where(conn_tbl.c.workerid == _workerid)
             if _name is not None:
                 q = q.where(workers_tbl.c.name == _name)
             if masterid is not None:
                 q = q.where(conn_tbl.c.masterid == masterid)
 
             for row in conn.execute(q):
-                id = row.workerid
-                if id not in rv:
+                if row.workerid not in rv:
                     continue
-                rv[row.workerid]['connected_to'].append(row.masterid)
+                rv[row.workerid].connected_to.append(row.masterid)
 
             return list(rv.values())
 
