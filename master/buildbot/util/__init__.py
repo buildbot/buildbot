@@ -28,8 +28,6 @@ from urllib.parse import urlunsplit
 
 import dateutil.tz
 from twisted.python import reflect
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
@@ -269,13 +267,6 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
 
 
 _hush_pyflakes = [json]
-
-deprecatedModuleAttribute(
-    Version("buildbot", 0, 9, 4),
-    message="Use json from the standard library instead.",
-    moduleName="buildbot.util",
-    name="json",
-)
 
 
 def toJson(obj):

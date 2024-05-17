@@ -24,10 +24,8 @@ from twisted.internet import error
 from twisted.python import deprecate
 from twisted.python import log
 from twisted.python import versions
-from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
-from twisted.python.versions import Version
 from twisted.web.util import formatFailure
 from zope.interface import implementer
 
@@ -43,7 +41,6 @@ from buildbot.db.model import Model
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
 from buildbot.process import log as plog
-from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import results
@@ -83,56 +80,6 @@ class BuildStepCancelled(Exception):
 class CallableAttributeError(Exception):
     # attribute error raised from a callable run inside a property
     pass
-
-
-# old import paths for these classes
-RemoteCommand = remotecommand.RemoteCommand
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 10, 1),
-    message="Use buildbot.process.remotecommand.RemoteCommand instead.",
-    moduleName="buildbot.process.buildstep",
-    name="RemoteCommand",
-)
-
-LoggedRemoteCommand = remotecommand.LoggedRemoteCommand
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 10, 1),
-    message="Use buildbot.process.remotecommand.LoggedRemoteCommand instead.",
-    moduleName="buildbot.process.buildstep",
-    name="LoggedRemoteCommand",
-)
-
-RemoteShellCommand = remotecommand.RemoteShellCommand
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 10, 1),
-    message="Use buildbot.process.remotecommand.RemoteShellCommand instead.",
-    moduleName="buildbot.process.buildstep",
-    name="RemoteShellCommand",
-)
-
-LogObserver = logobserver.LogObserver
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 10, 1),
-    message="Use buildbot.process.logobserver.LogObserver instead.",
-    moduleName="buildbot.process.buildstep",
-    name="LogObserver",
-)
-
-LogLineObserver = logobserver.LogLineObserver
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 10, 1),
-    message="Use buildbot.util.LogLineObserver instead.",
-    moduleName="buildbot.process.buildstep",
-    name="LogLineObserver",
-)
-
-OutputProgressObserver = logobserver.OutputProgressObserver
-deprecatedModuleAttribute(
-    Version("buildbot", 2, 10, 1),
-    message="Use buildbot.process.logobserver.OutputProgressObserver instead.",
-    moduleName="buildbot.process.buildstep",
-    name="OutputProgressObserver",
-)
 
 
 @implementer(interfaces.IBuildStepFactory)
