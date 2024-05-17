@@ -18,6 +18,8 @@ import json
 
 from twisted.internet import defer
 
+from buildbot.db.workers import BuilderMasterModel
+from buildbot.db.workers import WorkerModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.util import validation
@@ -233,7 +235,7 @@ class FakeWorkersComponent(FakeDBComponent):
                 continue
             if masterid is not None and mid != masterid:
                 continue
-            cfg.append({'builderid': bid, 'masterid': mid})
+            cfg.append(BuilderMasterModel(builderid=bid, masterid=mid))
         return cfg
 
     def _connectedTo(self, workerid, masterid=None):
@@ -246,14 +248,14 @@ class FakeWorkersComponent(FakeDBComponent):
             conns.append(cs['masterid'])
         return conns
 
-    def _mkdict(self, w, builderid, masterid):
-        return {
-            'id': w['id'],
-            'workerinfo': w['info'],
-            'name': w['name'],
-            'paused': bool(w.get('paused')),
-            'pause_reason': w.get("pause_reason"),
-            'graceful': bool(w.get('graceful')),
-            'configured_on': self._configuredOn(w['id'], builderid, masterid),
-            'connected_to': self._connectedTo(w['id'], masterid),
-        }
+    def _mkdict(self, w, builderid: int | None, masterid: int | None):
+        return WorkerModel(
+            id=w['id'],
+            workerinfo=w['info'],
+            name=w['name'],
+            paused=bool(w.get('paused')),
+            pause_reason=w.get("pause_reason"),
+            graceful=bool(w.get('graceful')),
+            configured_on=self._configuredOn(w['id'], builderid, masterid),
+            connected_to=self._connectedTo(w['id'], masterid),
+        )

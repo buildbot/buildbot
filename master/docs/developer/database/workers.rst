@@ -8,7 +8,7 @@ Workers connector
 .. py:class:: WorkersConnectorComponent
 
     This class handles Buildbot's notion of workers.
-    The worker information is returned as a dictionary with the following keys:
+    The worker information is returned as a :class:`WorkerModel` dataclass with the following fields:
 
     * ``id``
     * ``name`` - the name of the worker
@@ -19,7 +19,7 @@ Workers connector
     * ``connected_to`` - a list of masters, by ID, to which this worker is currently connected.
       This list will typically contain only one master, but in unusual circumstances the same worker may appear to be connected to multiple masters simultaneously
     * ``configured_on`` - a list of master-builder pairs, on which this worker is configured.
-      Each pair is represented by a dictionary with keys ``buliderid`` and ``masterid``
+      Each pair is represented by a :class:`BuilderMasterModel` with fields ``buliderid`` and ``masterid``
 
     The worker information can be any JSON-able object.
     See :bb:rtype:`worker` for more detail.
@@ -37,7 +37,7 @@ Workers connector
 
         :param integer masterid: limit to workers configured on this master
         :param integer builderid: limit to workers configured on this builder
-        :returns: list of worker dictionaries, via Deferred
+        :returns: list of :class:`WorkerModel`, via Deferred
 
         Get a list of workers.
         If either or both of the filtering parameters either specified, then the result is limited to workers configured to run on that master or builder.
@@ -50,7 +50,7 @@ Workers connector
         :param integer workerid: the ID of the worker to retrieve
         :param integer masterid: limit to workers configured on this master
         :param integer builderid: limit to workers configured on this builder
-        :returns: info dictionary or None, via Deferred
+        :returns: :class:`WorkerModel` or None, via Deferred
 
         Looks up the worker with the given name or ID, returning ``None`` if no matching worker is found.
         The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getWorkers`.

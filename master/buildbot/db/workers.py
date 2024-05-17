@@ -13,11 +13,74 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+from dataclasses import field
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 from twisted.internet import defer
 
 from buildbot.db import base
 from buildbot.util import identifiers
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from typing import Any
+
+
+@dataclass
+class BuilderMasterModel:
+    builderid: int
+    masterid: int
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'WorkersConnectorComponent '
+                'getWorker, and getWorkers '
+                'no longer return Worker as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@dataclass
+class WorkerModel:
+    id: int
+    name: str
+    workerinfo: dict[str, Any]
+    paused: bool = False
+    pause_reason: str | None = None
+    graceful: bool = False
+
+    configured_on: list[BuilderMasterModel] = field(default_factory=list)
+    connected_to: list[int] = field(default_factory=list)
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'WorkersConnectorComponent '
+                'getWorker, and getWorkers '
+                'no longer return Worker as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
@@ -167,27 +230,18 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             if graceful is not None:
                 q = q.where(workers_tbl.c.graceful == int(graceful))
 
-            rv = {}
+            rv: dict[int, WorkerModel] = {}
             res = None
             lastId = None
-            cfgs = None
             for row in conn.execute(q):
                 if row.id != lastId:
                     lastId = row.id
-                    cfgs = []
-                    res = {
-                        'id': lastId,
-                        'name': row.name,
-                        'configured_on': cfgs,
-                        'connected_to': [],
-                        'workerinfo': row.info,
-                        'paused': bool(row.paused),
-                        "pause_reason": row.pause_reason,
-                        'graceful': bool(row.graceful),
-                    }
+                    res = self._model_from_row(row)
                     rv[lastId] = res
                 if row.builderid and row.masterid:
-                    cfgs.append({'builderid': row.builderid, 'masterid': row.masterid})
+                    rv[lastId].configured_on.append(
+                        BuilderMasterModel(builderid=row.builderid, masterid=row.masterid)
+                    )
 
             # now go back and get the connection info for the same set of
             # workers
@@ -265,3 +319,13 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q.values(graceful=int(graceful)))
 
         return self.db.pool.do(thd)
+
+    def _model_from_row(self, row):
+        return WorkerModel(
+            id=row.id,
+            name=row.name,
+            workerinfo=row.info,
+            paused=bool(row.paused),
+            pause_reason=row.pause_reason,
+            graceful=bool(row.graceful),
+        )

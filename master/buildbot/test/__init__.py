@@ -209,3 +209,9 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
+
+warnings.filterwarnings(
+    "ignore",
+    r".*WorkersConnectorComponent getWorker, and getWorkers no longer return Worker as dictionnaries.*",
+    category=DeprecatedApiWarning,
+)
