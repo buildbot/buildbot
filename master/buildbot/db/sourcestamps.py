@@ -60,7 +60,7 @@ class SourceStampModel:
     # For backward compatibility from when SsDict inherited from Dict
     def __getitem__(self, key: str):
         warn_deprecated(
-            '3.12.0',
+            '4.1.0',
             (
                 'SourceStampsConnectorComponent '
                 'getSourceStamp, get_sourcestamps_for_buildset, '
@@ -91,7 +91,7 @@ class SourceStampModel:
         raise KeyError(key)
 
 
-@deprecate.deprecated(versions.Version("buildbot", 3, 12, 0), SourceStampModel)
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), SourceStampModel)
 class SsDict(SourceStampModel):
     pass
 

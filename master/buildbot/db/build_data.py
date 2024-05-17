@@ -39,7 +39,7 @@ class BuildDataModel:
     # For backward compatibility
     def __getitem__(self, key: str):
         warn_deprecated(
-            '3.12.0',
+            '4.1.0',
             (
                 'BuildDataConnectorComponent getBuildData, getBuildDataNoValue, and getAllBuildDataNoValues '
                 'no longer return BuildData as dictionnaries. '
@@ -53,7 +53,7 @@ class BuildDataModel:
         raise KeyError(key)
 
 
-@deprecate.deprecated(versions.Version("buildbot", 3, 12, 0), BuildDataModel)
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), BuildDataModel)
 class BuildDataDict(BuildDataModel):
     pass
 

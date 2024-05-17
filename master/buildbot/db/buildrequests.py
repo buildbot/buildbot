@@ -67,7 +67,7 @@ class BuildRequestModel:
     # For backward compatibility from when SsDict inherited from Dict
     def __getitem__(self, key: str):
         warn_deprecated(
-            '3.12.0',
+            '4.1.0',
             (
                 'BuildRequestsConnectorComponent '
                 'getBuildRequest, and getBuildRequests '
@@ -82,7 +82,7 @@ class BuildRequestModel:
         raise KeyError(key)
 
 
-@deprecate.deprecated(versions.Version("buildbot", 3, 12, 0), BuildRequestModel)
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), BuildRequestModel)
 class BrDict(BuildRequestModel):
     pass
 
