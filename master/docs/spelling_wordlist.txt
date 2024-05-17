@@ -728,6 +728,8 @@ repourl
 reStructuredText
 resultSpec
 revertive
+reviewArg
+reviewCB
 revlink
 revlinks
 rmdir
@@ -799,6 +801,8 @@ ssdict
 sse
 sshd
 ssid
+startArg
+startCB
 startService
 startsWith
 startup
@@ -837,6 +841,8 @@ subunit
 successCb
 sucessful
 summarization
+summaryArg
+summaryCB
 superclass
 superproject
 superset
@@ -976,6 +982,7 @@ Vixie
 vpc
 wamp
 Wamp
+wantLogs
 wantSteps
 warner
 warningPattern
