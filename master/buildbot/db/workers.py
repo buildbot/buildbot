@@ -176,7 +176,13 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
+    def getWorker(
+        self,
+        workerid: int | None = None,
+        name: str | None = None,
+        masterid: int | None = None,
+        builderid: int | None = None,
+    ):
         if workerid is None and name is None:
             return None
         workers = yield self.getWorkers(
@@ -186,11 +192,16 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             return workers[0]
         return None
 
-    # returns a Deferred that returns a value
     def getWorkers(
-        self, _workerid=None, _name=None, masterid=None, builderid=None, paused=None, graceful=None
-    ):
-        def thd(conn):
+        self,
+        _workerid: int | None = None,
+        _name: str | None = None,
+        masterid: int | None = None,
+        builderid: int | None = None,
+        paused: bool | None = None,
+        graceful: bool | None = None,
+    ) -> defer.Deferred[list[WorkerModel]]:
+        def thd(conn) -> list[WorkerModel]:
             workers_tbl = self.db.model.workers
             conn_tbl = self.db.model.connected_workers
             cfg_tbl = self.db.model.configured_workers
