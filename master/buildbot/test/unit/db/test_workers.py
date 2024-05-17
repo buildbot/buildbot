@@ -24,12 +24,12 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import querylog
 
 
-def workerKey(worker):
-    return worker['id']
+def workerKey(worker: workers.WorkerModel):
+    return worker.id
 
 
-def configuredOnKey(worker):
-    return (worker['builderid'], worker['masterid'])
+def configuredOnKey(worker: workers.BuilderMasterModel):
+    return (worker.builderid, worker.masterid)
 
 
 class Tests(interfaces.InterfaceTests):
@@ -129,8 +129,8 @@ class Tests(interfaces.InterfaceTests):
     def test_findWorkerId_insert(self):
         id = yield self.db.workers.findWorkerId(name="xyz")
         worker = yield self.db.workers.getWorker(workerid=id)
-        self.assertEqual(worker['name'], 'xyz')
-        self.assertEqual(worker['workerinfo'], {})
+        self.assertEqual(worker.name, 'xyz')
+        self.assertEqual(worker.workerinfo, {})
 
     @defer.inlineCallbacks
     def test_findWorkerId_existing(self):
@@ -754,7 +754,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.workerConnected(workerid=self.W1_ID, masterid=11, workerinfo={})
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w['connected_to'], [11])
+        self.assertEqual(w.connected_to, [11])
 
     @defer.inlineCallbacks
     def test_workerDisconnected(self):
@@ -769,7 +769,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.workerDisconnected(workerid=self.W1_ID, masterid=11)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w['connected_to'], [10])
+        self.assertEqual(w.connected_to, [10])
 
     @defer.inlineCallbacks
     def test_workerDisconnected_already_disconnected(self):
@@ -777,7 +777,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.workerDisconnected(workerid=self.W1_ID, masterid=11)
 
         w = yield self.db.workers.getWorker(self.W1_ID)
-        self.assertEqual(w['connected_to'], [])
+        self.assertEqual(w.connected_to, [])
 
     @defer.inlineCallbacks
     def test_set_worker_paused_existing(self):
@@ -866,7 +866,7 @@ class Tests(interfaces.InterfaceTests):
 
         w = yield self.db.workers.getWorker(30)
         self.assertEqual(
-            sorted(w['configured_on'], key=configuredOnKey),
+            sorted(w.configured_on, key=configuredOnKey),
             sorted(
                 [
                     workers.BuilderMasterModel(builderid=20, masterid=11),
@@ -890,7 +890,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.workerConfigured(workerid=30, masterid=10, builderids=[20, 21, 22])
 
         w = yield self.db.workers.getWorker(30)
-        x1 = sorted(w['configured_on'], key=configuredOnKey)
+        x1 = sorted(w.configured_on, key=configuredOnKey)
         x2 = sorted(
             [
                 workers.BuilderMasterModel(builderid=20, masterid=11),
@@ -912,7 +912,7 @@ class Tests(interfaces.InterfaceTests):
         w = yield self.db.workers.getWorker(30)
         w.configured_on = sorted(w.configured_on, key=configuredOnKey)
         self.assertEqual(
-            w['configured_on'],
+            w.configured_on,
             sorted(
                 [
                     workers.BuilderMasterModel(builderid=20, masterid=11),
@@ -931,7 +931,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.workers.workerConfigured(workerid=30, masterid=11, builderids=[])
 
         w = yield self.db.workers.getWorker(30)
-        x1 = sorted(w['configured_on'], key=configuredOnKey)
+        x1 = sorted(w.configured_on, key=configuredOnKey)
         x2 = sorted(
             [
                 workers.BuilderMasterModel(builderid=20, masterid=10),
@@ -943,7 +943,7 @@ class Tests(interfaces.InterfaceTests):
 
         # ensure worker 31 is not affected (see GitHub issue#3392)
         w = yield self.db.workers.getWorker(31)
-        x1 = sorted(w['configured_on'], key=configuredOnKey)
+        x1 = sorted(w.configured_on, key=configuredOnKey)
         x2 = sorted(
             [
                 workers.BuilderMasterModel(builderid=20, masterid=11),
@@ -1047,7 +1047,7 @@ class TestRealDB(
             yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
 
         w = yield self.db.workers.getWorker(30)
-        self.assertEqual(sorted(w['configured_on']), [])
+        self.assertEqual(sorted(w.configured_on), [])
 
     @defer.inlineCallbacks
     def test_workerConfiguredManyBuilders(self):
@@ -1071,7 +1071,7 @@ class TestRealDB(
         with self.assertNoMaxVariables():
             yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
         w = yield self.db.workers.getWorker(30)
-        self.assertEqual(sorted(w['configured_on']), [])
+        self.assertEqual(sorted(w.configured_on), [])
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
