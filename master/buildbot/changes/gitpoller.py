@@ -34,19 +34,30 @@ from buildbot.util.state import StateMixin
 
 
 class GitError(Exception):
-
     """Raised when git exits with code 128."""
 
 
 class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
-
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ("repourl", "branches", "workdir", "pollInterval", "gitbin", "usetimestamps",
-                     "category", "project", "pollAtLaunch", "buildPushesWithNoCommits",
-                     "sshPrivateKey", "sshHostKey", "sshKnownHosts", "pollRandomDelayMin",
-                     "pollRandomDelayMax")
+    compare_attrs = (
+        "repourl",
+        "branches",
+        "workdir",
+        "pollInterval",
+        "gitbin",
+        "usetimestamps",
+        "category",
+        "project",
+        "pollAtLaunch",
+        "buildPushesWithNoCommits",
+        "sshPrivateKey",
+        "sshHostKey",
+        "sshKnownHosts",
+        "pollRandomDelayMin",
+        "pollRandomDelayMax",
+    )
 
     secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
 
@@ -56,13 +67,30 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             kwargs["name"] = repourl
         super().__init__(repourl, **kwargs)
 
-    def checkConfig(self, repourl, branches=None, branch=None, workdir=None,
-                    pollInterval=10 * 60, gitbin="git", usetimestamps=True, category=None,
-                    project=None, pollinterval=-2, fetch_refspec=None, encoding="utf-8",
-                    name=None, pollAtLaunch=False, buildPushesWithNoCommits=False,
-                    only_tags=False, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
-                    pollRandomDelayMin=0, pollRandomDelayMax=0):
-
+    def checkConfig(
+        self,
+        repourl,
+        branches=None,
+        branch=None,
+        workdir=None,
+        pollInterval=10 * 60,
+        gitbin="git",
+        usetimestamps=True,
+        category=None,
+        project=None,
+        pollinterval=-2,
+        fetch_refspec=None,
+        encoding="utf-8",
+        name=None,
+        pollAtLaunch=False,
+        buildPushesWithNoCommits=False,
+        only_tags=False,
+        sshPrivateKey=None,
+        sshHostKey=None,
+        sshKnownHosts=None,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
+    ):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -78,25 +106,47 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.setupGit(logname='GitPoller')  # check the configuration
 
         if fetch_refspec is not None:
-            config.error("GitPoller: fetch_refspec is no longer supported. "
-                         "Instead, only the given branches are downloaded.")
+            config.error(
+                "GitPoller: fetch_refspec is no longer supported. "
+                "Instead, only the given branches are downloaded."
+            )
 
         if name is None:
             name = repourl
 
-        super().checkConfig(name=name,
-                            pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
-                            pollRandomDelayMin=pollRandomDelayMin,
-                            pollRandomDelayMax=pollRandomDelayMax)
+        super().checkConfig(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
+        )
 
     @defer.inlineCallbacks
-    def reconfigService(self, repourl, branches=None, branch=None, workdir=None,
-                        pollInterval=10 * 60, gitbin="git", usetimestamps=True, category=None,
-                        project=None, pollinterval=-2, fetch_refspec=None, encoding="utf-8",
-                        name=None, pollAtLaunch=False, buildPushesWithNoCommits=False,
-                        only_tags=False, sshPrivateKey=None, sshHostKey=None, sshKnownHosts=None,
-                        pollRandomDelayMin=0, pollRandomDelayMax=0):
-
+    def reconfigService(
+        self,
+        repourl,
+        branches=None,
+        branch=None,
+        workdir=None,
+        pollInterval=10 * 60,
+        gitbin="git",
+        usetimestamps=True,
+        category=None,
+        project=None,
+        pollinterval=-2,
+        fetch_refspec=None,
+        encoding="utf-8",
+        name=None,
+        pollAtLaunch=False,
+        buildPushesWithNoCommits=False,
+        only_tags=False,
+        sshPrivateKey=None,
+        sshHostKey=None,
+        sshKnownHosts=None,
+        pollRandomDelayMin=0,
+        pollRandomDelayMax=0,
+    ):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -122,8 +172,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = category if callable(
-            category) else bytes2unicode(category, encoding=self.encoding)
+        self.category = (
+            category if callable(category) else bytes2unicode(category, encoding=self.encoding)
+        )
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
@@ -141,10 +192,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg(f"gitpoller: using workdir '{self.workdir}'")
 
-        yield super().reconfigService(name=name,
-                                      pollInterval=pollInterval, pollAtLaunch=pollAtLaunch,
-                                      pollRandomDelayMin=pollRandomDelayMin,
-                                      pollRandomDelayMax=pollRandomDelayMax)
+        yield super().reconfigService(
+            name=name,
+            pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch,
+            pollRandomDelayMin=pollRandomDelayMin,
+            pollRandomDelayMax=pollRandomDelayMax,
+        )
 
     @defer.inlineCallbacks
     def _checkGitFeatures(self):
@@ -154,8 +208,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if not self.gitInstalled:
             raise EnvironmentError('Git is not installed')
 
-        if (self.sshPrivateKey is not None and
-                not self.supportsSshPrivateKeyAsEnvOption):
+        if self.sshPrivateKey is not None and not self.supportsSshPrivateKeyAsEnvOption:
             raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
 
     @defer.inlineCallbacks
@@ -168,8 +221,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             log.err(e, 'while initializing GitPoller repository')
 
     def describe(self):
-        str = ('GitPoller watching the remote git repository ' +
-               bytes2unicode(self.repourl, self.encoding))
+        str = 'GitPoller watching the remote git repository ' + bytes2unicode(
+            self.repourl, self.encoding
+        )
 
         if self.branches:
             if self.branches is True:
@@ -195,6 +249,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 _, ref = row.split("\t")
                 branches.append(ref)
             return branches
+
         return d
 
     def _headsFilter(self, branch):
@@ -242,13 +297,11 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
-            f'+{self._removeHeads(branch)}:{self._trackerBranch(branch)}'
-            for branch in branches
+            f'+{self._removeHeads(branch)}:{self._trackerBranch(branch)}' for branch in branches
         ]
 
         try:
-            yield self._dovccmd('fetch', ['--progress', self.repourl] + refspecs,
-                                path=self.workdir)
+            yield self._dovccmd('fetch', ['--progress', self.repourl] + refspecs, path=self.workdir)
         except GitError as e:
             log.msg(e.args[0])
             return
@@ -263,7 +316,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     break
 
                 rev = yield self._dovccmd(
-                    'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
+                    'rev-parse', [self._trackerBranch(branch)], path=self.workdir
+                )
                 revs[branch] = bytes2unicode(rev, self.encoding)
                 yield self._process_changes(revs[branch], branch)
             except Exception:
@@ -288,11 +342,14 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 try:
                     stamp = int(git_output)
                 except Exception as e:
-                    log.msg(f'gitpoller: caught exception converting output \'{git_output}\' to '
-                            'timestamp')
+                    log.msg(
+                        f'gitpoller: caught exception converting output \'{git_output}\' to '
+                        'timestamp'
+                    )
                     raise e
                 return stamp
             return None
+
         return d
 
     def _get_commit_files(self, rev):
@@ -303,16 +360,18 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             # git use octal char sequences in quotes when non ASCII
             match = re.match('^"(.*)"$', file)
             if match:
-                file = bytes2unicode(match.groups()[0], encoding=self.encoding,
-                                     errors='unicode_escape')
+                file = bytes2unicode(
+                    match.groups()[0], encoding=self.encoding, errors='unicode_escape'
+                )
             return bytes2unicode(file, encoding=self.encoding)
 
         @d.addCallback
         def process(git_output):
-            fileList = [decode_file(file)
-                        for file in
-                        [s for s in git_output.splitlines() if len(s)]]
+            fileList = [
+                decode_file(file) for file in [s for s in git_output.splitlines() if len(s)]
+            ]
             return fileList
+
         return d
 
     def _get_commit_author(self, rev):
@@ -324,6 +383,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             if not git_output:
                 raise EnvironmentError('could not get commit author for rev')
             return git_output
+
         return d
 
     @defer.inlineCallbacks
@@ -349,11 +409,12 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             return
 
         # get the change list
-        revListArgs = (['--ignore-missing'] +
-                       ['--format=%H', f'{newRev}'] +
-                       ['^' + rev
-                        for rev in sorted(self.lastRev.values())] +
-                       ['--'])
+        revListArgs = (
+            ['--ignore-missing']
+            + ['--format=%H', f'{newRev}']
+            + ['^' + rev for rev in sorted(self.lastRev.values())]
+            + ['--']
+        )
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
@@ -377,17 +438,22 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.lastRev[branch] = newRev
 
         if self.changeCount:
-            log.msg(f'gitpoller: processing {self.changeCount} changes: {revList} from '
-                    f'"{self.repourl}" branch "{branch}"')
+            log.msg(
+                f'gitpoller: processing {self.changeCount} changes: {revList} from '
+                f'"{self.repourl}" branch "{branch}"'
+            )
 
         for rev in revList:
-            dl = defer.DeferredList([
-                self._get_commit_timestamp(rev),
-                self._get_commit_author(rev),
-                self._get_commit_committer(rev),
-                self._get_commit_files(rev),
-                self._get_commit_comments(rev),
-            ], consumeErrors=True)
+            dl = defer.DeferredList(
+                [
+                    self._get_commit_timestamp(rev),
+                    self._get_commit_author(rev),
+                    self._get_commit_committer(rev),
+                    self._get_commit_files(rev),
+                    self._get_commit_comments(rev),
+                ],
+                consumeErrors=True,
+            )
 
             results = yield dl
 
@@ -405,11 +471,15 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 author=author,
                 committer=committer,
                 revision=bytes2unicode(rev, encoding=self.encoding),
-                files=files, comments=comments, when_timestamp=timestamp,
+                files=files,
+                comments=comments,
+                when_timestamp=timestamp,
                 branch=bytes2unicode(self._removeHeads(branch)),
                 project=self.project,
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
-                category=self.category, src='git')
+                category=self.category,
+                src='git',
+            )
 
     def _isSshPrivateKeyNeededForCommand(self, command):
         commandsThatNeedKey = [
@@ -443,7 +513,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     def _dovccmd(self, command, args, path=None):
         if self._isSshPrivateKeyNeededForCommand(command):
             with private_tempdir.PrivateTemporaryDirectory(
-                    dir=self.workdir, prefix='.buildbot-ssh') as tmp_path:
+                dir=self.workdir, prefix='.buildbot-ssh'
+            ) as tmp_path:
                 stdout = yield self._dovccmdImpl(command, args, path, tmp_path)
         else:
             stdout = yield self._dovccmdImpl(command, args, path, None)
@@ -463,21 +534,26 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 known_hosts_path = self._getSshKnownHostsPath(ssh_workdir)
                 self._downloadSshKnownHosts(known_hosts_path)
 
-            self.adjustCommandParamsForSshPrivateKey(full_args, full_env,
-                                                     key_path, None,
-                                                     known_hosts_path)
+            self.adjustCommandParamsForSshPrivateKey(
+                full_args, full_env, key_path, None, known_hosts_path
+            )
 
         full_args += [command] + args
 
-        res = yield runprocess.run_process(self.master.reactor, [self.gitbin] + full_args, path,
-                                           env=full_env)
+        res = yield runprocess.run_process(
+            self.master.reactor, [self.gitbin] + full_args, path, env=full_env
+        )
         (code, stdout, stderr) = res
         stdout = bytes2unicode(stdout, self.encoding)
         stderr = bytes2unicode(stderr, self.encoding)
         if code != 0:
             if code == 128:
-                raise GitError(f'command {full_args} in {path} on repourl {self.repourl} failed '
-                               f'with exit code {code}: {stderr}')
-            raise EnvironmentError(f'command {full_args} in {path} on repourl {self.repourl} '
-                                   f'failed with exit code {code}: {stderr}')
+                raise GitError(
+                    f'command {full_args} in {path} on repourl {self.repourl} failed '
+                    f'with exit code {code}: {stderr}'
+                )
+            raise EnvironmentError(
+                f'command {full_args} in {path} on repourl {self.repourl} '
+                f'failed with exit code {code}: {stderr}'
+            )
         return stdout.strip()
