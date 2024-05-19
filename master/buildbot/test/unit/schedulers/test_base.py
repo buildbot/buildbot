@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from parameterized import parameterized
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -29,8 +28,6 @@ from buildbot.schedulers import base
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.warnings import DeprecatedApiWarning
 
 
 class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
@@ -243,21 +240,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
             None,
             change_kwargs={'category': 'ref-updated', 'branch': 'refs/changes/123'},
         )
-
-    @parameterized.expand([
-        ("branch", filter.ChangeFilter(branch='refs/heads/master'), True),
-        ("branch_re", filter.ChangeFilter(branch_re='refs/heads/master'), True),
-        ("branch_re_no_match", filter.ChangeFilter(branch_re='(refs/heads/other|master)'), None),
-    ])
-    def test_change_consumption_refs_heads_branch_deprecated(self, name, cf, expected_result):
-        with assertProducesWarning(
-            DeprecatedApiWarning, "Change filters must not expect ref-updated events"
-        ):
-            return self.do_test_change_consumption(
-                {'change_filter': cf},
-                expected_result,
-                change_kwargs={'category': 'ref-updated', 'branch': 'master'},
-            )
 
     def test_change_consumption_change_filter_gerrit_filters_branch_new(self):
         cf = filter.ChangeFilter(branch='master')

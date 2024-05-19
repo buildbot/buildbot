@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import copy
-
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
@@ -26,7 +24,6 @@ from buildbot.changes import changes
 from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
-from buildbot.warnings import warn_deprecated
 
 
 @implementer(interfaces.IScheduler)
@@ -209,44 +206,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         change = yield changes.Change.fromChdict(self.master, chdict)
 
         # filter it
-        if change_filter:
-            # There has been a change in how Gerrit handles branches in Buildbot 3.5 - ref-updated
-            # events will now emit proper branch instead of refs/heads/<branch>. Below we detect
-            # whether this breaks change filters.
-            change_filter_may_be_broken = (
-                change.category == 'ref-updated' and not change.branch.startswith('refs/')
-            )
-
-            if change_filter_may_be_broken:
-                old_change = copy.deepcopy(change)
-                old_change.branch = f'refs/heads/{old_change.branch}'
-
-                old_filter_result = change_filter.filter_change(old_change)
-                new_filter_result = change_filter.filter_change(change)
-
-                def has_deprecated_ref_branch_filter():
-                    for filter in change_filter.filters:
-                        if filter.prop == 'branch':
-                            if 'refs/heads/' in filter.describe():
-                                return True
-
-                    return False
-
-                if old_filter_result != new_filter_result and has_deprecated_ref_branch_filter():
-                    warn_deprecated(
-                        '3.5.0',
-                        'Change filters must not expect ref-updated events from '
-                        'Gerrit to include refs/heads prefix for the branch attr.',
-                    )
-
-                    if not old_filter_result:
-                        return
-                else:
-                    if not new_filter_result:
-                        return
-            else:
-                if not change_filter.filter_change(change):
-                    return
+        if change_filter and not change_filter.filter_change(change):
+            return
 
         if change.codebase not in self.codebases:
             log.msg(
