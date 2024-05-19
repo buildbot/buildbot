@@ -33,6 +33,7 @@ from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
+from buildbot.warnings import warn_deprecated
 
 debug_logging = False
 
@@ -129,6 +130,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated('3.11.3', 'pollinterval has been deprecated: please use pollInterval')
 
         name = self.build_name(name, p4port, p4base)
 
@@ -160,6 +162,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+            warn_deprecated('3.11.3', 'pollinterval has been deprecated: please use pollInterval')
 
         name = self.build_name(name, p4port, p4base)
 

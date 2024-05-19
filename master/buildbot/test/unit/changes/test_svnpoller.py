@@ -26,6 +26,8 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -644,7 +646,15 @@ class TestSVNPoller(MasterRunProcessMixin,
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
 
     def test_constructor_pollinterval(self):
-        return self.attachSVNPoller(sample_base, pollinterval=100)  # just don't fail!
+        return self.attachSVNPoller(sample_base, pollInterval=100)  # just don't fail!
+
+    def test_deprecated_pollinterval(self):
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            2,
+            message_pattern='pollinterval has been deprecated: ' + 'please use pollInterval',
+        ):
+            return self.attachSVNPoller(sample_base, pollinterval=100)
 
     @defer.inlineCallbacks
     def test_extra_args(self):
