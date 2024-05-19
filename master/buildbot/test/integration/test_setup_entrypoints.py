@@ -108,7 +108,6 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.bbcollections.KeyedSets',
             'buildbot.util.codebase.AbsoluteSourceStampsMixin',
             'buildbot.util.config.ConfiguredMixin',
-            'buildbot.util.croniter.croniter',
             'buildbot.util.debounce.Debouncer',
             'buildbot.util.deferwaiter.DeferWaiter',
             "buildbot.util.deferwaiter.NonRepeatedActionHandler",
