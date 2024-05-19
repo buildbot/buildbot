@@ -27,6 +27,11 @@ Deprecations and Removals
 - The ``pollinterval`` (note the small ``i``) argument of various change sources has been deprecated
   with a warning in favor of ``pollInterval``.
 
+Features
+--------
+
+- Added ``MessageFormatterFunctionRaw`` which allows complete customization of messages to be emitted.
+  This feature has been available since 3.11.0 and only the announcement has been missed.
 
 Buildbot ``3.11.2`` ( ``2024-05-04`` )
 ======================================
