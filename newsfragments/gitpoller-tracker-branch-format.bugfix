@@ -1,0 +1,2 @@
+Changed ``GitPoller`` tracker branch naming to reduce directory name which could cause issues.
+Also remove credentials from ``repourl`` used in the tracker branch name.
