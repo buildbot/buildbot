@@ -81,7 +81,8 @@ packaging==24.0
 parameterized==0.9.0
 pathlib2==2.3.7.post1
 pbr==6.0.0
-Pillow==10.3.0
+Pillow==10.3.0 ; python_version < '3.13'
+git+https://github.com/python-pillow/Pillow.git ; python_version >= '3.13'  # pyup: ignore
 platformdirs==4.2.1
 psutil==5.9.8
 pyaml==24.4.0
