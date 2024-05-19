@@ -30,6 +30,7 @@ from buildbot.util.twisted import async_to_deferred
 if TYPE_CHECKING:
     from buildbot.db.builders import BuilderModel
     from buildbot.db.builds import BuildModel
+    from buildbot.db.workers import WorkerModel
 
 
 class EndpointKind(enum.Enum):
@@ -200,7 +201,7 @@ class NestedBuildDataRetriever:
         self.build_dict: BuildModel | None | False = False
         self.builder_dict: BuilderModel | None | False = False
         self.log_dict = False
-        self.worker_dict = False
+        self.worker_dict: WorkerModel | None | False = False
 
     @async_to_deferred
     async def get_step_dict(self):
@@ -341,7 +342,7 @@ class NestedBuildDataRetriever:
         return log_dict['id']
 
     @async_to_deferred
-    async def get_worker_dict(self):
+    async def get_worker_dict(self) -> WorkerModel | None:
         if self.worker_dict is not False:
             return self.worker_dict
 

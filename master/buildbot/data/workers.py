@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -21,20 +24,22 @@ from buildbot.data import exceptions
 from buildbot.data import types
 from buildbot.util import identifiers
 
+if TYPE_CHECKING:
+    from buildbot.db.workers import WorkerModel
+
 
 class Db2DataMixin:
-    def db2data(self, dbdict):
+    def db2data(self, model: WorkerModel):
         return {
-            'workerid': dbdict['id'],
-            'name': dbdict['name'],
-            'workerinfo': dbdict['workerinfo'],
-            'paused': dbdict['paused'],
-            "pause_reason": dbdict["pause_reason"],
-            'graceful': dbdict['graceful'],
-            'connected_to': [{'masterid': id} for id in dbdict['connected_to']],
+            'workerid': model.id,
+            'name': model.name,
+            'workerinfo': model.workerinfo,
+            'paused': model.paused,
+            "pause_reason": model.pause_reason,
+            'graceful': model.graceful,
+            'connected_to': [{'masterid': id} for id in model.connected_to],
             'configured_on': [
-                {'masterid': c['masterid'], 'builderid': c['builderid']}
-                for c in dbdict['configured_on']
+                {'masterid': c.masterid, 'builderid': c.builderid} for c in model.configured_on
             ],
         }
 

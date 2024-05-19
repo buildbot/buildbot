@@ -1,0 +1,1 @@
+:class:`WorkersConnectorComponent` `getWorker`, and `getWorkers` now return a :class`WorkerModel` instead of a dictionary of Worker data

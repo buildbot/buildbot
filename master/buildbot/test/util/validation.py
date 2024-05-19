@@ -367,24 +367,6 @@ message['builders'].add(
     ),
 )
 
-# worker
-
-dbdict['workerdict'] = DictValidator(
-    id=IntValidator(),
-    name=StringValidator(),
-    configured_on=ListValidator(
-        DictValidator(
-            masterid=IntValidator(),
-            builderid=IntValidator(),
-        )
-    ),
-    paused=BooleanValidator(),
-    pause_reason=NoneOk(StringValidator()),
-    graceful=BooleanValidator(),
-    connected_to=ListValidator(IntValidator()),
-    workerinfo=JsonValidator(),
-)
-
 # buildset
 
 _buildset = {

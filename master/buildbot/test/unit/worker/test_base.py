@@ -511,7 +511,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
         # check that a new worker row was added for this worker
         bs = yield self.master.db.workers.getWorker(name='bot')
-        self.assertEqual(bs['name'], 'bot')
+        self.assertEqual(bs.name, 'bot')
 
     @defer.inlineCallbacks
     def test_startService_getWorkerInfo_fromDb(self):
@@ -632,10 +632,10 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         # and the db is updated too:
         db_worker = yield self.master.db.workers.getWorker(name="bot")
 
-        self.assertEqual(db_worker['workerinfo']['admin'], 'TheAdmin')
-        self.assertEqual(db_worker['workerinfo']['host'], 'TheHost')
-        self.assertEqual(db_worker['workerinfo']['access_uri'], 'TheURI')
-        self.assertEqual(db_worker['workerinfo']['version'], 'TheVersion')
+        self.assertEqual(db_worker.workerinfo['admin'], 'TheAdmin')
+        self.assertEqual(db_worker.workerinfo['host'], 'TheHost')
+        self.assertEqual(db_worker.workerinfo['access_uri'], 'TheURI')
+        self.assertEqual(db_worker.workerinfo['version'], 'TheVersion')
 
     @defer.inlineCallbacks
     def test_double_attached(self):

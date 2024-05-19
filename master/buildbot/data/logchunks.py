@@ -52,7 +52,7 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             if build_dict is not None:
                 log_prefix += f'Build number: {build_dict.number}\n'
             if worker_dict is not None:
-                log_prefix += f'Worker name: {worker_dict["name"]}\n'
+                log_prefix += f'Worker name: {worker_dict.name}\n'
 
             log_lines = log_prefix + "\n".join([line[1:] for line in log_lines.splitlines()])
 

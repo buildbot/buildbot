@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
 
 from twisted.internet import defer
 
+from buildbot.db.workers import BuilderMasterModel
+from buildbot.db.workers import WorkerModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.util import validation
@@ -107,17 +110,21 @@ class FakeWorkersComponent(FakeDBComponent):
                 return worker
         return None
 
-    def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
+    def getWorker(
+        self,
+        workerid: int | None = None,
+        name: str | None = None,
+        masterid: int | None = None,
+        builderid: int | None = None,
+    ) -> defer.Deferred[WorkerModel | None]:
         # get the id and the worker
         if workerid is None:
             for worker in self.workers.values():
                 if worker['name'] == name:
                     workerid = worker['id']
                     break
-            else:
-                worker = None
-        else:
-            worker = self.workers.get(workerid)
+
+        worker = self.workers.get(workerid)
 
         if not worker:
             return defer.succeed(None)
@@ -126,7 +133,13 @@ class FakeWorkersComponent(FakeDBComponent):
         # by builderid and masterid
         return defer.succeed(self._mkdict(worker, builderid, masterid))
 
-    def getWorkers(self, masterid=None, builderid=None, paused=None, graceful=None):
+    def getWorkers(
+        self,
+        masterid: int | None = None,
+        builderid: int | None = None,
+        paused: bool | None = None,
+        graceful: bool | None = None,
+    ) -> defer.Deferred[list[WorkerModel]]:
         if masterid is not None or builderid is not None:
             builder_masters = self.db.builders.builder_masters
             workers = []
@@ -223,8 +236,10 @@ class FakeWorkersComponent(FakeDBComponent):
         if worker is not None:
             worker['graceful'] = int(graceful)
 
-    def _configuredOn(self, workerid, builderid=None, masterid=None):
-        cfg = []
+    def _configuredOn(
+        self, workerid: int, builderid: int | None = None, masterid: int | None = None
+    ) -> list[BuilderMasterModel]:
+        cfg: list[BuilderMasterModel] = []
         for cs in self.configured.values():
             if cs['workerid'] != workerid:
                 continue
@@ -233,10 +248,10 @@ class FakeWorkersComponent(FakeDBComponent):
                 continue
             if masterid is not None and mid != masterid:
                 continue
-            cfg.append({'builderid': bid, 'masterid': mid})
+            cfg.append(BuilderMasterModel(builderid=bid, masterid=mid))
         return cfg
 
-    def _connectedTo(self, workerid, masterid=None):
+    def _connectedTo(self, workerid: int, masterid: int | None = None) -> list[int]:
         conns = []
         for cs in self.connected.values():
             if cs['workerid'] != workerid:
@@ -246,14 +261,14 @@ class FakeWorkersComponent(FakeDBComponent):
             conns.append(cs['masterid'])
         return conns
 
-    def _mkdict(self, w, builderid, masterid):
-        return {
-            'id': w['id'],
-            'workerinfo': w['info'],
-            'name': w['name'],
-            'paused': bool(w.get('paused')),
-            'pause_reason': w.get("pause_reason"),
-            'graceful': bool(w.get('graceful')),
-            'configured_on': self._configuredOn(w['id'], builderid, masterid),
-            'connected_to': self._connectedTo(w['id'], masterid),
-        }
+    def _mkdict(self, w, builderid: int | None, masterid: int | None):
+        return WorkerModel(
+            id=w['id'],
+            workerinfo=w['info'],
+            name=w['name'],
+            paused=bool(w.get('paused')),
+            pause_reason=w.get("pause_reason"),
+            graceful=bool(w.get('graceful')),
+            configured_on=self._configuredOn(w['id'], builderid, masterid),
+            connected_to=self._connectedTo(w['id'], masterid),
+        )
