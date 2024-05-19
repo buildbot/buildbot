@@ -65,6 +65,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     secrets = ("sshPrivateKey", "sshHostKey", "sshKnownHosts")
 
     def __init__(self, repourl, **kwargs):
+        self.lastRev: dict[str, str] | None = None
         name = kwargs.get("name", None)
         if name is None:
             kwargs["name"] = repourl
@@ -180,7 +181,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         )
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
-        self.lastRev = {}
+        self.lastRev = None
         self.sshPrivateKey = sshPrivateKey
         self.sshHostKey = sshHostKey
         self.sshKnownHosts = sshKnownHosts
@@ -214,10 +215,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if self.sshPrivateKey is not None and not self.supportsSshPrivateKeyAsEnvOption:
             raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
 
-    @defer.inlineCallbacks
     def activate(self):
         try:
-            self.lastRev = yield self.getState('lastRev', {})
+            self.lastRev = None
 
             super().activate()
         except Exception as e:
@@ -316,6 +316,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         except GitError as e:
             log.msg(e.args[0])
             return
+
+        if self.lastRev is None:
+            self.lastRev = yield self.getState('lastRev', {})
 
         revs = {}
         log.msg(f'gitpoller: processing changes from "{self.repourl}"')
@@ -473,7 +476,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             failures = [r[1] for r in results if not r[0]]
             if failures:
                 for failure in failures:
-                    log.err(failure, f"while processing changes for {newRev} {branch}")
+                    log.err(failure, f"while processing changes for {rev} {branch}")
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
 
