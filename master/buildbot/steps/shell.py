@@ -16,8 +16,6 @@
 import re
 
 from twisted.internet import defer
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -150,15 +148,6 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         if cmd.didFail():
             return FAILURE
         return SUCCESS
-
-
-SetProperty = SetPropertyFromCommand
-deprecatedModuleAttribute(
-    Version("Buildbot", 0, 8, 8),
-    "It has been renamed to SetPropertyFromCommand",
-    "buildbot.steps.shell",
-    "SetProperty",
-)
 
 
 class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):

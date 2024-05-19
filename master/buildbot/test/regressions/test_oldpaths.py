@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-import warnings
-
 from twisted.trial import unittest
 
 from buildbot.warnings import DeprecatedApiWarning
@@ -115,26 +113,3 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.steps.source import Source
 
         assert Source
-
-    def test_buildstep_remotecommand(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecatedApiWarning)
-            warnings.simplefilter("ignore", DeprecationWarning)
-            from buildbot.process.buildstep import LoggedRemoteCommand
-            from buildbot.process.buildstep import RemoteCommand
-            from buildbot.process.buildstep import RemoteShellCommand
-
-            assert RemoteCommand
-            assert LoggedRemoteCommand
-            assert RemoteShellCommand
-
-    def test_buildstep_logobserver(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecatedApiWarning)
-            warnings.simplefilter("ignore", DeprecationWarning)
-            from buildbot.process.buildstep import LogLineObserver
-            from buildbot.process.buildstep import LogObserver
-            from buildbot.process.buildstep import OutputProgressObserver
-        assert LogObserver
-        assert LogLineObserver
-        assert OutputProgressObserver
