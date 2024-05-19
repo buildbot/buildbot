@@ -1,2 +1,0 @@
-Fix ``GitPoller`` run with git config ``fetch.prune=true`` pruning of local ref on fetch.
-Issue would cause rev-parse to fail as it would be run on a non-existing local ref.
