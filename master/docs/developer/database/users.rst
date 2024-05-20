@@ -17,16 +17,14 @@ Users connector
     type.  The :py:meth:`findUserByAttr` method uses these attributes to match users,
     adding a new user if no matching user is found.
 
-    Users are identified canonically by *uid*, and are represented by *usdicts* (user
-    dictionaries) with the following keys:
+    Users are identified canonically by *uid*, and are represented by a :class:`UserModel`
+    dataclass with the following fields:
 
     * ``uid``
     * ``identifier`` (display name for the user)
     * ``bb_username`` (buildbot login username)
     * ``bb_password`` (hashed login password)
-
-    All attributes are also included in the dictionary, keyed by type.  Types
-    colliding with the keys above are ignored.
+    * ``attributes`` (a dictionary of attributes, keyed by type)
 
     .. py:method:: findUserByAttr(identifier, attr_type, attr_data)
 
@@ -54,26 +52,26 @@ Users connector
         :type key: int
         :param no_cache: bypass cache and always fetch from database
         :type no_cache: boolean
-        :returns: usdict via Deferred
+        :returns: :class:`UserModel` or ``None`` via Deferred
 
-        Get a usdict for the given user, or ``None`` if no matching user is
+        Get a :class:`UserModel` for the given user, or ``None`` if no matching user is
         found.
 
     .. py:method:: getUserByUsername(username)
 
         :param username: username portion of user credentials
         :type username: string
-        :returns: usdict or None via deferred
+        :returns: :class:`UserModel` or None via deferred
 
-        Looks up the user with the bb_username, returning the usdict or
+        Looks up the user with the bb_username, returning a :class:`UserModel` or
         ``None`` if no matching user is found.
 
     .. py:method:: getUsers()
 
-        :returns: list of partial usdicts via Deferred
+        :returns: list of :class:`UserModel` without ``attributes`` via Deferred
 
         Get the entire list of users.  User attributes are not included, so the
-        results are not full usdicts.
+        ``attributes`` field of the resulting :class:`UserModel` are ``None``.
 
     .. py:method:: updateUser(uid=None, identifier=None, bb_username=None, bb_password=None, attr_type=None, attr_data=None)
 

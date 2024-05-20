@@ -14,13 +14,75 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+import dataclasses
+
 import sqlalchemy as sa
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import identifiers
+from buildbot.warnings import warn_deprecated
 
 
-class UsDict(dict):
+@dataclasses.dataclass
+class UserModel:
+    uid: int
+    identifier: str
+    bb_username: str | None = None
+    bb_password: str | None = None
+    attributes: dict[str, str] | None = None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'UsersConnectorComponent '
+                'getUser, getUserByUsername, and getUsers '
+                'no longer return User as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        if self.attributes is not None and key in self.attributes:
+            return self.attributes[key]
+
+        raise KeyError(key)
+
+    def get(self, key: str, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def keys(self):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'UsersConnectorComponent '
+                'getUser, getUserByUsername, and getUsers '
+                'no longer return User as dictionnaries. '
+                'Usage of keys is deprecated: please access the member directly'
+            ),
+        )
+
+        keys = set()
+        if self.attributes is not None:
+            keys.update(self.attributes.keys())
+
+        keys.update(f.name for f in dataclasses.fields(self) if f.name != 'attributes')
+
+        return keys
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), UserModel)
+class UsDict(UserModel):
     pass
 
 
@@ -103,24 +165,21 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             q = tbl_info.select().where(tbl_info.c.uid == uid)
             rows = conn.execute(q).fetchall()
 
-            return self.thd_createUsDict(users_row, rows)
+            return self._model_from_row(users_row, rows)
 
         return self.db.pool.do(thd)
 
-    def thd_createUsDict(self, users_row, rows):
-        # make UsDict to return
-        usdict = UsDict()
-        for row in rows:
-            usdict[row.attr_type] = row.attr_data
-
-        # add the users_row data *after* the attributes in case attr_type
-        # matches one of these keys.
-        usdict['uid'] = users_row.uid
-        usdict['identifier'] = users_row.identifier
-        usdict['bb_username'] = users_row.bb_username
-        usdict['bb_password'] = users_row.bb_password
-
-        return usdict
+    def _model_from_row(self, users_row, attribute_rows=None):
+        attributes = None
+        if attribute_rows is not None:
+            attributes = {row.attr_type: row.attr_data for row in attribute_rows}
+        return UserModel(
+            uid=users_row.uid,
+            identifier=users_row.identifier,
+            bb_username=users_row.bb_username,
+            bb_password=users_row.bb_password,
+            attributes=attributes,
+        )
 
     # returns a Deferred that returns a value
     def getUserByUsername(self, username):
@@ -138,7 +197,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             q = tbl_info.select().where(tbl_info.c.uid == users_row.uid)
             rows = conn.execute(q).fetchall()
 
-            return self.thd_createUsDict(users_row, rows)
+            return self._model_from_row(users_row, rows)
 
         return self.db.pool.do(thd)
 
@@ -148,12 +207,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             rows = conn.execute(tbl.select()).fetchall()
 
-            dicts = []
-            if rows:
-                for row in rows:
-                    ud = {"uid": row.uid, "identifier": row.identifier}
-                    dicts.append(ud)
-            return dicts
+            return [self._model_from_row(row, attribute_rows=None) for row in rows]
 
         return self.db.pool.do(thd)
 

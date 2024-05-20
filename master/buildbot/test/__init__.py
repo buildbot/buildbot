@@ -209,3 +209,9 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
+
+warnings.filterwarnings(
+    "ignore",
+    r".*UsersConnectorComponent getUser, getUserByUsername, and getUsers no longer return User as dictionnaries.*",
+    category=DeprecatedApiWarning,
+)

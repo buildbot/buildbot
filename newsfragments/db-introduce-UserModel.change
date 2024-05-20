@@ -1,0 +1,1 @@
+:class:`UsersConnectorComponent` `getUser`, `getUserByUsername`, and `getUsers` now return a :class`UserModel` instead of a dictionary of User data

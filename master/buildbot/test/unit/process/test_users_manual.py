@@ -21,6 +21,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.db.users import UserModel
 from buildbot.process.users import manual
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -62,7 +63,9 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 
         self.assertEqual(
             usdict,
-            {"uid": 1, "identifier": 'x', "bb_username": None, "bb_password": None, "git": 'x'},
+            UserModel(
+                uid=1, identifier='x', bb_username=None, bb_password=None, attributes={"git": 'x'}
+            ),
         )
 
     @defer.inlineCallbacks
@@ -78,7 +81,9 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 
         self.assertEqual(
             usdict,
-            {"uid": 1, "identifier": 'x', "bb_username": None, "bb_password": None, "svn": 'y'},
+            UserModel(
+                uid=1, identifier='x', bb_username=None, bb_password=None, attributes={"svn": 'y'}
+            ),
         )
 
     @defer.inlineCallbacks
@@ -94,13 +99,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 
         self.assertEqual(
             usdict,
-            {
-                "uid": 1,
-                "identifier": 'x',
-                "bb_username": 'bb_user',
-                "bb_password": 'hashed_bb_pass',
-                "svn": 'x',
-            },
+            UserModel(
+                uid=1,
+                identifier='x',
+                bb_username='bb_user',
+                bb_password='hashed_bb_pass',
+                attributes={"svn": 'x'},
+            ),
         )
 
     @defer.inlineCallbacks
@@ -115,13 +120,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         usdict = yield self.master.db.users.getUser(1)
         self.assertEqual(
             usdict,
-            {
-                "uid": 1,
-                "identifier": 'x',
-                "bb_username": 'bb_user',
-                "bb_password": 'hashed_bb_pass',
-                "svn": 'y',
-            },
+            UserModel(
+                uid=1,
+                identifier='x',
+                bb_username='bb_user',
+                bb_password='hashed_bb_pass',
+                attributes={"svn": 'y'},
+            ),
         )
 
     @defer.inlineCallbacks
@@ -143,7 +148,14 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 
         res = yield self.master.db.users.getUser(1)
         self.assertEqual(
-            res, {"uid": 1, "identifier": 'x', "bb_username": None, "bb_password": None, "svn": 'x'}
+            res,
+            UserModel(
+                uid=1,
+                identifier='x',
+                bb_username=None,
+                bb_password=None,
+                attributes={"svn": 'x'},
+            ),
         )
 
     @defer.inlineCallbacks
@@ -156,14 +168,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         res = yield self.master.db.users.getUser(1)
         self.assertEqual(
             res,
-            {
-                "uid": 1,
-                "identifier": 'x',
-                "bb_username": None,
-                "bb_password": None,
-                "svn": 'x',
-                "git": 'x@c',
-            },
+            UserModel(
+                uid=1,
+                identifier='x',
+                bb_username=None,
+                bb_password=None,
+                attributes={"svn": 'x', 'git': 'x@c'},
+            ),
         )
 
     @defer.inlineCallbacks
