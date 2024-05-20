@@ -527,9 +527,12 @@ class GerritHttpEventLogPollerConnector:
     def get_files(self, change, patchset):
         res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
         res = yield res.content()
-
-        res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
-        return list(json.loads(res))
+        try:
+            res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
+            return list(json.loads(res))
+        except Exception as e:
+            log.err(e, 'while getting files from connector')
+            return []
 
     @defer.inlineCallbacks
     def do_poll(self):

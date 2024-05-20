@@ -1,0 +1,1 @@
+GerritEventLogPoller.getFiles() function does not crash when invalid input (:issue:`7612`)

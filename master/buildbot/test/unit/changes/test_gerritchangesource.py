@@ -1189,6 +1189,21 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
         files = yield self.changesource.getFiles(100, 1)
         self.assertEqual(set(files), {'/COMMIT_MSG', 'file1'})
 
+    @defer.inlineCallbacks
+    def test_getFiles_handle_error(self):
+        yield self.newChangeSource(get_files=True)
+        yield self.startChangeSource()
+
+        self._http.expect(
+            method='get',
+            ep='/changes/100/revisions/1/files/',
+            content=b')]}\n',  # more than one line expected
+        )
+
+        files = yield self.changesource.getFiles(100, 1)
+        self.assertEqual(files, [])
+        self.assertEqual(len(self.flushLoggedErrors()), 1)
+
 
 class TestGerritChangeFilter(unittest.TestCase):
     def test_event_type(self):
