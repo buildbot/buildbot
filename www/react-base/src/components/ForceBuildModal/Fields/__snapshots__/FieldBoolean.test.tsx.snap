@@ -1,0 +1,126 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ForceFieldBoolean component change state on click 1`] = `
+<div
+  className="form-group"
+>
+  <div
+    className="col-sm-10 col-sm-offset-2"
+  >
+    <div
+      className="checkbox"
+    >
+      <label>
+        <input
+          checked={true}
+          data-bb-test-id="force-field-fullDummy"
+          onChange={[Function]}
+          type="checkbox"
+        />
+         
+        dummyLabel
+      </label>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldBoolean component render default value False 1`] = `
+<div
+  className="form-group"
+>
+  <div
+    className="col-sm-10 col-sm-offset-2"
+  >
+    <div
+      className="checkbox"
+    >
+      <label>
+        <input
+          checked={false}
+          data-bb-test-id="force-field-fullDummy"
+          onChange={[Function]}
+          type="checkbox"
+        />
+         
+        dummyLabel
+      </label>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldBoolean component render default value True 1`] = `
+<div
+  className="form-group"
+>
+  <div
+    className="col-sm-10 col-sm-offset-2"
+  >
+    <div
+      className="checkbox"
+    >
+      <label>
+        <input
+          checked={true}
+          data-bb-test-id="force-field-fullDummy"
+          onChange={[Function]}
+          type="checkbox"
+        />
+         
+        dummyLabel
+      </label>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldBoolean component render non-default value False 1`] = `
+<div
+  className="form-group"
+>
+  <div
+    className="col-sm-10 col-sm-offset-2"
+  >
+    <div
+      className="checkbox"
+    >
+      <label>
+        <input
+          checked={false}
+          data-bb-test-id="force-field-fullDummy"
+          onChange={[Function]}
+          type="checkbox"
+        />
+         
+        dummyLabel
+      </label>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldBoolean component render non-default value True 1`] = `
+<div
+  className="form-group"
+>
+  <div
+    className="col-sm-10 col-sm-offset-2"
+  >
+    <div
+      className="checkbox"
+    >
+      <label>
+        <input
+          checked={true}
+          data-bb-test-id="force-field-fullDummy"
+          onChange={[Function]}
+          type="checkbox"
+        />
+         
+        dummyLabel
+      </label>
+    </div>
+  </div>
+</div>
+`;

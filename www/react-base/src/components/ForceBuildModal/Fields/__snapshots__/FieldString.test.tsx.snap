@@ -1,0 +1,137 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ForceFieldString component change state on click 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        autoComplete="on"
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        id="fullDummy"
+        onChange={[Function]}
+        type="text"
+        value="stateValue"
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldString component render default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        autoComplete="on"
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        id="fullDummy"
+        onChange={[Function]}
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldString component render default value 2`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        autoComplete="on"
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        id="fullDummy"
+        onChange={[Function]}
+        type="text"
+        value="default"
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldString component render non-default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        autoComplete="on"
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        id="fullDummy"
+        onChange={[Function]}
+        type="text"
+        value="stateValue"
+      />
+    </div>
+  </div>
+</div>
+`;
