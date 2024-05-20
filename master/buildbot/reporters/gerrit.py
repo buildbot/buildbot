@@ -26,7 +26,6 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 from zope.interface import implementer
 
-from buildbot import config
 from buildbot import interfaces
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -37,7 +36,6 @@ from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.reporters.base import ReporterBase
 from buildbot.util import bytes2unicode
-from buildbot.warnings import warn_deprecated
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
@@ -331,59 +329,22 @@ class GerritStatusPush(ReporterBase):
         self,
         server,
         username,
-        reviewCB=DEFAULT_REVIEW,
-        startCB=None,
         port=29418,
-        reviewArg=None,
-        startArg=None,
-        summaryCB=DEFAULT_SUMMARY,
-        summaryArg=None,
         identity_file=None,
-        builders=None,
         notify=None,
-        wantSteps=False,
-        wantLogs=False,
         generators=None,
         **kwargs,
     ):
-        old_arg_names = {
-            "reviewCB": reviewCB is not DEFAULT_REVIEW,
-            "startCB": startCB is not None,
-            "reviewArg": reviewArg is not None,
-            "startArg": startArg is not None,
-            "summaryCB": summaryCB is not DEFAULT_SUMMARY,
-            "summaryArg": summaryArg is not None,
-            "builders": builders is not None,
-            "wantSteps": wantSteps is not False,
-            "wantLogs": wantLogs is not False,
-        }
-
-        passed_old_arg_names = [k for k, v in old_arg_names.items() if v]
-
-        if passed_old_arg_names:
-            old_arg_names_msg = ', '.join(passed_old_arg_names)
-            if generators is not None:
-                config.error(
-                    "can't specify generators and deprecated GerritStatusPush "
-                    f"arguments ({old_arg_names_msg}) at the same time"
-                )
-            warn_deprecated(
-                "3.11.0",
-                f"The arguments {old_arg_names_msg} passed to {self.__class__.__name__} "
-                "have been deprecated. Use generators instead",
-            )
-
         if generators is None:
-            generators = self._create_generators_from_old_args(
-                reviewCB,
-                startCB,
-                reviewArg,
-                startArg,
-                summaryCB,
-                summaryArg,
-                builders,
-                wantSteps,
-                wantLogs,
+            generators = []
+            generators.append(
+                GerritBuildSetStatusGenerator(
+                    callback=defaultSummaryCB,
+                    callback_arg=None,
+                    builders=None,
+                    want_steps=False,
+                    want_logs=False,
+                )
             )
 
         super().checkConfig(generators=generators, **kwargs)
@@ -392,18 +353,9 @@ class GerritStatusPush(ReporterBase):
         self,
         server,
         username,
-        reviewCB=DEFAULT_REVIEW,
-        startCB=None,
         port=29418,
-        reviewArg=None,
-        startArg=None,
-        summaryCB=DEFAULT_SUMMARY,
-        summaryArg=None,
         identity_file=None,
-        builders=None,
         notify=None,
-        wantSteps=False,
-        wantLogs=False,
         generators=None,
         **kwargs,
     ):
@@ -416,80 +368,18 @@ class GerritStatusPush(ReporterBase):
         self._gerrit_notify = notify
 
         if generators is None:
-            generators = self._create_generators_from_old_args(
-                reviewCB,
-                startCB,
-                reviewArg,
-                startArg,
-                summaryCB,
-                summaryArg,
-                builders,
-                wantSteps,
-                wantLogs,
+            generators = []
+            generators.append(
+                GerritBuildSetStatusGenerator(
+                    callback=defaultSummaryCB,
+                    callback_arg=None,
+                    builders=None,
+                    want_steps=False,
+                    want_logs=False,
+                )
             )
 
         super().reconfigService(generators=generators, **kwargs)
-
-    def _create_generators_from_old_args(
-        self,
-        reviewCB,
-        startCB,
-        reviewArg,
-        startArg,
-        summaryCB,
-        summaryArg,
-        builders,
-        wantSteps,
-        wantLogs,
-    ):
-        # If neither reviewCB nor summaryCB were specified, default to sending
-        # out "summary" reviews. But if we were given a reviewCB and only a
-        # reviewCB, disable the "summary" reviews, so we don't send out both
-        # by default.
-        if reviewCB is DEFAULT_REVIEW and summaryCB is DEFAULT_SUMMARY:
-            reviewCB = None
-            summaryCB = defaultSummaryCB
-        if reviewCB is DEFAULT_REVIEW:
-            reviewCB = None
-        if summaryCB is DEFAULT_SUMMARY:
-            summaryCB = None
-
-        generators = []
-
-        if startCB is not None:
-            generators.append(
-                GerritBuildStartStatusGenerator(
-                    callback=startCB,
-                    callback_arg=startArg,
-                    builders=builders,
-                    want_steps=wantSteps,
-                    want_logs=wantLogs,
-                )
-            )
-
-        if reviewCB is not None:
-            generators.append(
-                GerritBuildEndStatusGenerator(
-                    callback=reviewCB,
-                    callback_arg=reviewArg,
-                    builders=builders,
-                    want_steps=wantSteps,
-                    want_logs=wantLogs,
-                )
-            )
-
-        if summaryCB is not None:
-            generators.append(
-                GerritBuildSetStatusGenerator(
-                    callback=summaryCB,
-                    callback_arg=summaryArg,
-                    builders=builders,
-                    want_steps=wantSteps,
-                    want_logs=wantLogs,
-                )
-            )
-
-        return generators
 
     def _gerritCmd(self, *args):
         """Construct a command as a list of strings suitable for
