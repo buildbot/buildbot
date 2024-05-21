@@ -21,7 +21,6 @@ from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
 def changeSourceKey(changeSource):
@@ -133,8 +132,8 @@ class Tests(interfaces.InterfaceTests):
         """getChangeSource for a changesource that exists"""
         yield self.insert_test_data([self.cs87])
         cs = yield self.db.changesources.getChangeSource(87)
-        validation.verifyDbDict(self, 'changesourcedict', cs)
-        self.assertEqual(cs, {"id": 87, "name": 'lame_source', "masterid": None})
+        self.assertIsInstance(cs, changesources.ChangeSourceModel)
+        self.assertEqual(cs, changesources.ChangeSourceModel(id=87, name='lame_source'))
 
     @defer.inlineCallbacks
     def test_getChangeSource_missing(self):
@@ -147,18 +146,21 @@ class Tests(interfaces.InterfaceTests):
         """getChangeSource for a changesource that exists and is active"""
         yield self.insert_test_data([self.cs42, self.master13, self.cs42master13])
         cs = yield self.db.changesources.getChangeSource(42)
-        validation.verifyDbDict(self, 'changesourcedict', cs)
-        self.assertEqual(cs, {"id": 42, "name": 'cool_source', "masterid": 13})
+        self.assertIsInstance(cs, changesources.ChangeSourceModel)
+        self.assertEqual(
+            cs, changesources.ChangeSourceModel(id=42, name='cool_source', masterid=13)
+        )
 
     @defer.inlineCallbacks
     def test_getChangeSource_inactive_but_linked(self):
         """getChangeSource for a changesource that is assigned but is inactive"""
         yield self.insert_test_data([self.cs87, self.master14, self.cs87master14])
         cs = yield self.db.changesources.getChangeSource(87)
-        validation.verifyDbDict(self, 'changesourcedict', cs)
+        self.assertIsInstance(cs, changesources.ChangeSourceModel)
         self.assertEqual(
-            cs, {"id": 87, "name": 'lame_source', "masterid": 14}
-        )  # row exists, but marked inactive
+            cs, changesources.ChangeSourceModel(id=87, name='lame_source', masterid=14)
+        )
+        # row exists, but marked inactive
 
     def test_signature_getChangeSources(self):
         """getChangeSources has right signature"""
@@ -179,14 +181,14 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources()
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(
             sorted(cslist, key=changeSourceKey),
             sorted(
                 [
-                    {"id": 42, "name": 'cool_source', "masterid": 13},
-                    {"id": 87, "name": 'lame_source', "masterid": None},
+                    changesources.ChangeSourceModel(id=42, name='cool_source', masterid=13),
+                    changesources.ChangeSourceModel(id=87, name='lame_source', masterid=None),
                 ],
                 key=changeSourceKey,
             ),
@@ -204,13 +206,13 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources(masterid=13)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(
             sorted(cslist, key=changeSourceKey),
             sorted(
                 [
-                    {"id": 42, "name": 'cool_source', "masterid": 13},
+                    changesources.ChangeSourceModel(id=42, name='cool_source', masterid=13),
                 ],
                 key=changeSourceKey,
             ),
@@ -223,12 +225,12 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources(active=True)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(
             sorted(cslist),
             sorted([
-                {"id": 42, "name": 'cool_source', "masterid": 13},
+                changesources.ChangeSourceModel(id=42, name='cool_source', masterid=13),
             ]),
         )
 
@@ -239,19 +241,19 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources(active=True, masterid=13)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(
             sorted(cslist),
             sorted([
-                {"id": 42, "name": 'cool_source', "masterid": 13},
+                changesources.ChangeSourceModel(id=42, name='cool_source', masterid=13),
             ]),
         )
 
         cslist = yield self.db.changesources.getChangeSources(active=True, masterid=14)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(sorted(cslist), [])
 
@@ -262,12 +264,12 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources(active=False)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(
             sorted(cslist),
             sorted([
-                {"id": 87, "name": 'lame_source', "masterid": None},
+                changesources.ChangeSourceModel(id=87, name='lame_source'),
             ]),
         )
 
@@ -278,14 +280,14 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources(active=False, masterid=13)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(sorted(cslist), [])
 
         cslist = yield self.db.changesources.getChangeSources(active=False, masterid=14)
 
         for cs in cslist:
-            validation.verifyDbDict(self, 'changesourcedict', cs)
+            self.assertIsInstance(cs, changesources.ChangeSourceModel)
 
         self.assertEqual(sorted(cslist), [])  # always returns [] by spec!
 

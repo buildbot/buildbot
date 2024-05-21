@@ -17,7 +17,7 @@ Change sources connector
 
     Changesources are identified by their changesourceid, which can be obtained from :py:meth:`findChangeSourceId`.
 
-    Changesources are represented by dictionaries with the following keys:
+    Changesources are represented as :class:`ChangeSourceModel` dataclass with the following fields:
 
         * ``id`` - changesource's ID
         * ``name`` - changesource's name
@@ -48,7 +48,7 @@ Change sources connector
     .. py:method:: getChangeSource(changesourceid)
 
         :param changesourceid: changesource ID
-        :returns: changesource dictionary or None, via Deferred
+        :returns: :class:`ChangeSourceModel` or `None`, via Deferred
 
         Get the changesource dictionary for the given changesource.
 
@@ -56,7 +56,7 @@ Change sources connector
 
         :param boolean active: if specified, filter for active or inactive changesources
         :param integer masterid: if specified, only return changesources attached associated with this master
-        :returns: list of changesource dictionaries in unspecified order
+        :returns: list of :class:`ChangeSourceModel` in unspecified order
 
         Get a list of changesources.
 

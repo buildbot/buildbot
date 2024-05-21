@@ -66,15 +66,13 @@ class FakeChangeSourcesComponent(FakeDBComponent):
 
     def getChangeSource(self, changesourceid):
         if changesourceid in self.changesources:
-            rv = {
-                "id": changesourceid,
-                "name": self.changesources[changesourceid],
-                "masterid": None,
-            }
-            # only set masterid if the relevant changesource master exists and
-            # is active
-            rv['masterid'] = self.changesource_masters.get(changesourceid)
-            return defer.succeed(rv)
+            return defer.succeed(
+                changesources.ChangeSourceModel(
+                    id=changesourceid,
+                    name=self.changesources[changesourceid],
+                    masterid=self.changesource_masters.get(changesourceid),
+                )
+            )
         return None
 
     def getChangeSources(self, active=None, masterid=None):

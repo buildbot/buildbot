@@ -204,3 +204,9 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
+
+warnings.filterwarnings(
+    "ignore",
+    r".*ChangeSourcesConnectorComponent getChangeSource, and getChangeSources no longer return ChangeSource as dictionnaries.*",
+    category=DeprecatedApiWarning,
+)
