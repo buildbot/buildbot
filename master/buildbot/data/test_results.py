@@ -14,23 +14,30 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    from buildbot.db.test_results import TestResultModel
+
 
 class Db2DataMixin:
-    def db2data(self, dbdict):
+    def db2data(self, model: TestResultModel):
         data = {
-            'test_resultid': dbdict['id'],
-            'builderid': dbdict['builderid'],
-            'test_result_setid': dbdict['test_result_setid'],
-            'test_name': dbdict['test_name'],
-            'test_code_path': dbdict['test_code_path'],
-            'line': dbdict['line'],
-            'duration_ns': dbdict['duration_ns'],
-            'value': dbdict['value'],
+            'test_resultid': model.id,
+            'builderid': model.builderid,
+            'test_result_setid': model.test_result_setid,
+            'test_name': model.test_name,
+            'test_code_path': model.test_code_path,
+            'line': model.line,
+            'duration_ns': model.duration_ns,
+            'value': model.value,
         }
         return defer.succeed(data)
 
