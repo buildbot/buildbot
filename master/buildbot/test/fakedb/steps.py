@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 
 from twisted.internet import defer
 
+from buildbot.db.steps import StepModel
+from buildbot.db.steps import UrlModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.util import validation
@@ -76,27 +80,33 @@ class FakeStepsComponent(FakeDBComponent):
             id += 1
         return id
 
-    def _row2dict(self, row):
-        return {
-            "id": row['id'],
-            "buildid": row['buildid'],
-            "number": row['number'],
-            "name": row['name'],
-            "started_at": epoch2datetime(row['started_at']),
-            "locks_acquired_at": epoch2datetime(row["locks_acquired_at"]),
-            "complete_at": epoch2datetime(row['complete_at']),
-            "state_string": row['state_string'],
-            "results": row['results'],
-            "urls": json.loads(row['urls_json']),
-            "hidden": bool(row['hidden']),
-        }
+    def _model_from_row(self, row):
+        return StepModel(
+            id=row['id'],
+            buildid=row['buildid'],
+            number=row['number'],
+            name=row['name'],
+            started_at=epoch2datetime(row['started_at']),
+            locks_acquired_at=epoch2datetime(row["locks_acquired_at"]),
+            complete_at=epoch2datetime(row['complete_at']),
+            state_string=row['state_string'],
+            results=row['results'],
+            urls=[UrlModel(item['name'], item['url']) for item in json.loads(row['urls_json'])],
+            hidden=bool(row['hidden']),
+        )
 
-    def getStep(self, stepid=None, buildid=None, number=None, name=None):
+    def getStep(
+        self,
+        stepid: int | None = None,
+        buildid: int | None = None,
+        number: int | None = None,
+        name: str | None = None,
+    ) -> defer.Deferred[StepModel | None]:
         if stepid is not None:
             row = self.steps.get(stepid)
             if not row:
                 return defer.succeed(None)
-            return defer.succeed(self._row2dict(row))
+            return defer.succeed(self._model_from_row(row))
         else:
             if number is None and name is None:
                 return defer.fail(RuntimeError("specify both name and number"))
@@ -107,18 +117,18 @@ class FakeStepsComponent(FakeDBComponent):
                     continue
                 if name is not None and row['name'] != name:
                     continue
-                return defer.succeed(self._row2dict(row))
+                return defer.succeed(self._model_from_row(row))
             return defer.succeed(None)
 
-    def getSteps(self, buildid):
+    def getSteps(self, buildid) -> defer.Deferred[list[StepModel]]:
         ret = []
 
         for row in self.steps.values():
             if row['buildid'] != buildid:
                 continue
-            ret.append(self._row2dict(row))
+            ret.append(self._model_from_row(row))
 
-        ret.sort(key=lambda r: r['number'])
+        ret.sort(key=lambda r: r.number)
         return defer.succeed(ret)
 
     def addStep(self, buildid, name, state_string):

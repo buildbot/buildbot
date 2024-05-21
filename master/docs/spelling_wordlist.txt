@@ -817,6 +817,7 @@ stdout
 stepdict
 stepdicts
 stepid
+StepModel
 stopService
 storages
 strports

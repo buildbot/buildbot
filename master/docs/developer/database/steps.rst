@@ -14,7 +14,7 @@ Steps connector
 
     .. index:: stepdict, stepid
 
-    Builds are indexed by *stepid* and their contents are represented as *stepdicts* (step dictionaries), with the following keys:
+    Steps are indexed by *stepid* and are represented by a :class:`StepModel` dataclass with the following fields:
 
     * ``id`` (the step ID, globally unique)
     * ``number`` (the step number, unique only within the build)
@@ -25,8 +25,13 @@ Steps connector
     * ``complete_at`` (datetime at which this step finished, or None if it is ongoing)
     * ``state_string`` (short string describing the step's state)
     * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
-    * ``urls`` (list of URLs produced by this step. Each urls is stored as a dictionary with keys `name` and `url`)
+    * ``urls`` (list of URLs produced by this step. Each urls is stored as a :class:`UrlModel` dataclass)
     * ``hidden`` (true if the step should be hidden in status displays)
+
+    Urls are represented by a :class:`UrlModel` dataclass with the following fields:
+
+    * ``name``
+    * ``url``
 
     .. py:method:: getStep(stepid=None, buildid=None, number=None, name=None)
 
@@ -35,7 +40,7 @@ Steps connector
         :param integer number: the step number
         :param name: the step name
         :type name: 50-character :ref:`identifier <type-identifier>`
-        :returns: stepdict via Deferred
+        :returns: :class:`StepModel` or ``None`` via Deferred
 
         Get a single step.
         The step can be specified by:
@@ -47,7 +52,7 @@ Steps connector
     .. py:method:: getSteps(buildid)
 
         :param integer buildid: the build from which to get the step
-        :returns: list of stepdicts, sorted by number, via Deferred
+        :returns: list of :class:`StepModel`, sorted by number, via Deferred
 
         Get all steps in the given build, ordered by number.
 

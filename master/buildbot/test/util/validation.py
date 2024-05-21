@@ -572,20 +572,6 @@ message['steps'].add(
     None, MessageValidator(events=_stepEvents, messageValidator=DictValidator(**_step))
 )
 
-dbdict['stepdict'] = DictValidator(
-    id=IntValidator(),
-    number=IntValidator(),
-    name=IdentifierValidator(50),
-    buildid=IntValidator(),
-    started_at=DateTimeValidator(),
-    locks_acquired_at=NoneOk(DateTimeValidator()),
-    complete_at=NoneOk(DateTimeValidator()),
-    state_string=StringValidator(),
-    results=NoneOk(IntValidator()),
-    urls=ListValidator(StringValidator()),
-    hidden=BooleanValidator(),
-)
-
 # logs
 
 _log = {

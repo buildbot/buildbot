@@ -13,30 +13,35 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    from buildbot.db.steps import StepModel
+
 
 class Db2DataMixin:
-    def db2data(self, dbdict):
-        data = {
-            'stepid': dbdict['id'],
-            'number': dbdict['number'],
-            'name': dbdict['name'],
-            'buildid': dbdict['buildid'],
-            'started_at': dbdict['started_at'],
-            "locks_acquired_at": dbdict["locks_acquired_at"],
-            'complete': dbdict['complete_at'] is not None,
-            'complete_at': dbdict['complete_at'],
-            'state_string': dbdict['state_string'],
-            'results': dbdict['results'],
-            'urls': dbdict['urls'],
-            'hidden': dbdict['hidden'],
+    def db2data(self, model: StepModel):
+        return {
+            'stepid': model.id,
+            'number': model.number,
+            'name': model.name,
+            'buildid': model.buildid,
+            'started_at': model.started_at,
+            "locks_acquired_at": model.locks_acquired_at,
+            'complete': model.complete_at is not None,
+            'complete_at': model.complete_at,
+            'state_string': model.state_string,
+            'results': model.results,
+            'urls': [{'name': item.name, 'url': item.url} for item in model.urls],
+            'hidden': model.hidden,
         }
-        return defer.succeed(data)
 
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -55,14 +60,14 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            return (yield self.db2data(dbdict)) if dbdict else None
+            return self.db2data(dbdict) if dbdict else None
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return None
         dbdict = yield self.master.db.steps.getStep(
             buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
         )
-        return (yield self.db2data(dbdict)) if dbdict else None
+        return self.db2data(dbdict) if dbdict else None
 
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -82,10 +87,7 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             if buildid is None:
                 return None
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
-        results = []
-        for dbdict in steps:
-            results.append((yield self.db2data(dbdict)))
-        return results
+        return [self.db2data(model) for model in steps]
 
 
 class UrlEntityType(types.Entity):

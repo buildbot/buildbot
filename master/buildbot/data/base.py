@@ -30,6 +30,7 @@ from buildbot.util.twisted import async_to_deferred
 if TYPE_CHECKING:
     from buildbot.db.builders import BuilderModel
     from buildbot.db.builds import BuildModel
+    from buildbot.db.steps import StepModel
     from buildbot.db.workers import WorkerModel
 
 
@@ -197,14 +198,14 @@ class NestedBuildDataRetriever:
         self.args = args
         # False is used as special value as "not set". None is used as "not exists". This solves
         # the problem of multiple database queries in case entity does not exist.
-        self.step_dict = False
+        self.step_dict: StepModel | None | False = False
         self.build_dict: BuildModel | None | False = False
         self.builder_dict: BuilderModel | None | False = False
         self.log_dict = False
         self.worker_dict: WorkerModel | None | False = False
 
     @async_to_deferred
-    async def get_step_dict(self):
+    async def get_step_dict(self) -> StepModel | None:
         if self.step_dict is not False:
             return self.step_dict
 
@@ -259,7 +260,7 @@ class NestedBuildDataRetriever:
         # fallback when there's only indirect information
         step_dict = await self.get_step_dict()
         if step_dict is not None:
-            self.build_dict = await self.master.db.builds.getBuild(step_dict['buildid'])
+            self.build_dict = await self.master.db.builds.getBuild(step_dict.buildid)
             return self.build_dict
 
         self.build_dict = None
@@ -327,7 +328,7 @@ class NestedBuildDataRetriever:
             self.log_dict = None
             return None
         self.log_dict = await self.master.db.logs.getLogBySlug(
-            step_dict['id'], self.args.get('log_slug')
+            step_dict.id, self.args.get('log_slug')
         )
         return self.log_dict
 

@@ -51,11 +51,11 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
         complete = resultSpec.popBooleanFilter('complete')
         if 'stepid' in kwargs:
             step_dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            build_dbdict = yield self.master.db.builds.getBuild(step_dbdict['buildid'])
+            build_dbdict = yield self.master.db.builds.getBuild(step_dbdict.buildid)
 
             sets = yield self.master.db.test_result_sets.getTestResultSets(
                 build_dbdict.builderid,
-                buildid=step_dbdict['buildid'],
+                buildid=step_dbdict.buildid,
                 stepid=kwargs['stepid'],
                 complete=complete,
                 result_spec=resultSpec,

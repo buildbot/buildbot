@@ -1,0 +1,1 @@
+:class:`StepsConnectorComponent` `getStep`, and `getSteps` now return a :class`StepModel` instead of a dictionary of Step data

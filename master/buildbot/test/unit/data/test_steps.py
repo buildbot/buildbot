@@ -18,6 +18,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import steps
+from buildbot.db.steps import StepModel
+from buildbot.db.steps import UrlModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -248,19 +250,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(stepid)
         self.assertEqual(
             step,
-            {
-                'buildid': 10,
-                'complete_at': None,
-                'id': stepid,
-                'name': name,
-                'number': number,
-                'results': None,
-                'started_at': None,
-                "locks_acquired_at": None,
-                'state_string': 'pending',
-                'urls': [],
-                'hidden': False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=None,
+                id=stepid,
+                name=name,
+                number=number,
+                results=None,
+                started_at=None,
+                locks_acquired_at=None,
+                state_string='pending',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -299,19 +301,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
-            {
-                'buildid': 10,
-                'complete_at': None,
-                'id': 100,
-                'name': 'ten',
-                'number': 0,
-                'results': None,
-                'started_at': epoch2datetime(TIME1),
-                "locks_acquired_at": None,
-                'state_string': 'pending',
-                'urls': [],
-                'hidden': False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=None,
+                id=100,
+                name='ten',
+                number=0,
+                results=None,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=None,
+                state_string='pending',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -341,19 +343,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
-            {
-                "buildid": 10,
-                "complete_at": None,
-                "id": 100,
-                "name": "ten",
-                "number": 0,
-                "results": None,
-                "started_at": epoch2datetime(TIME1),
-                "locks_acquired_at": epoch2datetime(TIME1),
-                "state_string": "pending",
-                "urls": [],
-                "hidden": False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=None,
+                id=100,
+                name="ten",
+                number=0,
+                results=None,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=epoch2datetime(TIME1),
+                state_string="pending",
+                urls=[],
+                hidden=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -386,19 +388,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
-            {
-                'buildid': 10,
-                'complete_at': None,
-                'id': 100,
-                'name': 'ten',
-                'number': 0,
-                'results': None,
-                'started_at': epoch2datetime(TIME1),
-                "locks_acquired_at": epoch2datetime(TIME2),
-                'state_string': 'pending',
-                'urls': [],
-                'hidden': False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=None,
+                id=100,
+                name='ten',
+                number=0,
+                results=None,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=epoch2datetime(TIME2),
+                state_string='pending',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     def test_signature_setStepStateString(self):
@@ -435,19 +437,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
-            {
-                'buildid': 10,
-                'complete_at': None,
-                'id': 100,
-                'name': 'ten',
-                'number': 0,
-                'results': None,
-                'started_at': None,
-                "locks_acquired_at": None,
-                'state_string': 'hi',
-                'urls': [],
-                'hidden': False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=None,
+                id=100,
+                name='ten',
+                number=0,
+                results=None,
+                started_at=None,
+                locks_acquired_at=None,
+                state_string='hi',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     def test_signature_finishStep(self):
@@ -489,19 +491,19 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
-            {
-                'buildid': 10,
-                'complete_at': epoch2datetime(TIME2),
-                'id': 100,
-                'name': 'ten',
-                'number': 0,
-                'results': 9,
-                'started_at': epoch2datetime(TIME1),
-                "locks_acquired_at": epoch2datetime(TIME1),
-                'state_string': 'pending',
-                'urls': [],
-                'hidden': False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=epoch2datetime(TIME2),
+                id=100,
+                name='ten',
+                number=0,
+                results=9,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=epoch2datetime(TIME1),
+                state_string='pending',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     def test_signature_addStepURL(self):
@@ -538,17 +540,17 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
-            {
-                'buildid': 10,
-                'complete_at': None,
-                'id': 100,
-                'name': 'ten',
-                'number': 0,
-                'results': None,
-                'started_at': None,
-                "locks_acquired_at": None,
-                'state_string': 'pending',
-                'urls': [{'name': 'foo', 'url': 'bar'}],
-                'hidden': False,
-            },
+            StepModel(
+                buildid=10,
+                complete_at=None,
+                id=100,
+                name='ten',
+                number=0,
+                results=None,
+                started_at=None,
+                locks_acquired_at=None,
+                state_string='pending',
+                urls=[UrlModel(name='foo', url='bar')],
+                hidden=False,
+            ),
         )
