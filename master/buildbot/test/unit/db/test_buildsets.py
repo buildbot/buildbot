@@ -277,7 +277,7 @@ class Tests(interfaces.InterfaceTests):
         bsdictlist = yield self.db.buildsets.getBuildsets()
 
         def bsdictKey(bsdict):
-            return bsdict['reason']
+            return bsdict.reason
 
         for bsdict in bsdictlist:
             self.assertIsInstance(bsdict, buildsets.BuildSetModel)
@@ -374,10 +374,10 @@ class Tests(interfaces.InterfaceTests):
 
         bsdicts = [
             (
-                bsdict['bsid'],
-                bsdict['complete'],
-                datetime2epoch(bsdict['complete_at']),
-                bsdict['results'],
+                bsdict.bsid,
+                bsdict.complete,
+                datetime2epoch(bsdict.complete_at),
+                bsdict.results,
             )
             for bsdict in bsdicts
         ]
@@ -393,10 +393,10 @@ class Tests(interfaces.InterfaceTests):
 
         bsdicts = [
             (
-                bsdict['bsid'],
-                bsdict['complete'],
-                datetime2epoch(bsdict['complete_at']),
-                bsdict['results'],
+                bsdict.bsid,
+                bsdict.complete,
+                datetime2epoch(bsdict.complete_at),
+                bsdict.results,
             )
             for bsdict in bsdicts
         ]

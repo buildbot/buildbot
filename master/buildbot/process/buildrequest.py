@@ -235,7 +235,7 @@ class BuildRequest:
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict.buildsetid)
         assert buildset  # schema should guarantee this
-        buildrequest.reason = buildset['reason']
+        buildrequest.reason = buildset.reason
 
         # fetch the buildset properties, and convert to Properties
         buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict.buildsetid)

@@ -230,10 +230,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for bs in (yield self.getBuildsets(complete=complete)):
             if branch or repository:
                 ok = True
-                if not bs['sourcestamps']:
+                if not bs.sourcestamps:
                     # no sourcestamps -> no match
                     ok = False
-                for ssid in bs['sourcestamps']:
+                for ssid in bs.sourcestamps:
                     ss: SourceStampModel = yield self.db.sourcestamps.getSourceStamp(ssid)
                     if branch and ss.branch != branch:
                         ok = False
@@ -245,7 +245,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
             if ok:
                 rv.append(bs)
 
-        rv.sort(key=lambda bs: -bs['bsid'])
+        rv.sort(key=lambda bs: -bs.bsid)
 
         return list(reversed(rv[:count]))
 

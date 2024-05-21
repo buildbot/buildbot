@@ -204,9 +204,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*BuildsetsConnectorComponent getBuildset, getBuildsets, and getRecentBuildsets no longer return BuildSet as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)
