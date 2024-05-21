@@ -55,31 +55,6 @@ class UserModel:
 
         raise KeyError(key)
 
-    def get(self, key: str, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
-    def keys(self):
-        warn_deprecated(
-            '4.1.0',
-            (
-                'UsersConnectorComponent '
-                'getUser, getUserByUsername, and getUsers '
-                'no longer return User as dictionnaries. '
-                'Usage of keys is deprecated: please access the member directly'
-            ),
-        )
-
-        keys = set()
-        if self.attributes is not None:
-            keys.update(self.attributes.keys())
-
-        keys.update(f.name for f in dataclasses.fields(self) if f.name != 'attributes')
-
-        return keys
-
 
 @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), UserModel)
 class UsDict(UserModel):

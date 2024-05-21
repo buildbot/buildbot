@@ -216,7 +216,15 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 
         result = yield self.call_perspective_commandline('get', None, None, ['x@y'], None)
 
-        exp_format = 'user(s) found:\nbb_username: None\ngit: x <x@y>\nidentifier: x@y\nuid: 1\n\n'
+        exp_format = (
+            'user(s) found:\n'
+            'uid: 1\n'
+            'identifier: x@y\n'
+            'bb_username: None\n'
+            'attributes:\n'
+            '\tgit: x <x@y>\n'
+            '\n'
+        )
         self.assertEqual(result, exp_format)
 
     @defer.inlineCallbacks

@@ -13,16 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 from binascii import hexlify
 from hashlib import sha1
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+
+if TYPE_CHECKING:
+    from buildbot.db.users import UserModel
 
 # TODO: fossil comes from a plugin. We should have an API that plugins could use to
 # register allowed user types.
@@ -63,10 +68,10 @@ def createUserObject(master, author, src=None):
     )
 
 
-def _extractContact(usdict, contact_types, uid):
-    if usdict:
+def _extractContact(user: UserModel | None, contact_types, uid):
+    if user is not None and user.attributes is not None:
         for type in contact_types:
-            contact = usdict.get(type)
+            contact = user.attributes.get(type)
             if contact:
                 break
     else:
