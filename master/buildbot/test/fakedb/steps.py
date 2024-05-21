@@ -120,7 +120,7 @@ class FakeStepsComponent(FakeDBComponent):
                 continue
             ret.append(self._model_from_row(row))
 
-        ret.sort(key=lambda r: r['number'])
+        ret.sort(key=lambda r: r.number)
         return defer.succeed(ret)
 
     def addStep(self, buildid, name, state_string):

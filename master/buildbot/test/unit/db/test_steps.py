@@ -328,7 +328,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
         yield self.db.steps.setStepStateString(stepid=72, state_string='aaa')
         stepdict = yield self.db.steps.getStep(stepid=72)
-        self.assertEqual(stepdict['state_string'], 'aaa')
+        self.assertEqual(stepdict.state_string, 'aaa')
 
     @defer.inlineCallbacks
     def test_addURL(self):
@@ -352,7 +352,7 @@ class Tests(interfaces.InterfaceTests):
         stepdict = yield self.db.steps.getStep(stepid=72)
 
         def urlKey(url):
-            return url['name']
+            return url.name
 
         # order is not guaranteed though
         self.assertEqual(
@@ -381,16 +381,16 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
         yield self.db.steps.finishStep(stepid=72, results=11, hidden=False)
         stepdict = yield self.db.steps.getStep(stepid=72)
-        self.assertEqual(stepdict['results'], 11)
-        self.assertEqual(stepdict['complete_at'], epoch2datetime(TIME2))
-        self.assertEqual(stepdict['hidden'], False)
+        self.assertEqual(stepdict.results, 11)
+        self.assertEqual(stepdict.complete_at, epoch2datetime(TIME2))
+        self.assertEqual(stepdict.hidden, False)
 
     @defer.inlineCallbacks
     def test_finishStep_hidden(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
         yield self.db.steps.finishStep(stepid=72, results=11, hidden=True)
         stepdict = yield self.db.steps.getStep(stepid=72)
-        self.assertEqual(stepdict['hidden'], True)
+        self.assertEqual(stepdict.hidden, True)
 
 
 class RealTests(Tests):

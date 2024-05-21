@@ -62,7 +62,7 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         if build_dict is not None:
             informative_parts += ['build', str(build_dict.number)]
         if step_dict is not None:
-            informative_parts += ['step', step_dict['name']]
+            informative_parts += ['step', step_dict.name]
         informative_parts += ['log', log_dict['slug']]
         informative_slug = '_'.join(informative_parts)
 

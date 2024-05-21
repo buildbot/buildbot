@@ -13,28 +13,34 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    from buildbot.db.steps import StepModel
+
 
 class Db2DataMixin:
-    def db2data(self, dbdict):
+    def db2data(self, model: StepModel):
         data = {
-            'stepid': dbdict['id'],
-            'number': dbdict['number'],
-            'name': dbdict['name'],
-            'buildid': dbdict['buildid'],
-            'started_at': dbdict['started_at'],
-            "locks_acquired_at": dbdict["locks_acquired_at"],
-            'complete': dbdict['complete_at'] is not None,
-            'complete_at': dbdict['complete_at'],
-            'state_string': dbdict['state_string'],
-            'results': dbdict['results'],
-            'urls': [{'name': url['name'], 'url': url['url']} for url in dbdict['urls']],
-            'hidden': dbdict['hidden'],
+            'stepid': model.id,
+            'number': model.number,
+            'name': model.name,
+            'buildid': model.buildid,
+            'started_at': model.started_at,
+            "locks_acquired_at": model.locks_acquired_at,
+            'complete': model.complete_at is not None,
+            'complete_at': model.complete_at,
+            'state_string': model.state_string,
+            'results': model.results,
+            'urls': [{'name': item.name, 'url': item.url} for item in model.urls],
+            'hidden': model.hidden,
         }
         return defer.succeed(data)
 

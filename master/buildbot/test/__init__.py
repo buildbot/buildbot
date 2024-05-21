@@ -209,9 +209,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*StepsConnectorComponent getStep, and getSteps no longer return Step as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)
