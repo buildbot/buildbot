@@ -67,7 +67,7 @@ class Tests(interfaces.InterfaceTests):
             complete_at=TIME4,
             state_string='test',
             results=2,
-            urls_json='["http://url"]',
+            urls_json='[{"name": "url", "url": "http://url"}]',
             hidden=1,
         ),
         fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME5),
@@ -97,7 +97,7 @@ class Tests(interfaces.InterfaceTests):
             "locks_acquired_at": epoch2datetime(TIME3),
             'complete_at': epoch2datetime(TIME4),
             'state_string': 'test',
-            'urls': ['http://url'],
+            'urls': [{'name': 'url', 'url': 'http://url'}],
             'hidden': True,
         },
         {
