@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 class Db2DataMixin:
     def db2data(self, model: StepModel):
-        data = {
+        return {
             'stepid': model.id,
             'number': model.number,
             'name': model.name,
@@ -42,7 +42,6 @@ class Db2DataMixin:
             'urls': [{'name': item.name, 'url': item.url} for item in model.urls],
             'hidden': model.hidden,
         }
-        return defer.succeed(data)
 
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -61,14 +60,14 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            return (yield self.db2data(dbdict)) if dbdict else None
+            return self.db2data(dbdict) if dbdict else None
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return None
         dbdict = yield self.master.db.steps.getStep(
             buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
         )
-        return (yield self.db2data(dbdict)) if dbdict else None
+        return self.db2data(dbdict) if dbdict else None
 
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -88,10 +87,7 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             if buildid is None:
                 return None
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
-        results = []
-        for dbdict in steps:
-            results.append((yield self.db2data(dbdict)))
-        return results
+        return [self.db2data(model) for model in steps]
 
 
 class UrlEntityType(types.Entity):
