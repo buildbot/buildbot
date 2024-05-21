@@ -130,7 +130,9 @@ class CVSMaildirSource(MaildirSource):
         updateRE = re.compile(r'^Update of:\s*(\S.*)')
         comments = ""
         branch = None
+        category = None
         cvsroot = None
+        cvsmode = None
         fileList = None
         files = []
         isdir = 0

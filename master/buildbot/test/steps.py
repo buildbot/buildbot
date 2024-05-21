@@ -945,6 +945,7 @@ class TestBuildStepMixin:
     def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
 
+        exp = None
         if self._expected_commands:
             exp = self._expected_commands.pop(0)
             self._expected_commands_popped += 1
@@ -991,6 +992,7 @@ class TestBuildStepMixin:
     ):
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
+        exp = None
         if self._expected_commands:
             exp = self._expected_commands.pop(0)
             self._expected_commands_popped += 1

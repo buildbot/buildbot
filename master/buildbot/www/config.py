@@ -189,6 +189,7 @@ class IndexResource(resource.Resource):
                 basename, ext = os.path.splitext(f)
                 if ext not in allowed_ext:
                     continue
+                html = None
                 if ext == ".html":
                     with open(fn, encoding='utf-8') as f:
                         html = f.read().strip()

@@ -130,6 +130,7 @@ class MaildirService(service.BuildbotService):
             log.err(None, f"while polling maildir '{self.basedir}':")
 
     def moveToCurDir(self, filename):
+        f = None
         if runtime.platformType == "posix":
             # open the file before moving it, because I'm afraid that once
             # it's in cur/, someone might delete it at any moment

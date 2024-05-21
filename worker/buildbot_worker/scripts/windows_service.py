@@ -540,6 +540,7 @@ def CustomInstall(opts):
         print("FAILED to register with the Windows firewall")
         print(why)
 
+    userName = None
     for opt, val in opts:
         if opt == '--username':
             userName = val
