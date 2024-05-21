@@ -153,15 +153,14 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     def getScheduler(self, schedulerid):
         if schedulerid in self.schedulers:
-            rv = {
-                "id": schedulerid,
-                "name": self.schedulers[schedulerid],
-                "enabled": self.enabled.get(schedulerid, True),
-                "masterid": None,
-            }
-            # only set masterid if the relevant scheduler master exists and
-            # is active
-            rv['masterid'] = self.scheduler_masters.get(schedulerid)
+            rv = schedulers.SchedulerModel(
+                id=schedulerid,
+                name=self.schedulers[schedulerid],
+                enabled=self.enabled.get(schedulerid, True),
+                # only set masterid if the relevant scheduler master exists and
+                # is active
+                masterid=self.scheduler_masters.get(schedulerid),
+            )
             return defer.succeed(rv)
         return None
 
@@ -174,12 +173,12 @@ class FakeSchedulersComponent(FakeDBComponent):
             results = [r[1] for r in results]
             # filter for masterid
             if masterid is not None:
-                results = [r for r in results if r['masterid'] == masterid]
+                results = [r for r in results if r.masterid == masterid]
             # filter for active or inactive if necessary
             if active:
-                results = [r for r in results if r['masterid'] is not None]
+                results = [r for r in results if r.masterid is not None]
             elif active is not None:
-                results = [r for r in results if r['masterid'] is None]
+                results = [r for r in results if r.masterid is None]
             return results
 
         return d

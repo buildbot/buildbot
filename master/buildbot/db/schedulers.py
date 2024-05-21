@@ -13,31 +13,67 @@
 #
 # Copyright Buildbot Team Members
 
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 import sqlalchemy.exc
 from twisted.internet import defer
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from typing import Literal
 
 
 class SchedulerAlreadyClaimedError(Exception):
     pass
 
 
+@dataclass
+class SchedulerModel:
+    id: int
+    name: str
+    enabled: bool = True
+
+    masterid: int | None = None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'SchedulersConnectorComponent '
+                'getScheduler, and getSchedulers '
+                'no longer return Scheduler as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    # returns a Deferred that returns None
-    def enable(self, schedulerid, v):
-        def thd(conn):
+    def enable(self, schedulerid: int, v: bool) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             tbl = self.db.model.schedulers
             q = tbl.update().where(tbl.c.id == schedulerid)
             conn.execute(q.values(enabled=int(v)))
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns None
-    def classifyChanges(self, schedulerid, classifications):
-        def thd(conn):
+    def classifyChanges(
+        self, schedulerid: int, classifications: dict[int, bool]
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update().where(
@@ -62,9 +98,10 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns None
-    def flushChangeClassifications(self, schedulerid, less_than=None):
-        def thd(conn):
+    def flushChangeClassifications(
+        self, schedulerid: int, less_than: int | None = None
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             sch_ch_tbl = self.db.model.scheduler_changes
             wc = sch_ch_tbl.c.schedulerid == schedulerid
             if less_than is not None:
@@ -74,13 +111,17 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
     def getChangeClassifications(
-        self, schedulerid, branch=-1, repository=-1, project=-1, codebase=-1
-    ):
+        self,
+        schedulerid: int,
+        branch: str | None | Literal[-1] = -1,
+        repository: str | None | Literal[-1] = -1,
+        project: str | None | Literal[-1] = -1,
+        codebase: str | None | Literal[-1] = -1,
+    ) -> defer.Deferred[dict[int, bool]]:
         # -1 here stands for "argument not given", since None has meaning
         # as a branch
-        def thd(conn):
+        def thd(conn) -> dict[int, bool]:
             sch_ch_tbl = self.db.model.scheduler_changes
             ch_tbl = self.db.model.changes
 
@@ -109,7 +150,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def findSchedulerId(self, name):
+    def findSchedulerId(self, name: str) -> int:
         tbl = self.db.model.schedulers
         name_hash = self.hashColumns(name)
         return self.findSomethingId(
@@ -118,9 +159,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             insert_values={"name": name, "name_hash": name_hash},
         )
 
-    # returns a Deferred that returns None
-    def setSchedulerMaster(self, schedulerid, masterid):
-        def thd(conn):
+    def setSchedulerMaster(self, schedulerid: int, masterid: int | None) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             sch_mst_tbl = self.db.model.scheduler_masters
 
             # handle the masterid=None case to get it out of the way
@@ -157,15 +197,19 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getScheduler(self, schedulerid):
+    def getScheduler(self, schedulerid: int):
         sch = yield self.getSchedulers(_schedulerid=schedulerid)
         if sch:
             return sch[0]
         return None
 
-    # returns a Deferred that returns a value
-    def getSchedulers(self, active=None, masterid=None, _schedulerid=None):
-        def thd(conn):
+    def getSchedulers(
+        self,
+        active: bool | None = None,
+        masterid: int | None = None,
+        _schedulerid: int | None = None,
+    ) -> defer.Deferred[list[SchedulerModel]]:
+        def thd(conn) -> list[SchedulerModel]:
             sch_tbl = self.db.model.schedulers
             sch_mst_tbl = self.db.model.scheduler_masters
 
@@ -197,14 +241,14 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if wc is not None:
                 q = q.where(wc)
 
-            return [
-                {
-                    "id": row.id,
-                    "name": row.name,
-                    "enabled": bool(row.enabled),
-                    "masterid": row.masterid,
-                }
-                for row in conn.execute(q).fetchall()
-            ]
+            return [self._model_from_row(row) for row in conn.execute(q).fetchall()]
 
         return self.db.pool.do(thd)
+
+    def _model_from_row(self, row):
+        return SchedulerModel(
+            id=row.id,
+            name=row.name,
+            enabled=bool(row.enabled),
+            masterid=row.masterid,
+        )

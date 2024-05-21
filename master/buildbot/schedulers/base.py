@@ -128,7 +128,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         schedulerData = yield self._getScheduler(self.serviceid)
 
         if schedulerData:
-            self.enabled = schedulerData['enabled']
+            self.enabled = schedulerData.enabled
 
         if not self._enable_consumer:
             yield self.startConsumingEnableEvents()

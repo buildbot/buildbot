@@ -18,6 +18,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.db.schedulers import SchedulerModel
 from buildbot.schedulers import base
 from buildbot.schedulers import manager
 
@@ -43,7 +44,14 @@ class SchedulerManager(unittest.TestCase):
         self.master.db.state.getObjectId = getObjectId
 
         def getScheduler(sched_id):
-            return defer.succeed({"enabled": True})
+            return defer.succeed(
+                SchedulerModel(
+                    id=sched_id,
+                    name=f"test-{sched_id}",
+                    enabled=True,
+                    masterid=None,
+                )
+            )
 
         self.master.db.schedulers.getScheduler = getScheduler
 

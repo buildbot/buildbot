@@ -1,0 +1,1 @@
+:class:`SchedulersConnectorComponent` `getScheduler`, and `getSchedulers` now return a :class`SchedulerModel` instead of a dictionary of Scheduler data
