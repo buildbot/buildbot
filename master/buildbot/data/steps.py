@@ -33,7 +33,7 @@ class Db2DataMixin:
             'complete_at': dbdict['complete_at'],
             'state_string': dbdict['state_string'],
             'results': dbdict['results'],
-            'urls': dbdict['urls'],
+            'urls': [{'name': url['name'], 'url': url['url']} for url in dbdict['urls']],
             'hidden': dbdict['hidden'],
         }
         return defer.succeed(data)

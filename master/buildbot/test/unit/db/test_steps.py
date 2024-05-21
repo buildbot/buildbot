@@ -23,7 +23,6 @@ from buildbot.db import steps
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
 
 TIME1 = 1304262222
@@ -74,45 +73,45 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Step(id=73, number=0, name='wrong-build', buildid=31),
     ]
     stepDicts = [
-        {
-            'id': 70,
-            'buildid': 30,
-            'number': 0,
-            'name': 'one',
-            'results': 0,
-            'started_at': epoch2datetime(TIME1),
-            "locks_acquired_at": epoch2datetime(TIME2),
-            'complete_at': epoch2datetime(TIME3),
-            'state_string': 'test',
-            'urls': [],
-            'hidden': False,
-        },
-        {
-            'id': 71,
-            'buildid': 30,
-            'number': 1,
-            'name': 'two',
-            'results': 2,
-            'started_at': epoch2datetime(TIME2),
-            "locks_acquired_at": epoch2datetime(TIME3),
-            'complete_at': epoch2datetime(TIME4),
-            'state_string': 'test',
-            'urls': [{'name': 'url', 'url': 'http://url'}],
-            'hidden': True,
-        },
-        {
-            'id': 72,
-            'buildid': 30,
-            'number': 2,
-            'name': 'three',
-            'results': None,
-            'started_at': epoch2datetime(TIME5),
-            "locks_acquired_at": None,
-            'complete_at': None,
-            'state_string': '',
-            'urls': [],
-            'hidden': False,
-        },
+        steps.StepModel(
+            id=70,
+            buildid=30,
+            number=0,
+            name='one',
+            results=0,
+            started_at=epoch2datetime(TIME1),
+            locks_acquired_at=epoch2datetime(TIME2),
+            complete_at=epoch2datetime(TIME3),
+            state_string='test',
+            urls=[],
+            hidden=False,
+        ),
+        steps.StepModel(
+            id=71,
+            buildid=30,
+            number=1,
+            name='two',
+            results=2,
+            started_at=epoch2datetime(TIME2),
+            locks_acquired_at=epoch2datetime(TIME3),
+            complete_at=epoch2datetime(TIME4),
+            state_string='test',
+            urls=[steps.UrlModel(name='url', url='http://url')],
+            hidden=True,
+        ),
+        steps.StepModel(
+            id=72,
+            buildid=30,
+            number=2,
+            name='three',
+            results=None,
+            started_at=epoch2datetime(TIME5),
+            locks_acquired_at=None,
+            complete_at=None,
+            state_string='',
+            urls=[],
+            hidden=False,
+        ),
     ]
 
     # signature tests
@@ -153,7 +152,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getStep(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[0]])
         stepdict = yield self.db.steps.getStep(70)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict, self.stepDicts[0])
 
     @defer.inlineCallbacks
@@ -165,8 +164,8 @@ class Tests(interfaces.InterfaceTests):
     def test_getStep_number(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[1]])
         stepdict = yield self.db.steps.getStep(buildid=30, number=1)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict['id'], 71)
+        self.assertIsInstance(stepdict, steps.StepModel)
+        self.assertEqual(stepdict.id, 71)
 
     @defer.inlineCallbacks
     def test_getStep_number_missing(self):
@@ -178,8 +177,8 @@ class Tests(interfaces.InterfaceTests):
     def test_getStep_name(self):
         yield self.insert_test_data(self.backgroundData + [self.stepRows[2]])
         stepdict = yield self.db.steps.getStep(buildid=30, name='three')
-        validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict['id'], 72)
+        self.assertIsInstance(stepdict, steps.StepModel)
+        self.assertEqual(stepdict.id, 72)
 
     @defer.inlineCallbacks
     def test_getStep_name_missing(self):
@@ -198,7 +197,7 @@ class Tests(interfaces.InterfaceTests):
         stepdicts = yield self.db.steps.getSteps(buildid=30)
 
         for stepdict in stepdicts:
-            validation.verifyDbDict(self, 'stepdict', stepdict)
+            self.assertIsInstance(stepdict, steps.StepModel)
 
         self.assertEqual(stepdicts, self.stepDicts[:3])
 
@@ -217,22 +216,22 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(
             stepdict,
-            {
-                'id': stepid,
-                'buildid': 30,
-                'name': 'new',
-                'number': 0,
-                'started_at': epoch2datetime(TIME1),
-                "locks_acquired_at": None,
-                'complete_at': None,
-                'results': None,
-                'state_string': 'new',
-                'urls': [],
-                'hidden': False,
-            },
+            steps.StepModel(
+                id=stepid,
+                buildid=30,
+                name='new',
+                number=0,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=None,
+                complete_at=None,
+                results=None,
+                state_string='new',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -244,22 +243,22 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=True)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(
             stepdict,
-            {
-                "id": stepid,
-                "buildid": 30,
-                "name": "new",
-                "number": 0,
-                "started_at": epoch2datetime(TIME1),
-                "locks_acquired_at": epoch2datetime(TIME1),
-                "complete_at": None,
-                "results": None,
-                "state_string": "new",
-                "urls": [],
-                "hidden": False,
-            },
+            steps.StepModel(
+                id=stepid,
+                buildid=30,
+                name="new",
+                number=0,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=epoch2datetime(TIME1),
+                complete_at=None,
+                results=None,
+                state_string="new",
+                urls=[],
+                hidden=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -272,22 +271,22 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.steps.set_step_locks_acquired_at(stepid=stepid, locks_acquired_at=TIME2)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
+        self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(
             stepdict,
-            {
-                'id': stepid,
-                'buildid': 30,
-                'name': 'new',
-                'number': 0,
-                'started_at': epoch2datetime(TIME1),
-                "locks_acquired_at": epoch2datetime(TIME2),
-                'complete_at': None,
-                'results': None,
-                'state_string': 'new',
-                'urls': [],
-                'hidden': False,
-            },
+            steps.StepModel(
+                id=stepid,
+                buildid=30,
+                name='new',
+                number=0,
+                started_at=epoch2datetime(TIME1),
+                locks_acquired_at=epoch2datetime(TIME2),
+                complete_at=None,
+                results=None,
+                state_string='new',
+                urls=[],
+                hidden=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -299,9 +298,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (1, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict['number'], number)
-        self.assertEqual(stepdict['name'], name)
+        self.assertIsInstance(stepdict, steps.StepModel)
+        self.assertEqual(stepdict.number, number)
+        self.assertEqual(stepdict.name, name)
 
     @defer.inlineCallbacks
     def test_addStep_getStep_name_collisions(self):
@@ -320,9 +319,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (4, 'new_3'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict['number'], number)
-        self.assertEqual(stepdict['name'], name)
+        self.assertIsInstance(stepdict, steps.StepModel)
+        self.assertEqual(stepdict.number, number)
+        self.assertEqual(stepdict.name, name)
 
     @defer.inlineCallbacks
     def test_setStepStateString(self):
@@ -337,7 +336,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.steps.addURL(stepid=72, name='foo', url='bar')
 
         stepdict = yield self.db.steps.getStep(stepid=72)
-        self.assertEqual(stepdict['urls'], [{'name': 'foo', 'url': 'bar'}])
+        self.assertEqual(stepdict.urls, [steps.UrlModel(name='foo', url='bar')])
 
     @defer.inlineCallbacks
     def test_addURL_race(self):
@@ -357,8 +356,11 @@ class Tests(interfaces.InterfaceTests):
 
         # order is not guaranteed though
         self.assertEqual(
-            sorted(stepdict['urls'], key=urlKey),
-            sorted([{'name': 'foo', 'url': 'bar'}, {'name': 'foo2', 'url': 'bar2'}], key=urlKey),
+            sorted(stepdict.urls, key=urlKey),
+            sorted(
+                [steps.UrlModel(name='foo', url='bar'), steps.UrlModel(name='foo2', url='bar2')],
+                key=urlKey,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -371,7 +373,7 @@ class Tests(interfaces.InterfaceTests):
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 
-        self.assertEqual(stepdict['urls'], [{'name': 'foo', 'url': 'bar'}])
+        self.assertEqual(stepdict.urls, [steps.UrlModel(name='foo', url='bar')])
 
     @defer.inlineCallbacks
     def test_finishStep(self):
@@ -408,9 +410,9 @@ class RealTests(Tests):
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (2, 'a' * 48 + '_2'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict['number'], number)
-        self.assertEqual(stepdict['name'], name)
+        self.assertIsInstance(stepdict, steps.StepModel)
+        self.assertEqual(stepdict.number, number)
+        self.assertEqual(stepdict.name, name)
 
     @defer.inlineCallbacks
     def test_addStep_getStep_name_collisions_too_long_extra_digits(self):
@@ -434,9 +436,9 @@ class RealTests(Tests):
         yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (100, 'a' * 46 + '_100'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
-        validation.verifyDbDict(self, 'stepdict', stepdict)
-        self.assertEqual(stepdict['number'], number)
-        self.assertEqual(stepdict['name'], name)
+        self.assertIsInstance(stepdict, steps.StepModel)
+        self.assertEqual(stepdict.number, number)
+        self.assertEqual(stepdict.name, name)
 
 
 class TestFakeDB(Tests, unittest.TestCase, connector_component.FakeConnectorComponentMixin):

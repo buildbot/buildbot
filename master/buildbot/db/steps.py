@@ -13,14 +13,76 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    import datetime
+
+
+@dataclass
+class UrlModel:
+    name: str
+    url: str
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'StepsConnectorComponent '
+                'getStep, and getSteps '
+                'no longer return Step as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@dataclass
+class StepModel:
+    id: int
+    number: int
+    name: str
+    buildid: int
+    started_at: datetime.datetime | None
+    locks_acquired_at: datetime.datetime | None
+    complete_at: datetime.datetime | None
+    state_string: str
+    results: int | None
+    urls: list[UrlModel]
+    hidden: bool = False
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'StepsConnectorComponent '
+                'getStep, and getSteps '
+                'no longer return Step as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 class StepsConnectorComponent(base.DBConnectorComponent):
@@ -49,7 +111,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._stepdictFromRow(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
@@ -63,7 +125,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = q.where(tbl.c.buildid == buildid)
             q = q.order_by(tbl.c.number)
             res = conn.execute(q)
-            return [self._stepdictFromRow(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
@@ -193,17 +255,17 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _stepdictFromRow(self, row):
-        return {
-            "id": row.id,
-            "number": row.number,
-            "name": row.name,
-            "buildid": row.buildid,
-            "started_at": epoch2datetime(row.started_at),
-            "locks_acquired_at": epoch2datetime(row.locks_acquired_at),
-            "complete_at": epoch2datetime(row.complete_at),
-            "state_string": row.state_string,
-            "results": row.results,
-            "urls": json.loads(row.urls_json),
-            "hidden": bool(row.hidden),
-        }
+    def _model_from_row(self, row):
+        return StepModel(
+            id=row.id,
+            number=row.number,
+            name=row.name,
+            buildid=row.buildid,
+            started_at=epoch2datetime(row.started_at),
+            locks_acquired_at=epoch2datetime(row.locks_acquired_at),
+            complete_at=epoch2datetime(row.complete_at),
+            state_string=row.state_string,
+            results=row.results,
+            urls=[UrlModel(item['name'], item['url']) for item in json.loads(row.urls_json)],
+            hidden=bool(row.hidden),
+        )
