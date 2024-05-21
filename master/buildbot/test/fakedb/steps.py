@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 
 from twisted.internet import defer
@@ -93,7 +95,13 @@ class FakeStepsComponent(FakeDBComponent):
             hidden=bool(row['hidden']),
         )
 
-    def getStep(self, stepid=None, buildid=None, number=None, name=None):
+    def getStep(
+        self,
+        stepid: int | None = None,
+        buildid: int | None = None,
+        number: int | None = None,
+        name: str | None = None,
+    ) -> defer.Deferred[StepModel | None]:
         if stepid is not None:
             row = self.steps.get(stepid)
             if not row:
@@ -112,7 +120,7 @@ class FakeStepsComponent(FakeDBComponent):
                 return defer.succeed(self._model_from_row(row))
             return defer.succeed(None)
 
-    def getSteps(self, buildid):
+    def getSteps(self, buildid) -> defer.Deferred[list[StepModel]]:
         ret = []
 
         for row in self.steps.values():
