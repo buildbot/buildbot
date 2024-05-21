@@ -16,6 +16,7 @@
 from twisted.internet import defer
 
 from buildbot.db.test_result_sets import TestResultSetAlreadyCompleted
+from buildbot.db.test_result_sets import TestResultSetModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
@@ -79,16 +80,24 @@ class FakeTestResultSetsComponent(FakeDBComponent):
         }
         return defer.succeed(id)
 
-    def _row2dict(self, row):
-        row = row.copy()
-        row['complete'] = bool(row['complete'])
-        return row
+    def _model_from_row(self, row):
+        return TestResultSetModel(
+            id=row['id'],
+            builderid=row['builderid'],
+            buildid=row['buildid'],
+            stepid=row['stepid'],
+            description=row['description'],
+            category=row['category'],
+            value_unit=row['value_unit'],
+            tests_passed=row['tests_passed'],
+            tests_failed=row['tests_failed'],
+            complete=bool(row['complete']),
+        )
 
-    # returns a Deferred
     def getTestResultSet(self, test_result_setid):
         if test_result_setid not in self.result_sets:
             return defer.succeed(None)
-        return defer.succeed(self._row2dict(self.result_sets[test_result_setid]))
+        return defer.succeed(self._model_from_row(self.result_sets[test_result_setid]))
 
     # returns a Deferred
     def getTestResultSets(
@@ -104,7 +113,7 @@ class FakeTestResultSetsComponent(FakeDBComponent):
                 continue
             if complete is not None and row['complete'] != complete:
                 continue
-            ret.append(self._row2dict(row))
+            ret.append(self._model_from_row(row))
 
         if result_spec is not None:
             ret = self.applyResultSpec(ret, result_spec)

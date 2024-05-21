@@ -870,6 +870,7 @@ templateCache
 templating
 testability
 TestResultModel
+TestResultSetModel
 testsuite
 textarea
 tgrid

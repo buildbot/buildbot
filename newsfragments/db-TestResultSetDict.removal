@@ -1,0 +1,1 @@
+:class:`buildbot.db.test_result_sets.TestResultSetDict` is deprecated in favor of :class:`buildbot.db.test_result_sets.TestResultSetModel`

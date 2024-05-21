@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import test_result_sets
+from buildbot.db.test_result_sets import TestResultSetModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -198,18 +199,18 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         result = yield self.master.db.test_result_sets.getTestResultSet(test_result_setid)
         self.assertEqual(
             result,
-            {
-                'id': test_result_setid,
-                'builderid': 1,
-                'buildid': 2,
-                'stepid': 3,
-                'description': 'desc',
-                'category': 'cat4',
-                'value_unit': 'ms',
-                'tests_passed': None,
-                'tests_failed': None,
-                'complete': False,
-            },
+            TestResultSetModel(
+                id=test_result_setid,
+                builderid=1,
+                buildid=2,
+                stepid=3,
+                description='desc',
+                category='cat4',
+                value_unit='ms',
+                tests_passed=None,
+                tests_failed=None,
+                complete=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -240,18 +241,18 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         result = yield self.master.db.test_result_sets.getTestResultSet(test_result_setid)
         self.assertEqual(
             result,
-            {
-                'id': test_result_setid,
-                'builderid': 1,
-                'buildid': 2,
-                'stepid': 3,
-                'description': 'desc',
-                'category': 'cat4',
-                'value_unit': 'ms',
-                'tests_passed': None,
-                'tests_failed': None,
-                'complete': True,
-            },
+            TestResultSetModel(
+                id=test_result_setid,
+                builderid=1,
+                buildid=2,
+                stepid=3,
+                description='desc',
+                category='cat4',
+                value_unit='ms',
+                tests_passed=None,
+                tests_failed=None,
+                complete=True,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -282,16 +283,16 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         result = yield self.master.db.test_result_sets.getTestResultSet(test_result_setid)
         self.assertEqual(
             result,
-            {
-                'id': test_result_setid,
-                'builderid': 1,
-                'buildid': 2,
-                'stepid': 3,
-                'description': 'desc',
-                'category': 'cat4',
-                'value_unit': 'ms',
-                'tests_passed': 12,
-                'tests_failed': 34,
-                'complete': True,
-            },
+            TestResultSetModel(
+                id=test_result_setid,
+                builderid=1,
+                buildid=2,
+                stepid=3,
+                description='desc',
+                category='cat4',
+                value_unit='ms',
+                tests_passed=12,
+                tests_failed=34,
+                complete=True,
+            ),
         )

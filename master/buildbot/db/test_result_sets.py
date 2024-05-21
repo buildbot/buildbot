@@ -13,12 +13,51 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from twisted.internet import defer
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
 
 
-class TestResultSetDict(dict):
+@dataclass
+class TestResultSetModel:
+    id: int
+    builderid: int
+    buildid: int
+    stepid: int
+    description: str | None
+    category: str
+    value_unit: str
+    tests_passed: int | None
+    tests_failed: int | None
+    complete: bool = False
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'TestResultSetsConnectorComponent '
+                'getTestResultSet, and getTestResultSets '
+                'no longer return TestResultSet as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), TestResultSetModel)
+class TestResultSetDict(TestResultSetModel):
     pass
 
 
@@ -59,7 +98,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            return self._thd_row2dict(conn, row)
+            return self._model_from_row(row)
 
         res = yield self.db.pool.do(thd)
         return res
@@ -78,9 +117,9 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             if complete is not None:
                 q = q.where(sets_table.c.complete == (1 if complete else 0))
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda x: self._thd_row2dict(conn, x))
+                return result_spec.thd_execute(conn, q, self._model_from_row)
             res = conn.execute(q)
-            return [self._thd_row2dict(conn, row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         res = yield self.db.pool.do(thd)
         return res
@@ -108,8 +147,8 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    def _thd_row2dict(self, conn, row):
-        return TestResultSetDict(
+    def _model_from_row(self, row):
+        return TestResultSetModel(
             id=row.id,
             builderid=row.builderid,
             buildid=row.buildid,
