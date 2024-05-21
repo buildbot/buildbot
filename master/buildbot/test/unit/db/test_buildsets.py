@@ -26,7 +26,6 @@ from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
@@ -100,22 +99,17 @@ class Tests(interfaces.InterfaceTests):
 
         # TODO: verify buildrequests too
         bsdict = yield self.db.buildsets.getBuildset(bsid)
-        validation.verifyDbDict(self, 'bsdict', bsdict)
+        self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             bsdict,
-            {
-                "external_idstring": 'extid',
-                "reason": 'because',
-                "sourcestamps": [234],
-                "submitted_at": datetime.datetime(1970, 4, 18, 7, 39, 19, tzinfo=UTC),
-                "complete": False,
-                "complete_at": None,
-                "results": -1,
-                "rebuilt_buildid": None,
-                "parent_buildid": None,
-                "parent_relationship": None,
-                "bsid": bsid,
-            },
+            buildsets.BuildSetModel(
+                bsid=bsid,
+                external_idstring='extid',
+                reason='because',
+                submitted_at=datetime.datetime(1970, 4, 18, 7, 39, 19, tzinfo=UTC),
+                results=-1,
+                sourcestamps=[234],
+            ),
         )
 
     @defer.inlineCallbacks
@@ -131,22 +125,17 @@ class Tests(interfaces.InterfaceTests):
         )
         bsdict = yield self.db.buildsets.getBuildset(bsid_brids[0])
 
-        validation.verifyDbDict(self, 'bsdict', bsdict)
+        self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             bsdict,
-            {
-                "external_idstring": 'extid',
-                "reason": 'because',
-                "sourcestamps": [234],
-                "submitted_at": datetime.datetime(1970, 4, 13, 21, 8, 8, tzinfo=UTC),
-                "complete": False,
-                "complete_at": None,
-                "results": -1,
-                "rebuilt_buildid": None,
-                "parent_buildid": None,
-                "parent_relationship": None,
-                "bsid": bsdict['bsid'],
-            },
+            buildsets.BuildSetModel(
+                bsid=bsid_brids[0],
+                external_idstring='extid',
+                reason='because',
+                sourcestamps=[234],
+                submitted_at=datetime.datetime(1970, 4, 13, 21, 8, 8, tzinfo=UTC),
+                results=-1,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -200,22 +189,19 @@ class Tests(interfaces.InterfaceTests):
         ])
         bsdict = yield self.db.buildsets.getBuildset(91)
 
-        validation.verifyDbDict(self, 'bsdict', bsdict)
+        self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             bsdict,
-            {
-                "external_idstring": 'extid',
-                "reason": 'rsn',
-                "sourcestamps": [234],
-                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
-                "complete": False,
-                "complete_at": epoch2datetime(0),
-                "results": -1,
-                "bsid": 91,
-                "rebuilt_buildid": None,
-                "parent_buildid": None,
-                "parent_relationship": None,
-            },
+            buildsets.BuildSetModel(
+                bsid=91,
+                external_idstring='extid',
+                reason='rsn',
+                sourcestamps=[234],
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                complete=False,
+                complete_at=epoch2datetime(0),
+                results=-1,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -234,22 +220,19 @@ class Tests(interfaces.InterfaceTests):
         ])
         bsdict = yield self.db.buildsets.getBuildset(91)
 
-        validation.verifyDbDict(self, 'bsdict', bsdict)
+        self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             bsdict,
-            {
-                "external_idstring": 'extid',
-                "reason": 'rsn',
-                "sourcestamps": [234],
-                "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
-                "complete": True,
-                "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
-                "results": -1,
-                "bsid": 91,
-                "rebuilt_buildid": None,
-                "parent_buildid": None,
-                "parent_relationship": None,
-            },
+            buildsets.BuildSetModel(
+                bsid=91,
+                external_idstring='extid',
+                reason='rsn',
+                sourcestamps=[234],
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                complete=True,
+                complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                results=-1,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -294,40 +277,34 @@ class Tests(interfaces.InterfaceTests):
         bsdictlist = yield self.db.buildsets.getBuildsets()
 
         def bsdictKey(bsdict):
-            return bsdict['reason']
+            return bsdict.reason
 
         for bsdict in bsdictlist:
-            validation.verifyDbDict(self, 'bsdict', bsdict)
+            self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             sorted(bsdictlist, key=bsdictKey),
             sorted(
                 [
-                    {
-                        "external_idstring": 'extid',
-                        "reason": 'rsn1',
-                        "sourcestamps": [234],
-                        "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
-                        "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
-                        "complete": False,
-                        "results": -1,
-                        "bsid": 91,
-                        "rebuilt_buildid": None,
-                        "parent_buildid": None,
-                        "parent_relationship": None,
-                    },
-                    {
-                        "external_idstring": 'extid',
-                        "reason": 'rsn2',
-                        "sourcestamps": [234],
-                        "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
-                        "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
-                        "complete": True,
-                        "results": 7,
-                        "bsid": 92,
-                        "rebuilt_buildid": None,
-                        "parent_buildid": None,
-                        "parent_relationship": None,
-                    },
+                    buildsets.BuildSetModel(
+                        bsid=91,
+                        external_idstring='extid',
+                        reason='rsn1',
+                        sourcestamps=[234],
+                        submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                        complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                        complete=False,
+                        results=-1,
+                    ),
+                    buildsets.BuildSetModel(
+                        bsid=92,
+                        external_idstring='extid',
+                        reason='rsn2',
+                        sourcestamps=[234],
+                        submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                        complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                        complete=True,
+                        results=7,
+                    ),
                 ],
                 key=bsdictKey,
             ),
@@ -339,23 +316,20 @@ class Tests(interfaces.InterfaceTests):
         bsdictlist = yield self.db.buildsets.getBuildsets(complete=True)
 
         for bsdict in bsdictlist:
-            validation.verifyDbDict(self, 'bsdict', bsdict)
+            self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             bsdictlist,
             [
-                {
-                    "external_idstring": 'extid',
-                    "reason": 'rsn2',
-                    "sourcestamps": [234],
-                    "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
-                    "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
-                    "complete": True,
-                    "results": 7,
-                    "bsid": 92,
-                    "rebuilt_buildid": None,
-                    "parent_buildid": None,
-                    "parent_relationship": None,
-                },
+                buildsets.BuildSetModel(
+                    bsid=92,
+                    external_idstring='extid',
+                    reason='rsn2',
+                    sourcestamps=[234],
+                    submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                    complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                    complete=True,
+                    results=7,
+                ),
             ],
         )
 
@@ -365,23 +339,20 @@ class Tests(interfaces.InterfaceTests):
         bsdictlist = yield self.db.buildsets.getBuildsets(complete=False)
 
         for bsdict in bsdictlist:
-            validation.verifyDbDict(self, 'bsdict', bsdict)
+            self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
             bsdictlist,
             [
-                {
-                    "external_idstring": 'extid',
-                    "reason": 'rsn1',
-                    "sourcestamps": [234],
-                    "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
-                    "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
-                    "complete": False,
-                    "results": -1,
-                    "bsid": 91,
-                    "rebuilt_buildid": None,
-                    "parent_buildid": None,
-                    "parent_relationship": None,
-                },
+                buildsets.BuildSetModel(
+                    bsid=91,
+                    external_idstring='extid',
+                    reason='rsn1',
+                    sourcestamps=[234],
+                    submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                    complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                    complete=False,
+                    results=-1,
+                ),
             ],
         )
 
@@ -403,10 +374,10 @@ class Tests(interfaces.InterfaceTests):
 
         bsdicts = [
             (
-                bsdict['bsid'],
-                bsdict['complete'],
-                datetime2epoch(bsdict['complete_at']),
-                bsdict['results'],
+                bsdict.bsid,
+                bsdict.complete,
+                datetime2epoch(bsdict.complete_at),
+                bsdict.results,
             )
             for bsdict in bsdicts
         ]
@@ -422,10 +393,10 @@ class Tests(interfaces.InterfaceTests):
 
         bsdicts = [
             (
-                bsdict['bsid'],
-                bsdict['complete'],
-                datetime2epoch(bsdict['complete_at']),
-                bsdict['results'],
+                bsdict.bsid,
+                bsdict.complete,
+                datetime2epoch(bsdict.complete_at),
+                bsdict.results,
             )
             for bsdict in bsdicts
         ]
@@ -476,32 +447,26 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(
             bsdictlist,
             [
-                {
-                    "external_idstring": 'extid',
-                    "reason": 'rsn1',
-                    "sourcestamps": [91],
-                    "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
-                    "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
-                    "complete": False,
-                    "results": -1,
-                    "bsid": 91,
-                    "rebuilt_buildid": None,
-                    "parent_buildid": None,
-                    "parent_relationship": None,
-                },
-                {
-                    "external_idstring": 'extid',
-                    "reason": 'rsn2',
-                    "sourcestamps": [91],
-                    "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
-                    "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
-                    "complete": True,
-                    "results": 7,
-                    "bsid": 92,
-                    "rebuilt_buildid": None,
-                    "parent_buildid": None,
-                    "parent_relationship": None,
-                },
+                buildsets.BuildSetModel(
+                    bsid=91,
+                    external_idstring='extid',
+                    reason='rsn1',
+                    sourcestamps=[91],
+                    submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                    complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15, tzinfo=UTC),
+                    complete=False,
+                    results=-1,
+                ),
+                buildsets.BuildSetModel(
+                    bsid=92,
+                    external_idstring='extid',
+                    reason='rsn2',
+                    sourcestamps=[91],
+                    submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                    complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                    complete=True,
+                    results=7,
+                ),
             ],
         )
 
@@ -515,19 +480,16 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(
             bsdictlist,
             [
-                {
-                    "external_idstring": 'extid',
-                    "reason": 'rsn2',
-                    "sourcestamps": [91],
-                    "submitted_at": datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
-                    "complete_at": datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
-                    "complete": True,
-                    "results": 7,
-                    "bsid": 92,
-                    "rebuilt_buildid": None,
-                    "parent_buildid": None,
-                    "parent_relationship": None,
-                },
+                buildsets.BuildSetModel(
+                    bsid=92,
+                    external_idstring='extid',
+                    reason='rsn2',
+                    sourcestamps=[91],
+                    submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16, tzinfo=UTC),
+                    complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16, tzinfo=UTC),
+                    complete=True,
+                    results=7,
+                ),
             ],
         )
 

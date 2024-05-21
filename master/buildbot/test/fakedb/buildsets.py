@@ -198,13 +198,15 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildsets[bsid]['complete_at'] = complete_at
         return defer.succeed(None)
 
-    def getBuildset(self, bsid):
+    def getBuildset(self, bsid: int) -> defer.Deferred[buildsets.BuildSetModel | None]:
         if bsid not in self.buildsets:
             return defer.succeed(None)
         row = self.buildsets[bsid]
-        return defer.succeed(self._row2dict(row))
+        return defer.succeed(self._model_from_row(row))
 
-    def getBuildsets(self, complete=None, resultSpec=None):
+    def getBuildsets(
+        self, complete: bool | None = None, resultSpec=None
+    ) -> defer.Deferred[list[buildsets.BuildSetModel]]:
         rv = []
         for bs in self.buildsets.values():
             if complete is not None:
@@ -217,7 +219,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if resultSpec is not None:
             rv = self.applyResultSpec(rv, resultSpec)
 
-        rv = [self._row2dict(bs) for bs in rv]
+        rv = [self._model_from_row(bs) for bs in rv]
         return defer.succeed(rv)
 
     @defer.inlineCallbacks
@@ -228,10 +230,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for bs in (yield self.getBuildsets(complete=complete)):
             if branch or repository:
                 ok = True
-                if not bs['sourcestamps']:
+                if not bs.sourcestamps:
                     # no sourcestamps -> no match
                     ok = False
-                for ssid in bs['sourcestamps']:
+                for ssid in bs.sourcestamps:
                     ss: SourceStampModel = yield self.db.sourcestamps.getSourceStamp(ssid)
                     if branch and ss.branch != branch:
                         ok = False
@@ -243,20 +245,24 @@ class FakeBuildsetsComponent(FakeDBComponent):
             if ok:
                 rv.append(bs)
 
-        rv.sort(key=lambda bs: -bs['bsid'])
+        rv.sort(key=lambda bs: -bs.bsid)
 
         return list(reversed(rv[:count]))
 
-    def _row2dict(self, row):
-        row = row.copy()
-        row['complete_at'] = epoch2datetime(row['complete_at'])
-        row['submitted_at'] = epoch2datetime(row['submitted_at'])
-        row['complete'] = bool(row['complete'])
-        row['bsid'] = row['id']
-        row['sourcestamps'] = self.buildset_sourcestamps.get(row['id'], [])
-        del row['id']
-        del row['properties']
-        return row
+    def _model_from_row(self, row) -> buildsets.BuildSetModel:
+        return buildsets.BuildSetModel(
+            bsid=row['id'],
+            external_idstring=row['external_idstring'],
+            reason=row['reason'],
+            submitted_at=epoch2datetime(row['submitted_at']),
+            complete=bool(row['complete']),
+            complete_at=epoch2datetime(row['complete_at']),
+            results=row['results'],
+            parent_buildid=row['parent_buildid'],
+            parent_relationship=row['parent_relationship'],
+            rebuilt_buildid=row['rebuilt_buildid'],
+            sourcestamps=self.buildset_sourcestamps.get(row['id'], []),
+        )
 
     def getBuildsetProperties(self, key, no_cache=False):
         if key in self.buildsets:

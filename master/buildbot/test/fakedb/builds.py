@@ -200,9 +200,7 @@ class FakeBuildsComponent(FakeDBComponent):
         change_ssid = change['sourcestampid']
 
         change_buildsetids = set(
-            bset['bsid']
-            for bset in bsets
-            if any(change_ssid == ssid for ssid in bset['sourcestamps'])
+            bset.bsid for bset in bsets if any(change_ssid == ssid for ssid in bset.sourcestamps)
         )
 
         breqs = yield self.db.buildrequests.getBuildRequests()

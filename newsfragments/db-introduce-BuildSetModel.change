@@ -1,0 +1,1 @@
+:class:`BuildsetsConnectorComponent` `getBuildset`, `getBuildsets`, and `getRecentBuildsets` now return a :class`BuildSetModel` instead of a dictionary of BuildSet data

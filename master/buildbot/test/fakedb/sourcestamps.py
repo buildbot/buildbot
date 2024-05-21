@@ -238,7 +238,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
             return []
 
         results = []
-        for ssid in bset["sourcestamps"]:
+        for ssid in bset.sourcestamps:
             results.append((yield self.getSourceStamp(ssid)))
         return results
 
@@ -249,6 +249,6 @@ class FakeSourceStampsComponent(FakeDBComponent):
         bset = yield self.db.buildsets.getBuildset(breq.buildsetid)
 
         results = []
-        for ssid in bset['sourcestamps']:
+        for ssid in bset.sourcestamps:
             results.append((yield self.getSourceStamp(ssid)))
         return results
