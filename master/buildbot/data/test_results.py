@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 class Db2DataMixin:
     def db2data(self, model: TestResultModel):
-        data = {
+        return {
             'test_resultid': model.id,
             'builderid': model.builderid,
             'test_result_setid': model.test_result_setid,
@@ -39,7 +39,6 @@ class Db2DataMixin:
             'duration_ns': model.duration_ns,
             'value': model.value,
         }
-        return defer.succeed(data)
 
 
 class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
@@ -61,10 +60,7 @@ class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
             set_dbdict['builderid'], kwargs['test_result_setid'], result_spec=resultSpec
         )
 
-        results = []
-        for dbdict in result_dbdicts:
-            results.append((yield self.db2data(dbdict)))
-        return results
+        return [self.db2data(result) for result in result_dbdicts]
 
 
 class TestResult(base.ResourceType):
