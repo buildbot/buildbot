@@ -26,6 +26,8 @@ Buildsets connector
     * ``complete`` (boolean; true if all of the builds for this buildset are complete)
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
+    * ``parent_buildid`` (optional build id that is the parent for this buildset)
+    * ``parent_relationship`` (relationship identifier for the parent)
 
     .. py:method:: addBuildset(sourcestamps, reason, properties, builderids, rebuilt_buildid=None, external_idstring=None, parent_buildid=None, parent_relationship=None)
 
