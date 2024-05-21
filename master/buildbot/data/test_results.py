@@ -57,7 +57,7 @@ class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
             return []
 
         result_dbdicts = yield self.master.db.test_results.getTestResults(
-            set_dbdict['builderid'], kwargs['test_result_setid'], result_spec=resultSpec
+            set_dbdict.builderid, kwargs['test_result_setid'], result_spec=resultSpec
         )
 
         return [self.db2data(result) for result in result_dbdicts]

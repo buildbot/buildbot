@@ -20,7 +20,6 @@ from buildbot.db import test_result_sets
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
 class Tests(interfaces.InterfaceTests):
@@ -103,21 +102,21 @@ class Tests(interfaces.InterfaceTests):
             value_unit='ms',
         )
         set_dict = yield self.db.test_result_sets.getTestResultSet(set_id)
-        validation.verifyDbDict(self, 'test_result_setdict', set_dict)
+        self.assertIsInstance(set_dict, test_result_sets.TestResultSetModel)
         self.assertEqual(
             set_dict,
-            {
-                'id': set_id,
-                'builderid': 88,
-                'buildid': 30,
-                'stepid': 131,
-                'description': 'desc',
-                'category': 'cat',
-                'value_unit': 'ms',
-                'tests_failed': None,
-                'tests_passed': None,
-                'complete': False,
-            },
+            test_result_sets.TestResultSetModel(
+                id=set_id,
+                builderid=88,
+                buildid=30,
+                stepid=131,
+                description='desc',
+                category='cat',
+                value_unit='ms',
+                tests_failed=None,
+                tests_passed=None,
+                complete=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -189,24 +188,24 @@ class Tests(interfaces.InterfaceTests):
         )
 
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 93, 94, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 93, 94, 95])
         for d in set_dicts:
-            validation.verifyDbDict(self, 'test_result_setdict', d)
+            self.assertIsInstance(d, test_result_sets.TestResultSetModel)
 
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=89)
-        self.assertEqual([d['id'] for d in set_dicts], [92])
+        self.assertEqual([d.id for d in set_dicts], [92])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=30)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 94, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 94, 95])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=31)
-        self.assertEqual([d['id'] for d in set_dicts], [93])
+        self.assertEqual([d.id for d in set_dicts], [93])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, stepid=131)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 95])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, stepid=132)
-        self.assertEqual([d['id'] for d in set_dicts], [94])
+        self.assertEqual([d.id for d in set_dicts], [94])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, complete=True)
-        self.assertEqual([d['id'] for d in set_dicts], [93, 94])
+        self.assertEqual([d.id for d in set_dicts], [93, 94])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, complete=False)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 95])
 
     @defer.inlineCallbacks
     def test_get_set_from_data(self):
@@ -215,18 +214,18 @@ class Tests(interfaces.InterfaceTests):
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(
             set_dict,
-            {
-                'id': 91,
-                'builderid': 88,
-                'buildid': 30,
-                'stepid': 131,
-                'description': 'desc1',
-                'category': 'cat',
-                'value_unit': 'ms',
-                'tests_failed': None,
-                'tests_passed': None,
-                'complete': False,
-            },
+            test_result_sets.TestResultSetModel(
+                id=91,
+                builderid=88,
+                buildid=30,
+                stepid=131,
+                description='desc1',
+                category='cat',
+                value_unit='ms',
+                tests_failed=None,
+                tests_passed=None,
+                complete=False,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -250,18 +249,18 @@ class Tests(interfaces.InterfaceTests):
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(
             set_dict,
-            {
-                'id': 91,
-                'builderid': 88,
-                'buildid': 30,
-                'stepid': 131,
-                'description': 'desc1',
-                'category': 'cat',
-                'value_unit': 'ms',
-                'tests_failed': 2,
-                'tests_passed': 12,
-                'complete': True,
-            },
+            test_result_sets.TestResultSetModel(
+                id=91,
+                builderid=88,
+                buildid=30,
+                stepid=131,
+                description='desc1',
+                category='cat',
+                value_unit='ms',
+                tests_failed=2,
+                tests_passed=12,
+                complete=True,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -273,18 +272,18 @@ class Tests(interfaces.InterfaceTests):
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(
             set_dict,
-            {
-                'id': 91,
-                'builderid': 88,
-                'buildid': 30,
-                'stepid': 131,
-                'description': 'desc1',
-                'category': 'cat',
-                'value_unit': 'ms',
-                'tests_failed': None,
-                'tests_passed': None,
-                'complete': True,
-            },
+            test_result_sets.TestResultSetModel(
+                id=91,
+                builderid=88,
+                buildid=30,
+                stepid=131,
+                description='desc1',
+                category='cat',
+                value_unit='ms',
+                tests_failed=None,
+                tests_passed=None,
+                complete=True,
+            ),
         )
 
 

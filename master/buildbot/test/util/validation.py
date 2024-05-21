@@ -592,19 +592,6 @@ message['test_result_sets'].add(
     None, MessageValidator(events=[b'new', b'completed'], messageValidator=_test_result_set_msgdict)
 )
 
-dbdict['test_result_setdict'] = DictValidator(
-    id=IntValidator(),
-    builderid=IntValidator(),
-    buildid=IntValidator(),
-    stepid=IntValidator(),
-    description=NoneOk(StringValidator()),
-    category=StringValidator(),
-    value_unit=StringValidator(),
-    tests_passed=NoneOk(IntValidator()),
-    tests_failed=NoneOk(IntValidator()),
-    complete=BooleanValidator(),
-)
-
 # test results
 
 _test_results_msgdict = DictValidator(

@@ -13,12 +13,51 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from twisted.internet import defer
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
 
 
-class TestResultSetDict(dict):
+@dataclass
+class TestResultSetModel:
+    id: int
+    builderid: int
+    buildid: int
+    stepid: int
+    description: str | None
+    category: str
+    value_unit: str
+    tests_passed: int | None
+    tests_failed: int | None
+    complete: bool = False
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'TestResultSetsConnectorComponent '
+                'getTestResultSet, and getTestResultSets '
+                'no longer return TestResultSet as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), TestResultSetModel)
+class TestResultSetDict(TestResultSetModel):
     pass
 
 
@@ -27,10 +66,11 @@ class TestResultSetAlreadyCompleted(Exception):
 
 
 class TestResultSetsConnectorComponent(base.DBConnectorComponent):
-    @defer.inlineCallbacks
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+    def addTestResultSet(
+        self, builderid, buildid, stepid, description, category, value_unit
+    ) -> defer.Deferred[int]:
         # Returns the id of the new result set
-        def thd(conn):
+        def thd(conn) -> int:
             sets_table = self.db.model.test_result_sets
 
             insert_values = {
@@ -47,28 +87,29 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(q)
             return r.inserted_primary_key[0]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getTestResultSet(self, test_result_setid):
-        def thd(conn):
+    def getTestResultSet(self, test_result_setid: int) -> defer.Deferred[TestResultSetModel | None]:
+        def thd(conn) -> TestResultSetModel | None:
             sets_table = self.db.model.test_result_sets
             q = sets_table.select().where(sets_table.c.id == test_result_setid)
             res = conn.execute(q)
             row = res.fetchone()
             if not row:
                 return None
-            return self._thd_row2dict(conn, row)
+            return self._model_from_row(row)
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
     def getTestResultSets(
-        self, builderid, buildid=None, stepid=None, complete=None, result_spec=None
-    ):
-        def thd(conn):
+        self,
+        builderid: int,
+        buildid: int | None = None,
+        stepid: int | None = None,
+        complete: bool | None = None,
+        result_spec=None,
+    ) -> defer.Deferred[list[TestResultSetModel]]:
+        def thd(conn) -> list[TestResultSetModel]:
             sets_table = self.db.model.test_result_sets
             q = sets_table.select().where(sets_table.c.builderid == builderid)
             if buildid is not None:
@@ -78,16 +119,16 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             if complete is not None:
                 q = q.where(sets_table.c.complete == (1 if complete else 0))
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda x: self._thd_row2dict(conn, x))
+                return result_spec.thd_execute(conn, q, self._model_from_row)
             res = conn.execute(q)
-            return [self._thd_row2dict(conn, row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
-        def thd(conn):
+    def completeTestResultSet(
+        self, test_result_setid, tests_passed=None, tests_failed=None
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             sets_table = self.db.model.test_result_sets
 
             values = {'complete': 1}
@@ -106,10 +147,10 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
                     f'is already completed or does not exist'
                 )
 
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    def _thd_row2dict(self, conn, row):
-        return TestResultSetDict(
+    def _model_from_row(self, row):
+        return TestResultSetModel(
             id=row.id,
             builderid=row.builderid,
             buildid=row.buildid,

@@ -1,0 +1,1 @@
+:class:`TestResultSetsConnectorComponent` `getTestResultSet`, and `getTestResultSets` now return a :class`TestResultSetModel` instead of a dictionary of TestResultSet data

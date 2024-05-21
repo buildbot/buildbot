@@ -13,28 +13,33 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    from buildbot.db.test_result_sets import TestResultSetModel
+
 
 class Db2DataMixin:
-    def db2data(self, dbdict):
-        data = {
-            'test_result_setid': dbdict['id'],
-            'builderid': dbdict['builderid'],
-            'buildid': dbdict['buildid'],
-            'stepid': dbdict['stepid'],
-            'description': dbdict['description'],
-            'category': dbdict['category'],
-            'value_unit': dbdict['value_unit'],
-            'tests_passed': dbdict['tests_passed'],
-            'tests_failed': dbdict['tests_failed'],
-            'complete': bool(dbdict['complete']),
+    def db2data(self, model: TestResultSetModel):
+        return {
+            'test_result_setid': model.id,
+            'builderid': model.builderid,
+            'buildid': model.buildid,
+            'stepid': model.stepid,
+            'description': model.description,
+            'category': model.category,
+            'value_unit': model.value_unit,
+            'tests_passed': model.tests_passed,
+            'tests_failed': model.tests_failed,
+            'complete': model.complete,
         }
-        return defer.succeed(data)
 
 
 class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -77,10 +82,7 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
                 builderid, complete=complete, result_spec=resultSpec
             )
 
-        results = []
-        for dbdict in sets:
-            results.append((yield self.db2data(dbdict)))
-        return results
+        return [self.db2data(model) for model in sets]
 
 
 class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -91,8 +93,8 @@ class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint)
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        dbdict = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
-        return (yield self.db2data(dbdict)) if dbdict else None
+        model = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
+        return self.db2data(model) if model else None
 
 
 class TestResultSet(base.ResourceType):
