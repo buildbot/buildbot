@@ -14,22 +14,64 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+import dataclasses
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import identifiers
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 
-class UsDict(dict):
+@dataclasses.dataclass
+class UserModel:
+    uid: int
+    identifier: str
+    bb_username: str | None = None
+    bb_password: str | None = None
+    attributes: dict[str, str] | None = None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'UsersConnectorComponent '
+                'getUser, getUserByUsername, and getUsers '
+                'no longer return User as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        if self.attributes is not None and key in self.attributes:
+            return self.attributes[key]
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), UserModel)
+class UsDict(UserModel):
     pass
 
 
 class UsersConnectorComponent(base.DBConnectorComponent):
-    # returns a Deferred that returns a value
-    def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
+    def findUserByAttr(
+        self, identifier: str, attr_type: str, attr_data: str, _race_hook=None
+    ) -> defer.Deferred[int]:
         # note that since this involves two tables, self.findSomethingId is not
         # helpful
-        def thd(conn, no_recurse=False, identifier=identifier):
+        def thd(conn, no_recurse=False, identifier=identifier) -> int:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -86,10 +128,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
     @base.cached("usdicts")
-    def getUser(self, uid):
-        def thd(conn):
+    def getUser(self, uid: int) -> defer.Deferred[UserModel | None]:
+        def thd(conn) -> UserModel | None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -103,28 +144,25 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             q = tbl_info.select().where(tbl_info.c.uid == uid)
             rows = conn.execute(q).fetchall()
 
-            return self.thd_createUsDict(users_row, rows)
+            return self._model_from_row(users_row, rows)
 
         return self.db.pool.do(thd)
 
-    def thd_createUsDict(self, users_row, rows):
-        # make UsDict to return
-        usdict = UsDict()
-        for row in rows:
-            usdict[row.attr_type] = row.attr_data
-
-        # add the users_row data *after* the attributes in case attr_type
-        # matches one of these keys.
-        usdict['uid'] = users_row.uid
-        usdict['identifier'] = users_row.identifier
-        usdict['bb_username'] = users_row.bb_username
-        usdict['bb_password'] = users_row.bb_password
-
-        return usdict
+    def _model_from_row(self, users_row, attribute_rows=None):
+        attributes = None
+        if attribute_rows is not None:
+            attributes = {row.attr_type: row.attr_data for row in attribute_rows}
+        return UserModel(
+            uid=users_row.uid,
+            identifier=users_row.identifier,
+            bb_username=users_row.bb_username,
+            bb_password=users_row.bb_password,
+            attributes=attributes,
+        )
 
     # returns a Deferred that returns a value
-    def getUserByUsername(self, username):
-        def thd(conn):
+    def getUserByUsername(self, username: str | None) -> defer.Deferred[UserModel | None]:
+        def thd(conn) -> UserModel | None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -138,34 +176,28 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             q = tbl_info.select().where(tbl_info.c.uid == users_row.uid)
             rows = conn.execute(q).fetchall()
 
-            return self.thd_createUsDict(users_row, rows)
+            return self._model_from_row(users_row, rows)
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getUsers(self):
-        def thd(conn):
+    def getUsers(self) -> defer.Deferred[list[UserModel]]:
+        def thd(conn) -> list[UserModel]:
             tbl = self.db.model.users
             rows = conn.execute(tbl.select()).fetchall()
 
-            dicts = []
-            if rows:
-                for row in rows:
-                    ud = {"uid": row.uid, "identifier": row.identifier}
-                    dicts.append(ud)
-            return dicts
+            return [self._model_from_row(row, attribute_rows=None) for row in rows]
 
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
     def updateUser(
         self,
-        uid=None,
-        identifier=None,
-        bb_username=None,
-        bb_password=None,
-        attr_type=None,
-        attr_data=None,
+        uid: int | None = None,
+        identifier: str | None = None,
+        bb_username: str | None = None,
+        bb_password: str | None = None,
+        attr_type: str | None = None,
+        attr_data: str | None = None,
         _race_hook=None,
     ):
         def thd(conn):
@@ -240,8 +272,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def identifierToUid(self, identifier):
-        def thd(conn):
+    def identifierToUid(self, identifier) -> defer.Deferred[int | None]:
+        def thd(conn) -> int | None:
             tbl = self.db.model.users
 
             q = tbl.select().where(tbl.c.identifier == identifier)

@@ -56,29 +56,34 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     user3_rows = [fakedb.User(uid=3, identifier='marla', bb_username='marla', bb_password='cancer')]
 
-    user1_dict = {
-        'uid': 1,
-        'identifier': 'soap',
-        'bb_username': None,
-        'bb_password': None,
-        'IPv9': '0578cc6.8db024',
-    }
+    user1_model = users.UserModel(
+        uid=1,
+        identifier='soap',
+        bb_username=None,
+        bb_password=None,
+        attributes={
+            'IPv9': '0578cc6.8db024',
+        },
+    )
 
-    user2_dict = {
-        'uid': 2,
-        'identifier': 'lye',
-        'bb_username': None,
-        'bb_password': None,
-        'irc': 'durden',
-        'git': 'Tyler Durden <tyler@mayhem.net>',
-    }
+    user2_model = users.UserModel(
+        uid=2,
+        identifier='lye',
+        bb_username=None,
+        bb_password=None,
+        attributes={
+            'irc': 'durden',
+            'git': 'Tyler Durden <tyler@mayhem.net>',
+        },
+    )
 
-    user3_dict = {
-        'uid': 3,
-        'identifier': 'marla',
-        'bb_username': 'marla',
-        'bb_password': 'cancer',
-    }
+    user3_model = users.UserModel(
+        uid=3,
+        identifier='marla',
+        bb_username='marla',
+        bb_password='cancer',
+        attributes={},
+    )
 
     # tests
 
@@ -234,7 +239,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict, self.user1_dict)
+        self.assertEqual(usdict, self.user1_model)
 
     @defer.inlineCallbacks
     def test_getUser_bb(self):
@@ -242,7 +247,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(3)
 
-        self.assertEqual(usdict, self.user3_dict)
+        self.assertEqual(usdict, self.user3_model)
 
     @defer.inlineCallbacks
     def test_getUser_multi_attr(self):
@@ -250,7 +255,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(2)
 
-        self.assertEqual(usdict, self.user2_dict)
+        self.assertEqual(usdict, self.user2_model)
 
     @defer.inlineCallbacks
     def test_getUser_no_match(self):
@@ -272,7 +277,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         res = yield self.db.users.getUsers()
 
-        self.assertEqual(res, [{"uid": 1, "identifier": 'soap'}])
+        self.assertEqual(res, [users.UserModel(uid=1, identifier='soap')])
 
     @defer.inlineCallbacks
     def test_getUsers_multiple(self):
@@ -280,7 +285,10 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         res = yield self.db.users.getUsers()
 
-        self.assertEqual(res, [{"uid": 1, "identifier": 'soap'}, {"uid": 2, "identifier": 'lye'}])
+        self.assertEqual(
+            res,
+            [users.UserModel(uid=1, identifier='soap'), users.UserModel(uid=2, identifier='lye')],
+        )
 
     @defer.inlineCallbacks
     def test_getUserByUsername(self):
@@ -288,7 +296,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         res = yield self.db.users.getUserByUsername("marla")
 
-        self.assertEqual(res, self.user3_dict)
+        self.assertEqual(res, self.user3_model)
 
     @defer.inlineCallbacks
     def test_getUserByUsername_no_match(self):
@@ -306,8 +314,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['IPv9'], 'abcd.1234')
-        self.assertEqual(usdict['identifier'], 'soap')  # no change
+        self.assertEqual(usdict.attributes['IPv9'], 'abcd.1234')
+        self.assertEqual(usdict.identifier, 'soap')  # no change
 
     @defer.inlineCallbacks
     def test_updateUser_new_type(self):
@@ -317,9 +325,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['IPv4'], '123.134.156.167')
-        self.assertEqual(usdict['IPv9'], '0578cc6.8db024')  # no change
-        self.assertEqual(usdict['identifier'], 'soap')  # no change
+        self.assertEqual(usdict.attributes['IPv4'], '123.134.156.167')
+        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
+        self.assertEqual(usdict.identifier, 'soap')  # no change
 
     @defer.inlineCallbacks
     def test_updateUser_identifier(self):
@@ -329,8 +337,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['identifier'], 'lye')
-        self.assertEqual(usdict['IPv9'], '0578cc6.8db024')  # no change
+        self.assertEqual(usdict.identifier, 'lye')
+        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
     def test_updateUser_bb(self):
@@ -340,9 +348,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(3)
 
-        self.assertEqual(usdict['bb_username'], 'boss')
-        self.assertEqual(usdict['bb_password'], 'fired')
-        self.assertEqual(usdict['identifier'], 'marla')  # no change
+        self.assertEqual(usdict.bb_username, 'boss')
+        self.assertEqual(usdict.bb_password, 'fired')
+        self.assertEqual(usdict.identifier, 'marla')  # no change
 
     @defer.inlineCallbacks
     def test_updateUser_all(self):
@@ -359,11 +367,19 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['identifier'], 'lye')
-        self.assertEqual(usdict['bb_username'], 'marla')
-        self.assertEqual(usdict['bb_password'], 'cancer')
-        self.assertEqual(usdict['IPv4'], '123.134.156.167')
-        self.assertEqual(usdict['IPv9'], '0578cc6.8db024')  # no change
+        self.assertEqual(
+            usdict,
+            users.UserModel(
+                uid=1,
+                identifier='lye',
+                bb_username='marla',
+                bb_password='cancer',
+                attributes={
+                    'IPv4': '123.134.156.167',
+                    'IPv9': '0578cc6.8db024',  # no change
+                },
+            ),
+        )
 
     @defer.inlineCallbacks
     def test_updateUser_race(self):
@@ -404,12 +420,12 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['identifier'], 'soap')
+        self.assertEqual(usdict.identifier, 'soap')
         if transaction_wins:
-            self.assertEqual(usdict['IPv4'], '123.134.156.167')
+            self.assertEqual(usdict.attributes['IPv4'], '123.134.156.167')
         else:
-            self.assertEqual(usdict['IPv4'], '8.8.8.8')
-        self.assertEqual(usdict['IPv9'], '0578cc6.8db024')  # no change
+            self.assertEqual(usdict.attributes['IPv4'], '8.8.8.8')
+        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
     def test_update_NoMatch_identifier(self):
@@ -419,7 +435,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['identifier'], 'soap')  # no change
+        self.assertEqual(usdict.identifier, 'soap')  # no change
 
     @defer.inlineCallbacks
     def test_update_NoMatch_attribute(self):
@@ -429,7 +445,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['IPv9'], '0578cc6.8db024')  # no change
+        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
     def test_update_NoMatch_bb(self):
@@ -439,7 +455,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         usdict = yield self.db.users.getUser(1)
 
-        self.assertEqual(usdict['IPv9'], '0578cc6.8db024')  # no change
+        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
     def test_removeUser_uid(self):

@@ -1,0 +1,1 @@
+:class:`buildbot.db.users.UsDict` is deprecated in favor of :class:`buildbot.db.users.UserModel`

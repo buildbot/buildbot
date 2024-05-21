@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from twisted.internet import defer
 
+from buildbot.db.users import UserModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
@@ -68,16 +70,25 @@ class FakeUsersComponent(FakeDBComponent):
                         "attr_data": row.attr_data,
                     })
 
-    def _user2dict(self, uid):
-        usdict = None
+    def _model_from_uid(self, uid: int) -> UserModel | None:
+        model = None
         if uid in self.users:
             usdict = self.users[uid]
+            model = UserModel(
+                uid=uid,
+                identifier=usdict['identifier'],
+                bb_username=usdict.get('bb_username'),
+                bb_password=usdict.get('bb_password'),
+                attributes=None,
+            )
             if uid in self.users_info:
                 infos = self.users_info[uid]
+                attributes = {}
                 for attr in infos:
-                    usdict[attr['attr_type']] = attr['attr_data']
-            usdict['uid'] = uid
-        return usdict
+                    attributes[attr['attr_type']] = attr['attr_data']
+                model.attributes = attributes
+
+        return model
 
     def nextId(self):
         self.id_num += 1
@@ -96,17 +107,17 @@ class FakeUsersComponent(FakeDBComponent):
         self.db.insert_test_data([UserInfo(uid=uid, attr_type=attr_type, attr_data=attr_data)])
         return defer.succeed(uid)
 
-    def getUser(self, uid):
+    def getUser(self, uid) -> defer.Deferred[UserModel | None]:
         usdict = None
         if uid in self.users:
-            usdict = self._user2dict(uid)
+            usdict = self._model_from_uid(uid)
         return defer.succeed(usdict)
 
-    def getUserByUsername(self, username):
+    def getUserByUsername(self, username) -> defer.Deferred[UserModel | None]:
         usdict = None
         for uid, user in self.users.items():
             if user['bb_username'] == username:
-                usdict = self._user2dict(uid)
+                usdict = self._model_from_uid(uid)
         return defer.succeed(usdict)
 
     def updateUser(

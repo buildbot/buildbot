@@ -953,6 +953,7 @@ userid
 userids
 userInfoProvider
 userlist
+UserModel
 username
 Username
 usernames

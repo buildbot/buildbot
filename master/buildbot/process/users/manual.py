@@ -73,10 +73,17 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             formatted_results += "user(s) found:\n"
             for user in results:
                 if user:
-                    for key in sorted(user.keys()):
-                        if key != 'bb_password':
-                            formatted_results += f"{key}: {user[key]}\n"
-                    formatted_results += "\n"
+                    formatted_results += (
+                        f"uid: {user.uid}\n"
+                        f"identifier: {user.identifier}\n"
+                        f"bb_username: {user.bb_username}\n"
+                    )
+                    if user.attributes:
+                        formatted_results += "attributes:\n"
+                        formatted_results += (
+                            ''.join(f"\t{key}: {value}\n" for key, value in user.attributes.items())
+                            + '\n'
+                        )
                 else:
                     formatted_results += "no match found\n"
         return formatted_results
