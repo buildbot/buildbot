@@ -645,17 +645,6 @@ message['test_results'].add(
     None, MessageValidator(events=[b'new'], messageValidator=_test_results_msgdict)
 )
 
-dbdict['test_resultdict'] = DictValidator(
-    id=IntValidator(),
-    builderid=IntValidator(),
-    test_result_setid=IntValidator(),
-    test_name=NoneOk(StringValidator()),
-    test_code_path=NoneOk(StringValidator()),
-    line=NoneOk(IntValidator()),
-    duration_ns=NoneOk(IntValidator()),
-    value=StringValidator(),
-)
-
 
 # external functions
 

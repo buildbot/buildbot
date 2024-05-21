@@ -20,7 +20,6 @@ from buildbot.db import test_results
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
 class Tests(interfaces.InterfaceTests):
@@ -88,89 +87,89 @@ class Tests(interfaces.InterfaceTests):
 
         result_dicts = yield self.db.test_results.getTestResults(builderid=88, test_result_setid=13)
         for d in result_dicts:
-            validation.verifyDbDict(self, 'test_resultdict', d)
+            self.assertIsInstance(d, test_results.TestResultModel)
 
-        result_dicts = sorted(result_dicts, key=lambda x: x['id'])
-        resultid = result_dicts[0]['id']
+        result_dicts = sorted(result_dicts, key=lambda x: x.id)
+        resultid = result_dicts[0].id
         self.assertEqual(
             result_dicts,
             [
-                {
-                    'id': resultid,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name1',
-                    'test_code_path': None,
-                    'line': None,
-                    'duration_ns': None,
-                    'value': '1',
-                },
-                {
-                    'id': resultid + 1,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name1',
-                    'test_code_path': None,
-                    'line': None,
-                    'duration_ns': 1000,
-                    'value': '2',
-                },
-                {
-                    'id': resultid + 2,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name2',
-                    'test_code_path': 'path2',
-                    'line': None,
-                    'duration_ns': None,
-                    'value': '3',
-                },
-                {
-                    'id': resultid + 3,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name3',
-                    'test_code_path': 'path3',
-                    'line': None,
-                    'duration_ns': None,
-                    'value': '4',
-                },
-                {
-                    'id': resultid + 4,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name4',
-                    'test_code_path': 'path4',
-                    'line': 4,
-                    'duration_ns': None,
-                    'value': '5',
-                },
-                {
-                    'id': resultid + 5,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': None,
-                    'test_code_path': 'path5',
-                    'line': 5,
-                    'duration_ns': None,
-                    'value': '6',
-                },
+                test_results.TestResultModel(
+                    id=resultid,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name1',
+                    test_code_path=None,
+                    line=None,
+                    duration_ns=None,
+                    value='1',
+                ),
+                test_results.TestResultModel(
+                    id=resultid + 1,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name1',
+                    test_code_path=None,
+                    line=None,
+                    duration_ns=1000,
+                    value='2',
+                ),
+                test_results.TestResultModel(
+                    id=resultid + 2,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name2',
+                    test_code_path='path2',
+                    line=None,
+                    duration_ns=None,
+                    value='3',
+                ),
+                test_results.TestResultModel(
+                    id=resultid + 3,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name3',
+                    test_code_path='path3',
+                    line=None,
+                    duration_ns=None,
+                    value='4',
+                ),
+                test_results.TestResultModel(
+                    id=resultid + 4,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name4',
+                    test_code_path='path4',
+                    line=4,
+                    duration_ns=None,
+                    value='5',
+                ),
+                test_results.TestResultModel(
+                    id=resultid + 5,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name=None,
+                    test_code_path='path5',
+                    line=5,
+                    duration_ns=None,
+                    value='6',
+                ),
             ],
         )
 
         result_dict = yield self.db.test_results.getTestResult(test_resultid=resultid)
         self.assertEqual(
             result_dict,
-            {
-                'id': resultid,
-                'builderid': 88,
-                'test_result_setid': 13,
-                'test_name': 'name1',
-                'test_code_path': None,
-                'line': None,
-                'duration_ns': None,
-                'value': '1',
-            },
+            test_results.TestResultModel(
+                id=resultid,
+                builderid=88,
+                test_result_setid=13,
+                test_name='name1',
+                test_code_path=None,
+                line=None,
+                duration_ns=None,
+                value='1',
+            ),
         )
 
     @defer.inlineCallbacks
