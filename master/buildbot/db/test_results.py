@@ -61,13 +61,12 @@ class TestResultDict(TestResultModel):
 
 
 class TestResultsConnectorComponent(base.DBConnectorComponent):
-    @defer.inlineCallbacks
-    def _add_code_paths(self, builderid, paths):
+    def _add_code_paths(self, builderid: int, paths: set[str]) -> defer.Deferred[dict[str, int]]:
         # returns a dictionary of path to id in the test_code_paths table.
         # For paths that already exist, the id of the row in the test_code_paths is retrieved.
         assert isinstance(paths, set)
 
-        def thd(conn):
+        def thd(conn) -> dict[str, int]:
             paths_to_ids = {}
             paths_table = self.db.model.test_code_paths
 
@@ -114,12 +113,12 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
             return paths_to_ids
 
-        paths_to_id = yield self.db.pool.do(thd)
-        return paths_to_id
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getTestCodePaths(self, builderid, path_prefix=None, result_spec=None):
-        def thd(conn):
+    def getTestCodePaths(
+        self, builderid, path_prefix: str | None = None, result_spec=None
+    ) -> defer.Deferred[list[str]]:
+        def thd(conn) -> list[str]:
             paths_table = self.db.model.test_code_paths
             q = paths_table.select()
             if path_prefix is not None:
@@ -129,16 +128,14 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [row['path'] for row in res.fetchall()]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def _add_names(self, builderid, names):
+    def _add_names(self, builderid: int, names: set[str]) -> defer.Deferred[dict[str, int]]:
         # returns a dictionary of name to id in the test_names table.
         # For names that already exist, the id of the row in the test_names is retrieved.
         assert isinstance(names, set)
 
-        def thd(conn):
+        def thd(conn) -> dict[str, int]:
             names_to_ids = {}
             names_table = self.db.model.test_names
 
@@ -184,12 +181,12 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
             return names_to_ids
 
-        names_to_id = yield self.db.pool.do(thd)
-        return names_to_id
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getTestNames(self, builderid, name_prefix=None, result_spec=None):
-        def thd(conn):
+    def getTestNames(
+        self, builderid, name_prefix=None, result_spec=None
+    ) -> defer.Deferred[list[str]]:
+        def thd(conn) -> list[str]:
             names_table = self.db.model.test_names
             q = names_table.select().where(names_table.c.builderid == builderid)
             if name_prefix is not None:
@@ -199,8 +196,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [row['name'] for row in res.fetchall()]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def addTestResults(self, builderid, test_result_setid, result_values):
@@ -261,9 +257,8 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getTestResult(self, test_resultid):
-        def thd(conn):
+    def getTestResult(self, test_resultid: int) -> defer.Deferred[TestResultModel | None]:
+        def thd(conn) -> TestResultModel | None:
             results_table = self.db.model.test_results
             code_paths_table = self.db.model.test_code_paths
             names_table = self.db.model.test_names
@@ -279,12 +274,12 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                 return None
             return self._mode_from_row(row)
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getTestResults(self, builderid, test_result_setid, result_spec=None):
-        def thd(conn):
+    def getTestResults(
+        self, builderid: int, test_result_setid: int, result_spec=None
+    ) -> defer.Deferred[list[TestResultModel]]:
+        def thd(conn) -> list[TestResultModel]:
             results_table = self.db.model.test_results
             code_paths_table = self.db.model.test_code_paths
             names_table = self.db.model.test_names
@@ -315,8 +310,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._mode_from_row(row) for row in res.fetchall()]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
     def _mode_from_row(self, row):
         return TestResultModel(
