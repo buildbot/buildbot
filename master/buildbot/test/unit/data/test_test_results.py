@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import test_results
+from buildbot.db.test_results import TestResultModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -125,69 +126,69 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
         results = yield self.master.db.test_results.getTestResults(
             builderid=88, test_result_setid=13
         )
-        resultid = results[0]['id']
+        resultid = results[0].id
         self.assertEqual(
             results,
             [
-                {
-                    'id': resultid,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name1',
-                    'test_code_path': None,
-                    'line': None,
-                    'duration_ns': None,
-                    'value': '1',
-                },
-                {
-                    'id': resultid + 1,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name2',
-                    'test_code_path': None,
-                    'line': None,
-                    'duration_ns': 1000,
-                    'value': '1',
-                },
-                {
-                    'id': resultid + 2,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name3',
-                    'test_code_path': 'path2',
-                    'line': None,
-                    'duration_ns': None,
-                    'value': '2',
-                },
-                {
-                    'id': resultid + 3,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name4',
-                    'test_code_path': 'path3',
-                    'line': None,
-                    'duration_ns': None,
-                    'value': '3',
-                },
-                {
-                    'id': resultid + 4,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': 'name5',
-                    'test_code_path': 'path4',
-                    'line': 4,
-                    'duration_ns': None,
-                    'value': '4',
-                },
-                {
-                    'id': resultid + 5,
-                    'builderid': 88,
-                    'test_result_setid': 13,
-                    'test_name': None,
-                    'test_code_path': 'path5',
-                    'line': 5,
-                    'duration_ns': None,
-                    'value': '5',
-                },
+                TestResultModel(
+                    id=resultid,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name1',
+                    test_code_path=None,
+                    line=None,
+                    duration_ns=None,
+                    value='1',
+                ),
+                TestResultModel(
+                    id=resultid + 1,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name2',
+                    test_code_path=None,
+                    line=None,
+                    duration_ns=1000,
+                    value='1',
+                ),
+                TestResultModel(
+                    id=resultid + 2,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name3',
+                    test_code_path='path2',
+                    line=None,
+                    duration_ns=None,
+                    value='2',
+                ),
+                TestResultModel(
+                    id=resultid + 3,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name4',
+                    test_code_path='path3',
+                    line=None,
+                    duration_ns=None,
+                    value='3',
+                ),
+                TestResultModel(
+                    id=resultid + 4,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name='name5',
+                    test_code_path='path4',
+                    line=4,
+                    duration_ns=None,
+                    value='4',
+                ),
+                TestResultModel(
+                    id=resultid + 5,
+                    builderid=88,
+                    test_result_setid=13,
+                    test_name=None,
+                    test_code_path='path5',
+                    line=5,
+                    duration_ns=None,
+                    value='5',
+                ),
             ],
         )

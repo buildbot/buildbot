@@ -13,13 +13,50 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 import sqlalchemy as sa
 from twisted.internet import defer
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
 
 
-class TestResultDict(dict):
+@dataclass
+class TestResultModel:
+    id: int
+    builderid: int
+    test_result_setid: int
+    test_name: str | None
+    test_code_path: str | None
+    line: int | None
+    duration_ns: int | None
+    value: str | None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'TestResultsConnectorComponent '
+                'getTestResult, and getTestResults '
+                'no longer return TestResult as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), TestResultModel)
+class TestResultDict(TestResultModel):
     pass
 
 
@@ -240,7 +277,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            return self._thd_row2dict(conn, row)
+            return self._mode_from_row(row)
 
         res = yield self.db.pool.do(thd)
         return res
@@ -274,15 +311,15 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             )
 
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda x: self._thd_row2dict(conn, x))
+                return result_spec.thd_execute(conn, q, self._mode_from_row)
             res = conn.execute(q)
-            return [self._thd_row2dict(conn, row) for row in res.fetchall()]
+            return [self._mode_from_row(row) for row in res.fetchall()]
 
         res = yield self.db.pool.do(thd)
         return res
 
-    def _thd_row2dict(self, conn, row):
-        return TestResultDict(
+    def _mode_from_row(self, row):
+        return TestResultModel(
             id=row.id,
             builderid=row.builderid,
             test_result_setid=row.test_result_setid,

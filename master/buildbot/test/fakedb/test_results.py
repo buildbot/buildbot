@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 
+from buildbot.db.test_results import TestResultModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
@@ -211,7 +214,7 @@ class FakeTestResultsComponent(FakeDBComponent):
 
         return defer.succeed(ret)
 
-    def _fill_extra_data(self, id, row):
+    def _model_from_id(self, id: int, row: dict) -> TestResultModel:
         row = row.copy()
         row['id'] = id
 
@@ -227,13 +230,22 @@ class FakeTestResultsComponent(FakeDBComponent):
             row['test_code_path'] = None
         del row['test_code_pathid']
 
-        return row
+        return TestResultModel(
+            id=row['id'],
+            builderid=row['builderid'],
+            test_result_setid=row['test_result_setid'],
+            line=row['line'],
+            duration_ns=row['duration_ns'],
+            value=row['value'],
+            test_name=row['test_name'],
+            test_code_path=row['test_code_path'],
+        )
 
     # returns a Deferred
     def getTestResult(self, test_resultid):
         if test_resultid not in self.results:
             return defer.succeed(None)
-        return defer.succeed(self._fill_extra_data(test_resultid, self.results[test_resultid]))
+        return defer.succeed(self._model_from_id(test_resultid, self.results[test_resultid]))
 
     # returns a Deferred
     def getTestResults(self, builderid, test_result_setid, result_spec=None):
@@ -243,7 +255,7 @@ class FakeTestResultsComponent(FakeDBComponent):
                 continue
             if row['test_result_setid'] != test_result_setid:
                 continue
-            ret.append(self._fill_extra_data(id, row))
+            ret.append(self._model_from_id(id, row))
 
         if result_spec is not None:
             ret = self.applyResultSpec(ret, result_spec)
