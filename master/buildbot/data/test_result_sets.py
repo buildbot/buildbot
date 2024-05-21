@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 class Db2DataMixin:
     def db2data(self, model: TestResultSetModel):
-        data = {
+        return {
             'test_result_setid': model.id,
             'builderid': model.builderid,
             'buildid': model.buildid,
@@ -40,7 +40,6 @@ class Db2DataMixin:
             'tests_failed': model.tests_failed,
             'complete': model.complete,
         }
-        return defer.succeed(data)
 
 
 class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -83,10 +82,7 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
                 builderid, complete=complete, result_spec=resultSpec
             )
 
-        results = []
-        for dbdict in sets:
-            results.append((yield self.db2data(dbdict)))
-        return results
+        return [self.db2data(model) for model in sets]
 
 
 class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -97,8 +93,8 @@ class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint)
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        dbdict = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
-        return (yield self.db2data(dbdict)) if dbdict else None
+        model = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
+        return self.db2data(model) if model else None
 
 
 class TestResultSet(base.ResourceType):
