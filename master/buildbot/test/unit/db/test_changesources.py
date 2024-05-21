@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -23,8 +25,8 @@ from buildbot.test.util import db
 from buildbot.test.util import interfaces
 
 
-def changeSourceKey(changeSource):
-    return changeSource['id']
+def changeSourceKey(changeSource: changesources.ChangeSourceModel):
+    return changeSource.id
 
 
 class Tests(interfaces.InterfaceTests):
@@ -53,7 +55,7 @@ class Tests(interfaces.InterfaceTests):
         """findChangeSourceId for a new changesource creates it"""
         id = yield self.db.changesources.findChangeSourceId('csname')
         cs = yield self.db.changesources.getChangeSource(id)
-        self.assertEqual(cs['name'], 'csname')
+        self.assertEqual(cs.name, 'csname')
 
     @defer.inlineCallbacks
     def test_findChangeSourceId_existing(self):
@@ -75,7 +77,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data([self.cs42, self.master13])
         yield self.db.changesources.setChangeSourceMaster(42, 13)
         cs = yield self.db.changesources.getChangeSource(42)
-        self.assertEqual(cs['masterid'], 13)
+        self.assertEqual(cs.masterid, 13)
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_inactive_but_linked(self):
@@ -110,7 +112,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.changesources.setChangeSourceMaster(87, None)
         cs = yield self.db.changesources.getChangeSource(87)
-        self.assertEqual(cs['masterid'], None)
+        self.assertEqual(cs.masterid, None)
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None_unowned(self):
@@ -118,7 +120,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data([self.cs87])
         yield self.db.changesources.setChangeSourceMaster(87, None)
         cs = yield self.db.changesources.getChangeSource(87)
-        self.assertEqual(cs['masterid'], None)
+        self.assertEqual(cs.masterid, None)
 
     def test_signature_getChangeSource(self):
         """getChangeSource has the right signature"""
