@@ -18,6 +18,7 @@ from twisted.python import log
 from twisted.trial import unittest
 
 from buildbot.db.buildrequests import BuildRequestModel
+from buildbot.db.buildsets import BuildSetModel
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
 from buildbot.test import fakedb
@@ -76,26 +77,21 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         from buildbot.util import UTC
 
-        ssids = buildset.pop('sourcestamps')
-
         self.assertEqual(
             buildset,
-            {
-                'bsid': bsid,
-                'complete': False,
-                'complete_at': None,
-                'external_idstring': None,
-                'reason': "The Triggerable scheduler named 'n' triggered this build",
-                'results': -1,
-                'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
-                'rebuilt_buildid': None,
-                'parent_buildid': None,
-                'parent_relationship': None,
-            },
+            BuildSetModel(
+                bsid=bsid,
+                external_idstring=None,
+                reason="The Triggerable scheduler named 'n' triggered this build",
+                submitted_at=datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
+                results=-1,
+                # sourcestamps testing is just after
+                sourcestamps=buildset.sourcestamps,
+            ),
         )
 
         actual_sourcestamps = yield defer.gatherResults([
-            self.master.db.sourcestamps.getSourceStamp(ssid) for ssid in ssids
+            self.master.db.sourcestamps.getSourceStamp(ssid) for ssid in buildset.sourcestamps
         ])
 
         self.assertEqual(len(sourcestamps), len(actual_sourcestamps))

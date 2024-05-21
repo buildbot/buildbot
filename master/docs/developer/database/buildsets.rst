@@ -14,7 +14,7 @@ Buildsets connector
 
     .. index:: bsdict, bsid
 
-    Buildsets are indexed by *bsid* and their contents are represented as *bsdicts* (buildset dictionaries), with keys
+    Buildsets are indexed by *bsid* and their contents are represented as :class:`BuildSetModel` dataclass with the following fields:
 
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
@@ -70,10 +70,10 @@ Buildsets connector
     .. py:method:: getBuildset(bsid)
 
         :param bsid: buildset ID
-        :returns: bsdict, or ``None``, via Deferred
+        :returns: :class:`BuildSetModel` or ``None``, via Deferred
 
-        Get a bsdict representing the given buildset, or ``None`` if no such
-        buildset exists.
+        Get a :class:`BuildSetModel` representing the given buildset, or ``None``
+        if no such buildset exists.
 
         Note that buildsets are not cached, as the values in the database are
         not fixed.
@@ -86,9 +86,9 @@ Buildsets connector
         :param resultSpec: result spec containing filters sorting and paging requests from data/REST API.
             If possible, the db layer can optimize the SQL query using this information.
 
-        :returns: list of bsdicts, via Deferred
+        :returns: list of :class:`BuildSetModel`, via Deferred
 
-        Get a list of bsdicts matching the given criteria.
+        Get a list of :class:`BuildSetModel` matching the given criteria.
 
     .. py:method:: getRecentBuildsets(count=None, branch=None, repository=None,
                            complete=None):
@@ -105,7 +105,7 @@ Buildsets connector
             return only incomplete buildsets; if ``None`` or omitted, return all
             buildsets
         :type complete: Boolean
-        :returns: list of bsdicts, via Deferred
+        :returns: list of :class:`BuildSetModel`, via Deferred
 
         Get "recent" buildsets, as defined by their ``submitted_at`` times.
 

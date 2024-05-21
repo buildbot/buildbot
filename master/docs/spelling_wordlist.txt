@@ -116,6 +116,7 @@ buildset
 Buildset
 buildsetid
 buildsetids
+BuildSetModel
 buildsets
 Buildsets
 buildslave

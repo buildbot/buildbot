@@ -404,20 +404,6 @@ message['buildsets'].add(
     ),
 )
 
-dbdict['bsdict'] = DictValidator(
-    bsid=IntValidator(),
-    external_idstring=NoneOk(StringValidator()),
-    reason=StringValidator(),
-    sourcestamps=ListValidator(IntValidator()),
-    submitted_at=DateTimeValidator(),
-    complete=BooleanValidator(),
-    complete_at=NoneOk(DateTimeValidator()),
-    results=NoneOk(IntValidator()),
-    rebuilt_buildid=NoneOk(IntValidator()),
-    parent_buildid=NoneOk(IntValidator()),
-    parent_relationship=NoneOk(StringValidator()),
-)
-
 # buildrequest
 
 message['buildrequests'] = Selector()
