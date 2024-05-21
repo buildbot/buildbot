@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -21,17 +24,20 @@ from buildbot.data import masters
 from buildbot.data import types
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
+if TYPE_CHECKING:
+    from buildbot.db.schedulers import SchedulerModel
+
 
 class Db2DataMixin:
     @defer.inlineCallbacks
-    def db2data(self, dbdict):
+    def db2data(self, dbdict: SchedulerModel):
         master = None
-        if dbdict['masterid'] is not None:
-            master = yield self.master.data.get(('masters', dbdict['masterid']))
+        if dbdict.masterid is not None:
+            master = yield self.master.data.get(('masters', dbdict.masterid))
         data = {
-            'schedulerid': dbdict['id'],
-            'name': dbdict['name'],
-            'enabled': dbdict['enabled'],
+            'schedulerid': dbdict.id,
+            'name': dbdict.name,
+            'enabled': dbdict.enabled,
             'master': master,
         }
         return data
@@ -48,7 +54,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.schedulers.getScheduler(kwargs['schedulerid'])
         if 'masterid' in kwargs:
-            if dbdict['masterid'] != kwargs['masterid']:
+            if dbdict.masterid != kwargs['masterid']:
                 return None
         return (yield self.db2data(dbdict)) if dbdict else None
 
@@ -135,4 +141,4 @@ class Scheduler(base.ResourceType):
     def _masterDeactivated(self, masterid):
         schedulers = yield self.master.db.schedulers.getSchedulers(masterid=masterid)
         for sch in schedulers:
-            yield self.master.db.schedulers.setSchedulerMaster(sch['id'], None)
+            yield self.master.db.schedulers.setSchedulerMaster(sch.id, None)

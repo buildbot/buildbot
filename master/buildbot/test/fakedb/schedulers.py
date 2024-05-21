@@ -173,12 +173,12 @@ class FakeSchedulersComponent(FakeDBComponent):
             results = [r[1] for r in results]
             # filter for masterid
             if masterid is not None:
-                results = [r for r in results if r['masterid'] == masterid]
+                results = [r for r in results if r.masterid == masterid]
             # filter for active or inactive if necessary
             if active:
-                results = [r for r in results if r['masterid'] is not None]
+                results = [r for r in results if r.masterid is not None]
             elif active is not None:
-                results = [r for r in results if r['masterid'] is None]
+                results = [r for r in results if r.masterid is None]
             return results
 
         return d

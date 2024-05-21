@@ -180,7 +180,7 @@ class Tests(interfaces.InterfaceTests):
     def test_findSchedulerId_new(self):
         id = yield self.db.schedulers.findSchedulerId('schname')
         sch = yield self.db.schedulers.getScheduler(id)
-        self.assertEqual(sch['name'], 'schname')
+        self.assertEqual(sch.name, 'schname')
 
     @defer.inlineCallbacks
     def test_findSchedulerId_existing(self):
@@ -198,7 +198,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insert_test_data([self.scheduler24, self.master13])
         yield self.db.schedulers.setSchedulerMaster(24, 13)
         sch = yield self.db.schedulers.getScheduler(24)
-        self.assertEqual(sch['masterid'], 13)
+        self.assertEqual(sch.masterid, 13)
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked(self):
@@ -239,14 +239,14 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.schedulers.setSchedulerMaster(25, None)
         sch = yield self.db.schedulers.getScheduler(25)
-        self.assertEqual(sch['masterid'], None)
+        self.assertEqual(sch.masterid, None)
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_None_unowned(self):
         yield self.insert_test_data([self.scheduler25])
         yield self.db.schedulers.setSchedulerMaster(25, None)
         sch = yield self.db.schedulers.getScheduler(25)
-        self.assertEqual(sch['masterid'], None)
+        self.assertEqual(sch.masterid, None)
 
     def test_signature_getScheduler(self):
         @self.assertArgSpecMatches(self.db.schedulers.getScheduler)
@@ -300,7 +300,7 @@ class Tests(interfaces.InterfaceTests):
         ])
 
         def schKey(sch):
-            return sch['id']
+            return sch.id
 
         schlist = yield self.db.schedulers.getSchedulers()
 

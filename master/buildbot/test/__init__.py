@@ -204,9 +204,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*SchedulersConnectorComponent getScheduler, and getSchedulers no longer return Scheduler as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)
