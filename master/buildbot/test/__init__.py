@@ -204,9 +204,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*TestResultSetsConnectorComponent getTestResultSet, and getTestResultSets no longer return TestResultSet as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)

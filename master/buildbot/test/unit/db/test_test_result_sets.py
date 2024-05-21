@@ -188,24 +188,24 @@ class Tests(interfaces.InterfaceTests):
         )
 
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 93, 94, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 93, 94, 95])
         for d in set_dicts:
             self.assertIsInstance(d, test_result_sets.TestResultSetModel)
 
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=89)
-        self.assertEqual([d['id'] for d in set_dicts], [92])
+        self.assertEqual([d.id for d in set_dicts], [92])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=30)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 94, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 94, 95])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=31)
-        self.assertEqual([d['id'] for d in set_dicts], [93])
+        self.assertEqual([d.id for d in set_dicts], [93])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, stepid=131)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 95])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, stepid=132)
-        self.assertEqual([d['id'] for d in set_dicts], [94])
+        self.assertEqual([d.id for d in set_dicts], [94])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, complete=True)
-        self.assertEqual([d['id'] for d in set_dicts], [93, 94])
+        self.assertEqual([d.id for d in set_dicts], [93, 94])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, complete=False)
-        self.assertEqual([d['id'] for d in set_dicts], [91, 95])
+        self.assertEqual([d.id for d in set_dicts], [91, 95])
 
     @defer.inlineCallbacks
     def test_get_set_from_data(self):
