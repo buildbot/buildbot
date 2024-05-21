@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.python import deprecate
@@ -25,6 +26,9 @@ from twisted.python import versions
 from buildbot.db import base
 from buildbot.util import identifiers
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 
 @dataclasses.dataclass
@@ -62,11 +66,12 @@ class UsDict(UserModel):
 
 
 class UsersConnectorComponent(base.DBConnectorComponent):
-    # returns a Deferred that returns a value
-    def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
+    def findUserByAttr(
+        self, identifier: str, attr_type: str, attr_data: str, _race_hook=None
+    ) -> defer.Deferred[int]:
         # note that since this involves two tables, self.findSomethingId is not
         # helpful
-        def thd(conn, no_recurse=False, identifier=identifier):
+        def thd(conn, no_recurse=False, identifier=identifier) -> int:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -123,10 +128,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
     @base.cached("usdicts")
-    def getUser(self, uid):
-        def thd(conn):
+    def getUser(self, uid: int) -> defer.Deferred[UserModel | None]:
+        def thd(conn) -> UserModel | None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -157,8 +161,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         )
 
     # returns a Deferred that returns a value
-    def getUserByUsername(self, username):
-        def thd(conn):
+    def getUserByUsername(self, username: str | None) -> defer.Deferred[UserModel | None]:
+        def thd(conn) -> UserModel | None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -176,9 +180,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getUsers(self):
-        def thd(conn):
+    def getUsers(self) -> defer.Deferred[list[UserModel]]:
+        def thd(conn) -> list[UserModel]:
             tbl = self.db.model.users
             rows = conn.execute(tbl.select()).fetchall()
 
@@ -189,12 +192,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     # returns a Deferred that returns None
     def updateUser(
         self,
-        uid=None,
-        identifier=None,
-        bb_username=None,
-        bb_password=None,
-        attr_type=None,
-        attr_data=None,
+        uid: int | None = None,
+        identifier: str | None = None,
+        bb_username: str | None = None,
+        bb_password: str | None = None,
+        attr_type: str | None = None,
+        attr_data: str | None = None,
         _race_hook=None,
     ):
         def thd(conn):
@@ -269,8 +272,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def identifierToUid(self, identifier):
-        def thd(conn):
+    def identifierToUid(self, identifier) -> defer.Deferred[int | None]:
+        def thd(conn) -> int | None:
             tbl = self.db.model.users
 
             q = tbl.select().where(tbl.c.identifier == identifier)

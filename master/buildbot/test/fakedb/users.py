@@ -107,13 +107,13 @@ class FakeUsersComponent(FakeDBComponent):
         self.db.insert_test_data([UserInfo(uid=uid, attr_type=attr_type, attr_data=attr_data)])
         return defer.succeed(uid)
 
-    def getUser(self, uid):
+    def getUser(self, uid) -> defer.Deferred[UserModel | None]:
         usdict = None
         if uid in self.users:
             usdict = self._model_from_uid(uid)
         return defer.succeed(usdict)
 
-    def getUserByUsername(self, username):
+    def getUserByUsername(self, username) -> defer.Deferred[UserModel | None]:
         usdict = None
         for uid, user in self.users.items():
             if user['bb_username'] == username:
