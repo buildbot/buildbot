@@ -198,13 +198,15 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildsets[bsid]['complete_at'] = complete_at
         return defer.succeed(None)
 
-    def getBuildset(self, bsid):
+    def getBuildset(self, bsid: int) -> defer.Deferred[buildsets.BuildSetModel | None]:
         if bsid not in self.buildsets:
             return defer.succeed(None)
         row = self.buildsets[bsid]
         return defer.succeed(self._model_from_row(row))
 
-    def getBuildsets(self, complete=None, resultSpec=None):
+    def getBuildsets(
+        self, complete: bool | None = None, resultSpec=None
+    ) -> defer.Deferred[list[buildsets.BuildSetModel]]:
         rv = []
         for bs in self.buildsets.values():
             if complete is not None:

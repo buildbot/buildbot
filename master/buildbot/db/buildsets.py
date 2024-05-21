@@ -213,9 +213,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getBuildset(self, bsid):
-        def thd(conn):
+    def getBuildset(self, bsid) -> defer.Deferred[BuildSetModel | None]:
+        def thd(conn) -> BuildSetModel | None:
             bs_tbl = self.db.model.buildsets
             q = bs_tbl.select().where(bs_tbl.c.id == bsid)
             res = conn.execute(q)
@@ -228,7 +227,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def getBuildsets(self, complete=None, resultSpec=None):
-        def thd(conn):
+        def thd(conn) -> list[BuildSetModel]:
             bs_tbl = self.db.model.buildsets
             q = bs_tbl.select()
             if complete is not None:
@@ -244,9 +243,14 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         res = yield self.db.pool.do(thd)
         return res
 
-    # returns a Deferred that returns a value
-    def getRecentBuildsets(self, count=None, branch=None, repository=None, complete=None):
-        def thd(conn):
+    def getRecentBuildsets(
+        self,
+        count: int | None = None,
+        branch: str | None = None,
+        repository: str | None = None,
+        complete: bool | None = None,
+    ) -> defer.Deferred[list[BuildSetModel]]:
+        def thd(conn) -> list[BuildSetModel]:
             bs_tbl = self.db.model.buildsets
             ss_tbl = self.db.model.sourcestamps
             j = self.db.model.buildsets
@@ -270,10 +274,9 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
     @base.cached("BuildsetProperties")
-    def getBuildsetProperties(self, bsid):
-        def thd(conn):
+    def getBuildsetProperties(self, bsid) -> defer.Deferred[BsProps]:
+        def thd(conn) -> BsProps:
             bsp_tbl = self.db.model.buildset_properties
             q = sa.select(
                 bsp_tbl.c.property_name,
