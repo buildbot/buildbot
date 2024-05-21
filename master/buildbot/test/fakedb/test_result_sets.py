@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 
 from buildbot.db.test_result_sets import TestResultSetAlreadyCompleted
@@ -94,15 +96,19 @@ class FakeTestResultSetsComponent(FakeDBComponent):
             complete=bool(row['complete']),
         )
 
-    def getTestResultSet(self, test_result_setid):
+    def getTestResultSet(self, test_result_setid: int) -> defer.Deferred[TestResultSetModel | None]:
         if test_result_setid not in self.result_sets:
             return defer.succeed(None)
         return defer.succeed(self._model_from_row(self.result_sets[test_result_setid]))
 
-    # returns a Deferred
     def getTestResultSets(
-        self, builderid, buildid=None, stepid=None, complete=None, result_spec=None
-    ):
+        self,
+        builderid: int,
+        buildid: int | None = None,
+        stepid: int | None = None,
+        complete: bool | None = None,
+        result_spec=None,
+    ) -> defer.Deferred[list[TestResultSetModel]]:
         ret = []
         for row in self.result_sets.values():
             if row['builderid'] != builderid:

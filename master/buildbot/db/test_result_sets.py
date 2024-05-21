@@ -66,10 +66,11 @@ class TestResultSetAlreadyCompleted(Exception):
 
 
 class TestResultSetsConnectorComponent(base.DBConnectorComponent):
-    @defer.inlineCallbacks
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+    def addTestResultSet(
+        self, builderid, buildid, stepid, description, category, value_unit
+    ) -> defer.Deferred[int]:
         # Returns the id of the new result set
-        def thd(conn):
+        def thd(conn) -> int:
             sets_table = self.db.model.test_result_sets
 
             insert_values = {
@@ -86,12 +87,10 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(q)
             return r.inserted_primary_key[0]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getTestResultSet(self, test_result_setid):
-        def thd(conn):
+    def getTestResultSet(self, test_result_setid: int) -> defer.Deferred[TestResultSetModel | None]:
+        def thd(conn) -> TestResultSetModel | None:
             sets_table = self.db.model.test_result_sets
             q = sets_table.select().where(sets_table.c.id == test_result_setid)
             res = conn.execute(q)
@@ -100,14 +99,17 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
                 return None
             return self._model_from_row(row)
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
     def getTestResultSets(
-        self, builderid, buildid=None, stepid=None, complete=None, result_spec=None
-    ):
-        def thd(conn):
+        self,
+        builderid: int,
+        buildid: int | None = None,
+        stepid: int | None = None,
+        complete: bool | None = None,
+        result_spec=None,
+    ) -> defer.Deferred[list[TestResultSetModel]]:
+        def thd(conn) -> list[TestResultSetModel]:
             sets_table = self.db.model.test_result_sets
             q = sets_table.select().where(sets_table.c.builderid == builderid)
             if buildid is not None:
@@ -121,12 +123,12 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._model_from_row(row) for row in res.fetchall()]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
-        def thd(conn):
+    def completeTestResultSet(
+        self, test_result_setid, tests_passed=None, tests_failed=None
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             sets_table = self.db.model.test_result_sets
 
             values = {'complete': 1}
@@ -145,7 +147,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
                     f'is already completed or does not exist'
                 )
 
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     def _model_from_row(self, row):
         return TestResultSetModel(
