@@ -174,11 +174,6 @@ warnings.filterwarnings(
 )
 warnings.filterwarnings(
     'ignore',
-    "Using non-integer/slice indices on Row is deprecated and will be removed in version 2.0",
-    category=RemovedIn20Warning,
-)
-warnings.filterwarnings(
-    'ignore',
     "The ``bind`` argument for schema methods that invoke SQL against an engine or connection will be required in SQLAlchemy 2.0.",
     category=RemovedIn20Warning,
 )

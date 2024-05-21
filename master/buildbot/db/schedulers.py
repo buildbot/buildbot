@@ -149,9 +149,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 )
                 row = conn.execute(q).fetchone()
                 # ok, that was us, so we just do nothing
-                if row['masterid'] == masterid:
+                if row.masterid == masterid:
                     return None
-                raise SchedulerAlreadyClaimedError(f"already claimed by {row['name']}") from e
+                raise SchedulerAlreadyClaimedError(f"already claimed by {row.name}") from e
             return None
 
         return self.db.pool.do(thd)
