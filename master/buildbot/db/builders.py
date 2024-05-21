@@ -196,7 +196,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             rv: list[BuilderModel] = []
             last: BuilderModel | None = None
             for row in conn.execute(q).fetchall():
-                if not last or row['id'] != last.id:
+                if not last or row.id != last.id:
                     last = BuilderModel(
                         id=row.id,
                         name=row.name,
@@ -207,8 +207,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                         tags=bldr_id_to_tags[row.id],
                     )
                     rv.append(last)
-                if row['masterid']:
-                    last.masterids.append(row['masterid'])
+                if row.masterid:
+                    last.masterids.append(row.masterid)
             return rv
 
         return self.db.pool.do(thd)

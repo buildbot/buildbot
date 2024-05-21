@@ -123,7 +123,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(cfg_tbl.c.buildermasterid).select_from(j).distinct()
             q = q.where(bm_tbl.c.masterid == masterid)
             res = conn.execute(q)
-            buildermasterids = [row['buildermasterid'] for row in res]
+            buildermasterids = [row.buildermasterid for row in res]
             res.close()
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
@@ -141,7 +141,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(bm_tbl.c.masterid == masterid)
                 q = q.where(bm_tbl.c.builderid.in_(builderids))
                 res = conn.execute(q)
-                buildermasterids = {row['id'] for row in res}
+                buildermasterids = {row.id for row in res}
                 res.close()
             else:
                 buildermasterids = set([])
@@ -152,7 +152,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
             res = conn.execute(q)
-            oldbuildermasterids = {row['buildermasterid'] for row in res}
+            oldbuildermasterids = {row.buildermasterid for row in res}
             res.close()
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids

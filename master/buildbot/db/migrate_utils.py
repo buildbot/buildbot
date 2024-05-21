@@ -41,10 +41,10 @@ def test_unicode(migrate_engine):
 
     # see if the data is intact
     row = migrate_engine.execute(test_unicode.select()).fetchall()[0]
-    assert isinstance(row['u'], str)
-    assert row['u'] == u
-    assert isinstance(row['b'], bytes)
-    assert row['b'] == b
+    assert isinstance(row.u, str)
+    assert row.u == u
+    assert isinstance(row.b, bytes)
+    assert row.b == b
 
     # drop the test table
     test_unicode.drop()

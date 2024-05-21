@@ -126,7 +126,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             if result_spec is not None:
                 return result_spec.thd_execute(conn, q, lambda x: x['path'])
             res = conn.execute(q)
-            return [row['path'] for row in res.fetchall()]
+            return [row.path for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
@@ -192,9 +192,9 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             if name_prefix is not None:
                 q = q.where(names_table.c.name.startswith(name_prefix))
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda x: x['name'])
+                return result_spec.thd_execute(conn, q, lambda x: x.name)
             res = conn.execute(q)
-            return [row['name'] for row in res.fetchall()]
+            return [row.name for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
