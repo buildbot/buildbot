@@ -13,16 +13,48 @@
 #
 # Copyright Buildbot Team Members
 
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 import sqlalchemy as sa
 import sqlalchemy.exc
 from twisted.internet import defer
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
 
 
 class SchedulerAlreadyClaimedError(Exception):
     pass
+
+
+@dataclass
+class SchedulerModel:
+    id: int
+    name: str
+    enabled: bool = True
+
+    masterid: int | None = None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'SchedulersConnectorComponent '
+                'getScheduler, and getSchedulers '
+                'no longer return Scheduler as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
@@ -197,14 +229,14 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if wc is not None:
                 q = q.where(wc)
 
-            return [
-                {
-                    "id": row.id,
-                    "name": row.name,
-                    "enabled": bool(row.enabled),
-                    "masterid": row.masterid,
-                }
-                for row in conn.execute(q).fetchall()
-            ]
+            return [self._model_from_row(row) for row in conn.execute(q).fetchall()]
 
         return self.db.pool.do(thd)
+
+    def _model_from_row(self, row):
+        return SchedulerModel(
+            id=row.id,
+            name=row.name,
+            enabled=bool(row.enabled),
+            masterid=row.masterid,
+        )

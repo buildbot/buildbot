@@ -22,7 +22,6 @@ from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
 class Tests(interfaces.InterfaceTests):
@@ -53,18 +52,24 @@ class Tests(interfaces.InterfaceTests):
     def test_enable(self):
         yield self.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
-        validation.verifyDbDict(self, 'schedulerdict', sch)
-        self.assertEqual(sch, {"id": 24, "name": 'schname', "enabled": True, "masterid": 13})
+        self.assertIsInstance(sch, schedulers.SchedulerModel)
+        self.assertEqual(
+            sch, schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13)
+        )
 
         yield self.db.schedulers.enable(24, False)
         sch = yield self.db.schedulers.getScheduler(24)
-        validation.verifyDbDict(self, 'schedulerdict', sch)
-        self.assertEqual(sch, {"id": 24, "name": 'schname', "enabled": False, "masterid": 13})
+        self.assertIsInstance(sch, schedulers.SchedulerModel)
+        self.assertEqual(
+            sch, schedulers.SchedulerModel(id=24, name='schname', enabled=False, masterid=13)
+        )
 
         yield self.db.schedulers.enable(24, True)
         sch = yield self.db.schedulers.getScheduler(24)
-        validation.verifyDbDict(self, 'schedulerdict', sch)
-        self.assertEqual(sch, {"id": 24, "name": 'schname', "enabled": True, "masterid": 13})
+        self.assertIsInstance(sch, schedulers.SchedulerModel)
+        self.assertEqual(
+            sch, schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13)
+        )
 
     def test_signature_classifyChanges(self):
         @self.assertArgSpecMatches(self.db.schedulers.classifyChanges)
@@ -252,8 +257,10 @@ class Tests(interfaces.InterfaceTests):
     def test_getScheduler(self):
         yield self.insert_test_data([self.scheduler24])
         sch = yield self.db.schedulers.getScheduler(24)
-        validation.verifyDbDict(self, 'schedulerdict', sch)
-        self.assertEqual(sch, {"id": 24, "name": 'schname', "enabled": True, "masterid": None})
+        self.assertIsInstance(sch, schedulers.SchedulerModel)
+        self.assertEqual(
+            sch, schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=None)
+        )
 
     @defer.inlineCallbacks
     def test_getScheduler_missing(self):
@@ -264,16 +271,18 @@ class Tests(interfaces.InterfaceTests):
     def test_getScheduler_active(self):
         yield self.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
-        validation.verifyDbDict(self, 'schedulerdict', sch)
-        self.assertEqual(sch, {"id": 24, "name": 'schname', "enabled": True, "masterid": 13})
+        self.assertIsInstance(sch, schedulers.SchedulerModel)
+        self.assertEqual(
+            sch, schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13)
+        )
 
     @defer.inlineCallbacks
     def test_getScheduler_inactive_but_linked(self):
         yield self.insert_test_data([self.scheduler25, self.master14, self.scheduler25master])
         sch = yield self.db.schedulers.getScheduler(25)
-        validation.verifyDbDict(self, 'schedulerdict', sch)
+        self.assertIsInstance(sch, schedulers.SchedulerModel)
         self.assertEqual(
-            sch, {"id": 25, "name": 'schname2', "enabled": True, "masterid": 14}
+            sch, schedulers.SchedulerModel(id=25, name='schname2', enabled=True, masterid=14)
         )  # row exists, but marked inactive
 
     def test_signature_getSchedulers(self):
@@ -296,14 +305,14 @@ class Tests(interfaces.InterfaceTests):
         schlist = yield self.db.schedulers.getSchedulers()
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(
             sorted(schlist, key=schKey),
             sorted(
                 [
-                    {"id": 24, "name": 'schname', "enabled": True, "masterid": 13},
-                    {"id": 25, "name": 'schname2', "enabled": True, "masterid": None},
+                    schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13),
+                    schedulers.SchedulerModel(id=25, name='schname2', enabled=True, masterid=None),
                 ],
                 key=schKey,
             ),
@@ -320,12 +329,12 @@ class Tests(interfaces.InterfaceTests):
         schlist = yield self.db.schedulers.getSchedulers(masterid=13)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(
             sorted(schlist),
             sorted([
-                {"id": 24, "name": 'schname', "enabled": True, "masterid": 13},
+                schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13),
             ]),
         )
 
@@ -340,12 +349,12 @@ class Tests(interfaces.InterfaceTests):
         schlist = yield self.db.schedulers.getSchedulers(active=True)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(
             sorted(schlist),
             sorted([
-                {"id": 24, "name": 'schname', "enabled": True, "masterid": 13},
+                schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13),
             ]),
         )
 
@@ -360,19 +369,19 @@ class Tests(interfaces.InterfaceTests):
         schlist = yield self.db.schedulers.getSchedulers(active=True, masterid=13)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(
             sorted(schlist),
             sorted([
-                {"id": 24, "name": 'schname', "enabled": True, "masterid": 13},
+                schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13),
             ]),
         )
 
         schlist = yield self.db.schedulers.getSchedulers(active=True, masterid=14)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(sorted(schlist), [])
 
@@ -387,12 +396,12 @@ class Tests(interfaces.InterfaceTests):
         schlist = yield self.db.schedulers.getSchedulers(active=False)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(
             sorted(schlist),
             sorted([
-                {"id": 25, "name": 'schname2', "enabled": True, "masterid": None},
+                schedulers.SchedulerModel(id=25, name='schname2', enabled=True, masterid=None),
             ]),
         )
 
@@ -407,14 +416,14 @@ class Tests(interfaces.InterfaceTests):
         schlist = yield self.db.schedulers.getSchedulers(active=False, masterid=13)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(sorted(schlist), [])
 
         schlist = yield self.db.schedulers.getSchedulers(active=False, masterid=14)
 
         for sch in schlist:
-            validation.verifyDbDict(self, 'schedulerdict', sch)
+            self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(sorted(schlist), [])  # always returns [] by spec!
 

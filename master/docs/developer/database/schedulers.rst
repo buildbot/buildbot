@@ -18,10 +18,11 @@ Schedulers connector
 
     Schedulers are identified by their schedulerid, which can be obtained from :py:meth:`findSchedulerId`.
 
-    Schedulers are represented by dictionaries with the following keys:
+    Schedulers are represented as :class:`SchedulerModel` dataclass with the following fields:
 
         * ``id`` - scheduler's ID
         * ``name`` - scheduler's name
+        * ``enabled`` - scheduler's status
         * ``masterid`` - ID of the master currently running this scheduler, or None if it is inactive
 
     Note that this class is conservative in determining what schedulers are inactive: a scheduler linked to an inactive master is still considered active.
@@ -90,15 +91,15 @@ Schedulers connector
     .. py:method:: getScheduler(schedulerid)
 
         :param schedulerid: scheduler ID
-        :returns: scheduler dictionary or None via Deferred
+        :returns: :class:`SchedulerModelModel` or None via Deferred
 
-        Get the scheduler dictionary for the given scheduler.
+        Get the :class:`SchedulerModelModel` for the given scheduler.
 
     .. py:method:: getSchedulers(active=None, masterid=None)
 
         :param boolean active: if specified, filter for active or inactive schedulers
         :param integer masterid: if specified, only return schedulers attached associated with this master
-        :returns: list of scheduler dictionaries in unspecified order
+        :returns: list of :class:`SchedulerModelModel` in unspecified order
 
         Get a list of schedulers.
 

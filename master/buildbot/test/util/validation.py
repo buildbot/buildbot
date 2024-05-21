@@ -490,15 +490,6 @@ dbdict['changesourcedict'] = DictValidator(
     masterid=NoneOk(IntValidator()),
 )
 
-# schedulers
-
-dbdict['schedulerdict'] = DictValidator(
-    id=IntValidator(),
-    name=StringValidator(),
-    masterid=NoneOk(IntValidator()),
-    enabled=BooleanValidator(),
-)
-
 # builds
 
 _build = {
