@@ -27,7 +27,6 @@ from buildbot.db import logs
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
@@ -188,18 +187,18 @@ class Tests(interfaces.InterfaceTests):
             ]
         )
         logdict = yield self.db.logs.getLog(201)
-        validation.verifyDbDict(self, 'logdict', logdict)
+        self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(
             logdict,
-            {
-                'id': 201,
-                'stepid': 101,
-                'name': 'stdio',
-                'slug': 'stdio',
-                'complete': False,
-                'num_lines': 200,
-                'type': 's',
-            },
+            logs.LogModel(
+                id=201,
+                stepid=101,
+                name='stdio',
+                slug='stdio',
+                complete=False,
+                num_lines=200,
+                type='s',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -233,7 +232,7 @@ class Tests(interfaces.InterfaceTests):
             ]
         )
         logdict = yield self.db.logs.getLogBySlug(101, 'dbg_log')
-        validation.verifyDbDict(self, 'logdict', logdict)
+        self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(logdict['id'], 202)
 
     @defer.inlineCallbacks
@@ -291,7 +290,7 @@ class Tests(interfaces.InterfaceTests):
         )
         logdicts = yield self.db.logs.getLogs(101)
         for logdict in logdicts:
-            validation.verifyDbDict(self, 'logdict', logdict)
+            self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(sorted([ld['id'] for ld in logdicts]), [201, 202])
 
     @defer.inlineCallbacks
@@ -340,18 +339,18 @@ class Tests(interfaces.InterfaceTests):
             stepid=101, name='config.log', slug='config_log', type='t'
         )
         logdict = yield self.db.logs.getLog(logid)
-        validation.verifyDbDict(self, 'logdict', logdict)
+        self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(
             logdict,
-            {
-                'id': logid,
-                'stepid': 101,
-                'name': 'config.log',
-                'slug': 'config_log',
-                'complete': False,
-                'num_lines': 0,
-                'type': 't',
-            },
+            logs.LogModel(
+                id=logid,
+                stepid=101,
+                name='config.log',
+                slug='config_log',
+                complete=False,
+                num_lines=0,
+                type='t',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -367,15 +366,15 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual((yield self.db.logs.getLogLines(logid, 0, 1)), "xyz\nXYZ\n")
         self.assertEqual(
             (yield self.db.logs.getLog(logid)),
-            {
-                'complete': False,
-                'id': logid,
-                'name': 'another',
-                'slug': 'another',
-                'num_lines': 2,
-                'stepid': 102,
-                'type': 's',
-            },
+            logs.LogModel(
+                complete=False,
+                id=logid,
+                name='another',
+                slug='another',
+                num_lines=2,
+                stepid=102,
+                type='s',
+            ),
         )
 
     @defer.inlineCallbacks
@@ -670,15 +669,15 @@ class RealTests(Tests):
         logdict = yield self.db.logs.getLog(201)
         self.assertEqual(
             logdict,
-            {
-                'stepid': 101,
-                'num_lines': 0,
-                'name': 'stdio',
-                'id': 201,
-                'type': 's',
-                'slug': 'stdio',
-                'complete': True,
-            },
+            logs.LogModel(
+                stepid=101,
+                num_lines=0,
+                name='stdio',
+                id=201,
+                type='s',
+                slug='stdio',
+                complete=True,
+            ),
         )
 
     @defer.inlineCallbacks

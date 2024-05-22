@@ -11,7 +11,7 @@ Logs connector
     Build steps can have zero or more logs.
     Logs are uniquely identified by name within a step.
 
-    Information about a log, apart from its contents, is represented as a dictionary with the following keys, referred to as a *logdict*:
+    Information about a log, apart from its contents, is represented as a :class:`LogModel` dataclass with the following fields:
 
     * ``id`` (log ID, globally unique)
     * ``stepid`` (step ID, indicating the containing step)
@@ -35,7 +35,7 @@ Logs connector
     .. py:method:: getLog(logid)
 
         :param integer logid: ID of the requested log
-        :returns: logdict via Deferred
+        :returns: :class:`LogModel` or ``None``, via Deferred
 
         Get a log, identified by logid.
 
@@ -44,14 +44,14 @@ Logs connector
         :param integer stepid: ID of the step containing this log
         :param slug: slug of the logfile to retrieve
         :type name: 50-character identifier
-        :returns: logdict via Deferred
+        :returns: :class:`LogModel` or ``None``, via Deferred
 
         Get a log, identified by name within the given step.
 
     .. py:method:: getLogs(stepid)
 
         :param integer stepid: ID of the step containing the desired logs
-        :returns: list of logdicts via Deferred
+        :returns: list of :class:`LogModel` via Deferred
 
         Get all logs within the given step.
 

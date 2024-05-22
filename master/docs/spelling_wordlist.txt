@@ -504,6 +504,7 @@ logid
 login
 Login
 loginfo
+LogModel
 logout
 Logout
 logwatcher

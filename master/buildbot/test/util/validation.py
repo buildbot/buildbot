@@ -543,18 +543,6 @@ _log = {
 }
 _logEvents = ['new', 'complete', 'appended']
 
-# message['log']
-
-dbdict['logdict'] = DictValidator(
-    id=IntValidator(),
-    stepid=IntValidator(),
-    name=StringValidator(),
-    slug=IdentifierValidator(50),
-    complete=BooleanValidator(),
-    num_lines=IntValidator(),
-    type=IdentifierValidator(1),
-)
-
 # test results sets
 
 _test_result_set_msgdict = DictValidator(

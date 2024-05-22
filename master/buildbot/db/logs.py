@@ -13,14 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+
+from __future__ import annotations
+
 import bz2
+import dataclasses
 import zlib
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from typing import Literal
+
+    LogType = Literal['s', 't', 'h', 'd']
 
 try:
     from lz4.block import compress as dumps_lz4
@@ -32,6 +43,34 @@ except ImportError:
 
     def read_lz4(data):
         return data
+
+
+@dataclasses.dataclass
+class LogModel:
+    id: int
+    name: str
+    slug: str
+    stepid: int
+    complete: bool
+    num_lines: int
+    type: LogType
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'LogsConnectorComponent '
+                'getLog, getLogBySlug, and getLogs '
+                'no longer return Log as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 def dumps_gzip(data):
@@ -77,7 +116,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._logdictFromRow(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
@@ -99,7 +138,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(tbl.c.stepid == stepid)
             q = q.order_by(tbl.c.id)
             res = conn.execute(q).mappings()
-            return [self._logdictFromRow(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thdGetLogs)
 
@@ -430,7 +469,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thddeleteOldLogs)
 
-    def _logdictFromRow(self, row):
-        rv = dict(row)
-        rv['complete'] = bool(rv['complete'])
-        return rv
+    def _model_from_row(self, row):
+        return LogModel(
+            id=row.id,
+            name=row.name,
+            slug=row.slug,
+            stepid=row.stepid,
+            complete=bool(row.complete),
+            num_lines=row.num_lines,
+            type=row.type,
+        )
