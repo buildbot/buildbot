@@ -25,7 +25,6 @@ from buildbot.db import sourcestamps
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
 
 SOMETIME = 20398573
@@ -79,24 +78,24 @@ class Tests(interfaces.InterfaceTests):
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
 
-    change14_dict = {
-        'changeid': 14,
-        'parent_changeids': [],
-        'author': 'warner',
-        'committer': 'david',
-        'branch': 'warnerdb',
-        'category': 'devel',
-        'comments': 'fix whitespace',
-        'files': ['master/buildbot/__init__.py'],
-        'project': 'Buildbot',
-        'properties': {},
-        'repository': 'git://warner',
-        'codebase': 'mainapp',
-        'revision': '0e92a098b',
-        'revlink': 'http://warner/0e92a098b',
-        'when_timestamp': epoch2datetime(266738404),
-        'sourcestampid': 233,
-    }
+    change14_dict = changes.ChangeModel(
+        changeid=14,
+        parent_changeids=[],
+        author='warner',
+        committer='david',
+        branch='warnerdb',
+        category='devel',
+        comments='fix whitespace',
+        files=['master/buildbot/__init__.py'],
+        project='Buildbot',
+        properties={},
+        repository='git://warner',
+        codebase='mainapp',
+        revision='0e92a098b',
+        revlink='http://warner/0e92a098b',
+        when_timestamp=epoch2datetime(266738404),
+        sourcestampid=233,
+    )
 
     # tests
 
@@ -146,28 +145,27 @@ class Tests(interfaces.InterfaceTests):
             project='proj',
         )
         chdict = yield self.db.changes.getChange(changeid)
-        validation.verifyDbDict(self, 'chdict', chdict)
-        chdict = chdict.copy()
+        self.assertIsInstance(chdict, changes.ChangeModel)
         ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
-        chdict['sourcestampid'] = ss
+        chdict.sourcestampid = ss
         self.assertEqual(
             chdict,
-            {
-                'author': 'dustin',
-                'committer': 'justin',
-                'branch': 'master',
-                'category': None,
-                'changeid': changeid,
-                'parent_changeids': [],
-                'codebase': 'cb',
-                'comments': 'fix spelling',
-                'files': [],
-                'project': 'proj',
-                'properties': {},
-                'repository': 'repo://',
-                'revision': '2d6caa52',
-                'revlink': None,
-                'sourcestampid': sourcestamps.SourceStampModel(
+            changes.ChangeModel(
+                author='dustin',
+                committer='justin',
+                branch='master',
+                category=None,
+                changeid=changeid,
+                parent_changeids=[],
+                codebase='cb',
+                comments='fix spelling',
+                files=[],
+                project='proj',
+                properties={},
+                repository='repo://',
+                revision='2d6caa52',
+                revlink=None,
+                sourcestampid=sourcestamps.SourceStampModel(
                     branch='master',
                     codebase='cb',
                     patch=None,
@@ -177,8 +175,8 @@ class Tests(interfaces.InterfaceTests):
                     created_at=epoch2datetime(SOMETIME),
                     ssid=ss.ssid,
                 ),
-                'when_timestamp': epoch2datetime(OTHERTIME),
-            },
+                when_timestamp=epoch2datetime(OTHERTIME),
+            ),
         )
 
     @defer.inlineCallbacks
@@ -202,28 +200,27 @@ class Tests(interfaces.InterfaceTests):
             project='Buildbot',
         )
         chdict = yield self.db.changes.getChange(changeid)
-        validation.verifyDbDict(self, 'chdict', chdict)
-        chdict = chdict.copy()
+        self.assertIsInstance(chdict, changes.ChangeModel)
         ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
-        chdict['sourcestampid'] = ss
+        chdict.sourcestampid = ss
         self.assertEqual(
             chdict,
-            {
-                'author': 'delanne',
-                'committer': 'melanne',
-                'branch': 'warnerdb',
-                'category': 'devel',
-                'changeid': changeid,
-                'parent_changeids': [14],
-                'codebase': 'mainapp',
-                'comments': 'child of changeid14',
-                'files': [],
-                'project': 'Buildbot',
-                'properties': {},
-                'repository': 'git://warner',
-                'revision': '50adad56',
-                'revlink': None,
-                'sourcestampid': sourcestamps.SourceStampModel(
+            changes.ChangeModel(
+                author='delanne',
+                committer='melanne',
+                branch='warnerdb',
+                category='devel',
+                changeid=changeid,
+                parent_changeids=[14],
+                codebase='mainapp',
+                comments='child of changeid14',
+                files=[],
+                project='Buildbot',
+                properties={},
+                repository='git://warner',
+                revision='50adad56',
+                revlink=None,
+                sourcestampid=sourcestamps.SourceStampModel(
                     branch='warnerdb',
                     codebase='mainapp',
                     created_at=epoch2datetime(SOMETIME),
@@ -233,8 +230,8 @@ class Tests(interfaces.InterfaceTests):
                     revision='50adad56',
                     ssid=ss.ssid,
                 ),
-                'when_timestamp': epoch2datetime(OTHERTIME),
-            },
+                when_timestamp=epoch2datetime(OTHERTIME),
+            ),
         )
 
     @defer.inlineCallbacks
@@ -243,7 +240,7 @@ class Tests(interfaces.InterfaceTests):
 
         chdict = yield self.db.changes.getChange(14)
 
-        validation.verifyDbDict(self, 'chdict', chdict)
+        self.assertIsInstance(chdict, changes.ChangeModel)
         self.assertEqual(chdict, self.change14_dict)
 
     @defer.inlineCallbacks

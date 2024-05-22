@@ -14,8 +14,8 @@ Changes connector
 
     .. index:: chdict, changeid
 
-    Changes are indexed by *changeid*, and are represented by a *chdict*, which
-    has the following keys:
+    Changes are indexed by *changeid*, and are represented by a :class:`ChangeModel` dataclass, which
+    has the following fields:
 
     * ``changeid`` (the ID of this change)
     * ``parent_changeids`` (list of ID; change's parents)
@@ -103,9 +103,9 @@ Changes connector
         :param changeid: the id of the change instance to fetch
         :param no_cache: bypass cache and always fetch from database
         :type no_cache: boolean
-        :returns: chdict via Deferred
+        :returns: :class:`ChangeModel` or None, via Deferred
 
-        Get a change dictionary for the given changeid, or ``None`` if no such
+        Get a :class:`ChangeModel` for the given changeid, or ``None`` if no such
         change exists.
 
     .. py:method:: getChangeUids(changeid)
@@ -119,9 +119,9 @@ Changes connector
 
         :param resultSpec: result spec containing filters sorting and paging requests from data/REST API.
             If possible, the db layer can optimize the SQL query using this information.
-        :returns: list of dictionaries via Deferred
+        :returns: list of :class:`ChangeModel` via Deferred
 
-        Get a list of the changes, represented as dictionaries, matching the given
+        Get a list of the changes, represented as :class:`ChangeModel`, matching the given
         criteria. if ``resultSpec`` is not provided, changes are sorted, and paged
         using generic data query options.
 
@@ -142,20 +142,20 @@ Changes connector
     .. py:method:: getChangesForBuild(buildid)
 
         :param buildid: ID of the build
-        :returns: list of dictionaries via Deferred
+        :returns: list of :class:`ChangeModel` via Deferred
 
         Get the "blame" list of changes for a build.
 
     .. py:method:: getBuildsForChange(changeid)
 
         :param changeid: ID of the change
-        :returns: list of buildDict via Deferred
+        :returns: list of :class:`ChangeModel` via Deferred
 
         Get builds related to a change.
 
     .. py:method:: getChangeFromSSid(sourcestampid)
 
         :param sourcestampid: ID of the sourcestampid
-        :returns: chdict via Deferred
+        :returns: :class:`ChangeModel` via Deferred
 
-        Returns the change dictionary related to the sourcestamp ID.
+        Returns the :class:`ChangeModel` related to the sourcestamp ID.

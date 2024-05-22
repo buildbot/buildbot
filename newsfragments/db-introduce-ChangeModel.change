@@ -1,0 +1,1 @@
+:class:`ChangesConnectorComponent` `getChange`, `getChangesForBuild`, `getChangeFromSSid`, and `getChanges` now return a :class`ChangeModel` instead of a dictionary of Change data

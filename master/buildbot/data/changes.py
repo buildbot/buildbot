@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import json
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
@@ -27,23 +30,41 @@ from buildbot.process.users import users
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from buildbot.db.changes import ChangeModel
+
 
 class FixerMixin:
     @defer.inlineCallbacks
-    def _fixChange(self, change, is_graphql):
+    def _fixChange(self, model: ChangeModel | None, is_graphql: bool):
         # TODO: make these mods in the DB API
-        if change:
-            change = change.copy()
-            change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
+        change = None
+        if model is not None:
+            change = {
+                'changeid': model.changeid,
+                'author': model.author,
+                'committer': model.committer,
+                'comments': model.comments,
+                'branch': model.branch,
+                'revision': model.revision,
+                'revlink': model.revlink,
+                'when_timestamp': datetime2epoch(model.when_timestamp),
+                'category': model.category,
+                'parent_changeids': model.parent_changeids,
+                'repository': model.repository,
+                'codebase': model.codebase,
+                'project': model.project,
+                'files': model.files,
+                'properties': model.properties,
+            }
             if is_graphql:
                 props = change['properties']
                 change['properties'] = [
                     {'name': k, 'source': v[1], 'value': json.dumps(v[0])} for k, v in props.items()
                 ]
             else:
-                sskey = ('sourcestamps', str(change['sourcestampid']))
+                sskey = ('sourcestamps', str(model.sourcestampid))
                 change['sourcestamp'] = yield self.master.data.get(sskey)
-                del change['sourcestampid']
         return change
 
     fieldMapping = {

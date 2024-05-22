@@ -20,17 +20,67 @@ Support for changes in the database
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from dataclasses import field
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
+from twisted.python import deprecate
 from twisted.python import log
+from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    import datetime
+    from typing import Any
+    from typing import Literal
 
 
-class ChDict(dict):
+@dataclass
+class ChangeModel:
+    changeid: int
+    author: str
+    committer: str | None
+    comments: str
+    branch: str | None
+    revision: str | None
+    revlink: str | None
+    when_timestamp: datetime.datetime
+    category: str | None
+    sourcestampid: int
+    parent_changeids: list[int] = field(default_factory=list)
+    repository: str = ''
+    codebase: str = ''
+    project: str = ''
+
+    files: list[str] = field(default_factory=list)
+    properties: dict[str, tuple[Any, Literal["Change"]]] = field(default_factory=dict)
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'ChangesConnectorComponent '
+                'getChange, getChangesForBuild, getChangeFromSSid, and getChanges '
+                'no longer return Change as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), ChangeModel)
+class ChDict(ChangeModel):
     pass
 
 
@@ -185,7 +235,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return None
             # and fetch the ancillary data (files, properties)
-            return self._chdict_from_change_row_thd(conn, row)
+            return self._thd_model_from_row(conn, row)
 
         return self.db.pool.do(thd)
 
@@ -194,10 +244,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         assert buildid > 0
 
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
-        changes: list[ChDict] = []
+        changes: list[ChangeModel] = []
         currentBuild = yield self.master.db.builds.getBuild(buildid)
-        fromChanges: dict[str, ChDict | None] = {}
-        toChanges: dict[str, ChDict] = {}
+        fromChanges: dict[str, ChangeModel | None] = {}
+        toChanges: dict[str, ChangeModel] = {}
         ssBuild = yield gssfb(buildid)
         for ss in ssBuild:
             fromChanges[ss.codebase] = yield self.getChangeFromSSid(ss.ssid)
@@ -214,7 +264,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # For each codebase, append changes until we match the parent
         for cb, change in fromChanges.items():
-            to_cb_changeid = toChanges.get(cb, ChDict()).get('changeid')
+            to_cb_change = toChanges.get(cb)
+            to_cb_changeid = to_cb_change.changeid if to_cb_change is not None else None
             if change and (not to_cb_changeid or change['changeid'] != to_cb_changeid):
                 changes.append(change)
                 while (to_cb_changeid not in change['parent_changeids']) and change[
@@ -245,7 +296,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return None
             # and fetch the ancillary data (files, properties)
-            return self._chdict_from_change_row_thd(conn, row)
+            return self._thd_model_from_row(conn, row)
 
         return self.db.pool.do(thd)
 
@@ -370,9 +421,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    def _chdict_from_change_row_thd(self, conn, ch_row):
-        # This method must be run in a db.pool thread, and returns a chdict
-        # given a row from the 'changes' table
+    def _thd_model_from_row(self, conn, ch_row) -> ChangeModel:
+        # This method must be run in a db.pool thread
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
 
@@ -381,19 +431,17 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         else:
             parent_changeids = []
 
-        chdict = ChDict(
+        chdict = ChangeModel(
             changeid=ch_row.changeid,
             parent_changeids=parent_changeids,
             author=ch_row.author,
             committer=ch_row.committer,
-            files=[],  # see below
             comments=ch_row.comments,
             revision=ch_row.revision,
             when_timestamp=epoch2datetime(ch_row.when_timestamp),
             branch=ch_row.branch,
             category=ch_row.category,
             revlink=ch_row.revlink,
-            properties={},  # see below
             repository=ch_row.repository,
             codebase=ch_row.codebase,
             project=ch_row.project,
@@ -402,13 +450,12 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         query = change_files_tbl.select().where(change_files_tbl.c.changeid == ch_row.changeid)
         rows = conn.execute(query)
-        for r in rows:
-            chdict['files'].append(r.filename)
+        chdict.files.extend(r.filename for r in rows)
 
         # and properties must be given without a source, so strip that, but
         # be flexible in case users have used a development version where the
         # change properties were recorded incorrectly
-        def split_vs(vs):
+        def split_vs(vs) -> tuple[Any, Literal["Change"]]:
             try:
                 v, s = vs
                 if s != "Change":
@@ -424,7 +471,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         for r in rows:
             try:
                 v, s = split_vs(json.loads(r.property_value))
-                chdict['properties'][r.property_name] = (v, s)
+                chdict.properties[r.property_name] = (v, s)
             except ValueError:
                 pass
 

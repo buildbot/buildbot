@@ -18,6 +18,7 @@ import json
 
 from twisted.internet import defer
 
+from buildbot.db.changes import ChangeModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.util import datetime2epoch
@@ -213,7 +214,7 @@ class FakeChangesComponent(FakeDBComponent):
         except KeyError:
             return defer.succeed(None)
 
-        return defer.succeed(self._chdict(row))
+        return defer.succeed(self._model_from_row(row))
 
     def getChangeUids(self, changeid):
         try:
@@ -225,9 +226,9 @@ class FakeChangesComponent(FakeDBComponent):
     def getChanges(self, resultSpec=None):
         if resultSpec is not None and resultSpec.limit is not None:
             ids = sorted(self.changes.keys())
-            chdicts = [self._chdict(self.changes[id]) for id in ids[-resultSpec.limit :]]
+            chdicts = [self._model_from_row(self.changes[id]) for id in ids[-resultSpec.limit :]]
             return defer.succeed(chdicts)
-        chdicts = [self._chdict(v) for v in self.changes.values()]
+        chdicts = [self._model_from_row(v) for v in self.changes.values()]
         return defer.succeed(chdicts)
 
     def getChangesCount(self):
@@ -239,19 +240,35 @@ class FakeChangesComponent(FakeDBComponent):
         raise NotImplementedError("Please patch in tests to return appropriate results")
 
     def getChangeFromSSid(self, ssid):
-        chdicts = [self._chdict(v) for v in self.changes.values() if v['sourcestampid'] == ssid]
+        chdicts = [
+            self._model_from_row(v) for v in self.changes.values() if v['sourcestampid'] == ssid
+        ]
         if chdicts:
             return defer.succeed(chdicts[0])
         return defer.succeed(None)
 
-    def _chdict(self, row):
-        chdict = row.copy()
-        del chdict['uids']
-        if chdict['parent_changeids'] is None:
-            chdict['parent_changeids'] = []
+    def _model_from_row(self, row):
+        model = ChangeModel(
+            changeid=row['changeid'],
+            author=row['author'],
+            committer=row['committer'],
+            comments=row['comments'],
+            branch=row['branch'],
+            revision=row['revision'],
+            revlink=row['revlink'],
+            when_timestamp=epoch2datetime(row['when_timestamp']),
+            category=row['category'],
+            sourcestampid=row['sourcestampid'],
+            repository=row['repository'],
+            codebase=row['codebase'],
+            project=row['project'],
+            files=row['files'],
+            properties=row['properties'],
+        )
+        if row['parent_changeids'] is not None:
+            model.parent_changeids = row['parent_changeids']
 
-        chdict['when_timestamp'] = epoch2datetime(chdict['when_timestamp'])
-        return chdict
+        return model
 
     # assertions
 

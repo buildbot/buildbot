@@ -1,0 +1,1 @@
+:class:`buildbot.db.changes.ChDict` is deprecated in favor of :class:`buildbot.db.changes.ChangeModel`
