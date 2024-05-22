@@ -17,6 +17,8 @@
 Support for changes in the database
 """
 
+from __future__ import annotations
+
 import json
 
 import sqlalchemy as sa
@@ -188,13 +190,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getChangesForBuild(self, buildid):
+    def getChangesForBuild(self, buildid: int):
         assert buildid > 0
 
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
-        changes = []
+        changes: list[ChDict] = []
         currentBuild = yield self.master.db.builds.getBuild(buildid)
-        fromChanges, toChanges = {}, {}
+        fromChanges: dict[str, ChDict | None] = {}
+        toChanges: dict[str, ChDict | None] = {}
         ssBuild = yield gssfb(buildid)
         for ss in ssBuild:
             fromChanges[ss.codebase] = yield self.getChangeFromSSid(ss.ssid)
@@ -210,12 +213,12 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # If no successful previous build, then we need to catch all
             # changes
             for cb in fromChanges:
-                toChanges[cb] = {'changeid': None}
+                toChanges[cb] = ChDict(changeid=None)
 
         # For each codebase, append changes until we match the parent
         for cb, change in fromChanges.items():
             # Careful; toChanges[cb] may be None from getChangeFromSSid
-            toCbChange = toChanges.get(cb) or {}
+            toCbChange = toChanges.get(cb) or ChDict(changeid=None)
             if change and change['changeid'] != toCbChange.get('changeid'):
                 changes.append(change)
                 while (toCbChange.get('changeid') not in change['parent_changeids']) and change[
