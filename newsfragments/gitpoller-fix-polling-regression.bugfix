@@ -1,0 +1,1 @@
+GitPoller would no longer register new changes (regression introduced in 3.11.3 in #7554)
