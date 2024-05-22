@@ -20,7 +20,6 @@ from buildbot.db import projects
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 
 
 def project_key(builder):
@@ -65,17 +64,17 @@ class Tests(interfaces.InterfaceTests):
             7, "slug7", "project7 desc", "format", "html desc"
         )
         dbdict = yield self.db.projects.get_project(7)
-        validation.verifyDbDict(self, 'projectdict', dbdict)
+        self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
             dbdict,
-            {
-                "id": 7,
-                "name": "fake_project7",
-                "slug": "slug7",
-                "description": "project7 desc",
-                "description_format": "format",
-                "description_html": "html desc",
-            },
+            projects.ProjectModel(
+                id=7,
+                name="fake_project7",
+                slug="slug7",
+                description="project7 desc",
+                description_format="format",
+                description_html="html desc",
+            ),
         )
 
     @defer.inlineCallbacks
@@ -84,14 +83,14 @@ class Tests(interfaces.InterfaceTests):
         dbdict = yield self.db.projects.get_project(id)
         self.assertEqual(
             dbdict,
-            {
-                "id": id,
-                "name": "fake_project",
-                "slug": "fake_project",
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-            },
+            projects.ProjectModel(
+                id=id,
+                name="fake_project",
+                slug="fake_project",
+                description=None,
+                description_format=None,
+                description_html=None,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -113,17 +112,17 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Project(id=7, name='fake_project'),
         ])
         dbdict = yield self.db.projects.get_project(7)
-        validation.verifyDbDict(self, 'projectdict', dbdict)
+        self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
             dbdict,
-            {
-                "id": 7,
-                "name": "fake_project",
-                "slug": "fake_project",
-                "description": None,
-                "description_format": None,
-                "description_html": None,
-            },
+            projects.ProjectModel(
+                id=7,
+                name="fake_project",
+                slug="fake_project",
+                description=None,
+                description_format=None,
+                description_html=None,
+            ),
         )
 
     @defer.inlineCallbacks
@@ -140,35 +139,35 @@ class Tests(interfaces.InterfaceTests):
         ])
         dblist = yield self.db.projects.get_projects()
         for dbdict in dblist:
-            validation.verifyDbDict(self, 'projectdict', dbdict)
+            self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
             sorted(dblist, key=project_key),
             sorted(
                 [
-                    {
-                        "id": 7,
-                        "name": "fake_project7",
-                        "slug": "fake_project7",
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                    },
-                    {
-                        "id": 8,
-                        "name": "fake_project8",
-                        "slug": "fake_project8",
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                    },
-                    {
-                        "id": 9,
-                        "name": "fake_project9",
-                        "slug": "fake_project9",
-                        "description": None,
-                        "description_format": None,
-                        "description_html": None,
-                    },
+                    projects.ProjectModel(
+                        id=7,
+                        name="fake_project7",
+                        slug="fake_project7",
+                        description=None,
+                        description_format=None,
+                        description_html=None,
+                    ),
+                    projects.ProjectModel(
+                        id=8,
+                        name="fake_project8",
+                        slug="fake_project8",
+                        description=None,
+                        description_format=None,
+                        description_html=None,
+                    ),
+                    projects.ProjectModel(
+                        id=9,
+                        name="fake_project9",
+                        slug="fake_project9",
+                        description=None,
+                        description_format=None,
+                        description_html=None,
+                    ),
                 ],
                 key=project_key,
             ),
@@ -192,18 +191,18 @@ class Tests(interfaces.InterfaceTests):
         ])
         dblist = yield self.db.projects.get_active_projects()
         for dbdict in dblist:
-            validation.verifyDbDict(self, 'projectdict', dbdict)
+            self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
             dblist,
             [
-                {
-                    "id": 2,
-                    "name": "fake_project2",
-                    "slug": "fake_project2",
-                    "description": None,
-                    "description_format": None,
-                    "description_html": None,
-                }
+                projects.ProjectModel(
+                    id=2,
+                    name="fake_project2",
+                    slug="fake_project2",
+                    description=None,
+                    description_format=None,
+                    description_html=None,
+                )
             ],
         )
 

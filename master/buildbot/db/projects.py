@@ -13,10 +13,41 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 
 from twisted.internet import defer
 
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
+
+
+@dataclass
+class ProjectModel:
+    id: int
+    name: str
+    slug: str
+    description: str | None
+    description_format: str | None
+    description_html: str | None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'ProjectsConnectorComponent '
+                'get_project, get_projects, and get_active_projects '
+                'no longer return Project as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 class ProjectsConnectorComponent(base.DBConnectorComponent):
@@ -44,7 +75,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._project_dict_from_row(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
@@ -57,7 +88,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             q = tbl.select()
             q = q.order_by(tbl.c.name)
             res = conn.execute(q)
-            return [self._project_dict_from_row(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
@@ -70,7 +101,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
             q = projects_tbl.select().join(builders_tbl).join(bm_tbl).order_by(projects_tbl.c.name)
             res = conn.execute(q)
-            return [self._project_dict_from_row(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
@@ -91,12 +122,12 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _project_dict_from_row(self, row):
-        return {
-            "id": row.id,
-            "name": row.name,
-            "slug": row.slug,
-            "description": row.description,
-            "description_format": row.description_format,
-            "description_html": row.description_html,
-        }
+    def _model_from_row(self, row):
+        return ProjectModel(
+            id=row.id,
+            name=row.name,
+            slug=row.slug,
+            description=row.description,
+            description_format=row.description_format,
+            description_html=row.description_html,
+        )

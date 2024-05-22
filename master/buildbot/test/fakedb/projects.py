@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 
+from buildbot.db.projects import ProjectModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
@@ -85,13 +86,13 @@ class FakeProjectsComponent(FakeDBComponent):
 
     def get_project(self, projectid):
         if projectid in self.projects:
-            return defer.succeed(self._row2dict(self.projects[projectid]))
+            return defer.succeed(self._model_from_row(self.projects[projectid]))
         return defer.succeed(None)
 
     def get_projects(self):
         rv = []
         for project in self.projects.values():
-            rv.append(self._row2dict(project))
+            rv.append(self._model_from_row(project))
         return rv
 
     def get_active_projects(self):
@@ -110,7 +111,7 @@ class FakeProjectsComponent(FakeDBComponent):
         for id, project in self.projects.items():
             if id not in active_projectids:
                 continue
-            rv.append(self._row2dict(project))
+            rv.append(self._model_from_row(project))
         return rv
 
     def update_project_info(
@@ -125,5 +126,12 @@ class FakeProjectsComponent(FakeDBComponent):
         project["description_html"] = description_html
         return defer.succeed(None)
 
-    def _row2dict(self, row):
-        return row.copy()
+    def _model_from_row(self, row):
+        return ProjectModel(
+            id=row['id'],
+            name=row['name'],
+            slug=row['slug'],
+            description=row['description'],
+            description_format=row['description_format'],
+            description_html=row['description_html'],
+        )
