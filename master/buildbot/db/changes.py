@@ -205,7 +205,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         )
         if previousBuild:
             for ss in (yield gssfb(previousBuild.id)):
-                toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
+                toChanges[ss.codebase] = yield self.getChangeFromSSid(ss.ssid)
         else:
             # If no successful previous build, then we need to catch all
             # changes
