@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -50,7 +51,7 @@ class FakeMastersComponent(FakeDBComponent):
                     last_active=epoch2datetime(row.last_active),
                 )
 
-    def findMasterId(self, name):
+    def findMasterId(self, name: str) -> defer.Deferred[int]:
         for m in self.masters.values():
             if m.name == name:
                 return defer.succeed(m.id)
@@ -63,7 +64,7 @@ class FakeMastersComponent(FakeDBComponent):
         )
         return defer.succeed(id)
 
-    def setMasterState(self, masterid, active):
+    def setMasterState(self, masterid: int, active: bool) -> defer.Deferred[bool]:
         if masterid in self.masters:
             was_active = self.masters[masterid].active
             self.masters[masterid].active = active
@@ -73,17 +74,17 @@ class FakeMastersComponent(FakeDBComponent):
         else:
             return defer.succeed(False)
 
-    def getMaster(self, masterid):
+    def getMaster(self, masterid: int) -> defer.Deferred[MasterModel | None]:
         if masterid in self.masters:
             return defer.succeed(self.masters[masterid])
         return defer.succeed(None)
 
-    def getMasters(self):
+    def getMasters(self) -> defer.Deferred[list[MasterModel]]:
         return defer.succeed(sorted(self.masters.values(), key=lambda x: x.id))
 
     # test helpers
 
-    def markMasterInactive(self, masterid):
+    def markMasterInactive(self, masterid: int) -> defer.Deferred[None]:
         if masterid in self.masters:
             self.masters[masterid].active = False
         return defer.succeed(None)
