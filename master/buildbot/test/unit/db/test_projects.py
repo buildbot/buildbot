@@ -23,7 +23,7 @@ from buildbot.test.util import interfaces
 
 
 def project_key(builder):
-    return builder['id']
+    return builder.id
 
 
 class Tests(interfaces.InterfaceTests):

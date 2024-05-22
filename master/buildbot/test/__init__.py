@@ -204,9 +204,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*ProjectsConnectorComponent get_project, get_projects, and get_active_projects no longer return Project as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)

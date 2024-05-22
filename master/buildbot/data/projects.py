@@ -13,21 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    from buildbot.db.projects import ProjectModel
 
-def project_db_to_data(dbdict, active=None):
+
+def project_db_to_data(model: ProjectModel, active=None):
     return {
-        "projectid": dbdict["id"],
-        "name": dbdict["name"],
-        "slug": dbdict["slug"],
-        "description": dbdict["description"],
-        "description_format": dbdict["description_format"],
-        "description_html": dbdict["description_html"],
+        "projectid": model.id,
+        "name": model.name,
+        "slug": model.slug,
+        "description": model.description,
+        "description_format": model.description_format,
+        "description_html": model.description_html,
         "active": active,
     }
 
@@ -69,8 +75,8 @@ class ProjectsEndpoint(base.Endpoint):
             # This is not optimized case which is assumed to be infrequently required
             dbdicts_all = yield self.master.db.projects.get_projects()
             dbdicts_active = yield self.master.db.projects.get_active_projects()
-            ids_active = set(dbdict["id"] for dbdict in dbdicts_active)
-            dbdicts = [dbdict for dbdict in dbdicts_all if dbdict["id"] not in ids_active]
+            ids_active = set(dbdict.id for dbdict in dbdicts_active)
+            dbdicts = [dbdict for dbdict in dbdicts_all if dbdict.id not in ids_active]
 
         return [project_db_to_data(dbdict, active=active) for dbdict in dbdicts]
 
