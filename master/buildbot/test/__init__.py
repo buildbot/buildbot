@@ -190,9 +190,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*ChangesConnectorComponent getChange, getChangesForBuild, getChangeFromSSid, and getChanges no longer return Change as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)

@@ -197,7 +197,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def getBuildsForChange(self, changeid):
         change = yield self.db.changes.getChange(changeid)
         bsets = yield self.db.buildsets.getBuildsets()
-        change_ssid = change['sourcestampid']
+        change_ssid = change.sourcestampid
 
         change_buildsetids = set(
             bset.bsid for bset in bsets if any(change_ssid == ssid for ssid in bset.sourcestamps)

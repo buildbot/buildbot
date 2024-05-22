@@ -146,7 +146,7 @@ class Tests(interfaces.InterfaceTests):
         )
         chdict = yield self.db.changes.getChange(changeid)
         self.assertIsInstance(chdict, changes.ChangeModel)
-        ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
+        ss = yield self.db.sourcestamps.getSourceStamp(chdict.sourcestampid)
         chdict.sourcestampid = ss
         self.assertEqual(
             chdict,
@@ -201,7 +201,7 @@ class Tests(interfaces.InterfaceTests):
         )
         chdict = yield self.db.changes.getChange(changeid)
         self.assertIsInstance(chdict, changes.ChangeModel)
-        ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
+        ss = yield self.db.sourcestamps.getSourceStamp(chdict.sourcestampid)
         chdict.sourcestampid = ss
         self.assertEqual(
             chdict,
@@ -317,7 +317,7 @@ class Tests(interfaces.InterfaceTests):
         rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
         rs.fieldMapping = FixerMixin.fieldMapping
         changes = yield self.db.changes.getChanges(resultSpec=rs)
-        changeids = [c['changeid'] for c in changes]
+        changeids = [c.changeid for c in changes]
         self.assertEqual(changeids, [10, 11, 12, 13, 14])
 
     @defer.inlineCallbacks
@@ -358,14 +358,14 @@ class Tests(interfaces.InterfaceTests):
         def check(changes):
             # requested all, but only got 2
             # sort by changeid, since we assert on change 13 at index 0
-            changes.sort(key=lambda c: c['changeid'])
-            changeids = [c['changeid'] for c in changes]
+            changes.sort(key=lambda c: c.changeid)
+            changeids = [c.changeid for c in changes]
             self.assertEqual(changeids, [13, 14])
             # double-check that they have .files, etc.
             self.assertEqual(
-                sorted(changes[0]['files']), sorted(['master/README.txt', 'worker/README.txt'])
+                sorted(changes[0].files), sorted(['master/README.txt', 'worker/README.txt'])
             )
-            self.assertEqual(changes[0]['properties'], {'notest': ('no', 'Change')})
+            self.assertEqual(changes[0].properties, {'notest': ('no', 'Change')})
 
         rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
         changes = yield self.db.changes.getChanges(resultSpec=rs)
@@ -842,7 +842,7 @@ class RealTests(Tests):
         @defer.inlineCallbacks
         def expect(buildid, commits):
             got = yield self.db.changes.getChangesForBuild(buildid)
-            got_commits = [c['comments'] for c in got]
+            got_commits = [c.comments for c in got]
             self.assertEqual(sorted(got_commits), sorted(commits))
 
         yield expect(1, ['2nd commit', '3rd commit', '1st commit'])
