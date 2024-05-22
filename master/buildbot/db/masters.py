@@ -14,12 +14,51 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+import dataclasses
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    import datetime
+
+    from twisted.internet import defer
 
 
+@dataclasses.dataclass
+class MasterModel:
+    id: int
+    name: str
+    active: bool
+    last_active: datetime.datetime
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'MastersConnectorComponent '
+                'getMaster, and getMasters '
+                'no longer return Master as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), MasterModel)
 class MasterDict(dict):
     pass
 
@@ -27,7 +66,7 @@ class MasterDict(dict):
 class MastersConnectorComponent(base.DBConnectorComponent):
     data2db = {"masterid": "id", "link": "id"}
 
-    def findMasterId(self, name):
+    def findMasterId(self, name: str) -> defer.Deferred[int]:
         tbl = self.db.model.masters
         name_hash = self.hashColumns(name)
         return self.findSomethingId(
@@ -41,9 +80,8 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             },
         )
 
-    # returns a Deferred that returns a value
-    def setMasterState(self, masterid, active):
-        def thd(conn):
+    def setMasterState(self, masterid: int, active: bool) -> defer.Deferred[bool]:
+        def thd(conn) -> bool:
             tbl = self.db.model.masters
             whereclause = tbl.c.id == masterid
 
@@ -74,40 +112,37 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getMaster(self, masterid):
-        def thd(conn):
+    def getMaster(self, masterid: int) -> defer.Deferred[MasterModel | None]:
+        def thd(conn) -> MasterModel | None:
             tbl = self.db.model.masters
             res = conn.execute(tbl.select().where(tbl.c.id == masterid))
             row = res.fetchone()
 
             rv = None
             if row:
-                rv = self._masterdictFromRow(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getMasters(self):
-        def thd(conn):
+    def getMasters(self) -> defer.Deferred[list[MasterModel]]:
+        def thd(conn) -> list[MasterModel]:
             tbl = self.db.model.masters
-            return [self._masterdictFromRow(row) for row in conn.execute(tbl.select()).fetchall()]
+            return [self._model_from_row(row) for row in conn.execute(tbl.select()).fetchall()]
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns None
-    def setAllMastersActiveLongTimeAgo(self):
-        def thd(conn):
+    def setAllMastersActiveLongTimeAgo(self) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             tbl = self.db.model.masters
             q = tbl.update().values(active=1, last_active=0)
             conn.execute(q)
 
         return self.db.pool.do(thd)
 
-    def _masterdictFromRow(self, row):
-        return MasterDict(
+    def _model_from_row(self, row):
+        return MasterModel(
             id=row.id,
             name=row.name,
             active=bool(row.active),

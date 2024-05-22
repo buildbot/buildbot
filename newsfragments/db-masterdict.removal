@@ -1,0 +1,1 @@
+:class:`buildbot.db.masters.MasterDict` is deprecated in favor of :class:`buildbot.db.masters.MasterModel`
