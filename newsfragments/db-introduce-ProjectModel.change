@@ -1,0 +1,1 @@
+:class:`ProjectsConnectorComponent` `get_project`, `get_projects`, and `get_active_projects` now return a :class`ProjectModel` instead of a dictionary of Project data

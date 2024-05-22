@@ -13,14 +13,45 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 
 from twisted.internet import defer
 
 from buildbot.db import base
+from buildbot.warnings import warn_deprecated
+
+
+@dataclass
+class ProjectModel:
+    id: int
+    name: str
+    slug: str
+    description: str | None
+    description_format: str | None
+    description_html: str | None
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'ProjectsConnectorComponent '
+                'get_project, get_projects, and get_active_projects '
+                'no longer return Project as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
 
 
 class ProjectsConnectorComponent(base.DBConnectorComponent):
-    def find_project_id(self, name, auto_create=True):
+    def find_project_id(self, name: str, auto_create: bool = True) -> defer.Deferred[int | None]:
         name_hash = self.hashColumns(name)
         return self.findSomethingId(
             tbl=self.db.model.projects,
@@ -33,9 +64,8 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             autoCreate=auto_create,
         )
 
-    @defer.inlineCallbacks
-    def get_project(self, projectid):
-        def thd(conn):
+    def get_project(self, projectid: int) -> defer.Deferred[ProjectModel | None]:
+        def thd(conn) -> ProjectModel | None:
             q = self.db.model.projects.select().where(
                 self.db.model.projects.c.id == projectid,
             )
@@ -44,41 +74,44 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._project_dict_from_row(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
-        return (yield self.db.pool.do(thd))
+        return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def get_projects(self):
-        def thd(conn):
+    def get_projects(self) -> defer.Deferred[list[ProjectModel]]:
+        def thd(conn) -> list[ProjectModel]:
             tbl = self.db.model.projects
             q = tbl.select()
             q = q.order_by(tbl.c.name)
             res = conn.execute(q)
-            return [self._project_dict_from_row(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def get_active_projects(self):
-        def thd(conn):
+    def get_active_projects(self) -> defer.Deferred[list[ProjectModel]]:
+        def thd(conn) -> list[ProjectModel]:
             projects_tbl = self.db.model.projects
             builders_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
 
             q = projects_tbl.select().join(builders_tbl).join(bm_tbl).order_by(projects_tbl.c.name)
             res = conn.execute(q)
-            return [self._project_dict_from_row(row) for row in res.fetchall()]
+            return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
     def update_project_info(
-        self, projectid, slug, description, description_format, description_html
-    ):
-        def thd(conn):
+        self,
+        projectid: int,
+        slug: str,
+        description: str | None,
+        description_format: str | None,
+        description_html: str | None,
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             q = self.db.model.projects.update().where(self.db.model.projects.c.id == projectid)
             conn.execute(
                 q.values(
@@ -91,12 +124,12 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _project_dict_from_row(self, row):
-        return {
-            "id": row.id,
-            "name": row.name,
-            "slug": row.slug,
-            "description": row.description,
-            "description_format": row.description_format,
-            "description_html": row.description_html,
-        }
+    def _model_from_row(self, row):
+        return ProjectModel(
+            id=row.id,
+            name=row.name,
+            slug=row.slug,
+            description=row.description,
+            description_format=row.description_format,
+            description_html=row.description_html,
+        )

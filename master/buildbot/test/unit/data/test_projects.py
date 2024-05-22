@@ -21,6 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.data import projects
 from buildbot.data import resultspec
+from buildbot.db.projects import ProjectModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -155,13 +156,13 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             projects,
             [
-                {
-                    "id": 13,
-                    "name": "fake_project",
-                    "slug": "slug13",
-                    "description": "project13 desc",
-                    "description_format": "format",
-                    "description_html": "html desc",
-                }
+                ProjectModel(
+                    id=13,
+                    name="fake_project",
+                    slug="slug13",
+                    description="project13 desc",
+                    description_format="format",
+                    description_html="html desc",
+                )
             ],
         )

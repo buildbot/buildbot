@@ -342,16 +342,6 @@ _sourcestamp = {
 message['sourcestamps'] = Selector()
 message['sourcestamps'].add(None, DictValidator(**_sourcestamp))
 
-# project
-dbdict['projectdict'] = DictValidator(
-    id=IntValidator(),
-    name=StringValidator(),
-    slug=StringValidator(),
-    description=NoneOk(StringValidator()),
-    description_format=NoneOk(StringValidator()),
-    description_html=NoneOk(StringValidator()),
-)
-
 # builder
 
 message['builders'] = Selector()
