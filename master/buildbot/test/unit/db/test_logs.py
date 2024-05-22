@@ -233,7 +233,7 @@ class Tests(interfaces.InterfaceTests):
         )
         logdict = yield self.db.logs.getLogBySlug(101, 'dbg_log')
         self.assertIsInstance(logdict, logs.LogModel)
-        self.assertEqual(logdict['id'], 202)
+        self.assertEqual(logdict.id, 202)
 
     @defer.inlineCallbacks
     def test_getLogBySlug_missing(self):
@@ -291,7 +291,7 @@ class Tests(interfaces.InterfaceTests):
         logdicts = yield self.db.logs.getLogs(101)
         for logdict in logdicts:
             self.assertIsInstance(logdict, logs.LogModel)
-        self.assertEqual(sorted([ld['id'] for ld in logdicts]), [201, 202])
+        self.assertEqual(sorted([ld.id for ld in logdicts]), [201, 202])
 
     @defer.inlineCallbacks
     def test_getLogLines(self):
@@ -708,10 +708,10 @@ class RealTests(Tests):
         self.assertEqual(deleted_chunks, 0)
         for logid in logids:
             logdict = yield self.db.logs.getLog(logid)
-            self.assertEqual(logdict['type'], 'd')
+            self.assertEqual(logdict.type, 'd')
 
             # we make sure we can still getLogLines, it will just return empty value
-            lines = yield self.db.logs.getLogLines(logid, 0, logdict['num_lines'])
+            lines = yield self.db.logs.getLogLines(logid, 0, logdict.num_lines)
             self.assertEqual(lines, '')
 
 

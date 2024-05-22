@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -20,17 +22,20 @@ from buildbot.data import base
 from buildbot.data import types
 from buildbot.util import identifiers
 
+if TYPE_CHECKING:
+    from buildbot.db.logs import LogModel
+
 
 class EndpointMixin:
-    def db2data(self, dbdict):
+    def db2data(self, model: LogModel):
         data = {
-            'logid': dbdict['id'],
-            'name': dbdict['name'],
-            'slug': dbdict['slug'],
-            'stepid': dbdict['stepid'],
-            'complete': dbdict['complete'],
-            'num_lines': dbdict['num_lines'],
-            'type': dbdict['type'],
+            'logid': model.id,
+            'name': model.name,
+            'slug': model.slug,
+            'stepid': model.stepid,
+            'complete': model.complete,
+            'num_lines': model.num_lines,
+            'type': model.type,
         }
         return defer.succeed(data)
 

@@ -204,9 +204,3 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
-
-warnings.filterwarnings(
-    "ignore",
-    r".*LogsConnectorComponent getLog, getLogBySlug, and getLogs no longer return Log as dictionnaries.*",
-    category=DeprecatedApiWarning,
-)
