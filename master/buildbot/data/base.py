@@ -230,7 +230,7 @@ class NestedBuildDataRetriever:
         if 'logid' in self.args:
             log_dict = await self.get_log_dict()
             if log_dict is not None:
-                self.step_dict = await self.master.db.steps.getStep(stepid=log_dict['stepid'])
+                self.step_dict = await self.master.db.steps.getStep(stepid=log_dict.stepid)
                 return self.step_dict
 
         self.step_dict = None
@@ -340,7 +340,7 @@ class NestedBuildDataRetriever:
         log_dict = await self.get_log_dict()
         if log_dict is None:
             return None
-        return log_dict['id']
+        return log_dict.id
 
     @async_to_deferred
     async def get_worker_dict(self) -> WorkerModel | None:

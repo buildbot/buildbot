@@ -28,7 +28,7 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         if log_dict is None:
             return None, None, None
 
-        lastline = max(0, log_dict['num_lines'] - 1)
+        lastline = max(0, log_dict.num_lines - 1)
 
         @defer.inlineCallbacks
         def get_info():
@@ -41,11 +41,11 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             return step_dict, build_dict, builder_dict, worker_dict
 
         log_lines, (step_dict, build_dict, builder_dict, worker_dict) = yield defer.gatherResults([
-            self.master.db.logs.getLogLines(log_dict['id'], 0, lastline),
+            self.master.db.logs.getLogLines(log_dict.id, 0, lastline),
             get_info(),
         ])
 
-        if log_dict['type'] == 's':
+        if log_dict.type == 's':
             log_prefix = ''
             if builder_dict is not None:
                 log_prefix += f'Builder: {builder_dict.name}\n'
@@ -63,10 +63,10 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             informative_parts += ['build', str(build_dict.number)]
         if step_dict is not None:
             informative_parts += ['step', step_dict.name]
-        informative_parts += ['log', log_dict['slug']]
+        informative_parts += ['log', log_dict.slug]
         informative_slug = '_'.join(informative_parts)
 
-        return log_lines, log_dict['type'], informative_slug
+        return log_lines, log_dict.type, informative_slug
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
@@ -101,7 +101,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
             log_dict = yield retriever.get_log_dict()
             if not log_dict:
                 return None
-            lastline = int(max(0, log_dict['num_lines'] - 1))
+            lastline = int(max(0, log_dict.num_lines - 1))
 
         # bounds checks
         if firstline < 0 or lastline < 0 or firstline > lastline:

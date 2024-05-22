@@ -1,0 +1,1 @@
+:class:`LogsConnectorComponent` `getLog`, `getLogBySlug`, and `getLogs` now return a :class`LogModel` instead of a dictionary of Log data

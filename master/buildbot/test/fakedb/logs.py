@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 
+from buildbot.db.logs import LogModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.test.util import validation
@@ -84,22 +85,22 @@ class FakeLogsComponent(FakeDBComponent):
             id += 1
         return id
 
-    def _row2dict(self, row):
-        return {
-            "id": row['id'],
-            "stepid": row['stepid'],
-            "name": row['name'],
-            "slug": row['slug'],
-            "complete": bool(row['complete']),
-            "num_lines": row['num_lines'],
-            "type": row['type'],
-        }
+    def _model_from_row(self, row):
+        return LogModel(
+            id=row['id'],
+            stepid=row['stepid'],
+            name=row['name'],
+            slug=row['slug'],
+            complete=bool(row['complete']),
+            num_lines=row['num_lines'],
+            type=row['type'],
+        )
 
     def getLog(self, logid):
         row = self.logs.get(logid)
         if not row:
             return defer.succeed(None)
-        return defer.succeed(self._row2dict(row))
+        return defer.succeed(self._model_from_row(row))
 
     def getLogBySlug(self, stepid, slug):
         row = None
@@ -108,11 +109,11 @@ class FakeLogsComponent(FakeDBComponent):
                 break
         else:
             return defer.succeed(None)
-        return defer.succeed(self._row2dict(row))
+        return defer.succeed(self._model_from_row(row))
 
     def getLogs(self, stepid=None):
         return defer.succeed([
-            self._row2dict(row) for row in self.logs.values() if row['stepid'] == stepid
+            self._model_from_row(row) for row in self.logs.values() if row['stepid'] == stepid
         ])
 
     def getLogLines(self, logid, first_line, last_line):

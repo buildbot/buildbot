@@ -39,7 +39,7 @@ def doCleanupDatabase(config, master_cfg):
     percent = 0
     saved = 0
     for log in res:
-        saved += yield db.logs.compressLog(log['id'], force=config['force'])
+        saved += yield db.logs.compressLog(log.id, force=config['force'])
         i += 1
         if not config['quiet'] and percent != i * 100 / len(res):
             percent = i * 100 / len(res)
