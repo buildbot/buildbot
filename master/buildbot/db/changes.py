@@ -38,6 +38,7 @@ from buildbot.warnings import warn_deprecated
 if TYPE_CHECKING:
     import datetime
     from typing import Any
+    from typing import Iterable
     from typing import Literal
 
 
@@ -85,9 +86,10 @@ class ChDict(ChangeModel):
 
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
-    # returns a Deferred that returns a value
-    def getParentChangeIds(self, branch, repository, project, codebase):
-        def thd(conn):
+    def getParentChangeIds(
+        self, branch: str | None, repository: str, project: str, codebase: str
+    ) -> defer.Deferred[list[int]]:
+        def thd(conn) -> list[int]:
             changes_tbl = self.db.model.changes
             q = (
                 sa.select(
@@ -112,21 +114,21 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def addChange(
         self,
-        author=None,
-        committer=None,
-        files=None,
-        comments=None,
-        is_dir=None,
-        revision=None,
-        when_timestamp=None,
-        branch=None,
-        category=None,
-        revlink='',
-        properties=None,
-        repository='',
-        codebase='',
-        project='',
-        uid=None,
+        author: str | None = None,
+        committer: str | None = None,
+        files: list[str] | None = None,
+        comments: str | None = None,
+        is_dir: None = None,
+        revision: str | None = None,
+        when_timestamp: datetime.datetime | None = None,
+        branch: str | None = None,
+        category: str | None = None,
+        revlink: str | None = '',
+        properties: dict[str, tuple[Any, Literal['Change']]] | None = None,
+        repository: str = '',
+        codebase: str = '',
+        project: str = '',
+        uid: int | None = None,
     ):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -168,7 +170,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # But for the moment, a Change can only have 1 parent
         parent_changeid = parent_changeids[0] if parent_changeids else None
 
-        def thd(conn):
+        def thd(conn) -> int:
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicity - other database users may
             # still come across a change without its files, properties,
@@ -221,12 +223,11 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return (yield self.db.pool.do(thd))
 
-    # returns a Deferred that returns a value
     @base.cached("chdicts")
-    def getChange(self, changeid):
+    def getChange(self, changeid: int) -> defer.Deferred[ChangeModel | None]:
         assert changeid >= 0
 
-        def thd(conn):
+        def thd(conn) -> ChangeModel | None:
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select().where(changes_tbl.c.changeid == changeid)
@@ -278,11 +279,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     changes.append(change)
         return changes
 
-    # returns a Deferred that returns a value
-    def getChangeFromSSid(self, sourcestampid):
+    def getChangeFromSSid(self, sourcestampid: int) -> defer.Deferred[ChangeModel | None]:
         assert sourcestampid >= 0
 
-        def thd(conn):
+        def thd(conn) -> ChangeModel | None:
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select().where(changes_tbl.c.sourcestampid == sourcestampid)
@@ -298,11 +298,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getChangeUids(self, changeid):
+    def getChangeUids(self, changeid: int) -> defer.Deferred[list[int]]:
         assert changeid >= 0
 
-        def thd(conn):
+        def thd(conn) -> list[int]:
             cu_tbl = self.db.model.change_users
             q = cu_tbl.select().where(cu_tbl.c.changeid == changeid)
             res = conn.execute(q)
@@ -315,8 +314,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def _getDataFromRow(self, row):
         return row.changeid
 
-    def getChanges(self, resultSpec=None):
-        def thd(conn):
+    def getChanges(self, resultSpec=None) -> defer.Deferred[Iterable[int]]:
+        def thd(conn) -> Iterable[int]:
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
 
@@ -339,9 +338,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return d
 
-    # returns a Deferred that returns a value
-    def getChangesCount(self):
-        def thd(conn):
+    def getChangesCount(self) -> defer.Deferred[int]:
+        def thd(conn) -> int:
             changes_tbl = self.db.model.changes
             q = sa.select(sa.func.count()).select_from(changes_tbl)
             rp = conn.execute(q)
@@ -353,9 +351,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def getLatestChangeid(self):
-        def thd(conn):
+    def getLatestChangeid(self) -> defer.Deferred[int | None]:
+        def thd(conn) -> int:
             changes_tbl = self.db.model.changes
             q = (
                 sa.select(
@@ -373,7 +370,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     # utility methods
 
     @defer.inlineCallbacks
-    def pruneChanges(self, changeHorizon):
+    def pruneChanges(self, changeHorizon: int):
         """
         Called periodically by DBConnector, this method deletes changes older
         than C{changeHorizon}.
@@ -382,7 +379,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         if not changeHorizon:
             return
 
-        def thd(conn):
+        def thd(conn) -> None:
             changes_tbl = self.db.model.changes
 
             # First, get the list of changes to delete.  This could be written

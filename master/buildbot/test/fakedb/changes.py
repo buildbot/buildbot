@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import json
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -23,6 +26,12 @@ from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    import datetime
+    from typing import Any
+    from typing import Iterable
+    from typing import Literal
 
 
 class Change(Row):
@@ -132,21 +141,21 @@ class FakeChangesComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def addChange(
         self,
-        author=None,
-        committer=None,
-        files=None,
-        comments=None,
-        is_dir=None,
-        revision=None,
-        when_timestamp=None,
-        branch=None,
-        category=None,
-        revlink='',
-        properties=None,
-        repository='',
-        codebase='',
-        project='',
-        uid=None,
+        author: str | None = None,
+        committer: str | None = None,
+        files: list[str] | None = None,
+        comments: str | None = None,
+        is_dir: None = None,
+        revision: str | None = None,
+        when_timestamp: datetime.datetime | None = None,
+        branch: str | None = None,
+        category: str | None = None,
+        revlink: str | None = '',
+        properties: dict[str, tuple[Any, Literal['Change']]] | None = None,
+        repository: str = '',
+        codebase: str = '',
+        project: str = '',
+        uid: int | None = None,
     ):
         if properties is None:
             properties = {}
@@ -191,12 +200,14 @@ class FakeChangesComponent(FakeDBComponent):
 
         return changeid
 
-    def getLatestChangeid(self):
+    def getLatestChangeid(self) -> defer.Deferred[int | None]:
         if self.changes:
             return defer.succeed(max(list(self.changes)))
         return defer.succeed(None)
 
-    def getParentChangeIds(self, branch, repository, project, codebase):
+    def getParentChangeIds(
+        self, branch: str | None, repository: str, project: str, codebase: str
+    ) -> defer.Deferred[list[int]]:
         if self.changes:
             for change in self.changes.values():
                 if (
@@ -208,7 +219,7 @@ class FakeChangesComponent(FakeDBComponent):
                     return defer.succeed([change['changeid']])
         return defer.succeed([])
 
-    def getChange(self, key, no_cache=False):
+    def getChange(self, key: int, no_cache: bool = False) -> defer.Deferred[ChangeModel | None]:
         try:
             row = self.changes[key]
         except KeyError:
@@ -216,14 +227,14 @@ class FakeChangesComponent(FakeDBComponent):
 
         return defer.succeed(self._model_from_row(row))
 
-    def getChangeUids(self, changeid):
+    def getChangeUids(self, changeid: int) -> defer.Deferred[list[int]]:
         try:
             ch_uids = self.changes[changeid]['uids']
         except KeyError:
             ch_uids = []
         return defer.succeed(ch_uids)
 
-    def getChanges(self, resultSpec=None):
+    def getChanges(self, resultSpec=None) -> defer.Deferred[Iterable[int]]:
         if resultSpec is not None and resultSpec.limit is not None:
             ids = sorted(self.changes.keys())
             chdicts = [self._model_from_row(self.changes[id]) for id in ids[-resultSpec.limit :]]
@@ -231,15 +242,15 @@ class FakeChangesComponent(FakeDBComponent):
         chdicts = [self._model_from_row(v) for v in self.changes.values()]
         return defer.succeed(chdicts)
 
-    def getChangesCount(self):
+    def getChangesCount(self) -> defer.Deferred[int]:
         return defer.succeed(len(self.changes))
 
-    def getChangesForBuild(self, buildid):
+    def getChangesForBuild(self, buildid: int):
         # the algorithm is too complicated to be worth faked, better patch it
         # ad-hoc
         raise NotImplementedError("Please patch in tests to return appropriate results")
 
-    def getChangeFromSSid(self, ssid):
+    def getChangeFromSSid(self, ssid: int) -> defer.Deferred[ChangeModel | None]:
         chdicts = [
             self._model_from_row(v) for v in self.changes.values() if v['sourcestampid'] == ssid
         ]
