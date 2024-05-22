@@ -829,6 +829,15 @@ class RealTests(Tests):
         # Build 7 has only one change for codebase C
         rows.extend(addChange('C', 3, 'bob', 'bob', '11th commit'))
         rows.extend(addBuild(codebase_ss, 2))
+        # Build 8 has only one change for codebase C, and succeed
+        rows.extend(addChange('C', 4, 'bob', 'bob', '12th commit'))
+        rows.extend(addBuild(codebase_ss))
+        # Build 9 has only one change for codebase C, and fails
+        rows.extend(addChange('C', 5, 'bob', 'bob', '13th commit'))
+        rows.extend(addBuild(codebase_ss, 2))
+        # Build 10 has only one change for codebase C, and fails
+        rows.extend(addChange('C', 6, 'bob', 'bob', '14th commit'))
+        rows.extend(addBuild(codebase_ss, 2))
         yield self.insert_test_data(rows)
 
         @defer.inlineCallbacks
@@ -844,6 +853,9 @@ class RealTests(Tests):
         yield expect(5, ['8th commit', '9th commit', '7th commit'])
         yield expect(6, ['10th commit'])
         yield expect(7, ['11th commit'])
+        yield expect(8, ['12th commit'])
+        yield expect(9, ['13th commit'])
+        yield expect(10, ['13th commit', '14th commit'])
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
