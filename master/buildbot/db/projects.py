@@ -51,7 +51,7 @@ class ProjectModel:
 
 
 class ProjectsConnectorComponent(base.DBConnectorComponent):
-    def find_project_id(self, name, auto_create=True):
+    def find_project_id(self, name: str, auto_create: bool = True) -> defer.Deferred[int | None]:
         name_hash = self.hashColumns(name)
         return self.findSomethingId(
             tbl=self.db.model.projects,
@@ -64,9 +64,8 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             autoCreate=auto_create,
         )
 
-    @defer.inlineCallbacks
-    def get_project(self, projectid):
-        def thd(conn):
+    def get_project(self, projectid: int) -> defer.Deferred[ProjectModel | None]:
+        def thd(conn) -> ProjectModel | None:
             q = self.db.model.projects.select().where(
                 self.db.model.projects.c.id == projectid,
             )
@@ -79,11 +78,10 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
             res.close()
             return rv
 
-        return (yield self.db.pool.do(thd))
+        return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def get_projects(self):
-        def thd(conn):
+    def get_projects(self) -> defer.Deferred[list[ProjectModel]]:
+        def thd(conn) -> list[ProjectModel]:
             tbl = self.db.model.projects
             q = tbl.select()
             q = q.order_by(tbl.c.name)
@@ -92,9 +90,8 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    # returns a Deferred that returns a value
-    def get_active_projects(self):
-        def thd(conn):
+    def get_active_projects(self) -> defer.Deferred[list[ProjectModel]]:
+        def thd(conn) -> list[ProjectModel]:
             projects_tbl = self.db.model.projects
             builders_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
@@ -107,9 +104,14 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     def update_project_info(
-        self, projectid, slug, description, description_format, description_html
-    ):
-        def thd(conn):
+        self,
+        projectid: int,
+        slug: str,
+        description: str | None,
+        description_format: str | None,
+        description_html: str | None,
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             q = self.db.model.projects.update().where(self.db.model.projects.c.id == projectid)
             conn.execute(
                 q.values(
