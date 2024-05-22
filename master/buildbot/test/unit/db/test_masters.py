@@ -20,7 +20,6 @@ from buildbot.db import masters
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
-from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1348971992
@@ -64,7 +63,7 @@ class Tests(interfaces.InterfaceTests):
         masterdict = yield self.db.masters.getMaster(id)
         self.assertEqual(
             masterdict,
-            {"id": id, "name": 'some:master', "active": False, "last_active": SOMETIME_DT},
+            masters.MasterModel(id=id, name='some:master', active=False, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -76,7 +75,7 @@ class Tests(interfaces.InterfaceTests):
         masterdict = yield self.db.masters.getMaster(id)
         self.assertEqual(
             masterdict,
-            {'id': id, 'name': 'some:Master', 'active': False, 'last_active': SOMETIME_DT},
+            masters.MasterModel(id=id, name='some:Master', active=False, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -101,7 +100,8 @@ class Tests(interfaces.InterfaceTests):
         self.assertFalse(activated)  # it was already active
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
-            masterdict, {"id": 7, "name": 'some:master', "active": True, "last_active": SOMETIME_DT}
+            masterdict,
+            masters.MasterModel(id=7, name='some:master', active=True, last_active=SOMETIME_DT),
         )  # timestamp updated
 
     @defer.inlineCallbacks
@@ -113,7 +113,8 @@ class Tests(interfaces.InterfaceTests):
         self.assertTrue(activated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
-            masterdict, {"id": 7, "name": 'some:master', "active": True, "last_active": SOMETIME_DT}
+            masterdict,
+            masters.MasterModel(id=7, name='some:master', active=True, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -126,7 +127,7 @@ class Tests(interfaces.InterfaceTests):
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
             masterdict,
-            {"id": 7, "name": 'some:master', "active": False, "last_active": OTHERTIME_DT},
+            masters.MasterModel(id=7, name='some:master', active=False, last_active=OTHERTIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -139,7 +140,7 @@ class Tests(interfaces.InterfaceTests):
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
             masterdict,
-            {"id": 7, "name": 'some:master', "active": False, "last_active": OTHERTIME_DT},
+            masters.MasterModel(id=7, name='some:master', active=False, last_active=OTHERTIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -148,10 +149,10 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
         ])
         masterdict = yield self.db.masters.getMaster(7)
-        validation.verifyDbDict(self, 'masterdict', masterdict)
+        self.assertIsInstance(masterdict, masters.MasterModel)
         self.assertEqual(
             masterdict,
-            {"id": 7, "name": 'some:master', "active": False, "last_active": SOMETIME_DT},
+            masters.MasterModel(id=7, name='some:master', active=False, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -167,15 +168,15 @@ class Tests(interfaces.InterfaceTests):
         ])
         masterlist = yield self.db.masters.getMasters()
         for masterdict in masterlist:
-            validation.verifyDbDict(self, 'masterdict', masterdict)
+            self.assertIsInstance(masterdict, masters.MasterModel)
 
         def masterKey(master):
             return master['id']
 
         expected = sorted(
             [
-                {"id": 7, "name": 'some:master', "active": 0, "last_active": SOMETIME_DT},
-                {"id": 8, "name": 'other:master', "active": 1, "last_active": OTHERTIME_DT},
+                masters.MasterModel(id=7, name='some:master', active=0, last_active=SOMETIME_DT),
+                masters.MasterModel(id=8, name='other:master', active=1, last_active=OTHERTIME_DT),
             ],
             key=masterKey,
         )

@@ -20,6 +20,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import masters
+from buildbot.db.masters import MasterModel
 from buildbot.process.results import RETRY
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
@@ -153,7 +154,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.masterActive(name='myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(
-            master, {"id": 13, "name": 'myname', "active": True, "last_active": epoch2datetime(60)}
+            master, MasterModel(id=13, name='myname', active=True, last_active=epoch2datetime(60))
         )
         self.assertEqual(
             self.master.mq.productions,
@@ -169,7 +170,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.masterActive('myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(
-            master, {"id": 13, "name": 'myname', "active": True, "last_active": epoch2datetime(120)}
+            master, MasterModel(id=13, name='myname', active=True, last_active=epoch2datetime(120))
         )
         self.assertEqual(
             self.master.mq.productions,
@@ -237,7 +238,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.expireMasters()
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(
-            master, {"id": 14, "name": 'other', "active": False, "last_active": epoch2datetime(0)}
+            master, MasterModel(id=14, name='other', active=False, last_active=epoch2datetime(0))
         )
         self.rtype._masterDeactivated.assert_called_with(14, 'other')
 

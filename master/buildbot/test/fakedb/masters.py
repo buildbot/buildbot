@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 
+from buildbot.db.masters import MasterModel
 from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 from buildbot.util import epoch2datetime
@@ -42,32 +43,32 @@ class FakeMastersComponent(FakeDBComponent):
     def insert_test_data(self, rows):
         for row in rows:
             if isinstance(row, Master):
-                self.masters[row.id] = {
-                    "id": row.id,
-                    "name": row.name,
-                    "active": bool(row.active),
-                    "last_active": epoch2datetime(row.last_active),
-                }
+                self.masters[row.id] = MasterModel(
+                    id=row.id,
+                    name=row.name,
+                    active=bool(row.active),
+                    last_active=epoch2datetime(row.last_active),
+                )
 
     def findMasterId(self, name):
         for m in self.masters.values():
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.masters) + 1
-        self.masters[id] = {
-            "id": id,
-            "name": name,
-            "active": False,
-            "last_active": epoch2datetime(self.reactor.seconds()),
-        }
+        self.masters[id] = MasterModel(
+            id=id,
+            name=name,
+            active=False,
+            last_active=epoch2datetime(self.reactor.seconds()),
+        )
         return defer.succeed(id)
 
     def setMasterState(self, masterid, active):
         if masterid in self.masters:
             was_active = self.masters[masterid]['active']
-            self.masters[masterid]['active'] = active
+            self.masters[masterid].active = active
             if active:
-                self.masters[masterid]['last_active'] = epoch2datetime(self.reactor.seconds())
+                self.masters[masterid].last_active = epoch2datetime(self.reactor.seconds())
             return defer.succeed(bool(was_active) != bool(active))
         else:
             return defer.succeed(False)
@@ -84,5 +85,5 @@ class FakeMastersComponent(FakeDBComponent):
 
     def markMasterInactive(self, masterid):
         if masterid in self.masters:
-            self.masters[masterid]['active'] = False
+            self.masters[masterid].active = False
         return defer.succeed(None)

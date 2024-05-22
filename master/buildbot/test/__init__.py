@@ -204,3 +204,9 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
+
+warnings.filterwarnings(
+    "ignore",
+    r".*MastersConnectorComponent getMaster, and getMasters no longer return Master as dictionnaries.*",
+    category=DeprecatedApiWarning,
+)

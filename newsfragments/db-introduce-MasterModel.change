@@ -1,0 +1,1 @@
+:class:`MastersConnectorComponent` `getMaster`, and `getMasters` now return a :class`MasterModel` instead of a dictionary of Master data

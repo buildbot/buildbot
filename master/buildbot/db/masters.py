@@ -14,12 +14,49 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+import dataclasses
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
+from twisted.python import deprecate
+from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    import datetime
 
 
+@dataclasses.dataclass
+class MasterModel:
+    id: int
+    name: str
+    active: bool
+    last_active: datetime.datetime
+
+    # For backward compatibility
+    def __getitem__(self, key: str):
+        warn_deprecated(
+            '4.1.0',
+            (
+                'MastersConnectorComponent '
+                'getMaster, and getMasters '
+                'no longer return Master as dictionnaries. '
+                'Usage of [] accessor is deprecated: please access the member directly'
+            ),
+        )
+
+        if hasattr(self, key):
+            return getattr(self, key)
+
+        raise KeyError(key)
+
+
+@deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), MasterModel)
 class MasterDict(dict):
     pass
 
@@ -83,7 +120,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._masterdictFromRow(row)
+                rv = self._model_from_row(row)
             res.close()
             return rv
 
@@ -93,7 +130,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
     def getMasters(self):
         def thd(conn):
             tbl = self.db.model.masters
-            return [self._masterdictFromRow(row) for row in conn.execute(tbl.select()).fetchall()]
+            return [self._model_from_row(row) for row in conn.execute(tbl.select()).fetchall()]
 
         return self.db.pool.do(thd)
 
@@ -106,8 +143,8 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _masterdictFromRow(self, row):
-        return MasterDict(
+    def _model_from_row(self, row):
+        return MasterModel(
             id=row.id,
             name=row.name,
             active=bool(row.active),
