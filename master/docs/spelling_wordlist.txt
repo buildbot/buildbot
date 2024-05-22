@@ -164,6 +164,7 @@ changeroot
 changeset
 changesource
 changesourceid
+ChangeSourceModel
 changesources
 Changesources
 chdict

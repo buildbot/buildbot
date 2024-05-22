@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -21,16 +24,19 @@ from buildbot.data import masters
 from buildbot.data import types
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 
+if TYPE_CHECKING:
+    from buildbot.db.changesources import ChangeSourceModel
+
 
 class Db2DataMixin:
     @defer.inlineCallbacks
-    def db2data(self, dbdict):
+    def db2data(self, dbdict: ChangeSourceModel):
         master = None
-        if dbdict['masterid'] is not None:
-            master = yield self.master.data.get(('masters', dbdict['masterid']))
+        if dbdict.masterid is not None:
+            master = yield self.master.data.get(('masters', dbdict.masterid))
         data = {
-            'changesourceid': dbdict['id'],
-            'name': dbdict['name'],
+            'changesourceid': dbdict.id,
+            'name': dbdict.name,
             'master': master,
         }
         return data
@@ -46,7 +52,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.changesources.getChangeSource(kwargs['changesourceid'])
         if 'masterid' in kwargs:
-            if dbdict['masterid'] != kwargs['masterid']:
+            if dbdict.masterid != kwargs['masterid']:
                 return None
         return (yield self.db2data(dbdict)) if dbdict else None
 
@@ -111,4 +117,4 @@ class ChangeSource(base.ResourceType):
     def _masterDeactivated(self, masterid):
         changesources = yield self.master.db.changesources.getChangeSources(masterid=masterid)
         for cs in changesources:
-            yield self.master.db.changesources.setChangeSourceMaster(cs['id'], None)
+            yield self.master.db.changesources.setChangeSourceMaster(cs.id, None)

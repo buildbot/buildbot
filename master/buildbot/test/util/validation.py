@@ -468,14 +468,6 @@ dbdict['chdict'] = DictValidator(
     parent_changeids=ListValidator(IntValidator()),
 )
 
-# changesources
-
-dbdict['changesourcedict'] = DictValidator(
-    id=IntValidator(),
-    name=StringValidator(),
-    masterid=NoneOk(IntValidator()),
-)
-
 # builds
 
 _build = {

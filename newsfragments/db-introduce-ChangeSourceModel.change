@@ -1,0 +1,1 @@
+:class:`ChangeSourcesConnectorComponent` `getChangeSource`, and `getChangeSources` now return a :class`ChangeSourceModel` instead of a dictionary of ChangeSource data
