@@ -52,8 +52,8 @@ class FakeMastersComponent(FakeDBComponent):
 
     def findMasterId(self, name):
         for m in self.masters.values():
-            if m['name'] == name:
-                return defer.succeed(m['id'])
+            if m.name == name:
+                return defer.succeed(m.id)
         id = len(self.masters) + 1
         self.masters[id] = MasterModel(
             id=id,
@@ -65,7 +65,7 @@ class FakeMastersComponent(FakeDBComponent):
 
     def setMasterState(self, masterid, active):
         if masterid in self.masters:
-            was_active = self.masters[masterid]['active']
+            was_active = self.masters[masterid].active
             self.masters[masterid].active = active
             if active:
                 self.masters[masterid].last_active = epoch2datetime(self.reactor.seconds())
@@ -79,7 +79,7 @@ class FakeMastersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getMasters(self):
-        return defer.succeed(sorted(self.masters.values(), key=lambda x: x['id']))
+        return defer.succeed(sorted(self.masters.values(), key=lambda x: x.id))
 
     # test helpers
 

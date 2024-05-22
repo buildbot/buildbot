@@ -171,7 +171,7 @@ class Tests(interfaces.InterfaceTests):
             self.assertIsInstance(masterdict, masters.MasterModel)
 
         def masterKey(master):
-            return master['id']
+            return master.id
 
         expected = sorted(
             [
