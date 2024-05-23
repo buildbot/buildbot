@@ -15,8 +15,14 @@
 
 from __future__ import annotations
 
+import datetime
 import os
 import re
+import shutil
+import stat
+import tempfile
+from pathlib import Path
+from subprocess import CalledProcessError
 from unittest import mock
 
 from twisted.internet import defer
@@ -30,6 +36,7 @@ from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import logging
+from buildbot.test.util.git_repository import TestGitRepository
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.twisted import async_to_deferred
@@ -2447,4 +2454,240 @@ class TestGitPollerUtils(unittest.TestCase):
         self.assertNotEqual(
             gitpoller.GitPoller._tracker_ref("https://example.org/repo.git", "HEAD"),
             gitpoller.GitPoller._tracker_ref("https://example.org/repo.git", "refs/raw/HEAD"),
+        )
+
+
+class TestGitPollerBareRepository(
+    changesource.ChangeSourceMixin,
+    logging.LoggingMixin,
+    unittest.TestCase,
+):
+    INITIAL_SHA = "4c3f214c2637998bb2d0c63363cabd93544fef31"
+    FIX_1_SHA = "867489d185291a0b4ba4f3acceffc2c02b23a0d7"
+    FEATURE_1_SHA = "43775fd1159be5a96ca5972b73f60cd5018f62db"
+    MERGE_FEATURE_1_SHA = "dfbfad40b6543851583912091c7e7a225db38024"
+
+    MAIN_HEAD_SHA = MERGE_FEATURE_1_SHA
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        try:
+            self.repo = TestGitRepository(
+                repository_path=tempfile.mkdtemp(
+                    prefix="TestRepository_",
+                    dir=os.getcwd(),
+                )
+            )
+        except FileNotFoundError as e:
+            raise unittest.SkipTest("Can't find git binary") from e
+
+        yield self.prepare_repository()
+
+        yield self.setUpChangeSource(want_real_reactor=True)
+        yield self.master.startService()
+
+        self.poller_workdir = tempfile.mkdtemp(
+            prefix="TestGitPollerBareRepository_",
+            dir=os.getcwd(),
+        )
+
+        self.repo_url = str(self.repo.repository_path / '.git')
+        self.poller = yield self.attachChangeSource(
+            gitpoller.GitPoller(
+                self.repo_url,
+                branches=['main'],
+                workdir=self.poller_workdir,
+                gitbin=self.repo.git_bin,
+            )
+        )
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+        yield self.tearDownChangeSource()
+
+        def _delete_repository(repo_path: Path):
+            # on Win, git will mark objects as read-only
+            git_objects_path = repo_path / "objects"
+            for item in git_objects_path.rglob(''):
+                if not item.is_file():
+                    continue
+
+                item.chmod(item.stat().st_mode | stat.S_IWUSR)
+
+            shutil.rmtree(repo_path, ignore_errors=True)
+
+        _delete_repository(Path(self.poller_workdir))
+        _delete_repository(self.repo.repository_path)
+
+    @async_to_deferred
+    async def prepare_repository(self):
+        author_env_vars = self.repo.git_author_env(
+            author_name="test user", author_mail="user@example.com"
+        )
+        base_date = datetime.datetime(2024, 6, 8, 14, 0, 0, tzinfo=datetime.timezone.utc)
+
+        def _date(delta: datetime.timedelta):
+            return base_date + delta
+
+        def _commit_env(delta: datetime.timedelta):
+            return {**author_env_vars, **TestGitRepository.git_date_env(_date(delta))}
+
+        readme_path = self.repo.repository_path / "README.md"
+
+        def _set_utime(date: datetime.datetime):
+            os.utime(readme_path, (date.timestamp(), date.timestamp()))
+
+        # create initial commit with README
+        readme_path.write_text("initial\n")
+        _set_utime(_date(datetime.timedelta(minutes=1)))
+
+        self.repo.exec_git(['add', str(readme_path.relative_to(self.repo.repository_path))])
+
+        initial_commit_hash = self.repo.commit(
+            message="Initial",
+            files=[readme_path.relative_to(self.repo.repository_path)],
+            env=_commit_env(datetime.timedelta(minutes=1)),
+        )
+        self.assertEqual(initial_commit_hash, self.INITIAL_SHA)
+
+        # Create fix/1 branch
+        self.repo.exec_git(['checkout', '-b', 'fix/1'])
+        with readme_path.open('a') as fp:
+            fp.write('\nfix 1\n')
+        _set_utime(_date(datetime.timedelta(minutes=2)))
+
+        fix_1_hash = self.repo.commit(
+            message="Fix 1",
+            files=[readme_path.relative_to(self.repo.repository_path)],
+            env=_commit_env(datetime.timedelta(minutes=2)),
+        )
+        self.assertEqual(fix_1_hash, self.FIX_1_SHA)
+
+        # merge ff fix/1 into main
+        self.repo.exec_git(['checkout', 'main'])
+        self.repo.exec_git(['merge', '--ff', 'fix/1'])
+
+        # create feature/1 branch
+        self.repo.exec_git(['checkout', '-b', 'feature/1', initial_commit_hash])
+        with readme_path.open('a') as fp:
+            fp.write('\nfeature 1\n')
+        _set_utime(_date(datetime.timedelta(minutes=3)))
+
+        feature_1_hash = self.repo.commit(
+            message="Feature 1",
+            files=[readme_path.relative_to(self.repo.repository_path)],
+            env=_commit_env(datetime.timedelta(minutes=3)),
+        )
+        self.assertEqual(feature_1_hash, self.FEATURE_1_SHA)
+
+        # merge no-ff feature/1 into main, this will conflict
+        self.repo.exec_git(['checkout', 'main'])
+        # use --strategy so the command don't error due to merge conflict
+        try:
+            self.repo.exec_git(
+                ['merge', '--no-ff', '--no-commit', '--strategy=ours', 'feature/1'],
+                env=_commit_env(datetime.timedelta(minutes=4)),
+            )
+        except CalledProcessError as process_error:
+            # merge conflict cause git to error with 128 code
+            if process_error.returncode not in (0, 128):
+                raise
+
+        with readme_path.open('a') as fp:
+            fp.write("initial\n\nfix 1\nfeature 1\n")
+        _set_utime(_date(datetime.timedelta(minutes=5)))
+
+        self.repo.exec_git(['add', str(readme_path.relative_to(self.repo.repository_path))])
+        merge_feature_1_hash = self.repo.commit(
+            message="Merge branch 'feature/1'",
+            env=_commit_env(datetime.timedelta(minutes=5)),
+        )
+        self.assertEqual(merge_feature_1_hash, self.MERGE_FEATURE_1_SHA)
+
+        self.assertEqual(merge_feature_1_hash, self.MAIN_HEAD_SHA)
+
+    @async_to_deferred
+    async def set_last_rev(self, state: dict[str, str]) -> None:
+        await self.poller.setState('lastRev', state)
+        self.poller.lastRev = state
+
+    @async_to_deferred
+    async def assert_last_rev(self, state: dict[str, str]) -> None:
+        last_rev = await self.poller.getState('lastRev', None)
+        self.assertEqual(last_rev, state)
+        self.assertEqual(self.poller.lastRev, state)
+
+    @async_to_deferred
+    async def test_poll_initial(self):
+        self.poller.doPoll.running = True
+        await self.poller.poll()
+
+        await self.assert_last_rev({'main': self.MAIN_HEAD_SHA})
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [],
+        )
+
+    @async_to_deferred
+    async def test_poll_from_last(self):
+        self.maxDiff = None
+        await self.set_last_rev({'main': self.INITIAL_SHA})
+        self.poller.doPoll.running = True
+        await self.poller.poll()
+
+        await self.assert_last_rev({'main': self.MAIN_HEAD_SHA})
+
+        self.assertEqual(
+            self.master.data.updates.changesAdded,
+            [
+                {
+                    'author': 'test user <user@example.com>',
+                    'branch': 'main',
+                    'category': None,
+                    'codebase': None,
+                    'comments': 'Fix 1',
+                    'committer': 'test user <user@example.com>',
+                    'files': ['README.md'],
+                    'project': '',
+                    'properties': {},
+                    'repository': self.repo_url,
+                    'revision': self.FIX_1_SHA,
+                    'revlink': '',
+                    'src': 'git',
+                    'when_timestamp': 1717855320,
+                },
+                {
+                    'author': 'test user <user@example.com>',
+                    'branch': 'main',
+                    'category': None,
+                    'codebase': None,
+                    'comments': 'Feature 1',
+                    'committer': 'test user <user@example.com>',
+                    'files': ['README.md'],
+                    'project': '',
+                    'properties': {},
+                    'repository': self.repo_url,
+                    'revision': self.FEATURE_1_SHA,
+                    'revlink': '',
+                    'src': 'git',
+                    'when_timestamp': 1717855380,
+                },
+                {
+                    'author': 'test user <user@example.com>',
+                    'branch': 'main',
+                    'category': None,
+                    'codebase': None,
+                    'comments': "Merge branch 'feature/1'",
+                    'committer': 'test user <user@example.com>',
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': self.repo_url,
+                    'revision': self.MERGE_FEATURE_1_SHA,
+                    'revlink': '',
+                    'src': 'git',
+                    'when_timestamp': 1717855500,
+                },
+            ],
         )
