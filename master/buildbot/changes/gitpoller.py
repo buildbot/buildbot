@@ -395,7 +395,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     break
 
                 rev = yield self._dovccmd(
-                    'rev-parse', [self._tracker_ref(self.repourl, ref), '--'], path=self.workdir
+                    'rev-parse', [self._tracker_ref(self.repourl, ref)], path=self.workdir
                 )
                 revs[branch] = rev
                 yield self._process_changes(rev, branch)
