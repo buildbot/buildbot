@@ -345,7 +345,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.listenport.stopListening()
+        yield self.listenport.stopListening()
         yield self.parent.stopService()
 
     @defer.inlineCallbacks
