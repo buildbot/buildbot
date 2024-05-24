@@ -20,6 +20,7 @@ Support for running 'shell commands'
 import os
 import pprint
 import re
+import shlex
 import signal
 import stat
 import subprocess
@@ -65,13 +66,10 @@ def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
 
 def shell_quote(cmd_list, unicode_encoding='utf-8'):
     # attempt to quote cmd_list such that a shell will properly re-interpret
-    # it.  The pipes module is only available on UNIX; also, the quote
-    # function is undocumented (although it looks like it will be documented
-    # soon: http://bugs.python.org/issue9723). Finally, it has a nasty bug
-    # in some versions where an empty string is not quoted.
+    # it.  The shlex module is only designed for UNIX;
     #
     # So:
-    #  - use pipes.quote on UNIX, handling '' as a special case
+    #  - use shlex.quote on UNIX, handling '' as a special case
     #  - use our own custom function on Windows
     if isinstance(cmd_list, bytes):
         cmd_list = bytes2unicode(cmd_list, unicode_encoding)
@@ -79,16 +77,13 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
     if runtime.platformType == 'win32':
         return win32_batch_quote(cmd_list, unicode_encoding)
 
-    # only available on unix
-    import pipes  # pylint: disable=import-outside-toplevel
-
     def quote(e):
         if not e:
             return '""'
         e = bytes2unicode(e, unicode_encoding)
-        return pipes.quote(e)
+        return shlex.quote(e)
 
-    return " ".join([quote(e) for e in cmd_list])
+    return " ".join(quote(e) for e in cmd_list)
 
 
 class LogFileWatcher(object):
