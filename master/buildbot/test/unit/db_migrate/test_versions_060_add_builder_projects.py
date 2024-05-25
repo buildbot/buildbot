@@ -41,7 +41,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('description', sa.Text, nullable=True),
             sa.Column('name_hash', sa.String(40), nullable=False),
         )
-        builders.create()
+        builders.create(bind=conn)
 
         conn.execute(
             builders.insert(),

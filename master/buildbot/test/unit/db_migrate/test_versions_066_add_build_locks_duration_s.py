@@ -43,7 +43,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('state_string', sa.Text, nullable=False),
             sa.Column('results', sa.Integer),
         )
-        builds.create()
+        builds.create(bind=conn)
 
         conn.execute(
             builds.insert(),

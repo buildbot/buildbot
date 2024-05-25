@@ -47,7 +47,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column("results", sa.SmallInteger),
             sa.Column("parent_relationship", sa.Text),
         )
-        buildsets.create()
+        buildsets.create(bind=conn)
 
         conn.execute(
             buildsets.insert(),
@@ -66,7 +66,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
 
         builds = sautils.Table("builds", metadata, sa.Column("id", sa.Integer, primary_key=True))
-        builds.create()
+        builds.create(bind=conn)
 
         conn.execute(
             builds.insert(),
