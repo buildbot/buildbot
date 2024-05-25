@@ -107,13 +107,13 @@ class Basic(unittest.TestCase):
         # transaction runs.  This is why we set optimal_thread_pool_size in
         # setUp.
         def create_table(engine):
-            with engine.connect() as conn:
+            with engine.connect() as conn, conn.begin():
                 conn.execute(sa.text("CREATE TABLE tmp ( a integer )"))
 
         yield self.pool.do_with_engine(create_table)
 
         def insert_into_table(engine):
-            with engine.connect() as conn:
+            with engine.connect() as conn, conn.begin():
                 conn.execute(sa.text("INSERT INTO tmp values ( 1 )"))
 
         yield self.pool.do_with_engine(insert_into_table)
@@ -213,6 +213,7 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         yield self.pool.do(ddl)
 
         def access(conn):
-            conn.execute(native_tests.insert().values({'name': 'foo'}))
+            with conn.begin():
+                conn.execute(native_tests.insert().values({'name': 'foo'}))
 
         yield self.pool.do(access)

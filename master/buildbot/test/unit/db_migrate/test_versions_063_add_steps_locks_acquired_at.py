@@ -46,25 +46,26 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('urls_json', sa.Text, nullable=False),
             sa.Column('hidden', sa.SmallInteger, nullable=False, server_default='0'),
         )
-        steps.create(bind=conn)
+        with conn.begin():
+            steps.create(bind=conn)
 
-        conn.execute(
-            steps.insert(),
-            [
-                {
-                    "id": 4,
-                    "number": 123,
-                    "name": "step",
-                    "buildid": 12,
-                    "started_at": 1690848000,
-                    "complete_at": 1690848030,
-                    "state_string": "state",
-                    "results": 0,
-                    "urls_json": "",
-                    "hidden": 0,
-                }
-            ],
-        )
+            conn.execute(
+                steps.insert(),
+                [
+                    {
+                        "id": 4,
+                        "number": 123,
+                        "name": "step",
+                        "buildid": 12,
+                        "started_at": 1690848000,
+                        "complete_at": 1690848030,
+                        "state_string": "state",
+                        "results": 0,
+                        "urls_json": "",
+                        "hidden": 0,
+                    }
+                ],
+            )
 
     def test_update(self):
         def setup_thd(conn):

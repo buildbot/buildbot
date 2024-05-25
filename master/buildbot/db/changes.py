@@ -366,7 +366,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     batch = remaining[:100]
                     remaining = remaining[100:]
                     table = self.db.model.metadata.tables[table_name]
-                    conn.execute(table.delete().where(table.c.changeid.in_(batch)))
+                    with conn.begin():
+                        conn.execute(table.delete().where(table.c.changeid.in_(batch)))
 
         yield self.db.pool.do(thd)
 

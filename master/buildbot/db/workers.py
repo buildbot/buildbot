@@ -125,7 +125,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             buildermasterids = [row.buildermasterid for row in res]
             res.close()
-            self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
+            with conn.begin():
+                self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
         return self.db.pool.do(thd)
 
@@ -157,21 +158,19 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
             toinsertbuildermasterids = buildermasterids - oldbuildermasterids
-            transaction = conn.begin()
-            self._deleteFromConfiguredWorkers_thd(conn, todeletebuildermasterids, workerid)
+            with conn.begin():
+                self._deleteFromConfiguredWorkers_thd(conn, todeletebuildermasterids, workerid)
 
-            # and insert the new ones
-            if toinsertbuildermasterids:
-                q = cfg_tbl.insert()
-                conn.execute(
-                    q,
-                    [
-                        {'workerid': workerid, 'buildermasterid': buildermasterid}
-                        for buildermasterid in toinsertbuildermasterids
-                    ],
-                ).close()
-
-            transaction.commit()
+                # and insert the new ones
+                if toinsertbuildermasterids:
+                    q = cfg_tbl.insert()
+                    conn.execute(
+                        q,
+                        [
+                            {'workerid': workerid, 'buildermasterid': buildermasterid}
+                            for buildermasterid in toinsertbuildermasterids
+                        ],
+                    ).close()
 
         return self.db.pool.do(thd)
 
@@ -291,14 +290,16 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn_tbl = self.db.model.connected_workers
             q = conn_tbl.insert()
             try:
-                conn.execute(q, {'workerid': workerid, 'masterid': masterid})
+                with conn.begin():
+                    conn.execute(q, {'workerid': workerid, 'masterid': masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
 
             bs_tbl = self.db.model.workers
             q = bs_tbl.update().where(bs_tbl.c.id == workerid)
-            conn.execute(q.values(info=workerinfo))
+            with conn.begin():
+                conn.execute(q.values(info=workerinfo))
 
         return self.db.pool.do(thd)
 
@@ -307,7 +308,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.connected_workers
             q = tbl.delete().where(tbl.c.workerid == workerid, tbl.c.masterid == masterid)
-            conn.execute(q)
+            with conn.begin():
+                conn.execute(q)
 
         return self.db.pool.do(thd)
 
@@ -316,7 +318,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.workers
             q = tbl.update().where(tbl.c.id == workerid)
-            conn.execute(q.values(paused=int(paused), pause_reason=pause_reason))
+            with conn.begin():
+                conn.execute(q.values(paused=int(paused), pause_reason=pause_reason))
 
         return self.db.pool.do(thd)
 
@@ -325,7 +328,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.workers
             q = tbl.update().where(tbl.c.id == workerid)
-            conn.execute(q.values(graceful=int(graceful)))
+            with conn.begin():
+                conn.execute(q.values(graceful=int(graceful)))
 
         return self.db.pool.do(thd)
 

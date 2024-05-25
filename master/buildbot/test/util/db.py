@@ -178,7 +178,7 @@ class RealDatabaseMixin:
             # SQLAlchemy wouldn't be able to break circular references.
             # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during
             # that operation, even though we made our possible to use use_alter
-            with withoutSqliteForeignKeys(conn):
+            with withoutSqliteForeignKeys(conn), conn.begin():
                 meta.drop_all(bind=conn)
 
         except Exception:
@@ -197,7 +197,8 @@ class RealDatabaseMixin:
         # Create tables using create_all() method. This way not only tables
         # and direct indices are created, but also deferred references
         # (that use use_alter=True in definition).
-        model.Model.metadata.create_all(bind=conn, tables=tables, checkfirst=True)
+        with conn.begin():
+            model.Model.metadata.create_all(bind=conn, tables=tables, checkfirst=True)
 
     @defer.inlineCallbacks
     def setUpRealDatabase(
@@ -270,7 +271,8 @@ class RealDatabaseMixin:
                 for row in [r for r in rows if r.table == tbl.name]:
                     tbl = model.Model.metadata.tables[row.table]
                     try:
-                        conn.execute(tbl.insert().values(row.values))
+                        with conn.begin():
+                            conn.execute(tbl.insert().values(row.values))
                     except Exception:
                         log.msg(f"while inserting {row} - {row.values}")
                         raise

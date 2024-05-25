@@ -158,7 +158,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 "name": name,
             }
             try:
-                r = conn.execute(self.db.model.steps.insert(), insert_row)
+                with conn.begin():
+                    r = conn.execute(self.db.model.steps.insert(), insert_row)
                 got_id = r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 got_id = None
@@ -179,7 +180,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                     break
                 num += 1
             insert_row['name'] = newname
-            r = conn.execute(self.db.model.steps.insert(), insert_row)
+            with conn.begin():
+                r = conn.execute(self.db.model.steps.insert(), insert_row)
             got_id = r.inserted_primary_key[0]
             return (got_id, number, newname)
 
@@ -189,10 +191,11 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            if locks_acquired:
-                conn.execute(q.values(started_at=started_at, locks_acquired_at=started_at))
-            else:
-                conn.execute(q.values(started_at=started_at))
+            with conn.begin():
+                if locks_acquired:
+                    conn.execute(q.values(started_at=started_at, locks_acquired_at=started_at))
+                else:
+                    conn.execute(q.values(started_at=started_at))
 
         return self.db.pool.do(thd)
 
@@ -202,7 +205,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            conn.execute(q.values(locks_acquired_at=locks_acquired_at))
+            with conn.begin():
+                conn.execute(q.values(locks_acquired_at=locks_acquired_at))
 
         return self.db.pool.do(thd)
 
@@ -210,7 +214,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            conn.execute(q.values(state_string=state_string))
+            with conn.begin():
+                conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do(thd)
 
@@ -241,7 +246,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             if url_item not in urls:
                 urls.append(url_item)
                 q = tbl.update().where(wc)
-                conn.execute(q.values(urls_json=json.dumps(urls)))
+                with conn.begin():
+                    conn.execute(q.values(urls_json=json.dumps(urls)))
 
         return self.url_lock.run(self.db.pool.do, thd)
 
@@ -249,13 +255,14 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            conn.execute(
-                q.values(
-                    complete_at=int(self.master.reactor.seconds()),
-                    results=results,
-                    hidden=1 if hidden else 0,
+            with conn.begin():
+                conn.execute(
+                    q.values(
+                        complete_at=int(self.master.reactor.seconds()),
+                        results=results,
+                        hidden=1 if hidden else 0,
+                    )
                 )
-            )
 
         return self.db.pool.do(thd)
 

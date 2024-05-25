@@ -98,14 +98,16 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 # master
                 sch_mst_tbl = self.db.model.scheduler_masters
                 q = sch_mst_tbl.delete().where(sch_mst_tbl.c.masterid == masterid)
-                conn.execute(q)
+                with conn.begin():
+                    conn.execute(q)
 
             # set the state (unconditionally, just to be safe)
             q = tbl.update().where(whereclause)
             q = q.values(active=1 if active else 0)
             if active:
                 q = q.values(last_active=int(self.master.reactor.seconds()))
-            conn.execute(q)
+            with conn.begin():
+                conn.execute(q)
 
             # return True if there was a change in state
             return was_active != bool(active)

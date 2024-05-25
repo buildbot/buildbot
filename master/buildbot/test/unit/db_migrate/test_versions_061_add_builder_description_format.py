@@ -42,20 +42,21 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('projectid', sa.Integer, nullable=True),
             sa.Column('name_hash', sa.String(40), nullable=False),
         )
-        builders.create(bind=conn)
+        with conn.begin():
+            builders.create(bind=conn)
 
-        conn.execute(
-            builders.insert(),
-            [
-                {
-                    "id": 3,
-                    "name": "foo",
-                    "description": "foo_description",
-                    "projectid": None,
-                    "name_hash": hashlib.sha1(b'foo').hexdigest(),
-                }
-            ],
-        )
+            conn.execute(
+                builders.insert(),
+                [
+                    {
+                        "id": 3,
+                        "name": "foo",
+                        "description": "foo_description",
+                        "projectid": None,
+                        "name_hash": hashlib.sha1(b'foo').hexdigest(),
+                    }
+                ],
+            )
 
     def test_update(self):
         def setup_thd(conn):

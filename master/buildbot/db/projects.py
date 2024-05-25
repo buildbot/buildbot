@@ -113,14 +113,15 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
     ) -> defer.Deferred[None]:
         def thd(conn) -> None:
             q = self.db.model.projects.update().where(self.db.model.projects.c.id == projectid)
-            conn.execute(
-                q.values(
-                    slug=slug,
-                    description=description,
-                    description_format=description_format,
-                    description_html=description_html,
-                )
-            ).close()
+            with conn.begin():
+                conn.execute(
+                    q.values(
+                        slug=slug,
+                        description=description,
+                        description_format=description_format,
+                        description_html=description_html,
+                    )
+                ).close()
 
         return self.db.pool.do(thd)
 

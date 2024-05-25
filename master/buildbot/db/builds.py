@@ -232,20 +232,21 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     _race_hook(conn)
 
                 try:
-                    r = conn.execute(
-                        self.db.model.builds.insert(),
-                        {
-                            "number": new_number,
-                            "builderid": builderid,
-                            "buildrequestid": buildrequestid,
-                            "workerid": workerid,
-                            "masterid": masterid,
-                            "started_at": started_at,
-                            "complete_at": None,
-                            "locks_duration_s": 0,
-                            "state_string": state_string,
-                        },
-                    )
+                    with conn.begin():
+                        r = conn.execute(
+                            self.db.model.builds.insert(),
+                            {
+                                "number": new_number,
+                                "builderid": builderid,
+                                "buildrequestid": buildrequestid,
+                                "workerid": workerid,
+                                "masterid": masterid,
+                                "started_at": started_at,
+                                "complete_at": None,
+                                "locks_duration_s": 0,
+                                "state_string": state_string,
+                            },
+                        )
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                     # pg 9.5 gives this error which makes it pass some build
                     # numbers
@@ -262,7 +263,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
 
             q = tbl.update().where(tbl.c.id == buildid)
-            conn.execute(q.values(state_string=state_string))
+            with conn.begin():
+                conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do(thd)
 
@@ -271,7 +273,10 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.update().where(tbl.c.id == buildid)
-            conn.execute(q.values(complete_at=int(self.master.reactor.seconds()), results=results))
+            with conn.begin():
+                conn.execute(
+                    q.values(complete_at=int(self.master.reactor.seconds()), results=results)
+                )
 
         return self.db.pool.do(thd)
 
@@ -310,14 +315,16 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             prop = conn.execute(q).fetchone()
             value_js = json.dumps(value)
             if prop is None:
-                conn.execute(
-                    bp_tbl.insert(),
-                    {"buildid": bid, "name": name, "value": value_js, "source": source},
-                )
+                with conn.begin():
+                    conn.execute(
+                        bp_tbl.insert(),
+                        {"buildid": bid, "name": name, "value": value_js, "source": source},
+                    )
             elif (prop.value != value_js) or (prop.source != source):
-                conn.execute(
-                    bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
-                )
+                with conn.begin():
+                    conn.execute(
+                        bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
+                    )
 
         yield self.db.pool.do(thd)
 
@@ -325,11 +332,12 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     def add_build_locks_duration(self, buildid, duration_s):
         def thd(conn):
             builds_tbl = self.db.model.builds
-            conn.execute(
-                builds_tbl.update()
-                .where(builds_tbl.c.id == buildid)
-                .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
-            )
+            with conn.begin():
+                conn.execute(
+                    builds_tbl.update()
+                    .where(builds_tbl.c.id == buildid)
+                    .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
+                )
 
         yield self.db.pool.do(thd)
 

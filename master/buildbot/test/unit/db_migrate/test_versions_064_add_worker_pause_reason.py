@@ -41,20 +41,21 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column("paused", sa.SmallInteger, nullable=False, server_default="0"),
             sa.Column("graceful", sa.SmallInteger, nullable=False, server_default="0"),
         )
-        workers.create(bind=conn)
+        with conn.begin():
+            workers.create(bind=conn)
 
-        conn.execute(
-            workers.insert(),
-            [
-                {
-                    "id": 4,
-                    "name": "worker1",
-                    "info": "{\"key\": \"value\"}",
-                    "paused": 0,
-                    "graceful": 0,
-                }
-            ],
-        )
+            conn.execute(
+                workers.insert(),
+                [
+                    {
+                        "id": 4,
+                        "name": "worker1",
+                        "info": "{\"key\": \"value\"}",
+                        "paused": 0,
+                        "graceful": 0,
+                    }
+                ],
+            )
 
     def test_update(self):
         def setup_thd(conn):
