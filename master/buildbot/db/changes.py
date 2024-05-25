@@ -366,10 +366,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     batch = remaining[:100]
                     remaining = remaining[100:]
                     table = self.db.model.metadata.tables[table_name]
-                    with conn.begin():
-                        conn.execute(table.delete().where(table.c.changeid.in_(batch)))
+                    conn.execute(table.delete().where(table.c.changeid.in_(batch)))
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
         # This method must be run in a db.pool thread, and returns a chdict

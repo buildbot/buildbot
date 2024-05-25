@@ -302,10 +302,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thdfinishLog(conn) -> None:
             tbl = self.db.model.logs
             q = tbl.update().where(tbl.c.id == logid)
-            with conn.begin():
-                conn.execute(q.values(complete=1))
+            conn.execute(q.values(complete=1))
 
-        return self.db.pool.do(thdfinishLog)
+        return self.db.pool.do_with_transaction(thdfinishLog)
 
     def compressLog(self, logid: int, force: bool = False) -> defer.Deferred[int]:
         def thdcompressLog(conn) -> int:

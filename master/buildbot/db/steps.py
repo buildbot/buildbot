@@ -191,13 +191,12 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            with conn.begin():
-                if locks_acquired:
-                    conn.execute(q.values(started_at=started_at, locks_acquired_at=started_at))
-                else:
-                    conn.execute(q.values(started_at=started_at))
+            if locks_acquired:
+                conn.execute(q.values(started_at=started_at, locks_acquired_at=started_at))
+            else:
+                conn.execute(q.values(started_at=started_at))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def set_step_locks_acquired_at(
         self, stepid: int, locks_acquired_at: int
@@ -205,19 +204,17 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            with conn.begin():
-                conn.execute(q.values(locks_acquired_at=locks_acquired_at))
+            conn.execute(q.values(locks_acquired_at=locks_acquired_at))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def setStepStateString(self, stepid: int, state_string: str) -> defer.Deferred[None]:
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            with conn.begin():
-                conn.execute(q.values(state_string=state_string))
+            conn.execute(q.values(state_string=state_string))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def addURL(self, stepid: int, name: str, url: str, _racehook=None) -> defer.Deferred[None]:
         # This methods adds an URL to the db
@@ -255,16 +252,15 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
-            with conn.begin():
-                conn.execute(
-                    q.values(
-                        complete_at=int(self.master.reactor.seconds()),
-                        results=results,
-                        hidden=1 if hidden else 0,
-                    )
+            conn.execute(
+                q.values(
+                    complete_at=int(self.master.reactor.seconds()),
+                    results=results,
+                    hidden=1 if hidden else 0,
                 )
+            )
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return StepModel(

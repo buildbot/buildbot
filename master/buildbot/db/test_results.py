@@ -257,10 +257,9 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             results_table = self.db.model.test_results
             q = results_table.insert().values(insert_values)
-            with conn.begin():
-                conn.execute(q)
+            conn.execute(q)
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     def getTestResult(self, test_resultid: int) -> defer.Deferred[TestResultModel | None]:
         def thd(conn) -> TestResultModel | None:

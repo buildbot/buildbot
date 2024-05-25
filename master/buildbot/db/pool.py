@@ -255,6 +255,15 @@ class DBThreadPool:
             break
         return rv
 
+    def do_with_transaction(self, callable, *args, **kwargs):
+        """Same as `do`, but will wrap callable with `with conn.begin():`"""
+
+        def _transaction(conn, callable, *args, **kwargs):
+            with conn.begin():
+                return callable(conn, *args, **kwargs)
+
+        return self.do(_transaction, callable, *args, **kwargs)
+
     @defer.inlineCallbacks
     def do(self, callable, *args, **kwargs):
         ret = yield threads.deferToThreadPool(

@@ -66,10 +66,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             tbl = self.db.model.schedulers
             q = tbl.update().where(tbl.c.id == schedulerid)
-            with conn.begin():
-                conn.execute(q.values(enabled=int(v)))
+            conn.execute(q.values(enabled=int(v)))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def classifyChanges(
         self, schedulerid: int, classifications: dict[int, bool]
@@ -108,10 +107,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if less_than is not None:
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
             q = sch_ch_tbl.delete().where(wc)
-            with conn.begin():
-                conn.execute(q).close()
+            conn.execute(q).close()
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def getChangeClassifications(
         self,

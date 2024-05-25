@@ -139,12 +139,11 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
     def removeBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
-            with conn.begin():
-                conn.execute(
-                    tbl.delete().where(tbl.c.builderid == builderid, tbl.c.masterid == masterid)
-                )
+            conn.execute(
+                tbl.delete().where(tbl.c.builderid == builderid, tbl.c.masterid == masterid)
+            )
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def getBuilders(
         self,

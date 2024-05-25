@@ -263,22 +263,18 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
 
             q = tbl.update().where(tbl.c.id == buildid)
-            with conn.begin():
-                conn.execute(q.values(state_string=state_string))
+            conn.execute(q.values(state_string=state_string))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
     def finishBuild(self, buildid, results):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.update().where(tbl.c.id == buildid)
-            with conn.begin():
-                conn.execute(
-                    q.values(complete_at=int(self.master.reactor.seconds()), results=results)
-                )
+            conn.execute(q.values(complete_at=int(self.master.reactor.seconds()), results=results))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns a value
     def getBuildProperties(self, bid, resultSpec=None):
@@ -315,31 +311,28 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             prop = conn.execute(q).fetchone()
             value_js = json.dumps(value)
             if prop is None:
-                with conn.begin():
-                    conn.execute(
-                        bp_tbl.insert(),
-                        {"buildid": bid, "name": name, "value": value_js, "source": source},
-                    )
+                conn.execute(
+                    bp_tbl.insert(),
+                    {"buildid": bid, "name": name, "value": value_js, "source": source},
+                )
             elif (prop.value != value_js) or (prop.source != source):
-                with conn.begin():
-                    conn.execute(
-                        bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
-                    )
+                conn.execute(
+                    bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
+                )
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     @defer.inlineCallbacks
     def add_build_locks_duration(self, buildid, duration_s):
         def thd(conn):
             builds_tbl = self.db.model.builds
-            with conn.begin():
-                conn.execute(
-                    builds_tbl.update()
-                    .where(builds_tbl.c.id == buildid)
-                    .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
-                )
+            conn.execute(
+                builds_tbl.update()
+                .where(builds_tbl.c.id == buildid)
+                .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
+            )
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return BuildModel(

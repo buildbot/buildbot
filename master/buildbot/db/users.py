@@ -267,10 +267,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 self.db.model.users_info,
                 self.db.model.users,
             ]:
-                with conn.begin():
-                    conn.execute(tbl.delete().where(tbl.c.uid == uid))
+                conn.execute(tbl.delete().where(tbl.c.uid == uid))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns a value
     def identifierToUid(self, identifier) -> defer.Deferred[int | None]:

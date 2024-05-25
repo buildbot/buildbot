@@ -467,13 +467,12 @@ class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealT
     def addClassifications(self, schedulerid, *classifications):
         def thd(conn):
             q = self.db.model.scheduler_changes.insert()
-            with conn.begin():
-                conn.execute(
-                    q,
-                    [
-                        {"changeid": c[0], "schedulerid": schedulerid, "important": c[1]}
-                        for c in classifications
-                    ],
-                )
+            conn.execute(
+                q,
+                [
+                    {"changeid": c[0], "schedulerid": schedulerid, "important": c[1]}
+                    for c in classifications
+                ],
+            )
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
