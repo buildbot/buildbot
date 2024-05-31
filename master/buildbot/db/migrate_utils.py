@@ -31,7 +31,7 @@ def test_unicode(migrate_engine):
         sa.Column('u', sa.Unicode(length=100)),
         sa.Column('b', sa.LargeBinary),
     )
-    test_unicode.create()
+    test_unicode.create(bind=migrate_engine)
 
     # insert a unicode value in there
     u = "Frosty the \N{SNOWMAN}"
@@ -47,4 +47,4 @@ def test_unicode(migrate_engine):
     assert row.b == b
 
     # drop the test table
-    test_unicode.drop()
+    test_unicode.drop(bind=migrate_engine)

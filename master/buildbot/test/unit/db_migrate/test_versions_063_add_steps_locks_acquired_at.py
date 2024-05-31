@@ -46,7 +46,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('urls_json', sa.Text, nullable=False),
             sa.Column('hidden', sa.SmallInteger, nullable=False, server_default='0'),
         )
-        steps.create()
+        steps.create(bind=conn)
 
         conn.execute(
             steps.insert(),

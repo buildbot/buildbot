@@ -44,7 +44,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('slug', sa.String(50), nullable=False),
             sa.Column('description', sa.Text, nullable=True),
         )
-        projects.create()
+        projects.create(bind=conn)
 
         conn.execute(
             projects.insert(),

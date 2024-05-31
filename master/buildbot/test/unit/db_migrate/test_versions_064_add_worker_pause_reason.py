@@ -41,7 +41,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column("paused", sa.SmallInteger, nullable=False, server_default="0"),
             sa.Column("graceful", sa.SmallInteger, nullable=False, server_default="0"),
         )
-        workers.create()
+        workers.create(bind=conn)
 
         conn.execute(
             workers.insert(),
