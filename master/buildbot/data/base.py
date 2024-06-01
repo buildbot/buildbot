@@ -240,7 +240,7 @@ class NestedBuildDataRetriever:
         return self.step_dict
 
     @async_to_deferred
-    async def get_build_dict(self) -> BuilderModel | None:
+    async def get_build_dict(self) -> BuildModel | None:
         if self.build_dict is not False:
             return self.build_dict
 
