@@ -51,7 +51,7 @@ class Strategy:
 
 
 class SqlLiteStrategy(Strategy):
-    def set_up(self, u, engine):
+    def set_up(self, u, engine: sa.engine.base.Engine):
         """Special setup for sqlite engines"""
 
         def connect_listener_enable_fk(connection, record):
@@ -71,7 +71,8 @@ class SqlLiteStrategy(Strategy):
 
             log.msg("setting database journal mode to 'wal'")
             try:
-                engine.exec_driver_sql("pragma journal_mode = wal")
+                with engine.connect() as conn:
+                    conn.exec_driver_sql("pragma journal_mode = wal")
             except Exception:
                 log.msg("failed to set journal mode - database may fail")
 

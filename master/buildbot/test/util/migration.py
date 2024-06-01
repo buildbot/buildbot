@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 
@@ -89,13 +90,14 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         yield self.db.pool.do_with_engine(upgrade_thd)
 
-        def check_table_charsets_thd(engine):
+        def check_table_charsets_thd(conn: sa.engine.base.Connection):
             # charsets are only a problem for MySQL
-            if engine.dialect.name != 'mysql':
+            if conn.dialect.name != 'mysql':
                 return
-            dbs = [r[0] for r in engine.exec_driver_sql("show tables")]
+
+            dbs = [r[0] for r in conn.exec_driver_sql("show tables")]
             for tbl in dbs:
-                r = engine.exec_driver_sql(f"show create table {tbl}")
+                r = conn.exec_driver_sql(f"show create table {tbl}")
                 create_table = r.fetchone()[1]
                 self.assertIn(
                     'DEFAULT CHARSET=utf8',
