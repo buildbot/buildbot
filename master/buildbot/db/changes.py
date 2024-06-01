@@ -265,18 +265,24 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # For each codebase, append changes until we match the parent
         for cb, change in fromChanges.items():
+            if not change:
+                continue
+
             to_cb_change = toChanges.get(cb)
             to_cb_changeid = to_cb_change.changeid if to_cb_change is not None else None
-            if change and (not to_cb_changeid or change.changeid != to_cb_changeid):
+            if to_cb_changeid is not None and to_cb_changeid == change.changeid:
+                continue
+
+            changes.append(change)
+            while change.parent_changeids and to_cb_changeid not in change.parent_changeids:
+                # For the moment, a Change only have 1 parent.
+                change = yield self.master.db.changes.getChange(change.parent_changeids[0])
+                # http://trac.buildbot.net/ticket/3461 sometimes,
+                # parent_changeids could be corrupted
+                if change is None:
+                    break
                 changes.append(change)
-                while to_cb_changeid not in change.parent_changeids and change.parent_changeids:
-                    # For the moment, a Change only have 1 parent.
-                    change = yield self.master.db.changes.getChange(change.parent_changeids[0])
-                    # http://trac.buildbot.net/ticket/3461 sometimes,
-                    # parent_changeids could be corrupted
-                    if change is None:
-                        break
-                    changes.append(change)
+
         return changes
 
     def getChangeFromSSid(self, sourcestampid: int) -> defer.Deferred[ChangeModel | None]:
