@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import calendar
 import datetime
 import itertools
@@ -23,6 +25,7 @@ import sys
 import textwrap
 import time
 from builtins import bytes
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 
@@ -35,6 +38,10 @@ from buildbot.util.giturlparse import giturlparse
 from buildbot.util.misc import deferredLocked
 
 from ._notifier import Notifier
+
+if TYPE_CHECKING:
+    from typing import ClassVar
+    from typing import Sequence
 
 
 def naturalSort(array):
@@ -144,7 +151,7 @@ def fuzzyInterval(seconds):
 
 @implementer(IConfigured)
 class ComparableMixin:
-    compare_attrs = ()
+    compare_attrs: ClassVar[Sequence[str]] = ()
 
     class _None:
         pass
