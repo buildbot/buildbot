@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
     from buildbot.db.builders import BuilderModel
     from buildbot.db.builds import BuildModel
+    from buildbot.db.logs import LogModel
     from buildbot.db.steps import StepModel
     from buildbot.db.workers import WorkerModel
 
@@ -203,7 +204,7 @@ class NestedBuildDataRetriever:
         self.step_dict: StepModel | None | Literal[False] = False
         self.build_dict: BuildModel | None | Literal[False] = False
         self.builder_dict: BuilderModel | None | Literal[False] = False
-        self.log_dict = False
+        self.log_dict: LogModel | None | Literal[False] = False
         self.worker_dict: WorkerModel | None | Literal[False] = False
 
     @async_to_deferred
@@ -317,7 +318,7 @@ class NestedBuildDataRetriever:
         return builder_dict.id
 
     @async_to_deferred
-    async def get_log_dict(self):
+    async def get_log_dict(self) -> LogModel | None:
         if self.log_dict is not False:
             return self.log_dict
 
