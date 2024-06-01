@@ -17,6 +17,8 @@
 Support for changes in the database
 """
 
+from __future__ import annotations
+
 import json
 
 import sqlalchemy as sa
@@ -188,13 +190,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getChangesForBuild(self, buildid):
+    def getChangesForBuild(self, buildid: int):
         assert buildid > 0
 
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
-        changes = []
+        changes: list[ChDict] = []
         currentBuild = yield self.master.db.builds.getBuild(buildid)
-        fromChanges, toChanges = {}, {}
+        fromChanges: dict[str, ChDict | None] = {}
+        toChanges: dict[str, ChDict] = {}
         ssBuild = yield gssfb(buildid)
         for ss in ssBuild:
             fromChanges[ss.codebase] = yield self.getChangeFromSSid(ss.ssid)
@@ -205,20 +208,16 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         )
         if previousBuild:
             for ss in (yield gssfb(previousBuild.id)):
-                toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
-        else:
-            # If no successful previous build, then we need to catch all
-            # changes
-            for cb in fromChanges:
-                toChanges[cb] = {'changeid': None}
+                ss_change = yield self.getChangeFromSSid(ss.ssid)
+                if ss_change:
+                    toChanges[ss.codebase] = ss_change
 
         # For each codebase, append changes until we match the parent
         for cb, change in fromChanges.items():
-            # Careful; toChanges[cb] may be None from getChangeFromSSid
-            toCbChange = toChanges.get(cb) or {}
-            if change and change['changeid'] != toCbChange.get('changeid'):
+            to_cb_changeid = toChanges.get(cb, ChDict()).get('changeid')
+            if change and (not to_cb_changeid or change['changeid'] != to_cb_changeid):
                 changes.append(change)
-                while (toCbChange.get('changeid') not in change['parent_changeids']) and change[
+                while (to_cb_changeid not in change['parent_changeids']) and change[
                     'parent_changeids'
                 ]:
                     # For the moment, a Change only have 1 parent.

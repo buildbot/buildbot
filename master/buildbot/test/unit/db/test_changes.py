@@ -722,6 +722,7 @@ class RealTests(Tests):
         }
 
         codebase_ss = {}  # shared state between addChange and addBuild
+        codebase_prev_change = {}
 
         def addChange(
             codebase,
@@ -736,9 +737,10 @@ class RealTests(Tests):
         ):
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
-            parent_changeids = codebase_ss.get(codebase, None)
+            parent_changeids = codebase_prev_change.get(codebase)
 
-            codebase_ss[codebase] = lastID["sourcestampid"]
+            codebase_prev_change[codebase] = lastID["changeid"]
+            codebase_ss[codebase] = lastID["changeid"]
 
             changeRows = [
                 fakedb.SourceStamp(
@@ -829,6 +831,15 @@ class RealTests(Tests):
         # Build 7 has only one change for codebase C
         rows.extend(addChange('C', 3, 'bob', 'bob', '11th commit'))
         rows.extend(addBuild(codebase_ss, 2))
+        # Build 8 has only one change for codebase C, and succeed
+        rows.extend(addChange('C', 4, 'bob', 'bob', '12th commit'))
+        rows.extend(addBuild(codebase_ss))
+        # Build 9 has only one change for codebase C, and fails
+        rows.extend(addChange('C', 5, 'bob', 'bob', '13th commit'))
+        rows.extend(addBuild(codebase_ss, 2))
+        # Build 10 has only one change for codebase C, and fails
+        rows.extend(addChange('C', 6, 'bob', 'bob', '14th commit'))
+        rows.extend(addBuild(codebase_ss, 2))
         yield self.insert_test_data(rows)
 
         @defer.inlineCallbacks
@@ -838,12 +849,32 @@ class RealTests(Tests):
             self.assertEqual(sorted(got_commits), sorted(commits))
 
         yield expect(1, ['2nd commit', '3rd commit', '1st commit'])
-        yield expect(2, ['4th commit'])
-        yield expect(3, ['6th commit'])
+        yield expect(2, ['1st commit', '4th commit'])
+        yield expect(
+            3,
+            [
+                '2nd commit',
+                '6th commit',
+            ],
+        )
         yield expect(4, [])
-        yield expect(5, ['8th commit', '9th commit', '7th commit'])
-        yield expect(6, ['10th commit'])
-        yield expect(7, ['11th commit'])
+        yield expect(
+            5,
+            [
+                '1st commit',
+                '2nd commit',
+                '4th commit',
+                '6th commit',
+                '7th commit',
+                '8th commit',
+                '9th commit',
+            ],
+        )
+        yield expect(6, ['3rd commit', '10th commit'])
+        yield expect(7, ['3rd commit', '10th commit', '11th commit'])
+        yield expect(8, ['3rd commit', '10th commit', '11th commit', '12th commit'])
+        yield expect(9, ['13th commit'])
+        yield expect(10, ['13th commit', '14th commit'])
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
