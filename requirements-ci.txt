@@ -11,6 +11,8 @@ msgpack==1.0.8
 Markdown==3.6
 pylint==3.2.2
 ruff==0.4.3
+mypy==1.9.0
+mypy-zope==1.0.4
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
