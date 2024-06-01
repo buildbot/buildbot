@@ -37,6 +37,8 @@ except ImportError:
 
 if boto3 is not None:
     from buildbot.worker import ec2  # pylint: disable=ungrouped-imports
+else:
+    ec2 = None
 
 
 # Current moto (1.3.7) requires dummy credentials to work

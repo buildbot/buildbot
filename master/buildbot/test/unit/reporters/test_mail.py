@@ -82,6 +82,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         # by calling email.encoders.encode_7or8bit().
         # If the foo.encode('ascii') works on the body, it
         # is assumed '7bit'.  If it fails, it is assumed '8bit'.
+        expEncoding = None
         input_charset = charset.Charset(mail.ENCODING)
         if input_charset.body_encoding == charset.BASE64:
             expEncoding = 'base64'
@@ -97,6 +98,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         # will try to deduce the 'Content-Transfer-Encoding'
         # by calling email.encoders.encode_7or8bit().
         # If the foo.encode('ascii') works on the body, it
+        expEncoding = None
         input_charset = charset.Charset(mail.ENCODING)
         if input_charset.body_encoding == charset.BASE64:
             expEncoding = 'base64'

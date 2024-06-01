@@ -44,6 +44,10 @@ if sys.version_info >= (3, 6):
     from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
     from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
     from buildbot_worker.msgpack import ProtocolCommandMsgpack
+else:
+    BuildbotWebSocketClientFactory = None
+    BuildbotWebSocketClientProtocol = None
+    ProtocolCommandMsgpack = None
 
 
 class UnknownCommand(pb.Error):

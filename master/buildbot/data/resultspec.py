@@ -381,6 +381,7 @@ class ResultSpec:
             applyFields = includeFields
         else:
             fields = None
+            applyFields = None
 
         if isinstance(data, dict):
             # item details

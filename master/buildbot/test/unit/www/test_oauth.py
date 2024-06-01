@@ -44,6 +44,8 @@ except ImportError:
 
 if requests:
     from buildbot.www import oauth2  # pylint: disable=ungrouped-imports
+else:
+    oauth2 = None
 
 
 class FakeResponse:

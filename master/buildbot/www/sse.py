@@ -73,6 +73,7 @@ class EventResource(resource.Resource):
         return
 
     def render(self, request):
+        consumer = None
         command = b"listen"
         path = request.postpath
         if path and path[-1] == b'':

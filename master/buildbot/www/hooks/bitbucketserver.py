@@ -94,6 +94,7 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
             commit_hash = payload_change[age]['target']['hash']
 
+            branch = None
             if payload_change[age]['type'] == 'branch':
                 branch = GIT_BRANCH_REF.format(payload_change[age]['name'])
             elif payload_change[age]['type'] == 'tag':

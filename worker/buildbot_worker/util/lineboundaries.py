@@ -39,6 +39,7 @@ class LineBoundaryFinder:
         # - lf_positions: newline position in returned string
         # - line times: times when first line symbol was received
         had_partial_line = False
+        time_partial_line = None
         if self.partial_line:
             had_partial_line = True
             text = self.partial_line + text

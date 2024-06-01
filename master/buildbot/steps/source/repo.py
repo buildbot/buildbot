@@ -465,6 +465,7 @@ class Repo(Source):
         res = yield self._Cmd(
             ["stat", "-c%Y", self.tarball], collectStdout=True, abandonOnFailure=False
         )
+        age = 0
         if not res:
             tarball_mtime = int(self.lastCommand.stdout)
             yield self._Cmd(["stat", "-c%Y", "."], collectStdout=True)

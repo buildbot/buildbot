@@ -91,6 +91,7 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
         if 'build_number' in kwargs:
             buildid = yield self.getBuildid(kwargs)
         ssid = kwargs.get('ssid')
+        changes = []
         if buildid is not None:
             changes = yield self.master.db.changes.getChangesForBuild(buildid)
         elif ssid is not None:
