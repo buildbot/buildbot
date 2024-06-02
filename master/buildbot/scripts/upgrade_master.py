@@ -23,6 +23,7 @@ from twisted.internet import defer
 from twisted.python import util
 
 from buildbot.db import connector
+from buildbot.interfaces import IRenderable
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
@@ -76,7 +77,16 @@ def upgradeFiles(config):
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
-        print(f"upgrading database ({stripUrlPassword(master_cfg.db['db_url'])})")
+        db_url_cfg = master_cfg.db['db_url']
+        if IRenderable.providedBy(db_url_cfg):
+            # if it's a renderable, assume the password is rendered
+            # so no need to try and strip it.
+            # Doesn't really make sense for it to be renderable with clear password
+            db_url = repr(db_url_cfg)
+        else:
+            db_url = stripUrlPassword(db_url_cfg)
+
+        print(f"upgrading database ({db_url})")
         print("Warning: Stopping this process might cause data loss")
 
     def sighandler(signum, frame):
@@ -101,6 +111,7 @@ def upgradeDatabase(config, master_cfg):
         master.db.disownServiceParent()
         db = connector.DBConnector(basedir=config['basedir'])
         yield db.setServiceParent(master)
+        yield master.secrets_manager.setup()
         yield db.setup(check_version=False, verbose=not config['quiet'])
         yield db.model.upgrade()
         yield db.masters.setAllMastersActiveLongTimeAgo()

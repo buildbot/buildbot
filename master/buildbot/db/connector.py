@@ -64,13 +64,13 @@ class AbstractDBConnector(service.ReconfigurableServiceMixin, service.AsyncMulti
         super().__init__()
         self.configured_url = None
 
+    @defer.inlineCallbacks
     def setup(self):
-        self.configured_url = self.master.config.db['db_url']
-        return defer.succeed(None)
+        self.configured_url = yield self.master.get_db_url(self.master.config)
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        new_db_url = new_config.db['db_url']
+        new_db_url = yield self.master.get_db_url(new_config)
         if self.configured_url is None:
             self.configured_url = new_db_url
         elif self.configured_url != new_db_url:

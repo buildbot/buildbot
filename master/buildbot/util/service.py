@@ -25,6 +25,7 @@ from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import util
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
@@ -132,6 +133,11 @@ class MasterService(AsyncMultiService):
     def master(self):
         return self
 
+    def get_db_url(self, new_config) -> defer.Deferred:
+        p = Properties()
+        p.master = self
+        return p.render(new_config.db['db_url'])
+
 
 class SharedService(AsyncMultiService):
     """a service that is created only once per parameter set in a parent service"""
@@ -211,8 +217,6 @@ class BuildbotService(
             return None
         self.configured = True
         # render renderables in parallel
-        # Properties import to resolve cyclic import issue
-        from buildbot.process.properties import Properties
 
         p = Properties()
         p.master = self.master
@@ -254,9 +258,6 @@ class BuildbotService(
         return defer.succeed(None)
 
     def renderSecrets(self, *args):
-        # Properties import to resolve cyclic import issue
-        from buildbot.process.properties import Properties
-
         p = Properties()
         p.master = self.master
 
