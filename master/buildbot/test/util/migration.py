@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from alembic.operations import Operations
@@ -30,6 +31,10 @@ from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
 from buildbot.util import sautils
+
+if TYPE_CHECKING:
+    from sqlalchemy.future.engine import Connection
+
 
 # test_upgrade vs. migration tests
 #
@@ -65,9 +70,9 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                 metadata,
                 sa.Column("version_num", sa.String(32), nullable=False),
             )
-            with conn.begin():
-                table.create(bind=conn)
-                conn.execute(table.insert().values(version_num=base_revision))
+            table.create(bind=conn)
+            conn.execute(table.insert().values(version_num=base_revision))
+            conn.commit()
             setup_thd_cb(conn)
 
         yield self.db.pool.do(setup_thd)
@@ -89,9 +94,11 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                             with context.begin_transaction():
                                 context.run_migrations()
 
+                        conn.commit()
+
         yield self.db.pool.do_with_engine(upgrade_thd)
 
-        def check_table_charsets_thd(conn: sa.engine.base.Connection):
+        def check_table_charsets_thd(conn: Connection):
             # charsets are only a problem for MySQL
             if conn.dialect.name != 'mysql':
                 return

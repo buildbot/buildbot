@@ -43,22 +43,22 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('state_string', sa.Text, nullable=False),
             sa.Column('results', sa.Integer),
         )
-        with conn.begin():
-            builds.create(bind=conn)
+        builds.create(bind=conn)
 
-            conn.execute(
-                builds.insert(),
-                [
-                    {
-                        "id": 4,
-                        "number": 5,
-                        "started_at": 1695730972,
-                        "complete_at": 1695730975,
-                        "state_string": "test build",
-                        "results": 0,
-                    }
-                ],
-            )
+        conn.execute(
+            builds.insert(),
+            [
+                {
+                    "id": 4,
+                    "number": 5,
+                    "started_at": 1695730972,
+                    "complete_at": 1695730975,
+                    "state_string": "test build",
+                    "results": 0,
+                }
+            ],
+        )
+        conn.commit()
 
     def test_update(self):
         def setup_thd(conn):
@@ -71,21 +71,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             builds = sautils.Table('builds', metadata, autoload_with=conn)
             self.assertIsInstance(builds.c.locks_duration_s.type, sa.Integer)
 
-            with conn.begin():
-                conn.execute(
-                    builds.insert(),
-                    [
-                        {
-                            "id": 5,
-                            "number": 6,
-                            "started_at": 1695730982,
-                            "complete_at": 1695730985,
-                            "locks_duration_s": 12,
-                            "state_string": "test build",
-                            "results": 0,
-                        }
-                    ],
-                )
+            conn.execute(
+                builds.insert(),
+                [
+                    {
+                        "id": 5,
+                        "number": 6,
+                        "started_at": 1695730982,
+                        "complete_at": 1695730985,
+                        "locks_duration_s": 12,
+                        "state_string": "test build",
+                        "results": 0,
+                    }
+                ],
+            )
 
             durations = []
             for row in conn.execute(sa.select(builds.c.locks_duration_s)):

@@ -47,37 +47,37 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column("results", sa.SmallInteger),
             sa.Column("parent_relationship", sa.Text),
         )
-        with conn.begin():
-            buildsets.create(bind=conn)
+        buildsets.create(bind=conn)
 
-            conn.execute(
-                buildsets.insert(),
-                [
-                    {
-                        "id": 4,
-                        "external_idstring": 5,
-                        "reason": "rebuild",
-                        "submitted_at": 1695730972,
-                        "complete": 1,
-                        "complete_at": 1695730977,
-                        "results": 0,
-                        "parent_relationship": "Triggered from",
-                    }
-                ],
-            )
+        conn.execute(
+            buildsets.insert(),
+            [
+                {
+                    "id": 4,
+                    "external_idstring": 5,
+                    "reason": "rebuild",
+                    "submitted_at": 1695730972,
+                    "complete": 1,
+                    "complete_at": 1695730977,
+                    "results": 0,
+                    "parent_relationship": "Triggered from",
+                }
+            ],
+        )
+        conn.commit()
 
         builds = sautils.Table("builds", metadata, sa.Column("id", sa.Integer, primary_key=True))
-        with conn.begin():
-            builds.create(bind=conn)
+        builds.create(bind=conn)
 
-            conn.execute(
-                builds.insert(),
-                [
-                    {
-                        "id": 123,
-                    }
-                ],
-            )
+        conn.execute(
+            builds.insert(),
+            [
+                {
+                    "id": 123,
+                }
+            ],
+        )
+        conn.commit()
 
     def test_update(self):
         def setup_thd(conn):
@@ -103,23 +103,23 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 # verify that a foreign with name "fk_buildsets_rebuilt_buildid" was found
                 self.assertEqual(len(fk_in_search), 1)
 
-            with conn.begin():
-                conn.execute(
-                    buildsets.insert(),
-                    [
-                        {
-                            "id": 5,
-                            "external_idstring": 6,
-                            "reason": "rebuild",
-                            "submitted_at": 1695730973,
-                            "complete": 1,
-                            "complete_at": 1695730978,
-                            "results": 0,
-                            "rebuilt_buildid": 123,
-                            "parent_relationship": "Triggered from",
-                        }
-                    ],
-                )
+            conn.execute(
+                buildsets.insert(),
+                [
+                    {
+                        "id": 5,
+                        "external_idstring": 6,
+                        "reason": "rebuild",
+                        "submitted_at": 1695730973,
+                        "complete": 1,
+                        "complete_at": 1695730978,
+                        "results": 0,
+                        "rebuilt_buildid": 123,
+                        "parent_relationship": "Triggered from",
+                    }
+                ],
+            )
+            conn.commit()
 
             rebuilt_buildid_list = []
             for row in conn.execute(q):

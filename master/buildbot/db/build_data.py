@@ -89,8 +89,8 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                     (build_data_table.c.buildid == buildid) & (build_data_table.c.name == name)
                 )
                 q = q.values(update_values)
-                with conn.begin():
-                    r = conn.execute(q)
+                r = conn.execute(q)
+                conn.commit()
                 if r.rowcount > 0:
                     return
                 r.close()
@@ -99,12 +99,12 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
                 try:
                     q = build_data_table.insert().values(insert_values)
-                    with conn.begin():
-                        r = conn.execute(q)
+                    r = conn.execute(q)
+                    conn.commit()
                     return
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     # there's been a competing insert, retry
-                    pass
+                    conn.rollback()
 
         return self.db.pool.do(thd)
 
@@ -187,8 +187,8 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                 q = q.where(
                     (builds.c.complete_at >= older_than_timestamp) | (builds.c.complete_at == NULL)
                 )
-            with conn.begin():
-                res = conn.execute(q)
+            res = conn.execute(q)
+            conn.commit()
             res.close()
 
             count_after = count_build_datum(conn)

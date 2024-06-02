@@ -60,12 +60,10 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
         # and adding a new one, triggering the fallback to re-running
         # the select.
         def hook(conn):
-            with conn.begin():
-                conn.execute(
-                    self.db.model.objects.insert().values(
-                        id=27, name='someobj', class_name='someclass'
-                    )
-                )
+            conn.execute(
+                self.db.model.objects.insert().values(id=27, name='someobj', class_name='someclass')
+            )
+            conn.commit()
 
         self.db.state._test_timing_hook = hook
 
@@ -166,12 +164,10 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
     @defer.inlineCallbacks
     def test_setState_conflict(self):
         def hook(conn):
-            with conn.begin():
-                conn.execute(
-                    self.db.model.object_state.insert().values(
-                        objectid=10, name='x', value_json='22'
-                    )
-                )
+            conn.execute(
+                self.db.model.object_state.insert().values(objectid=10, name='x', value_json='22')
+            )
+            conn.commit()
 
         self.db.state._test_timing_hook = hook
 
@@ -204,12 +200,10 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
         ])
 
         def hook(conn):
-            with conn.begin():
-                conn.execute(
-                    self.db.model.object_state.insert().values(
-                        objectid=10, name='x', value_json='22'
-                    )
-                )
+            conn.execute(
+                self.db.model.object_state.insert().values(objectid=10, name='x', value_json='22')
+            )
+            conn.commit()
 
         self.db.state._test_timing_hook = hook
 

@@ -31,15 +31,15 @@ def test_unicode(migrate_engine):
         sa.Column('u', sa.Unicode(length=100)),
         sa.Column('b', sa.LargeBinary),
     )
-    with migrate_engine.begin():
-        test_unicode.create(bind=migrate_engine)
+    test_unicode.create(bind=migrate_engine)
+    migrate_engine.commit()
 
     # insert a unicode value in there
     u = "Frosty the \N{SNOWMAN}"
     b = b'\xff\xff\x00'
     ins = test_unicode.insert().values(u=u, b=b)
-    with migrate_engine.begin():
-        migrate_engine.execute(ins)
+    migrate_engine.execute(ins)
+    migrate_engine.commit()
 
     # see if the data is intact
     row = migrate_engine.execute(test_unicode.select()).fetchall()[0]
@@ -49,5 +49,5 @@ def test_unicode(migrate_engine):
     assert row.b == b
 
     # drop the test table
-    with migrate_engine.begin():
-        test_unicode.drop(bind=migrate_engine)
+    test_unicode.drop(bind=migrate_engine)
+    migrate_engine.commit()

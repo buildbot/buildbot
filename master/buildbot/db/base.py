@@ -113,10 +113,11 @@ class DBConnectorComponent:
                 _race_hook(conn)
 
             try:
-                with conn.begin():
-                    r = conn.execute(tbl.insert(), [insert_values])
+                r = conn.execute(tbl.insert(), [insert_values])
+                conn.commit()
                 return r.inserted_primary_key[0], False
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                conn.rollback()
                 # try it all over again, in case there was an overlapping,
                 # identical call, but only retry once.
                 if no_recurse:
