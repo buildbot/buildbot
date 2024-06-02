@@ -70,9 +70,9 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                 metadata,
                 sa.Column("version_num", sa.String(32), nullable=False),
             )
-            with conn.begin():
-                table.create(bind=conn)
-                conn.execute(table.insert().values(version_num=base_revision))
+            table.create(bind=conn)
+            conn.execute(table.insert().values(version_num=base_revision))
+            conn.commit()
             setup_thd_cb(conn)
 
         yield self.db.pool.do(setup_thd)

@@ -72,15 +72,15 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = cs_mst_tbl.delete().where(cs_mst_tbl.c.changesourceid == changesourceid)
-                with conn.begin():
-                    conn.execute(q)
+                conn.execute(q)
+                conn.commit()
                 return
 
             # try a blind insert..
             try:
                 q = cs_mst_tbl.insert()
-                with conn.begin():
-                    conn.execute(q, {"changesourceid": changesourceid, "masterid": masterid})
+                conn.execute(q, {"changesourceid": changesourceid, "masterid": masterid})
+                conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this changesource.
                 raise ChangeSourceAlreadyClaimedError from e

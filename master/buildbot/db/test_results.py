@@ -98,14 +98,14 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                             # Use RETURNING, this way we won't need an additional select query
                             q = q.returning(paths_table.c.id, paths_table.c.path)
 
-                            with conn.begin():
-                                res = conn.execute(q)
+                            res = conn.execute(q)
+                            conn.commit()
                             for row in res.fetchall():
                                 paths_to_ids[row.path] = row.id
                                 path_batch.remove(row.path)
                         else:
-                            with conn.begin():
-                                conn.execute(q)
+                            conn.execute(q)
+                            conn.commit()
 
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # There was a competing addCodePaths() call that added a path for the same
@@ -168,14 +168,14 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                             # Use RETURNING, this way we won't need an additional select query
                             q = q.returning(names_table.c.id, names_table.c.name)
 
-                            with conn.begin():
-                                res = conn.execute(q)
+                            res = conn.execute(q)
+                            conn.commit()
                             for row in res.fetchall():
                                 names_to_ids[row.name] = row.id
                                 name_batch.remove(row.name)
                         else:
-                            with conn.begin():
-                                conn.execute(q)
+                            conn.execute(q)
+                            conn.commit()
 
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # There was a competing addNames() call that added a name for the same

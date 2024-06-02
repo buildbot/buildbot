@@ -166,15 +166,15 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = sch_mst_tbl.delete().where(sch_mst_tbl.c.schedulerid == schedulerid)
-                with conn.begin():
-                    conn.execute(q).close()
+                conn.execute(q).close()
+                conn.commit()
                 return None
 
             # try a blind insert..
             try:
                 q = sch_mst_tbl.insert()
-                with conn.begin():
-                    conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
+                conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
+                conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(

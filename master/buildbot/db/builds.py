@@ -232,21 +232,21 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     _race_hook(conn)
 
                 try:
-                    with conn.begin():
-                        r = conn.execute(
-                            self.db.model.builds.insert(),
-                            {
-                                "number": new_number,
-                                "builderid": builderid,
-                                "buildrequestid": buildrequestid,
-                                "workerid": workerid,
-                                "masterid": masterid,
-                                "started_at": started_at,
-                                "complete_at": None,
-                                "locks_duration_s": 0,
-                                "state_string": state_string,
-                            },
-                        )
+                    r = conn.execute(
+                        self.db.model.builds.insert(),
+                        {
+                            "number": new_number,
+                            "builderid": builderid,
+                            "buildrequestid": buildrequestid,
+                            "workerid": workerid,
+                            "masterid": masterid,
+                            "started_at": started_at,
+                            "complete_at": None,
+                            "locks_duration_s": 0,
+                            "state_string": state_string,
+                        },
+                    )
+                    conn.commit()
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                     # pg 9.5 gives this error which makes it pass some build
                     # numbers

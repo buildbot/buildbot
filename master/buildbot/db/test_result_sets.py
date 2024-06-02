@@ -84,8 +84,8 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             }
 
             q = sets_table.insert().values(insert_values)
-            with conn.begin():
-                r = conn.execute(q)
+            r = conn.execute(q)
+            conn.commit()
             return r.inserted_primary_key[0]
 
         return self.db.pool.do(thd)
@@ -141,8 +141,8 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             q = sets_table.update().values(values)
             q = q.where((sets_table.c.id == test_result_setid) & (sets_table.c.complete == 0))
 
-            with conn.begin():
-                res = conn.execute(q)
+            res = conn.execute(q)
+            conn.commit()
             if res.rowcount == 0:
                 raise TestResultSetAlreadyCompleted(
                     f'Test result set {test_result_setid} '

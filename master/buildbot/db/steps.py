@@ -158,8 +158,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 "name": name,
             }
             try:
-                with conn.begin():
-                    r = conn.execute(self.db.model.steps.insert(), insert_row)
+                r = conn.execute(self.db.model.steps.insert(), insert_row)
+                conn.commit()
                 got_id = r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 got_id = None
@@ -180,8 +180,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                     break
                 num += 1
             insert_row['name'] = newname
-            with conn.begin():
-                r = conn.execute(self.db.model.steps.insert(), insert_row)
+            r = conn.execute(self.db.model.steps.insert(), insert_row)
+            conn.commit()
             got_id = r.inserted_primary_key[0]
             return (got_id, number, newname)
 
@@ -243,8 +243,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             if url_item not in urls:
                 urls.append(url_item)
                 q = tbl.update().where(wc)
-                with conn.begin():
-                    conn.execute(q.values(urls_json=json.dumps(urls)))
+                conn.execute(q.values(urls_json=json.dumps(urls)))
+                conn.commit()
 
         return self.url_lock.run(self.db.pool.do, thd)
 

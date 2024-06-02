@@ -101,12 +101,12 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
         def race_thd(conn: Connection):
-            with conn.begin():
-                conn.execute(
-                    tbl.insert().values(
-                        id=5, name='somemaster', name_hash=hash, active=1, last_active=1
-                    )
+            conn.execute(
+                tbl.insert().values(
+                    id=5, name='somemaster', name_hash=hash, active=1, last_active=1
                 )
+            )
+            conn.commit()
 
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,

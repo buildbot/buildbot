@@ -288,16 +288,16 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn_tbl = self.db.model.connected_workers
             q = conn_tbl.insert()
             try:
-                with conn.begin():
-                    conn.execute(q, {'workerid': workerid, 'masterid': masterid})
+                conn.execute(q, {'workerid': workerid, 'masterid': masterid})
+                conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
 
             bs_tbl = self.db.model.workers
             q = bs_tbl.update().where(bs_tbl.c.id == workerid)
-            with conn.begin():
-                conn.execute(q.values(info=workerinfo))
+            conn.execute(q.values(info=workerinfo))
+            conn.commit()
 
         return self.db.pool.do(thd)
 

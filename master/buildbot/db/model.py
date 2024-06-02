@@ -1145,8 +1145,8 @@ class Model(base.DBConnectorComponent):
 
     def alembic_stamp(self, conn, alembic_scripts, revision):
         context = alembic.runtime.migration.MigrationContext.configure(conn)
-        with conn.begin():
-            context.stamp(alembic_scripts, revision)
+        context.stamp(alembic_scripts, revision)
+        conn.commit()
 
     @defer.inlineCallbacks
     def is_current(self):
@@ -1194,8 +1194,8 @@ class Model(base.DBConnectorComponent):
                     raise UpgradeFromBefore3p0Error()
 
                 self.alembic_stamp(conn, alembic_scripts, alembic_scripts.get_base())
-                with conn.begin():
-                    conn.execute(sa.text('drop table migrate_version'))
+                conn.execute(sa.text('drop table migrate_version'))
+                conn.commit()
 
             if not self.table_exists(conn, 'alembic_version'):
                 log.msg("Initializing empty database")
@@ -1203,8 +1203,8 @@ class Model(base.DBConnectorComponent):
                 # Do some tests first
                 test_unicode(conn)
 
-                with conn.begin():
-                    Model.metadata.create_all(conn)
+                Model.metadata.create_all(conn)
+                conn.commit()
                 self.alembic_stamp(conn, alembic_scripts, current_script_rev_head)
                 return
 

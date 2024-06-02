@@ -515,20 +515,20 @@ class RealTests(Tests):
         def raceHook(conn):
             if not numbers:
                 return
-            with conn.begin():
-                conn.execute(
-                    self.db.model.builds.insert(),
-                    {
-                        "number": numbers.pop(0),
-                        "buildrequestid": 41,
-                        "masterid": 88,
-                        "workerid": 13,
-                        "builderid": 77,
-                        "started_at": TIME1,
-                        "locks_duration_s": 0,
-                        "state_string": "hi",
-                    },
-                )
+            conn.execute(
+                self.db.model.builds.insert(),
+                {
+                    "number": numbers.pop(0),
+                    "buildrequestid": 41,
+                    "masterid": 88,
+                    "workerid": 13,
+                    "builderid": 77,
+                    "started_at": TIME1,
+                    "locks_duration_s": 0,
+                    "state_string": "hi",
+                },
+            )
+            conn.commit()
 
         id, number = yield self.db.builds.addBuild(
             builderid=77,

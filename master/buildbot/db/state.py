@@ -66,8 +66,8 @@ class StateConnectorComponent(base.DBConnectorComponent):
             return row.id
 
         def insert():
-            with conn.begin():
-                res = conn.execute(objects_tbl.insert().values(name=name, class_name=class_name))
+            res = conn.execute(objects_tbl.insert().values(name=name, class_name=class_name))
+            conn.commit()
             return res.inserted_primary_key[0]
 
         # we want to try selecting, then inserting, but if the insert fails
@@ -140,19 +140,19 @@ class StateConnectorComponent(base.DBConnectorComponent):
             q = object_state_tbl.update().where(
                 object_state_tbl.c.objectid == objectid, object_state_tbl.c.name == name
             )
-            with conn.begin():
-                res = conn.execute(q.values(value_json=value_json))
+            res = conn.execute(q.values(value_json=value_json))
+            conn.commit()
 
             # check whether that worked
             return res.rowcount > 0
 
         def insert():
-            with conn.begin():
-                conn.execute(
-                    object_state_tbl.insert().values(
-                        objectid=objectid, name=name, value_json=value_json
-                    )
+            conn.execute(
+                object_state_tbl.insert().values(
+                    objectid=objectid, name=name, value_json=value_json
                 )
+            )
+            conn.commit()
 
         # try updating; if that fails, try inserting; if that fails, then
         # we raced with another instance to insert, so let that instance
@@ -186,14 +186,14 @@ class StateConnectorComponent(base.DBConnectorComponent):
                     raise TypeError(f"Error encoding JSON for {repr(res)}") from e
                 self._test_timing_hook(conn)
                 try:
-                    with conn.begin():
-                        conn.execute(
-                            object_state_tbl.insert().values(
-                                objectid=objectid,
-                                name=name,
-                                value_json=value_json,
-                            )
+                    conn.execute(
+                        object_state_tbl.insert().values(
+                            objectid=objectid,
+                            name=name,
+                            value_json=value_json,
                         )
+                    )
+                    conn.commit()
                 except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
                     # someone beat us to it - oh well return that value
                     return self.thdGetState(conn, objectid, name)

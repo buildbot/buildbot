@@ -107,14 +107,16 @@ class Basic(unittest.TestCase):
         # transaction runs.  This is why we set optimal_thread_pool_size in
         # setUp.
         def create_table(engine):
-            with engine.connect() as conn, conn.begin():
+            with engine.connect() as conn:
                 conn.execute(sa.text("CREATE TABLE tmp ( a integer )"))
+                conn.commit()
 
         yield self.pool.do_with_engine(create_table)
 
         def insert_into_table(engine):
-            with engine.connect() as conn, conn.begin():
+            with engine.connect() as conn:
                 conn.execute(sa.text("INSERT INTO tmp values ( 1 )"))
+                conn.commit()
 
         yield self.pool.do_with_engine(insert_into_table)
 

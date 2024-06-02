@@ -128,8 +128,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             try:
                 tbl = self.db.model.builder_masters
                 q = tbl.insert()
-                with conn.begin():
-                    conn.execute(q.values(builderid=builderid, masterid=masterid))
+                conn.execute(q.values(builderid=builderid, masterid=masterid))
+                conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 pass
 
