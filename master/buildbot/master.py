@@ -452,13 +452,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         log.msg(f"{msg} (took {(self.reactor.seconds() - time_started):.3f} seconds)")
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        if self.configured_db_url is None:
-            self.configured_db_url = new_config.db['db_url']
-        elif self.configured_db_url != new_config.db['db_url']:
-            config.error(
-                "Cannot change c['db']['db_url'] after the master has started",
-            )
-
         if self.config.mq['type'] != new_config.mq['type']:
             raise config.ConfigErrors([
                 "Cannot change c['mq']['type'] after the master has started",

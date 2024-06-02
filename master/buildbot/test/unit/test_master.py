@@ -217,4 +217,4 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         new.db['db_url'] = 'bbbb'
 
         with self.assertRaises(config.ConfigErrors):
-            self.master.reconfigServiceWithBuildbotConfig(new)
+            yield self.master.reconfigServiceWithBuildbotConfig(new)
