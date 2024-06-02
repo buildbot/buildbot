@@ -31,7 +31,7 @@ class Basic(unittest.TestCase):
     # basic tests, just using an in-memory SQL db and one thread
 
     def setUp(self):
-        self.engine = sa.create_engine('sqlite://')
+        self.engine = sa.create_engine('sqlite://', future=True)
         self.engine.should_retry = lambda _: False
         self.engine.optimal_thread_pool_size = 1
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
@@ -123,11 +123,11 @@ class Basic(unittest.TestCase):
 
 class Stress(unittest.TestCase):
     def setUp(self):
-        setup_engine = sa.create_engine('sqlite:///test.sqlite')
+        setup_engine = sa.create_engine('sqlite:///test.sqlite', future=True)
         setup_engine.execute("pragma journal_mode = wal")
         setup_engine.execute("CREATE TABLE test (a integer, b integer)")
 
-        self.engine = sa.create_engine('sqlite:///test.sqlite')
+        self.engine = sa.create_engine('sqlite:///test.sqlite', future=True)
         self.engine.optimal_thread_pool_size = 2
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
 
