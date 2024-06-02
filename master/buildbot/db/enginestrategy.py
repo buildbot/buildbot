@@ -230,7 +230,7 @@ def create_engine(name_or_url, **kwargs):
     if max_conns is None:
         max_conns = kwargs.get('pool_size', 5) + kwargs.get('max_overflow', 10)
     driver_strategy = get_drivers_strategy(u.drivername)
-    engine = sa.create_engine(u, **kwargs)
+    engine = sa.create_engine(u, **kwargs, future=True)
     driver_strategy.set_up(u, engine)
     engine.should_retry = driver_strategy.should_retry
     # annotate the engine with the optimal thread pool size; this is used

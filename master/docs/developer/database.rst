@@ -138,7 +138,7 @@ A connector method should look like this::
 
 Picking that apart, the body of the method defines a function named ``thd``
 taking one argument, a :class:`Connection
-<sqlalchemy:sqlalchemy.engine.base.Connection>` object.  It then calls
+<sqlalchemy:sqlalchemy.future.engine.Connection>` object.  It then calls
 ``self.db.pool.do``, passing the ``thd`` function.  This function is called in
 a thread, and can make blocking calls to SQLAlchemy as desired.  The ``do``
 method will return a Deferred that will fire with the return value of ``thd``,

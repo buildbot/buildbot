@@ -24,7 +24,7 @@ from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine.base import Connection
+    from sqlalchemy.future.engine import Connection
 
 # from http:
 # //www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long

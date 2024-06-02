@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import hashlib
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import sqlalchemy as sa
@@ -25,6 +27,9 @@ from buildbot.db import base
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.util import sautils
+
+if TYPE_CHECKING:
+    from sqlalchemy.future.engine import Connection
 
 
 class TestBase(unittest.TestCase):
@@ -95,7 +100,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
-        def race_thd(conn: sa.engine.base.Connection):
+        def race_thd(conn: Connection):
             with conn.begin():
                 conn.execute(
                     tbl.insert().values(

@@ -16,6 +16,7 @@
 
 import os
 
+import sqlalchemy as sa
 from sqlalchemy.schema import MetaData
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -185,7 +186,7 @@ class RealDatabaseMixin:
             # sometimes this goes badly wrong; being able to see the schema
             # can be a big help
             if conn.engine.dialect.name == 'sqlite':
-                r = conn.execute("select sql from sqlite_master where type='table'")
+                r = conn.execute(sa.text("select sql from sqlite_master where type='table'"))
                 log.msg("Current schema:")
                 for row in r.fetchall():
                     log.msg(row.sql)

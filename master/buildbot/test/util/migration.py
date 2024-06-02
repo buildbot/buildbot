@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from alembic.operations import Operations
@@ -30,6 +31,10 @@ from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
 from buildbot.util import sautils
+
+if TYPE_CHECKING:
+    from sqlalchemy.future.engine import Connection
+
 
 # test_upgrade vs. migration tests
 #
@@ -91,7 +96,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
         yield self.db.pool.do_with_engine(upgrade_thd)
 
-        def check_table_charsets_thd(conn: sa.engine.base.Connection):
+        def check_table_charsets_thd(conn: Connection):
             # charsets are only a problem for MySQL
             if conn.dialect.name != 'mysql':
                 return
