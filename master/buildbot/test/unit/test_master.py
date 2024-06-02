@@ -31,6 +31,7 @@ from buildbot.config.master import FileLoader
 from buildbot.config.master import MasterConfig
 from buildbot.db import exceptions
 from buildbot.interfaces import IConfigLoader
+from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakemq
@@ -91,6 +92,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         )
         self.master.sendBuildbotNetUsageData = mock.Mock()
         self.master.botmaster = FakeBotMaster()
+        self.secrets_manager = self.master.secrets_manager = SecretManager()
+        yield self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self)
         yield self.db.setServiceParent(self.master)
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)

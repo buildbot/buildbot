@@ -18,6 +18,7 @@ manage providers and handle secrets
 
 from twisted.internet import defer
 
+from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
 from buildbot.util import service
 
@@ -29,6 +30,15 @@ class SecretManager(service.BuildbotServiceManager):
 
     name = 'secrets'
     config_attr = "secretsProviders"
+
+    @defer.inlineCallbacks
+    def setup(self):
+        configuredProviders = self.get_service_config(self.master.config)
+
+        for child in configuredProviders.values():
+            assert isinstance(child, SecretProviderBase)
+            yield child.setServiceParent(self)
+            yield child.configureService()
 
     @defer.inlineCallbacks
     def get(self, secret, *args, **kwargs):

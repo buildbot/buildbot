@@ -191,7 +191,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self)
-        self.secrets_manager.reconfig_priority = 2000
+        self.secrets_manager.reconfig_priority = self.db.reconfig_priority - 1
 
         self.service_manager = service.BuildbotServiceManager()
         yield self.service_manager.setServiceParent(self)
@@ -265,6 +265,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
             # set up services that need access to the config before everything
             # else gets told to reconfig
+            yield self.secrets_manager.setup()
             try:
                 yield self.db.setup()
             except exceptions.DatabaseNotReadyError:
