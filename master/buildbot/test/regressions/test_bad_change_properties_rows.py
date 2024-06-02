@@ -49,7 +49,7 @@ class TestBadRows(connector_component.ConnectorComponentMixin, unittest.TestCase
 
         c = yield self.db.changes.getChange(13)
 
-        self.assertEqual(c['properties'], {"devel": ('no source', 'Change')})
+        self.assertEqual(c.properties, {"devel": ('no source', 'Change')})
 
     @defer.inlineCallbacks
     def test_bogus_row_jsoned_list(self):
@@ -61,4 +61,4 @@ class TestBadRows(connector_component.ConnectorComponentMixin, unittest.TestCase
 
         c = yield self.db.changes.getChange(13)
 
-        self.assertEqual(c['properties'], {"devel": ([1, 2], 'Change')})
+        self.assertEqual(c.properties, {"devel": ([1, 2], 'Change')})

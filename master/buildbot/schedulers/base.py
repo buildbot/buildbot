@@ -339,12 +339,12 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
-            return max(changesByCodebase[codebase], key=lambda change: change["changeid"])
+            return max(changesByCodebase[codebase], key=lambda change: change.changeid)
 
         # Changes are retrieved from database and grouped by their codebase
         for changeid in changeids:
             chdict = yield self.master.db.changes.getChange(changeid)
-            changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
+            changesByCodebase.setdefault(chdict.codebase, []).append(chdict)
 
         sourcestamps = []
         for codebase in sorted(self.codebases):
@@ -362,7 +362,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 }
             else:
                 lastChange = get_last_change_for_codebase(codebase)
-                ss = lastChange['sourcestampid']
+                ss = lastChange.sourcestampid
             sourcestamps.append(ss)
 
         if priority is None:

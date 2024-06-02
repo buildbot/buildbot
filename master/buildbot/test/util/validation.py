@@ -439,25 +439,6 @@ message['changes'].add(
     ),
 )
 
-dbdict['chdict'] = DictValidator(
-    changeid=IntValidator(),
-    author=StringValidator(),
-    committer=StringValidator(),
-    files=ListValidator(StringValidator()),
-    comments=StringValidator(),
-    revision=NoneOk(StringValidator()),
-    when_timestamp=DateTimeValidator(),
-    branch=NoneOk(StringValidator()),
-    category=NoneOk(StringValidator()),
-    revlink=NoneOk(StringValidator()),
-    properties=SourcedPropertiesValidator(),
-    repository=StringValidator(),
-    project=StringValidator(),
-    codebase=StringValidator(),
-    sourcestampid=IntValidator(),
-    parent_changeids=ListValidator(IntValidator()),
-)
-
 # builds
 
 _build = {

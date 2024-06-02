@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import json
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
@@ -27,24 +30,45 @@ from buildbot.process.users import users
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from buildbot.db.changes import ChangeModel
+
 
 class FixerMixin:
     @defer.inlineCallbacks
-    def _fixChange(self, change, is_graphql):
+    def _fixChange(self, model: ChangeModel, is_graphql: bool):
         # TODO: make these mods in the DB API
-        if change:
-            change = change.copy()
-            change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
-            if is_graphql:
-                props = change['properties']
-                change['properties'] = [
-                    {'name': k, 'source': v[1], 'value': json.dumps(v[0])} for k, v in props.items()
-                ]
-            else:
-                sskey = ('sourcestamps', str(change['sourcestampid']))
-                change['sourcestamp'] = yield self.master.data.get(sskey)
-                del change['sourcestampid']
-        return change
+        data = {
+            'changeid': model.changeid,
+            'author': model.author,
+            'committer': model.committer,
+            'comments': model.comments,
+            'branch': model.branch,
+            'revision': model.revision,
+            'revlink': model.revlink,
+            'when_timestamp': datetime2epoch(model.when_timestamp),
+            'category': model.category,
+            'parent_changeids': model.parent_changeids,
+            'repository': model.repository,
+            'codebase': model.codebase,
+            'project': model.project,
+            'files': model.files,
+        }
+        if is_graphql:
+            data['sourcestampid'] = model.sourcestampid
+        else:
+            sskey = ('sourcestamps', str(model.sourcestampid))
+            data['sourcestamp'] = yield self.master.data.get(sskey)
+
+        if is_graphql:
+            data['properties'] = [
+                {'name': k, 'source': v[1], 'value': json.dumps(v[0])}
+                for k, v in model.properties.items()
+            ]
+        else:
+            data['properties'] = model.properties
+
+        return data
 
     fieldMapping = {
         'author': 'changes.author',
@@ -69,10 +93,12 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
         /changes/n:changeid
     """
 
+    @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        d = self.master.db.changes.getChange(kwargs['changeid'])
-        d.addCallback(self._fixChange, is_graphql='graphql' in kwargs)
-        return d
+        change = yield self.master.db.changes.getChange(kwargs['changeid'])
+        if change is None:
+            return None
+        return (yield self._fixChange(change, is_graphql='graphql' in kwargs))
 
 
 class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):

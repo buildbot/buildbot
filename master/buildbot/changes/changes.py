@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import html
 import time
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
@@ -22,6 +25,9 @@ from twisted.python import log
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.util import datetime2epoch
+
+if TYPE_CHECKING:
+    from buildbot.db.changes import ChangeModel
 
 
 class Change:
@@ -36,43 +42,43 @@ class Change:
     links = []  # links are gone, but upgrade code expects this attribute
 
     @classmethod
-    def fromChdict(cls, master, chdict):
+    def fromChdict(cls, master, chdict: ChangeModel) -> Change:
         """
-        Class method to create a L{Change} from a dictionary as returned
+        Class method to create a L{Change} from a L{ChangeModel} as returned
         by L{ChangesConnectorComponent.getChange}.
 
         @param master: build master instance
-        @param chdict: change dictionary
+        @param chdict: change model
 
         @returns: L{Change} via Deferred
         """
         cache = master.caches.get_cache("Changes", cls._make_ch)
-        return cache.get(chdict['changeid'], chdict=chdict, master=master)
+        return cache.get(chdict.changeid, chdict=chdict, master=master)
 
     @classmethod
-    def _make_ch(cls, changeid, master, chdict):
+    def _make_ch(cls, changeid: int, master, chdict: ChangeModel) -> Change:
         change = cls(None, None, None, _fromChdict=True)
-        change.who = chdict['author']
-        change.committer = chdict['committer']
-        change.comments = chdict['comments']
-        change.revision = chdict['revision']
-        change.branch = chdict['branch']
-        change.category = chdict['category']
-        change.revlink = chdict['revlink']
-        change.repository = chdict['repository']
-        change.codebase = chdict['codebase']
-        change.project = chdict['project']
-        change.number = chdict['changeid']
+        change.who = chdict.author
+        change.committer = chdict.committer
+        change.comments = chdict.comments
+        change.revision = chdict.revision
+        change.branch = chdict.branch
+        change.category = chdict.category
+        change.revlink = chdict.revlink
+        change.repository = chdict.repository
+        change.codebase = chdict.codebase
+        change.project = chdict.project
+        change.number = chdict.changeid
 
-        when = chdict['when_timestamp']
+        when = chdict.when_timestamp
         if when:
             when = datetime2epoch(when)
         change.when = when
 
-        change.files = sorted(chdict['files'])
+        change.files = sorted(chdict.files)
 
         change.properties = Properties()
-        for n, (v, s) in chdict['properties'].items():
+        for n, (v, s) in chdict.properties.items():
             change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)
