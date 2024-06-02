@@ -13,12 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
 import itertools
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 
 from buildbot.util import unicode2bytes
+
+if TYPE_CHECKING:
+    from buildbot.db.connector import DBConnector
 
 
 class DBConnectorComponent:
@@ -31,7 +37,7 @@ class DBConnectorComponent:
     connector = None
     data2db = {}
 
-    def __init__(self, connector):
+    def __init__(self, connector: DBConnector):
         self.db = connector
 
         # set up caches

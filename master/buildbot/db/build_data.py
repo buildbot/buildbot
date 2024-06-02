@@ -63,9 +63,10 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         # called so tests can simulate a race condition during insertion
         pass
 
-    @defer.inlineCallbacks
-    def setBuildData(self, buildid, name, value, source):
-        def thd(conn):
+    def setBuildData(
+        self, buildid: int, name: str, value: bytes, source: str
+    ) -> defer.Deferred[None]:
+        def thd(conn) -> None:
             build_data_table = self.db.model.build_data
 
             update_values = {
@@ -105,10 +106,9 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                     # there's been a competing insert, retry
                     pass
 
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getBuildData(self, buildid, name):
+    def getBuildData(self, buildid: int, name: str) -> defer.Deferred[BuildDataModel | None]:
         def thd(conn) -> BuildDataModel | None:
             build_data_table = self.db.model.build_data
 
@@ -121,11 +121,9 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                 return None
             return self._model_from_row(row, value=row.value)
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getBuildDataNoValue(self, buildid, name):
+    def getBuildDataNoValue(self, buildid: int, name: str) -> defer.Deferred[BuildDataModel | None]:
         def thd(conn) -> BuildDataModel | None:
             build_data_table = self.db.model.build_data
 
@@ -142,11 +140,9 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                 return None
             return self._model_from_row(row, value=None)
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getAllBuildDataNoValues(self, buildid):
+    def getAllBuildDataNoValues(self, buildid: int) -> defer.Deferred[list[BuildDataModel]]:
         def thd(conn) -> list[BuildDataModel]:
             build_data_table = self.db.model.build_data
 
@@ -160,21 +156,19 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
             return [self._model_from_row(row, value=None) for row in conn.execute(q).fetchall()]
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def deleteOldBuildData(self, older_than_timestamp):
+    def deleteOldBuildData(self, older_than_timestamp: int) -> defer.Deferred[int]:
         build_data = self.db.model.build_data
         builds = self.db.model.builds
 
-        def count_build_datum(conn):
+        def count_build_datum(conn) -> int:
             res = conn.execute(sa.select(sa.func.count(build_data.c.id)))
             count = res.fetchone()[0]
             res.close()
             return count
 
-        def thd(conn):
+        def thd(conn) -> int:
             count_before = count_build_datum(conn)
 
             if self.db._engine.dialect.name == 'sqlite':
@@ -200,8 +194,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
             count_after = count_build_datum(conn)
             return count_before - count_after
 
-        res = yield self.db.pool.do(thd)
-        return res
+        return self.db.pool.do(thd)
 
     def _model_from_row(self, row, value: bytes | None):
         return BuildDataModel(
