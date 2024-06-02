@@ -24,8 +24,9 @@ if TYPE_CHECKING:
     from typing import Any
     from typing import Callable
     from typing import Coroutine
-    from typing import ParamSpec
     from typing import TypeVar
+
+    from typing_extensions import ParamSpec
 
     _T = TypeVar('_T')
     _P = ParamSpec('_P')

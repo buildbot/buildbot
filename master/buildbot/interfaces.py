@@ -98,21 +98,21 @@ class ISourceStamp(Interface):
     @type repository: string
     """
 
-    def canBeMergedWith(self, other):
+    def canBeMergedWith(other):
         """
         Can this SourceStamp be merged with OTHER?
         """
 
-    def mergeWith(self, others):
+    def mergeWith(others):
         """Generate a SourceStamp for the merger of me and all the other
         SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
 
-    def getAbsoluteSourceStamp(self, got_revision):
+    def getAbsoluteSourceStamp(got_revision):
         """Get a new SourceStamp object reflecting the actual revision found
         by a Source step."""
 
-    def getText(self):
+    def getText():
         """Returns a list of strings to describe the stamp. These are
         intended to be displayed in a narrow column. If more space is
         available, the caller should join them together with spaces before
@@ -189,7 +189,7 @@ class IMachine(Interface):
 
 
 class IMachineAction(Interface):
-    def perform(self, manager):
+    def perform(manager):
         """Perform an action on the machine managed by manager. Returns a
         deferred evaluating to True if it was possible to execute the
         action.
@@ -320,7 +320,7 @@ class IConfigured(Interface):
 
 
 class IReportGenerator(Interface):
-    def generate(self, master, reporter, key, build):
+    def generate(master, reporter, key, build):
         pass
 
 

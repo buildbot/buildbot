@@ -60,3 +60,8 @@ quote-style = "preserve"
         directory = "misc"
         name = "Misc"
         showcontent = false
+
+[tool.mypy]
+python_version = "3.8"
+namespace_packages = true
+plugins = "mypy_zope:plugin"
