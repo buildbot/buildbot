@@ -660,7 +660,7 @@ setup_args['install_requires'] = [
     'importlib-resources >= 5; python_version < "3.9"',
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',
-    'sqlalchemy >= 1.4.0, < 1.5',
+    'sqlalchemy >= 1.4.0',
     'alembic >= 1.6.0',
     'python-dateutil>=1.5',
     "txaio >= 2.2.2",
