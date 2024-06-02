@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 from twisted.python import deprecate
 from twisted.python import versions
@@ -32,6 +34,9 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
+
+if TYPE_CHECKING:
+    from buildbot.process.builder import Builder
 
 
 # deprecated, use BuildFactory.addStep
@@ -58,13 +63,13 @@ class BuildFactory(util.ComparableMixin):
         if steps:
             self.addSteps(steps)
 
-    def newBuild(self, requests):
+    def newBuild(self, requests, builder: Builder) -> None:
         """Create a new Build instance.
 
         @param requests: a list of buildrequest dictionaries describing what is
         to be built
         """
-        b = self.buildClass(requests)
+        b = self.buildClass(requests, builder)
         b.useProgress = self.useProgress
         b.workdir = self.workdir
         b.setStepFactories(self.steps)

@@ -375,8 +375,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
-        build = self.config.factory.newBuild(buildrequests)
-        build.setBuilder(self)
+        build = self.config.factory.newBuild(buildrequests, self)
 
         props = build.getProperties()
 
