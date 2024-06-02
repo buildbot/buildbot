@@ -94,6 +94,8 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                             with context.begin_transaction():
                                 context.run_migrations()
 
+                        conn.commit()
+
         yield self.db.pool.do_with_engine(upgrade_thd)
 
         def check_table_charsets_thd(conn: Connection):

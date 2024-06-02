@@ -94,7 +94,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # try to do both of these inserts in a transaction, so that both
             # the new user and the corresponding attributes appear at the same
             # time from the perspective of other masters.
-            transaction = conn.begin()
+            transaction = conn.begin_nested()
             inserted_user = False
             try:
                 r = conn.execute(tbl.insert(), {"identifier": identifier})
@@ -124,6 +124,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
                 return thd(conn, no_recurse=no_recurse, identifier=identifier)
 
+            conn.commit()
             return uid
 
         return self.db.pool.do(thd)

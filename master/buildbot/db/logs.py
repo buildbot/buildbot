@@ -374,29 +374,30 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     chunk += self.COMPRESSION_BYID[row.compressed]["read"](row.content)
                 rows.close()
 
-                # Transaction is necessary so that readers don't see disappeared chunks
-                transaction = conn.begin()
-
                 # we remove the chunks that we are compressing
                 d = tbl.delete()
                 d = d.where(tbl.c.logid == logid)
                 d = d.where(tbl.c.first_line >= todo_first_line)
                 d = d.where(tbl.c.last_line <= todo_last_line)
-                conn.execute(d).close()
 
-                # and we recompress them in one big chunk
-                chunk, compressed_id = self.thdCompressChunk(chunk)
-                conn.execute(
-                    tbl.insert(),
-                    {
-                        "logid": logid,
-                        "first_line": todo_first_line,
-                        "last_line": todo_last_line,
-                        "content": chunk,
-                        "compressed": compressed_id,
-                    },
-                ).close()
-                transaction.commit()
+                # Transaction is necessary so that readers don't see disappeared chunks
+                with conn.begin_nested():
+                    conn.execute(d).close()
+
+                    # and we recompress them in one big chunk
+                    chunk, compressed_id = self.thdCompressChunk(chunk)
+                    conn.execute(
+                        tbl.insert(),
+                        {
+                            "logid": logid,
+                            "first_line": todo_first_line,
+                            "last_line": todo_last_line,
+                            "content": chunk,
+                            "compressed": compressed_id,
+                        },
+                    ).close()
+
+                conn.commit()
 
             # calculate how many bytes we saved
             q = sa.select(sa.func.sum(sa.func.length(tbl.c.content)))
