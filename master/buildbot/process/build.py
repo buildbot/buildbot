@@ -83,8 +83,11 @@ class Build(properties.PropertiesMixin):
 
     _sentinel = Sentinel()  # used as a sentinel to indicate unspecified initial_value
 
-    def __init__(self, requests):
+    def __init__(self, requests, builder: Builder) -> None:
         self.requests = requests
+        self.builder = builder
+        self.master = builder.master
+
         self.locks = []  # list of lock accesses
         self._locks_to_acquire = []  # list of (real_lock, access) tuples
         # build a source stamp
@@ -119,20 +122,10 @@ class Build(properties.PropertiesMixin):
         self._is_substantiating = False
 
         # tracks the config version for locks
-        self.config_version = None
+        self.config_version = builder.config_version
 
     def getProperties(self):
         return self.properties
-
-    def setBuilder(self, builder: Builder) -> None:
-        """
-        Set the given builder as our builder.
-
-        @type  builder: L{buildbot.process.builder.Builder}
-        """
-        self.builder = builder
-        self.master = builder.master
-        self.config_version = builder.config_version
 
     def setLocks(self, lockList):
         self.locks = lockList

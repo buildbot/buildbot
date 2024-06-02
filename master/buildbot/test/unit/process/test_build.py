@@ -191,7 +191,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
         self.builder = FakeBuilder(self.master)
-        self.build = Build([r])
+        self.build = Build([r], self.builder)
         self.build.conn = fakeprotocol.FakeConnection(self.worker)
         self.build.workername = self.worker.workername
 
@@ -200,7 +200,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.workerforbuilder.substantiate_if_needed = lambda _: True
         self.workerforbuilder.ping = lambda: True
 
-        self.build.setBuilder(self.builder)
         self.build.workerforbuilder = self.workerforbuilder
         self.build.text = []
         self.build.buildid = 666
@@ -396,10 +395,9 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         counting locks cannot jump ahead of exclusive locks"""
         eBuild = self.build
         cBuilder = FakeBuilder(self.master)
-        cBuild = Build([self.request])
+        cBuild = Build([self.request], cBuilder)
         cBuild.workerforbuilder = self.workerforbuilder
         cBuild.workername = self.worker.workername
-        cBuild.setBuilder(cBuilder)
 
         eWorker = Mock()
         cWorker = Mock()
@@ -884,8 +882,12 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(get_active_builds(), 0)
 
 
-class TestMultipleSourceStamps(unittest.TestCase):
+class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):
     def setUp(self):
+        self.setup_test_reactor()
+        self.master = fakemaster.make_master(self)
+        self.builder = FakeBuilder(self.master)
+
         r = FakeRequest()
         s1 = FakeSource()
         s1.repository = "repoA"
@@ -904,7 +906,7 @@ class TestMultipleSourceStamps(unittest.TestCase):
         s3.revision = "111213"
         r.sources.extend([s1, s2, s3])
 
-        self.build = Build([r])
+        self.build = Build([r], self.builder)
 
     def test_buildReturnSourceStamp(self):
         """
@@ -926,8 +928,12 @@ class TestMultipleSourceStamps(unittest.TestCase):
         self.assertEqual([source3.repository, source3.revision], ["repoC", "111213"])
 
 
-class TestBuildBlameList(unittest.TestCase):
+class TestBuildBlameList(TestReactorMixin, unittest.TestCase):
     def setUp(self):
+        self.setup_test_reactor()
+        self.master = fakemaster.make_master(self)
+        self.builder = FakeBuilder(self.master)
+
         self.sourceByMe = FakeSource()
         self.sourceByMe.repository = "repoA"
         self.sourceByMe.codebase = "A"
@@ -952,14 +958,14 @@ class TestBuildBlameList(unittest.TestCase):
     def test_blamelist_for_changes(self):
         r = FakeRequest()
         r.sources.extend([self.sourceByMe, self.sourceByHim])
-        build = Build([r])
+        build = Build([r], self.builder)
         blamelist = build.blamelist()
         self.assertEqual(blamelist, ['him', 'me'])
 
     def test_blamelist_for_patch(self):
         r = FakeRequest()
         r.sources.extend([self.patchSource])
-        build = Build([r])
+        build = Build([r], self.builder)
         blamelist = build.blamelist()
         # If no patch is set, author will not be est
         self.assertEqual(blamelist, [])
@@ -987,10 +993,9 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         self.r.sources[1].repository = "http://svn-repo-B"
         self.r.sources[1].codebase = "B"
         self.r.sources[1].revision = "34567"
-        self.build = Build([self.r])
-        self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
-        self.build.setBuilder(self.builder)
+        self.build = Build([self.r], self.builder)
+        self.build.setStepFactories([])
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
 
@@ -1027,10 +1032,9 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         self.r.sources[0].codebase = "A"
         self.r.sources[0].branch = "develop"
         self.r.sources[0].revision = "12345"
-        self.build = Build([self.r])
-        self.build.setStepFactories([])
         self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
-        self.build.setBuilder(self.builder)
+        self.build = Build([self.r], self.builder)
+        self.build.setStepFactories([])
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
 
