@@ -248,6 +248,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     )
                     conn.commit()
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                    conn.rollback()
                     # pg 9.5 gives this error which makes it pass some build
                     # numbers
                     if 'duplicate key value violates unique constraint "builds_pkey"' not in str(e):

@@ -64,6 +64,7 @@ class DbConfig:
             with db_engine.connect() as conn:
                 self.objectid = db.state.thdGetObjectId(conn, self.name, "DbConfig")['id']
         except (ProgrammingError, OperationalError):
+            conn.rollback()
             # ProgrammingError: mysql&pg, OperationalError: sqlite
             # assume db is not initialized
             db.pool.engine.dispose()

@@ -176,6 +176,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
                 conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                conn.rollback()
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(
                     sch_mst_tbl, (self.db.model.masters.c.id == sch_mst_tbl.c.masterid)

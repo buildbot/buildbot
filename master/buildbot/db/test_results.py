@@ -111,7 +111,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                         # There was a competing addCodePaths() call that added a path for the same
                         # builder. Depending on the DB driver, none or some rows were inserted, but
                         # we will re-check what's got inserted in the next iteration of the loop
-                        pass
+                        conn.rollback()
 
             return paths_to_ids
 
@@ -181,7 +181,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                         # There was a competing addNames() call that added a name for the same
                         # builder. Depending on the DB driver, none or some rows were inserted, but
                         # we will re-check what's got inserted in the next iteration of the loop
-                        pass
+                        conn.rollback()
 
             return names_to_ids
 

@@ -162,6 +162,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 conn.commit()
                 got_id = r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                conn.rollback()
                 got_id = None
 
             if got_id:

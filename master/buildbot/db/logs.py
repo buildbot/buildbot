@@ -192,6 +192,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 conn.commit()
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                conn.rollback()
                 raise KeyError(f"log with slug '{slug!r}' already exists in this step") from e
 
         return self.db.pool.do(thdAddLog)

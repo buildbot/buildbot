@@ -131,7 +131,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q.values(builderid=builderid, masterid=masterid))
                 conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                pass
+                conn.rollback()
 
         return self.db.pool.do(thd)
 

@@ -292,7 +292,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
-                pass
+                conn.rollback()
 
             bs_tbl = self.db.model.workers
             q = bs_tbl.update().where(bs_tbl.c.id == workerid)

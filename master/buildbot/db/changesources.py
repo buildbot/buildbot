@@ -82,6 +82,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q, {"changesourceid": changesourceid, "masterid": masterid})
                 conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                conn.rollback()
                 # someone already owns this changesource.
                 raise ChangeSourceAlreadyClaimedError from e
 

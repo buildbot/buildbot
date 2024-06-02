@@ -103,7 +103,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                     return
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     # there's been a competing insert, retry
-                    pass
+                    conn.rollback()
 
         yield self.db.pool.do(thd)
 

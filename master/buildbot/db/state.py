@@ -83,7 +83,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         try:
             return ObjDict(id=insert())
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
-            pass
+            conn.rollback()
 
         return ObjDict(id=select())
 
@@ -166,7 +166,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         try:
             insert()
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
-            pass  # someone beat us to it - oh well
+            conn.rollback()  # someone beat us to it - oh well
 
     def _test_timing_hook(self, conn):
         # called so tests can simulate another process inserting a database row
@@ -195,6 +195,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
                     )
                     conn.commit()
                 except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
+                    conn.rollback()
                     # someone beat us to it - oh well return that value
                     return self.thdGetState(conn, objectid, name)
             return res
