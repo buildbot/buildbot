@@ -68,7 +68,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == schedulerid)
             conn.execute(q.values(enabled=int(v)))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def classifyChanges(
         self, schedulerid: int, classifications: dict[int, bool]
@@ -109,7 +109,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             q = sch_ch_tbl.delete().where(wc)
             conn.execute(q).close()
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def getChangeClassifications(
         self,
@@ -166,13 +166,15 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = sch_mst_tbl.delete().where(sch_mst_tbl.c.schedulerid == schedulerid)
-                conn.execute(q).close()
+                with conn.begin():
+                    conn.execute(q).close()
                 return None
 
             # try a blind insert..
             try:
                 q = sch_mst_tbl.insert()
-                conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
+                with conn.begin():
+                    conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 # someone already owns this scheduler, but who?
                 join = self.db.model.masters.outerjoin(

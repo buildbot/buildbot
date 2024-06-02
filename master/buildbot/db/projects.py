@@ -122,7 +122,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
                 )
             ).close()
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return ProjectModel(

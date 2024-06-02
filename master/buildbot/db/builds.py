@@ -232,20 +232,21 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     _race_hook(conn)
 
                 try:
-                    r = conn.execute(
-                        self.db.model.builds.insert(),
-                        {
-                            "number": new_number,
-                            "builderid": builderid,
-                            "buildrequestid": buildrequestid,
-                            "workerid": workerid,
-                            "masterid": masterid,
-                            "started_at": started_at,
-                            "complete_at": None,
-                            "locks_duration_s": 0,
-                            "state_string": state_string,
-                        },
-                    )
+                    with conn.begin():
+                        r = conn.execute(
+                            self.db.model.builds.insert(),
+                            {
+                                "number": new_number,
+                                "builderid": builderid,
+                                "buildrequestid": buildrequestid,
+                                "workerid": workerid,
+                                "masterid": masterid,
+                                "started_at": started_at,
+                                "complete_at": None,
+                                "locks_duration_s": 0,
+                                "state_string": state_string,
+                            },
+                        )
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                     # pg 9.5 gives this error which makes it pass some build
                     # numbers
@@ -264,7 +265,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == buildid)
             conn.execute(q.values(state_string=state_string))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
     def finishBuild(self, buildid, results):
@@ -273,7 +274,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == buildid)
             conn.execute(q.values(complete_at=int(self.master.reactor.seconds()), results=results))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns a value
     def getBuildProperties(self, bid, resultSpec=None):
@@ -319,7 +320,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
                 )
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     @defer.inlineCallbacks
     def add_build_locks_duration(self, buildid, duration_s):
@@ -331,7 +332,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
             )
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return BuildModel(

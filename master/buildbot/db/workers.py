@@ -127,7 +127,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             res.close()
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
@@ -157,7 +157,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
             toinsertbuildermasterids = buildermasterids - oldbuildermasterids
-            transaction = conn.begin()
             self._deleteFromConfiguredWorkers_thd(conn, todeletebuildermasterids, workerid)
 
             # and insert the new ones
@@ -171,9 +170,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                     ],
                 ).close()
 
-            transaction.commit()
-
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     @defer.inlineCallbacks
     def getWorker(
@@ -291,14 +288,16 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             conn_tbl = self.db.model.connected_workers
             q = conn_tbl.insert()
             try:
-                conn.execute(q, {'workerid': workerid, 'masterid': masterid})
+                with conn.begin():
+                    conn.execute(q, {'workerid': workerid, 'masterid': masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
 
             bs_tbl = self.db.model.workers
             q = bs_tbl.update().where(bs_tbl.c.id == workerid)
-            conn.execute(q.values(info=workerinfo))
+            with conn.begin():
+                conn.execute(q.values(info=workerinfo))
 
         return self.db.pool.do(thd)
 
@@ -309,7 +308,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = tbl.delete().where(tbl.c.workerid == workerid, tbl.c.masterid == masterid)
             conn.execute(q)
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
     def set_worker_paused(self, workerid, paused, pause_reason=None):
@@ -318,7 +317,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == workerid)
             conn.execute(q.values(paused=int(paused), pause_reason=pause_reason))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
     def set_worker_graceful(self, workerid, graceful):
@@ -327,7 +326,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == workerid)
             conn.execute(q.values(graceful=int(graceful)))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return WorkerModel(

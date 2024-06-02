@@ -98,12 +98,14 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                             # Use RETURNING, this way we won't need an additional select query
                             q = q.returning(paths_table.c.id, paths_table.c.path)
 
-                            res = conn.execute(q)
+                            with conn.begin():
+                                res = conn.execute(q)
                             for row in res.fetchall():
                                 paths_to_ids[row.path] = row.id
                                 path_batch.remove(row.path)
                         else:
-                            conn.execute(q)
+                            with conn.begin():
+                                conn.execute(q)
 
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # There was a competing addCodePaths() call that added a path for the same
@@ -166,12 +168,14 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                             # Use RETURNING, this way we won't need an additional select query
                             q = q.returning(names_table.c.id, names_table.c.name)
 
-                            res = conn.execute(q)
+                            with conn.begin():
+                                res = conn.execute(q)
                             for row in res.fetchall():
                                 names_to_ids[row.name] = row.id
                                 name_batch.remove(row.name)
                         else:
-                            conn.execute(q)
+                            with conn.begin():
+                                conn.execute(q)
 
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # There was a competing addNames() call that added a name for the same
@@ -255,7 +259,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             q = results_table.insert().values(insert_values)
             conn.execute(q)
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     def getTestResult(self, test_resultid: int) -> defer.Deferred[TestResultModel | None]:
         def thd(conn) -> TestResultModel | None:

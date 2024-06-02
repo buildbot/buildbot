@@ -158,7 +158,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 "name": name,
             }
             try:
-                r = conn.execute(self.db.model.steps.insert(), insert_row)
+                with conn.begin():
+                    r = conn.execute(self.db.model.steps.insert(), insert_row)
                 got_id = r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 got_id = None
@@ -179,7 +180,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                     break
                 num += 1
             insert_row['name'] = newname
-            r = conn.execute(self.db.model.steps.insert(), insert_row)
+            with conn.begin():
+                r = conn.execute(self.db.model.steps.insert(), insert_row)
             got_id = r.inserted_primary_key[0]
             return (got_id, number, newname)
 
@@ -194,7 +196,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             else:
                 conn.execute(q.values(started_at=started_at))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def set_step_locks_acquired_at(
         self, stepid: int, locks_acquired_at: int
@@ -204,7 +206,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == stepid)
             conn.execute(q.values(locks_acquired_at=locks_acquired_at))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def setStepStateString(self, stepid: int, state_string: str) -> defer.Deferred[None]:
         def thd(conn) -> None:
@@ -212,7 +214,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = tbl.update().where(tbl.c.id == stepid)
             conn.execute(q.values(state_string=state_string))
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def addURL(self, stepid: int, name: str, url: str, _racehook=None) -> defer.Deferred[None]:
         # This methods adds an URL to the db
@@ -241,7 +243,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             if url_item not in urls:
                 urls.append(url_item)
                 q = tbl.update().where(wc)
-                conn.execute(q.values(urls_json=json.dumps(urls)))
+                with conn.begin():
+                    conn.execute(q.values(urls_json=json.dumps(urls)))
 
         return self.url_lock.run(self.db.pool.do, thd)
 
@@ -257,7 +260,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 )
             )
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return StepModel(

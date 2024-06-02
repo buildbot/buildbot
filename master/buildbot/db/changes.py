@@ -420,7 +420,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     table = self.db.model.metadata.tables[table_name]
                     conn.execute(table.delete().where(table.c.changeid.in_(batch)))
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)
 
     def _thd_model_from_row(self, conn, ch_row) -> ChangeModel:
         # This method must be run in a db.pool thread

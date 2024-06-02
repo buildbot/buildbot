@@ -475,4 +475,4 @@ class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealT
                 ],
             )
 
-        yield self.db.pool.do(thd)
+        yield self.db.pool.do_with_transaction(thd)

@@ -128,7 +128,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             try:
                 tbl = self.db.model.builder_masters
                 q = tbl.insert()
-                conn.execute(q.values(builderid=builderid, masterid=masterid))
+                with conn.begin():
+                    conn.execute(q.values(builderid=builderid, masterid=masterid))
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 pass
 
@@ -142,7 +143,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 tbl.delete().where(tbl.c.builderid == builderid, tbl.c.masterid == masterid)
             )
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     def getBuilders(
         self,
