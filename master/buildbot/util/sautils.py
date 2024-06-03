@@ -20,11 +20,17 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
+from sqlalchemy.sql.elements import BooleanClauseList
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
 
 if TYPE_CHECKING:
+    from typing import Any
+    from typing import Callable
+    from typing import Sequence
+
     from sqlalchemy.future.engine import Connection
+    from sqlalchemy.future.engine import Engine
 
 # from http:
 # www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long
@@ -91,3 +97,74 @@ def get_sqlite_version():
     import sqlite3
 
     return sqlite3.sqlite_version_info
+
+
+def get_upsert_method(engine: Engine | None):
+    if engine is None:
+        return _upsert_default
+
+    # https://sqlite.org/lang_upsert.html
+    if engine.dialect.name == 'sqlite' and get_sqlite_version() > (3, 24, 0):
+        return _upsert_sqlite
+
+    return _upsert_default
+
+
+def _upsert_sqlite(
+    connection: Connection,
+    table: sa.Table,
+    *,
+    where_values: Sequence[tuple[sa.Column, Any]],
+    update_values: Sequence[tuple[sa.Column, Any]],
+    _race_hook: Callable[[Connection], None] | None = None,
+):
+    from sqlalchemy.dialects.sqlite import insert  # pylint: disable=import-outside-toplevel
+
+    insert_stmt = insert(table).values(
+        **_column_value_kwargs(where_values),
+        **_column_value_kwargs(update_values),
+    )
+    do_update_stmt = insert_stmt.on_conflict_do_update(
+        index_elements=[c for (c, _) in where_values],
+        index_where=_column_values_where_clause(where_values),
+        set_=dict(update_values),
+    )
+    connection.execute(do_update_stmt)
+
+    if _race_hook is not None:
+        _race_hook(connection)
+
+
+def _upsert_default(
+    connection: Connection,
+    table: sa.Table,
+    *,
+    where_values: Sequence[tuple[sa.Column, Any]],
+    update_values: Sequence[tuple[sa.Column, Any]],
+    _race_hook: Callable[[Connection], None] | None = None,
+):
+    q = table.update()
+    if where_values:
+        q = q.where(_column_values_where_clause(where_values))
+    res = connection.execute(q.values(*update_values))
+    if res.rowcount > 0:
+        return
+    # the update hit 0 rows, so try inserting a new one
+
+    if _race_hook is not None:
+        _race_hook(connection)
+
+    connection.execute(
+        table.insert().values(
+            **_column_value_kwargs(where_values),
+            **_column_value_kwargs(update_values),
+        )
+    )
+
+
+def _column_value_kwargs(values: Sequence[tuple[sa.Column, Any]]) -> dict[str, Any]:
+    return {c.name: v for (c, v) in values}
+
+
+def _column_values_where_clause(values: Sequence[tuple[sa.Column, Any]]) -> BooleanClauseList:
+    return BooleanClauseList.and_(c == v for (c, v) in values)

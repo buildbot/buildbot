@@ -22,6 +22,7 @@ from buildbot.db import model
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
+from buildbot.util.sautils import get_upsert_method
 
 
 class FakeDBConnector:
@@ -52,6 +53,7 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
 
         self.db = FakeDBConnector()
         self.db.pool = self.db_pool
+        self.db.upsert = get_upsert_method(self.db_engine)
         self.db.master = fakemaster.make_master(self)
         self.db.model = model.Model(self.db)
         self.db._engine = types.SimpleNamespace(dialect=types.SimpleNamespace(name=dialect_name))
