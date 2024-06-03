@@ -108,6 +108,8 @@ def get_upsert_method(engine: Engine | None):
         return _upsert_sqlite
     if engine.dialect.name == 'postgresql':
         return _upsert_postgresql
+    if engine.dialect.name == 'mysql':
+        return _upsert_mysql
 
     return _upsert_default
 
@@ -175,8 +177,29 @@ def _upsert_on_conflict_do_update(
     )
     connection.execute(do_update_stmt)
 
+
+def _upsert_mysql(
+    connection: Connection,
+    table: sa.Table,
+    *,
+    where_values: Sequence[tuple[sa.Column, Any]],
+    update_values: Sequence[tuple[sa.Column, Any]],
+    _race_hook: Callable[[Connection], None] | None = None,
+):
+    from sqlalchemy.dialects.mysql import insert  # pylint: disable=import-outside-toplevel
+
     if _race_hook is not None:
         _race_hook(connection)
+
+    update_kwargs = _column_value_kwargs(update_values)
+    insert_stmt = insert(table).values(
+        **_column_value_kwargs(where_values),
+        **update_kwargs,
+    )
+    on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(
+        **update_kwargs,
+    )
+    connection.execute(on_duplicate_key_stmt)
 
 
 def _upsert_default(
