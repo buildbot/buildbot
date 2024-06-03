@@ -388,7 +388,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
         # the existing transaction) and executes a conflicting insert in that
         # connection.  This will cause the insert in the db method to fail, and
         # the data in this insert (8.8.8.8) will appear below.
-        transaction_wins = []
+        race_condition_committed = []
         if (
             self.db.pool.engine.dialect.name == 'sqlite'
             and self.db.pool.engine.url.database not in [None, ':memory:']
@@ -409,9 +409,11 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
                 )
                 conn.commit()
                 r.close()
-            except sqlalchemy.exc.OperationalError:
+                conn.close()
+                race_condition_committed.append(True)
+            except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
                 # some engine (mysql innodb) will enforce lock until the transaction is over
-                transaction_wins.append(True)
+                race_condition_committed.append(False)
                 # scope variable, we modify a list so that modification is visible in parent scope
 
         yield self.insert_test_data(self.user1_rows)
@@ -420,10 +422,13 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             uid=1, attr_type='IPv4', attr_data='123.134.156.167', _race_hook=race_thd
         )
 
+        if not race_condition_committed:
+            raise RuntimeError('programmer error: race condition was not called')
+
         usdict = yield self.db.users.getUser(1)
 
         self.assertEqual(usdict.identifier, 'soap')
-        if transaction_wins:
+        if race_condition_committed[0] == self.db.has_native_upsert:
             self.assertEqual(usdict.attributes['IPv4'], '123.134.156.167')
         else:
             self.assertEqual(usdict.attributes['IPv4'], '8.8.8.8')

@@ -202,7 +202,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         _race_hook=None,
     ):
         def thd(conn):
-            transaction = conn.begin()
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
             update_dict = {}
@@ -223,7 +222,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # update the users table if it needs to be updated
             if update_dict:
                 q = tbl.update().where(tbl.c.uid == uid)
-                res = conn.execute(q, update_dict)
+                conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
             # update-or-insert race condition.
@@ -233,31 +232,24 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 self.checkLength(tbl_info.c.attr_type, attr_type)
                 self.checkLength(tbl_info.c.attr_data, attr_data)
 
-                # first update, then insert
-                q = tbl_info.update().where(
-                    tbl_info.c.uid == uid,
-                    tbl_info.c.attr_type == attr_type,
-                )
-                res = conn.execute(q.values(attr_data=attr_data))
-                if res.rowcount == 0:
-                    if _race_hook is not None:
-                        _race_hook(conn)
+                try:
+                    self.db.upsert(
+                        conn,
+                        tbl_info,
+                        where_values=(
+                            (tbl_info.c.uid, uid),
+                            (tbl_info.c.attr_type, attr_type),
+                        ),
+                        update_values=((tbl_info.c.attr_data, attr_data),),
+                        _race_hook=_race_hook,
+                    )
+                    conn.commit()
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                    # someone else beat us to the punch inserting this row;
+                    # let them win.
+                    conn.rollback()
 
-                    # the update hit 0 rows, so try inserting a new one
-                    try:
-                        q = tbl_info.insert()
-                        res = conn.execute(
-                            q.values(uid=uid, attr_type=attr_type, attr_data=attr_data)
-                        )
-                    except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                        # someone else beat us to the punch inserting this row;
-                        # let them win.
-                        transaction.rollback()
-                        return
-
-            transaction.commit()
-
-        return self.db.pool.do(thd)
+        return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
     def removeUser(self, uid):

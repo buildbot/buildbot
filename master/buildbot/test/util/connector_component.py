@@ -54,6 +54,7 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
         self.db = FakeDBConnector()
         self.db.pool = self.db_pool
         self.db.upsert = get_upsert_method(self.db_engine)
+        self.db.has_native_upsert = self.db.upsert != get_upsert_method(None)
         self.db.master = fakemaster.make_master(self)
         self.db.model = model.Model(self.db)
         self.db._engine = types.SimpleNamespace(dialect=types.SimpleNamespace(name=dialect_name))
