@@ -19,7 +19,6 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.test.util import db
 
@@ -31,14 +30,15 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpRealDatabase()
-
-        engine = enginestrategy.create_engine(self.db_url, basedir=os.path.abspath('basedir'))
+        yield self.setUpRealDatabase(
+            basedir=os.path.abspath('basedir'),
+            want_pool=False,
+        )
 
         # mock out the pool, and set up the model
         self.db = mock.Mock()
-        self.db.pool.do = lambda thd: defer.maybeDeferred(thd, engine.connect())
-        self.db.pool.do_with_engine = lambda thd: defer.maybeDeferred(thd, engine)
+        self.db.pool.do = lambda thd: defer.maybeDeferred(thd, self.db_engine.connect())
+        self.db.pool.do_with_engine = lambda thd: defer.maybeDeferred(thd, self.db_engine)
         self.db.model = model.Model(self.db)
         self.db.start()
 
