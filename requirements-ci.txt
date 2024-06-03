@@ -99,7 +99,7 @@ python-dateutil==2.9.0.post0
 python-subunit==1.4.4
 pytz==2024.1
 PyYAML==6.0.1
-requests==2.32.0
+requests==2.32.3
 responses==0.25.0
 ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
