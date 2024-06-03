@@ -45,7 +45,7 @@ cryptography==42.0.7
 decorator==5.1.1
 dicttoxml==1.7.16
 dill==0.3.8
-docker==7.0.0
+docker==7.1.0
 docutils==0.18.1  # pyup: ignore (sphinx-rtd-theme 1.2.0 requires docutils<0.19)
 extras==1.0.0
 fixtures==4.1.0
