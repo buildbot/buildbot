@@ -24,7 +24,11 @@ from buildbot.db import state
 
 
 class FakeDBConnector:
-    pass
+    def __init__(self, engine):
+        self.pool = FakePool(engine)
+        self.master = FakeMaster()
+        self.model = model.Model(self)
+        self.state = state.StateConnectorComponent(self)
 
 
 class FakeCacheManager:
@@ -33,11 +37,13 @@ class FakeCacheManager:
 
 
 class FakeMaster:
-    pass
+    def __init__(self):
+        self.caches = FakeCacheManager()
 
 
 class FakePool:
-    pass
+    def __init__(self, engine):
+        self.engine = engine
 
 
 class DbConfig:
@@ -48,20 +54,16 @@ class DbConfig:
 
     def getDb(self):
         try:
-            db_engine = enginestrategy.create_engine(self.db_url, basedir=self.basedir)
+            db = FakeDBConnector(
+                engine=enginestrategy.create_engine(self.db_url, basedir=self.basedir)
+            )
         except Exception:
             # db_url is probably trash. Just ignore, config.py db part will
             # create proper message
             return None
-        db = FakeDBConnector()
-        db.master = FakeMaster()
-        db.pool = FakePool()
-        db.pool.engine = db_engine
-        db.master.caches = FakeCacheManager()
-        db.model = model.Model(db)
-        db.state = state.StateConnectorComponent(db)
+
         try:
-            with db_engine.connect() as conn:
+            with db.pool.engine.connect() as conn:
                 self.objectid = db.state.thdGetObjectId(conn, self.name, "DbConfig")['id']
         except (ProgrammingError, OperationalError):
             conn.rollback()
