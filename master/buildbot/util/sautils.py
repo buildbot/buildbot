@@ -106,6 +106,8 @@ def get_upsert_method(engine: Engine | None):
     # https://sqlite.org/lang_upsert.html
     if engine.dialect.name == 'sqlite' and get_sqlite_version() > (3, 24, 0):
         return _upsert_sqlite
+    if engine.dialect.name == 'postgresql':
+        return _upsert_postgresql
 
     return _upsert_default
 
@@ -119,6 +121,48 @@ def _upsert_sqlite(
     _race_hook: Callable[[Connection], None] | None = None,
 ):
     from sqlalchemy.dialects.sqlite import insert  # pylint: disable=import-outside-toplevel
+
+    _upsert_on_conflict_do_update(
+        insert,
+        connection,
+        table,
+        where_values=where_values,
+        update_values=update_values,
+        _race_hook=_race_hook,
+    )
+
+
+def _upsert_postgresql(
+    connection: Connection,
+    table: sa.Table,
+    *,
+    where_values: Sequence[tuple[sa.Column, Any]],
+    update_values: Sequence[tuple[sa.Column, Any]],
+    _race_hook: Callable[[Connection], None] | None = None,
+):
+    from sqlalchemy.dialects.postgresql import insert  # pylint: disable=import-outside-toplevel
+
+    _upsert_on_conflict_do_update(
+        insert,
+        connection,
+        table,
+        where_values=where_values,
+        update_values=update_values,
+        _race_hook=_race_hook,
+    )
+
+
+def _upsert_on_conflict_do_update(
+    insert: Any,
+    connection: Connection,
+    table: sa.Table,
+    *,
+    where_values: Sequence[tuple[sa.Column, Any]],
+    update_values: Sequence[tuple[sa.Column, Any]],
+    _race_hook: Callable[[Connection], None] | None = None,
+):
+    if _race_hook is not None:
+        _race_hook(connection)
 
     insert_stmt = insert(table).values(
         **_column_value_kwargs(where_values),
