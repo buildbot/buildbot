@@ -69,42 +69,31 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> None:
             build_data_table = self.db.model.build_data
 
-            update_values = {
-                'value': value,
-                'length': len(value),
-                'source': source,
-            }
-
-            insert_values = {
-                'buildid': buildid,
-                'name': name,
-                'value': value,
-                'length': len(value),
-                'source': source,
-            }
-
-            while True:
-                q = build_data_table.update()
-                q = q.where(
-                    (build_data_table.c.buildid == buildid) & (build_data_table.c.name == name)
-                )
-                q = q.values(update_values)
-                r = conn.execute(q)
-                conn.commit()
-                if r.rowcount > 0:
-                    return
-                r.close()
-
-                self._insert_race_hook(conn)
-
+            retry = True
+            while retry:
                 try:
-                    q = build_data_table.insert().values(insert_values)
-                    r = conn.execute(q)
+                    self.db.upsert(
+                        conn,
+                        build_data_table,
+                        where_values=(
+                            (build_data_table.c.buildid, buildid),
+                            (build_data_table.c.name, name),
+                        ),
+                        update_values=(
+                            (build_data_table.c.value, value),
+                            (build_data_table.c.length, len(value)),
+                            (build_data_table.c.source, source),
+                        ),
+                        _race_hook=self._insert_race_hook,
+                    )
                     conn.commit()
-                    return
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     # there's been a competing insert, retry
                     conn.rollback()
+                    if not retry:
+                        raise
+                finally:
+                    retry = False
 
         return self.db.pool.do(thd)
 
