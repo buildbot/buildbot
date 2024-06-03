@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from sqlalchemy.future.engine import Connection
 
 # from http:
-# //www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long
+# www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long
 # _execution_options per
 # http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
 # (UpdateBase requires sqlalchemy 0.7.0)
@@ -85,3 +85,9 @@ def withoutSqliteForeignKeys(connection: Connection):
     finally:
         connection.fk_disabled = False
         connection.exec_driver_sql('pragma foreign_keys=ON')
+
+
+def get_sqlite_version():
+    import sqlite3
+
+    return sqlite3.sqlite_version_info
