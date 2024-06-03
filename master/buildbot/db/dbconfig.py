@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from contextlib import contextmanager
+
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import ProgrammingError
 
@@ -29,6 +31,14 @@ class FakeDBConnector:
         self.master = FakeMaster()
         self.model = model.Model(self)
         self.state = state.StateConnectorComponent(self)
+
+    @contextmanager
+    def connect(self):
+        try:
+            with self.pool.engine.connect() as conn:
+                yield conn
+        finally:
+            self.pool.engine.dispose()
 
 
 class FakeCacheManager:
@@ -62,23 +72,22 @@ class DbConfig:
             # create proper message
             return None
 
-        try:
-            with db.pool.engine.connect() as conn:
+        with db.connect() as conn:
+            try:
                 self.objectid = db.state.thdGetObjectId(conn, self.name, "DbConfig")['id']
-        except (ProgrammingError, OperationalError):
-            conn.rollback()
-            # ProgrammingError: mysql&pg, OperationalError: sqlite
-            # assume db is not initialized
-            db.pool.engine.dispose()
-            return None
+            except (ProgrammingError, OperationalError):
+                conn.rollback()
+                # ProgrammingError: mysql&pg, OperationalError: sqlite
+                # assume db is not initialized
+                return None
+
         return db
 
     def get(self, name, default=state.StateConnectorComponent.Thunk):
         db = self.getDb()
         if db is not None:
-            with db.pool.engine.connect() as conn:
+            with db.connect() as conn:
                 ret = db.state.thdGetState(conn, self.objectid, name, default=default)
-            db.pool.engine.dispose()
         else:
             if default is not state.StateConnectorComponent.Thunk:
                 return default
@@ -88,6 +97,5 @@ class DbConfig:
     def set(self, name, value):
         db = self.getDb()
         if db is not None:
-            with db.pool.engine.connect() as conn:
+            with db.connect() as conn:
                 db.state.thdSetState(conn, self.objectid, name, value)
-            db.pool.engine.dispose()
