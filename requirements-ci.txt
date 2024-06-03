@@ -31,7 +31,7 @@ Babel==2.15.0
 backports.functools-lru-cache==2.0.0
 boto==2.49.0
 botocore==1.34.117
-certifi==2024.2.2
+certifi==2024.6.2
 cffi==1.16.0
 chardet==5.2.0
 charset-normalizer==3.3.2
