@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import copy
 import math
@@ -31,6 +32,7 @@ from buildbot.util import deferwaiter
 from buildbot.util import epoch2datetime
 from buildbot.util import service
 from buildbot.util.async_sort import async_sort
+from buildbot.util.twisted import async_to_deferred
 
 
 class BuildChooserBase:
@@ -340,8 +342,8 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # TEST-TODO: this behavior is not asserted in any way.
         yield self._deferwaiter.wait()
 
-    @defer.inlineCallbacks
-    def maybeStartBuildsOn(self, new_builders):
+    @async_to_deferred
+    async def maybeStartBuildsOn(self, new_builders: list[str]) -> None:
         """
         Try to start any builds that can be started right now.  This function
         returns immediately, and promises to trigger those builders
@@ -354,29 +356,28 @@ class BuildRequestDistributor(service.AsyncMultiService):
             return
 
         try:
-            yield self._deferwaiter.add(self._maybeStartBuildsOn(new_builders))
+            await self._deferwaiter.add(self._maybeStartBuildsOn(new_builders))
         except Exception as e:  # pragma: no cover
             log.err(e, f"while starting builds on {new_builders}")
 
-    @defer.inlineCallbacks
-    def _maybeStartBuildsOn(self, new_builders):
+    @async_to_deferred
+    async def _maybeStartBuildsOn(self, new_builders: list[str]) -> None:
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
-            return None
+            return
 
         # reset the list of pending builders
-        @defer.inlineCallbacks
-        def resetPendingBuildersList(new_builders):
-            try:
+        try:
+            async with self.pending_builders_lock:
                 # re-fetch existing_pending, in case it has changed
                 # while acquiring the lock
                 existing_pending = set(self._pending_builders)
 
                 # then sort the new, expanded set of builders
-                self._pending_builders = yield self._sortBuilders(
+                self._pending_builders = await self._sortBuilders(
                     list(existing_pending | new_builders)
                 )
 
@@ -384,11 +385,8 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # working on that.
                 if not self.active:
                     self._activity_loop_deferred = self._activityLoop()
-            except Exception:  # pragma: no cover
-                log.err(Failure(), f"while attempting to start builds on {self.name}")
-
-        yield self.pending_builders_lock.run(resetPendingBuildersList, new_builders)
-        return None
+        except Exception:  # pragma: no cover
+            log.err(Failure(), f"while attempting to start builds on {self.name}")
 
     @defer.inlineCallbacks
     def _defaultSorter(self, master, builders):
