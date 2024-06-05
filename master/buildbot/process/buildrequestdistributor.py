@@ -474,14 +474,13 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         self.active = False
 
-    @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr):
+    async def _maybeStartBuildsOnBuilder(self, bldr):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
         bc = self.createBuildChooser(bldr, self.master)
 
         while True:
-            worker, breqs = yield bc.chooseNextBuild()
+            worker, breqs = await bc.chooseNextBuild()
             if not worker or not breqs:
                 break
 
@@ -492,15 +491,15 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
             self._add_in_progress_brids(brids)
             if not (
-                yield self.master.data.updates.claimBuildRequests(brids, claimed_at=claimed_at)
+                await self.master.data.updates.claimBuildRequests(brids, claimed_at=claimed_at)
             ):
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
-            buildStarted = yield bldr.maybeStartBuild(worker, breqs)
+            buildStarted = await bldr.maybeStartBuild(worker, breqs)
             if not buildStarted:
-                yield self.master.data.updates.unclaimBuildRequests(brids)
+                await self.master.data.updates.unclaimBuildRequests(brids)
                 self._remove_in_progress_brids(brids)
 
                 # try starting builds again.  If we still have a working worker,

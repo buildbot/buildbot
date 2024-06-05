@@ -30,6 +30,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
+from buildbot.util.twisted import async_to_deferred
 
 
 def nth_worker(n):
@@ -214,11 +215,11 @@ class Test(TestBRDBase):
     def test_maybeStartBuildsOn_exception(self):
         self.addBuilders(['bldr1'])
 
-        def _maybeStartBuildsOnBuilder(n):
+        async def _maybeStartBuildsOnBuilder(n):
             # fail slowly, so that the activity loop doesn't exit too soon
             d = defer.Deferred()
             self.reactor.callLater(0, d.errback, failure.Failure(RuntimeError("oh noes")))
-            return d
+            await d
 
         self.brd._maybeStartBuildsOnBuilder = _maybeStartBuildsOnBuilder
 
@@ -413,14 +414,14 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     # _maybeStartBuildsOnBuilder
 
-    @defer.inlineCallbacks
-    def do_test_maybeStartBuildsOnBuilder(self, rows=None, exp_claims=None, exp_builds=None):
+    @async_to_deferred
+    async def do_test_maybeStartBuildsOnBuilder(self, rows=None, exp_claims=None, exp_builds=None):
         rows = rows or []
         exp_claims = exp_claims or []
         exp_builds = exp_builds or []
-        yield self.master.db.insert_test_data(rows)
+        await self.master.db.insert_test_data(rows)
 
-        yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
+        await self.brd._maybeStartBuildsOnBuilder(self.bldr)
 
         self.assertMyClaims(exp_claims)
         self.assertBuildsStarted(exp_builds)
@@ -624,8 +625,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             exp_builds=[('test-worker2', [10]), ('test-worker1', [11])],
         )
 
-    @defer.inlineCallbacks
-    def test_bldr_maybeStartBuild_fails_once(self):
+    @async_to_deferred
+    async def test_bldr_maybeStartBuild_fails_once(self):
         self.bldr.config.nextWorker = nth_worker(-1)
         # the builder fails to start the build; we'll see that the build
         # was requested, but the brids will get claimed again
@@ -643,16 +644,16 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
 
-        yield self.master.db.insert_test_data(rows)
+        await self.master.db.insert_test_data(rows)
 
         # first time around, only #11 stays claimed
-        yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
+        await self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.assertMyClaims([11])  # claimed again so none taken!
         self.assertBuildsStarted([('test-worker2', [10]), ('test-worker1', [11])])
 
         # second time around the #10 will pass, adding another request and it
         # is claimed
-        yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
+        await self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.assertMyClaims([10, 11])
         self.assertBuildsStarted([
             ('test-worker2', [10]),
