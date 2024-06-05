@@ -384,7 +384,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # start the activity loop, if we aren't already
                 # working on that.
                 if not self.active:
-                    self._activity_loop_deferred = self._activityLoop()
+                    self._activity_loop_deferred = defer.ensureDeferred(self._activityLoop())
         except Exception:  # pragma: no cover
             log.err(Failure(), f"while attempting to start builds on {self.name}")
 
@@ -441,47 +441,36 @@ class BuildRequestDistributor(service.AsyncMultiService):
         timer.stop()
         return rv
 
-    @defer.inlineCallbacks
-    def _activityLoop(self):
+    @metrics.timeMethod('BuildRequestDistributor._activityLoop()')
+    async def _activityLoop(self) -> None:
         self.active = True
 
-        timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
-        timer.start()
         pending_builders = []
         while True:
-            yield self.activity_lock.acquire()
-            if not self.running:
-                self.activity_lock.release()
-                break
-
-            if not pending_builders:
-                # lock pending_builders, pop an element from it, and release
-                yield self.pending_builders_lock.acquire()
-
-                # bail out if we shouldn't keep looping
-                if not self._pending_builders:
-                    self.pending_builders_lock.release()
-                    self.activity_lock.release()
+            async with self.activity_lock:
+                if not self.running:
                     break
-                # take that builder list, and run it until the end
-                # we make a copy of it, as it could be modified meanwhile
-                pending_builders = copy.copy(self._pending_builders)
-                self._pending_builders = []
-                self.pending_builders_lock.release()
 
-            bldr_name = pending_builders.pop(0)
+                if not pending_builders:
+                    # lock pending_builders, pop an element from it, and release
+                    async with self.pending_builders_lock:
+                        # bail out if we shouldn't keep looping
+                        if not self._pending_builders:
+                            break
+                        # take that builder list, and run it until the end
+                        # we make a copy of it, as it could be modified meanwhile
+                        pending_builders = copy.copy(self._pending_builders)
+                        self._pending_builders = []
 
-            # get the actual builder object
-            bldr = self.botmaster.builders.get(bldr_name)
-            try:
-                if bldr:
-                    yield self._maybeStartBuildsOnBuilder(bldr)
-            except Exception:
-                log.err(Failure(), f"from maybeStartBuild for builder '{bldr_name}'")
+                bldr_name = pending_builders.pop(0)
 
-            self.activity_lock.release()
-
-        timer.stop()
+                # get the actual builder object
+                bldr = self.botmaster.builders.get(bldr_name)
+                try:
+                    if bldr:
+                        await self._maybeStartBuildsOnBuilder(bldr)
+                except Exception:
+                    log.err(Failure(), f"from maybeStartBuild for builder '{bldr_name}'")
 
         self.active = False
 
@@ -530,7 +519,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # just instantiate the build chooser requested
         return self.BuildChooser(bldr, master)
 
-    @defer.inlineCallbacks
-    def _waitForFinish(self):
+    @async_to_deferred
+    async def _waitForFinish(self):
         if self._activity_loop_deferred is not None:
-            yield self._activity_loop_deferred
+            await self._activity_loop_deferred
