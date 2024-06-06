@@ -108,6 +108,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
         self.builders[name] = bldr
 
         def maybeStartBuild(worker, builds):
+            worker.isAvailable.return_value = False
             self.startedBuilds.append((worker.name, builds))
             d = defer.Deferred()
             self.reactor.callLater(0, d.callback, True)

@@ -211,6 +211,9 @@ class BasicBuildChooser(BuildChooserBase):
             if not breq:
                 break
 
+            if not self.workerpool and not self.preferredWorkers:
+                self.workerpool = self.bldr.getAvailableWorkers()
+
             #  2. pick a worker
             worker = yield self._popNextWorker(breq)
             if not worker:
