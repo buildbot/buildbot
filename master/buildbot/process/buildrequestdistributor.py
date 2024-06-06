@@ -331,6 +331,15 @@ class BuildRequestDistributor(service.AsyncMultiService):
         self._deferwaiter = deferwaiter.DeferWaiter()
         self._activity_loop_deferred = None
 
+        # Use in Master clean shutdown
+        # this flag will allow the distributor to still
+        # start new builds if it has a parent waiting on it
+        self.distribute_only_waited_childs = False
+
+    @property
+    def can_distribute(self):
+        return bool(self.running) or self.distribute_only_waited_childs
+
     @defer.inlineCallbacks
     def stopService(self):
         # Lots of stuff happens asynchronously here, so we need to let it all
@@ -355,7 +364,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         @param new_builders: names of new builders that should be given the
         opportunity to check for new requests.
         """
-        if not self.running:
+        if not self.can_distribute:
             return
 
         try:
@@ -451,7 +460,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         pending_builders = []
         while True:
             async with self.activity_lock:
-                if not self.running:
+                if not self.can_distribute:
                     break
 
                 if not pending_builders:
@@ -486,6 +495,27 @@ class BuildRequestDistributor(service.AsyncMultiService):
             worker, breqs = await bc.chooseNextBuild()
             if not worker or not breqs:
                 break
+
+            if self.distribute_only_waited_childs:
+                # parenting is a field of Buildset
+                # get the buildsets only for requests
+                # that are waited for
+                buildset_ids = set(br.bsid for br in breqs if br.waitedFor)
+                if not buildset_ids:
+                    continue
+                # get buildsets if they have a parent
+                buildsets_data: list[dict] = await self.master.data.get(
+                    ('buildsets',),
+                    filters=[
+                        resultspec.Filter('bsid', 'in', buildset_ids),
+                        resultspec.Filter('parent_buildid', 'ne', [None]),
+                    ],
+                    fields=['bsid', 'parent_buildid'],
+                )
+                parented_buildset_ids = set(bs['bsid'] for bs in buildsets_data)
+                breqs = [br for br in breqs if br.bsid in parented_buildset_ids]
+                if not breqs:
+                    continue
 
             # claim brid's
             brids = [br.id for br in breqs]
