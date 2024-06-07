@@ -37,8 +37,8 @@ matrix:
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
-    - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
-    - env: PYTHON=3.9 TWISTED=22.4.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=18.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=22.4.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=1.4.52 NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.8 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
@@ -56,7 +56,7 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
     # Worker tests on python and twisted package combinations.
-    - env: PYTHON=3.9 TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
+    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=18.7.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
     # (by default in other tests in-memory SQLite database is used which is
@@ -101,6 +101,9 @@ install:
   - title: pip installs for backward compat
     cmd: |
       # pip installs for backward compat
+      if [ ! -z "$TREQ" ]; then
+        /tmp/bbvenv/bin/pip install treq==$TREQ
+      fi
       if [ $TWISTED = trunk ]; then
           /tmp/bbvenv/bin/pip install git+https://github.com/twisted/twisted
       fi
