@@ -432,7 +432,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return d
 
     def _get_commit_files(self, rev):
-        args = ['--name-only', '--no-walk', r'--format=%n', rev, '--']
+        args = ['--name-only', '--no-walk', r'--format=%n', '-m', '--first-parent', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
 
         def decode_file(file):
