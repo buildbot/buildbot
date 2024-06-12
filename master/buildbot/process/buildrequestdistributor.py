@@ -360,25 +360,14 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
-        new_builders = set(new_builders)
-        existing_pending = set(self._pending_builders)
-
-        # if we won't add any builders, there's nothing to do
-        if new_builders < existing_pending:
+        # if we won't add any new builders, there's nothing to do
+        if set(new_builders) < set(self._pending_builders):
             return None
 
         # reset the list of pending builders
-        @defer.inlineCallbacks
         def resetPendingBuildersList(new_builders):
             try:
-                # re-fetch existing_pending, in case it has changed
-                # while acquiring the lock
-                existing_pending = set(self._pending_builders)
-
-                # then sort the new, expanded set of builders
-                self._pending_builders = yield self._sortBuilders(
-                    list(existing_pending | new_builders)
-                )
+                self._pending_builders = list(set(self._pending_builders + new_builders))
 
                 # start the activity loop, if we aren't already
                 # working on that.
@@ -465,11 +454,13 @@ class BuildRequestDistributor(service.AsyncMultiService):
                     self.pending_builders_lock.release()
                     self.activity_lock.release()
                     break
-                # take that builder list, and run it until the end
+                # take that builder list, sort it and run it until the end
                 # we make a copy of it, as it could be modified meanwhile
                 pending_builders = copy.copy(self._pending_builders)
                 self._pending_builders = []
                 self.pending_builders_lock.release()
+
+                pending_builders = yield self._sortBuilders(pending_builders)
 
             bldr_name = pending_builders.pop(0)
 
