@@ -172,12 +172,7 @@ if sys.version_info < (3, 3):
 setup_args['tests_require'] = test_deps
 
 setup_args['extras_require'] = {
-    'test': [
-        # spellcheck introduced in version 1.4.0
-        'pylint>=1.4.0',
-        'pyenchant',
-    ]
-    + test_deps,
+    'test': test_deps,
 }
 
 if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:

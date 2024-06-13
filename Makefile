@@ -5,7 +5,7 @@
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-.PHONY: docs pylint ruff virtualenv
+.PHONY: docs ruff virtualenv
 
 ifeq ($(OS),Windows_NT)
   VENV_BIN_DIR := Scripts
@@ -58,12 +58,6 @@ docs-release: docs-towncrier
 
 docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
-
-# pylint the whole sourcecode (validate.sh will do that as well, but only process the modified files)
-pylint:
-	$(MAKE) -C master pylint; master_res=$$?; \
-	$(MAKE) -C worker pylint; worker_res=$$?; \
-	if [ $$master_res != 0 ] || [ $$worker_res != 0 ]; then exit 1; fi
 
 frontend_deps: $(VENV_NAME)
 	$(PIP) install build wheel -r requirements-ci.txt

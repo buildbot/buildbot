@@ -191,24 +191,6 @@ if [ ${#py_files[@]} -ne 0 ]; then
     fi
 fi
 
-status "running pylint"
-if [[ -z `command -v pylint` ]]; then
-    warning "pylint is not installed"
-elif [[ ! -f common/pylintrc ]]; then
-    warning "common/pylintrc not found"
-else
-    pylint_ok=true
-    for filename in ${py_files[@]}; do
-        if ! pylint --rcfile=common/pylintrc --disable=R,line-too-long \
-                --enable=W0611 --output-format=text --reports=no \
-                --spelling-private-dict-file=common/code_spelling_ignore_words.txt \
-                "$filename"; then
-            pylint_ok=false
-        fi
-    done
-    $pylint_ok || not_ok "pylint failed"
-fi
-
 if git diff --name-only $REVRANGE | grep ^master/docs/ ; then
     status "building docs"
     # Don't clean builddir if built in quick mode
