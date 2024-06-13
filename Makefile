@@ -101,7 +101,7 @@ rmpyc:
 	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
 
 ruff:
-	ruff --fix .
+	ruff check --fix .
 
 docker: docker-buildbot-worker docker-buildbot-master
 	echo done
