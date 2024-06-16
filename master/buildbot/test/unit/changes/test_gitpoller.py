@@ -259,7 +259,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -340,7 +339,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .exit(1),
@@ -377,7 +375,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -461,7 +458,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -518,7 +514,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -526,7 +521,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -574,7 +568,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -599,7 +592,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -737,7 +729,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -790,7 +781,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -890,7 +880,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -994,7 +983,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1090,7 +1078,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1201,7 +1188,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1249,7 +1235,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1274,7 +1259,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/release',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -1382,7 +1366,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1494,7 +1477,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/pull/410/head',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
@@ -1601,7 +1583,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1716,7 +1697,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
@@ -1841,7 +1821,6 @@ class TestGitPoller(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 f'refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'fa3ae8ed68e664d4db24798611b352e3c6509930\n'),
@@ -1920,7 +1899,6 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -1969,7 +1947,6 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -2075,7 +2052,6 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
@@ -2146,7 +2122,6 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
                 'git',
                 'rev-parse',
                 'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
-                '--',
             ])
             .workdir(self.POLLER_WORKDIR)
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
