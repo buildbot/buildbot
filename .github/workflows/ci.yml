@@ -23,10 +23,18 @@ jobs:
       SQLALCHEMY_WARN_20: 1
 
     steps:
-      - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: "actions/checkout@v4"
+      - uses: "actions/setup-python@v5"
         with:
           python-version: "${{ matrix.python-version }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-ci.txt
+            requirements-cidb.txt
+            master/setup.py
+            worker/setup.py
+            pkg/setup.py
+
       - name: "Install dependencies"
         run: |
           python -c "import sys; print(sys.prefix)"

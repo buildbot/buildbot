@@ -27,13 +27,13 @@ jobs:
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: mysqladmin ping
 
-          - name: PostgreSQL 9 / psycopg2
-            database: postgres:9
+          - name: PostgreSQL 12 / psycopg2
+            database: postgres:12
             connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
-          - name: PostgreSQL 9 / pg8000
-            database: postgres:9
+          - name: PostgreSQL 12 / pg8000
+            database: postgres:12
             connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
@@ -69,21 +69,21 @@ jobs:
         options: --health-cmd "${{ matrix.check }}" --health-interval 10s --health-timeout 5s --health-retries 10
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - run: sudo apt-get install aspell aspell-en enchant iamerican ispell
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
-
-      - name: Cache pip
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt', 'requirements-cidb.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-ci.txt
+            requirements-cidb.txt
+            master/setup.py
+            worker/setup.py
+            pkg/setup.py
 
       - run: pip install -U pip wheel
       - run: pip install -r requirements-ci.txt -r requirements-cidb.txt
