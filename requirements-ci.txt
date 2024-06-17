@@ -112,7 +112,7 @@ snowballstemmer==2.2.0
 SQLAlchemy==2.0.30
 sqlparse==0.5.0
 termcolor==2.4.0
-testtools==2.7.1
+testtools==2.7.2
 toml==0.10.2
 tomli==2.0.1
 tomlkit==0.12.4
