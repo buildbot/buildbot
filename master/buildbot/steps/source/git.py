@@ -66,6 +66,7 @@ git_describe_flags = [
     ('first-parent', lambda v: ['--first-parent'] if v else None),
     # string parameter
     ('match', lambda v: ['--match', v] if v else None),
+    ('exclude', lambda v: ['--exclude', v] if v else None),
     # numeric parameter
     ('abbrev', lambda v: [f'--abbrev={v}'] if isTrueOrIsExactlyZero(v) else None),
     ('candidates', lambda v: [f'--candidates={v}'] if isTrueOrIsExactlyZero(v) else None),

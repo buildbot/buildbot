@@ -3440,6 +3440,16 @@ class TestGit(
         self.setup_getDescription_test(setup_args={'match': None}, output_args=[])
         return self.run_step()
 
+    def test_getDescription_exclude(self):
+        self.setup_getDescription_test(
+            setup_args={'exclude': 'stuff-*'}, output_args=['--exclude', 'stuff-*']
+        )
+        return self.run_step()
+
+    def test_getDescription_exclude_false(self):
+        self.setup_getDescription_test(setup_args={'exclude': None}, output_args=[])
+        return self.run_step()
+
     def test_getDescription_tags(self):
         self.setup_getDescription_test(setup_args={'tags': True}, output_args=['--tags'])
         return self.run_step()
