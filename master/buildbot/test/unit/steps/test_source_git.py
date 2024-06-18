@@ -3526,6 +3526,16 @@ class TestGit(
         self.setup_getDescription_test(setup_args={'exact-match': False}, output_args=[])
         return self.run_step()
 
+    def test_getDescription_first_parent(self):
+        self.setup_getDescription_test(
+            setup_args={'first-parent': True}, output_args=['--first-parent']
+        )
+        return self.run_step()
+
+    def test_getDescription_first_parent_false(self):
+        self.setup_getDescription_test(setup_args={'first-parent': False}, output_args=[])
+        return self.run_step()
+
     def test_getDescription_debug(self):
         self.setup_getDescription_test(setup_args={'debug': True}, output_args=['--debug'])
         return self.run_step()

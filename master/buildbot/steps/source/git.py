@@ -63,6 +63,7 @@ git_describe_flags = [
     ('long', lambda v: ['--long'] if v else None),
     ('exact-match', lambda v: ['--exact-match'] if v else None),
     ('tags', lambda v: ['--tags'] if v else None),
+    ('first-parent', lambda v: ['--first-parent'] if v else None),
     # string parameter
     ('match', lambda v: ['--match', v] if v else None),
     # numeric parameter

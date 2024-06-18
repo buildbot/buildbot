@@ -121,6 +121,7 @@ The Git step takes the following arguments:
       * ``debug``: `--debug`
       * ``long``: `--long``
       * ``exact-match``: `--exact-match`
+      * ``first-parent``: `--first-parent`
       * ``tags``: `--tags`
       * ``dirty``: `--dirty`
 
