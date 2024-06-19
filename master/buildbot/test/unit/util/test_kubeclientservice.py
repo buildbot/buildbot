@@ -110,6 +110,11 @@ class KubeClientServiceTestKubeHardcodedConfig(
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "http://localhost:8001"
         )
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
 
     def test_basic(self):
         self.config = kubeclientservice.KubeHardcodedConfig(
