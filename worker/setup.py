@@ -135,7 +135,7 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-twisted_ver = ">= 18.7.0"
+twisted_ver = ">= 19.2.0"
 
 setup_args['install_requires'] = [
     'twisted ' + twisted_ver,
