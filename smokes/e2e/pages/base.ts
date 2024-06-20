@@ -5,7 +5,7 @@
 
 import { bbrowser } from '../utils';
 
-export const testPageUrl = 'http://localhost:8011'
+export const testPageUrl = 'http://127.0.0.1:8011'
 
 export class BasePage {
     // accessors for elements that all pages have (menu, login, etc)
