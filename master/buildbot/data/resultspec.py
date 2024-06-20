@@ -15,10 +15,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 from twisted.python import log
 
 from buildbot.data import base
+
+if TYPE_CHECKING:
+    from typing import Sequence
 
 
 class FieldBase:
@@ -73,12 +78,12 @@ class FieldBase:
         # only support string values, because currently there are no queries against lists in SQL
     }
 
-    # can't type `values` as `Sequence` as `str` is one as well...
-    def __init__(self, field: bytes, op: str, values: list | tuple):
+    def __init__(self, field: bytes, op: str, values: Sequence):
         self.field = field
         self.op = op
         self.values = values
-        assert isinstance(values, (list, tuple))
+        # `str` is a Sequence as well...
+        assert not isinstance(values, str)
 
     def getOperator(self, sqlMode=False):
         v = self.values

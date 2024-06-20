@@ -1,0 +1,1 @@
+`buildbot stop --clean` would hang if a in progress build was waiting on a not yet started BuildRequest that it triggered.

@@ -128,8 +128,11 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
         # build.
         self.assertReactorNotStopped()
 
-        # but the BuildRequestDistributor should not be running
-        self.assertFalse(self.botmaster.brd.running)
+        # the BuildRequestDistributor is still running
+        # distributing child BuildRequests blocking
+        # parent Build from finishing
+        self.assertTrue(self.botmaster.brd.running)
+        self.assertTrue(self.botmaster.brd.distribute_only_waited_childs)
 
         # Cancel the shutdown
         self.botmaster.cancelCleanShutdown()
@@ -141,7 +144,9 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
         self.assertReactorNotStopped()
 
         # and the BuildRequestDistributor should be, as well
+        # no longer limiting builds to those with parents
         self.assertTrue(self.botmaster.brd.running)
+        self.assertFalse(self.botmaster.brd.distribute_only_waited_childs)
 
 
 class TestBotMaster(TestReactorMixin, unittest.TestCase):

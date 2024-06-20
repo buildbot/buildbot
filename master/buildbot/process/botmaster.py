@@ -120,7 +120,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.shuttingDown = True
         # first, stop the distributor; this will finish any ongoing scheduling
         # operations before firing
-        yield self.brd.disownServiceParent()
+        if quickMode:
+            # if quick mode, builds will be cancelled, so stop scheduling altogether
+            yield self.brd.disownServiceParent()
+        else:
+            # if not quick, still schedule waited child builds
+            # other parent will never finish
+            self.brd.distribute_only_waited_childs = True
 
         # Double check that we're still supposed to be shutting down
         # The shutdown may have been cancelled!
@@ -186,13 +192,20 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 log.msg("Trying shutdown sequence again")
                 yield util.asyncSleep(1)
             else:
-                if stopReactor and self.shuttingDown:
-                    log.msg("Stopping reactor")
-                    self.master.reactor.stop()
                 break
 
+        # shutdown was cancelled
         if not self.shuttingDown:
-            yield self.brd.setServiceParent(self)
+            if quickMode:
+                yield self.brd.setServiceParent(self)
+            else:
+                self.brd.distribute_only_waited_childs = False
+
+            return
+
+        if stopReactor:
+            log.msg("Stopping reactor")
+            self.master.reactor.stop()
 
     def cancelCleanShutdown(self):
         """Cancel a clean shutdown that is already in progress, if any"""
