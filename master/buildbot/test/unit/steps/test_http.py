@@ -19,7 +19,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web.resource import Resource
-from twisted.web.server import Site
 from twisted.web.util import redirectTo
 
 from buildbot.process import properties
@@ -28,6 +27,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import http
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import TestBuildStepMixin
+from buildbot.test.util.site import SiteWithClose
 
 try:
     import txrequests
@@ -75,7 +75,8 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         session.trust_env = False
 
         # port 0 means random unused port
-        self.listener = reactor.listenTCP(0, Site(TestPage()))
+        self.site = SiteWithClose(TestPage())
+        self.listener = reactor.listenTCP(0, self.site)
         self.port = self.listener.getHost().port
         return self.setup_test_build_step()
 
@@ -84,6 +85,8 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         http.closeSession()
         try:
             yield self.listener.stopListening()
+            yield self.site.stopFactory()
+            yield self.site.close_connections()
         finally:
             yield self.tear_down_test_build_step()
 
