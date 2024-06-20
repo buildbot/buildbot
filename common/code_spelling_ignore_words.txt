@@ -401,6 +401,7 @@ delayedcall
 denormalized
 dependabot
 deprecatedmoduleattribute
+desc
 descriptionsuffix
 desynchronization
 dev

@@ -81,7 +81,10 @@ install:
       rm -rf /tmp/bbvenv
       if [ "$PYTHON" = "2.7" ]; then
         # system virtualenv doesn't work properly with python installed via pyenv
-        virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbvenv
+        rm -rf /tmp/bbinstallvenv
+        python3.6 -m venv /tmp/bbinstallvenv
+        /tmp/bbinstallvenv/bin/pip install virtualenv
+        /tmp/bbinstallvenv/bin/virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbvenv
         /tmp/bbvenv/bin/pip install -U --force-reinstall pip setuptools
       else
         python$PYTHON -m venv /tmp/bbvenv
@@ -105,8 +108,11 @@ install:
       set -e
       rm -rf /tmp/bbworkervenv
       if [ "$PYTHON" = "2.7" ]; then
-        # system virtualenv doesn't work properly with python installed via pyenv
-        virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbworkervenv
+        # use old Python venv to install 2.7 via virtualenv
+        rm -rf /tmp/bbinstallvenv
+        python3.6 -m venv /tmp/bbinstallvenv
+        /tmp/bbinstallvenv/bin/pip install virtualenv
+        /tmp/bbinstallvenv/bin/virtualenv --python=python2.7 --pip=20.3.0 /tmp/bbworkervenv
         /tmp/bbworkervenv/bin/pip install -U --force-reinstall pip setuptools
       else
         python$PYTHON -m venv /tmp/bbworkervenv
@@ -262,7 +268,7 @@ after_script:
         CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" ./codecov
       fi
   # List installed packages along with their versions.
-  - "pip list"
+  - "/tmp/bbvenv/bin/pip list"
 
 sudo: false
 branches:
