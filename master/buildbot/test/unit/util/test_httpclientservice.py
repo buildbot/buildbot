@@ -23,7 +23,6 @@ from twisted.internet import reactor
 from twisted.python import components
 from twisted.trial import unittest
 from twisted.web import resource
-from twisted.web import server
 
 from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
@@ -31,6 +30,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.test.util.site import SiteWithClose
 
 try:
     from requests.auth import HTTPDigestAuth
@@ -335,8 +335,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
         if httpclientservice.txrequests is None or httpclientservice.treq is None:
             raise unittest.SkipTest('this test requires txrequests and treq')
-        site = server.Site(MyResource())
-        self.listenport = reactor.listenTCP(0, site)
+        self.site = SiteWithClose(MyResource())
+        self.listenport = reactor.listenTCP(0, self.site)
         self.port = self.listenport.getHost().port
         self.parent = parent = service.MasterService()
         self.parent.reactor = reactor
@@ -345,7 +345,9 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.listenport.stopListening()
+        yield self.listenport.stopListening()
+        yield self.site.stopFactory()
+        yield self.site.close_connections()
         yield self.parent.stopService()
 
     @defer.inlineCallbacks

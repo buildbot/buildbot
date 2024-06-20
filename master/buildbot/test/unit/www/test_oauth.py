@@ -25,7 +25,6 @@ from twisted.internet import threads
 from twisted.python import failure
 from twisted.trial import unittest
 from twisted.web.resource import Resource
-from twisted.web.server import Site
 
 import buildbot
 from buildbot.process.properties import Secret
@@ -34,6 +33,7 @@ from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.site import SiteWithClose
 from buildbot.util import bytes2unicode
 
 try:
@@ -599,7 +599,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
                     + b"</body></html>"
                 )
 
-        class MySite(Site):
+        class MySite(SiteWithClose):
             def makeSession(self):
                 uid = self._mkuid()
                 session = self.sessions[uid] = self.sessionFactory(self, uid)
@@ -622,6 +622,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         res = yield d
         yield listener.stopListening()
         yield site.stopFactory()
+        yield site.close_connections()
 
         self.assertIn("full_name", res)
         self.assertIn("email", res)

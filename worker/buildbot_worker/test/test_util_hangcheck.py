@@ -12,11 +12,11 @@ from twisted.internet.task import Clock
 from twisted.python.failure import Failure
 from twisted.spread.pb import PBClientFactory
 from twisted.trial.unittest import TestCase
-from twisted.web.server import Site
 from twisted.web.static import Data
 
 from ..util import HangCheckFactory
 from ..util._hangcheck import HangCheckProtocol
+from buildbot_worker.test.util.site import SiteWithClose
 
 try:
     from twisted.internet.testing import AccumulatingProtocol
@@ -224,7 +224,7 @@ class EndToEndHangCheckTests(TestCase):
         """
         result = defer.Deferred()
 
-        site = Site(Data("", "text/plain"))
+        site = SiteWithClose(Data("", "text/plain"))
         client = HangCheckFactory(PBClientFactory(), lambda: result.callback(None))
 
         self.patch(HangCheckProtocol, '_HUNG_CONNECTION_TIMEOUT', 0.1)
@@ -248,3 +248,5 @@ class EndToEndHangCheckTests(TestCase):
         finally:
             d_connected.cancel()
             timer.cancel()
+
+        yield site.close_connections()

@@ -217,7 +217,7 @@ after_script:
         CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" ./codecov
       fi
   # List installed packages along with their versions.
-  - "pip list"
+  - "/tmp/bbvenv/bin/pip list"
 
 sudo: false
 branches:

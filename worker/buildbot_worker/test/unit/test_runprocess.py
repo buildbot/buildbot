@@ -538,6 +538,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
 
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
+    timeout = 60  # takes a while on oversubscribed test machines
+
     if runtime.platformType != "posix":
         skip = "not a POSIX platform"
 
@@ -580,7 +582,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
     def waitForPidfile(self, pidfile):
         # wait for a pidfile, and return the pid via a Deferred
-        until = time.time() + 10
+        until = time.time() + self.timeout
         d = defer.Deferred()
 
         def poll():
