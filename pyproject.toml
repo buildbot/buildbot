@@ -3,14 +3,32 @@ line-length = 100
 target-version = "py38"
 
 [tool.ruff.lint]
-    select = ["W", "E", "F", "I"]
+    select = ["W", "E", "F", "I", "PL"]
     ignore = [
         "E711", # comparison to None should be 'if cond is None:'
         "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
         "E721", # do not compare types, use 'isinstance()'
         "E731", # do not assign a lambda expression, use a def
         "E741", # ambiguous variable name
-        "E501"  # line too long (we rely on ruff format for that)
+        "E501", # line too long (we rely on ruff format for that)
+
+        "PLR0904", # too-many-public-methods
+        "PLR0911", # too-many-return-statements
+        "PLR0911", # too-many-return-statements
+        "PLR0912", # too-many-branches
+        "PLR0913", # too-many-arguments
+        "PLR0914", # too-many-locals
+        "PLR0915", # too-many-statements
+        "PLC0415", # import-outside-toplevel
+        "PLW0603", # global-statement
+        "PLW1501", # bad-open-mode
+        "PLR1711", # useless-return
+        "PLW1514", # unspecified-encoding
+        "PLR5501", # collapsible-else-if
+
+        # maybe we should fix these?
+        "PLR2004", # magic-value-comparison
+        "PLW2901", # redefined-loop-name
     ]
 
 [tool.ruff.lint.isort]
