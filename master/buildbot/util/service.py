@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
 
 from twisted.application import service
@@ -23,6 +25,7 @@ from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import util
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
@@ -130,6 +133,11 @@ class MasterService(AsyncMultiService):
     def master(self):
         return self
 
+    def get_db_url(self, new_config) -> defer.Deferred:
+        p = Properties()
+        p.master = self
+        return p.render(new_config.db['db_url'])
+
 
 class SharedService(AsyncMultiService):
     """a service that is created only once per parameter set in a parent service"""
@@ -209,8 +217,6 @@ class BuildbotService(
             return None
         self.configured = True
         # render renderables in parallel
-        # Properties import to resolve cyclic import issue
-        from buildbot.process.properties import Properties
 
         p = Properties()
         p.master = self.master
@@ -252,9 +258,6 @@ class BuildbotService(
         return defer.succeed(None)
 
     def renderSecrets(self, *args):
-        # Properties import to resolve cyclic import issue
-        from buildbot.process.properties import Properties
-
         p = Properties()
         p.master = self.master
 
@@ -442,18 +445,21 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
             'childs': [v.getConfigDict() for v in self.namedServices.values()],
         }
 
+    def get_service_config(self, new_config) -> dict[str, AsyncService]:
+        new_config_attr = getattr(new_config, self.config_attr)
+        if isinstance(new_config_attr, list):
+            return {s.name: s for s in new_config_attr}
+        if isinstance(new_config_attr, dict):
+            return new_config_attr
+
+        raise TypeError(f"config.{self.config_attr} should be a list or dictionary")
+
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # arrange childs by name
         old_by_name = self.namedServices
         old_set = set(old_by_name)
-        new_config_attr = getattr(new_config, self.config_attr)
-        if isinstance(new_config_attr, list):
-            new_by_name = {s.name: s for s in new_config_attr}
-        elif isinstance(new_config_attr, dict):
-            new_by_name = new_config_attr
-        else:
-            raise TypeError(f"config.{self.config_attr} should be a list or dictionary")
+        new_by_name = self.get_service_config(new_config)
         new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs

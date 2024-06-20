@@ -191,7 +191,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self)
-        self.secrets_manager.reconfig_priority = 2000
+        self.secrets_manager.reconfig_priority = self.db.reconfig_priority - 1
 
         self.service_manager = service.BuildbotServiceManager()
         yield self.service_manager.setServiceParent(self)
@@ -265,6 +265,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
             # set up services that need access to the config before everything
             # else gets told to reconfig
+            yield self.secrets_manager.setup()
             try:
                 yield self.db.setup()
             except exceptions.DatabaseNotReadyError:
@@ -451,13 +452,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         log.msg(f"{msg} (took {(self.reactor.seconds() - time_started):.3f} seconds)")
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        if self.configured_db_url is None:
-            self.configured_db_url = new_config.db['db_url']
-        elif self.configured_db_url != new_config.db['db_url']:
-            config.error(
-                "Cannot change c['db']['db_url'] after the master has started",
-            )
-
         if self.config.mq['type'] != new_config.mq['type']:
             raise config.ConfigErrors([
                 "Cannot change c['mq']['type'] after the master has started",

@@ -1,0 +1,2 @@
+The `db_url` config value can now be a renderable, allowing usage of secrets from secrets providers.
+eg. `util.Interpolate("postgresql+psycopg2://db_user:%(secret:db_password)s@db_host:db_port/db_name")`

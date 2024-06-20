@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 
+from buildbot.db.connector import AbstractDBConnector
 from buildbot.test.fakedb.build_data import FakeBuildDataComponent
 from buildbot.test.fakedb.builders import FakeBuildersComponent
 from buildbot.test.fakedb.buildrequests import FakeBuildRequestsComponent
@@ -35,10 +36,9 @@ from buildbot.test.fakedb.test_result_sets import FakeTestResultSetsComponent
 from buildbot.test.fakedb.test_results import FakeTestResultsComponent
 from buildbot.test.fakedb.users import FakeUsersComponent
 from buildbot.test.fakedb.workers import FakeWorkersComponent
-from buildbot.util import service
 
 
-class FakeDBConnector(service.AsyncMultiService):
+class FakeDBConnector(AbstractDBConnector):
     """
     A stand-in for C{master.db} that operates without an actual database
     backend.  This also implements a test-data interface similar to the
@@ -94,9 +94,10 @@ class FakeDBConnector(service.AsyncMultiService):
         self.test_result_sets = comp = FakeTestResultSetsComponent(self, testcase)
         self._components.append(comp)
 
+    @defer.inlineCallbacks
     def setup(self):
+        yield super().setup()
         self.is_setup = True
-        return defer.succeed(None)
 
     def insert_test_data(self, rows):
         """Insert a list of Row instances into the database; this method can be

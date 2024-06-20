@@ -31,10 +31,13 @@ from buildbot.config.master import FileLoader
 from buildbot.config.master import MasterConfig
 from buildbot.db import exceptions
 from buildbot.interfaces import IConfigLoader
+from buildbot.process.properties import Interpolate
+from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakemq
 from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
@@ -49,7 +52,12 @@ class FailingLoader:
 @implementer(IConfigLoader)
 class DefaultLoader:
     def loadConfig(self):
-        return MasterConfig()
+        master_cfg = MasterConfig()
+        master_cfg.db['db_url'] = Interpolate(
+            "postgresql+psycopg2://buildbot:%(secret:db_pwd)s@localhost:3306/bbtest"
+        )
+        master_cfg.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
+        return master_cfg
 
 
 class InitTests(unittest.SynchronousTestCase):
@@ -91,6 +99,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         )
         self.master.sendBuildbotNetUsageData = mock.Mock()
         self.master.botmaster = FakeBotMaster()
+        self.secrets_manager = self.master.secrets_manager = SecretManager()
+        yield self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self)
         yield self.db.setServiceParent(self.master)
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
@@ -142,6 +152,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_startup_ok(self):
         yield self.master.startService()
+
+        self.assertEqual(
+            self.master.db.configured_url,
+            'postgresql+psycopg2://buildbot:s3cr3t@localhost:3306/bbtest',
+        )
 
         self.assertTrue(self.master.data.updates.thisMasterActive)
         d = self.master.stopService()
@@ -207,11 +222,16 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = MasterConfig()
-        old.db['db_url'] = 'aaaa'
+        old.db['db_url'] = Interpolate('%(secret:db_pwd)s')
+        old.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
+        yield self.master.secrets_manager.setup()
+        yield self.master.db.setup()
         yield self.master.reconfigServiceWithBuildbotConfig(old)
+        self.assertEqual(self.master.db.configured_url, 's3cr3t')
 
         new = MasterConfig()
-        new.db['db_url'] = 'bbbb'
+        new.db['db_url'] = old.db['db_url']
+        new.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 'other-s3cr3t'})]
 
         with self.assertRaises(config.ConfigErrors):
-            self.master.reconfigServiceWithBuildbotConfig(new)
+            yield self.master.reconfigServiceWithBuildbotConfig(new)
