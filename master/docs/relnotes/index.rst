@@ -8,6 +8,15 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``v3.11.4`` ( ``2024-06-20`` )
+=======================================
+
+Bug fixes
+---------
+
+- Fixed a regression where ``GitPoller`` would no longer register new changes (regression introduced
+  in 3.11.3 in #7554)
+
 Buildbot ``3.11.3`` ( ``2024-05-19`` )
 ======================================
 
