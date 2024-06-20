@@ -121,6 +121,7 @@ The Git step takes the following arguments:
       * ``debug``: `--debug`
       * ``long``: `--long``
       * ``exact-match``: `--exact-match`
+      * ``first-parent``: `--first-parent`
       * ``tags``: `--tags`
       * ``dirty``: `--dirty`
 
@@ -128,6 +129,7 @@ The Git step takes the following arguments:
      Examples show the key-value pair:
 
       * ``match=foo``: `--match foo`
+      * ``exclude=foo``: `--exclude foo`
       * ``abbrev=7``: `--abbrev=7`
       * ``candidates=7``: `--candidates=7`
       * ``dirty=foo``: `--dirty=foo`
