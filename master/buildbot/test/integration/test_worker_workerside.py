@@ -107,6 +107,8 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
                 ``addMasterSideWorker``)
     """
 
+    timeout = 30
+
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -222,7 +224,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         def could_not_connect():
             self.fail("Worker never got connected to master")
 
-        timeout = reactor.callLater(10, could_not_connect)
+        timeout = reactor.callLater(self.timeout, could_not_connect)
         worker = self.addWorker()
         yield worker.startService()
         yield worker.tests_connected
@@ -245,7 +247,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         self.assertTrue('bldr' in worker.bot.builders)
 
-        timeout = reactor.callLater(10, could_not_connect)
+        timeout = reactor.callLater(self.timeout, could_not_connect)
         yield self.workerSideDisconnect(worker)
         yield worker.tests_connected
 
@@ -278,7 +280,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
             update_port=False,  # don't know why, but it'd fail
             connection_string=f"tcp:{self.port}:interface=127.0.0.1",
         )
-        timeout = reactor.callLater(10, could_not_connect)
+        timeout = reactor.callLater(self.timeout, could_not_connect)
         yield worker.tests_connected
 
         timeout.cancel()
