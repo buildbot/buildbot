@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import inspect
-import sqlite3
 import time
 import traceback
 from typing import TYPE_CHECKING
@@ -32,6 +31,7 @@ from buildbot.db.buildsets import AlreadyCompleteError
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 from buildbot.process import metrics
+from buildbot.util.sautils import get_sqlite_version
 
 if TYPE_CHECKING:
     from typing import Any
@@ -134,7 +134,7 @@ class DBThreadPool:
 
         self.engine = engine
         if engine.dialect.name == 'sqlite':
-            vers = self.get_sqlite_version()
+            vers = get_sqlite_version()
             if vers < (3, 7):
                 log_msg(f"Using SQLite Version {vers}")
                 log_msg(
@@ -312,6 +312,3 @@ class DBThreadPool:
         return threads.deferToThreadPool(
             self.reactor, self._pool, self.__thd, True, callable, args, kwargs
         )
-
-    def get_sqlite_version(self):
-        return sqlite3.sqlite_version_info

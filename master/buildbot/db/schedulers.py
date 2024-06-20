@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-import sqlalchemy.exc
 from twisted.internet import defer
 
 from buildbot.db import NULL
@@ -75,26 +74,22 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     ) -> defer.Deferred[None]:
         def thd(conn) -> None:
             tbl = self.db.model.scheduler_changes
-            ins_q = tbl.insert()
-            upd_q = tbl.update().where(
-                tbl.c.schedulerid == schedulerid, tbl.c.changeid == sa.bindparam('wc_changeid')
-            )
             for changeid, important in classifications.items():
-                transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type
                 imp_int = int(bool(important))
-                try:
-                    conn.execute(
-                        ins_q.values(schedulerid=schedulerid, changeid=changeid, important=imp_int)
-                    ).close()
-                except (sqlalchemy.exc.ProgrammingError, sqlalchemy.exc.IntegrityError):
-                    transaction.rollback()
-                    transaction = conn.begin()
-                    # insert failed, so try an update
-                    conn.execute(upd_q, {'wc_changeid': changeid, 'important': imp_int}).close()
 
-                transaction.commit()
+                self.db.upsert(
+                    conn,
+                    tbl,
+                    where_values=(
+                        (tbl.c.schedulerid, schedulerid),
+                        (tbl.c.changeid, changeid),
+                    ),
+                    update_values=((tbl.c.important, imp_int),),
+                    _race_hook=None,
+                )
+                conn.commit()
 
         return self.db.pool.do(thd)
 

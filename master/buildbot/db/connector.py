@@ -46,6 +46,7 @@ from buildbot.db import test_results
 from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
+from buildbot.util.sautils import get_upsert_method
 
 upgrade_message = textwrap.dedent("""\
 
@@ -105,6 +106,7 @@ class DBConnector(AbstractDBConnector):
         # set up components
         self._engine = None  # set up in reconfigService
         self.pool = None  # set up in reconfigService
+        self.upsert = get_upsert_method(None)  # set up in reconfigService
 
     @defer.inlineCallbacks
     def setServiceParent(self, p):
@@ -143,6 +145,7 @@ class DBConnector(AbstractDBConnector):
 
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
+        self.upsert = get_upsert_method(self._engine)
         self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
 
         # make sure the db is up to date, unless specifically asked not to
