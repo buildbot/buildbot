@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import sys
 import warnings
 from unittest import mock
 
@@ -60,10 +58,6 @@ warnings.filterwarnings('error')
 warnings.filterwarnings(
     'ignore', "Not importing directory.*docker': missing __init__.py", category=ImportWarning
 )
-
-# ignore ResourceWarnings for unclosed sockets for the pg8000 driver on Python 3+ (tech debt: #4508)
-if sys.version_info[0] >= 3 and "pg8000" in os.getenv("BUILDBOT_TEST_DB_URL", ""):
-    warnings.filterwarnings('ignore', ".*unclosed .*socket", ResourceWarning)
 
 # autobahn is not updated for Twisted 22.04 and newer
 warnings.filterwarnings(

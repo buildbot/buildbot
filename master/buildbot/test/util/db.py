@@ -251,6 +251,8 @@ class RealDatabaseMixin:
         if self.__want_pool:
             yield self.db_pool.do(self.__thd_clean_database)
             yield self.db_pool.shutdown()
+        else:
+            self.db_engine.engine.dispose()
 
     @defer.inlineCallbacks
     def insert_test_data(self, rows):
