@@ -1,0 +1,162 @@
+{
+  "name": "base",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^13.0.0",
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.7.13",
+    "@types/react": "^18.0.0",
+    "@types/react-copy-to-clipboard": "^5.0.4",
+    "@types/react-dom": "^18.0.0",
+    "@types/react-virtualized-auto-sizer": "^1.0.1",
+    "@types/react-window": "^1.8.5",
+    "@types/underscore": "^1.11.4",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
+    "@typescript-eslint/parser": "^4.5.0",
+    "axios": "^0.27.2",
+    "babel-jest": "^26.6.0",
+    "babel-preset-react-app": "^10.0.0",
+    "bootstrap": "^4.6.2",
+    "buildbot-data-js": "link:../data-module",
+    "buildbot-plugin-support": "link:../plugin_support",
+    "buildbot-ui": "link:../ui",
+    "eslint": "^7.11.0",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-plugin-flowtype": "^5.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "eslint-plugin-testing-library": "^3.9.2",
+    "jest": "26.6.0",
+    "jest-circus": "26.6.0",
+    "jest-resolve": "26.6.0",
+    "jest-watch-typeahead": "0.6.1",
+    "jquery": "^3.6.0",
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "moment": "^2.29.4",
+    "outdated-browser-rework": "^3.0.1",
+    "popper.js": "^1.16.1",
+    "postcss-flexbugs-fixes": "4.2.1",
+    "postcss-loader": "3.0.0",
+    "postcss-normalize": "8.0.1",
+    "postcss-preset-env": "6.7.0",
+    "postcss-safe-parser": "5.0.2",
+    "react": "^18.2.0",
+    "react-app-polyfill": "^2.0.0",
+    "react-bootstrap": "^1.6.5",
+    "react-copy-to-clipboard": "^5.1.0",
+    "react-dev-utils": "^11.0.3",
+    "react-dom": "^18.2.0",
+    "react-hotkeys-hook": "^4.4.0",
+    "react-icons": "^4.8.0",
+    "react-refresh": "^0.8.3",
+    "react-router-dom": "^6.3.0",
+    "react-virtualized-auto-sizer": "^1.0.7",
+    "resolve": "1.18.1",
+    "ts-pnp": "1.2.0",
+    "typescript": "^4.4.2",
+    "underscore": "^1.13.4"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "build-dev": "vite build -m development",
+    "test": "jest",
+    "test-watch": "jest --watchAll"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts"
+    ],
+    "setupFiles": [
+      "react-app-polyfill/jsdom"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
+      "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
+    ],
+    "testEnvironment": "jsdom",
+    "testRunner": "./node_modules/jest-circus/runner.js",
+    "transform": {
+      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
+      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
+      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+    },
+    "transformIgnorePatterns": [
+      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
+      "^.+\\.module\\.(css|sass|scss)$"
+    ],
+    "modulePaths": [],
+    "moduleDirectories": [
+      "<rootDir>/node_modules",
+      "node_modules"
+    ],
+    "moduleNameMapper": {
+      "^react-native$": "react-native-web",
+      "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "web.js",
+      "js",
+      "web.ts",
+      "ts",
+      "web.tsx",
+      "tsx",
+      "json",
+      "web.jsx",
+      "jsx",
+      "node"
+    ],
+    "watchPlugins": [
+      "jest-watch-typeahead/filename",
+      "jest-watch-typeahead/testname"
+    ],
+    "resetMocks": true
+  },
+  "babel": {
+    "presets": [
+      "react-app"
+    ]
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.16",
+    "@types/react-test-renderer": "^18.0.0",
+    "@vitejs/plugin-react": "^3.1.0",
+    "axios-mock-adapter": "^1.21.1",
+    "buffer": "^5.5.0",
+    "less": "^3.0.0",
+    "process": "^0.11.10",
+    "react-test-renderer": "^18.2.0",
+    "rollup-plugin-visualizer": "^5.9.0",
+    "sass": "^1.56.0",
+    "vite": "^4.5.3",
+    "vite-plugin-checker": "^0.5.6",
+    "vite-plugin-static-copy": "^0.13.1"
+  }
+}
