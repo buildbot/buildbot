@@ -48,7 +48,8 @@ import {
   PureComponent,
   ReactElement,
   Ref,
-  SyntheticEvent
+  SyntheticEvent,
+  WheelEvent
 } from 'react';
 import { cancelTimeout, requestTimeout } from './timer';
 import { getScrollbarSize } from './domHelpers';
@@ -94,7 +95,7 @@ type GetRangeToRenderOverrideCallback = (overscanStartIndex: number,
 type ScrollEvent = SyntheticEvent<HTMLDivElement>;
 type ItemStyleCache = {[index: number]: Object};
 
-type OuterProps = {
+export type FixedSizeListOuterProps = {
   children: React.ReactNode,
   className: string | undefined,
   onScroll: (e: ScrollEvent) => void,
@@ -134,7 +135,7 @@ export type FixedSizeListProps<T> = {
   onCacheClear?: () => void;
   getRangeToRenderOverride?: GetRangeToRenderOverrideCallback,
   outerRef?: Ref<HTMLElement>,
-  outerElementType?: string | React.ComponentType<OuterProps>,
+  outerElementType?: string | React.ForwardRefExoticComponent<React.PropsWithoutRef<FixedSizeListOuterProps>>,
   overscanCount: number,
   style?: Object,
   useIsScrolling: boolean,
