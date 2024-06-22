@@ -1,0 +1,106 @@
+{
+  "name": "buildbot-wsgi-dashboards",
+  "private": true,
+  "type": "module",
+  "module": "buildbot_react_wsgi_dashboards/static/scripts.js",
+  "style": "buildbot_react_wsgi_dashboards/static/styles.css",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "build-dev": "vite build -m development",
+    "test": "jest",
+    "test-watch": "jest --watchAll"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
+      "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
+    ],
+    "testEnvironment": "jsdom",
+    "testRunner": "./node_modules/jest-circus/runner.js",
+    "transform": {
+      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.cjs",
+      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.cjs",
+      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.cjs"
+    },
+    "transformIgnorePatterns": [
+      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
+      "^.+\\.module\\.(css|sass|scss)$"
+    ],
+    "modulePaths": [],
+    "moduleDirectories": [
+      "<rootDir>/node_modules",
+      "node_modules"
+    ],
+    "moduleNameMapper": {
+      "^react-native$": "react-native-web",
+      "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "tsx",
+      "json",
+      "jsx",
+      "node"
+    ],
+    "watchPlugins": [
+      "jest-watch-typeahead/filename",
+      "jest-watch-typeahead/testname"
+    ],
+    "resetMocks": true
+  },
+  "babel": {
+    "presets": [
+      "react-app"
+    ]
+  },
+  "peerDependencies": {
+    "axios": "^0.27.2",
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "moment": "^2.29.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@vitejs/plugin-react": "^3.1.0",
+    "axios": "^0.27.2",
+    "axios-mock-adapter": "^1.21.1",
+    "babel-preset-react-app": "^10.0.0",
+    "buildbot-data-js": "link:../react-data-module",
+    "buildbot-plugin-support": "link:../plugin_support",
+    "jest": "26.6.0",
+    "jest-circus": "26.6.0",
+    "jest-watch-typeahead": "0.6.1",
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "moment": "^2.29.4",
+    "react": "^18.2.0",
+    "react-app-polyfill": "^2.0.0",
+    "react-bootstrap": "^1.6.5",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
+    "sass": "^1.56.0",
+    "vite": "^4.5.3"
+  },
+  "license": "GPL-2.0",
+  "dependencies": {
+    "buildbot-ui": "link:../react-ui",
+    "react-icons": "^4.8.0"
+  }
+}

@@ -1,0 +1,162 @@
+@import "bootstrap/scss/bootstrap";
+@import "animations.scss";
+@import "colors.scss";
+@import "mobile.scss";
+@import "guanlecoja.scss";
+@import "buildbot-ui/dist/style.css";
+
+// Dashboards which use SVG to draw contents such as waterfall may require
+//  setting  body height to 100vh. (100% of viewport height)
+//  e.g. Waterfall uses this, otherwise the contents do not appear.
+// The controller dynamically adds and removes this class to body
+//   when entering and leaving Waterfall.
+//
+//  (note: adding height:100vh to a div also would solve this problem
+//   except that causes the dialogs to make the SVG disappear due to
+//   the dialog setting the body to overflow:hidden via modal-open rule.)
+body.hundredpercent {
+  height: 100vh;
+}
+
+@media screen {
+  /* border-radius looks strange for navbar,
+     on lower screen sizes it is 0 by default */
+  .navbar-static-top {
+    border-radius: 0;
+  }
+
+}
+
+/* make the sidebar be on the back of the modals dialog */
+.sidebar {
+  z-index: ($zindex-modal - 1) !important;
+}
+
+/* button bar inside the breadcrum, used for forcesched buttons */
+.breadcrumb .btn {
+  height: 29px;
+  margin-top: -5px;
+  padding-top: 4px;
+}
+
+.breadcrumb > li + li.pull-right:before {
+  content: " ";
+  padding: 0 2px;
+}
+
+.clickable {
+  cursor: pointer
+}
+
+.no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.select-content {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+/* https://danoc.me/blog/css-prevent-copy/
+Firefox will insert newlines if the selection go over a no-select span, so we need to implement them with ::before
+*/
+[data-linenumber-content]::before,
+[data-linenumber-content--before]::before,
+[data-linenumber-content--after]::after {
+  content: attr(data-linenumber-content);
+  color: $bb-color-log-white;
+  padding-right: 10px;
+  white-space: pre;
+}
+
+img.avatar {
+  background-color: #ccc;
+  border-radius: 50%;
+  height: 40px;
+  margin: -10px;
+  width: 40px;
+}
+
+.changedetails > .no-select > * {
+  margin-left: 0.3em;
+  margin-right: 0.3em;
+}
+
+li.unstyled{
+  list-style: none;
+}
+.no-margin{
+  margin: 0px !important;
+}
+.mouse-over-only  {display: none;}
+span:hover>.mouse-over-only  {display: inline;}
+
+/* flex row will make the row grow automatically given the size of the content
+   This will make sure all the inside div will fill all content.
+   This is useful when you want to create a row with one left and one right
+   the level of grow give the importance of the div. The more it has grow the more it will win
+   space when fighting against the other divs
+   You can use it with following jade code:
+   .flex-row
+      .flex-grow-1  left content
+      .flex-grow-1
+          .pull-right right content
+
+*/
+.flex-row {
+  display: flex;
+  flex-flow: row;
+
+  /* Then we define how is distributed the remaining space */
+  justify-content: space-around;
+  .flex-grow-1 {
+    flex-grow: 1
+  }
+  .flex-grow-2 {
+    flex-grow: 2
+  }
+  .flex-grow-3 {
+    flex-grow: 3
+  }
+  .flex-grow-4 {
+    flex-grow: 4
+  }
+}
+
+#root, .modal .modal-dialog {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #333333;
+  background-color: #fff;
+
+  a:hover {
+    text-decoration: none;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    // The padding is increased so that scroll bars don't appear when using .row elements in modal. The padding
+    // is such that it's larger than the negative margin of .row.
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .btn-light {
+    background-color: #fff;
+    border-color: #ccc;
+  }
+
+  .btn-light:hover {
+    background-color: #e6e6e6;
+    border-color: #adadad;
+  }
+}
