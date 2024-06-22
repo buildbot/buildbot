@@ -207,10 +207,16 @@ the following approach might be helpful:
         @defer.inlineCallbacks
         def key(b):
             newest_complete_time = yield b.getNewestCompleteTime()
+            if newest_complete_time is None:
+                newest_complete_time = datetime.datetime.min
+
             oldest_request_time = yield b.getOldestRequestTime()
+            if oldest_request_time is None:
+                oldest_request_time = datetime.datetime.min
+
             return (isBuilding(b), newest_complete_time, oldest_request_time)
 
-        async_sort(builders, key)
+        yield async_sort(builders, key)
         return builders
 
     c['prioritizeBuilders'] = prioritizeBuilders
