@@ -44,9 +44,9 @@ jobs:
             . .venv/bin/activate
             make docs-release
             make tarballs
-            # Note that installing www/react-base depends on frontend_deps target being built, which is
+            # Note that installing www/base depends on frontend_deps target being built, which is
             # a dependency of the tarballs target.
-            pip install -e www/react-base
+            pip install -e www/base
             pyinstaller pyinstaller/buildbot-worker.spec
             # we test the new generated binary with the global virtualenv
             SANDBOXED_WORKER_PATH=`pwd`/dist/buildbot-worker trial --reporter=text --rterrors buildbot.test.integration.interop

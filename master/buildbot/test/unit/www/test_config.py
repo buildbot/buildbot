@@ -191,7 +191,7 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         for _ in range(0, 4):
             path = os.path.dirname(path)
-        return os.path.join(path, 'www/react-base')
+        return os.path.join(path, 'www/base')
 
     def find_matching_line(self, lines, match, start_i):
         for i in range(start_i, len(lines)):
@@ -228,7 +228,7 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         )
 
         # IndexResourceReact only uses static path to get index.html. In the source checkout
-        # index.html resides not in www/react-base/public but in www/react-base. Thus
+        # index.html resides not in www/base/public but in www/base. Thus
         # base path is sent to IndexResourceReact.
         rsrc = config.IndexResourceReact(master, self.get_react_base_path())
         rsrc.reconfigResource(master.config)

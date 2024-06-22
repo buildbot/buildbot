@@ -24,9 +24,9 @@ from twisted.trial import unittest
 
 
 class BuildbotWWWPkg(unittest.TestCase):
-    pkgName = "buildbot_www_react"
-    pkgPaths = ["www", "react-base"]
-    epName = "base_react"
+    pkgName = "buildbot_www"
+    pkgPaths = ["www", "base"]
+    epName = "base"
 
     loadTestScript = dedent(r"""
         from importlib.metadata import entry_points
@@ -71,7 +71,7 @@ class BuildbotWWWPkg(unittest.TestCase):
 
     def check_correct_installation(self):
         # assert we can import buildbot_www
-        # and that it has an endpoint with resource containing file "script.js" or "index.html" (in case of buildbot_www_react)
+        # and that it has an endpoint with resource containing file "index.html"
         check_call([sys.executable, '-c', self.loadTestScript % dict(epName=self.epName)])
 
     def test_wheel(self):
@@ -90,12 +90,12 @@ class BuildbotWWWPkg(unittest.TestCase):
 
 
 class BuildbotConsolePkg(BuildbotWWWPkg):
-    pkgName = "buildbot-react-console-view"
-    pkgPaths = ["www", "react-console_view"]
-    epName = "react_console_view"
+    pkgName = "buildbot-console-view"
+    pkgPaths = ["www", "console_view"]
+    epName = "console_view"
 
 
 class BuildbotWaterfallPkg(BuildbotWWWPkg):
-    pkgName = "buildbot-react-waterfall-view"
-    pkgPaths = ["www", "react-waterfall_view"]
-    epName = "react_waterfall_view"
+    pkgName = "buildbot-waterfall-view"
+    pkgPaths = ["www", "waterfall_view"]
+    epName = "waterfall_view"
