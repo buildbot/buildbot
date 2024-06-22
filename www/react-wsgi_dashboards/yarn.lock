@@ -2077,16 +2077,16 @@ buffer-from@^1.0.0:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.2.tgz#2b146a6fd72e80b4f55d255f35ed59a3a9a41bd5"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
-"buildbot-data-js@link:../react-data-module":
+"buildbot-data-js@link:../data-module":
   version "4.0.0"
 
 "buildbot-plugin-support@link:../plugin_support":
   version "1.0.0"
 
-"buildbot-ui@link:../react-ui":
+"buildbot-ui@link:../ui":
   version "0.1.0"
   dependencies:
-    buildbot-data-js "link:../react-data-module"
+    buildbot-data-js "link:../data-module"
     react-icons "^4.8.0"
 
 cache-base@^1.0.1:

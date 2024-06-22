@@ -83,7 +83,7 @@
     "axios": "^0.27.2",
     "axios-mock-adapter": "^1.21.1",
     "babel-preset-react-app": "^10.0.0",
-    "buildbot-data-js": "link:../react-data-module",
+    "buildbot-data-js": "link:../data-module",
     "buildbot-plugin-support": "link:../plugin_support",
     "jest": "26.6.0",
     "jest-circus": "26.6.0",
@@ -104,7 +104,7 @@
     "d3-selection": "1.3.0"
   },
   "dependencies": {
-    "buildbot-ui": "link:../react-ui",
+    "buildbot-ui": "link:../ui",
     "d3": "^4.13.0",
     "react-hotkeys-hook": "^4.4.0",
     "react-icons": "^4.8.0"

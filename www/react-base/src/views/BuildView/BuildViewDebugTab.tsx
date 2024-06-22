@@ -24,7 +24,7 @@ import {
   useDataAccessor,
   useDataApiDynamicQuery,
 } from "buildbot-data-js";
-import {BuildLinkWithSummaryTooltip} from "../../../../react-ui";
+import {BuildLinkWithSummaryTooltip} from "../../../../ui";
 import {LoadingDiv} from "../../components/LoadingDiv/LoadingDiv";
 import {RawData} from "../../components/RawData/RawData";
 import {TableHeading} from "../../components/TableHeading/TableHeading";

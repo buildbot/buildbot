@@ -22,12 +22,12 @@ PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
 VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
 
-WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
+WWW_PKGS := www/base www/react-base www/console_view www/react-console_view www/grid_view www/react-grid_view www/waterfall_view www/react-waterfall_view www/wsgi_dashboards www/react-wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/ui www/grid_view www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/ui www/grid_view www/react-grid_view www/wsgi_dashboards www/react-wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -87,7 +87,7 @@ frontend_wheels: frontend_deps
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests: frontend_deps
-	trial pkg/test_buildbot_pkg.py
+	trial pkg/test_buildbot_pkg.py pkg/test_buildbot_pkg_old.py
 
 # upgrade FE dependencies
 frontend_yarn_upgrade:
