@@ -181,7 +181,7 @@ class RunMasterBase(unittest.TestCase):
 
     # All tests that start master need higher timeout due to test runtime variability on
     # oversubscribed hosts.
-    timeout = 40
+    timeout = 60
 
     if Worker is None:
         skip = "buildbot-worker package is not installed"

@@ -58,6 +58,8 @@ class TestException(Exception):
 
 
 class TestConnectableThreadQueue(unittest.TestCase):
+    timeout = 10
+
     def setUp(self):
         self.queue = TestableConnectableThreadQueue(
             self,
@@ -70,7 +72,7 @@ class TestConnectableThreadQueue(unittest.TestCase):
         self.join_queue()
 
     def join_queue(self, connection_called_count=None):
-        self.queue.join(timeout=1)
+        self.queue.join(timeout=self.timeout)
         if self.queue.is_alive():
             raise AssertionError('Thread is still alive')
         if connection_called_count is not None:
@@ -184,6 +186,8 @@ class NoneReturningConnectableThreadQueue(FailingConnectableThreadQueue):
 
 
 class ConnectionErrorTests:
+    timeout = 10
+
     def setUp(self):
         self.lock = threading.Lock()
         self.queue = self.QueueClass(
@@ -195,7 +199,7 @@ class ConnectionErrorTests:
         )
 
     def tearDown(self):
-        self.queue.join(timeout=1)
+        self.queue.join(timeout=self.timeout)
         if self.queue.is_alive():
             raise AssertionError('Thread is still alive')
 
