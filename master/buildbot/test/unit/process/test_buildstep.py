@@ -270,8 +270,12 @@ class TestBuildStep(
 
         self.assertEqual(len(lock_accesses), 2)
 
-        self.assertTrue(self.step._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0]))
-        self.assertTrue(self.step._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1]))
+        self.assertTrue(
+            self.get_nth_step(0)._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0])
+        )
+        self.assertTrue(
+            self.get_nth_step(0)._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1])
+        )
 
     def test_compare(self):
         lbs1 = buildstep.BuildStep(name="me")
@@ -299,8 +303,12 @@ class TestBuildStep(
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
 
-        self.assertTrue(self.step._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0]))
-        self.assertTrue(self.step._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1]))
+        self.assertTrue(
+            self.get_nth_step(0)._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0])
+        )
+        self.assertTrue(
+            self.get_nth_step(0)._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1])
+        )
 
     @defer.inlineCallbacks
     def test_regular_locks_skip_step(self):
@@ -562,20 +570,20 @@ class TestBuildStep(
     @defer.inlineCallbacks
     def test_start_returns_SKIPPED(self):
         self.setup_step(self.SkippingBuildStep())
-        self.step.finished = mock.Mock()
+        self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
-        self.step.finished.assert_not_called()
+        self.get_nth_step(0).finished.assert_not_called()
 
     @defer.inlineCallbacks
     def test_doStepIf_false(self):
         self.setup_step(self.FakeBuildStep(doStepIf=False))
-        self.step.finished = mock.Mock()
+        self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
-        self.step.finished.assert_not_called()
+        self.get_nth_step(0).finished.assert_not_called()
 
     @defer.inlineCallbacks
     def test_doStepIf_renderable_false(self):
@@ -584,29 +592,29 @@ class TestBuildStep(
             return False
 
         self.setup_step(self.FakeBuildStep(doStepIf=dostepif))
-        self.step.finished = mock.Mock()
+        self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
-        self.step.finished.assert_not_called()
+        self.get_nth_step(0).finished.assert_not_called()
 
     @defer.inlineCallbacks
     def test_doStepIf_returns_false(self):
         self.setup_step(self.FakeBuildStep(doStepIf=lambda step: False))
-        self.step.finished = mock.Mock()
+        self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
-        self.step.finished.assert_not_called()
+        self.get_nth_step(0).finished.assert_not_called()
 
     @defer.inlineCallbacks
     def test_doStepIf_returns_deferred_false(self):
         self.setup_step(self.FakeBuildStep(doStepIf=lambda step: defer.succeed(False)))
-        self.step.finished = mock.Mock()
+        self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
-        self.step.finished.assert_not_called()
+        self.get_nth_step(0).finished.assert_not_called()
 
     def test_hideStepIf_False(self):
         self._setupWaterfallTest(False, False)
@@ -622,7 +630,7 @@ class TestBuildStep(
 
         def shouldHide(result, step):
             called[0] = True
-            self.assertTrue(step is self.step)
+            self.assertTrue(step is self.get_nth_step(0))
             self.assertEqual(result, SUCCESS)
             return False
 
@@ -637,7 +645,7 @@ class TestBuildStep(
 
         def shouldHide(result, step):
             called[0] = True
-            self.assertTrue(step is self.step)
+            self.assertTrue(step is self.get_nth_step(0))
             self.assertEqual(result, SUCCESS)
             return True
 
@@ -651,7 +659,7 @@ class TestBuildStep(
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
 
         self._setupWaterfallTest(lambda x, y: 0 / 0, False, expectedResult=EXCEPTION)
-        self.step.addLogWithFailure = mock.Mock()
+        self.get_nth_step(0).addLogWithFailure = mock.Mock()
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(ZeroDivisionError)), 1)
 
@@ -661,7 +669,7 @@ class TestBuildStep(
 
         def shouldHide(result, step):
             called[0] = True
-            self.assertTrue(step is self.step)
+            self.assertTrue(step is self.get_nth_step(0))
             self.assertEqual(result, EXCEPTION)
             return True
 
@@ -702,7 +710,7 @@ class TestBuildStep(
         self.build.setProperty('fOF', 'yes', 'test')
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.flunkOnFailure, 'yes')
+        self.assertEqual(self.get_nth_step(0).flunkOnFailure, 'yes')
 
     def test_hasStatistic(self):
         step = buildstep.BuildStep()
@@ -980,90 +988,90 @@ class InterfaceTests(interfaces.InterfaceTests):
             'progress',
             'stopped',
         ]:
-            self.assertTrue(hasattr(self.step, attr))
+            self.assertTrue(hasattr(self.get_nth_step(0), attr))
 
     def test_signature_setBuild(self):
-        @self.assertArgSpecMatches(self.step.setBuild)
+        @self.assertArgSpecMatches(self.get_nth_step(0).setBuild)
         def setBuild(self, build):
             pass
 
     def test_signature_setWorker(self):
-        @self.assertArgSpecMatches(self.step.setWorker)
+        @self.assertArgSpecMatches(self.get_nth_step(0).setWorker)
         def setWorker(self, worker):
             pass
 
     def test_signature_setupProgress(self):
-        @self.assertArgSpecMatches(self.step.setupProgress)
+        @self.assertArgSpecMatches(self.get_nth_step(0).setupProgress)
         def setupProgress(self):
             pass
 
     def test_signature_startStep(self):
-        @self.assertArgSpecMatches(self.step.startStep)
+        @self.assertArgSpecMatches(self.get_nth_step(0).startStep)
         def startStep(self, remote):
             pass
 
     def test_signature_run(self):
-        @self.assertArgSpecMatches(self.step.run)
+        @self.assertArgSpecMatches(self.get_nth_step(0).run)
         def run(self):
             pass
 
     def test_signature_interrupt(self):
-        @self.assertArgSpecMatches(self.step.interrupt)
+        @self.assertArgSpecMatches(self.get_nth_step(0).interrupt)
         def interrupt(self, reason):
             pass
 
     def test_signature_setProgress(self):
-        @self.assertArgSpecMatches(self.step.setProgress)
+        @self.assertArgSpecMatches(self.get_nth_step(0).setProgress)
         def setProgress(self, metric, value):
             pass
 
     def test_signature_workerVersion(self):
-        @self.assertArgSpecMatches(self.step.workerVersion)
+        @self.assertArgSpecMatches(self.get_nth_step(0).workerVersion)
         def workerVersion(self, command, oldversion=None):
             pass
 
     def test_signature_workerVersionIsOlderThan(self):
-        @self.assertArgSpecMatches(self.step.workerVersionIsOlderThan)
+        @self.assertArgSpecMatches(self.get_nth_step(0).workerVersionIsOlderThan)
         def workerVersionIsOlderThan(self, command, minversion):
             pass
 
     def test_signature_getWorkerName(self):
-        @self.assertArgSpecMatches(self.step.getWorkerName)
+        @self.assertArgSpecMatches(self.get_nth_step(0).getWorkerName)
         def getWorkerName(self):
             pass
 
     def test_signature_runCommand(self):
-        @self.assertArgSpecMatches(self.step.runCommand)
+        @self.assertArgSpecMatches(self.get_nth_step(0).runCommand)
         def runCommand(self, command):
             pass
 
     def test_signature_addURL(self):
-        @self.assertArgSpecMatches(self.step.addURL)
+        @self.assertArgSpecMatches(self.get_nth_step(0).addURL)
         def addURL(self, name, url):
             pass
 
     def test_signature_addLog(self):
-        @self.assertArgSpecMatches(self.step.addLog)
+        @self.assertArgSpecMatches(self.get_nth_step(0).addLog)
         def addLog(self, name, type='s', logEncoding=None):
             pass
 
     def test_signature_getLog(self):
-        @self.assertArgSpecMatches(self.step.getLog)
+        @self.assertArgSpecMatches(self.get_nth_step(0).getLog)
         def getLog(self, name):
             pass
 
     def test_signature_addCompleteLog(self):
-        @self.assertArgSpecMatches(self.step.addCompleteLog)
+        @self.assertArgSpecMatches(self.get_nth_step(0).addCompleteLog)
         def addCompleteLog(self, name, text):
             pass
 
     def test_signature_addHTMLLog(self):
-        @self.assertArgSpecMatches(self.step.addHTMLLog)
+        @self.assertArgSpecMatches(self.get_nth_step(0).addHTMLLog)
         def addHTMLLog(self, name, html):
             pass
 
     def test_signature_addLogObserver(self):
-        @self.assertArgSpecMatches(self.step.addLogObserver)
+        @self.assertArgSpecMatches(self.get_nth_step(0).addLogObserver)
         def addLogObserver(self, logname, observer):
             pass
 
@@ -1079,6 +1087,9 @@ class TestRealItfc(unittest.TestCase, InterfaceTests):
     def setUp(self):
         self.step = buildstep.BuildStep()
 
+    def get_nth_step(self, index):
+        return self.step
+
 
 class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
     @defer.inlineCallbacks
@@ -1093,62 +1104,63 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         yield self.setup_test_build_step()
-        self.step = CommandMixinExample()
-        self.setup_step(self.step)
+        self.setup_step(CommandMixinExample())
 
     def tearDown(self):
         return self.tear_down_test_build_step()
 
     @defer.inlineCallbacks
     def test_runRmdir(self):
-        self.step.testMethod = lambda: self.step.runRmdir('/some/path')
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runRmdir('/some/path')
         self.expect_commands(ExpectRmdir(dir='/some/path', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertTrue(self.step.method_return_value)
+        self.assertTrue(self.get_nth_step(0).method_return_value)
 
     @defer.inlineCallbacks
     def test_runMkdir(self):
-        self.step.testMethod = lambda: self.step.runMkdir('/some/path')
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runMkdir('/some/path')
         self.expect_commands(ExpectMkdir(dir='/some/path', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertTrue(self.step.method_return_value)
+        self.assertTrue(self.get_nth_step(0).method_return_value)
 
     @defer.inlineCallbacks
     def test_runMkdir_fails(self):
-        self.step.testMethod = lambda: self.step.runMkdir('/some/path')
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runMkdir('/some/path')
         self.expect_commands(ExpectMkdir(dir='/some/path', log_environ=False).exit(1))
         self.expect_outcome(result=FAILURE)
         yield self.run_step()
 
     @defer.inlineCallbacks
     def test_runMkdir_fails_no_abandon(self):
-        self.step.testMethod = lambda: self.step.runMkdir('/some/path', abandonOnFailure=False)
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runMkdir(
+            '/some/path', abandonOnFailure=False
+        )
         self.expect_commands(ExpectMkdir(dir='/some/path', log_environ=False).exit(1))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertFalse(self.step.method_return_value)
+        self.assertFalse(self.get_nth_step(0).method_return_value)
 
     @defer.inlineCallbacks
     def test_pathExists(self):
-        self.step.testMethod = lambda: self.step.pathExists('/some/path')
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).pathExists('/some/path')
         self.expect_commands(ExpectStat(file='/some/path', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertTrue(self.step.method_return_value)
+        self.assertTrue(self.get_nth_step(0).method_return_value)
 
     @defer.inlineCallbacks
     def test_pathExists_doesnt(self):
-        self.step.testMethod = lambda: self.step.pathExists('/some/path')
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).pathExists('/some/path')
         self.expect_commands(ExpectStat(file='/some/path', log_environ=False).exit(1))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertFalse(self.step.method_return_value)
+        self.assertFalse(self.get_nth_step(0).method_return_value)
 
     @defer.inlineCallbacks
     def test_pathExists_logging(self):
-        self.step.testMethod = lambda: self.step.pathExists('/some/path')
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).pathExists('/some/path')
         self.expect_commands(
             ExpectStat(file='/some/path', log_environ=False)
             .log('stdio', header='NOTE: never mind\n')
@@ -1156,19 +1168,19 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertFalse(self.step.method_return_value)
+        self.assertFalse(self.get_nth_step(0).method_return_value)
         self.assertEqual(
-            self.step.getLog('stdio').header,
+            self.get_nth_step(0).getLog('stdio').header,
             'NOTE: never mind\nprogram finished with exit code 1\n',
         )
 
     def test_glob(self):
         @defer.inlineCallbacks
         def testFunc():
-            res = yield self.step.runGlob("*.pyc")
+            res = yield self.get_nth_step(0).runGlob("*.pyc")
             self.assertEqual(res, ["one.pyc", "two.pyc"])
 
-        self.step.testMethod = testFunc
+        self.get_nth_step(0).testMethod = testFunc
         self.expect_commands(
             ExpectGlob(path='*.pyc', log_environ=False).files(["one.pyc", "two.pyc"]).exit(0)
         )
@@ -1176,13 +1188,13 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_glob_empty(self):
-        self.step.testMethod = lambda: self.step.runGlob("*.pyc")
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runGlob("*.pyc")
         self.expect_commands(ExpectGlob(path='*.pyc', log_environ=False).files().exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
     def test_glob_fail(self):
-        self.step.testMethod = lambda: self.step.runGlob("*.pyc")
+        self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runGlob("*.pyc")
         self.expect_commands(ExpectGlob(path='*.pyc', log_environ=False).exit(1))
         self.expect_outcome(result=FAILURE)
         return self.run_step()
@@ -1365,7 +1377,7 @@ class TestShellMixin(
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('logname').stdout, 'logline\nlogline2\n')
+        self.assertEqual(self.get_nth_step(0).getLog('logname').stdout, 'logline\nlogline2\n')
 
     @defer.inlineCallbacks
     def test_lazy_logfiles_stdout_has_stdout(self):
@@ -1375,7 +1387,7 @@ class TestShellMixin(
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('stdio').stdout, 'some log\n')
+        self.assertEqual(self.get_nth_step(0).getLog('stdio').stdout, 'some log\n')
 
     @defer.inlineCallbacks
     def test_lazy_logfiles_stdout_no_stdout(self):
@@ -1384,7 +1396,7 @@ class TestShellMixin(
         self.expect_commands(ExpectShell(workdir='wkdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('stdio').stdout, '')
+        self.assertEqual(self.get_nth_step(0).getLog('stdio').stdout, '')
 
     @defer.inlineCallbacks
     def test_lazy_logfiles_logfile(self):
@@ -1402,7 +1414,7 @@ class TestShellMixin(
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('logname').stdout, 'logline\nlogline2\n')
+        self.assertEqual(self.get_nth_step(0).getLog('logname').stdout, 'logline\nlogline2\n')
 
     @defer.inlineCallbacks
     def test_lazy_logfiles_no_logfile(self):
@@ -1419,7 +1431,7 @@ class TestShellMixin(
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
         with self.assertRaises(KeyError):
-            self.step.getLog('logname')
+            self.get_nth_step(0).getLog('logname')
 
     @defer.inlineCallbacks
     def test_env(self):
@@ -1446,7 +1458,7 @@ class TestShellMixin(
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
         self.assertEqual(
-            self.step.getLog('stdio').header,
+            self.get_nth_step(0).getLog('stdio').header,
             'NOTE: worker does not allow master to override usePTY\n'
             'NOTE: worker does not allow master to specify interruptSignal\n'
             'program finished with exit code 0\n',
@@ -1465,7 +1477,9 @@ class TestShellMixin(
         )
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertEqual(self.step.getLog('stdio').header, 'program finished with exit code 0\n')
+        self.assertEqual(
+            self.get_nth_step(0).getLog('stdio').header, 'program finished with exit code 0\n'
+        )
 
     @defer.inlineCallbacks
     def test_description(self):
@@ -1488,5 +1502,5 @@ class TestShellMixin(
 
     def test_getResultSummary(self):
         self.setup_step(SimpleShellCommand(command=['a', ['b', 'c']]))
-        self.step.results = SUCCESS
-        self.assertEqual(self.step.getResultSummary(), {'step': "'a b ...'"})
+        self.get_nth_step(0).results = SUCCESS
+        self.assertEqual(self.get_nth_step(0).getResultSummary(), {'step': "'a b ...'"})

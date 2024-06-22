@@ -591,7 +591,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_log_file("warnings", warnings)
         yield self.run_step()
 
-        self.assertEqual(self.step.statistics, {'warnings': 2})
+        self.assertEqual(self.get_nth_step(0).statistics, {'warnings': 2})
 
     def test_constr_args(self):
         self.setup_step(

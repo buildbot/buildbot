@@ -677,6 +677,22 @@ class TestBuildStepMixin:
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
 
+        self._steps = []
+        self.build = None
+
+        # expectations
+
+        self._exp_results = []
+        self.exp_properties = {}
+        self.exp_missing_properties = []
+        self._exp_logfiles = {}
+        self._exp_logfiles_stderr = {}
+        self.exp_hidden = False
+        self.exp_exception = None
+        self._exp_test_result_sets = []
+        self._exp_test_results = []
+        self._exp_build_data = {}
+
     def tear_down_test_build_step(self):
         pass
 
@@ -741,28 +757,30 @@ class TestBuildStepMixin:
                 worker_version=worker_version, worker_env=worker_env, build_files=build_files
             )
 
-        self.step = buildstep.create_step_from_step_or_factory(step)
+        step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
         if want_default_work_dir:
-            self.step.workdir = self.step._workdir or 'wkdir'
+            step.workdir = step._workdir or 'wkdir'
 
-        self.build = self._setup_fake_build(
-            self._worker_version, self._worker_env, self._build_files
-        )
-        self.step.setBuild(self.build)
-        self.step.progress = mock.Mock(name="progress")
-        self.step.worker = self.worker
+        if self.build is None:
+            self.build = self._setup_fake_build(
+                self._worker_version, self._worker_env, self._build_files
+            )
+
+        step.setBuild(self.build)
+        step.progress = mock.Mock(name="progress")
+        step.worker = self.worker
 
         # step overrides
 
         def addLog(name, type='s', logEncoding=None):
             _log = logfile.FakeLogFile(name)
-            self.step.logs[name] = _log
-            self.step._connectPendingLogObservers()
+            step.logs[name] = _log
+            step._connectPendingLogObservers()
             return defer.succeed(_log)
 
-        self.step.addLog = addLog
+        step.addLog = addLog
 
         def addHTMLLog(name, html):
             _log = logfile.FakeLogFile(name)
@@ -770,17 +788,17 @@ class TestBuildStepMixin:
             _log.addStdout(html)
             return defer.succeed(None)
 
-        self.step.addHTMLLog = addHTMLLog
+        step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
             _log = logfile.FakeLogFile(name)
-            if name in self.step.logs:
+            if name in step.logs:
                 raise RuntimeError(f'Attempt to add log {name} twice to the logs')
-            self.step.logs[name] = _log
+            step.logs[name] = _log
             _log.addStdout(text)
             return defer.succeed(None)
 
-        self.step.addCompleteLog = addCompleteLog
+        step.addCompleteLog = addCompleteLog
 
         self._got_test_result_sets = []
         self._next_test_result_set_id = 1000
@@ -792,7 +810,7 @@ class TestBuildStepMixin:
             self._next_test_result_set_id += 1
             return defer.succeed(setid)
 
-        self.step.addTestResultSet = add_test_result_set
+        step.addTestResultSet = add_test_result_set
 
         self._got_test_results = []
 
@@ -808,7 +826,7 @@ class TestBuildStepMixin:
                 duration_ns,
             ))
 
-        self.step.addTestResult = add_test_result
+        step.addTestResult = add_test_result
 
         self._got_build_data = {}
 
@@ -816,34 +834,30 @@ class TestBuildStepMixin:
             self._got_build_data[name] = (value, source)
             return defer.succeed(None)
 
-        self.step.setBuildData = set_build_data
-
-        # expectations
-
-        self.exp_result = None
-        self.exp_state_string = None
-        self.exp_properties = {}
-        self.exp_missing_properties = []
-        self.exp_logfiles = {}
-        self._exp_logfiles_stderr = {}
-        self.exp_hidden = False
-        self.exp_exception = None
-        self._exp_test_result_sets = []
-        self._exp_test_results = []
-        self._exp_build_data = {}
+        step.setBuildData = set_build_data
 
         # check that the step's name is not None
-        self.assertNotEqual(self.step.name, None)
+        self.assertNotEqual(step.name, None)
 
-        return self.step
+        self._steps.append(step)
+        return step
+
+    @property
+    def step(self):
+        warn_deprecated(
+            "4.1.0",
+            "step attribute has been deprecated, use get_nth_step(0) as a replacement",
+        )
+        return self.get_nth_step(0)
+
+    def get_nth_step(self, index):
+        return self._steps[index]
 
     def expect_commands(self, *exp):
         self._expected_commands.extend(exp)
 
     def expect_outcome(self, result, state_string=None):
-        self.exp_result = result
-        if state_string:
-            self.exp_state_string = state_string
+        self._exp_results.append((result, state_string))
 
     def expect_property(self, property, value, source=None):
         self.exp_properties[property] = (value, source)
@@ -851,11 +865,11 @@ class TestBuildStepMixin:
     def expect_no_property(self, property):
         self.exp_missing_properties.append(property)
 
-    def expect_log_file(self, logfile, contents):
-        self.exp_logfiles[logfile] = contents
+    def expect_log_file(self, logfile, contents, step_index=0):
+        self._exp_logfiles.setdefault(step_index, {})[logfile] = contents
 
-    def expect_log_file_stderr(self, logfile, contents):
-        self._exp_logfiles_stderr[logfile] = contents
+    def expect_log_file_stderr(self, logfile, contents, step_index=0):
+        self._exp_logfiles_stderr.setdefault(step_index, {})[logfile] = contents
 
     def expect_build_data(self, name, value, source):
         self._exp_build_data[name] = (value, source)
@@ -876,8 +890,8 @@ class TestBuildStepMixin:
     def add_run_process_expect_env(self, d):
         self._master_run_process_expect_env.update(d)
 
-    def _dump_logs(self):
-        for l in self.step.logs.values():
+    def _dump_logs(self, step):
+        for l in step.logs.values():
             if l.stdout:
                 log.msg(f"{l.name} stdout:\n{l.stdout}")
             if l.stderr:
@@ -890,65 +904,71 @@ class TestBuildStepMixin:
 
         @returns: Deferred
         """
-        self.conn = connection.FakeConnection(
-            self, "WorkerForBuilder(connection)", self.step, self._interrupt_remote_command_numbers
-        )
-        self.step.setupProgress()
-        result = yield self.step.startStep(self.conn)
+        for step_i, step in enumerate(self._steps):
+            self.conn = connection.FakeConnection(
+                self, "WorkerForBuilder(connection)", step, self._interrupt_remote_command_numbers
+            )
+            step.setupProgress()
+            result = yield step.startStep(self.conn)
 
-        # finish up the debounced updateSummary before checking
-        self.reactor.advance(1)
+            # finish up the debounced updateSummary before checking
+            self.reactor.advance(1)
+
+            exp_result, exp_state_string = self._exp_results.pop(0)
+
+            # in case of unexpected result, display logs in stdout for
+            # debugging failing tests
+            if result != exp_result:
+                msg = (
+                    "unexpected result from step; "
+                    f"expected {exp_result} ({statusToString(exp_result)}), "
+                    f"got {result} ({statusToString(result)})"
+                )
+                log.msg(f"{msg}; dumping logs")
+                self._dump_logs(step)
+                raise AssertionError(f"{msg}; see logs")
+
+            if exp_state_string:
+                stepStateString = self.master.data.updates.stepStateString
+                stepids = list(stepStateString)
+                assert stepids, "no step state strings were set"
+                self.assertEqual(
+                    exp_state_string,
+                    stepStateString[stepids[0]],
+                    f"expected state_string {exp_state_string!r}, got "
+                    f"{stepStateString[stepids[0]]!r}",
+                )
+
+            properties = self.build.getProperties()
+
+            for pn, (pv, ps) in self.exp_properties.items():
+                self.assertTrue(properties.hasProperty(pn), f"missing property '{pn}'")
+                self.assertEqual(properties.getProperty(pn), pv, f"property '{pn}'")
+                if ps is not None:
+                    self.assertEqual(
+                        properties.getPropertySource(pn),
+                        ps,
+                        f"property {pn!r} source has source {properties.getPropertySource(pn)!r}",
+                    )
+
+            for pn in self.exp_missing_properties:
+                self.assertFalse(properties.hasProperty(pn), f"unexpected property '{pn}'")
+
+            if step_i in self._exp_logfiles:
+                for l, exp in self._exp_logfiles[step_i].items():
+                    got = step.logs[l].stdout
+                    self._match_log(exp, got, 'stdout')
+
+            if step_i in self._exp_logfiles_stderr:
+                for l, exp in self._exp_logfiles_stderr[step_i].items():
+                    got = step.logs[l].stderr
+                    self._match_log(exp, got, 'stderr')
+
         if self._expected_commands:
             log.msg("un-executed remote commands:")
             for rc in self._expected_commands:
                 log.msg(repr(rc))
             raise AssertionError("un-executed remote commands; see logs")
-
-        # in case of unexpected result, display logs in stdout for
-        # debugging failing tests
-        if result != self.exp_result:
-            msg = (
-                "unexpected result from step; "
-                f"expected {self.exp_result} ({statusToString(self.exp_result)}), "
-                f"got {result} ({statusToString(result)})"
-            )
-            log.msg(f"{msg}; dumping logs")
-            self._dump_logs()
-            raise AssertionError(f"{msg}; see logs")
-
-        if self.exp_state_string:
-            stepStateString = self.master.data.updates.stepStateString
-            stepids = list(stepStateString)
-            assert stepids, "no step state strings were set"
-            self.assertEqual(
-                self.exp_state_string,
-                stepStateString[stepids[0]],
-                f"expected state_string {self.exp_state_string!r}, got "
-                f"{stepStateString[stepids[0]]!r}",
-            )
-
-        properties = self.build.getProperties()
-
-        for pn, (pv, ps) in self.exp_properties.items():
-            self.assertTrue(properties.hasProperty(pn), f"missing property '{pn}'")
-            self.assertEqual(properties.getProperty(pn), pv, f"property '{pn}'")
-            if ps is not None:
-                self.assertEqual(
-                    properties.getPropertySource(pn),
-                    ps,
-                    f"property {pn!r} source has source {properties.getPropertySource(pn)!r}",
-                )
-
-        for pn in self.exp_missing_properties:
-            self.assertFalse(properties.hasProperty(pn), f"unexpected property '{pn}'")
-
-        for l, exp in self.exp_logfiles.items():
-            got = self.step.logs[l].stdout
-            self._match_log(exp, got, 'stdout')
-
-        for l, exp in self._exp_logfiles_stderr.items():
-            got = self.step.logs[l].stderr
-            self._match_log(exp, got, 'stderr')
 
         if self.exp_exception:
             self.assertEqual(len(self.flushLoggedErrors(self.exp_exception)), 1)

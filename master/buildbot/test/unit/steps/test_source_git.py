@@ -1765,7 +1765,7 @@ class TestGit(
                 repourl='http://github.com/buildbot/buildbot.git', mode='incremental', progress=True
             )
         )
-        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
+        self.get_nth_step(0).build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expect_commands(
             ExpectShell(workdir='wkdir', interrupt_signal='TERM', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2787,7 +2787,7 @@ class TestGit(
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git', mode='incremental')
         )
-        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
+        self.get_nth_step(0).build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expect_commands(
             ExpectShell(workdir='wkdir', interrupt_signal='TERM', command=['git', '--version'])
             .stdout('git version 1.7.5')

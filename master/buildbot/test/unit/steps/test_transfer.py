@@ -142,7 +142,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectUploadFile(
@@ -170,7 +170,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectUploadFile(
@@ -189,7 +189,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         yield self.run_step()
 
-        self.step.addURL.assert_called_once_with(
+        self.get_nth_step(0).addURL.assert_called_once_with(
             os.path.basename(self.destfile), "http://server/file"
         )
 
@@ -204,7 +204,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectUploadFile(
@@ -223,7 +223,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         yield self.run_step()
 
-        self.step.addURL.assert_called_once_with("testfile", "http://server/file")
+        self.get_nth_step(0).addURL.assert_called_once_with("testfile", "http://server/file")
 
     def testFailure(self):
         self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
@@ -373,7 +373,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectUploadDirectory(
@@ -392,7 +392,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
         yield self.run_step()
 
-        self.step.addURL.assert_called_once_with("destdir", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("destdir", "http://server/dir")
 
     @defer.inlineCallbacks
     def test_url_text(self):
@@ -405,7 +405,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectUploadDirectory(
@@ -424,7 +424,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
         yield self.run_step()
 
-        self.step.addURL.assert_called_once_with("url text", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("url text", "http://server/dir")
 
     @defer.inlineCallbacks
     def testFailure(self):
@@ -760,7 +760,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectStat(file='srcfile', workdir='wkdir').stat_file().exit(0),
@@ -780,7 +780,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         yield self.run_step()
 
-        self.step.addURL.assert_called_once_with("destdir", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("destdir", "http://server/dir")
 
     @defer.inlineCallbacks
     def test_url_text(self):
@@ -793,7 +793,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
             )
         )
 
-        self.step.addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()
 
         self.expect_commands(
             ExpectStat(file='srcfile', workdir='wkdir').stat_file().exit(0),
@@ -813,7 +813,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         yield self.run_step()
 
-        self.step.addURL.assert_called_once_with("url text", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("url text", "http://server/dir")
 
     def testFailure(self):
         self.setup_step(
@@ -1065,8 +1065,8 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
     def testBasic(self):
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
-        self.step.worker = Mock()
-        self.step.remote = Mock()
+        self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
         read = []
@@ -1094,8 +1094,8 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
-        self.step.worker = Mock()
-        self.step.remote = Mock()
+        self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
         read = []
@@ -1165,8 +1165,8 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         msg = {"message": 'Hello World'}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
-        self.step.worker = Mock()
-        self.step.remote = Mock()
+        self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
         read = []
@@ -1194,8 +1194,8 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         msg = {"message": Interpolate('Hello World')}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
-        self.step.worker = Mock()
-        self.step.remote = Mock()
+        self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
         read = []
@@ -1264,7 +1264,7 @@ class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.
     @defer.inlineCallbacks
     def testBasic(self):
         self.setup_step(transfer.JSONPropertiesDownload("props.json"))
-        self.step.build.setProperty('key1', 'value1', 'test')
+        self.get_nth_step(0).build.setProperty('key1', 'value1', 'test')
         read = []
         self.expect_commands(
             ExpectDownloadFile(

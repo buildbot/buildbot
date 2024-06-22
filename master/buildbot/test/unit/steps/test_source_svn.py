@@ -196,7 +196,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', 'a10', 'SVN')
         yield self.run_step()
 
-        revision = self.step.getProperty('got_revision')
+        revision = self.get_nth_step(0).getProperty('got_revision')
         with self.assertRaises(ValueError):
             int(revision)
 

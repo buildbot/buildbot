@@ -21,6 +21,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -37,8 +38,9 @@ class TestStep(buildstep.ShellMixin, buildstep.BuildStep):
             cmd = yield self.makeRemoteShellCommand(command=["echo", "build_file", file])
             yield self.runCommand(cmd)
         version = self.build.getWorkerCommandVersion("shell", None)
-        cmd = yield self.makeRemoteShellCommand(command=["echo", "version", version])
-        yield self.runCommand(cmd)
+        if version != "99.99":
+            cmd = yield self.makeRemoteShellCommand(command=["echo", "version", version])
+            yield self.runCommand(cmd)
         cmd = yield self.makeRemoteShellCommand(command=["echo", "done", self.text])
         yield self.runCommand(cmd)
         return SUCCESS
@@ -92,8 +94,31 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
             ExpectShell(
                 workdir="wkdir", command=["echo", "version", "2.9"], env={"key": "value"}
             ).exit(0),
-            ExpectShell(workdir="wkdir", command=["echo", "done", "step1"], env={"key": "value"}).exit(0),
+            ExpectShell(
+                workdir="wkdir", command=["echo", "done", "step1"], env={"key": "value"}
+            ).exit(0),
         )
         self.expect_outcome(SUCCESS)
 
+        yield self.run_step()
+
+    def test_get_nth_step(self):
+        self.setup_step(TestStep("step1"))
+        self.assertTrue(isinstance(self.get_nth_step(0), TestStep))
+
+        with assertProducesWarning(DeprecatedApiWarning, "step attribute has been deprecated"):
+            self.assertTrue(isinstance(self.step, TestStep))
+
+    @defer.inlineCallbacks
+    def test_multiple_steps(self):
+        self.setup_step(TestStep("step1"))
+        self.setup_step(TestStep("step2"))
+        self.expect_commands(
+            ExpectShell(workdir="wkdir", command=["echo", "done", "step1"]).stdout("out1").exit(0),
+            ExpectShell(workdir="wkdir", command=["echo", "done", "step2"]).stdout("out2").exit(0),
+        )
+        self.expect_log_file("stdio", "out1\n", step_index=0)
+        self.expect_log_file("stdio", "out2\n", step_index=1)
+        self.expect_outcome(SUCCESS)
+        self.expect_outcome(SUCCESS)
         yield self.run_step()

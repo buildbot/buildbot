@@ -253,11 +253,11 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_installdir(self):
         self.setup_step(VCx(installdir=r'C:\I'))
-        self.step.exp_installdir = r'C:\I'
+        self.get_nth_step(0).exp_installdir = r'C:\I'
         self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
-        self.assertEqual(self.step.installdir, r'C:\I')
+        self.assertEqual(self.get_nth_step(0).installdir, r'C:\I')
 
     def test_evaluate_result_failure(self):
         self.setup_step(VCx())
@@ -343,9 +343,8 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
 
-        self.assertEqual(
-            [self.step.projectfile, self.step.config, self.step.project], ['aa', 'bb', 'cc']
-        )
+        step = self.get_nth_step(0)
+        self.assertEqual([step.projectfile, step.config, step.project], ['aa', 'bb', 'cc'])
 
 
 class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
@@ -639,7 +638,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
 
-        self.assertEqual(self.step.arch, 'x64')
+        self.assertEqual(self.get_nth_step(0).arch, 'x64')
 
 
 class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):

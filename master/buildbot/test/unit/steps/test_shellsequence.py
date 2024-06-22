@@ -21,6 +21,7 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.steps import master
 from buildbot.steps import shellsequence
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
@@ -130,26 +131,22 @@ class TestOneShellCommand(
         return self.run_step()
 
     @defer.inlineCallbacks
-    def testShellArgsAreRenderedAnewAtEachBuild(self):
+    def testShellArgsAreRenderedAnewAtEachInvocation(self):
         """Unit test to ensure that ShellArg instances are properly re-rendered.
-
-        This unit test makes sure that ShellArg instances are rendered anew at
-        each new build.
+        This unit test makes sure that ShellArg instances are rendered anew at each invocation
         """
         arg = shellsequence.ShellArg(command=WithProperties('make %s', 'project'))
         step = shellsequence.ShellSequence(commands=[arg], workdir='build')
 
-        # First "build"
+        self.setup_step(step)
+        self.setup_step(master.SetProperty(property="project", value="BUILDBOT-TEST-2"))
         self.setup_step(step)
         self.build.setProperty("project", "BUILDBOT-TEST-1", "TEST")
-        self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0))
+        self.expect_commands(
+            ExpectShell(workdir='build', command='make BUILDBOT-TEST-1').exit(0),
+            ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0),
+        )
         self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST-1'")
-        yield self.run_step()
-
-        # Second "build"
-        self.setup_step(step)
-        self.build.setProperty("project", "BUILDBOT-TEST-2", "TEST")
-        self.expect_commands(ExpectShell(workdir='build', command='make BUILDBOT-TEST-2').exit(0))
+        self.expect_outcome(result=SUCCESS, state_string="Set")
         self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST-2'")
-
         yield self.run_step()

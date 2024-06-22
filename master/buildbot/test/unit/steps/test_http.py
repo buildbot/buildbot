@@ -210,8 +210,8 @@ OK:key1=value1""",
         self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         yield self.run_step()
-        self.assertIn("X-Test: <HIDDEN>", self.step.logs['log'].header)
-        self.assertIn("Content-Length: <HIDDEN>", self.step.logs['log'].header)
+        self.assertIn("X-Test: <HIDDEN>", self.get_nth_step(0).logs['log'].header)
+        self.assertIn("Content-Length: <HIDDEN>", self.get_nth_step(0).logs['log'].header)
 
     def test_params_renderable(self):
         url = self.getURL()

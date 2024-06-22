@@ -175,7 +175,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         def getAllGotRevisions():
             return got_revisions
 
-        self.step.getAllGotRevisions = getAllGotRevisions
+        self.get_nth_step(0).getAllGotRevisions = getAllGotRevisions
 
         self.exp_add_sourcestamp = None
         self.exp_a_trigger = None
@@ -187,7 +187,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def run_step(self, results_dict=None):
         if results_dict is None:
             results_dict = {}
-        if self.step.waitForFinish:
+        if self.get_nth_step(0).waitForFinish:
             for i in [11, 22, 33, 44]:
                 yield self.master.db.builds.finishBuild(
                     BRID_TO_BID(i), results_dict.get(i, SUCCESS)
@@ -195,7 +195,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         d = super().run_step()
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
-        if self.step.waitForFinish:
+        if self.get_nth_step(0).waitForFinish:
             self.assertFalse(d.called)
         else:
             self.assertTrue(d.called)
@@ -528,13 +528,13 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_waitForFinish_exception(self):
         yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
-        self.step.addCompleteLog = Mock()
+        self.get_nth_step(0).addCompleteLog = Mock()
         self.scheduler_b.exception = True
         self.expect_outcome(result=EXCEPTION, state_string='triggered a, b')
         self.expectTriggeredWith(a=(True, [], {}), b=(True, [], {}))
         self.expectTriggeredLinks('a')  # b doesn't return a brid
         yield self.run_step()
-        self.assertEqual(len(self.step.addCompleteLog.call_args_list), 1)
+        self.assertEqual(len(self.get_nth_step(0).addCompleteLog.call_args_list), 1)
 
     @defer.inlineCallbacks
     def test_virtual_builder(self):
@@ -585,7 +585,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         # interrupt before the callLater representing the Triggerable
         # schedulers completes
-        self.step.interrupt(failure.Failure(RuntimeError('oh noes')))
+        self.get_nth_step(0).interrupt(failure.Failure(RuntimeError('oh noes')))
 
         yield d
 
@@ -601,7 +601,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         # interrupt before the callLater representing the Triggerable
         # schedulers completes
         self.build.conn = None
-        self.step.interrupt(failure.Failure(RuntimeError('oh noes')))
+        self.get_nth_step(0).interrupt(failure.Failure(RuntimeError('oh noes')))
 
         yield d
 

@@ -51,7 +51,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         **kwargs,
     ):
         self.setup_step(mswin.Robocopy(source, destination, **kwargs))
-        self.step.rendered = True
+        self.get_nth_step(0).rendered = True
 
         command = ['robocopy', source, destination]
         if expected_args:
