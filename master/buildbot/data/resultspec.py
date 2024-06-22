@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -24,6 +25,30 @@ from buildbot.data import base
 
 if TYPE_CHECKING:
     from typing import Sequence
+
+
+class NotSupportedFieldTypeError(TypeError):
+    def __init__(self, data, *args: object) -> None:
+        super().__init__(
+            (
+                f"Unsupported data type '{type(data)}': "
+                "must be an instance of Dict or a Dataclass."
+            ),
+            *args,
+        )
+
+
+def _data_getter(d, fld):
+    if isinstance(d, dict):
+        return d[fld]
+    if dataclasses.is_dataclass(d):
+        try:
+            return getattr(d, fld)
+        except AttributeError as e:
+            # backward compatibility when only dict was allowed
+            raise KeyError(*e.args) from e
+
+    raise NotSupportedFieldTypeError(d)
 
 
 class FieldBase:
@@ -104,7 +129,7 @@ class FieldBase:
         fld = self.field
         v = self.values
         f = self.getOperator()
-        return (d for d in data if f((d[fld] if isinstance(d, dict) else getattr(d, fld)), v))
+        return (d for d in data if f(_data_getter(d, fld), v))
 
     def __repr__(self):
         return f"resultspec.{self.__class__.__name__}('{self.field}','{self.op}',{self.values})"
@@ -381,14 +406,18 @@ class ResultSpec:
             fields = set(self.fields)
 
             def includeFields(d):
-                return dict((k, v) for k, v in d.items() if k in fields)
+                if isinstance(d, dict):
+                    return dict((k, v) for k, v in d.items() if k in fields)
+                elif dataclasses.is_dataclass(d):
+                    raise TypeError("includeFields can't filter fields of dataclasses")
+                raise NotSupportedFieldTypeError(d)
 
             applyFields = includeFields
         else:
             fields = None
             applyFields = None
 
-        if isinstance(data, dict):
+        if isinstance(data, dict) or dataclasses.is_dataclass(data):
             # item details
             if fields:
                 data = applyFields(data)
@@ -445,8 +474,7 @@ class ResultSpec:
                             # it means sort by 'lastName' in reverse.
                             k = k[1:]
                             doReverse = True
-                        val = elem[k] if isinstance(elem, dict) else getattr(elem, k)
-                        val = NoneComparator(val)
+                        val = NoneComparator(_data_getter(elem, k))
                         if doReverse:
                             val = ReverseComparator(val)
                         compareKey.append(val)

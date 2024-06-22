@@ -372,6 +372,7 @@ cvs
 cvsroot
 daemonize
 dan
+dataclasses
 darcs
 datafields
 datareceived
