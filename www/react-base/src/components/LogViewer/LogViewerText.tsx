@@ -21,7 +21,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {generateStyleElement} from "../../util/AnsiEscapeCodes";
 import {observer} from "mobx-react";
 import {Log, useDataAccessor} from "buildbot-data-js";
-import {FixedSizeList, ListOnItemsRenderedProps} from 'buildbot-ui';
+import {FixedSizeList, ListOnItemsRenderedProps, FixedSizeListOuterProps} from 'buildbot-ui';
 import AutoSizer, {Size} from "react-virtualized-auto-sizer";
 import {digitCount} from "../../util/Math";
 import {LogDownloadButtons} from "../LogDownloadButtons/LogDownloadButtons";
@@ -120,7 +120,8 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   const searchInputRef = useRef<HTMLInputElement>(null);
   useHotkeys('Mod+F', () => { searchInputRef.current?.focus(); }, {preventDefault: true});
 
-  const outerElementType = useMemo(() => forwardRef<HTMLDivElement>((props, ref) => (
+  const outerElementType = useMemo(() => forwardRef<HTMLDivElement, FixedSizeListOuterProps>(
+    (props, ref) => (
     <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props}/>
   )), []);
 
