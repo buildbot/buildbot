@@ -250,3 +250,74 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
             "plugins": {},
         }
         self.assertEqual(config_json, exp)
+
+
+class IndexResourceReactTestOldPath(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    def setUp(self):
+        self.setup_test_reactor()
+
+    def get_react_base_path(self):
+        path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        for _ in range(0, 4):
+            path = os.path.dirname(path)
+        return os.path.join(path, 'www/react-base')
+
+    def find_matching_line(self, lines, match, start_i):
+        for i in range(start_i, len(lines)):
+            if match in lines[i]:
+                return i
+        return None
+
+    def extract_config_json(self, res):
+        lines = res.split('\n')
+
+        first_line = self.find_matching_line(lines, '<script id="bb-config">', 0)
+        if first_line is None:
+            raise RuntimeError("Could not find first config line")
+        first_line += 1
+
+        last_line = self.find_matching_line(lines, '</script>', first_line)
+        if last_line is None:
+            raise RuntimeError("Could not find last config line")
+
+        config_json = '\n'.join(lines[first_line:last_line])
+        config_json = config_json.replace('window.buildbotFrontendConfig = ', '').strip()
+        config_json = config_json.strip(';').strip()
+        return json.loads(config_json)
+
+    @defer.inlineCallbacks
+    def test_render(self):
+        _auth = auth.NoAuth()
+        _auth.maybeAutoLogin = mock.Mock()
+
+        custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
+
+        master = self.make_master(
+            url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={'base_react': True}
+        )
+
+        # IndexResourceReact only uses static path to get index.html. In the source checkout
+        # index.html resides not in www/base/public but in www/base. Thus
+        # base path is sent to IndexResourceReact.
+        rsrc = config.IndexResourceReact(master, self.get_react_base_path())
+        rsrc.reconfigResource(master.config)
+
+        vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
+
+        res = yield self.render_resource(rsrc, b'/')
+        config_json = self.extract_config_json(bytes2unicode(res))
+
+        _auth.maybeAutoLogin.assert_called_with(mock.ANY)
+        exp = {
+            "authz": {},
+            "titleURL": "http://buildbot.net",
+            "versions": vjson,
+            "title": "Buildbot",
+            "auth": {"name": "NoAuth"},
+            "user": {"anonymous": True},
+            "buildbotURL": "h:/a/b/",
+            "multiMaster": False,
+            "port": None,
+            "plugins": {},
+        }
+        self.assertEqual(config_json, exp)

@@ -1,0 +1,387 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RawData component object with array of objects 1`] = `
+<dl
+  className="dl-horizontal"
+>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      array
+    </dt>
+    <dd>
+      <svg
+        className="rotate clickable"
+        fill="currentColor"
+        height="1em"
+        onClick={[Function]}
+        stroke="currentColor"
+        strokeWidth="0"
+        style={
+          Object {
+            "color": undefined,
+          }
+        }
+        viewBox="0 0 512 512"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M256 8c137 0 248 111 248 248S393 504 256 504 8 393 8 256 119 8 256 8zm113.9 231L234.4 103.5c-9.4-9.4-24.6-9.4-33.9 0l-17 17c-9.4 9.4-9.4 24.6 0 33.9L285.1 256 183.5 357.6c-9.4 9.4-9.4 24.6 0 33.9l17 17c9.4 9.4 24.6 9.4 33.9 0L369.9 273c9.4-9.4 9.4-24.6 0-34z"
+        />
+      </svg>
+      <span>
+        [{"str":"string"},{"int":123},{"float":123.4},{"boolean":true},{"null":null},{}]
+      </span>
+    </dd>
+  </div>
+</dl>
+`;
+
+exports[`RawData component object with array of objects expanded 1`] = `
+<dl
+  className="dl-horizontal"
+>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      array
+    </dt>
+    <dd>
+      <svg
+        className="rotate clickable"
+        fill="currentColor"
+        height="1em"
+        onClick={[Function]}
+        stroke="currentColor"
+        strokeWidth="0"
+        style={
+          Object {
+            "color": undefined,
+          }
+        }
+        viewBox="0 0 512 512"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zM273 369.9l135.5-135.5c9.4-9.4 9.4-24.6 0-33.9l-17-17c-9.4-9.4-24.6-9.4-33.9 0L256 285.1 154.4 183.5c-9.4-9.4-24.6-9.4-33.9 0l-17 17c-9.4 9.4-9.4 24.6 0 33.9L239 369.9c9.4 9.4 24.6 9.4 34 0z"
+        />
+      </svg>
+      <ul>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                str
+              </dt>
+              <dd>
+                string
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                int
+              </dt>
+              <dd>
+                123
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                float
+              </dt>
+              <dd>
+                123.4
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                boolean
+              </dt>
+              <dd>
+                true
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                null
+              </dt>
+              <dd>
+                null
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <dl
+            className="dl-horizontal"
+          >
+            <div
+              className="bb-raw-data-key-value"
+            >
+              <dt>
+                undefined
+              </dt>
+              <dd>
+                undefined
+                 
+              </dd>
+            </div>
+          </dl>
+        </li>
+      </ul>
+    </dd>
+  </div>
+</dl>
+`;
+
+exports[`RawData component observable object 1`] = `
+<dl
+  className="dl-horizontal"
+>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      str
+    </dt>
+    <dd>
+      string
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      int
+    </dt>
+    <dd>
+      123
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      float
+    </dt>
+    <dd>
+      123.4
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      boolean
+    </dt>
+    <dd>
+      true
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      array
+    </dt>
+    <dd>
+      321,string,true
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      null
+    </dt>
+    <dd>
+      null
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      undefined
+    </dt>
+    <dd>
+      undefined
+       
+    </dd>
+  </div>
+</dl>
+`;
+
+exports[`RawData component observable object with array of objects 1`] = `
+<dl
+  className="dl-horizontal"
+>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      array
+    </dt>
+    <dd>
+      <svg
+        className="rotate clickable"
+        fill="currentColor"
+        height="1em"
+        onClick={[Function]}
+        stroke="currentColor"
+        strokeWidth="0"
+        style={
+          Object {
+            "color": undefined,
+          }
+        }
+        viewBox="0 0 512 512"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M256 8c137 0 248 111 248 248S393 504 256 504 8 393 8 256 119 8 256 8zm113.9 231L234.4 103.5c-9.4-9.4-24.6-9.4-33.9 0l-17 17c-9.4 9.4-9.4 24.6 0 33.9L285.1 256 183.5 357.6c-9.4 9.4-9.4 24.6 0 33.9l17 17c9.4 9.4 24.6 9.4 33.9 0L369.9 273c9.4-9.4 9.4-24.6 0-34z"
+        />
+      </svg>
+      <span>
+        [{"str":"string"},{"int":123},{"float":123.4},{"boolean":true},{"null":null},{}]
+      </span>
+    </dd>
+  </div>
+</dl>
+`;
+
+exports[`RawData component simple object 1`] = `
+<dl
+  className="dl-horizontal"
+>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      str
+    </dt>
+    <dd>
+      string
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      int
+    </dt>
+    <dd>
+      123
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      float
+    </dt>
+    <dd>
+      123.4
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      boolean
+    </dt>
+    <dd>
+      true
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      array
+    </dt>
+    <dd>
+      321,string,true
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      null
+    </dt>
+    <dd>
+      null
+       
+    </dd>
+  </div>
+  <div
+    className="bb-raw-data-key-value"
+  >
+    <dt>
+      undefined
+    </dt>
+    <dd>
+      undefined
+       
+    </dd>
+  </div>
+</dl>
+`;

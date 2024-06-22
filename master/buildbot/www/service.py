@@ -33,11 +33,11 @@ from twisted.web import resource
 from twisted.web import server
 from zope.interface import implementer
 
-from buildbot import config
 from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.warnings import warn_deprecated
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
@@ -273,11 +273,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def refresh_base_plugin_name(self, new_config):
         if 'base_react' in new_config.www.get('plugins', {}):
-            config.error(
-                "base_react is no longer supported. Remove buildbot-www-react and install"
-                "buildbot-www package"
+            warn_deprecated(
+                "4.0.0",
+                "base_react is no longer supported. Remove buildbot-www-react and install "
+                "buildbot-www package",
             )
-            self.base_plugin_name = 'base'
+            self.base_plugin_name = 'base_react'
         else:
             self.base_plugin_name = 'base'
 
@@ -316,6 +317,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # we're going to need at least the base plugin (buildbot-www or buildbot-www-react)
         if self.base_plugin_name not in self.apps:
+            if self.base_plugin_name == 'base_react':
+                raise RuntimeError("could not find buildbot-www-react; is it installed?")
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
         root = self.apps.get(self.base_plugin_name).resource

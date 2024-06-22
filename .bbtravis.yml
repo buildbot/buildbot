@@ -34,6 +34,10 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl_old_path NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz_old_path NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl_old_path NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz_old_path NUM_CPU=2 MEMORY_SIZE=2G
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
@@ -78,10 +82,10 @@ install:
       rm -rf /tmp/bbvenv
       python$PYTHON -m venv /tmp/bbvenv
   - /tmp/bbvenv/bin/pip install -U pip wheel
-  - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
+  - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "e2e_react_whl_old_path", "e2e_react_tgz_old_path", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
   # On python 3.12 workaround done in dcbc28d1431e1aae892f7fdc0e266253365bc11e is no longer enough.
-  - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
+  - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "e2e_react_whl_old_path", "e2e_react_tgz_old_path", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -e master -e worker
   - condition: TESTS == "dev_virtualenv"
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
@@ -191,7 +195,7 @@ script:
       make docs-release-spelling
 
   - title: maketarballs
-    condition: TESTS in ("e2e_react_whl", "e2e_react_tgz")
+    condition: TESTS in ("e2e_react_whl", "e2e_react_tgz", "e2e_react_whl_old_path", "e2e_react_tgz_old_path")
     cmd:  |
       export PATH=/tmp/bbvenv/bin/:$PATH
       make tarballs
@@ -203,6 +207,14 @@ script:
   - title: tarballs end to end tests
     condition: TESTS == "e2e_react_tgz"
     cmd: ./common/smokedist-react.sh tar.gz
+
+  - title: end to end tests (old path)
+    condition: TESTS == "e2e_react_whl_old_path"
+    cmd: BB_TEST_OLD_REACT_PATH=1 ./common/smokedist-react.sh whl
+
+  - title: tarballs end to end tests (old path)
+    condition: TESTS == "e2e_react_tgz_old_path"
+    cmd: BB_TEST_OLD_REACT_PATH=1 ./common/smokedist-react.sh tar.gz
 
 notifications:
   email: false

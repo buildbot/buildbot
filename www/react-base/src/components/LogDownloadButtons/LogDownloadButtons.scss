@@ -1,0 +1,7 @@
+
+.bb-log-download-button.btn {
+  // This fixes wrong vertical alignment in relation to other elements if the download button is part of the text
+  // line with other content.
+  display: inline;
+  vertical-align: top;
+}

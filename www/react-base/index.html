@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width">
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Buildbot Web UI"/>
+    <link id="bbicon" href="/icon.png" rel="icon">
+    <link href="/icon.svg" title="Buildbot" rel="fluid-icon">
+    <title>Buildbot</title>
+    <!-- BUILDBOT_THEME_CSS_PLACEHOLDER_BEGIN -->
+    <style id="bb-style">
+      /* when updating the default colors update the following too:
+         - documentation at master/docs/manual/configuration/www.rst
+         - the actual color generation at master/buildbot/www/config.py _known_theme_variables
+      */
+      :root {
+        --bb-sidebar-background-color: #30426a;
+        --bb-sidebar-header-background-color: #273759;
+        --bb-sidebar-header-text-color: #fff;
+        --bb-sidebar-title-text-color: #627cb7;
+        --bb-sidebar-footer-background-color: #273759;
+        --bb-sidebar-button-text-color: #b2bfdc;
+        --bb-sidebar-button-hover-background-color: #1b263d;
+        --bb-sidebar-button-hover-text-color: #fff;
+        --bb-sidebar-button-current-background-color: #273759;
+        --bb-sidebar-button-current-text-color: #b2bfdc;
+        --bb-sidebar-stripe-hover-color: #e99d1a;
+        --bb-sidebar-stripe-current-color: #8c5e10;
+      }
+    </style>
+    <!-- BUILDBOT_THEME_CSS_PLACEHOLDER_END -->
+  </head>
+  <body>
+    <div id="outdated"></div>
+    <noscript>You need to enable JavaScript to view this website.</noscript>
+    <div id="root"></div>
+  </body>
+  <script src="/browser-warning.js"></script>
+  <link href="/browser-warning.css" rel="stylesheet">
+  <script src="/src/browser-warning-list.js"></script>
+  <!-- BUILDBOT_CONFIG_PLACEHOLDER -->
+  <script src="/src/index.tsx" type="module"></script>
+</html>

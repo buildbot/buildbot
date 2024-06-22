@@ -1,0 +1,38 @@
+
+tr.bb-console-table-first-row {
+  background-color: #fff !important;
+  th {
+    border: none;
+  }
+}
+
+.bb-console-table-builder {
+  position: relative;
+  float: left;
+  font-size: 1em;
+  width: 1.5em;
+  text-align: center;
+  transform: rotate(-25deg) ;
+  transform-origin: 0% 100%;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bb-console-tag-row {
+  td {
+    margin: 0;
+    padding: 0;
+  }
+  span {
+    position: relative;
+    float: left;
+    font-size: 10px;
+    overflow: hidden;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+}
+
+.bb-console-changes-expand-icon {
+  float: left;
+}
