@@ -51,11 +51,6 @@ def get_www_frontend_config_dict(master, www_config):
     # This config is shared with the frontend.
     config = dict(www_config)
 
-    # base_react is not a real plugin, so don't send it to frontend
-    if 'plugins' in config and 'base_react' in config['plugins']:
-        config['plugins'] = dict(config['plugins'])
-        del config['plugins']['base_react']
-
     versions = get_environment_versions()
     vs = config.get('versions')
     if isinstance(vs, list):

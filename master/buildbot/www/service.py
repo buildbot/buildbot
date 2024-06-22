@@ -33,6 +33,7 @@ from twisted.web import resource
 from twisted.web import server
 from zope.interface import implementer
 
+from buildbot import config
 from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import service
@@ -272,23 +273,26 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def refresh_base_plugin_name(self, new_config):
         if 'base_react' in new_config.www.get('plugins', {}):
-            self.base_plugin_name = 'base_react'
+            config.error(
+                "base_react is no longer supported. Remove buildbot-www-react and install"
+                "buildbot-www package"
+            )
+            self.base_plugin_name = 'base'
         else:
             self.base_plugin_name = 'base'
 
     def configPlugins(self, root, new_config):
         plugin_root = root
-        if self.base_plugin_name == 'base_react':
-            current_version = parse_version(twisted.__version__)
-            if current_version < parse_version("22.10.0"):
-                from twisted.web.resource import NoResource
+        current_version = parse_version(twisted.__version__)
+        if current_version < parse_version("22.10.0"):
+            from twisted.web.resource import NoResource
 
-                plugin_root = NoResource()
-            else:
-                from twisted.web.pages import notFound
+            plugin_root = NoResource()
+        else:
+            from twisted.web.pages import notFound
 
-                plugin_root = notFound()
-            root.putChild(b"plugins", plugin_root)
+            plugin_root = notFound()
+        root.putChild(b"plugins", plugin_root)
 
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
@@ -312,8 +316,6 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # we're going to need at least the base plugin (buildbot-www or buildbot-www-react)
         if self.base_plugin_name not in self.apps:
-            if self.base_plugin_name == 'base_react':
-                raise RuntimeError("could not find buildbot-www-react; is it installed?")
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
         root = self.apps.get(self.base_plugin_name).resource
