@@ -44,8 +44,9 @@ class BuildbotWWWPkg(unittest.TestCase):
             apps[ep.name] = ep.load()
 
         print(apps["%(epName)s"])
+        print(apps["%(epName)s"].resource.listNames())
         expected_file = "scripts.js"
-        if "%(epName)s" == "base_react":
+        if "%(epName)s" == "base":
             expected_file = "index.html"
         assert(expected_file in apps["%(epName)s"].resource.listNames())
         assert(re.match(r'\d+\.\d+\.\d+', apps["%(epName)s"].version) is not None)
