@@ -210,7 +210,7 @@ the following approach might be helpful:
             oldest_request_time = yield b.getOldestRequestTime()
             return (isBuilding(b), newest_complete_time, oldest_request_time)
 
-        async_sort(builders, key)
+        yield async_sort(builders, key)
         return builders
 
     c['prioritizeBuilders'] = prioritizeBuilders
