@@ -122,9 +122,8 @@ class TestShellCommandExecution(
         return self.run_step()
 
     def test_run_env(self):
-        self.setup_step(
-            shell.ShellCommand(workdir='build', command="echo hello"), worker_env={"DEF": 'HERE'}
-        )
+        self.setup_build(worker_env={"DEF": 'HERE'})
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"))
         self.expect_commands(
             ExpectShell(workdir='build', command='echo hello', env={"DEF": 'HERE'}).exit(0)
         )
@@ -132,9 +131,9 @@ class TestShellCommandExecution(
         return self.run_step()
 
     def test_run_env_override(self):
+        self.setup_build(worker_env={"ABC": 'XXX', "DEF": 'HERE'})
         self.setup_step(
             shell.ShellCommand(workdir='build', env={'ABC': '123'}, command="echo hello"),
-            worker_env={"ABC": 'XXX', "DEF": 'HERE'},
         )
         self.expect_commands(
             ExpectShell(
@@ -153,10 +152,8 @@ class TestShellCommandExecution(
         return self.run_step()
 
     def test_run_usePTY_old_worker(self):
-        self.setup_step(
-            shell.ShellCommand(workdir='build', command="echo hello", usePTY=True),
-            worker_version={"shell": '1.1'},
-        )
+        self.setup_build(worker_version={"shell": '1.1'})
+        self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=True))
         self.expect_commands(ExpectShell(workdir='build', command='echo hello').exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()

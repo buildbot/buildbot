@@ -131,7 +131,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             override_commands = []
         commands = (
             [
-                self.ExpectShell(command=['bash', '-c', self.step._getCleanupCommand()]),
+                self.ExpectShell(command=['bash', '-c', self.get_nth_step(0)._getCleanupCommand()]),
                 self.ExpectShell(
                     command=[
                         'repo',
@@ -405,7 +405,9 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.build.setProperty("repo_download2", "repo download manifest 565/12", "test")
         self.expectnoClobber()
         self.expect_commands(
-            self.ExpectShell(command=['bash', '-c', self.step._getCleanupCommand()]).exit(0),
+            self.ExpectShell(
+                command=['bash', '-c', self.get_nth_step(0)._getCleanupCommand()]
+            ).exit(0),
             self.ExpectShell(
                 command=[
                     'repo',
@@ -441,7 +443,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         """repo downloads, with mirror synchronization issues"""
         self.mySetupStep()
         # we don't really want the test to wait...
-        self.step.mirror_sync_sleep = 0.001
+        self.get_nth_step(0).mirror_sync_sleep = 0.001
         self.build.setProperty("repo_download", "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()
@@ -460,8 +462,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         """repo downloads, with no actual mirror synchronization issues (still retries 2 times)"""
         self.mySetupStep()
         # we don't really want the test to wait...
-        self.step.mirror_sync_sleep = 0.001
-        self.step.mirror_sync_retry = 1  # on retry once
+        self.get_nth_step(0).mirror_sync_sleep = 0.001
+        self.get_nth_step(0).mirror_sync_retry = 1  # on retry once
         self.build.setProperty("repo_download", "repo download test/bla 564/12", "test")
         self.expectnoClobber()
         self.expectRepoSync()

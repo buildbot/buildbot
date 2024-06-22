@@ -1069,12 +1069,12 @@ class TestGit(
         return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'
             ),
             patch=(1, 'patch'),
-            worker_version={'*': '2.16'},
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
@@ -1765,7 +1765,7 @@ class TestGit(
                 repourl='http://github.com/buildbot/buildbot.git', mode='incremental', progress=True
             )
         )
-        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
+        self.get_nth_step(0).build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expect_commands(
             ExpectShell(workdir='wkdir', interrupt_signal='TERM', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -2787,7 +2787,7 @@ class TestGit(
         self.setup_step(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git', mode='incremental')
         )
-        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
+        self.get_nth_step(0).build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expect_commands(
             ExpectShell(workdir='wkdir', interrupt_signal='TERM', command=['git', '--version'])
             .stdout('git version 1.7.5')

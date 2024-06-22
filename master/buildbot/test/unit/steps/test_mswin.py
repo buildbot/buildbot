@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -50,7 +51,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         **kwargs,
     ):
         self.setup_step(mswin.Robocopy(source, destination, **kwargs))
-        self.step.rendered = True
+        self.get_nth_step(0).rendered = True
 
         command = ['robocopy', source, destination]
         if expected_args:
@@ -137,26 +138,18 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
             expected_args=['*.foo', '/V', '/TS', '/FP'],
         )
 
-    @defer.inlineCallbacks
-    def test_codes(self):
+    @parameterized.expand(
         # Codes that mean uneventful copies (including no copy at all).
-        for i in [0, 1]:
-            yield self._run_simple_test(
-                r'D:\source', r'E:\dest', expected_code=i, expected_res=SUCCESS
-            )
-
+        [(c, SUCCESS) for c in range(0, 2)]
         # Codes that mean some mismatched or extra files were found.
-        for i in range(2, 8):
-            yield self._run_simple_test(
-                r'D:\source', r'E:\dest', expected_code=i, expected_res=WARNINGS
-            )
+        + [(c, WARNINGS) for c in range(2, 8)]
         # Codes that mean errors have been encountered.
-        for i in range(8, 32):
-            yield self._run_simple_test(
-                r'D:\source', r'E:\dest', expected_code=i, expected_res=FAILURE
-            )
-
+        + [(c, FAILURE) for c in range(8, 32)]
         # bit 32 is meaningless
+        + [(32, EXCEPTION)]
+    )
+    @defer.inlineCallbacks
+    def test_codes(self, code, expected_result):
         yield self._run_simple_test(
-            r'D:\source', r'E:\dest', expected_code=32, expected_res=EXCEPTION
+            r'D:\source', r'E:\dest', expected_code=code, expected_res=expected_result
         )

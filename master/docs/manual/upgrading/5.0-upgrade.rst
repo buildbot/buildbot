@@ -1,0 +1,27 @@
+.. _5.0_Upgrading:
+
+Upgrading to Buildbot 5.0 (not released)
+========================================
+
+Upgrading a Buildbot instance from 4.x to 5.0 may require some work to achieve.
+
+The recommended upgrade procedure is as follows:
+
+  - Upgrade to the last released BuildBot version in 4.x series.
+
+  - Remove usage of the deprecated APIs.
+    All usages of deprecated APIs threw a deprecation warning at the point of use.
+    If the code does not emit deprecation warnings, it's in a good shape in this regard.
+    You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
+
+  - Upgrade to the latest Buildbot 5.0.x release.
+
+  - (Optional) Upgrade to newest Buildbot 5.x.
+    The newest point release will contain bug fixes and functionality improvements.
+
+Testing support
+===============
+
+The ``build_files``, ``worker_env`` and ``worker_version`` arguments of
+``TestBuildStepMixin.setup_step()`` have been removed. As a replacement, call
+``TestBuildStepMixin.setup_build()`` before ``setup_step``.

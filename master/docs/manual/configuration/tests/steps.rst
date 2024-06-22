@@ -40,6 +40,9 @@ TestBuildStepMixin
 
      * In ``setUp()`` of test case call ``self.setup_test_build_step()``.
 
+     * In unit test first optionally call ``self.setup_build(...)`` function to setup information
+        that will be available to the step during the test.
+
      * In unit test call ``self.setup_step(step)`` which will setup the step for testing.
 
      * Call ``self.expect_commands(commands)`` to specify commands that the step is expected to run and the results of these commands.
@@ -58,19 +61,35 @@ TestBuildStepMixin
 
         Call this function in the ``tearDown()`` of the test case to destroy step testing machinery.
 
-    .. py:method:: setup_step(step, worker_env=None, build_files=None)
+    .. py:method:: setup_build(worker_env=None, build_files=None)
 
         :param dict worker_env: An optional dictionary of environment variables on the mock worker.
         :param list build_files: An optional list of source files that were changed in the build.
+
+        Sets up build and worker information that will be available to the tested step.
+
+    .. py:method:: setup_step(step, worker_env=None, build_files=None)
+
+        :param BuildStep step: An instance of ``BuildStep`` to test.
+        :param dict worker_env: An optional dictionary of environment variables on the mock worker (deprecated).
+        :param list build_files: An optional list of source files that were changed in the build (deprecated).
         :returns: An instance of prepared step (not the same as the ``step`` argument).
 
-        Prepares the given step for testing.
-        The method mimics how Buildbot instantiates steps in reality and thus the ``step`` parameter is used only as a factory for creating the real step.
+        Prepares the given step for testing. This function may be invoked multiple times.
+        The ``step`` argument is used as a step factory, just like in real Buildbot.
 
     .. py:attribute:: step
 
-        The step under test.
+        (deprecated) The step under test.
         This attribute is available after ``setup_step()`` is run.
+
+        This function has been deprecated, use ``get_nth_step(0)`` as a replacement
+
+    .. py:method:: get_nth_step(index)
+
+        :param int index: The index of the step to retrieve
+
+        Retrieves the instance of a step that has been created by ``setup_step()``.
 
     ..
         TODO: build, progress, worker attributes
@@ -86,7 +105,9 @@ TestBuildStepMixin
         :param result: A result from `buildbot.process.results`.
         :param str state_string: An optional status text.
 
-        Sets up an expectation of the step result.
+        Sets up an expectation of the step result. If there are multiple steps registered to the
+        test, then there must be as many calls to ``expect_outcome`` as there are steps, in the
+        same order.
 
     .. py:method:: expect_property(property, value, source=None)
 
@@ -94,27 +115,32 @@ TestBuildStepMixin
         :param str value: The value of the property
         :param str source: An optional source of the property
 
-        Sets up an expectation of a property set by the step
+        Sets up an expectation of a property set by the step. If there are multiple steps
+        registered to the test, then this function tests the cumulative set of properties set
+        on the build.
 
     .. py:method:: expect_no_property(self, property)
 
         :param str property: The name of the property
 
-        Sets up an expectation of an absence of a property set by the step.
+        Sets up an expectation of an absence of a property set by the step. If there are multiple
+        steps registered to the test, then this function expects that no tests set the property.
 
-    .. py:method:: expect_log_file(self, logfile, contents)
+    .. py:method:: expect_log_file(self, logfile, contents, step_index=0)
 
         :param str logfile: The name of the log file
         :param str contents: The contents of the log file
+        :param int step_index: The index of the step whose logs to investigate.
 
         Sets up an expectation of a log file being produced by the step.
         Only the ``stdout`` associated with the log file is checked.
         To check the ``stderr`` see ``expect_log_file_stderr()``
 
-    .. py:method:: expect_log_file_stderr(self, logfile, contents)
+    .. py:method:: expect_log_file_stderr(self, logfile, contents, step_index=0)
 
         :param str logfile: The name of the log file
         :param str contents: The contents of the log file
+        :param int step_index: The index of the step whose logs to investigate.
 
         Sets up an expectation of a ``stderr`` output in log file being produced by the step.
 
@@ -124,7 +150,9 @@ TestBuildStepMixin
         :param str value: The value of the build data.
         :param str source: The source of the build data.
 
-        Sets up an expectation of build data produced by the step.
+        Sets up an expectation of build data produced by the step. If there are multiple steps
+        registered to the test, then this function tests the cumulative set of build data added to
+        the build.
 
     .. py:method:: expect_hidden(hidden=True)
 
@@ -146,4 +174,4 @@ TestBuildStepMixin
 
     .. py:method:: run_step()
 
-        Runs the step and validates the expectations setup before this function.
+        Runs the steps and validates the expectations setup before this function.

@@ -196,7 +196,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', 'a10', 'SVN')
         yield self.run_step()
 
-        revision = self.step.getProperty('got_revision')
+        revision = self.get_nth_step(0).getProperty('got_revision')
         with self.assertRaises(ValueError):
             int(revision)
 
@@ -1337,10 +1337,10 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_mode_full_export_patch_worker_2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='export'),
             patch=(1, 'patch'),
-            worker_version={'*': '2.16'},
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),

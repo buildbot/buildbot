@@ -162,12 +162,12 @@ class TestMonotone(
         return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
             ),
             patch=(1, 'patch'),
-            worker_version={'*': '2.16'},
         )
 
         self.expect_commands(
