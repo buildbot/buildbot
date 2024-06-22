@@ -1435,9 +1435,9 @@ class TestShellMixin(
 
     @defer.inlineCallbacks
     def test_old_worker_args(self):
+        self.setup_build(worker_version={'*': "1.1"})
         self.setup_step(
-            SimpleShellCommand(command=['cmd', 'arg'], usePTY=False, interruptSignal='DIE'),
-            worker_version={'*': "1.1"},
+            SimpleShellCommand(command=['cmd', 'arg'], usePTY=False, interruptSignal='DIE')
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg']).exit(0)
@@ -1454,9 +1454,9 @@ class TestShellMixin(
 
     @defer.inlineCallbacks
     def test_new_worker_args(self):
+        self.setup_build(worker_version={'*': "3.0"})
         self.setup_step(
-            SimpleShellCommand(command=['cmd', 'arg'], usePTY=False, interruptSignal='DIE'),
-            worker_version={'*': "3.0"},
+            SimpleShellCommand(command=['cmd', 'arg'], usePTY=False, interruptSignal='DIE')
         )
         self.expect_commands(
             ExpectShell(

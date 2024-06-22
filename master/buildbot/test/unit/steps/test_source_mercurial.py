@@ -249,12 +249,12 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
             ),
             patch=(1, 'patch'),
-            worker_version={'*': '2.16'},
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['hg', '--verbose', '--version']).exit(0),

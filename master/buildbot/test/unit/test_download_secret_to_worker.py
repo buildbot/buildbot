@@ -89,12 +89,12 @@ class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin, TestReactorMixin, 
         return self.tear_down_test_build_step()
 
     def testBasic(self):
+        self.setup_build(worker_version={'*': '3.0'})
         self.setup_step(
             RemoveWorkerFileSecret([
                 (os.path.join(self.temp_path, "pathA"), "something"),
                 (os.path.join(self.temp_path, "pathB"), "somethingmore"),
             ]),
-            worker_version={'*': '3.0'},
         )
 
         self.expect_commands(

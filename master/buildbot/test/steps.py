@@ -33,6 +33,7 @@ from buildbot.test.fake import worker
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
 from buildbot.util import unicode2bytes
+from buildbot.warnings import warn_deprecated
 
 
 def _dict_diff(d1, d2):
@@ -669,6 +670,10 @@ class TestBuildStepMixin:
         self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env = {}
 
+        self._worker_version = None
+        self._worker_env = None
+        self._build_files = None
+
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
 
@@ -702,6 +707,11 @@ class TestBuildStepMixin:
 
         return build
 
+    def setup_build(self, worker_version=None, worker_env=None, build_files=None):
+        self._worker_version = worker_version
+        self._worker_env = worker_env
+        self._build_files = build_files
+
     def setup_step(
         self,
         step,
@@ -710,13 +720,36 @@ class TestBuildStepMixin:
         build_files=None,
         want_default_work_dir=True,
     ):
+        if worker_version is not None:
+            warn_deprecated(
+                "4.1.0",
+                "worker_version has been deprecated, use setup_build() to pass this information",
+            )
+        if worker_env is not None:
+            warn_deprecated(
+                "4.1.0",
+                "worker_env has been deprecated, use setup_build() to pass this information",
+            )
+        if build_files is not None:
+            warn_deprecated(
+                "4.1.0",
+                "build_files has been deprecated, use setup_build() to pass this information",
+            )
+
+        if worker_version is not None or worker_env is not None or build_files is not None:
+            self.setup_build(
+                worker_version=worker_version, worker_env=worker_env, build_files=build_files
+            )
+
         self.step = buildstep.create_step_from_step_or_factory(step)
 
         # set defaults
         if want_default_work_dir:
             self.step.workdir = self.step._workdir or 'wkdir'
 
-        self.build = self._setup_fake_build(worker_version, worker_env, build_files)
+        self.build = self._setup_fake_build(
+            self._worker_version, self._worker_env, self._build_files
+        )
         self.step.setBuild(self.build)
         self.step.progress = mock.Mock(name="progress")
         self.step.worker = self.worker

@@ -293,10 +293,10 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         return self.run_step()
 
     def test_mode_full_clobber_revision_worker_2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='clobber'),
             {"revision": 'abcdef01'},
-            worker_version={'*': '2.16'},
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['darcs', '--version']).exit(0),

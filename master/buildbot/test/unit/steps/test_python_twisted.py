@@ -235,9 +235,9 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_build_changed_files(self):
+        self.setup_build(build_files=['my/test/file.py', 'my/test/file2.py'])
         self.setup_step(
             python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
-            build_files=['my/test/file.py', 'my/test/file2.py'],
         )
 
         self.expect_commands(
@@ -404,7 +404,8 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.tear_down_test_build_step()
 
     def test_run_ok(self):
-        self.setup_step(python_twisted.HLint(workdir='build'), build_files=['foo.xhtml'])
+        self.setup_build(build_files=['foo.xhtml'])
+        self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_commands(
             ExpectShell(
                 workdir='build',
@@ -418,9 +419,8 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_custom_python(self):
-        self.setup_step(
-            python_twisted.HLint(workdir='build', python='/bin/mypython'), build_files=['foo.xhtml']
-        )
+        self.setup_build(build_files=['foo.xhtml'])
+        self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'))
         self.expect_commands(
             ExpectShell(
                 workdir='build',
@@ -432,7 +432,8 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_command_failure(self):
-        self.setup_step(python_twisted.HLint(workdir='build'), build_files=['foo.xhtml'])
+        self.setup_build(build_files=['foo.xhtml'])
+        self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_commands(
             ExpectShell(
                 workdir='build',
@@ -449,7 +450,8 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_run_warnings(self):
-        self.setup_step(python_twisted.HLint(workdir='build'), build_files=['foo.xhtml'])
+        self.setup_build(build_files=['foo.xhtml'])
+        self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_commands(
             ExpectShell(
                 workdir='build', command=['bin/lore', '-p', '--output', 'lint', 'foo.xhtml']

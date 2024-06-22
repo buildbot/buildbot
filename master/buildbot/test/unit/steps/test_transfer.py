@@ -79,10 +79,8 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return d
 
     def testWorker2_16(self):
-        self.setup_step(
-            transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile),
-            worker_version={'*': '2.16'},
-        )
+        self.setup_build(worker_version={'*': '2.16'})
+        self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expect_commands(
             ExpectUploadFile(
@@ -345,9 +343,9 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
         return d
 
     def testWorker2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir),
-            worker_version={'*': '2.16'},
         )
 
         self.expect_commands(
@@ -672,9 +670,9 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return d
 
     def testFileWorker2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir),
-            worker_version={'*': '2.16'},
         )
 
         self.expect_commands(
@@ -696,9 +694,9 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return d
 
     def testDirectoryWorker2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir),
-            worker_version={'*': '2.16'},
         )
 
         self.expect_commands(
@@ -720,9 +718,9 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return d
 
     def testMultipleWorker2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir),
-            worker_version={'*': '2.16'},
         )
 
         self.expect_commands(
@@ -999,9 +997,9 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testBasicWorker2_16(self):
         master_file = __file__
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.FileDownload(mastersrc=master_file, workerdest=self.destfile),
-            worker_version={'*': '2.16'},
         )
 
         # A place to store what gets read
@@ -1093,9 +1091,8 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def testBasicWorker2_16(self):
-        self.setup_step(
-            transfer.StringDownload("Hello World", "hello.txt"), worker_version={'*': '2.16'}
-        )
+        self.setup_build(worker_version={'*': '2.16'})
+        self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
         self.step.worker = Mock()
         self.step.remote = Mock()

@@ -1,0 +1,3 @@
+The ``build_files``, ``worker_env`` and ``worker_version`` arguments of
+``TestBuildStepMixin.setup_step()`` have been deprecated. As a replacement, call
+``TestBuildStepMixin.setup_build()`` before ``setup_step``.

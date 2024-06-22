@@ -114,7 +114,8 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_old_version(self):
-        self.setup_step(worker.FileExists(file="x"), worker_version={})
+        self.setup_build(worker_version={})
+        self.setup_step(worker.FileExists(file="x"))
         self.expect_outcome(result=EXCEPTION, state_string="finished (exception)")
         yield self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
@@ -372,7 +373,8 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
             res = yield x.getFileContentFromWorker("file.txt")
             self.assertEqual(res, "Hello world!")
 
-        self.setup_step(CompositeUser(testFunc), worker_version={'*': '2.16'})
+        self.setup_build(worker_version={'*': '2.16'})
+        self.setup_step(CompositeUser(testFunc))
         self.expect_commands(
             ExpectUploadFile(
                 slavesrc="file.txt",

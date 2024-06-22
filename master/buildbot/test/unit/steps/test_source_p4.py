@@ -790,6 +790,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4base_not_obfuscated(self):
+        self.setup_build(worker_version={'*': '2.15'})
         self.setup_step(
             P4(
                 p4port='localhost:12000',
@@ -799,8 +800,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4user='user',
                 p4client='p4_client1',
                 p4passwd='pass',
-            ),
-            worker_version={'*': '2.15'},
+            )
         )
 
         root_dir = '/home/user/workspace/wkdir'

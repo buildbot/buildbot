@@ -1069,12 +1069,12 @@ class TestGit(
         return self.run_step()
 
     def test_mode_full_clean_patch_worker_2_16(self):
+        self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'
             ),
             patch=(1, 'patch'),
-            worker_version={'*': '2.16'},
         )
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])

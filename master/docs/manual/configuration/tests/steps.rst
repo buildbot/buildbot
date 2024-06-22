@@ -40,6 +40,9 @@ TestBuildStepMixin
 
      * In ``setUp()`` of test case call ``self.setup_test_build_step()``.
 
+     * In unit test first optionally call ``self.setup_build(...)`` function to setup information
+        that will be available to the step during the test.
+
      * In unit test call ``self.setup_step(step)`` which will setup the step for testing.
 
      * Call ``self.expect_commands(commands)`` to specify commands that the step is expected to run and the results of these commands.
@@ -58,10 +61,17 @@ TestBuildStepMixin
 
         Call this function in the ``tearDown()`` of the test case to destroy step testing machinery.
 
-    .. py:method:: setup_step(step, worker_env=None, build_files=None)
+    .. py:method:: setup_build(worker_env=None, build_files=None)
 
         :param dict worker_env: An optional dictionary of environment variables on the mock worker.
         :param list build_files: An optional list of source files that were changed in the build.
+
+        Sets up build and worker information that will be available to the tested step.
+
+    .. py:method:: setup_step(step, worker_env=None, build_files=None)
+
+        :param dict worker_env: An optional dictionary of environment variables on the mock worker (deprecated).
+        :param list build_files: An optional list of source files that were changed in the build (deprecated).
         :returns: An instance of prepared step (not the same as the ``step`` argument).
 
         Prepares the given step for testing.
