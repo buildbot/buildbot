@@ -287,7 +287,6 @@ class BuildRequest(base.ResourceType):
         # if already rebuilt build of the same initial build is rebuilt again only save the build
         # id of the initial build
         if len(builds) != 0 and buildset['rebuilt_buildid'] is None:
-            print("Length = ", len(builds))
             rebuilt_buildid = builds[0]['buildid']
         else:
             rebuilt_buildid = buildset['rebuilt_buildid']

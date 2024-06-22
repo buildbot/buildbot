@@ -61,23 +61,22 @@ class DownloadSecretsBase(RunMasterBase):
     ])
     @defer.inlineCallbacks
     def test_transfer_secrets(self, name, relative_to_home, remove):
-        path = os.path.join(self.temp_dir, 'secret_path')
-
-        bb_path = path
+        bb_path = self.temp_dir
         if relative_to_home:
             homedir = self.get_homedir()
             if homedir is None:
                 raise SkipTest("Home directory is not known")
             try:
-                bb_path = os.path.join('~', os.path.relpath(path, homedir))
+                bb_path = os.path.join('~', os.path.relpath(bb_path, homedir))
             except ValueError as e:
                 raise SkipTest("Can't get relative path from home directory to test files") from e
             if not os.path.isdir(os.path.expanduser(bb_path)):
                 raise SkipTest("Unknown error preparing test paths")
 
+        path = os.path.join(bb_path, 'secret_path')
         data = 'some data'
 
-        yield self.setup_config(bb_path, data, remove=remove)
+        yield self.setup_config(path, data, remove=remove)
 
         yield self.doForceBuild()
 
