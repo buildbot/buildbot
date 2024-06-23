@@ -144,6 +144,8 @@ script:
     condition: TESTS == "js_unit"
     cmd: |
       export PATH=/tmp/bbvenv/bin/:$PATH
+      export VITEST_MIN_THREADS=1
+      export VITEST_MAX_THREADS=8
       make frontend_tests
 
   - title: master and worker tests
