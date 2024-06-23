@@ -79,7 +79,8 @@ async function renderWithReactDom(children: React.ReactNode) {
   const instance = createRoot(document.createElement('div'));
   instance.render(children);
   await waitForAnimationFrame();
-  vi.runAllTimers();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await vi.runAllTimersAsync();
   await waitForAnimationFrame();
 }
 
