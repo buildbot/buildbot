@@ -142,6 +142,6 @@ export default defineConfig({
       'react-dom',
       'react-router-dom'
     ],
-    mainFields: ['module', 'main']
+    mainFields: ['browser', 'module', 'main']
   },
 });
