@@ -14,7 +14,7 @@ export default defineConfig({
       name: "buildbot-plugin-support",
       fileName: "buildbot-plugin-support",
     },
-    target: ['es2015'],
+    target: ['es2020'],
     outDir: outDir,
     emptyOutDir: true,
   },
