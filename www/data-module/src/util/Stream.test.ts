@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it, vi} from "vitest";
 import {Stream} from "./Stream";
 
 describe('Stream', () => {
@@ -40,8 +41,8 @@ describe('Stream', () => {
       second(data: any) { expect(data).toEqual({a: 'A', b: 'B'}); }
     };
 
-    jest.spyOn(listeners, 'first');
-    jest.spyOn(listeners, 'second');
+    vi.spyOn(listeners, 'first');
+    vi.spyOn(listeners, 'second');
 
     stream.subscribe(listeners.first);
     stream.subscribe(listeners.second);

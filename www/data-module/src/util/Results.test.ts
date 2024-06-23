@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {results2class, results2text, RETRY, SUCCESS} from "./Results";
 
 describe('results2class', () => {
