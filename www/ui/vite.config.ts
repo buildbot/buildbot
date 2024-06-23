@@ -28,6 +28,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
+      formats: ["es", "cjs"],
       name: "buildbotUi",
       fileName: "buildbot-ui",
     },

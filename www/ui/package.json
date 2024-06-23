@@ -1,9 +1,10 @@
 {
   "name": "buildbot-ui",
   "version": "0.1.0",
-  "main": "dist/buildbot-ui.umd.js",
   "style": "dist/buildbot-ui.css",
-  "module": "dist/buildbot-ui.mjs",
+  "module": "dist/buildbot-ui.js",
+  "main": "dist/buildbot-ui.cjs",
+  "type": "module",
   "types": "dist/main.d.ts",
   "files": [
     "dist"
@@ -35,9 +36,9 @@
     "testEnvironment": "jsdom",
     "testRunner": "./node_modules/jest-circus/runner.js",
     "transform": {
-      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.cjs",
+      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.cjs",
+      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.cjs"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
