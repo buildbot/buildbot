@@ -24,7 +24,7 @@ WWW_EX_PKGS := www/nestedexample www/codeparameter
 WWW_DEP_PKGS := www/guanlecoja-ui www/data_module www/plugin_support www/react-data-module www/react-ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-ui www/react-grid_view www/react-wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-grid_view www/react-wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
