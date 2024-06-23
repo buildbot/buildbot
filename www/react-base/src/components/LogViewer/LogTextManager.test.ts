@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {beforeEach, describe, expect, it, vi} from "vitest";
 import {LogTextManager} from "./LogTextManager";
 import {CancellablePromise} from "buildbot-data-js";
 
@@ -31,9 +32,9 @@ const getFakeData = (offset: number, limit: number) => {
 type DataRequest = {offset: number, limit: number};
 type GetFakeDataFn = (offest: number, limit: number) => CancellablePromise<any>;
 
-function flushPromisesAndTimers() {
-  jest.runAllTimers();
-  return new Promise(resolve => setImmediate(resolve));
+const flushPromisesAndTimers = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await vi.runAllTimersAsync();
 }
 
 const createRecordingGetFakeData = () : [DataRequest[], GetFakeDataFn] => {
@@ -164,7 +165,7 @@ describe('LogTextManager', () => {
 
   describe("download", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers({ toFake: ['nextTick'] });
     });
 
     it('empty', async () => {
@@ -266,7 +267,7 @@ describe('LogTextManager', () => {
 
   describe("search", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers({ toFake: ['nextTick'] });
     });
 
     it('no occurrences', async () => {

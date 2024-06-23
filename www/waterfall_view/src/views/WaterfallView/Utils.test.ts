@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {Build, IDataAccessor, UNKNOWN} from "buildbot-data-js";
 import {BuildGroup, groupBuildsByTime, WaterfallYScale} from "./Utils";
 

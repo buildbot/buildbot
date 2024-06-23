@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {BaseClass} from "./classes/BaseClass";
 import {IDataDescriptor} from "./classes/DataDescriptor";
 import {WebSocketClient} from "./WebSocketClient";
@@ -66,7 +67,7 @@ describe('DataPropertiesCollection', () => {
   let client: DataClient;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['nextTick'] });
     mock = new MockAdapter(axios);
     restClient = new RestClient(rootUrl);
     webSocket = new MockWebSocket();
@@ -79,9 +80,9 @@ describe('DataPropertiesCollection', () => {
     mock.reset();
   });
 
-  function flushPromisesAndTimers() {
-    jest.runAllTimers();
-    return new Promise(resolve => setImmediate(resolve));
+  const flushPromisesAndTimers = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await vi.runAllTimersAsync();
   }
 
   it("new properties to empty properties", async () => {

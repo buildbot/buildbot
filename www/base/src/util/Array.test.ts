@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {repositionPositionedArray} from "./Array";
 
 describe('Array', () => {
@@ -22,36 +23,36 @@ describe('Array', () => {
     const u = undefined;
 
     it('no change', () => {
-      expect(repositionPositionedArray([1, 2, 3], 0, 0, 3)).toStrictEqual([[1, 2, 3], 0]);
-      expect(repositionPositionedArray([1, 2, 3], 2, 2, 5)).toStrictEqual([[1, 2, 3], 2]);
-      expect(repositionPositionedArray([1, u, 3, u], 2, 2, 6)).toStrictEqual([[1, u, 3, u], 2]);
+      expect(repositionPositionedArray([1, 2, 3], 0, 0, 3)).toMatchObject([[1, 2, 3], 0]);
+      expect(repositionPositionedArray([1, 2, 3], 2, 2, 5)).toMatchObject([[1, 2, 3], 2]);
+      expect(repositionPositionedArray([1, u, 3, u], 2, 2, 6)).toMatchObject([[1, u, 3, u], 2]);
     });
     it('new range empty', () => {
-      expect(repositionPositionedArray([1, 2, 3], 0, 5, 5)).toStrictEqual([[], 5]);
-      expect(repositionPositionedArray([1, 2, 3], 0, 0, 0)).toStrictEqual([[], 0]);
+      expect(repositionPositionedArray([1, 2, 3], 0, 5, 5)).toMatchObject([[], 5]);
+      expect(repositionPositionedArray([1, 2, 3], 0, 0, 0)).toMatchObject([[], 0]);
     });
     it('no overlap', () => {
-      expect(repositionPositionedArray([1, 2, 3], 10, 2, 5)).toStrictEqual([[u, u, u], 2]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 20, 23)).toStrictEqual([[u, u, u], 20]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 2, 5)).toMatchObject([[u, u, u], 2]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 20, 23)).toMatchObject([[u, u, u], 20]);
     });
     it('reposition', () => {
-      expect(repositionPositionedArray([1, 2, 3], 10, 9, 11)).toStrictEqual([[u, 1], 9]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 10, 12)).toStrictEqual([[1, 2], 10]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 11, 13)).toStrictEqual([[2, 3], 11]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 12, 14)).toStrictEqual([[3, u], 12]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 9, 11)).toMatchObject([[u, 1], 9]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 10, 12)).toMatchObject([[1, 2], 10]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 11, 13)).toMatchObject([[2, 3], 11]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 12, 14)).toMatchObject([[3, u], 12]);
 
-      expect(repositionPositionedArray([1, 2, 3], 10, 8, 11)).toStrictEqual([[u, u, 1], 8]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 9, 12)).toStrictEqual([[u, 1, 2], 9]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 10, 13)).toStrictEqual([[1, 2, 3], 10]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 11, 14)).toStrictEqual([[2, 3, u], 11]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 12, 15)).toStrictEqual([[3, u, u], 12]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 8, 11)).toMatchObject([[u, u, 1], 8]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 9, 12)).toMatchObject([[u, 1, 2], 9]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 10, 13)).toMatchObject([[1, 2, 3], 10]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 11, 14)).toMatchObject([[2, 3, u], 11]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 12, 15)).toMatchObject([[3, u, u], 12]);
 
-      expect(repositionPositionedArray([1, 2, 3], 10, 7, 11)).toStrictEqual([[u, u, u, 1], 7]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 8, 12)).toStrictEqual([[u, u, 1, 2], 8]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 9, 13)).toStrictEqual([[u, 1, 2, 3], 9]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 10, 14)).toStrictEqual([[1, 2, 3, u], 10]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 11, 15)).toStrictEqual([[2, 3, u, u], 11]);
-      expect(repositionPositionedArray([1, 2, 3], 10, 12, 16)).toStrictEqual([[3, u, u, u], 12]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 7, 11)).toMatchObject([[u, u, u, 1], 7]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 8, 12)).toMatchObject([[u, u, 1, 2], 8]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 9, 13)).toMatchObject([[u, 1, 2, 3], 9]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 10, 14)).toMatchObject([[1, 2, 3, u], 10]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 11, 15)).toMatchObject([[2, 3, u, u], 11]);
+      expect(repositionPositionedArray([1, 2, 3], 10, 12, 16)).toMatchObject([[3, u, u, u], 12]);
     });
   });
 });

@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import renderer from 'react-test-renderer';
 import { FieldChoiceString } from "./FieldChoiceString";
 import { ForceSchedulerFieldChoiceString } from 'buildbot-data-js';

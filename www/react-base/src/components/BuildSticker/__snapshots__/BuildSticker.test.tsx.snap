@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildsticker component failed 1`] = `
+exports[`buildsticker component > failed 1`] = `
 <div
   className="bb-buildsticker results_FAILURE card"
 >
@@ -39,7 +39,7 @@ exports[`buildsticker component failed 1`] = `
 </div>
 `;
 
-exports[`buildsticker component pending 1`] = `
+exports[`buildsticker component > pending 1`] = `
 <div
   className="bb-buildsticker results_PENDING card"
 >
@@ -78,7 +78,7 @@ exports[`buildsticker component pending 1`] = `
 </div>
 `;
 
-exports[`buildsticker component simple 1`] = `
+exports[`buildsticker component > simple 1`] = `
 <div
   className="bb-buildsticker results_UNKNOWN card"
 >
@@ -115,7 +115,7 @@ exports[`buildsticker component simple 1`] = `
 </div>
 `;
 
-exports[`buildsticker component success 1`] = `
+exports[`buildsticker component > success 1`] = `
 <div
   className="bb-buildsticker results_SUCCESS card"
 >
