@@ -27,7 +27,7 @@ WWW_EX_PKGS := www/nestedexample www/codeparameter
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/ui www/grid_view www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/grid_view www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
