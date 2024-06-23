@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {beforeEach, describe, expect, it} from "vitest";
 import {DataQuery, Query} from "./DataQuery";
 
 class WrappedDataQuery {

@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {expect} from "vitest";
 import {DataClient} from "./DataClient";
 import {Query} from "./DataQuery";
 import {BaseClass} from "./classes/BaseClass";
@@ -40,10 +41,10 @@ export class MockDataClient extends DataClient {
   }
 
   verifyNoOutstandingExpectation() {
-    if (this.expects.length) {
-      fail(`expecting ${this.expects.length} more data requests ` +
-        `(${JSON.stringify(this.expects)})`);
-    }
+    expect(
+      this.expects.length,
+      `expecting ${this.expects.length} more data requests (${JSON.stringify(this.expects)})`
+    ).toBe(0);
   }
 
   // register return values with the .when function when testing get will return the given values

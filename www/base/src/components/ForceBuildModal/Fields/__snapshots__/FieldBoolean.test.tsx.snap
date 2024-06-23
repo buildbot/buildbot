@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ForceFieldBoolean component change state on click 1`] = `
+exports[`ForceFieldBoolean component > change state on click 1`] = `
 <div
   className="form-group"
 >
@@ -25,7 +25,7 @@ exports[`ForceFieldBoolean component change state on click 1`] = `
 </div>
 `;
 
-exports[`ForceFieldBoolean component render default value False 1`] = `
+exports[`ForceFieldBoolean component > render default value False 1`] = `
 <div
   className="form-group"
 >
@@ -50,7 +50,7 @@ exports[`ForceFieldBoolean component render default value False 1`] = `
 </div>
 `;
 
-exports[`ForceFieldBoolean component render default value True 1`] = `
+exports[`ForceFieldBoolean component > render default value True 1`] = `
 <div
   className="form-group"
 >
@@ -75,7 +75,7 @@ exports[`ForceFieldBoolean component render default value True 1`] = `
 </div>
 `;
 
-exports[`ForceFieldBoolean component render non-default value False 1`] = `
+exports[`ForceFieldBoolean component > render non-default value False 1`] = `
 <div
   className="form-group"
 >
@@ -100,7 +100,7 @@ exports[`ForceFieldBoolean component render non-default value False 1`] = `
 </div>
 `;
 
-exports[`ForceFieldBoolean component render non-default value True 1`] = `
+exports[`ForceFieldBoolean component > render non-default value True 1`] = `
 <div
   className="form-group"
 >

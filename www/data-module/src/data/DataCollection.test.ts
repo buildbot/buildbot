@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {beforeEach, describe, expect, it, vi} from "vitest";
 import {DataCollection} from "./DataCollection";
 import {BaseClass} from "./classes/BaseClass";
 import {IDataDescriptor} from "./classes/DataDescriptor";
@@ -46,7 +47,7 @@ describe('DataCollection', () => {
   }
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['nextTick'] });
   });
 
   describe("simple collection", () => {

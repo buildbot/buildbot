@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {regexEscape} from "./Regex";
 
 describe('Regex', () => {
