@@ -46,6 +46,14 @@ describe('DataCollection', () => {
     return c;
   }
 
+  const expectArrayContents = (c: DataCollection<TestDataClass>, expected: [number, number][]) => {
+    expect(c.array.map(x => [x.testid, x.testdata])).toEqual(expected);
+  }
+
+  const expectByIdContents = (c: DataCollection<TestDataClass>, expected: [number, number][]) => {
+    expect([...c.byId.values()].map(x => [x.testid, x.testdata])).toEqual(expected);
+  }
+
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['nextTick'] });
   });
@@ -104,7 +112,23 @@ describe('DataCollection', () => {
         testid: 1,
         testdata: 1
       }]);
-      expect(c.array.map(x => [x.testid, x.testdata])).toEqual([[1, 0]]);
+      expectArrayContents(c, [[1, 0]]);
+    });
+
+    it("remove items when do not match filter", () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      c.initial([]);
+      expectArrayContents(c, [[1, 0]]);
+      expectByIdContents(c, [[1, 0]]);
+
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
+      expectArrayContents(c, []);
+      expectByIdContents(c, []);
+
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      expectArrayContents(c, [[1, 0]]);
+      expectByIdContents(c, [[1, 0]]);
     });
 
     it('should have a from function, which iteratively inserts data', () => {
