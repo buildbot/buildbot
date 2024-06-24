@@ -85,7 +85,7 @@ export class DataQuery {
     }
   }
 
-  isFiltered(v: any) {
+  isAllowedByFilters(v: any) {
     for (const filter of this.filters) {
       if (!filter(v)) {
         return false;
@@ -99,7 +99,7 @@ export class DataQuery {
     const result = [];
     while (i < array.length) {
       const v = array[i];
-      if (this.isFiltered(v)) {
+      if (this.isAllowedByFilters(v)) {
         result.push(i += 1);
       } else {
         result.push(array.splice(i, 1));
