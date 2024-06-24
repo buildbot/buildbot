@@ -1,2 +1,0 @@
-Master and Worker packages have stopped using the deprecated distutils package and rely on setuptools.
-Worker installation now requires setuptools.

@@ -1,1 +1,0 @@
-Add support for regex search within the logs.

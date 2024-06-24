@@ -1,1 +1,0 @@
-Fixed ``OldBuildCanceller`` crashes when sourcestamp with no branch was ingested.
