@@ -153,7 +153,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
 
   @action add(element: any) {
     // don't create wrapper if element is filtered
-    if (this.queryExecutor.filter([element]).length === 0) {
+    if (!this.queryExecutor.isAllowedByFilters(element)) {
       return;
     }
     const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
