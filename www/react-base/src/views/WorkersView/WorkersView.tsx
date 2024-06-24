@@ -42,28 +42,26 @@ const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean) => {
 const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
                                buildsQuery: DataCollection<Build>,
                                maxBuilds: number) => {
-  const map : {[workername: string]: Build[]} = {};
-  for (const name of workersQuery.array.map(worker => worker.name)) {
-    map[name] = [];
+  const idMap = new Map<number, Build[]>();
+  for (const worker of workersQuery.array) {
+    idMap.set(worker.workerid, []);
   }
 
   for (const build of buildsQuery.array) {
-    if (!('workername' in build.properties)) {
-      // This may happen when WorkersView gets information of a new build via websocket update.
-      // FIXME: the internal API should re-request full data about build in such case
+    const buildsArray = idMap.get(build.workerid);
+    if (buildsArray === undefined) {
       continue;
     }
-    const workername = build.properties['workername'][0];
-    if (!(workername in map)) {
-      // This means that workername is not in validNames either
-      continue;
-    }
-    const buildsArray = map[workername];
     if (buildsArray.length >= maxBuilds) {
       continue;
     }
     // builds array is already sorted by decreasing build id
     buildsArray.push(build);
+  }
+
+  const map : {[workername: string]: Build[]} = {};
+  for (const worker of workersQuery.array) {
+    map[worker.name] = idMap.get(worker.workerid) ?? [];
   }
 
   return map;
