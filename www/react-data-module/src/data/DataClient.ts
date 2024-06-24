@@ -19,6 +19,7 @@ export class DataClient {
   restClient: RestClient;
   webSocketClient: WebSocketClient;
   private jsonRpcId: number = 1;
+  nextDataCollectionInternalId: number = 0;
 
   constructor(restClient: RestClient, webSocketClient: WebSocketClient) {
     this.restClient = restClient;
@@ -30,7 +31,8 @@ export class DataClient {
                                   query: Query, subscribe: boolean) {
     return this.getAny(endpoint, accessor, descriptor, query, subscribe,
       () => {
-        const c = new DataCollection<DataType>();
+        const c = new DataCollection<DataType>(this.nextDataCollectionInternalId);
+        this.nextDataCollectionInternalId += 1;
         c.open(endpoint, query, accessor, descriptor, this.webSocketClient);
         return c;
       });
