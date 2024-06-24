@@ -176,6 +176,11 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
 
     const old = this.byId.get(String(id));
     if (old !== undefined) {
+      if (!this.queryExecutor.isAllowedByFilters(element)) {
+        this.byId.delete(String(id));
+        this.deleteFromArray(old);
+        return;
+      }
       old.update(element);
       return;
     }
@@ -188,7 +193,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     this.array.replace([]);
   }
 
-  @action delete(element: DataType) {
+  @action deleteFromArray(element: DataType) {
     const index = this.array.indexOf(element);
     if (index > -1) {
       this.array.splice(index, 1);
