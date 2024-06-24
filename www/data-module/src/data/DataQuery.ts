@@ -131,9 +131,9 @@ export class DataQuery {
       };
     };
     if (typeof order === 'string') {
-      return array.sort(compare(order));
+      array.sort(compare(order));
     } else if (Array.isArray(order)) {
-      return array.sort((a: any, b: any) => {
+      array.sort((a: any, b: any) => {
         for (let o of Array.from(order)) {
           const f = compare(o)(a, b);
           if (f) { return f; }
