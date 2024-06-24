@@ -56,6 +56,8 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
 export class DataQuery {
   query: Query;
   filters: ValueFilter[] = [];
+  order: any | null = null;
+  limit: number | null = null;
 
   constructor(query: Query | null) {
     if (query === null) {
@@ -68,24 +70,15 @@ export class DataQuery {
         this.filters.push(filter);
       }
     }
-  }
-
-  computeQuery(array: any[]) {
-    // 1. filtering
-    this.filter(array);
-
-    // 2. sorting
     if ('order' in this.query) {
-      this.sort(array, this.query.order);
+      this.order = this.query.order;
     }
-
-    // 3. limit
     if ('limit' in this.query) {
-      this.limit(array, this.query.limit);
+      this.limit = this.query.limit;
     }
   }
 
-  isFiltered(v: any) {
+  isAllowedByFilters(v: any) {
     for (const filter of this.filters) {
       if (!filter(v)) {
         return false;
@@ -96,19 +89,21 @@ export class DataQuery {
 
   filter(array: any[]) {
     let i = 0;
-    const result = [];
     while (i < array.length) {
       const v = array[i];
-      if (this.isFiltered(v)) {
-        result.push(i += 1);
+      if (this.isAllowedByFilters(v)) {
+        i += 1;
       } else {
-        result.push(array.splice(i, 1));
+        array.splice(i, 1);
       }
     }
-    return result;
   }
 
-  sort(array: any[], order: any) {
+  applySort(array: any[]) {
+    const order = this.order;
+    if (order === null) {
+      return;
+    }
     const compare = (property: string) => {
       let reverse = false;
       if (property[0] === '-') {
@@ -131,9 +126,9 @@ export class DataQuery {
       };
     };
     if (typeof order === 'string') {
-      return array.sort(compare(order));
+      array.sort(compare(order));
     } else if (Array.isArray(order)) {
-      return array.sort((a: any, b: any) => {
+      array.sort((a: any, b: any) => {
         for (let o of Array.from(order)) {
           const f = compare(o)(a, b);
           if (f) { return f; }
@@ -145,8 +140,11 @@ export class DataQuery {
     }
   }
 
-  limit(array: string[], limit: number) {
-    while (array.length > limit) {
+  applyLimit(array: any[]) {
+    if (this.limit === null) {
+      return;
+    }
+    while (array.length > this.limit) {
       array.pop();
     }
   }
