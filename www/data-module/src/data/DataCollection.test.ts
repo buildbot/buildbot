@@ -70,9 +70,9 @@ describe('DataCollection', () => {
       expect(c.array.length).toEqual(2);
     });
 
-    it('should have a from function, which iteratively inserts data', () => {
+    it('should have a initial function, which iteratively inserts data', () => {
       const c = createCollection('tests', {});
-      c.from([
+      c.initial([
         {testid: 1},
         {testid: 2},
         {testid: 2}
@@ -95,6 +95,16 @@ describe('DataCollection', () => {
   });
 
   describe("queried collection", () => {
+    it('should have a initial function, which iteratively inserts data', () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.initial([
+        {testid: 1, testdata: 1},
+        {testid: 0, testdata: 0},
+        {testid: 0, testdata: 0}
+      ]);
+      expect(c.array.length).toEqual(1);
+    });
+
     it("initial data should not overwrite filtered data from ws", () => {
       const c = createCollection('tests', {testdata__eq: 0});
       c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
@@ -130,27 +140,7 @@ describe('DataCollection', () => {
       expectArrayContents(c, [[1, 0]]);
       expectByIdContents(c, [[1, 0]]);
     });
-
-    it('should have a from function, which iteratively inserts data', () => {
-      const c = createCollection('tests', {order:'-testid', limit: 2});
-
-      c.from([
-        {testid: 1},
-        {testid: 2},
-        {testid: 2}
-      ]);
-      expect(c.array.length).toEqual(2);
-      c.from([
-        {testid: 3},
-        {testid: 4},
-        {testid: 5}
-      ]);
-      expect(c.array.length).toEqual(2);
-      expect(c.array[0].id).toEqual("5");
-      expect(c.array[1].id).toEqual("4");
-    });
   });
-
 
   describe("singleid collection", () => {
     const c = createCollection('tests/1', {});
