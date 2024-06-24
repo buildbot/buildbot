@@ -21,7 +21,7 @@ export class Builder extends BaseClass {
   @observable description!: string|null;
   @observable description_format!: string|null;
   @observable description_html!: string|null;
-  @observable masterids!: string[];
+  @observable masterids!: number[];
   @observable name!: string;
   @observable tags!: string[];
   @observable projectid!: string|null;
