@@ -41,8 +41,14 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   internalId: number = 0;
 
   @observable resolved: boolean = false;
+  // does not contain elements that have been filtered out and off limits
   @observable array: IObservableArray<DataType> = observable<DataType>([]);
+  // does not contain elements that have been filtered out
   @observable byId: ObservableMap<string, DataType> = observable.map<string, DataType>();
+
+  // includes IDs of all elements received before resolved becomes true. This is necessary to
+  // track which elements have been received, but filtered out.
+  idsBeforeResolve = new Set<string>();
 
   constructor(internalId: number = 0) {
     makeObservable(this);
@@ -135,11 +141,12 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     // with REST data
     for (const element of data) {
       const id = element[this.descriptor.fieldId];
-      if (!this.byId.has(String(id))) {
+      if (!this.idsBeforeResolve.has(String(id))) {
         this.put(element);
       }
     }
     this.resolved = true;
+    this.idsBeforeResolve.clear();
     this.recomputeQuery();
   }
 
@@ -163,6 +170,10 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
 
   @action put(element: any) {
     const id = element[this.descriptor.fieldId];
+    if (!this.resolved) {
+      this.idsBeforeResolve.add(String(id));
+    }
+
     const old = this.byId.get(String(id));
     if (old !== undefined) {
       old.update(element);
