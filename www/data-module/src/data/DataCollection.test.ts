@@ -86,6 +86,25 @@ describe('DataCollection', () => {
   });
 
   describe("queried collection", () => {
+    it("initial data should not overwrite filtered data from ws", () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
+      c.initial([{
+        testid: 1,
+        testdata: 0
+      }]);
+      expect(c.array.length).toEqual(0);
+    });
+
+    it("initial data should not overwrite not filtered data from ws", () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      c.initial([{
+        testid: 1,
+        testdata: 1
+      }]);
+      expect(c.array.map(x => [x.testid, x.testdata])).toEqual([[1, 0]]);
+    });
 
     it('should have a from function, which iteratively inserts data', () => {
       const c = createCollection('tests', {order:'-testid', limit: 2});
