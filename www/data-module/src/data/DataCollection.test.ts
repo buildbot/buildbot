@@ -45,6 +45,14 @@ describe('DataCollection', () => {
     return c;
   }
 
+  const expectArrayContents = (c: DataCollection<TestDataClass>, expected: [number, number][]) => {
+    expect(c.array.map(x => [x.testid, x.testdata])).toEqual(expected);
+  }
+
+  const expectByIdContents = (c: DataCollection<TestDataClass>, expected: [number, number][]) => {
+    expect([...c.byId.values()].map(x => [x.testid, x.testdata])).toEqual(expected);
+  }
+
   beforeEach(() => {
     jest.useFakeTimers();
   });
@@ -61,9 +69,9 @@ describe('DataCollection', () => {
       expect(c.array.length).toEqual(2);
     });
 
-    it('should have a from function, which iteratively inserts data', () => {
+    it('should have a initial function, which iteratively inserts data', () => {
       const c = createCollection('tests', {});
-      c.from([
+      c.initial([
         {testid: 1},
         {testid: 2},
         {testid: 2}
@@ -86,27 +94,66 @@ describe('DataCollection', () => {
   });
 
   describe("queried collection", () => {
-
-    it('should have a from function, which iteratively inserts data', () => {
-      const c = createCollection('tests', {order:'-testid', limit: 2});
-
-      c.from([
-        {testid: 1},
-        {testid: 2},
-        {testid: 2}
+    it('should have a initial function, which iteratively inserts data', () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.initial([
+        {testid: 1, testdata: 1},
+        {testid: 0, testdata: 0},
+        {testid: 0, testdata: 0}
       ]);
-      expect(c.array.length).toEqual(2);
-      c.from([
-        {testid: 3},
-        {testid: 4},
-        {testid: 5}
-      ]);
-      expect(c.array.length).toEqual(2);
-      expect(c.array[0].id).toEqual("5");
-      expect(c.array[1].id).toEqual("4");
+      expect(c.array.length).toEqual(1);
+    });
+
+    it("initial data should not overwrite filtered data from ws", () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
+      c.initial([{
+        testid: 1,
+        testdata: 0
+      }]);
+      expect(c.array.length).toEqual(0);
+    });
+
+    it("initial data should not overwrite not filtered data from ws", () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      c.initial([{
+        testid: 1,
+        testdata: 1
+      }]);
+      expectArrayContents(c, [[1, 0]]);
+    });
+
+    it("remove items when do not match filter", () => {
+      const c = createCollection('tests', {testdata__eq: 0});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      c.initial([]);
+      expectArrayContents(c, [[1, 0]]);
+      expectByIdContents(c, [[1, 0]]);
+
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
+      expectArrayContents(c, []);
+      expectByIdContents(c, []);
+
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      expectArrayContents(c, [[1, 0]]);
+      expectByIdContents(c, [[1, 0]]);
+    });
+
+    it("fills array when array was full and updated items are filtered out", () => {
+      const c = createCollection('tests', {testdata__eq: 0, limit: 2});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      c.listener({k: "tests/1/update", m: {testid: 2, testdata: 0}});
+      c.listener({k: "tests/1/update", m: {testid: 3, testdata: 0}});
+      c.initial([]);
+      expectArrayContents(c, [[1, 0], [2, 0]]);
+      expectByIdContents(c, [[1, 0], [2, 0], [3, 0]]);
+
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
+      expectArrayContents(c, [[2, 0], [3, 0]]);
+      expectByIdContents(c, [[2, 0], [3, 0]]);
     });
   });
-
 
   describe("singleid collection", () => {
     const c = createCollection('tests/1', {});
