@@ -1,1 +1,0 @@
-Fixed buildrequest cancel requests being ignored under certain infrequent conditions.

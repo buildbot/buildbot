@@ -1,2 +1,0 @@
-Removed Python 2.7 support on the worker. This does not affect compatibility of connecting workers
-running old versions of Buildbot to masters running new versions of Buildbot.
