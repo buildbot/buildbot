@@ -8,6 +8,15 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``3.11.5`` ( ``2024-06-24`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed several occasional data update glitches in web frontend
+- Fixed display of newly added builds in Workers view in the web frontend.
+
 Buildbot ``v3.11.4`` ( ``2024-06-20`` )
 =======================================
 
