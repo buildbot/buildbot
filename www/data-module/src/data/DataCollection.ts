@@ -169,8 +169,19 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     const old = this.byId.get(String(id));
     if (old !== undefined) {
       if (!this.queryExecutor.isAllowedByFilters(element)) {
-        this.byId.delete(String(id));
-        this.deleteFromArray(old);
+        if (this.queryExecutor.limitCount !== null &&
+          this.array.length === this.queryExecutor.limitCount &&
+          this.byId.size > this.array.length)
+        {
+          // Array was limited, however there are more up-to-date data in byId that can be filled
+          // in.
+          this.byId.delete(String(id));
+          this.array.replace([...this.byId.values()]);
+          this.recomputeQuery();
+        } else {
+          this.byId.delete(String(id));
+          this.deleteFromArray(old);
+        }
         return;
       }
       old.update(element);
