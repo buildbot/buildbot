@@ -1,1 +1,0 @@
-Gerrit status callback functions now can only return dictionary type.

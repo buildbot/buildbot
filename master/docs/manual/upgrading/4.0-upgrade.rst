@@ -1,7 +1,7 @@
 .. _4.0_Upgrading:
 
-Upgrading to Buildbot 4.0 (not released)
-========================================
+Upgrading to Buildbot 4.0
+=========================
 
 Upgrading a Buildbot instance from 3.x to 4.0 may require some work to achieve.
 

@@ -1,1 +1,0 @@
-Added optional ``locks_acquired_at`` argument to ``master.data.updates.set_step_locks_acquired_at()``.
