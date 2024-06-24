@@ -140,6 +140,20 @@ describe('DataCollection', () => {
       expectArrayContents(c, [[1, 0]]);
       expectByIdContents(c, [[1, 0]]);
     });
+
+    it("fills array when array was full and updated items are filtered out", () => {
+      const c = createCollection('tests', {testdata__eq: 0, limit: 2});
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 0}});
+      c.listener({k: "tests/1/update", m: {testid: 2, testdata: 0}});
+      c.listener({k: "tests/1/update", m: {testid: 3, testdata: 0}});
+      c.initial([]);
+      expectArrayContents(c, [[1, 0], [2, 0]]);
+      expectByIdContents(c, [[1, 0], [2, 0], [3, 0]]);
+
+      c.listener({k: "tests/1/update", m: {testid: 1, testdata: 1}});
+      expectArrayContents(c, [[2, 0], [3, 0]]);
+      expectByIdContents(c, [[2, 0], [3, 0]]);
+    });
   });
 
   describe("singleid collection", () => {
