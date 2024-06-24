@@ -56,8 +56,8 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
 export class DataQuery {
   query: Query;
   filters: ValueFilter[] = [];
-  order: string | null = null;
-  limitCount: number | null = null;
+  order: any | null = null;
+  limit: number | null = null;
 
   constructor(query: Query | null) {
     if (query === null) {
@@ -74,18 +74,7 @@ export class DataQuery {
       this.order = this.query.order;
     }
     if ('limit' in this.query) {
-      this.limitCount = this.query.limit;
-    }
-  }
-
-  computeQuery(array: any[]) {
-    // 1. filtering
-    this.filter(array);
-    if (this.order !== null) {
-      this.sort(array, this.order);
-    }
-    if (this.limitCount !== null) {
-      this.limit(array, this.limitCount);
+      this.limit = this.query.limit;
     }
   }
 
@@ -100,19 +89,21 @@ export class DataQuery {
 
   filter(array: any[]) {
     let i = 0;
-    const result = [];
     while (i < array.length) {
       const v = array[i];
       if (this.isAllowedByFilters(v)) {
-        result.push(i += 1);
+        i += 1;
       } else {
-        result.push(array.splice(i, 1));
+        array.splice(i, 1);
       }
     }
-    return result;
   }
 
-  sort(array: any[], order: any) {
+  applySort(array: any[]) {
+    const order = this.order;
+    if (order === null) {
+      return;
+    }
     const compare = (property: string) => {
       let reverse = false;
       if (property[0] === '-') {
@@ -149,8 +140,11 @@ export class DataQuery {
     }
   }
 
-  limit(array: string[], limit: number) {
-    while (array.length > limit) {
+  applyLimit(array: any[]) {
+    if (this.limit === null) {
+      return;
+    }
+    while (array.length > this.limit) {
       array.pop();
     }
   }

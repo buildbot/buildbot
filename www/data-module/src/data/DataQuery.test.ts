@@ -19,13 +19,13 @@ class WrappedDataQuery {
   sort(array: any[], order: any) {
     const q = new DataQuery({order});
     array = [...array];
-    q.sort(array, order);
+    q.applySort(array);
     return array;
   }
   limit(array: any[], limit: number) {
     const q = new DataQuery({limit});
     array = [...array];
-    q.limit(array, limit);
+    q.applyLimit(array);
     return array;
   }
 }

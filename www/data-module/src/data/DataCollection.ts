@@ -160,8 +160,8 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     if (old !== undefined) {
       if (!this.queryExecutor.isAllowedByFilters(element)) {
         // existing item, but updated data has property that filters out the element outright
-        if (this.queryExecutor.limitCount !== null &&
-          this.array.length === this.queryExecutor.limitCount &&
+        if (this.queryExecutor.limit !== null &&
+          this.array.length === this.queryExecutor.limit &&
           this.byId.size > this.array.length)
         {
           // Array was limited, however there are more up-to-date data in byId that can be filled
@@ -203,6 +203,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   }
 
   @action recomputeQuery() {
-    this.queryExecutor.computeQuery(this.array);
+    this.queryExecutor.applySort(this.array);
+    this.queryExecutor.applyLimit(this.array);
   }
 }
