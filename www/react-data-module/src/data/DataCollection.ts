@@ -150,16 +150,6 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     this.recomputeQuery();
   }
 
-  @action add(element: any) {
-    // don't create wrapper if element is filtered
-    if (!this.queryExecutor.isAllowedByFilters(element)) {
-      return;
-    }
-    const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
-    this.byId.set(instance.id, instance);
-    this.array.push(instance);
-  }
-
   @action put(element: any) {
     const id = element[this.descriptor.fieldId];
     if (!this.resolved) {
@@ -169,6 +159,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     const old = this.byId.get(String(id));
     if (old !== undefined) {
       if (!this.queryExecutor.isAllowedByFilters(element)) {
+        // existing item, but updated data has property that filters out the element outright
         if (this.queryExecutor.limitCount !== null &&
           this.array.length === this.queryExecutor.limitCount &&
           this.byId.size > this.array.length)
@@ -184,12 +175,20 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
         }
         return;
       }
+      // update items that are not filtered out
       old.update(element);
       return;
     }
 
-    // if not found, add it.
-    this.add(element);
+    if (!this.queryExecutor.isAllowedByFilters(element)) {
+      // ignore items that are filtered out
+      return;
+    }
+
+    // add items that are not filtered out
+    const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
+    this.byId.set(instance.id, instance);
+    this.array.push(instance);
   }
 
   @action clear() {
