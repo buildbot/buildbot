@@ -17,7 +17,7 @@ export class MockDataCollection<DataType extends BaseClass> extends DataCollecti
   @action setItems(items: DataType[]) {
     this.resolved = true;
     for (const item of items) {
-      this.byId[item.id] = item;
+      this.byId.set(item.id, item);
       this.array.push(item);
     }
   }

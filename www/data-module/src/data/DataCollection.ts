@@ -11,7 +11,7 @@ import {WebSocketClient} from "./WebSocketClient";
 import {BaseClass} from "./classes/BaseClass";
 import {IDataDescriptor} from "./classes/DataDescriptor";
 import {IDataAccessor} from "./DataAccessor";
-import {action, IObservableArray, makeObservable, observable} from "mobx";
+import {action, IObservableArray, ObservableMap, makeObservable, observable} from "mobx";
 import {DataMultiCollection} from "./DataMultiCollection";
 import {DataPropertiesCollection} from "./DataPropertiesCollection";
 import {DataMultiPropertiesCollection} from "./DataMultiPropertiesCollection";
@@ -42,7 +42,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
 
   @observable resolved: boolean = false;
   @observable array: IObservableArray<DataType> = observable<DataType>([]);
-  @observable byId: {[key: string]: DataType} = {};
+  @observable byId: ObservableMap<string, DataType> = observable.map<string, DataType>();
 
   constructor(internalId: number = 0) {
     makeObservable(this);
@@ -126,10 +126,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   }
 
   getByIdOrNull(id: string): DataType | null {
-    if (id in this.byId) {
-      return this.byId[id];
-    }
-    return null;
+    return this.byId.get(id) ?? null;
   }
 
   @action initial(data: any[]) {
@@ -138,7 +135,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     // with REST data
     for (const element of data) {
       const id = element[this.descriptor.fieldId];
-      if (!(id in this.byId)) {
+      if (!this.byId.has(String(id))) {
         this.put(element);
       }
     }
@@ -160,14 +157,14 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
       return;
     }
     const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
-    this.byId[instance.id] = instance;
+    this.byId.set(instance.id, instance);
     this.array.push(instance);
   }
 
   @action put(element: any) {
     const id = element[this.descriptor.fieldId];
-    if (id in this.byId) {
-      const old = this.byId[id];
+    const old = this.byId.get(String(id));
+    if (old !== undefined) {
       old.update(element);
       return;
     }

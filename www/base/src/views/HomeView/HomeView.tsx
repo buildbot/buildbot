@@ -63,8 +63,8 @@ function computeBuildsByBuilder(builders: DataCollection<Builder>,
   const buildsByBuilder: BuildsByBuilder = {};
   for (const build of recentBuilds.array) {
     const builderid = build.builderid.toString();
-    if (builderid in builders.byId) {
-      const builder = builders.byId[builderid];
+    const builder = builders.byId.get(builderid);
+    if (builder !== undefined) {
       if (!(builderid in buildsByBuilder)) {
         buildsByBuilder[builderid] = {
           builder: builder,
@@ -116,12 +116,12 @@ export const HomeView = observer(() => {
               {
                 buildsRunning.array
                   .filter(build => build.complete === false &&
-                    build.builderid.toString() in builders.byId)
+                    builders.byId.has(build.builderid.toString()))
                   .map(build => {
                     return (
                       <li key={`${build.builderid}-${build.id}`} className="unstyled">
                         <BuildSticker build={build}
-                                      builder={builders.byId[build.builderid.toString()]}/>
+                                      builder={builders.byId.get(build.builderid.toString())!}/>
                       </li>
                     )
                   })
