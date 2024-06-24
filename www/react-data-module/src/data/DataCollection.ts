@@ -150,14 +150,6 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     this.recomputeQuery();
   }
 
-  @action from(data: any[]) {
-    // put items one by one
-    for (let element of data) {
-      this.put(element);
-    }
-    this.recomputeQuery();
-  }
-
   @action add(element: any) {
     // don't create wrapper if element is filtered
     if (!this.queryExecutor.isAllowedByFilters(element)) {
