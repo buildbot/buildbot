@@ -56,6 +56,8 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
 export class DataQuery {
   query: Query;
   filters: ValueFilter[] = [];
+  order: string | null = null;
+  limitCount: number | null = null;
 
   constructor(query: Query | null) {
     if (query === null) {
@@ -68,20 +70,22 @@ export class DataQuery {
         this.filters.push(filter);
       }
     }
+    if ('order' in this.query) {
+      this.order = this.query.order;
+    }
+    if ('limit' in this.query) {
+      this.limitCount = this.query.limit;
+    }
   }
 
   computeQuery(array: any[]) {
     // 1. filtering
     this.filter(array);
-
-    // 2. sorting
-    if ('order' in this.query) {
-      this.sort(array, this.query.order);
+    if (this.order !== null) {
+      this.sort(array, this.order);
     }
-
-    // 3. limit
-    if ('limit' in this.query) {
-      this.limit(array, this.query.limit);
+    if (this.limitCount !== null) {
+      this.limit(array, this.limitCount);
     }
   }
 
