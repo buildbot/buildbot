@@ -11,7 +11,7 @@ import {WebSocketClient} from "./WebSocketClient";
 import {BaseClass} from "./classes/BaseClass";
 import {IDataDescriptor} from "./classes/DataDescriptor";
 import {IDataAccessor} from "./DataAccessor";
-import {action, IObservableArray, makeObservable, observable} from "mobx";
+import {action, IObservableArray, ObservableMap, makeObservable, observable} from "mobx";
 import {DataMultiCollection} from "./DataMultiCollection";
 import {DataPropertiesCollection} from "./DataPropertiesCollection";
 import {DataMultiPropertiesCollection} from "./DataMultiPropertiesCollection";
@@ -41,8 +41,14 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   internalId: number = 0;
 
   @observable resolved: boolean = false;
+  // does not contain elements that have been filtered out and off limits
   @observable array: IObservableArray<DataType> = observable<DataType>([]);
-  @observable byId: {[key: string]: DataType} = {};
+  // does not contain elements that have been filtered out
+  @observable byId: ObservableMap<string, DataType> = observable.map<string, DataType>();
+
+  // includes IDs of all elements received before resolved becomes true. This is necessary to
+  // track which elements have been received, but filtered out.
+  idsBeforeResolve = new Set<string>();
 
   constructor(internalId: number = 0) {
     makeObservable(this);
@@ -126,10 +132,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   }
 
   getByIdOrNull(id: string): DataType | null {
-    if (id in this.byId) {
-      return this.byId[id];
-    }
-    return null;
+    return this.byId.get(id) ?? null;
   }
 
   @action initial(data: any[]) {
@@ -138,49 +141,61 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     // with REST data
     for (const element of data) {
       const id = element[this.descriptor.fieldId];
-      if (!(id in this.byId)) {
+      if (!this.idsBeforeResolve.has(String(id))) {
         this.put(element);
       }
     }
     this.resolved = true;
+    this.idsBeforeResolve.clear();
     this.recomputeQuery();
-  }
-
-  @action from(data: any[]) {
-    // put items one by one
-    for (let element of data) {
-      this.put(element);
-    }
-    this.recomputeQuery();
-  }
-
-  @action add(element: any) {
-    // don't create wrapper if element is filtered
-    if (this.queryExecutor.filter([element]).length === 0) {
-      return;
-    }
-    const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
-    this.byId[instance.id] = instance;
-    this.array.push(instance);
   }
 
   @action put(element: any) {
     const id = element[this.descriptor.fieldId];
-    if (id in this.byId) {
-      const old = this.byId[id];
+    if (!this.resolved) {
+      this.idsBeforeResolve.add(String(id));
+    }
+
+    const old = this.byId.get(String(id));
+    if (old !== undefined) {
+      if (!this.queryExecutor.isAllowedByFilters(element)) {
+        // existing item, but updated data has property that filters out the element outright
+        if (this.queryExecutor.limit !== null &&
+          this.array.length === this.queryExecutor.limit &&
+          this.byId.size > this.array.length)
+        {
+          // Array was limited, however there are more up-to-date data in byId that can be filled
+          // in.
+          this.byId.delete(String(id));
+          this.array.replace([...this.byId.values()]);
+          this.recomputeQuery();
+        } else {
+          this.byId.delete(String(id));
+          this.deleteFromArray(old);
+        }
+        return;
+      }
+      // update items that are not filtered out
       old.update(element);
       return;
     }
 
-    // if not found, add it.
-    this.add(element);
+    if (!this.queryExecutor.isAllowedByFilters(element)) {
+      // ignore items that are filtered out
+      return;
+    }
+
+    // add items that are not filtered out
+    const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
+    this.byId.set(instance.id, instance);
+    this.array.push(instance);
   }
 
   @action clear() {
     this.array.replace([]);
   }
 
-  @action delete(element: DataType) {
+  @action deleteFromArray(element: DataType) {
     const index = this.array.indexOf(element);
     if (index > -1) {
       this.array.splice(index, 1);
@@ -188,6 +203,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
   }
 
   @action recomputeQuery() {
-    this.queryExecutor.computeQuery(this.array);
+    this.queryExecutor.applySort(this.array);
+    this.queryExecutor.applyLimit(this.array);
   }
 }
