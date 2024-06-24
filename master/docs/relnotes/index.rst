@@ -8,8 +8,111 @@ Release Notes
 
 .. towncrier release notes start
 
-Buildbot ``v3.11.4`` ( ``2024-06-20`` )
-=======================================
+
+Buildbot ``4.0.0`` ( ``2024-06-24`` )
+======================================
+
+Bug fixes
+---------
+
+- ``BitbucketServerCoreAPIStatusPush`` now handles epoch time format in events as well as `datetime.datetime`.
+- Fixed buildrequest cancel requests being ignored under certain infrequent conditions.
+- Fixed an issue in lock handling which caused step locks to be acquired in excess of their
+  configured capacity under certain conditions (:issue:`5655`, :issue:`5987`).
+- ``OldBuildCanceller`` will now cancel builds only if a superseding buildrequest is actually
+  created. Previously it was enough to observe a superseding change even if it did not result in
+  actually running builds.
+- Fixed ``OldBuildCanceller`` crashes when sourcestamp with no branch was ingested.
+- Fixed ``ChoiceStringParameter`` fields being not present in ForceBuild Form.
+- Fixed initialization of default web setting values from config.
+- Fixed loading of user saved settings in React web frontend.
+
+Changes
+-------
+
+- Added optional ``locks_acquired_at`` argument to ``master.data.updates.set_step_locks_acquired_at()``.
+- Master and Worker packages have stopped using the deprecated ``distutils`` package and rely on
+  setuptools. Worker installation now requires setuptools.
+- Events between ``GerritChangeSource`` and ``GerritEventLogPoller`` are no longer deduplicated.
+  Use ``GerritChangeSource`` with both SSH and HTTP API configured as a replacement.
+- ``GitPoller`` no longer track the ``master`` branch when neither ``branch`` nor ``branches``
+  arguments are provided. It now track the remote's default branch.
+- Improved performance of ``OpenstackWorker`` startup when there are large number of images on the server.
+- ``buildbot.www.plugin.Application`` no longer accepts module name as the first parameter.
+  It requires the name of package. In most cases where ``__name__`` was being passed, ``__package__``
+  is now required.
+- Padding of the UI elements in the web UI has been reduced to increase density of presented data.
+- Buildbot now requires SQLAlchemy 1.4.0 or newer.
+- Old ``importlib_resources`` is no longer used.
+
+Features
+--------
+
+- Added ``rebuilt_buildid`` key-value pair to buildsets to be able to keep track on which build is
+  being rebuild.
+- Buildbot now tracks total time that has been spent waiting for locks in a build.
+- Added ``projectid`` and ``projectname`` properties to Build
+- The ``worker_preparation`` dummy step that tracks various build startup overhead has been split
+  into two steps to track worker startup and locks wait times separately.
+- Builds now have ``builderid`` property.
+- Build request cancellation has been exposed to the Data API.
+- Added optional ``started_at`` and ``locks_acquired`` arguments to ``master.data.updates.startStep()``.
+- ``buildbot.test.fake.httpclientservice.HTTPClientService`` now can simulate network and processing
+  delays via ``processing_delay_s`` option to ``expect()`` method.
+- Added ability to poll HTTP event API of Gerrit server to ``GerritChangeSource``. This has the
+  following advantages compared to simply pointing ``GerritChangeSource`` and
+  ``GerritEventLogPoller`` at the same Gerrit server:
+
+    - All events are properly deduplicated
+    - SSH connection is restarted in case of silent hangs of underlying SSH connection (this may
+      happen even when ServerAliveInterval is used)
+
+- Added ``select_next_worker`` global configuration key which sets default ``nextWorker``
+  customization hook on all builders.
+- Added support for connecting Kubernetes workers to multiple Kubernetes clusters.
+- Raw logs downloaded from the web UI now include full identifying information in the filename.
+- Raw text logs downloaded from the web UI now include a small header with identifying information.
+- The Rebuild button on a Build's view now redirect to the Buildrequest corresponding to the latest rebuild.
+- Add a "Workers" tab to the Builder view listing workers that are assigned to this builder (:issue:`7162`)
+- Added check for correct argument types to ``BuildStep`` and ``ShellCommand`` build steps and all steps
+  deriving from ``ShellMixin``. This will avoid wrong arguments causing confusing errors in unrelated
+  parts of the codebase.
+- Implemented a check for step attempting to acquire the same lock as its build.
+- Implement support for customizing ``affinity`` and ``nodeSelector`` fields in Kubernetes pod spec
+  for Kubernetes worker.
+- The debug tab in build page now shows previous build that has been built on the same worker
+  for the same builder. This helps debugging any build directory cleanup problems in custom Buildbot
+  setups.
+- Add support for case insensitive search within the logs.
+- Add support for regex search within the logs.
+
+
+Deprecations and Removals
+-------------------------
+
+- ``buildbot.process.factory.Distutils`` factory has been deprecated.
+- ``HashiCorpVaultSecretProvider`` has been removed.
+- ``GerritStatusPush`` no longer accepts deprecated arguments: ``reviewCB``, ``startCB``,
+  ``reviewArg``, ``startArg``, ``summaryCB``, ``summaryArg``, ``builders``, ``wantSteps``,
+  ``wantLogs``.
+- Deprecated module-level attributes have been deleted.
+- ``GerritStatusPush`` callback functions now can only return dictionary type.
+- AngularJS web frontend has been removed.
+- Deprecated ``LineBoundaryFinder callback`` argument has been removed.
+- Removed Python 2.7 support on the worker. This does not affect compatibility of connecting workers
+  running old versions of Buildbot to masters running new versions of Buildbot.
+
+Buildbot ``3.11.5`` ( ``2024-06-24`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed several occasional data update glitches in web frontend
+- Fixed display of newly added builds in Workers view in the web frontend.
+
+Buildbot ``3.11.4`` ( ``2024-06-20`` )
+======================================
 
 Bug fixes
 ---------

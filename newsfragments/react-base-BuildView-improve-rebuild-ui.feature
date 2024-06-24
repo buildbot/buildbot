@@ -1,1 +1,0 @@
-The Rebuild button on a Build's view now redirect to the Buildrequest corresponding to the latest rebuild.

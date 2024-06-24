@@ -1,1 +1,0 @@
-Conditionalize importlib_resources for Python <3.9 only, for interoperability with more modern Pythons and without that module.

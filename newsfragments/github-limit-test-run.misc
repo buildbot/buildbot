@@ -1,1 +1,0 @@
-Github action of Buildbot CI limits the execution of the tests to 30 minutes to avoid wasting resources (:issue `7277`).

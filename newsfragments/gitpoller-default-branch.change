@@ -1,1 +1,0 @@
-``GitPoller`` no longer track the ``master`` branch when not provided ``branch`` nor ``branches``. It now track the remote's default branch.
