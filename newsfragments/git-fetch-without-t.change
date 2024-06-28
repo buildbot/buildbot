@@ -1,0 +1,2 @@
+
+:bb:step:`Git` when fetching no longer includes "-t" (tags) by default. Explicitly enabling with tags=True is now required to achieve the same functionality.

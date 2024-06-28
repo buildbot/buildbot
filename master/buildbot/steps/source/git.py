@@ -365,7 +365,7 @@ class Git(Source, GitStepMixin):
                 fetch_required = False
 
         if fetch_required:
-            command = ['fetch', '-f', '-t', self.repourl, self.branch]
+            command = ['fetch', '-f']
             if shallowClone:
                 command += ['--depth', str(int(shallowClone))]
             if self.tags:
@@ -381,6 +381,7 @@ class Git(Source, GitStepMixin):
                 else:
                     log.msg("Git versions < 1.7.2 don't support progress")
 
+            command += [self.repourl, self.branch]
             res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
             if res != RC_SUCCESS:
                 return res
