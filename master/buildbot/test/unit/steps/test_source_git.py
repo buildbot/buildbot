@@ -1716,6 +1716,59 @@ class TestGit(
         )
         return self.run_step()
 
+    def test_mode_full_clobber_no_branch_support_shallow(self):
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clobber',
+                branch='test-branch',
+                shallow=True,
+            )
+        )
+
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 1.5.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'clone',
+                    '--depth',
+                    '1',
+                    'http://github.com/buildbot/buildbot.git',
+                    '.',
+                ],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '-t',
+                    'http://github.com/buildbot/buildbot.git',
+                    'test-branch',
+                    '--depth',
+                    '1',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
+        )
+        return self.run_step()
+
     def test_mode_full_clobber_no_branch_support(self):
         self.setup_step(
             self.stepClass(
@@ -2029,13 +2082,16 @@ class TestGit(
                 command=[
                     'git',
                     'clone',
+                    '--depth',
+                    '1',
                     'http://github.com/buildbot/buildbot.git',
                     '.',
                     '--progress',
                 ],
             ).exit(0),
             ExpectShell(
-                workdir='wkdir', command=['git', 'submodule', 'update', '--init', '--recursive']
+                workdir='wkdir',
+                command=['git', 'submodule', 'update', '--init', '--recursive', '--depth', '1'],
             ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
