@@ -109,7 +109,7 @@ setuptools-trial==0.6.0
 singledispatch==4.1.0
 six==1.16.0
 snowballstemmer==2.2.0
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 sqlparse==0.5.0
 termcolor==2.4.0
 testtools==2.7.2
