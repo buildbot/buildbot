@@ -156,7 +156,7 @@ def make_master(
         master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(testcase)
+        master.db = fakedb.FakeDBConnector(testcase, reactor=_reactor)
         master.db.setServiceParent(master)
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
