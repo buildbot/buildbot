@@ -103,7 +103,7 @@ requests==2.32.3
 responses==0.25.3
 ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
-s3transfer==0.10.1
+s3transfer==0.10.2
 service-identity==24.1.0
 setuptools-trial==0.6.0
 singledispatch==4.1.0
