@@ -81,7 +81,7 @@ packaging==24.1
 parameterized==0.9.0
 pathlib2==2.3.7.post1
 pbr==6.0.0
-Pillow==10.3.0
+Pillow==10.4.0
 platformdirs==4.2.2
 psutil==5.9.8
 pyaml==24.4.0
