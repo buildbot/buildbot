@@ -83,7 +83,7 @@ pathlib2==2.3.7.post1
 pbr==6.0.0
 Pillow==10.4.0
 platformdirs==4.2.2
-psutil==5.9.8
+psutil==6.0.0
 pyaml==24.4.0
 pyasn1==0.6.0
 pyasn1-modules==0.4.0
