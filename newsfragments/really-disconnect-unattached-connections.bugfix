@@ -1,0 +1,3 @@
+Notify disconnect of connections that are being unattached when a replacement connection is being set up.
+Additionally, make sure the notification callbacks cannot be called twice, and that a disconnected connection
+cannot send a KeepAlive.
