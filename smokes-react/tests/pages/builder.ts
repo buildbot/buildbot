@@ -33,7 +33,11 @@ export class BuilderPage {
   static async gotoForce(page: Page, builder: string, forceName: string) {
     await BuilderPage.goto(page, builder);
     await page.locator(`button:text("${forceName}")`).first().click();
-    await expect(page.locator(".modal-title.h4")).toBeEnabled();
+    await expect.poll(async () => {
+      return (await page.locator(".modal-title.h4").isEnabled());
+    }, {
+      message: "locator is enabled"
+    }).toBeTruthy();
   }
 
   static async gotoBuild(page: Page, builder: string, buildRef: string) {
