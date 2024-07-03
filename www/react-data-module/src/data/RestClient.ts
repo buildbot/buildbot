@@ -151,6 +151,15 @@ export class RestClient {
   }
 }
 
+export function getBaseUrl(location: Location, route?: string) {
+  const hostname = location.hostname;
+  const protocol = location.protocol;
+  const defaultport = location.protocol === 'https:' ? '443' : '80';
+  const path = location.pathname;
+  const port = location.port === defaultport ? '' : `:${location.port}`;
+  return `${protocol}//${hostname}${port}${path}${route ?? ""}`;
+}
+
 export function getRestUrl(location: Location) {
-  return `${location.protocol}//${location.hostname}:${location.port}/api/v2`;
+  return getBaseUrl(location, 'api/v2');
 }
