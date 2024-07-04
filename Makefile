@@ -22,6 +22,10 @@ PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
 VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
 
+ifeq ($(YARN),)
+  $(error "yarnpkg or yarn is not installed")
+endif
+
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
