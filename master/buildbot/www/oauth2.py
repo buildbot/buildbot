@@ -25,6 +25,7 @@ import requests
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.logger import Logger
+from twisted.web.error import Error
 
 import buildbot
 from buildbot import config
@@ -125,6 +126,11 @@ class OAuth2Auth(auth.AuthBase):
 
     def createSessionFromToken(self, token):
         s = requests.Session()
+        error = token.get("error")
+        if error:
+            error_description = token.get("error_description") or error
+            msg = f"OAuth2 session: creation failed: {error_description}"
+            raise Error(503, msg)
         s.params = {'access_token': token['access_token']}
         s.verify = self.sslVerify
         return s
