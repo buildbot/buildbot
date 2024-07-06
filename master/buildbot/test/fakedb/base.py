@@ -19,10 +19,10 @@ from buildbot.data import resultspec
 class FakeDBComponent:
     data2db = {}
 
-    def __init__(self, db, testcase):
+    def __init__(self, db, testcase, reactor=None):
         self.db = db
         self.t = testcase
-        self.reactor = testcase.reactor
+        self.reactor = reactor if reactor is not None else testcase.reactor
         self.setUp()
 
     def mapFilter(self, f, fieldMapping):
