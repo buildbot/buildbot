@@ -211,7 +211,7 @@ class Git(Source, GitStepMixin):
             return
         elif action == "clone":
             log.msg("No git repo present, making full clone")
-            yield self._fullCloneOrFallback()
+            yield self._fullCloneOrFallback(self.shallow)
         elif self.method == 'clean':
             yield self.clean()
         elif self.method == 'fresh':
@@ -228,7 +228,7 @@ class Git(Source, GitStepMixin):
             return
         elif action == "clone":
             log.msg("No git repo present, making full clone")
-            yield self._fullCloneOrFallback()
+            yield self._fullCloneOrFallback(shallowClone=self.shallow)
             return
 
         yield self._fetchOrFallback()
@@ -277,7 +277,7 @@ class Git(Source, GitStepMixin):
             yield self._fetchOrFallback()
         else:
             yield self._doClobber()
-            yield self._fullCloneOrFallback()
+            yield self._fullCloneOrFallback(shallowClone=self.shallow)
         yield self._syncSubmodule()
         yield self._updateSubmodule()
         yield self._cleanSubmodule()
@@ -354,7 +354,7 @@ class Git(Source, GitStepMixin):
         return self.workdir
 
     @defer.inlineCallbacks
-    def _fetch(self, _, abandonOnFailure=True):
+    def _fetch(self, _, shallowClone, abandonOnFailure=True):
         fetch_required = True
 
         # If the revision already exists in the repo, we don't need to fetch. However, if tags
@@ -366,6 +366,8 @@ class Git(Source, GitStepMixin):
 
         if fetch_required:
             command = ['fetch', '-f', '-t', self.repourl, self.branch]
+            if shallowClone:
+                command += ['--depth', str(int(shallowClone))]
             if self.tags:
                 command.append("--tags")
 
@@ -406,11 +408,11 @@ class Git(Source, GitStepMixin):
 
         abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
 
-        res = yield self._fetch(None, abandonOnFailure=abandonOnFailure)
+        res = yield self._fetch(None, shallowClone=self.shallow, abandonOnFailure=abandonOnFailure)
         if res == RC_SUCCESS:
             return res
         elif self.retryFetch:
-            yield self._fetch(None)
+            yield self._fetch(None, shallowClone=self.shallow)
         elif self.clobberOnFailure:
             yield self.clobber()
         else:
@@ -458,7 +460,7 @@ class Git(Source, GitStepMixin):
         res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
 
         if switchToBranch:
-            res = yield self._fetch(None)
+            res = yield self._fetch(None, shallowClone=shallowClone)
 
         done = self.stopped or res == RC_SUCCESS  # or shallow clone??
         if self.retry and not done:
@@ -501,12 +503,12 @@ class Git(Source, GitStepMixin):
         return res
 
     @defer.inlineCallbacks
-    def _fullCloneOrFallback(self):
+    def _fullCloneOrFallback(self, shallowClone):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
         is set to True remove the build directory and try a full clone again.
         """
 
-        res = yield self._fullClone()
+        res = yield self._fullClone(shallowClone)
         if res != RC_SUCCESS:
             if not self.clobberOnFailure:
                 raise buildstep.BuildStepFailed()
