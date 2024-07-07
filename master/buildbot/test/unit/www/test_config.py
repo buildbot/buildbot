@@ -17,6 +17,8 @@ import json
 import os
 from unittest import mock
 
+from parameterized import parameterized
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
@@ -216,14 +218,24 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         config_json = config_json.strip(';').strip()
         return json.loads(config_json)
 
+    @parameterized.expand([
+        ('anonymous_user', None, {'anonymous': True}),
+        (
+            'logged_in_user',
+            {"name": 'me', "email": 'me@me.org'},
+            {"email": "me@me.org", "name": "me"},
+        ),
+    ])
     @defer.inlineCallbacks
-    def test_render(self):
+    def test_render(self, name, user_info, expected_user):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
         master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={})
+        if user_info is not None:
+            master.session.user_info = user_info
 
         # IndexResourceReact only uses static path to get index.html. In the source checkout
         # index.html resides not in www/base/public but in www/base. Thus
@@ -243,7 +255,7 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
             "versions": vjson,
             "title": "Buildbot",
             "auth": {"name": "NoAuth"},
-            "user": {"anonymous": True},
+            "user": expected_user,
             "buildbotURL": "h:/a/b/",
             "multiMaster": False,
             "port": None,
