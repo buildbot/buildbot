@@ -51,7 +51,9 @@ def get_python_module_contents(package_name):
             if dir_entry.is_file() and filename.endswith('.py'):
                 result.add(next_package_name)
 
-            if dir_entry.is_dir():
+            if dir_entry.is_dir() and not filename.startswith('.'):
+                # Ignore hidden directories added by various tooling an user may have, e.g.
+                # .ropeproject
                 result.add(next_package_name)
                 result |= get_python_module_contents(next_package_name)
 
