@@ -1,0 +1,1 @@
+Fix ``GitPoller`` merge commit processing. ``GitPoller`` now correctly list merge commit files. (:issue:`7494`)
