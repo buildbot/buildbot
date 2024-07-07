@@ -12,7 +12,7 @@ Markdown==3.6
 pylint==3.2.5
 ruff==0.5.0
 mypy==1.10.1
-mypy-zope==1.0.4
+mypy-zope==1.0.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
