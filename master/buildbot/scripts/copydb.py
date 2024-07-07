@@ -88,7 +88,7 @@ def _copy_database_in_reactor(config):
 def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_buildid, print_log):
     column_keys = table.columns.keys()
 
-    rows_queue = queue.Queue(1024)
+    rows_queue = queue.Queue(32)
     written_count = [0]
     total_count = [0]
 
@@ -152,18 +152,17 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
         q = sa.select([sa.sql.func.count()]).select_from(table)
         total_count[0] = conn.execute(q).scalar()
 
-        rows = []
-        for row in conn.execute(sa.select(table)).fetchall():
-            rows.append(row)
-            if len(rows) >= 10000:
-                rows_queue.put(rows)
-                rows = []
+        result = conn.execute(sa.select(table))
+        while True:
+            chunk = result.fetchmany(10000)
+            if not chunk:
+                break
+            rows_queue.put(chunk)
 
-        rows_queue.put(rows)
         rows_queue.put(None)
 
-    yield src_db.pool.do(thd_read)
-    yield dst_db.pool.do(thd_write)
+    tasks = [src_db.pool.do(thd_read), dst_db.pool.do(thd_write)]
+    yield defer.gatherResults(tasks)
 
     rows_queue.join()
 
