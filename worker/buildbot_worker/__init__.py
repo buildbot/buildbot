@@ -67,14 +67,15 @@ def mTimeVersion(init_file):
     return d.strftime("%Y.%m.%d")
 
 
-def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
+def getVersionFromArchiveId(git_archive_id='$Format:%ct %(describe:abbrev=10)$'):
     """Extract the tag if a source is from git archive.
 
     When source is exported via `git archive`, the git_archive_id init value is modified
     and placeholders are expanded to the "archived" revision:
 
         %ct: committer date, UNIX timestamp
-        %d: ref names, like the --decorate option of git-log
+        %(describe:abbrev=10): git-describe output, always abbreviating to 10 characters of commit ID.
+                               e.g. v3.10.0-850-g5bf957f89
 
     See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
     """
@@ -83,17 +84,13 @@ def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
         # source was modified by git archive, try to parse the version from
         # the value of git_archive_id
 
-        match = re.search(r'tag:\s*v([^,)]+)', git_archive_id)
-        if match:
+        tstamp, _, describe_output = git_archive_id.strip().partition(' ')
+        if describe_output:
             # archived revision is tagged, use the tag
-            return gitDescribeToPep440(match.group(1))
+            return gitDescribeToPep440(describe_output)
 
         # archived revision is not tagged, use the commit date
-        tstamp = git_archive_id.strip().split()[0]
-        if sys.version_info >= (3, 3):
-            d = datetime.datetime.fromtimestamp(int(tstamp), datetime.timezone.utc)
-        else:
-            d = datetime.datetime.utcfromtimestamp(int(tstamp))
+        d = datetime.datetime.fromtimestamp(int(tstamp), datetime.timezone.utc)
         return d.strftime('%Y.%m.%d')
     return None
 

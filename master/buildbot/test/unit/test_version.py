@@ -41,11 +41,11 @@ class VersioningUtilsTests(unittest.SynchronousTestCase):
         self.assertEqual(self.m.gitDescribeToPep440("v0.9.9.post1-20-gf0f45ca"), "0.9.10.dev20")
 
     def test_getVersionFromArchiveIdNoTag(self):
-        version = self.m.getVersionFromArchiveId("1514651968  (git-archive-version)")
-        self.assertEqual(version, "2017.12.30")
+        version = self.m.getVersionFromArchiveId("1514651968 v0.9.9.post1-20-gf0f45ca")
+        self.assertEqual(version, "0.9.10.dev20")
 
     def test_getVersionFromArchiveIdtag(self):
-        version = self.m.getVersionFromArchiveId('1514808197  (HEAD -> master, tag: v1.0.0)')
+        version = self.m.getVersionFromArchiveId('1514808197 v1.0.0')
         self.assertEqual(version, "1.0.0")
 
 
