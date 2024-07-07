@@ -1,0 +1,1 @@
+Fix broken theming in web frontend when not using it via `base_react` plugin name.
