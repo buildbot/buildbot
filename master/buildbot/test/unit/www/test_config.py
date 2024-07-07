@@ -83,7 +83,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, exp)
 
 
-class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
@@ -135,10 +135,10 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         if user_info is not None:
             master.session.user_info = user_info
 
-        # IndexResourceReact only uses static path to get index.html. In the source checkout
+        # IndexResource only uses static path to get index.html. In the source checkout
         # index.html resides not in www/base/public but in www/base. Thus
-        # base path is sent to IndexResourceReact.
-        rsrc = config.IndexResourceReact(master, self.get_react_base_path())
+        # base path is sent to IndexResource.
+        rsrc = config.IndexResource(master, self.get_react_base_path())
         rsrc.reconfigResource(master.config)
 
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
@@ -206,10 +206,10 @@ class IndexResourceReactTestOldPath(TestReactorMixin, www.WwwTestMixin, unittest
             url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={'base_react': True}
         )
 
-        # IndexResourceReact only uses static path to get index.html. In the source checkout
+        # IndexResource only uses static path to get index.html. In the source checkout
         # index.html resides not in www/base/public but in www/base. Thus
-        # base path is sent to IndexResourceReact.
-        rsrc = config.IndexResourceReact(master, self.get_react_base_path())
+        # base path is sent to IndexResource.
+        rsrc = config.IndexResource(master, self.get_react_base_path())
         rsrc.reconfigResource(master.config)
 
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions

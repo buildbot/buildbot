@@ -142,7 +142,7 @@ class ConfigResource(resource.Resource):
         )
 
 
-class IndexResourceReact(resource.Resource):
+class IndexResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
 

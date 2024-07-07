@@ -326,9 +326,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /
         root.putChild(
             b'',
-            wwwconfig.IndexResourceReact(
-                self.master, self.apps.get(self.base_plugin_name).static_dir
-            ),
+            wwwconfig.IndexResource(self.master, self.apps.get(self.base_plugin_name).static_dir),
         )
 
         # /auth
