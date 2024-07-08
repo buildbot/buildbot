@@ -176,7 +176,7 @@ export const WaterfallView = observer(() => {
       const buildersToShow = buildersQuery.array.filter(b =>
         isBuilderFiltered(b, filterManager, mastersQuery, builderToBuilds, showBuildersWithoutBuilds,
           showOldBuilders));
-      const builderIds = new Set<number>(buildersToShow.keys());
+      const builderIds = new Set(buildersToShow.map(b => b.builderid));
       const buildGroups = groupBuildsByTime(builderIds, buildsQuery.array,
         settings.getIntegerSetting("Waterfall.idle_threshold_waterfall"), Date.now() / 1000);
 
