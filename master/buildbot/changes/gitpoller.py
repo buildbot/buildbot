@@ -275,7 +275,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return None
 
     @async_to_deferred
-    async def _get_refs(self, refs: list[str] | None = None) -> list[str]:
+    async def _list_remote_refs(self, refs: list[str] | None = None) -> list[str]:
         rows: str = await self._dovccmd(
             'ls-remote', ['--refs', self.repourl] + (refs if refs is not None else [])
         )
@@ -347,13 +347,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         trim_ref_head = False
         if callable(self.branches):
             # Get all refs and let callback filter them
-            remote_refs = yield self._get_refs()
+            remote_refs = yield self._list_remote_refs()
             refs = [b for b in remote_refs if self.branches(b)]
         elif self.branches is True:
             # Get all branch refs
-            refs = yield self._get_refs(["refs/heads/*"])
+            refs = yield self._list_remote_refs(["refs/heads/*"])
         elif self.branches:
-            refs = yield self._get_refs([f"refs/heads/{b}" for b in self.branches])
+            refs = yield self._list_remote_refs([f"refs/heads/{b}" for b in self.branches])
             trim_ref_head = True
         else:
             head_ref = yield self._resolve_head_ref()
