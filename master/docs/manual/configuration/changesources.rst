@@ -967,6 +967,16 @@ It accepts the following arguments:
    `sshPrivateKey` must be specified in order to use this option.
    `sshHostKey` must not be specified in order to use this option.
 
+``auth_credentials``
+
+    (optional) An username/password tuple to use when running git for fetch operations.
+    The worker's git version needs to be at least 1.7.9.
+
+``git_credentials``
+
+    (optional) See :ref:`GitCredentialOptions`.
+    The worker's git version needs to be at least 1.7.9.
+
 A configuration for the Git poller might look like this:
 
 .. code-block:: python

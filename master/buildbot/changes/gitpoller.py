@@ -30,15 +30,20 @@ from buildbot.util import bytes2unicode
 from buildbot.util import giturlparse
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
+from buildbot.util import unicode2bytes
 from buildbot.util.git import GitMixin
 from buildbot.util.git import GitServiceAuth
 from buildbot.util.git import check_ssh_config
+from buildbot.util.git_credential import GitCredentialOptions
+from buildbot.util.git_credential import add_user_password_to_credentials
 from buildbot.util.state import StateMixin
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from typing import Callable
     from typing import Literal
+
+    from buildbot.interfaces import IRenderable
 
 
 class GitError(Exception):
@@ -97,6 +102,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         sshKnownHosts=None,
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
+        auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
+        git_credentials: GitCredentialOptions | None = None,
     ):
         if only_tags and (branch or branches):
             config.error("GitPoller: can't specify only_tags and branch/branches")
@@ -156,6 +163,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         sshKnownHosts=None,
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
+        auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
+        git_credentials: GitCredentialOptions | None = None,
     ):
         if name is None:
             name = repourl
@@ -186,7 +195,17 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.lastRev = None
 
         self.setupGit()
-        self._git_auth = GitServiceAuth(self, sshPrivateKey, sshHostKey, sshKnownHosts)
+
+        if auth_credentials is not None:
+            git_credentials = add_user_password_to_credentials(
+                auth_credentials,
+                repourl,
+                git_credentials,
+            )
+
+        self._git_auth = GitServiceAuth(
+            self, sshPrivateKey, sshHostKey, sshKnownHosts, git_credentials
+        )
 
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
@@ -600,6 +619,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         args: list[str],
         path: str | None = None,
         auth_files_path: str | None = None,
+        initial_stdin: str | None = None,
     ) -> str:
         full_args: list[str] = []
         full_env = os.environ.copy()
@@ -623,6 +643,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             [self.gitbin] + full_args,
             path,
             env=full_env,
+            initial_stdin=unicode2bytes(initial_stdin) if initial_stdin is not None else None,
         )
         (code, stdout, stderr) = res
         stdout = bytes2unicode(stdout, self.encoding)
