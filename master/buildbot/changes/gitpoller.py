@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 from typing import TYPE_CHECKING
@@ -29,15 +30,20 @@ from buildbot.util import bytes2unicode
 from buildbot.util import giturlparse
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
+from buildbot.util import unicode2bytes
 from buildbot.util.git import GitMixin
 from buildbot.util.git import GitServiceAuth
 from buildbot.util.git import check_ssh_config
+from buildbot.util.git_credential import GitCredentialOptions
+from buildbot.util.git_credential import add_user_password_to_credentials
 from buildbot.util.state import StateMixin
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from typing import Callable
     from typing import Literal
+
+    from buildbot.interfaces import IRenderable
 
 
 class GitError(Exception):
@@ -96,6 +102,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         sshKnownHosts=None,
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
+        auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
+        git_credentials: GitCredentialOptions | None = None,
     ):
         if only_tags and (branch or branches):
             config.error("GitPoller: can't specify only_tags and branch/branches")
@@ -155,6 +163,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         sshKnownHosts=None,
         pollRandomDelayMin=0,
         pollRandomDelayMax=0,
+        auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
+        git_credentials: GitCredentialOptions | None = None,
     ):
         if name is None:
             name = repourl
@@ -185,7 +195,17 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.lastRev = None
 
         self.setupGit()
-        self._git_auth = GitServiceAuth(self, sshPrivateKey, sshHostKey, sshKnownHosts)
+
+        if auth_credentials is not None:
+            git_credentials = add_user_password_to_credentials(
+                auth_credentials,
+                repourl,
+                git_credentials,
+            )
+
+        self._git_auth = GitServiceAuth(
+            self, sshPrivateKey, sshHostKey, sshKnownHosts, git_credentials
+        )
 
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
@@ -244,9 +264,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return str
 
     @async_to_deferred
-    async def _resolve_head_ref(self) -> str | None:
+    async def _resolve_head_ref(self, git_auth_files_path: str | None = None) -> str | None:
         if self.supports_lsremote_symref:
-            rows: str = await self._dovccmd('ls-remote', ['--symref', self.repourl, 'HEAD'])
+            rows: str = await self._dovccmd(
+                'ls-remote',
+                ['--symref', self.repourl, 'HEAD'],
+                auth_files_path=git_auth_files_path,
+            )
             # simple parse of output which should have format:
             # ref: refs/heads/{branch}	HEAD
             # {hash}	HEAD
@@ -275,9 +299,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return None
 
     @async_to_deferred
-    async def _get_refs(self, refs: list[str] | None = None) -> list[str]:
+    async def _list_remote_refs(
+        self, refs: list[str] | None = None, git_auth_files_path: str | None = None
+    ) -> list[str]:
         rows: str = await self._dovccmd(
-            'ls-remote', ['--refs', self.repourl] + (refs if refs is not None else [])
+            'ls-remote',
+            ['--refs', self.repourl] + (refs if refs is not None else []),
+            auth_files_path=git_auth_files_path,
         )
 
         branches: list[str] = []
@@ -343,43 +371,36 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             log.msg(e.args[0])
             return
 
-        refs: list[str] = []
-        trim_ref_head = False
-        if callable(self.branches):
-            # Get all refs and let callback filter them
-            remote_refs = yield self._get_refs()
-            refs = [b for b in remote_refs if self.branches(b)]
-        elif self.branches is True:
-            # Get all branch refs
-            refs = yield self._get_refs(["refs/heads/*"])
-        elif self.branches:
-            refs = yield self._get_refs([f"refs/heads/{b}" for b in self.branches])
-            trim_ref_head = True
-        else:
-            head_ref = yield self._resolve_head_ref()
-            if head_ref is not None:
-                refs = [head_ref]
-            else:
-                # unlikely, but if we can't find HEAD here, something weird happen,
-                # but not a critical error. Just use HEAD as the ref to use
-                refs = ['HEAD']
+        tmp_dir = (
+            private_tempdir.PrivateTemporaryDirectory(dir=self.workdir, prefix='.buildbot-ssh')
+            if self._git_auth.is_auth_needed
+            else contextlib.nullcontext()
+        )
+        # retrieve auth files
+        with tmp_dir as tmp_path:
+            yield self._git_auth.download_auth_files_if_needed(tmp_path)
 
-        # Nothing to fetch and process.
-        if not refs:
-            return
+            refs, trim_ref_head = yield self._get_refs(tmp_path)
 
-        if self.poll_should_exit():
-            return
+            # Nothing to fetch and process.
+            if not refs:
+                return
 
-        refspecs = [f'+{ref}:{self._tracker_ref(self.repourl, ref)}' for ref in refs]
+            if self.poll_should_exit():
+                return
 
-        try:
-            yield self._dovccmd(
-                'fetch', ['--progress', self.repourl] + refspecs + ['--'], path=self.workdir
-            )
-        except GitError as e:
-            log.msg(e.args[0])
-            return
+            refspecs = [f'+{ref}:{self._tracker_ref(self.repourl, ref)}' for ref in refs]
+
+            try:
+                yield self._dovccmd(
+                    'fetch',
+                    ['--progress', self.repourl] + refspecs + ['--'],
+                    path=self.workdir,
+                    auth_files_path=tmp_path,
+                )
+            except GitError as e:
+                log.msg(e.args[0])
+                return
 
         if self.lastRev is None:
             self.lastRev = yield self.getState('lastRev', {})
@@ -404,6 +425,37 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         self.lastRev = revs
         yield self.setState('lastRev', self.lastRev)
+
+    @async_to_deferred
+    async def _get_refs(self, git_auth_files_path: str) -> tuple[list[str], bool]:
+        if callable(self.branches):
+            # Get all refs and let callback filter them
+            remote_refs = await self._list_remote_refs(git_auth_files_path=git_auth_files_path)
+            refs = [b for b in remote_refs if self.branches(b)]
+            return (refs, False)
+
+        if self.branches is True:
+            # Get all branch refs
+            refs = await self._list_remote_refs(
+                refs=["refs/heads/*"],
+                git_auth_files_path=git_auth_files_path,
+            )
+            return (refs, False)
+
+        if self.branches:
+            refs = await self._list_remote_refs(
+                refs=[f"refs/heads/{b}" for b in self.branches],
+                git_auth_files_path=git_auth_files_path,
+            )
+            return (refs, True)
+
+        head_ref = await self._resolve_head_ref(git_auth_files_path=git_auth_files_path)
+        if head_ref is not None:
+            return ([head_ref], False)
+
+        # unlikely, but if we can't find HEAD here, something weird happen,
+        # but not a critical error. Just use HEAD as the ref to use
+        return (['HEAD'], False)
 
     def _get_commit_comments(self, rev):
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
@@ -560,35 +612,38 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 src='git',
             )
 
-    @defer.inlineCallbacks
-    def _dovccmd(self, command, args, path=None):
-        if self._git_auth.is_auth_needed_for_git_command(command):
-            with private_tempdir.PrivateTemporaryDirectory(
-                dir=self.workdir, prefix='.buildbot-ssh'
-            ) as tmp_path:
-                stdout = yield self._dovccmdImpl(command, args, path, tmp_path)
-        else:
-            stdout = yield self._dovccmdImpl(command, args, path, None)
-        return stdout
-
-    @defer.inlineCallbacks
-    def _dovccmdImpl(self, command: str, args: list[str], path: str, ssh_workdir: str | None):
+    @async_to_deferred
+    async def _dovccmd(
+        self,
+        command: str,
+        args: list[str],
+        path: str | None = None,
+        auth_files_path: str | None = None,
+        initial_stdin: str | None = None,
+    ) -> str:
         full_args: list[str] = []
         full_env = os.environ.copy()
 
-        if ssh_workdir is not None:
-            yield self._git_auth.download_auth_files_if_needed(ssh_workdir)
+        if self._git_auth.is_auth_needed_for_git_command(command):
+            if auth_files_path is None:
+                raise RuntimeError(
+                    f"Git command {command} requires auth, but no auth information was provided"
+                )
             self._git_auth.adjust_git_command_params_for_auth(
                 full_args,
                 full_env,
-                ssh_workdir,
+                auth_files_path,
                 self,
             )
 
         full_args += [command] + args
 
-        res = yield runprocess.run_process(
-            self.master.reactor, [self.gitbin] + full_args, path, env=full_env
+        res = await runprocess.run_process(
+            self.master.reactor,
+            [self.gitbin] + full_args,
+            path,
+            env=full_env,
+            initial_stdin=unicode2bytes(initial_stdin) if initial_stdin is not None else None,
         )
         (code, stdout, stderr) = res
         stdout = bytes2unicode(stdout, self.encoding)

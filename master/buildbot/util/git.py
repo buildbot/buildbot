@@ -37,8 +37,8 @@ from buildbot.util.misc import writeLocalFile
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from buildbot.changes.gitpoller import GitPoller
     from buildbot.interfaces import IRenderable
-    from buildbot.util.service import BuildbotService
 
 RC_SUCCESS = 0
 
@@ -292,11 +292,15 @@ class AbstractGitAuth(ComparableMixin):
 
         check_ssh_config('Git', self.ssh_private_key, self.ssh_host_key, self.ssh_known_hosts)
 
+    @property
+    def is_auth_needed(self) -> bool:
+        return self.ssh_private_key is not None or self.git_credential_options is not None
+
     def is_auth_needed_for_git_command(self, git_command: str) -> bool:
         if not git_command:
             return False
 
-        if self.ssh_private_key is None and self.git_credential_options is None:
+        if not self.is_auth_needed:
             return False
 
         git_commands_that_need_auth = [
@@ -665,14 +669,15 @@ class GitStepAuth(AbstractGitAuth):
 class GitServiceAuth(AbstractGitAuth):
     def __init__(
         self,
-        service: BuildbotService,
+        service: GitPoller,
         ssh_private_key: IRenderable | None = None,
         ssh_host_key: IRenderable | None = None,
         ssh_known_hosts: IRenderable | None = None,
+        git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self._service = service
 
-        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts)
+        super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts, git_credential_options)
 
     @property
     def _path_module(self):
@@ -682,6 +687,21 @@ class GitServiceAuth(AbstractGitAuth):
     def _master(self):
         assert self._service.master is not None
         return self._service.master
+
+    @async_to_deferred
+    async def _dovccmd(
+        self,
+        command: list[str],
+        initial_stdin: str | None = None,
+        workdir: str | None = None,
+    ) -> None:
+        await self._service._dovccmd(
+            command=command[0],
+            args=command[1:],
+            initial_stdin=initial_stdin,
+            path=workdir,
+            auth_files_path=workdir,  # this is ... not great
+        )
 
     @async_to_deferred
     async def _download_file(

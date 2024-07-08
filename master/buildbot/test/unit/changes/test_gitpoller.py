@@ -39,6 +39,7 @@ from buildbot.test.util import logging
 from buildbot.test.util.git_repository import TestGitRepository
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.twisted import async_to_deferred
 
 # Test that environment variables get propagated to subprocesses (See #2116)
@@ -2117,7 +2118,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key\n', mode=0o400)
 
     @mock.patch(
@@ -2165,7 +2166,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key\n', mode=0o400)
 
     @mock.patch(
@@ -2210,7 +2211,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         self.assert_all_commands_ran()
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key\n', mode=0o400)
 
 
@@ -2272,11 +2273,9 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
 
         expected_file_writes = [
-            mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, '* ssh-host-key', mode=0o400),
             mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, '* ssh-host-key', mode=0o400),
         ]
@@ -2345,16 +2344,86 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
 
         expected_file_writes = [
-            mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, 'ssh-known-hosts', mode=0o400),
             mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, 'ssh-known-hosts', mode=0o400),
         ]
 
         self.assertEqual(expected_file_writes, write_local_file_mock.call_args_list)
+
+
+class TestGitPollerWithAuthCredentials(TestGitPollerBase):
+    def createPoller(self):
+        return gitpoller.GitPoller(
+            self.REPOURL,
+            branches=['master'],
+            auth_credentials=('username', 'token'),
+            git_credentials=GitCredentialOptions(
+                credentials=[],
+            ),
+        )
+
+    @mock.patch(
+        'buildbot.util.private_tempdir.PrivateTemporaryDirectory',
+        new_callable=MockPrivateTemporaryDirectory,
+    )
+    @defer.inlineCallbacks
+    def test_poll_initial_2_10(self, temp_dir_mock):
+        temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
+        credential_store_filepath = os.path.join(temp_dir_path, '.git-credentials')
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 2.10.0\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell([
+                'git',
+                '-c',
+                'credential.helper=',
+                '-c',
+                f'credential.helper=store "--file={credential_store_filepath}"',
+                'credential',
+                'approve',
+            ]).workdir(temp_dir_path),
+            ExpectMasterShell([
+                'git',
+                '-c',
+                'credential.helper=',
+                '-c',
+                f'credential.helper=store "--file={credential_store_filepath}"',
+                'ls-remote',
+                '--refs',
+                self.REPOURL,
+                'refs/heads/master',
+            ]).stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master\n'),
+            ExpectMasterShell([
+                'git',
+                '-c',
+                'credential.helper=',
+                '-c',
+                f'credential.helper=store "--file={credential_store_filepath}"',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                f'+refs/heads/master:refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                f'refs/buildbot/{self.REPOURL_QUOTED}/heads/master',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+        )
+
+        self.poller.doPoll.running = True
+        yield self.poller.poll()
+
+        self.assert_all_commands_ran()
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
 
 
 class TestGitPollerConstructor(
