@@ -150,7 +150,7 @@ export class Visualizer {
 
   getClassForBuilderResults(builder: Builder) {
     const builds = this.builderToBuilds.get(builder.builderid);
-    return results2class(builds === undefined ? null : builds[builds.length - 1], null);
+    return results2class(builds === undefined ? null : builds[0], null);
   }
 
   getHeaderHeight() {
