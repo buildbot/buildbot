@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.test.steps import ExpectMasterShell
 from buildbot.test.steps import _check_env_is_expected
 from buildbot.util import runprocess
@@ -45,7 +47,7 @@ class MasterRunProcessMixin:
         sigterm_timeout=5,
         initial_stdin=None,
         use_pty=False,
-    ):
+    ) -> defer.Deferred:
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
         if not self._expected_master_commands:
@@ -59,12 +61,12 @@ class MasterRunProcessMixin:
             rc = -1
 
         if collect_stdout and collect_stderr:
-            return (rc, stdout, stderr)
+            return defer.succeed((rc, stdout, stderr))
         if collect_stdout:
-            return (rc, stdout)
+            return defer.succeed((rc, stdout))
         if collect_stderr:
-            return (rc, stderr)
-        return rc
+            return defer.succeed((rc, stderr))
+        return defer.succeed(rc)
 
     def _patch_runprocess(self):
         if not self._master_run_process_patched:
