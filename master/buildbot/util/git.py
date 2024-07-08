@@ -292,11 +292,15 @@ class AbstractGitAuth(ComparableMixin):
 
         check_ssh_config('Git', self.ssh_private_key, self.ssh_host_key, self.ssh_known_hosts)
 
+    @property
+    def is_auth_needed(self) -> bool:
+        return self.ssh_private_key is not None or self.git_credential_options is not None
+
     def is_auth_needed_for_git_command(self, git_command: str) -> bool:
         if not git_command:
             return False
 
-        if self.ssh_private_key is None and self.git_credential_options is None:
+        if not self.is_auth_needed:
             return False
 
         git_commands_that_need_auth = [

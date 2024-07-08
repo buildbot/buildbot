@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 from typing import TYPE_CHECKING
@@ -244,9 +245,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return str
 
     @async_to_deferred
-    async def _resolve_head_ref(self) -> str | None:
+    async def _resolve_head_ref(self, git_auth_files_path: str | None = None) -> str | None:
         if self.supports_lsremote_symref:
-            rows: str = await self._dovccmd('ls-remote', ['--symref', self.repourl, 'HEAD'])
+            rows: str = await self._dovccmd(
+                'ls-remote',
+                ['--symref', self.repourl, 'HEAD'],
+                auth_files_path=git_auth_files_path,
+            )
             # simple parse of output which should have format:
             # ref: refs/heads/{branch}	HEAD
             # {hash}	HEAD
@@ -275,9 +280,13 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         return None
 
     @async_to_deferred
-    async def _list_remote_refs(self, refs: list[str] | None = None) -> list[str]:
+    async def _list_remote_refs(
+        self, refs: list[str] | None = None, git_auth_files_path: str | None = None
+    ) -> list[str]:
         rows: str = await self._dovccmd(
-            'ls-remote', ['--refs', self.repourl] + (refs if refs is not None else [])
+            'ls-remote',
+            ['--refs', self.repourl] + (refs if refs is not None else []),
+            auth_files_path=git_auth_files_path,
         )
 
         branches: list[str] = []
@@ -343,24 +352,36 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             log.msg(e.args[0])
             return
 
-        refs, trim_ref_head = yield self._get_refs()
+        tmp_dir = (
+            private_tempdir.PrivateTemporaryDirectory(dir=self.workdir, prefix='.buildbot-ssh')
+            if self._git_auth.is_auth_needed
+            else contextlib.nullcontext()
+        )
+        # retrieve auth files
+        with tmp_dir as tmp_path:
+            yield self._git_auth.download_auth_files_if_needed(tmp_path)
 
-        # Nothing to fetch and process.
-        if not refs:
-            return
+            refs, trim_ref_head = yield self._get_refs(tmp_path)
 
-        if self.poll_should_exit():
-            return
+            # Nothing to fetch and process.
+            if not refs:
+                return
 
-        refspecs = [f'+{ref}:{self._tracker_ref(self.repourl, ref)}' for ref in refs]
+            if self.poll_should_exit():
+                return
 
-        try:
-            yield self._dovccmd(
-                'fetch', ['--progress', self.repourl] + refspecs + ['--'], path=self.workdir
-            )
-        except GitError as e:
-            log.msg(e.args[0])
-            return
+            refspecs = [f'+{ref}:{self._tracker_ref(self.repourl, ref)}' for ref in refs]
+
+            try:
+                yield self._dovccmd(
+                    'fetch',
+                    ['--progress', self.repourl] + refspecs + ['--'],
+                    path=self.workdir,
+                    auth_files_path=tmp_path,
+                )
+            except GitError as e:
+                log.msg(e.args[0])
+                return
 
         if self.lastRev is None:
             self.lastRev = yield self.getState('lastRev', {})
@@ -387,23 +408,29 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         yield self.setState('lastRev', self.lastRev)
 
     @async_to_deferred
-    async def _get_refs(self) -> tuple[list[str], bool]:
+    async def _get_refs(self, git_auth_files_path: str) -> tuple[list[str], bool]:
         if callable(self.branches):
             # Get all refs and let callback filter them
-            remote_refs = await self._list_remote_refs()
+            remote_refs = await self._list_remote_refs(git_auth_files_path=git_auth_files_path)
             refs = [b for b in remote_refs if self.branches(b)]
             return (refs, False)
 
         if self.branches is True:
             # Get all branch refs
-            refs = await self._list_remote_refs(["refs/heads/*"])
+            refs = await self._list_remote_refs(
+                refs=["refs/heads/*"],
+                git_auth_files_path=git_auth_files_path,
+            )
             return (refs, False)
 
         if self.branches:
-            refs = await self._list_remote_refs([f"refs/heads/{b}" for b in self.branches])
+            refs = await self._list_remote_refs(
+                refs=[f"refs/heads/{b}" for b in self.branches],
+                git_auth_files_path=git_auth_files_path,
+            )
             return (refs, True)
 
-        head_ref = await self._resolve_head_ref()
+        head_ref = await self._resolve_head_ref(git_auth_files_path=git_auth_files_path)
         if head_ref is not None:
             return ([head_ref], False)
 
@@ -566,35 +593,36 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 src='git',
             )
 
-    @defer.inlineCallbacks
-    def _dovccmd(self, command, args, path=None):
-        if self._git_auth.is_auth_needed_for_git_command(command):
-            with private_tempdir.PrivateTemporaryDirectory(
-                dir=self.workdir, prefix='.buildbot-ssh'
-            ) as tmp_path:
-                stdout = yield self._dovccmdImpl(command, args, path, tmp_path)
-        else:
-            stdout = yield self._dovccmdImpl(command, args, path, None)
-        return stdout
-
-    @defer.inlineCallbacks
-    def _dovccmdImpl(self, command: str, args: list[str], path: str, ssh_workdir: str | None):
+    @async_to_deferred
+    async def _dovccmd(
+        self,
+        command: str,
+        args: list[str],
+        path: str | None = None,
+        auth_files_path: str | None = None,
+    ) -> str:
         full_args: list[str] = []
         full_env = os.environ.copy()
 
-        if ssh_workdir is not None:
-            yield self._git_auth.download_auth_files_if_needed(ssh_workdir)
+        if self._git_auth.is_auth_needed_for_git_command(command):
+            if auth_files_path is None:
+                raise RuntimeError(
+                    f"Git command {command} requires auth, but no auth information was provided"
+                )
             self._git_auth.adjust_git_command_params_for_auth(
                 full_args,
                 full_env,
-                ssh_workdir,
+                auth_files_path,
                 self,
             )
 
         full_args += [command] + args
 
-        res = yield runprocess.run_process(
-            self.master.reactor, [self.gitbin] + full_args, path, env=full_env
+        res = await runprocess.run_process(
+            self.master.reactor,
+            [self.gitbin] + full_args,
+            path,
+            env=full_env,
         )
         (code, stdout, stderr) = res
         stdout = bytes2unicode(stdout, self.encoding)

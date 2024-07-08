@@ -2117,7 +2117,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key\n', mode=0o400)
 
     @mock.patch(
@@ -2165,7 +2165,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key\n', mode=0o400)
 
     @mock.patch(
@@ -2210,7 +2210,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         self.assert_all_commands_ran()
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key\n', mode=0o400)
 
 
@@ -2272,11 +2272,9 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
 
         expected_file_writes = [
-            mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, '* ssh-host-key', mode=0o400),
             mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, '* ssh-host-key', mode=0o400),
         ]
@@ -2345,11 +2343,9 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
         yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
-        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700), (temp_dir_path, 0o700)])
+        self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
 
         expected_file_writes = [
-            mock.call(key_path, 'ssh-key\n', mode=0o400),
-            mock.call(known_hosts_path, 'ssh-known-hosts', mode=0o400),
             mock.call(key_path, 'ssh-key\n', mode=0o400),
             mock.call(known_hosts_path, 'ssh-known-hosts', mode=0o400),
         ]
