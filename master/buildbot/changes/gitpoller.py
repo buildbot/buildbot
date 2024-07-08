@@ -343,26 +343,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             log.msg(e.args[0])
             return
 
-        refs: list[str] = []
-        trim_ref_head = False
-        if callable(self.branches):
-            # Get all refs and let callback filter them
-            remote_refs = yield self._list_remote_refs()
-            refs = [b for b in remote_refs if self.branches(b)]
-        elif self.branches is True:
-            # Get all branch refs
-            refs = yield self._list_remote_refs(["refs/heads/*"])
-        elif self.branches:
-            refs = yield self._list_remote_refs([f"refs/heads/{b}" for b in self.branches])
-            trim_ref_head = True
-        else:
-            head_ref = yield self._resolve_head_ref()
-            if head_ref is not None:
-                refs = [head_ref]
-            else:
-                # unlikely, but if we can't find HEAD here, something weird happen,
-                # but not a critical error. Just use HEAD as the ref to use
-                refs = ['HEAD']
+        refs, trim_ref_head = yield self._get_refs()
 
         # Nothing to fetch and process.
         if not refs:
@@ -404,6 +385,31 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         self.lastRev = revs
         yield self.setState('lastRev', self.lastRev)
+
+    @async_to_deferred
+    async def _get_refs(self) -> tuple[list[str], bool]:
+        if callable(self.branches):
+            # Get all refs and let callback filter them
+            remote_refs = await self._list_remote_refs()
+            refs = [b for b in remote_refs if self.branches(b)]
+            return (refs, False)
+
+        if self.branches is True:
+            # Get all branch refs
+            refs = await self._list_remote_refs(["refs/heads/*"])
+            return (refs, False)
+
+        if self.branches:
+            refs = await self._list_remote_refs([f"refs/heads/{b}" for b in self.branches])
+            return (refs, True)
+
+        head_ref = await self._resolve_head_ref()
+        if head_ref is not None:
+            return ([head_ref], False)
+
+        # unlikely, but if we can't find HEAD here, something weird happen,
+        # but not a critical error. Just use HEAD as the ref to use
+        return (['HEAD'], False)
 
     def _get_commit_comments(self, rev):
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
