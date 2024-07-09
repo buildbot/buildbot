@@ -100,7 +100,7 @@ export const WaterfallView = observer(() => {
 
   const settings = buildbotGetSettings();
   const [scalingFactor, setScalingFactor] =
-    useState(() => settings.getIntegerSetting("Waterfall.scaling_waterfall"));
+    useState(() => settings.getFloatSetting("Waterfall.scaling_waterfall"));
   const lazyLoadingLimit = settings.getIntegerSetting("Waterfall.lazy_limit_waterfall");
   const showBuildersWithoutBuilds =
     settings.getBooleanSetting("Waterfall.show_builders_without_builds");
@@ -254,7 +254,7 @@ buildbotSetupPlugin(reg => {
     name: 'Waterfall',
     caption: 'Waterfall related settings',
     items: [{
-        type: 'integer',
+        type: 'float',
         name: 'scaling_waterfall',
         caption: 'Scaling factor',
         defaultValue: 1
