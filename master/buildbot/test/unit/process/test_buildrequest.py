@@ -66,6 +66,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         def collapseRequests_fn(master, builder, brdict1, brdict2):
             # Allow all requests
             self.fail("Should never be called")
+            # pylint: disable=unreachable
             return True
 
         self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn

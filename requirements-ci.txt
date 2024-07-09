@@ -6,13 +6,13 @@ buildbot-www==4.0.0
 
 autobahn==23.6.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
-boto3==1.34.127
+boto3==1.34.136
 msgpack==1.0.8
 Markdown==3.6
-pylint==3.2.3
-ruff==0.4.9
-mypy==1.9.0
-mypy-zope==1.0.4
+pylint==3.2.5
+ruff==0.5.0
+mypy==1.10.1
+mypy-zope==1.0.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -21,7 +21,7 @@ mypy-zope==1.0.4
 
 alabaster==0.7.16; python_version >= "3.9"
 alabaster==0.7.13; python_version < "3.9" # pyup: ignore 0.7.14 dropped support for Python 3.8 and earlier
-alembic==1.13.1
+alembic==1.13.2
 appdirs==1.4.4
 asn1crypto==1.5.1
 astroid==3.2.2
@@ -30,7 +30,7 @@ Automat==22.10.0
 Babel==2.15.0
 backports.functools-lru-cache==2.0.0
 boto==2.49.0
-botocore==1.34.127
+botocore==1.34.136
 certifi==2024.7.4
 cffi==1.16.0
 chardet==5.2.0
@@ -39,7 +39,7 @@ click==8.1.7
 configparser==7.0.0
 constantly==23.10.4
 cookies==2.2.1
-coverage==7.5.3
+coverage==7.5.4
 croniter==2.0.5
 cryptography==42.0.8
 decorator==5.1.1
@@ -54,11 +54,11 @@ future==1.0.0
 graphql-core==3.3.0a4; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
-hvac==2.2.0
+hvac==2.3.0
 hyperlink==21.0.0
 idna==3.7
 imagesize==1.4.1
-importlib-metadata==7.1.0
+importlib-metadata==8.0.0
 importlib-resources==6.4.0;  python_version < "3.9"
 incremental==22.10.0
 ipaddress==1.0.23
@@ -75,15 +75,15 @@ markdown2==2.4.13
 MarkupSafe==2.1.5
 mccabe==0.7.0
 more-itertools==10.3.0
-moto==5.0.9
+moto==5.0.10
 olefile==0.47
 packaging==24.1
 parameterized==0.9.0
 pathlib2==2.3.7.post1
 pbr==6.0.0
-Pillow==10.3.0
+Pillow==10.4.0
 platformdirs==4.2.2
-psutil==5.9.8
+psutil==6.0.0
 pyaml==24.4.0
 pyasn1==0.6.0
 pyasn1-modules==0.4.0
@@ -103,13 +103,13 @@ requests==2.32.3
 responses==0.25.3
 ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
-s3transfer==0.10.1
+s3transfer==0.10.2
 service-identity==24.1.0
 setuptools-trial==0.6.0
 singledispatch==4.1.0
 six==1.16.0
 snowballstemmer==2.2.0
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 sqlparse==0.5.0
 termcolor==2.4.0
 testtools==2.7.2
