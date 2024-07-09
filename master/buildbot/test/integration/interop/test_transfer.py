@@ -121,12 +121,8 @@ class TransferStepsMasterPb(RunMasterBase):
 
         f = BuildFactory()
 
-        f.addStep(FileUpload(workersrc="dir/noexist_path", masterdest="master_dest"))
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)
-        ]
+        f.addStep(step)
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
     def readMasterDirContents(self, top):
@@ -188,7 +184,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        res = yield self.checkBuildStepLogExist(build, "Cannot read directory")
         self.assertTrue(res)
 
     @defer.inlineCallbacks
@@ -198,7 +194,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        res = yield self.checkBuildStepLogExist(build, "No such file or directory")
         self.assertTrue(res)
 
 
