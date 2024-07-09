@@ -47,6 +47,20 @@
     padding: 0.375rem 1rem;
   }
 
+  .bb-build-summary-step-label {
+    display: flex;
+    align-items: center;
+
+    > *  {
+      flex-shrink: 0;
+    }
+
+    .bb-build-summary-step-details {
+      flex-shrink: 1;
+      margin-left: auto;
+    }
+  }
+
   &.list-group-item.bb-anchor-target {
     border: 2px solid #ffff00;
   }

@@ -202,7 +202,7 @@ const BuildSummaryStepLine = observer(({build, step, parentFullDisplay}: BuildSu
 
   return (
     <li key={step.id} className="bb-build-summary-step-line list-group-item" id={`bb-step-${step.number}`}>
-      <div onClick={() => setFullDisplay(!fullDisplay)}>
+      <div className="bb-build-summary-step-label" onClick={() => setFullDisplay(!fullDisplay)}>
         <AnchorLink className="bb-build-summary-step-anchor-link"
                     anchor={`bb-step-${step.number}`}>
           #
