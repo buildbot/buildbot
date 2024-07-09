@@ -131,6 +131,7 @@ class RemoveDirectory(base.Command):
         assert isinstance(rc, int)
         if rc == 0:
             defer.returnValue(0)
+            # pylint: disable=unreachable
             return  # pragma: no cover
         # Attempt a recursive chmod and re-try the rm -rf after.
 
