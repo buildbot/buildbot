@@ -61,11 +61,12 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insert_test_data([
+            fakedb.Builder(id=1),
             fakedb.Buildset(id=28),
-            fakedb.BuildRequest(id=5, buildsetid=28),
+            fakedb.BuildRequest(id=5, buildsetid=28, builderid=1),
             fakedb.Master(id=3),
             fakedb.Worker(id=42, name="Friday"),
-            fakedb.Build(id=786, buildrequestid=5, masterid=3, workerid=42),
+            fakedb.Build(id=786, buildrequestid=5, masterid=3, workerid=42, builderid=1, number=5),
             fakedb.BuildProperty(buildid=786, name="year", value=1651, source="Wikipedia"),
             fakedb.BuildProperty(buildid=786, name="island_name", value="despair", source="Book"),
         ])
@@ -81,7 +82,7 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_properties_from_builder(self):
-        props = yield self.callGet(('builders', 1, 'builds', 786, 'properties'))
+        props = yield self.callGet(('builders', 1, 'builds', 5, 'properties'))
         self.assertEqual(props, {'year': (1651, 'Wikipedia'), 'island_name': ("despair", 'Book')})
 
 
