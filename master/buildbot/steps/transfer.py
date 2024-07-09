@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
 import os
@@ -33,7 +34,7 @@ from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import flatten
 
 
-def makeStatusRemoteCommand(step, remote_command, args):
+def makeStatusRemoteCommand(step, remote_command, args) -> remotecommand.RemoteCommand:
     self = remotecommand.RemoteCommand(remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
     self.useLog(step.stdio_log)
     return self
@@ -55,16 +56,25 @@ class _TransferBuildStep(BuildStep):
         self.workdir = workdir
 
     @defer.inlineCallbacks
-    def runTransferCommand(self, cmd, writer=None):
+    def runTransferCommand(
+        self,
+        cmd: remotecommand.RemoteCommand,
+        writer: remotetransfer.FileWriter | None = None,
+    ):
         # Run a transfer step, add a callback to extract the command status,
         # add an error handler that cancels the writer.
         self.cmd = cmd
         try:
             yield self.runCommand(cmd)
-            return cmd.results()
         finally:
             if writer:
                 writer.cancel()
+
+        cmd_res = cmd.results()
+        if cmd_res >= FAILURE:
+            if writer:
+                writer.purge()
+        return cmd_res
 
     @defer.inlineCallbacks
     def interrupt(self, reason):
