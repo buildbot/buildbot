@@ -18,6 +18,7 @@ module for regrouping all FileWriterImpl and FileReaderImpl away from steps
 """
 
 import os
+import shutil
 import tarfile
 import tempfile
 from io import BytesIO
@@ -86,10 +87,13 @@ class FileWriter(base.FileWriterImpl):
         fp = getattr(self, "fp", None)
         if fp:
             fp.close()
-            if self.destfile and os.path.exists(self.destfile):
-                os.unlink(self.destfile)
-            if self.tmpname and os.path.exists(self.tmpname):
-                os.unlink(self.tmpname)
+            self.purge()
+
+    def purge(self):
+        if self.destfile and os.path.exists(self.destfile):
+            os.unlink(self.destfile)
+        if self.tmpname and os.path.exists(self.tmpname):
+            os.unlink(self.tmpname)
 
 
 class DirectoryWriter(FileWriter):
@@ -129,6 +133,11 @@ class DirectoryWriter(FileWriter):
             else:
                 archive.extractall(path=self.destroot)
         os.remove(self.tarname)
+
+    def purge(self):
+        super().purge()
+        if os.path.isdir(self.destroot):
+            shutil.rmtree(self.destroot)
 
 
 class FileReader(base.FileReaderImpl):
