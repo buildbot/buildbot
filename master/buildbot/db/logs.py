@@ -45,6 +45,10 @@ except ImportError:
         return data
 
 
+class LogSlugExistsError(KeyError):
+    pass
+
+
 @dataclasses.dataclass
 class LogModel:
     id: int
@@ -193,7 +197,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 conn.rollback()
-                raise KeyError(f"log with slug '{slug!r}' already exists in this step") from e
+                raise LogSlugExistsError(
+                    f"log with slug '{slug!r}' already exists in this step"
+                ) from e
 
         return self.db.pool.do(thdAddLog)
 

@@ -29,6 +29,7 @@ from twisted.python import threadpool
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.db.buildsets import AlreadyCompleteError
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
+from buildbot.db.logs import LogSlugExistsError
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 from buildbot.process import metrics
 from buildbot.util.sautils import get_sqlite_version
@@ -264,6 +265,7 @@ class DBThreadPool:
                             ChangeSourceAlreadyClaimedError,
                             SchedulerAlreadyClaimedError,
                             AlreadyCompleteError,
+                            LogSlugExistsError,
                         ),
                     ):
                         log.err(e, 'Got fatal Exception on DB')
