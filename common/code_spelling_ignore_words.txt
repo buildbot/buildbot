@@ -1230,6 +1230,7 @@ rmdirrecursive
 rmfile
 rmtree
 robocopy
+ropeproject
 routingkey
 rp
 rpc
