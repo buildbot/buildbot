@@ -1,0 +1,1 @@
+Fixed ReactUI when Buildbot is hosted behind a reverse proxy not at url's root. (:issue:`7260`, :issue:`7746`)
