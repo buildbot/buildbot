@@ -17,8 +17,9 @@ import json
 import os
 from unittest import mock
 
+from parameterized import parameterized
+
 from twisted.internet import defer
-from twisted.python import log
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -82,108 +83,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, exp)
 
 
-class IndexResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    def setUp(self):
-        self.setup_test_reactor()
-
-    @defer.inlineCallbacks
-    def test_render(self):
-        _auth = auth.NoAuth()
-        _auth.maybeAutoLogin = mock.Mock()
-
-        custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
-
-        master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions)
-        rsrc = config.IndexResource(master, "foo")
-        rsrc.reconfigResource(master.config)
-        rsrc.jinja = mock.Mock()
-        template = mock.Mock()
-        rsrc.jinja.get_template = lambda x: template
-        template.render = lambda configjson, config, custom_templates: configjson
-
-        vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
-
-        res = yield self.render_resource(rsrc, b'/')
-        res = json.loads(bytes2unicode(res))
-        _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = {
-            "authz": {},
-            "titleURL": "http://buildbot.net",
-            "versions": vjson,
-            "title": "Buildbot",
-            "auth": {"name": "NoAuth"},
-            "user": {"anonymous": True},
-            "buildbotURL": "h:/a/b/",
-            "multiMaster": False,
-            "port": None,
-        }
-        self.assertEqual(res, exp)
-
-        master.session.user_info = {"name": 'me', "email": 'me@me.org'}
-        res = yield self.render_resource(rsrc, b'/')
-        res = json.loads(bytes2unicode(res))
-        exp = {
-            "authz": {},
-            "titleURL": "http://buildbot.net",
-            "versions": vjson,
-            "title": "Buildbot",
-            "auth": {"name": "NoAuth"},
-            "user": {"email": "me@me.org", "name": "me"},
-            "buildbotURL": "h:/a/b/",
-            "multiMaster": False,
-            "port": None,
-        }
-        self.assertEqual(res, exp)
-
-        master = self.make_master(url='h:/a/c/', auth=_auth, versions=custom_versions)
-        rsrc.reconfigResource(master.config)
-        res = yield self.render_resource(rsrc, b'/')
-        res = json.loads(bytes2unicode(res))
-        exp = {
-            "authz": {},
-            "titleURL": "http://buildbot.net",
-            "versions": vjson,
-            "title": "Buildbot",
-            "auth": {"name": "NoAuth"},
-            "user": {"anonymous": True},
-            "buildbotURL": "h:/a/b/",
-            "multiMaster": False,
-            "port": None,
-        }
-        self.assertEqual(res, exp)
-
-    def test_parseCustomTemplateDir(self):
-        exp = {'views/builds.html': '<div>\n</div>'}
-        try:
-            # we make the test work if pypugjs is present or note
-            # It is better than just skip if pypugjs is not there
-            import pypugjs  # pylint: disable=import-outside-toplevel
-
-            [pypugjs]
-            exp.update({
-                'plugin/views/plugin.html': '<div class="myclass"><pre>this is customized</pre></div>'
-            })
-        except ImportError:
-            log.msg("Only testing html based template override")
-        template_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'test_templates_dir'
-        )
-        master = self.make_master(url='h:/a/b/')
-        rsrc = config.IndexResource(master, "foo")
-        res = rsrc.parseCustomTemplateDir(template_dir)
-        self.assertEqual(res, exp)
-
-    def test_CustomTemplateDir(self):
-        master = self.make_master(url='h:/a/b/')
-        rsrc = config.IndexResource(master, "foo")
-        master.config.www['custom_templates_dir'] = 'foo'
-        rsrc.parseCustomTemplateDir = mock.Mock(return_value="returnvalue")
-        rsrc.reconfigResource(master.config)
-        self.assertNotIn('custom_templates_dir', rsrc.frontend_config)
-        self.assertEqual('returnvalue', rsrc.custom_templates)
-
-
-class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
@@ -216,19 +116,29 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         config_json = config_json.strip(';').strip()
         return json.loads(config_json)
 
+    @parameterized.expand([
+        ('anonymous_user', None, {'anonymous': True}),
+        (
+            'logged_in_user',
+            {"name": 'me', "email": 'me@me.org'},
+            {"email": "me@me.org", "name": "me"},
+        ),
+    ])
     @defer.inlineCallbacks
-    def test_render(self):
+    def test_render(self, name, user_info, expected_user):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
         master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={})
+        if user_info is not None:
+            master.session.user_info = user_info
 
-        # IndexResourceReact only uses static path to get index.html. In the source checkout
+        # IndexResource only uses static path to get index.html. In the source checkout
         # index.html resides not in www/base/public but in www/base. Thus
-        # base path is sent to IndexResourceReact.
-        rsrc = config.IndexResourceReact(master, self.get_react_base_path())
+        # base path is sent to IndexResource.
+        rsrc = config.IndexResource(master, self.get_react_base_path())
         rsrc.reconfigResource(master.config)
 
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
@@ -243,7 +153,7 @@ class IndexResourceReactTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
             "versions": vjson,
             "title": "Buildbot",
             "auth": {"name": "NoAuth"},
-            "user": {"anonymous": True},
+            "user": expected_user,
             "buildbotURL": "h:/a/b/",
             "multiMaster": False,
             "port": None,
@@ -296,10 +206,10 @@ class IndexResourceReactTestOldPath(TestReactorMixin, www.WwwTestMixin, unittest
             url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={'base_react': True}
         )
 
-        # IndexResourceReact only uses static path to get index.html. In the source checkout
+        # IndexResource only uses static path to get index.html. In the source checkout
         # index.html resides not in www/base/public but in www/base. Thus
-        # base path is sent to IndexResourceReact.
-        rsrc = config.IndexResourceReact(master, self.get_react_base_path())
+        # base path is sent to IndexResource.
+        rsrc = config.IndexResource(master, self.get_react_base_path())
         rsrc.reconfigResource(master.config)
 
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions

@@ -324,20 +324,10 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         root = self.apps.get(self.base_plugin_name).resource
         self.configPlugins(root, new_config)
         # /
-        if self.base_plugin_name == 'base':
-            root.putChild(
-                b'',
-                wwwconfig.IndexResource(
-                    self.master, self.apps.get(self.base_plugin_name).static_dir
-                ),
-            )
-        else:
-            root.putChild(
-                b'',
-                wwwconfig.IndexResourceReact(
-                    self.master, self.apps.get(self.base_plugin_name).static_dir
-                ),
-            )
+        root.putChild(
+            b'',
+            wwwconfig.IndexResource(self.master, self.apps.get(self.base_plugin_name).static_dir),
+        )
 
         # /auth
         root.putChild(b'auth', auth.AuthRootResource(self.master))
