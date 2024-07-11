@@ -164,7 +164,7 @@ finishrelease:
 	rm -rf dist
 	python3 ./common/download_release.py
 	rm -rf ./dist/v*
-	twine upload --sign dist/*
+	twine upload dist/*
 
 pyinstaller: virtualenv
 	$(PIP) install pyinstaller
