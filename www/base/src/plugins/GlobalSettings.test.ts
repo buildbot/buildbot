@@ -373,4 +373,57 @@ describe('GlobalSettings', () => {
     );
     localStorage.clear();
   });
+
+  it('setting loading late group addition', () => {
+    localStorage.clear();
+
+    localStorage.setItem("settings",
+      "{\"Group\":{\"setting_string\":\"value1\",\"setting_integer\":345,\"setting_boolean\":false}}");
+
+    const frontendConfig = {
+      "Group.setting_string" : "value456",
+      "Group.setting_integer": "789",
+      "Group.setting_integer_2": "234",
+      "Group.setting_boolean": "true"
+    };
+
+    const settings = new GlobalSettings();
+    // early load before Group is added
+    settings.fillDefaults(frontendConfig);
+    settings.load();
+
+    settings.addGroup({
+      name: 'Group',
+      caption: 'group caption',
+      items: [{
+        type: 'string',
+        name: 'setting_string',
+        caption: 'caption1',
+        defaultValue: "default1"
+      }, {
+        type: 'integer',
+        name: 'setting_integer',
+        caption: 'caption2',
+        defaultValue: 123
+      }, {
+        type: 'boolean',
+        name: 'setting_boolean',
+        caption: 'caption3',
+        defaultValue: true
+      }, {
+        type: 'integer',
+        name: 'setting_integer_2',
+        caption: 'caption4',
+        defaultValue: 123
+      }]
+    });
+    settings.fillDefaults(frontendConfig, 'Group');
+    settings.load('Group');
+
+    expect(settings.getSetting("Group.setting_string")).toEqual("value1");
+    expect(settings.getSetting("Group.setting_integer")).toEqual(345);
+    expect(settings.getSetting("Group.setting_boolean")).toEqual(false);
+    expect(settings.getSetting("Group.setting_integer_2")).toEqual(234);
+    localStorage.clear();
+  });
 });

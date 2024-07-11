@@ -64,14 +64,19 @@ export class GlobalSettings implements ISettings {
     makeObservable(this);
   }
 
-  @action applyBuildbotConfig(config: Config) {
+  @action applyBuildbotConfig(config: Config, filterGroup?: string) {
     if (config.ui_default_config !== undefined) {
-      this.fillDefaults(config.ui_default_config);
+      this.fillDefaults(config.ui_default_config, filterGroup);
     }
   }
 
-  @action fillDefaults(uiConfig: {[key: string]: any}) {
+  @action fillDefaults(uiConfig: {[key: string]: any}, filterGroup?: string) {
     for (const [selector, value] of Object.entries(uiConfig)) {
+      if (filterGroup !== undefined) {
+        const groupAndSetting = this.splitSelector(selector);
+        if (groupAndSetting === null || groupAndSetting[0] != filterGroup)
+          continue;
+      }
       this.setSettingDefaultValue(selector, value);
     }
   }
@@ -101,7 +106,7 @@ export class GlobalSettings implements ISettings {
     }
   }
 
-  @action load() {
+  @action load(filterGroup?: string) {
     const settings = localStorage.getItem('settings');
     if (settings === null) {
       return;
@@ -109,6 +114,8 @@ export class GlobalSettings implements ISettings {
     try {
       const storedGroups = JSON.parse(settings) as StoredSettingGroups;
       for (const [groupName, storedGroup] of Object.entries(storedGroups)) {
+        if (filterGroup !== undefined && groupName != filterGroup)
+           continue;
         if (!(groupName in this.groups)) {
           console.log(`Ignoring unknown loaded setting group ${groupName}`);
           continue;

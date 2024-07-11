@@ -32,7 +32,11 @@ export function initializeGlobalSetup(config: Config) {
     callback({
       registerMenuGroup: (group: GroupSettings) => { globalMenuSettings.addGroup(group); },
       registerRoute: (route: RouteConfig) => { globalRoutes.addRoute(route); },
-      registerSettingGroup: (group: SettingGroupConfig) => { globalSettings.addGroup(group); },
+      registerSettingGroup: (group: SettingGroupConfig) => {
+        globalSettings.addGroup(group);
+        globalSettings.applyBuildbotConfig(config, group.name);
+        globalSettings.load(group.name);
+      },
     }, config);
   }
   registerPluginRegistrationConsumer(onBuildbotSetupPlugin);
