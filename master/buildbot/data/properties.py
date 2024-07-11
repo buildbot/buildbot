@@ -38,12 +38,12 @@ class BuildPropertiesEndpoint(base.Endpoint):
         /builds/n:buildid/properties
     """
 
+    @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        buildid = kwargs.get("buildid", None)
-        if buildid is None:
-            # fixme: this cannot work...
-            buildid = kwargs.get("build_number")
-        return self.master.db.builds.getBuildProperties(buildid)
+        retriever = base.NestedBuildDataRetriever(self.master, kwargs)
+        buildid = yield retriever.get_build_id()
+        build_properties = yield self.master.db.builds.getBuildProperties(buildid)
+        return build_properties
 
 
 class PropertiesListEndpoint(base.Endpoint):

@@ -237,14 +237,14 @@ class NestedBuildDataRetriever:
             return self.build_dict
 
         if 'build_number' in self.args:
-            builder_dict = await self.get_builder_dict()
+            builder_id = await self.get_builder_id()
 
-            if builder_dict is None:
+            if builder_id is None:
                 self.build_dict = None
                 return None
 
             self.build_dict = await self.master.db.builds.getBuildByNumber(
-                builderid=builder_dict['id'], number=self.args['build_number']
+                builderid=builder_id, number=self.args['build_number']
             )
             return self.build_dict
 
