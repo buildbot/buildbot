@@ -34,6 +34,10 @@ except ImportError:
         return data
 
 
+class LogSlugExistsError(KeyError):
+    pass
+
+
 def dumps_gzip(data):
     return zlib.compress(data, 9)
 
@@ -156,7 +160,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 )
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
-                raise KeyError(f"log with slug '{slug!r}' already exists in this step") from e
+                conn.rollback()
+                raise LogSlugExistsError(
+                    f"log with slug '{slug!r}' already exists in this step"
+                ) from e
 
         return self.db.pool.do(thdAddLog)
 

@@ -18,6 +18,7 @@ from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.db.logs import LogSlugExistsError
 from buildbot.util import identifiers
 
 
@@ -125,7 +126,7 @@ class Log(base.ResourceType):
                 logid = yield self.master.db.logs.addLog(
                     stepid=stepid, name=name, slug=slug, type=type
                 )
-            except KeyError:
+            except LogSlugExistsError:
                 slug = identifiers.incrementIdentifier(50, slug)
                 continue
             self.generateEvent(logid, "new")

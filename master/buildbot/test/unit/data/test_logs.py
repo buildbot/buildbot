@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import logs
+from buildbot.db.logs import LogSlugExistsError
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -227,7 +228,7 @@ class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def addLog(stepid, name, slug, type):
             tries.append((stepid, name, slug, type))
             if len(tries) < 3:
-                return defer.fail(KeyError())
+                return defer.fail(LogSlugExistsError())
             return defer.succeed(23)
 
         self.patch(self.master.db.logs, 'addLog', addLog)
