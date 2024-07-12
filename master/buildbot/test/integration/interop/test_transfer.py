@@ -121,12 +121,8 @@ class TransferStepsMasterPb(RunMasterBase):
 
         f = BuildFactory()
 
-        f.addStep(FileUpload(workersrc="dir/noexist_path", masterdest="master_dest"))
-        c['builders'] = [
-            BuilderConfig(name="testy",
-                          workernames=["local1"],
-                          factory=f)
-        ]
+        f.addStep(step)
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
     def readMasterDirContents(self, top):
@@ -180,6 +176,7 @@ class TransferStepsMasterPb(RunMasterBase):
         self.assertEqual(build['results'], FAILURE)
         res = yield self.checkBuildStepLogExist(build, "Cannot open file")
         self.assertTrue(res)
+        self.assertFalse(os.path.exists("master_dest"))
 
     @defer.inlineCallbacks
     def test_no_exist_directory_upload(self):
@@ -188,8 +185,9 @@ class TransferStepsMasterPb(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        res = yield self.checkBuildStepLogExist(build, "Cannot read directory")
         self.assertTrue(res)
+        self.assertFalse(os.path.exists("master_dest"))
 
     @defer.inlineCallbacks
     def test_no_exist_multiple_file_upload(self):
@@ -198,8 +196,9 @@ class TransferStepsMasterPb(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        res = yield self.checkBuildStepLogExist(build, "not available at worker")
         self.assertTrue(res)
+        self.assertEqual(self.readMasterDirContents("master_dest"), {})
 
 
 class TransferStepsMasterNull(TransferStepsMasterPb):
