@@ -8,6 +8,26 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.0.1`` ( ``2024-07-12`` )
+=====================================
+
+Bug fixes
+---------
+
+- Transfer build steps (:bb:step:`FileUpload`, :bb:step:`DirectoryUpload`,
+  :bb:step:`MultipleFileUpload`, :bb:step:`FileDownload`, and :bb:step:`StringDownload`) now
+  correctly remove destination on failure, no longer leaving partial content (:issue:`2860`)
+- Fixed ReactUI when Buildbot is hosted behind a reverse proxy not at url's root (:issue:`7260`,
+  :issue:`7746`)
+- Fixed results color shown on builder's header in waterfall view
+- Fixed cases where waterfall view could be squashed to a pixel high
+- Improved flexibility of ``scaling_waterfall`` setting to support floating-point values for more
+  condensed view.
+- Fixed broken theming in web frontend when not using it via ``base_react`` plugin name.
+- Fixed ``/builders/n:builderid/builds/n:build_number/properties`` endpoint returning results
+  for wrong builds.
+- Fixed useless logged ``fatal Exception on DB: log with slug ... already exists in this step``
+  errors.
 
 Buildbot ``4.0.0`` ( ``2024-06-24`` )
 ======================================

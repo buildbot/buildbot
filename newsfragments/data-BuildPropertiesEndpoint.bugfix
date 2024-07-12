@@ -1,1 +1,0 @@
-``/builders/n:builderid/builds/n:build_number/properties`` endpoint would use ``build_number`` as ``buildid``
