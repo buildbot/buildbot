@@ -48,8 +48,6 @@ const doRender = (buildbotFrontendConfig: Config) => {
   const sidebarStore = new SidebarStore();
   const topbarStore = new TopbarStore();
   initializeGlobalSetup(buildbotFrontendConfig);
-  globalSettings.applyBuildbotConfig(buildbotFrontendConfig);
-  globalSettings.load();
 
   for (const pluginKey in buildbotFrontendConfig.plugins) {
     // TODO: in production this could be added to the document by buildbot backend

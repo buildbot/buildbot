@@ -1,0 +1,1 @@
+Fix loading of plugins settings (e.g. from master's ui_default_config)
