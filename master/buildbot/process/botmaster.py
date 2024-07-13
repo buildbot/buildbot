@@ -86,7 +86,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     def __init__(self):
         super().__init__()
 
-        self.builders = {}
+        self.builders: dict[str, Builder] = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
         # which is the master-side object that defines and controls a build.

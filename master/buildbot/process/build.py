@@ -87,6 +87,7 @@ class Build(properties.PropertiesMixin):
         self.requests = requests
         self.builder = builder
         self.master = builder.master
+        self.workerforbuilder: AbstractWorkerForBuilder | None = None
 
         self.locks = []  # list of lock accesses
         self._locks_to_acquire = []  # list of (real_lock, access) tuples
@@ -303,7 +304,7 @@ class Build(properties.PropertiesMixin):
         return self._builderid
 
     @defer.inlineCallbacks
-    def startBuild(self, workerforbuilder):
+    def startBuild(self, workerforbuilder: AbstractWorkerForBuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
