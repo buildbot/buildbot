@@ -4,6 +4,7 @@ import os
 
 import requests
 import yaml
+import subprocess
 
 
 def download(session, url, fn):
@@ -18,6 +19,26 @@ def download(session, url, fn):
             f.write(c)
 
 
+def get_current_tag():
+    out = subprocess.check_output(['git', 'tag', '--points-at', 'HEAD']).strip()
+    if not out:
+        raise RuntimeError('Could not find any tags pointing to current release')
+    tags = out.decode('utf-8').split(' ')
+    if len(tags) > 1:
+        raise RuntimeError(f'More than one tag points to HEAD: {tags}')
+    return tags[0]
+
+
+def find_release_by_name(s, name):
+    r = s.get("https://api.github.com/repos/buildbot/buildbot/releases")
+    r.raise_for_status()
+    for release in r.json():
+        if release['name'] == name:
+            return release
+
+    raise RuntimeError(f'Could not find release for name {name}')
+
+
 def main():
     with open(os.path.expanduser("~/.config/hub")) as f:
         conf = yaml.safe_load(f)
@@ -25,13 +46,15 @@ def main():
 
     s = requests.Session()
     s.headers.update({'Authorization': 'token ' + token})
-    r = s.get("https://api.github.com/repos/buildbot/buildbot/releases/latest")
-    r.raise_for_status()
-    r = r.json()
-    tag = r['name']
-    upload_url = r['upload_url'].split('{')[0]
+
+    tag = get_current_tag()
+    release = find_release_by_name(s, name=tag)
+
+    upload_url = release['upload_url'].split('{')[0]
     assets = s.get(
-        ("https://api.github.com/repos/buildbot/buildbot/releases/{id}/assets").format(id=r['id'])
+        ("https://api.github.com/repos/buildbot/buildbot/releases/{id}/assets").format(
+            id=release['id']
+        )
     )
     assets.raise_for_status()
     assets = assets.json()
