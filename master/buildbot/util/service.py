@@ -24,6 +24,7 @@ from twisted.python import log
 from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
+import buildbot.config
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
@@ -448,7 +449,16 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
     def get_service_config(self, new_config) -> dict[str, AsyncService]:
         new_config_attr = getattr(new_config, self.config_attr)
         if isinstance(new_config_attr, list):
-            return {s.name: s for s in new_config_attr}
+            service_dict = {}
+            for s in new_config_attr:
+                if s.name in service_dict:
+                    buildbot.config.error(
+                        f"Two services share the same name '{s.name}'."
+                        "This will result in only one service being configured."
+                    )
+
+                service_dict[s.name] = s
+            return service_dict
         if isinstance(new_config_attr, dict):
             return new_config_attr
 
