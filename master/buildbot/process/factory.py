@@ -63,7 +63,7 @@ class BuildFactory(util.ComparableMixin):
         if steps:
             self.addSteps(steps)
 
-    def newBuild(self, requests, builder: Builder) -> None:
+    def newBuild(self, requests, builder: Builder) -> buildClass:
         """Create a new Build instance.
 
         @param requests: a list of buildrequest dictionaries describing what is
