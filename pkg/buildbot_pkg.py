@@ -232,11 +232,15 @@ class BuildJsCommand(Command):
                 logging.info('Running command: {}'.format(str(" ".join(command))))
                 subprocess.check_call(command, shell=shell)
 
-        self.copy_tree(
-            os.path.join(package, 'static'), os.path.join("build", "lib", package, "static")
-        )
-
         assert self.distribution.metadata.version is not None, "version is not set"
+
+        build_lib_package_path = os.path.join("build", "lib", package)
+        os.makedirs(build_lib_package_path, exist_ok=True)
+
+        static_dir = os.path.join(package, 'static')
+        if os.path.isdir(static_dir):
+            self.copy_tree(static_dir, os.path.join("build", "lib", package, "static"))
+
         with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
             f.write(self.distribution.metadata.version)
 
