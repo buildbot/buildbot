@@ -15,7 +15,10 @@
 #
 # Copyright Buildbot Team Members
 
+import os.path
+
 try:
+    from buildbot_pkg import getVersion
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
@@ -27,17 +30,24 @@ except ImportError:
     )
     sys.exit(1)
 
+
+PACKAGE_NAME = "buildbot_react_waterfall_view"
+version = getVersion(os.path.join(PACKAGE_NAME, '__init__.py'))
+
 setup_www_plugin(
     name='buildbot-react-waterfall-view',
     description='Buildbot Waterfall View plugin (React)',
     author='Pierre Tardy',
     author_email='tardyp@gmail.com',
+    setup_requires=['buildbot_pkg'],
+    version=version,
+    install_requires=['buildbot', f'buildbot-waterfall-view=={version}'],
     url='http://buildbot.net/',
-    packages=['buildbot_react_waterfall_view'],
-    package_data={'': ['VERSION', 'static/*', 'static/assets/*']},
+    packages=[PACKAGE_NAME],
+    package_data={'': ['VERSION']},
     entry_points="""
         [buildbot.www]
-        react_waterfall_view = buildbot_react_waterfall_view:ep
+        react_waterfall_view = buildbot_waterfall_view:ep
     """,
     classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
 )

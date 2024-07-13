@@ -15,7 +15,10 @@
 #
 # Copyright Buildbot Team Members
 
+import os.path
+
 try:
+    from buildbot_pkg import getVersion
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
@@ -27,17 +30,24 @@ except ImportError:
     )
     sys.exit(1)
 
+
+PACKAGE_NAME = "buildbot_react_wsgi_dashboards"
+version = getVersion(os.path.join(PACKAGE_NAME, '__init__.py'))
+
 setup_www_plugin(
     name='buildbot-react-wsgi-dashboards',
     description='Buildbot plugin to integrate flask or bottle' 'dashboards to buildbot UI (React)',
     author='Buildbot maintainers',
     author_email='devel@buildbot.net',
+    setup_requires=['buildbot_pkg'],
+    version=version,
+    install_requires=['buildbot', f'buildbot-wsgi-dashboards=={version}'],
     url='http://buildbot.net/',
-    packages=['buildbot_react_wsgi_dashboards'],
-    package_data={'': ['VERSION', 'static/*']},
+    packages=[PACKAGE_NAME],
+    package_data={'': ['VERSION']},
     entry_points="""
         [buildbot.www]
-        react_wsgi_dashboards = buildbot_react_wsgi_dashboards:ep
+        react_wsgi_dashboards = buildbot_wsgi_dashboards:ep
     """,
     classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
 )

@@ -15,7 +15,10 @@
 #
 # Copyright Buildbot Team Members
 
+import os.path
+
 try:
+    from buildbot_pkg import getVersion
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
@@ -27,17 +30,24 @@ except ImportError:
     )
     sys.exit(1)
 
+
+PACKAGE_NAME = "buildbot_react_grid_view"
+version = getVersion(os.path.join(PACKAGE_NAME, '__init__.py'))
+
 setup_www_plugin(
     name='buildbot-react-grid-view',
     description='Buildbot Grid View plugin (React)',
     author='Robin Jarry',
     author_email='robin.jarry@6wind.com',
+    setup_requires=['buildbot_pkg'],
+    version=version,
+    install_requires=['buildbot', f'buildbot-grid-view=={version}'],
     url='http://buildbot.net/',
-    packages=['buildbot_react_grid_view'],
-    package_data={'': ['VERSION', 'static/*', 'static/assets/*']},
+    packages=[PACKAGE_NAME],
+    package_data={'': ['VERSION']},
     entry_points="""
         [buildbot.www]
-        react_grid_view = buildbot_react_grid_view:ep
+        react_grid_view = buildbot_grid_view:ep
     """,
     classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
 )

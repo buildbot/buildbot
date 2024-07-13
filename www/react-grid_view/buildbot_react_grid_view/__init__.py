@@ -12,8 +12,3 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from buildbot.www.plugin import Application
-
-# create the interface for the setuptools entry point
-ep = Application(__package__, "Buildbot Grid View plugin")

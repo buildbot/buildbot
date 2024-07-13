@@ -12,28 +12,3 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from twisted.internet import reactor
-from twisted.internet.threads import blockingCallFromThread
-from twisted.web.wsgi import WSGIResource
-
-from buildbot.util import unicode2bytes
-from buildbot.www.plugin import Application
-
-
-class WSGIDashboardsApplication(Application):
-    def setConfiguration(self, config):
-        super().setConfiguration(config)
-        for dashboard in config:
-            dashboard['app'].buildbot_api = self
-            resource = WSGIResource(reactor, reactor.getThreadPool(), dashboard['app'])
-            self.resource.putChild(unicode2bytes(dashboard['name']), resource)
-
-    def dataGet(self, path, **kwargs):
-        if not isinstance(path, tuple):
-            path = tuple(path.strip("/").split("/"))
-        return blockingCallFromThread(reactor, self.master.data.get, path, **kwargs)
-
-
-# create the interface for the setuptools entry point
-ep = WSGIDashboardsApplication(__name__, "Buildbot WSGI Dashboard Glue")
