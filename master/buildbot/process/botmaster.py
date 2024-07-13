@@ -27,6 +27,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.workerforbuilder import States
 from buildbot.util import service
 from buildbot.util.render_description import render_description
+from buildbot.worker.latent import AbstractLatentWorker
 
 
 class LockRetrieverMixin:
@@ -142,7 +143,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                             results = CANCELLED
                         else:
                             results = RETRY
-                        is_building = build.workerforbuilder.state == States.BUILDING
+                        is_building = (
+                            build.workerforbuilder is not None
+                            and build.workerforbuilder.state == States.BUILDING
+                        )
 
                         # Master should not wait build.stopBuild for ages to complete if worker
                         # does not send any message about shutting the builds down quick enough.
@@ -163,7 +167,11 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                         if not is_building:
                             # if it is not building, then it must be a latent worker
                             # which is substantiating. Cancel it.
-                            build.workerforbuilder.worker.insubstantiate()
+                            if build.workerforbuilder is not None and isinstance(
+                                build.workerforbuilder.worker,
+                                AbstractLatentWorker,
+                            ):
+                                build.workerforbuilder.worker.insubstantiate()
             # then wait for all builds to finish
             dl = []
             for builder in self.builders.values():

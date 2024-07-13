@@ -1,0 +1,1 @@
+Fix crash on master shutdown trying to insubstantiate build's worker when no worker is assigned to the build (:issue:7753)
