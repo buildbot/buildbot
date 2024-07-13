@@ -305,8 +305,6 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             app.setConfiguration(plugin)
             plugin_root.putChild(unicode2bytes(key), app.resource)
 
-            if not app.ui:
-                del new_config.www['plugins'][key]
         for plugin_name in set(self.apps.names) - known_plugins:
             log.msg(f"NOTE: www plugin {repr(plugin_name)} is installed but not configured")
 
