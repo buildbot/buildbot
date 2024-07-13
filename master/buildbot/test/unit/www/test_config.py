@@ -170,7 +170,7 @@ class IndexResourceReactTestOldPath(TestReactorMixin, www.WwwTestMixin, unittest
         path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         for _ in range(0, 4):
             path = os.path.dirname(path)
-        return os.path.join(path, 'www/react-base')
+        return os.path.join(path, 'www/base')
 
     def find_matching_line(self, lines, match, start_i):
         for i in range(start_i, len(lines)):
