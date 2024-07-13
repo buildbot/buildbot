@@ -15,6 +15,7 @@
 
 
 import re
+from typing import Dict
 
 from twisted.internet import defer
 from twisted.python import log
@@ -70,7 +71,7 @@ class GitHubStatusPush(ReporterBase):
         generators=None,
         **kwargs,
     ):
-        token = yield self.renderSecrets(token)
+        self.token = token
         self.debug = debug
         self.verify = verify
         self.verbose = verbose
@@ -89,7 +90,7 @@ class GitHubStatusPush(ReporterBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master,
             baseURL,
-            headers={'Authorization': 'token ' + token, 'User-Agent': 'Buildbot'},
+            headers={'User-Agent': 'Buildbot'},
             debug=self.debug,
             verify=self.verify,
         )
@@ -109,12 +110,19 @@ class GitHubStatusPush(ReporterBase):
             ),
         ]
 
+    @defer.inlineCallbacks
+    def _get_auth_header(self, props: Properties) -> Dict[str, str]:
+        token = yield props.render(self.token)
+        return {'Authorization': f"token {token}"}
+
+    @defer.inlineCallbacks
     def createStatus(
         self,
         repo_user,
         repo_name,
         sha,
         state,
+        props,
         target_url=None,
         context=None,
         issue=None,
@@ -127,8 +135,10 @@ class GitHubStatusPush(ReporterBase):
         :param state: one of the following 'pending', 'success', 'error'
                       or 'failure'.
         :param target_url: Target url to associate with this status.
-        :param description: Short description of the status.
         :param context: Build context
+        :param issue: Pull request number
+        :param description: Short description of the status.
+        :param props: Properties object of the build (used for render GITHUB_TOKEN secret)
         :return: A deferred with the result from GitHub.
 
         This code comes from txgithub by @tomprince.
@@ -146,9 +156,13 @@ class GitHubStatusPush(ReporterBase):
         if context is not None:
             payload['context'] = context
 
-        return self._http.post(
-            '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]), json=payload
+        headers = yield self._get_auth_header(props)
+        ret = yield self._http.post(
+            '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
+            json=payload,
+            headers=headers,
         )
+        return ret
 
     def is_status_2xx(self, code):
         return code // 100 == 2
@@ -241,6 +255,7 @@ class GitHubStatusPush(ReporterBase):
                     context=context,
                     issue=issue,
                     description=description,
+                    props=props,
                 )
 
                 if not response:
@@ -301,6 +316,7 @@ class GitHubCommentPush(GitHubStatusPush):
         repo_name,
         sha,
         state,
+        props,
         target_url=None,
         context=None,
         issue=None,
@@ -309,10 +325,13 @@ class GitHubCommentPush(GitHubStatusPush):
         """
         :param repo_user: GitHub user or organization
         :param repo_name: Name of the repository
+        :param sha: Full sha to create the status for.
+        :param state: unused
+        :param target_url: unused
+        :param context: unused
         :param issue: Pull request number
-        :param state: one of the following 'pending', 'success', 'error'
-                      or 'failure'.
         :param description: Short description of the status.
+        :param props: Properties object of the build (used for render GITHUB_TOKEN secret)
         :return: A deferred with the result from GitHub.
 
         This code comes from txgithub by @tomprince.
@@ -328,5 +347,6 @@ class GitHubCommentPush(GitHubStatusPush):
             return None
 
         url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])
-        ret = yield self._http.post(url, json=payload)
+        headers = yield self._get_auth_header(props)
+        ret = yield self._http.post(url, json=payload, headers=headers)
         return ret
