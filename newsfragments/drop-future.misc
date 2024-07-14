@@ -1,0 +1,1 @@
+Drop future dependency as usage of the future library was already dropped in https://github.com/buildbot/buildbot/pull/6997.
