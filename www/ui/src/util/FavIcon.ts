@@ -28,7 +28,7 @@ function setFavIconUrl(url: string) {
 }
 
 function setFavIconUrlOriginal(buildbotUrl: string) {
-  setFavIconUrl(buildbotUrl + "/img/icon.png");
+  setFavIconUrl(buildbotUrl + "/icon.png");
 }
 
 async function setFavIcon(buildbotUrl: string, result: number) {
@@ -37,7 +37,7 @@ async function setFavIcon(buildbotUrl: string, result: number) {
     return;
   }
 
-  const response = await axios.get(buildbotUrl + "/img/icon.svg");
+  const response = await axios.get(buildbotUrl + "/icon.svg");
   const iconSvg = response.data;
 
   const canvas = document.createElement('canvas');
