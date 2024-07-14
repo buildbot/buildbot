@@ -71,7 +71,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         res = json.loads(bytes2unicode(res))
         exp = {
             "authz": {},
-            "titleURL": "http://buildbot.net",
+            "titleURL": "http://buildbot.net/",
             "versions": vjson,
             "title": "Buildbot",
             "auth": {"name": "NoAuth"},
@@ -149,7 +149,7 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
         exp = {
             "authz": {},
-            "titleURL": "http://buildbot.net",
+            "titleURL": "http://buildbot.net/",
             "versions": vjson,
             "title": "Buildbot",
             "auth": {"name": "NoAuth"},

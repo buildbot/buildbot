@@ -47,7 +47,7 @@ from buildbot.warnings import DeprecatedApiWarning
 
 global_defaults = {
     "title": 'Buildbot',
-    "titleURL": 'http://buildbot.net',
+    "titleURL": 'http://buildbot.net/',
     "buildbotURL": 'http://localhost:8080/',
     "logCompressionLimit": 4096,
     "logCompressionMethod": 'gz',
@@ -423,10 +423,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.do_test_load_global({"title": "Very very very very very long title"})
 
     def test_load_global_titleURL(self):
-        self.do_test_load_global({"titleURL": 'hi'}, titleURL='hi')
+        self.do_test_load_global({"titleURL": 'hi'}, titleURL='hi/')
 
     def test_load_global_buildbotURL(self):
-        self.do_test_load_global({"buildbotURL": 'hey'}, buildbotURL='hey')
+        self.do_test_load_global({"buildbotURL": 'hey'}, buildbotURL='hey/')
 
     def test_load_global_changeHorizon(self):
         self.do_test_load_global({"changeHorizon": 10}, changeHorizon=10)
