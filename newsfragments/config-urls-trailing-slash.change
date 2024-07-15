@@ -1,0 +1,1 @@
+Buildbot will now add a trailing '/' to the `buildbotURL` and `titleURL` configured values if it does not have one.

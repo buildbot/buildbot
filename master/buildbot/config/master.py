@@ -134,7 +134,7 @@ class MasterConfig(util.ComparableMixin):
         # default values for all attributes
         # global
         self.title = 'Buildbot'
-        self.titleURL = 'http://buildbot.net'
+        self.titleURL = 'http://buildbot.net/'
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
         self.logCompressionLimit = 4 * 1024
@@ -312,6 +312,12 @@ class MasterConfig(util.ComparableMixin):
         def copy_str_param(name):
             copy_param(name, check_type=(str,), check_type_name='a string')
 
+        def copy_str_url_param_with_trailing_slash(name):
+            copy_str_param(name)
+            url = getattr(self, name, None)
+            if url is not None and not url.endswith('/'):
+                setattr(self, name, url + '/')
+
         copy_str_param('title')
 
         max_title_len = 18
@@ -323,8 +329,8 @@ class MasterConfig(util.ComparableMixin):
                 category=ConfigWarning,
             )
 
-        copy_str_param('titleURL')
-        copy_str_param('buildbotURL')
+        copy_str_url_param_with_trailing_slash('titleURL')
+        copy_str_url_param_with_trailing_slash('buildbotURL')
 
         def copy_str_or_callable_param(name):
             copy_param(
