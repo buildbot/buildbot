@@ -68,6 +68,12 @@ test.describe('manage settings', function() {
       await SettingsPage.goto(page);
       await SettingsPage.checkIdleTime(page, idleTimeThreshold);
     })
+
+    test('check that custom ui_default_config from master.cfg is loaded', async ({page}) => {
+      await BuilderPage.gotoBuildersList(page);
+      await SettingsPage.goto(page);
+      await SettingsPage.checkScallingFactor(page, '1.234');
+    })
   });
 
   test.describe('console', () => {
