@@ -277,9 +277,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 "base_react is no longer supported. Remove buildbot-www-react and install "
                 "buildbot-www package"
             )
-            self.base_plugin_name = 'base'
-        else:
-            self.base_plugin_name = 'base'
+        self.base_plugin_name = 'base'
 
     def configPlugins(self, root, new_config):
         plugin_root = root
