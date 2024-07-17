@@ -320,7 +320,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         else:
             url_identifier = f"{git_url.proto}/{_sanitize(git_url.domain)}"
             if git_url.port is not None:
-                url_identifier += f":{git_url.port}"
+                # replace `:` with url encode `%3A`
+                url_identifier += f"%3A{git_url.port}"
 
             if git_url.owner is not None:
                 url_identifier += f"/{_sanitize(git_url.owner)}"
