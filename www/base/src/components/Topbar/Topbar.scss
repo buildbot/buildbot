@@ -69,6 +69,11 @@ $gl-sidebar-small-threshold: 600px;
   }
 }
 
+div.bb-topbar-navbar-elements {
+  display: flex;
+  flex-direction: row;
+}
+
 // Align navbar with sidebar
 .navbar {
   padding-bottom: 0;
