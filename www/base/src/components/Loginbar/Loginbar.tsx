@@ -24,6 +24,7 @@ import {
 import {useLocation} from "react-router-dom";
 import {Nav, NavDropdown} from "react-bootstrap";
 import {ConfigContext} from "buildbot-ui";
+import { getBaseUrl } from 'buildbot-data-js';
 
 function getAuthIcon(faIcon: string) {
   switch (faIcon) {
@@ -56,7 +57,7 @@ export const Loginbar = () => {
     return (
       <Nav className="bb-loginbar-dropdown-nav">
         <NavDropdown title="Anonymous" id="bb-loginbar-dropdown">
-          <NavDropdown.Item href={"/auth/login?redirect=" + encodeURI(redirect)}>
+          <NavDropdown.Item href={getBaseUrl(window.location, "auth/login?redirect=" + encodeURI(redirect))}>
             {
               config.auth.oauth2
                 ? <span>
@@ -90,7 +91,7 @@ export const Loginbar = () => {
     <Nav className="bb-loginbar-dropdown-nav">
       <NavDropdown title={dropdownToggle} id="bb-loginbar-dropdown">
         {userDropdownHeader}
-        <NavDropdown.Item href={"auth/logout?redirect=" + encodeURI(redirect)}>
+        <NavDropdown.Item href={getBaseUrl(window.location, "auth/logout?redirect=" + encodeURI(redirect))}>
           <FaSignOutAlt/>
           Logout
         </NavDropdown.Item>
