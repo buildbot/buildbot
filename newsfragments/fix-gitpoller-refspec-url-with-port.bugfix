@@ -1,0 +1,1 @@
+Fix ``GitPoller`` when repourl has the port specified (:issue:`7822`)
