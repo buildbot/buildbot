@@ -85,6 +85,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt', 'requirements-cidb.txt') }}
           restore-keys: ${{ runner.os }}-pip-
 
-      - run: pip install -U pip wheel
+      - run: pip install -r requirements-pip.txt
       - run: pip install -r requirements-ci.txt -r requirements-cidb.txt
       - run: $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
