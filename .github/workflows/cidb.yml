@@ -85,6 +85,6 @@ jobs:
             worker/setup.py
             pkg/setup.py
 
-      - run: pip install -U pip wheel
+      - run: pip install -r requirements-pip.txt
       - run: pip install -r requirements-ci.txt -r requirements-cidb.txt
       - run: $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
