@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -28,6 +32,9 @@ from buildbot.process.workerforbuilder import States
 from buildbot.util import service
 from buildbot.util.render_description import render_description
 from buildbot.worker.latent import AbstractLatentWorker
+
+if TYPE_CHECKING:
+    from buildbot.worker import AbstractWorker
 
 
 class LockRetrieverMixin:
@@ -223,15 +230,19 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.shuttingDown = False
 
     @metrics.countMethod('BotMaster.workerLost()')
-    def workerLost(self, bot):
+    def workerLost(self, bot: AbstractWorker):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
         for b in self.builders.values():
-            if bot.workername in b.config.workernames:
+            if b.config is not None and bot.workername in b.config.workernames:
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForWorker()')
-    def getBuildersForWorker(self, workername):
-        return [b for b in self.builders.values() if workername in b.config.workernames]
+    def getBuildersForWorker(self, workername: str):
+        return [
+            b
+            for b in self.builders.values()
+            if b.config is not None and workername in b.config.workernames
+        ]
 
     def getBuildernames(self):
         return self.builderNames

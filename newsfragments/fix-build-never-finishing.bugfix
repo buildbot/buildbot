@@ -1,0 +1,1 @@
+Fix a rare exception when master is reconfigured with new builders and a build finishing at this time, causing the build to never finish.
