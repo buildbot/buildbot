@@ -14,9 +14,10 @@ from twisted.spread.pb import PBClientFactory
 from twisted.trial.unittest import TestCase
 from twisted.web.static import Data
 
+from buildbot_worker.test.util.site import SiteWithClose
+
 from ..util import HangCheckFactory
 from ..util._hangcheck import HangCheckProtocol
-from buildbot_worker.test.util.site import SiteWithClose
 
 try:
     from twisted.internet.testing import AccumulatingProtocol
