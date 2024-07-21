@@ -22,9 +22,8 @@ env:
 matrix:
   fast_finish: true
   include:
-    # isort, pylint, docs first as they're more likely to find issues
+    # ruff, docs first as they're more likely to find issues
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=pylint NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     # add js tests in separate job. Start it early because it is quite long
@@ -167,13 +166,6 @@ script:
   - title: coverage tests
     condition: TESTS == "ci/coverage"
     cmd: /tmp/bbvenv/bin/coverage run --rcfile=.coveragerc /tmp/bbvenv/bin/trial -j8 --reporter=text --rterrors buildbot.test buildbot_worker.test
-
-  # Run additional tests in their separate job
-  - title: pylint
-    condition: TESTS == "pylint"
-    cmd:  |
-      export PATH=/tmp/bbvenv/bin/:$PATH
-      make pylint
 
   - title: ruff
     condition: TESTS == "ruff"

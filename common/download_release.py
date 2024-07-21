@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+import subprocess
 
 import requests
 import yaml
-import subprocess
 
 
 def download(session, url, fn):

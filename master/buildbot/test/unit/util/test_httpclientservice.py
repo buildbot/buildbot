@@ -26,11 +26,11 @@ from twisted.web import resource
 
 from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.util.site import SiteWithClose
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
-from buildbot.test.util.site import SiteWithClose
 
 try:
     from requests.auth import HTTPDigestAuth
