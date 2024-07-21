@@ -34,10 +34,7 @@ try:
 except ImportError:
     txrequests = None
 
-try:
-    import treq
-except ImportError:
-    treq = None
+import treq
 
 log = Logger()
 
@@ -141,12 +138,6 @@ class HTTPClientService(service.SharedService):
         if txrequests is not None and not self.PREFER_TREQ:
             self._session = txrequests.Session(maxthreads=self.MAX_THREADS)
             self._doRequest = self._doTxRequest
-        elif treq is None:
-            raise ImportError(
-                "{classname} requires either txrequest or treq install."
-                " Users should call {classname}.checkAvailable() during checkConfig()"
-                " to properly alert the user.".format(classname=self.__class__.__name__)
-            )
         else:
             self._doRequest = self._doTReq
             self._pool = HTTPConnectionPool(self.master.reactor)
