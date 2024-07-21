@@ -15,8 +15,6 @@ BitbucketStatusPush
 The build status is published to a specific commit SHA in Bitbucket.
 By default, it tracks the last build for each builder and each commit built.
 
-It requires `txrequests`_ package to allow interaction with the Bitbucket REST and OAuth APIs.
-
 It uses OAuth 2.x to authenticate with Bitbucket.
 To enable this, you need to go to your Bitbucket Settings -> OAuth page.
 Click "Add consumer".
@@ -66,5 +64,3 @@ For example, the following reporter
 produces the build statuses below when a build stars and ends, respectively.
 
 .. image:: ../../../_images/bitbucket-status-push.png
-
-.. _txrequests: https://pypi.python.org/pypi/txrequests

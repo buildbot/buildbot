@@ -14,8 +14,6 @@ GitHubCommentPush
 
 :class:`GitHubCommentPush` publishes a comment on a GitHub PR using `GitHub Review Comments API <https://developer.github.com/v3/pulls/comments/>`_.
 
-It requires `txrequests`_ package to allow interaction with GitHub REST API.
-
 It requires a GitHub API token in order to operate.
 By default, the reporter will only comment at the end of a build unless a custom build report generator is supplied.
 
@@ -64,5 +62,3 @@ Here's a complete example of posting build results as a github comment:
 
     generator = BuildStatusGenerator(message_formatter=MessageFormatterRenderable(getresults))
     c['services'].append(GitHubCommentPush(token='githubAPIToken', generators=[generator]))
-
-.. _txrequests: https://pypi.python.org/pypi/txrequests

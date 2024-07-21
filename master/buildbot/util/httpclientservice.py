@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import json as jsonmodule
-import textwrap
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -82,24 +81,10 @@ class TreqResponseWrapper:
 class HTTPClientService(service.SharedService):
     """A SharedService class that can make http requests to remote services.
 
-    I can use either txrequests or treq, depending on what I find installed
-
     I provide minimal get/post/put/delete API with automatic baseurl joining, and json data encoding
     that is suitable for use from buildbot services.
     """
 
-    TREQ_PROS_AND_CONS = textwrap.dedent("""
-       txrequests is based on requests and is probably a bit more mature, but it requires threads
-       to run, so has more overhead.
-       treq is better integrated in twisted and is more and more feature equivalent
-
-       txrequests is 2.8x slower than treq due to the use of threads.
-
-       http://treq.readthedocs.io/en/latest/#feature-parity-w-requests
-       pip install txrequests
-           or
-       pip install treq
-    """)
     # Those could be in theory be overridden in master.cfg by using
     # import buildbot.util.httpclientservice.HTTPClientService.PREFER_TREQ = True
     # We prefer at the moment keeping it simple

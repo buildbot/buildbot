@@ -13,10 +13,6 @@ HTTP Requests
 
 Using the :bb:step:`HTTPStep` step, it is possible to perform HTTP requests in order to trigger another REST service about the progress of the build.
 
-.. note::
-
-   This step requires the `txrequests <https://pypi.python.org/pypi/txrequests>`_ and `requests <https://requests.readthedocs.io/en/master>`_ Python libraries.
-
 The parameters are the following:
 
 ``url``

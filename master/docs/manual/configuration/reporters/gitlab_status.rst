@@ -16,8 +16,6 @@ GitLabStatusPush
 :class:`GitLabStatusPush` publishes build status using `GitLab Commit Status API <http://doc.gitlab.com/ce/api/commits.html#commit-status>`_.
 The build status is published to a specific commit SHA in GitLab.
 
-It requires `txrequests`_ package to allow interaction with GitLab Commit Status API.
-
 It uses private token auth, and the token owner is required to have at least developer access to each repository. As a result, we recommend you use https in your base_url rather than http.
 
 
@@ -32,5 +30,3 @@ It uses private token auth, and the token owner is required to have at least dev
     :param string verbose: Be more verbose
     :param boolean verify: Disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: Logs every requests and their response
-
-    .. _txrequests: https://pypi.python.org/pypi/txrequests
