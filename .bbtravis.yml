@@ -81,7 +81,7 @@ install:
     cmd: |
       rm -rf /tmp/bbvenv
       python$PYTHON -m venv /tmp/bbvenv
-  - /tmp/bbvenv/bin/pip install -U pip wheel
+  - /tmp/bbvenv/bin/pip install -r requirements-pip.txt
   - condition: TESTS not in ("dev_virtualenv", "smokes", "e2e_react_whl", "e2e_react_tgz", "e2e_react_whl_old_path", "e2e_react_tgz_old_path", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
   # On python 3.12 workaround done in dcbc28d1431e1aae892f7fdc0e266253365bc11e is no longer enough.
