@@ -68,7 +68,6 @@ class TestBitbucketStatusPush(
             data={'grant_type': 'client_credentials'},
             content_json={'access_token': 'foo'},
         )
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/user/repo/commit/d34db33fd43db33f/statuses/build',
@@ -209,7 +208,6 @@ class TestBitbucketStatusPush(
             data={'grant_type': 'client_credentials'},
             content_json={'access_token': 'foo'},
         )
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/user/repo/commit/d34db33fd43db33f/statuses/build',

@@ -75,7 +75,6 @@ class TestBitbucketServerStatusPush(
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build):
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
@@ -130,7 +129,6 @@ class TestBitbucketServerStatusPush(
 
         self.setupReporter(statusName='Build', generators=[generator])
         build = yield self.insert_build_finished(SUCCESS)
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
@@ -178,7 +176,6 @@ class TestBitbucketServerStatusPush(
     def test_error(self):
         self.setupReporter()
         build = yield self.insert_build_finished(SUCCESS)
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
@@ -259,8 +256,6 @@ class TestBitbucketServerCoreAPIStatusPush(
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build, parentPlan=False, epoch=False):
-        # we make sure proper calls to txrequests have been made
-
         _name = "Builder_parent #1 \u00bb Builder0 #0" if parentPlan else "Builder0 #0"
         _parent = "Builder_parent" if parentPlan else "Builder0"
 
@@ -428,7 +423,6 @@ class TestBitbucketServerCoreAPIStatusPush(
         self.setupReporter()
         build = yield self.insert_build_finished(SUCCESS)
         self.setUpLogging()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/rest/api/1.0/projects/example.org/repos/repo/commits/d34db33fd43db33f/builds',

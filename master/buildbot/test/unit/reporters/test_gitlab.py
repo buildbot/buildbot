@@ -104,7 +104,6 @@ class TestGitLabStatusPush(
     @defer.inlineCallbacks
     def test_basic(self):
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
@@ -164,7 +163,6 @@ class TestGitLabStatusPush(
     def test_sshurl(self):
         self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
@@ -206,7 +204,6 @@ class TestGitLabStatusPush(
         self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         self.setUpLogging()
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
             '/api/v4/projects/buildbot%2Fbuildbot',
@@ -232,7 +229,6 @@ class TestGitLabStatusPush(
     def test_senderror(self):
         self.setUpLogging()
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
             'post',
@@ -259,7 +255,6 @@ class TestGitLabStatusPush(
     def test_badchange(self):
         self.setUpLogging()
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
