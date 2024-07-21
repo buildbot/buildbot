@@ -112,7 +112,6 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         **kwargs,
     ):
         super().checkConfig(name, None, **kwargs)
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(

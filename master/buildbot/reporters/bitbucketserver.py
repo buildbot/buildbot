@@ -68,7 +68,6 @@ class BitbucketServerStatusPush(ReporterBase):
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(
@@ -196,7 +195,6 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
         if not base_url:
             config.error("Parameter base_url has to be given")
@@ -470,7 +468,6 @@ class BitbucketServerPRCommentPush(ReporterBase):
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     def _create_default_generators(self):
         return [BuildStatusGenerator()]

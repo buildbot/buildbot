@@ -18,11 +18,12 @@ import textwrap
 
 from twisted.internet import defer
 from twisted.logger import Logger
+from twisted.python import deprecate
+from twisted.python import versions
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
 from zope.interface import implementer
 
-from buildbot import config
 from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
 from buildbot.util import toJson
@@ -128,15 +129,9 @@ class HTTPClientService(service.SharedService):
         self._headers.update(headers)
 
     @staticmethod
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
     def checkAvailable(from_module):
-        """Call me at checkConfig time to properly report config error
-        if neither txrequests or treq is installed
-        """
-        if txrequests is None and treq is None:
-            config.error(
-                f"neither txrequests nor treq is installed, but {from_module} is "
-                f"requiring it\n\n{HTTPClientService.TREQ_PROS_AND_CONS}"
-            )
+        pass
 
     def startService(self):
         # treq only supports basicauth, so we force txrequests if the auth is

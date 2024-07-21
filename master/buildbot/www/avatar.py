@@ -51,8 +51,6 @@ class AvatarGitHub(AvatarBase):
         debug=False,
         verify=False,
     ):
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
-
         self.github_api_endpoint = github_api_endpoint
         if github_api_endpoint is None:
             self.github_api_endpoint = self.DEFAULT_GITHUB_API_URL

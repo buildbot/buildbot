@@ -45,7 +45,6 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         **kwargs,
     ):
         super().checkConfig(name, image=image, masterFQDN=masterFQDN, **kwargs)
-        HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(
