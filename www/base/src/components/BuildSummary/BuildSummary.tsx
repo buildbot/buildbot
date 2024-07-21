@@ -150,8 +150,9 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
       return null;
     }
     return (
-      <span className="bb-build-build-progress">
-        {renderAmount(stepInfo.buildrequests.length, "build")},
+      <span className="bb-build-request-counter">
+        {renderAmount(stepInfo.buildrequests.length, "build")}
+        {", "}
         {renderAmount(stepInfo.buildrequests.length - stepInfo.builds.length, "pending build")}
       </span>
     );
