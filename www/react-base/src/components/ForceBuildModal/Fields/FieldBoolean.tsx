@@ -32,9 +32,11 @@ export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) =
       <div className="col-sm-10 col-sm-offset-2">
         <div className="checkbox">
           <label>
-            <input type="checkbox" checked={state.value === 'true'}
-                   onChange={event => fieldsState.setValue(field.fullName,
-                     event.target.checked ? 'true' : 'false')}/> {field.label}
+            <input
+              data-bb-test-id={`force-field-${field.fullName}`}
+              type="checkbox" checked={state.value}
+              onChange={event => fieldsState.setValue(field.fullName,
+                event.target.checked)} /> {field.label}
           </label>
         </div>
       </div>

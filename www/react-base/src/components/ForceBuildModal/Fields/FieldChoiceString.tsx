@@ -29,18 +29,35 @@ type FieldChoiceStringProps = {
 export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps) => {
   const state = fieldsState.fields.get(field.fullName)!;
 
+  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!field.multiple) {
+      fieldsState.setValue(field.fullName, event.target.value);
+    }
+    else {
+      const currentValue = new Set(state.value);
+      if (currentValue.has(event.target.value)) {
+        currentValue.delete(event.target.value);
+      }
+      else {
+        currentValue.add(event.target.value);
+      }
+      fieldsState.setValue(field.fullName, [...currentValue]);
+    }
+  };
+
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
       <Form.Label className="col-sm-10">{field.label}</Form.Label>
       <div className="col-sm-10">
-        <Form.Control as="select" multiple={field.multiple} value={state.value}
-                      onChange={event => fieldsState.setValue(field.fullName, event.target.value)}>
-          {field.choices.map(choice => (<option>{choice}</option>))}
+        <Form.Control data-bb-test-id={`force-field-${field.fullName}`}
+                      as="select" multiple={field.multiple} value={state.value}
+                      onChange={onChange}>
+          {field.choices.map(choice => (<option key={`force-field-${field.fullName}-option-${choice}`}>{choice}</option>))}
         </Form.Control>
         { !field.strict && !field.multiple
-          ? <input data-bb-test-id={`force-field-${field.fullName}`}
+          ? <input data-bb-test-id={`force-field-non-strict-${field.fullName}`}
                    className="select-editable form-control" type="text" value={state.value}
-                   onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
+                   onChange={onChange}/>
           : <></>
         }
       </div>
