@@ -236,6 +236,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
         &nbsp;
         {step.name}
         {renderState()}
+        &nbsp;
         {maybeRenderPendingBuildCount()}
       </div>
       {showUrls ? renderStepUrls() : <></>}
