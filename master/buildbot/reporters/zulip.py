@@ -35,7 +35,6 @@ class ZulipStatusPush(ReporterBase):
             config.error("Token must be a string")
 
         super().checkConfig(generators=[BuildStartEndStatusGenerator()])
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None):

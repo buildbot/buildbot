@@ -66,8 +66,6 @@ class PushoverNotifier(ReporterBase):
 
         super().checkConfig(generators=generators)
 
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
-
         if otherParams is not None and set(otherParams.keys()) - VALID_PARAMS:
             config.error(
                 "otherParams can be only 'sound', 'callback', 'timestamp', "

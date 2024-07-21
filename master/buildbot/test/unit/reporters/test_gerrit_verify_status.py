@@ -64,7 +64,6 @@ class TestGerritVerifyStatusPush(
     def test_basic(self):
         yield self.createGerritStatus()
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -125,7 +124,6 @@ class TestGerritVerifyStatusPush(
 
         yield self.createGerritStatus(generators=[generator])
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -164,7 +162,6 @@ class TestGerritVerifyStatusPush(
     def test_custom_name(self):
         yield self.createGerritStatus(verification_name=Interpolate("builder %(prop:buildername)s"))
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -205,7 +202,6 @@ class TestGerritVerifyStatusPush(
             abstain=renderer(lambda p: p.getProperty("buildername") == 'Builder0')
         )
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -244,7 +240,6 @@ class TestGerritVerifyStatusPush(
     def test_custom_category(self):
         yield self.createGerritStatus(category=renderer(lambda p: p.getProperty("buildername")))
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -285,7 +280,6 @@ class TestGerritVerifyStatusPush(
     def test_custom_reporter(self):
         yield self.createGerritStatus(reporter=renderer(lambda p: p.getProperty("buildername")))
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',

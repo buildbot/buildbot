@@ -41,6 +41,5 @@ This reporter is integrated with :class:`GerritChangeSource`, and will update ch
 This reporter can also send reports for changes triggered manually provided that there is a property in the build named ``gerrit_changes``, containing the list of changes that were tested.
 This property must be a list of dictionaries, containing ``change_id`` and ``revision_id`` keys, as defined in the revision endpoints of the `Gerrit documentation`_.
 
-.. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _verify-status: https://gerrit.googlesource.com/plugins/verify-status
 .. _Gerrit documentation: https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#revision-endpoints

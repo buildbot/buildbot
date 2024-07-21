@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 
 import json as jsonmodule
-import textwrap
 
 from twisted.internet import defer
 from twisted.logger import Logger
+from twisted.python import deprecate
+from twisted.python import versions
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
 from zope.interface import implementer
 
-from buildbot import config
 from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
 from buildbot.util import toJson
@@ -33,10 +33,7 @@ try:
 except ImportError:
     txrequests = None
 
-try:
-    import treq
-except ImportError:
-    treq = None
+import treq
 
 log = Logger()
 
@@ -84,24 +81,10 @@ class TreqResponseWrapper:
 class HTTPClientService(service.SharedService):
     """A SharedService class that can make http requests to remote services.
 
-    I can use either txrequests or treq, depending on what I find installed
-
     I provide minimal get/post/put/delete API with automatic baseurl joining, and json data encoding
     that is suitable for use from buildbot services.
     """
 
-    TREQ_PROS_AND_CONS = textwrap.dedent("""
-       txrequests is based on requests and is probably a bit more mature, but it requires threads
-       to run, so has more overhead.
-       treq is better integrated in twisted and is more and more feature equivalent
-
-       txrequests is 2.8x slower than treq due to the use of threads.
-
-       http://treq.readthedocs.io/en/latest/#feature-parity-w-requests
-       pip install txrequests
-           or
-       pip install treq
-    """)
     # Those could be in theory be overridden in master.cfg by using
     # import buildbot.util.httpclientservice.HTTPClientService.PREFER_TREQ = True
     # We prefer at the moment keeping it simple
@@ -128,15 +111,9 @@ class HTTPClientService(service.SharedService):
         self._headers.update(headers)
 
     @staticmethod
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
     def checkAvailable(from_module):
-        """Call me at checkConfig time to properly report config error
-        if neither txrequests or treq is installed
-        """
-        if txrequests is None and treq is None:
-            config.error(
-                f"neither txrequests nor treq is installed, but {from_module} is "
-                f"requiring it\n\n{HTTPClientService.TREQ_PROS_AND_CONS}"
-            )
+        pass
 
     def startService(self):
         # treq only supports basicauth, so we force txrequests if the auth is
@@ -146,12 +123,6 @@ class HTTPClientService(service.SharedService):
         if txrequests is not None and not self.PREFER_TREQ:
             self._session = txrequests.Session(maxthreads=self.MAX_THREADS)
             self._doRequest = self._doTxRequest
-        elif treq is None:
-            raise ImportError(
-                "{classname} requires either txrequest or treq install."
-                " Users should call {classname}.checkAvailable() during checkConfig()"
-                " to properly alert the user.".format(classname=self.__class__.__name__)
-            )
         else:
             self._doRequest = self._doTReq
             self._pool = HTTPConnectionPool(self.master.reactor)

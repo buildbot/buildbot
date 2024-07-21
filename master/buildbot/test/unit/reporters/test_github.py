@@ -64,7 +64,6 @@ class TestGitHubStatusPush(
     @defer.inlineCallbacks
     def test_basic(self):
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
@@ -333,7 +332,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
         self.reporter_test_repo = 'git@github.com:buildbot2/buildbot2.git'
 
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/repos/buildbot2/buildbot2/statuses/d34db33fd43db33f',
@@ -378,7 +376,6 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
     @defer.inlineCallbacks
     def test_https(self):
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/repos/buildbot1/buildbot1/statuses/d34db33fd43db33f',
@@ -428,7 +425,6 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
     @defer.inlineCallbacks
     def test_basic(self):
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/issues/34/comments',
@@ -464,7 +460,6 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
     def test_basic_branch_head(self):
         self.reporter_test_props['branch'] = 'refs/pull/13/head'
         build = yield self.insert_build_new()
-        # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/issues/13/comments',

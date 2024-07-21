@@ -53,8 +53,6 @@ class PushjetNotifier(ReporterBase):
 
         super().checkConfig(generators=generators)
 
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
-
     @defer.inlineCallbacks
     def reconfigService(
         self, secret, levels=None, base_url='https://api.pushjet.io', generators=None

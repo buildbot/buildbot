@@ -654,6 +654,7 @@ bundle_version = version.split("-")[0]
 setup_args['install_requires'] = [
     'setuptools >= 8.0',
     'Twisted ' + twisted_ver,
+    'treq >= 20.9',
     'Jinja2 >= 2.1',
     'msgpack >= 0.6.0',
     "croniter >= 1.3.0",

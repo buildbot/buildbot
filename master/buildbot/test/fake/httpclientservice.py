@@ -15,7 +15,6 @@
 
 
 import json as jsonmodule
-from unittest import mock
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -99,9 +98,6 @@ class HTTPClientService(service.SharedService):
         service.case = case
         case.addCleanup(service.assertNoOutstanding)
         return service
-
-    # tests should ensure this has been called
-    checkAvailable = mock.Mock()
 
     def expect(
         self,

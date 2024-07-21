@@ -18,8 +18,6 @@ It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It requires `txrequests`_ package to allow interaction with Bitbucket Server REST API.
-
 It uses HTTP Basic AUTH.
 As a result, we recommend you use https in your base_url rather than http.
 
@@ -39,5 +37,3 @@ As a result, we recommend you use https in your base_url rather than http.
     :param boolean verbose: If True, logs a message for each successful status push.
     :param boolean verify: Disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: Logs every requests and their response
-
-.. _txrequests: https://pypi.python.org/pypi/txrequests

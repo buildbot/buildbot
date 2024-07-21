@@ -271,8 +271,6 @@ Marathon latent worker
 Marathon_ Marathon is a production-grade container orchestration platform for Mesosphere's Data-center Operating System (DC/OS) and Apache ``Mesos``.
 
 Buildbot supports using Marathon_ to host your latent workers.
-It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
-See :class:`HTTPClientService` for details.
 
 .. py:class:: buildbot.worker.marathon.MarathonLatentWorker
 .. py:class:: buildbot.plugins.worker.MarathonLatentWorker
@@ -319,7 +317,6 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ma
 .. _Marathon: https://mesosphere.github.io/marathon/
 .. _Marathon API: http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
 .. _txrequests: https://pypi.python.org/pypi/txrequests
-.. _treq: https://pypi.python.org/pypi/treq
 .. _requests authentication plugin: https://2.python-requests.org/en/master/user/authentication/
 
 Kubernetes latent worker

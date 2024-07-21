@@ -26,8 +26,6 @@ Or using `Bitbucket personal access token <https://confluence.atlassian.com/bitb
 :class:`BitbucketServerCoreAPIStatusPush` publishes build status using `BitbucketServer Core REST API <https://docs.atlassian.com/bitbucket-server/rest/7.4.0/bitbucket-rest.html#idp219>`_ into which it was integrated in `Bitbucket Server 7.4 <https://confluence.atlassian.com/bitbucketserver/bitbucket-server-7-4-release-notes-1013849643.html#BitbucketServer7.4releasenotes-cicdStreamlineyourworkflowwithIntegratedCI/CD>`_.
 The build status is published to a specific commit SHA in specific repository in Bitbucket Server with some additional information about reference name, build duration, parent relationship and also possibly test results.
 
-It requires `txrequests`_ package to allow interaction with Bitbucket Server REST API.
-
 .. py:class:: BitbucketServerCoreAPIStatusPush(base_url, token=None, auth=None, name=None, statusSuffix=None, generators=None, key=None, parentName=None, buildNumber=None, ref=None, duration=None, testResults=None, verbose=False, debug=None, verify=None)
 
     :param string base_url: The base url of the Bitbucket Server host.
@@ -64,5 +62,3 @@ It requires `txrequests`_ package to allow interaction with Bitbucket Server RES
     :param boolean verbose: If True, logs a message for each successful status push.
     :param boolean verify: Disable ssl verification for the case you use temporary self signed certificates.
     :param boolean debug: Logs every requests and their response.
-
-.. _txrequests: https://pypi.python.org/pypi/txrequests
