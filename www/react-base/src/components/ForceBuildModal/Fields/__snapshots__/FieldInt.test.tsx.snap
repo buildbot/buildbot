@@ -1,0 +1,257 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ForceFieldInt component change state on click 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={-150}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={0}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render default value 2`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={-0}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render default value 3`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={150}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render default value 4`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={-150}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render non-default value 1`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={-0}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render non-default value 2`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={150}
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ForceFieldInt component render non-default value 3`] = `
+<div>
+  <div
+    className="form-group"
+  >
+    <div
+      popover-is-open="field.haserrors"
+      popover-title="{{field.label}}"
+      popover-trigger="none"
+      uib-popover="{{field.errors}}"
+    />
+    <label
+      className="control-label col-sm-10"
+      htmlFor="fullDummy"
+    >
+      dummyLabel
+    </label>
+    <div
+      className="col-sm-10"
+    >
+      <input
+        className="form-control"
+        data-bb-test-id="force-field-fullDummy"
+        onChange={[Function]}
+        type="number"
+        value={-150}
+      />
+    </div>
+  </div>
+</div>
+`;

@@ -1,0 +1,1 @@
+Fix ``ChoiceStringParameter`` fields with ``multiple`` would not store the selected values
