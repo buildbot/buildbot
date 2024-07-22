@@ -109,6 +109,7 @@ class HTTPClientService(service.SharedService):
         self,
         method,
         ep,
+        session=None,
         params=None,
         headers=None,
         data=None,
@@ -129,6 +130,7 @@ class HTTPClientService(service.SharedService):
 
         self._expected.append({
             "method": method,
+            "session": session,
             "ep": ep,
             "params": params,
             "headers": headers,
@@ -190,9 +192,17 @@ class HTTPClientService(service.SharedService):
         expect = self._expected.pop(0)
         processing_delay_s = expect.pop("processing_delay_s")
 
+        expect_session = expect["session"] or self._session
+
         # pylint: disable=too-many-boolean-expressions
         if (
-            expect["method"] != method
+            expect_session.base_url != session.base_url
+            or expect_session.auth != session.auth
+            or expect_session.headers != session.headers
+            or expect_session.verify != session.verify
+            or expect_session.debug != session.debug
+            or expect_session.skip_encoding != session.skip_encoding
+            or expect["method"] != method
             or expect["ep"] != ep
             or expect["params"] != params
             or expect["headers"] != headers
@@ -204,6 +214,12 @@ class HTTPClientService(service.SharedService):
         ):
             raise AssertionError(
                 "expecting:\n"
+                f"session.base_url={expect_session.base_url!r}, "
+                f"session.auth={expect_session.auth!r}, "
+                f"session.headers={expect_session.headers!r}, "
+                f"session.verify={expect_session.verify!r}, "
+                f"session.debug={expect_session.debug!r}, "
+                f"session.skip_encoding={expect_session.skip_encoding!r}, "
                 f"method={expect['method']!r}, "
                 f"ep={expect['ep']!r}, "
                 f"params={expect['params']!r}, "
@@ -214,6 +230,12 @@ class HTTPClientService(service.SharedService):
                 f"verify={expect['verify']!r}, "
                 f"cert={expect['cert']!r}"
                 "\ngot      :\n"
+                f"session.base_url={session.base_url!r}, "
+                f"session.auth={session.auth!r}, "
+                f"session.headers={session.headers!r}, "
+                f"session.verify={session.verify!r}, "
+                f"session.debug={session.debug!r}, "
+                f"session.skip_encoding={session.skip_encoding!r}, "
                 f"method={method!r}, "
                 f"ep={ep!r}, "
                 f"params={params!r}, "
