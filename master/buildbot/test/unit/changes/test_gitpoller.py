@@ -2253,7 +2253,7 @@ class TestGitPollerUtils(unittest.TestCase):
             gitpoller.GitPoller._tracker_ref(
                 "https://example.org:1234/owner/repo.git", "refs/heads/branch_name"
             ),
-            "refs/buildbot/https/example.org:1234/owner/repo/heads/branch_name",
+            "refs/buildbot/https/example.org%3A1234/owner/repo/heads/branch_name",
         )
 
     def test_tracker_ref_tag(self):
@@ -2261,7 +2261,7 @@ class TestGitPollerUtils(unittest.TestCase):
             gitpoller.GitPoller._tracker_ref(
                 "https://example.org:1234/owner/repo.git", "refs/tags/v1"
             ),
-            "refs/buildbot/https/example.org:1234/owner/repo/tags/v1",
+            "refs/buildbot/https/example.org%3A1234/owner/repo/tags/v1",
         )
 
     def test_tracker_ref_with_credentials(self):
@@ -2269,7 +2269,7 @@ class TestGitPollerUtils(unittest.TestCase):
             gitpoller.GitPoller._tracker_ref(
                 "https://user:password@example.org:1234/owner/repo.git", "refs/heads/branch_name"
             ),
-            "refs/buildbot/https/example.org:1234/owner/repo/heads/branch_name",
+            "refs/buildbot/https/example.org%3A1234/owner/repo/heads/branch_name",
         )
 
     def test_tracker_ref_sub_branch(self):
@@ -2277,7 +2277,7 @@ class TestGitPollerUtils(unittest.TestCase):
             gitpoller.GitPoller._tracker_ref(
                 "https://user:password@example.org:1234/owner/repo.git", "refs/heads/branch_name"
             ),
-            "refs/buildbot/https/example.org:1234/owner/repo/heads/branch_name",
+            "refs/buildbot/https/example.org%3A1234/owner/repo/heads/branch_name",
         )
 
     def test_tracker_ref_not_ref_collision(self):
