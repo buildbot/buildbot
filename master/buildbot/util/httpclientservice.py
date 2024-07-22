@@ -116,18 +116,12 @@ class HTTPClientService(service.SharedService):
         pass
 
     def startService(self):
-        # treq only supports basicauth, so we force txrequests if the auth is
-        # something else
-        if self._auth is not None and not isinstance(self._auth, tuple):
-            self.PREFER_TREQ = False
-        if txrequests is not None and not self.PREFER_TREQ:
+        if txrequests is not None:
             self._txrequests_session = txrequests.Session(maxthreads=self.MAX_THREADS)
-            self._doRequest = self._doTxRequest
-        else:
-            self._doRequest = self._doTReq
-            self._pool = HTTPConnectionPool(self.master.reactor)
-            self._pool.maxPersistentPerHost = self.MAX_THREADS
-            self._agent = Agent(self.master.reactor, pool=self._pool)
+
+        self._pool = HTTPConnectionPool(self.master.reactor)
+        self._pool.maxPersistentPerHost = self.MAX_THREADS
+        self._agent = Agent(self.master.reactor, pool=self._pool)
         return super().startService()
 
     @defer.inlineCallbacks
@@ -137,6 +131,15 @@ class HTTPClientService(service.SharedService):
         if self._pool:
             yield self._pool.closeCachedConnections()
         yield super().stopService()
+
+    def _doRequest(self, method, ep, **kwargs):
+        prefer_treq = self.PREFER_TREQ
+        if self._auth is not None and not isinstance(self._auth, tuple):
+            prefer_treq = False
+        if prefer_treq or txrequests is None:
+            return self._doTReq(method, ep, **kwargs)
+        else:
+            return self._doTxRequest(method, ep, **kwargs)
 
     def _prepareRequest(self, ep, kwargs):
         if ep.startswith('http://') or ep.startswith('https://'):
