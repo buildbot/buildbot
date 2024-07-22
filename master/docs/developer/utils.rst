@@ -1285,7 +1285,6 @@ For example, a particular daily scheduler could be configured on multiple master
     It implements the same APIs as :class:`buildbot.util.httpclientservice.HTTPClientService`, plus one that should be used to register the expectations.
     It should be registered by the test case before the tested service actually requests an HTTPClientService instance, with the same parameters.
     It will then replace the original implementation automatically (no need to patch anything).
-    The testing methodology is based on `AngularJS ngMock`_.
 
     .. py:method:: getService(cls, master, case, *args, **kwargs)
 
@@ -1369,8 +1368,6 @@ For example, a particular daily scheduler could be configured on multiple master
 
                     response = self.failureResultOf(self.tested.doGetRoot())
                     self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
-
-.. _AngularJS ngMock: https://docs.angularjs.org/api/ngMock/service/$httpBackend
 
 :py:mod:`buildbot.util.ssl`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
