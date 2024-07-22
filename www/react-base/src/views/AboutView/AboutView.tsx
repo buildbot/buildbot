@@ -87,7 +87,7 @@ export const AboutView = observer(() => {
       <Card bg="light">
         <Card.Body>
           <h2>
-            <img src="img/icon.svg" alt="" width="64px" className="nut-spin"/>&nbsp;About this&nbsp;
+            <img src="icon.svg" alt="" width="64px" className="nut-spin"/>&nbsp;About this&nbsp;
             <Link to="http://buildbot.net">buildbot</Link>&nbsp;running for&nbsp;
             <Link to={config.titleURL}>{config.title}</Link>
           </h2>
