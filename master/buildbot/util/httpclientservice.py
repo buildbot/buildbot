@@ -100,7 +100,7 @@ class HTTPClientService(service.SharedService):
         self._auth = auth
         self._headers = headers
         self._pool = None
-        self._session = None
+        self._txrequests_session = None
         self.verify = verify
         self.debug = debug
         self.skipEncoding = skipEncoding
@@ -121,7 +121,7 @@ class HTTPClientService(service.SharedService):
         if self._auth is not None and not isinstance(self._auth, tuple):
             self.PREFER_TREQ = False
         if txrequests is not None and not self.PREFER_TREQ:
-            self._session = txrequests.Session(maxthreads=self.MAX_THREADS)
+            self._txrequests_session = txrequests.Session(maxthreads=self.MAX_THREADS)
             self._doRequest = self._doTxRequest
         else:
             self._doRequest = self._doTReq
@@ -132,8 +132,8 @@ class HTTPClientService(service.SharedService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        if self._session:
-            yield self._session.close()
+        if self._txrequests_session:
+            yield self._txrequests_session.close()
         if self._pool:
             yield self._pool.closeCachedConnections()
         yield super().stopService()
@@ -182,7 +182,7 @@ class HTTPClientService(service.SharedService):
         if self.verify is False:
             kwargs['verify'] = False
 
-        res = yield self._session.request(method, url, **kwargs)
+        res = yield self._txrequests_session.request(method, url, **kwargs)
         return IHttpResponse(TxRequestsResponseWrapper(res))
 
     @defer.inlineCallbacks

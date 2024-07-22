@@ -66,14 +66,14 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
     @defer.inlineCallbacks
     def test_get(self):
         yield self._http.get('/bar')
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'get', 'http://foo/bar', headers={}, background_callback=mock.ANY
         )
 
     @defer.inlineCallbacks
     def test_get_full_url(self):
         yield self._http.get('http://other/bar')
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'get', 'http://other/bar', headers={}, background_callback=mock.ANY
         )
 
@@ -83,7 +83,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'put', 'http://foo/bar', background_callback=mock.ANY, data=jsonBytes, headers=headers
         )
 
@@ -93,14 +93,14 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonBytes, headers=headers
         )
 
     @defer.inlineCallbacks
     def test_delete(self):
         yield self._http.delete('/bar')
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'delete', 'http://foo/bar', background_callback=mock.ANY, headers={}
         )
 
@@ -110,7 +110,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'post',
             'http://foo/bar',
             background_callback=mock.ANY,
@@ -126,7 +126,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'post',
             'http://foo/bar',
             background_callback=mock.ANY,
@@ -151,7 +151,7 @@ class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
         yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonStr, headers=headers
         )
 
@@ -160,7 +160,7 @@ class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
         yield self._http.post('/bar', json=[{'foo': 'bar'}])
         jsonStr = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': 'application/json'}
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonStr, headers=headers
         )
 
@@ -238,7 +238,7 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         )
         yield self._http.post('/bar', data={'foo': 'bar'})
         # if digest auth, we don't use treq! we use txrequests
-        self._http._session.request.assert_called_once_with(
+        self._http._txrequests_session.request.assert_called_once_with(
             'post',
             'http://foo/bar',
             background_callback=mock.ANY,
