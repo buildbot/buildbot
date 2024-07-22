@@ -95,8 +95,12 @@ class BitbucketServerStatusPush(ReporterBase):
 
         self.key = key or Interpolate('%(prop:buildername)s')
         self.context = statusName
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url, auth=(user, password), debug=self.debug, verify=self.verify
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice,
+            base_url,
+            auth=(user, password),
+            debug=self.debug,
+            verify=self.verify,
         )
 
     def _create_default_generators(self):
@@ -256,8 +260,13 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         headers = {}
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url, auth=auth, headers=headers, debug=debug, verify=verify
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice,
+            base_url,
+            auth=auth,
+            headers=headers,
+            debug=debug,
+            verify=verify,
         )
 
     def _create_default_generators(self):
@@ -449,8 +458,8 @@ class BitbucketServerPRCommentPush(ReporterBase):
             generators = self._create_default_generators()
 
         yield super().reconfigService(generators=generators, **kwargs)
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url, auth=(user, password), debug=debug, verify=verify
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice, base_url, auth=(user, password), debug=debug, verify=verify
         )
 
     def checkConfig(

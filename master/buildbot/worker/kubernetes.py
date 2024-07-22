@@ -132,8 +132,8 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
 
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, kube_config.get_master_url()
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice, kube_config.get_master_url()
         )
 
         if self.running and self._kube is not None:

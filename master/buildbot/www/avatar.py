@@ -83,8 +83,8 @@ class AvatarGitHub(AvatarBase):
         elif self.client_creds:
             headers['Authorization'] = 'basic ' + self.client_creds
 
-        self.client = yield httpclientservice.HTTPClientService.getService(
-            self.master,
+        self.client = yield httpclientservice.HTTPSession(
+            self.master.httpservice,
             self.github_api_endpoint,
             headers=headers,
             debug=self.debug,

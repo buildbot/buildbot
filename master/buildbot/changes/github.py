@@ -105,8 +105,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         if github_property_whitelist is None:
             github_property_whitelist = []
 
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers=http_headers
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice, baseURL, headers=http_headers
         )
 
         self.token = token

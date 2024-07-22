@@ -104,8 +104,8 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         self.external_property_whitelist = bitbucket_property_whitelist
 
         base_url = "https://api.bitbucket.org/2.0"
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url, auth=auth
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice, base_url, auth=auth
         )
 
         yield super().reconfigService(

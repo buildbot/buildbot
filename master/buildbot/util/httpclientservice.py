@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.logger import Logger
 from twisted.python import deprecate
 from twisted.python import versions
+from twisted.python.threadpool import ThreadPool
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
 from zope.interface import implementer
@@ -89,26 +90,26 @@ class HTTPClientService(service.SharedService):
     # import buildbot.util.httpclientservice.HTTPClientService.PREFER_TREQ = True
     # We prefer at the moment keeping it simple
     PREFER_TREQ = False
-    MAX_THREADS = 5
+    MAX_THREADS = 20
 
     def __init__(
         self, base_url, auth=None, headers=None, verify=None, debug=False, skipEncoding=False
     ):
-        assert not base_url.endswith("/"), "baseurl should not end with /: " + base_url
         super().__init__()
-        self._base_url = base_url
-        self._auth = auth
-        self._headers = headers
+        self._session = HTTPSession(
+            self,
+            base_url,
+            auth=auth,
+            headers=headers,
+            verify=verify,
+            debug=debug,
+            skip_encoding=skipEncoding,
+        )
         self._pool = None
-        self._session = None
-        self.verify = verify
-        self.debug = debug
-        self.skipEncoding = skipEncoding
+        self._txrequests_sessions = []
 
     def updateHeaders(self, headers):
-        if self._headers is None:
-            self._headers = {}
-        self._headers.update(headers)
+        self._session.update_headers(headers)
 
     @staticmethod
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
@@ -116,39 +117,53 @@ class HTTPClientService(service.SharedService):
         pass
 
     def startService(self):
-        # treq only supports basicauth, so we force txrequests if the auth is
-        # something else
-        if self._auth is not None and not isinstance(self._auth, tuple):
-            self.PREFER_TREQ = False
-        if txrequests is not None and not self.PREFER_TREQ:
-            self._session = txrequests.Session(maxthreads=self.MAX_THREADS)
-            self._doRequest = self._doTxRequest
-        else:
-            self._doRequest = self._doTReq
-            self._pool = HTTPConnectionPool(self.master.reactor)
-            self._pool.maxPersistentPerHost = self.MAX_THREADS
-            self._agent = Agent(self.master.reactor, pool=self._pool)
+        if txrequests is not None:
+            self._txrequests_pool = ThreadPool(minthreads=1, maxthreads=self.MAX_THREADS)
+            # unclosed ThreadPool leads to reactor hangs at shutdown
+            # this is a problem in many situation, so better enforce pool stop here
+            self.master.reactor.addSystemEventTrigger(
+                "after",
+                "shutdown",
+                lambda: self._txrequests_pool.stop() if self._txrequests_pool.started else None,
+            )
+            self._txrequests_pool.start()
+
+        self._pool = HTTPConnectionPool(self.master.reactor)
+        self._pool.maxPersistentPerHost = self.MAX_THREADS
         return super().startService()
 
     @defer.inlineCallbacks
     def stopService(self):
-        if self._session:
-            yield self._session.close()
+        if txrequests is not None:
+            sessions = self._txrequests_sessions
+            self._txrequests_sessions = []
+            for session in sessions:
+                session.close()
+            self._txrequests_pool.stop()
         if self._pool:
             yield self._pool.closeCachedConnections()
         yield super().stopService()
 
-    def _prepareRequest(self, ep, kwargs):
+    def _do_request(self, session, method, ep, **kwargs):
+        prefer_treq = self.PREFER_TREQ
+        if session.auth is not None and not isinstance(session.auth, tuple):
+            prefer_treq = False
+        if prefer_treq or txrequests is None:
+            return self._do_treq(session, method, ep, **kwargs)
+        else:
+            return self._do_txrequest(session, method, ep, **kwargs)
+
+    def _prepare_request(self, session, ep, kwargs):
         if ep.startswith('http://') or ep.startswith('https://'):
             url = ep
         else:
             assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
-            url = self._base_url + ep
-        if self._auth is not None and 'auth' not in kwargs:
-            kwargs['auth'] = self._auth
+            url = session.base_url + ep
+        if session.auth is not None and 'auth' not in kwargs:
+            kwargs['auth'] = session.auth
         headers = kwargs.get('headers', {})
-        if self._headers is not None:
-            headers.update(self._headers)
+        if session.headers is not None:
+            headers.update(session.headers)
         kwargs['headers'] = headers
 
         # we manually do the json encoding in order to automatically convert timestamps
@@ -157,7 +172,7 @@ class HTTPClientService(service.SharedService):
         if isinstance(json, (dict, list)):
             jsonStr = jsonmodule.dumps(json, default=toJson)
             kwargs['headers']['Content-Type'] = 'application/json'
-            if self.skipEncoding:
+            if session.skip_encoding:
                 kwargs['data'] = jsonStr
             else:
                 jsonBytes = unicode2bytes(jsonStr)
@@ -165,46 +180,94 @@ class HTTPClientService(service.SharedService):
         return url, kwargs
 
     @defer.inlineCallbacks
-    def _doTxRequest(self, method, ep, **kwargs):
-        url, kwargs = yield self._prepareRequest(ep, kwargs)
-        if self.debug:
+    def _do_txrequest(self, session, method, ep, **kwargs):
+        url, kwargs = yield self._prepare_request(session, ep, kwargs)
+        if session.debug:
             log.debug("http {url} {kwargs}", url=url, kwargs=kwargs)
 
-        def readContent(session, res):
+        def readContent(txrequests_session, res):
             # this forces reading of the content inside the thread
             res.content
-            if self.debug:
+            if session.debug:
                 log.debug("==> {code}: {content}", code=res.status_code, content=res.content)
             return res
 
         # read the whole content in the thread
         kwargs['background_callback'] = readContent
-        if self.verify is False:
+        if session.verify is False:
             kwargs['verify'] = False
 
-        res = yield self._session.request(method, url, **kwargs)
+        if session._txrequests_session is None:
+            session._txrequests_session = txrequests.Session(
+                pool=self._txrequests_pool, maxthreads=self.MAX_THREADS
+            )
+            # FIXME: remove items from the list as HTTPSession objects are destroyed
+            self._txrequests_sessions.append(session._txrequests_session)
+
+        res = yield session._txrequests_session.request(method, url, **kwargs)
         return IHttpResponse(TxRequestsResponseWrapper(res))
 
     @defer.inlineCallbacks
-    def _doTReq(self, method, ep, **kwargs):
-        url, kwargs = yield self._prepareRequest(ep, kwargs)
+    def _do_treq(self, session, method, ep, **kwargs):
+        url, kwargs = yield self._prepare_request(session, ep, kwargs)
         # treq requires header values to be an array
         if "headers" in kwargs:
             kwargs['headers'] = {k: [v] for k, v in kwargs["headers"].items()}
-        kwargs['agent'] = self._agent
+
+        if session._treq_agent is None:
+            session._trex_agent = Agent(self.master.reactor, pool=self._pool)
+        kwargs['agent'] = session._trex_agent
 
         res = yield getattr(treq, method)(url, **kwargs)
         return IHttpResponse(TreqResponseWrapper(res))
 
-    # lets be nice to the auto completers, and don't generate that code
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.get()")
     def get(self, ep, **kwargs):
-        return self._doRequest('get', ep, **kwargs)
+        return self._do_request(self._session, 'get', ep, **kwargs)
+
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.put()")
+    def put(self, ep, **kwargs):
+        return self._do_request(self._session, 'put', ep, **kwargs)
+
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.delete()")
+    def delete(self, ep, **kwargs):
+        return self._do_request(self._session, 'delete', ep, **kwargs)
+
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.post()")
+    def post(self, ep, **kwargs):
+        return self._do_request(self._session, 'post', ep, **kwargs)
+
+
+class HTTPSession:
+    def __init__(
+        self, http, base_url, auth=None, headers=None, verify=None, debug=False, skip_encoding=False
+    ):
+        assert not base_url.endswith("/"), "baseurl should not end with /: " + base_url
+        self.http = http
+        self.base_url = base_url
+        self.auth = auth
+        self.headers = headers
+        self.pool = None
+        self.verify = verify
+        self.debug = debug
+        self.skip_encoding = skip_encoding
+
+        self._treq_agent = None
+        self._txrequests_session = None
+
+    def update_headers(self, headers):
+        if self.headers is None:
+            self.headers = {}
+        self.headers.update(headers)
+
+    def get(self, ep, **kwargs):
+        return self.http._do_request(self, 'get', ep, **kwargs)
 
     def put(self, ep, **kwargs):
-        return self._doRequest('put', ep, **kwargs)
+        return self.http._do_request(self, 'put', ep, **kwargs)
 
     def delete(self, ep, **kwargs):
-        return self._doRequest('delete', ep, **kwargs)
+        return self.http._do_request(self, 'delete', ep, **kwargs)
 
     def post(self, ep, **kwargs):
-        return self._doRequest('post', ep, **kwargs)
+        return self.http._do_request(self, 'post', ep, **kwargs)

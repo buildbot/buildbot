@@ -96,6 +96,7 @@ class FakeMaster(service.MasterService):
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
         self.name = 'fake:/master'
+        self.httpservice = None
         self.masterid = master_id
         self.msgmanager = msgmanager.FakeMsgManager()
         self.workers = bworkermanager.FakeWorkerManager()

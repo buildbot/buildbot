@@ -497,8 +497,8 @@ class GerritHttpEventLogPollerConnector:
 
     @defer.inlineCallbacks
     def setup(self):
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self._change_source.master, self._base_url, auth=self._auth
+        self._http = yield httpclientservice.HTTPSession(
+            self._change_source.master.httpservice, self._base_url, auth=self._auth
         )
 
     @defer.inlineCallbacks

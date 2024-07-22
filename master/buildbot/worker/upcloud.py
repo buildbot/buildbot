@@ -23,7 +23,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot import util
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util.httpclientservice import HTTPClientService
+from buildbot.util.httpclientservice import HTTPSession
 from buildbot.worker import AbstractLatentWorker
 
 DEFAULT_ZONE = "de-fra1"
@@ -81,8 +81,8 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         if hostconfig is None:
             hostconfig = {}
         self.hostconfig = hostconfig
-        self.client = yield HTTPClientService.getService(
-            self.master,
+        self.client = yield HTTPSession(
+            self.master.httpservice,
             base_url,
             auth=(api_username, api_password),
             debug=kwargs.get('debug', False),

@@ -19,7 +19,7 @@ from twisted.logger import Logger
 
 from buildbot import util
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util.httpclientservice import HTTPClientService
+from buildbot.util.httpclientservice import HTTPSession
 from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker.docker import DockerBaseWorker
 
@@ -65,9 +65,7 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             kwargs['build_wait_timeout'] = 0
         yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
-        self._http = yield HTTPClientService.getService(
-            self.master, marathon_url, auth=marathon_auth
-        )
+        self._http = HTTPSession(self.master.httpservice, marathon_url, auth=marathon_auth)
         if marathon_extra_config is None:
             marathon_extra_config = {}
         self.marathon_extra_config = marathon_extra_config

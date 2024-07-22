@@ -95,10 +95,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
                 "TEST_PUSHOVER_CREDENTIALS is defined"
             )
         user, token = creds.split(':')
-        _http = yield httpclientservice.HTTPClientService.getService(
-            self.master, 'https://api.pushover.net'
-        )
-        yield _http.startService()
+        _http = httpclientservice.HTTPSession(self.master.httpservice, 'https://api.pushover.net')
         pn = yield self.setupPushoverNotifier(user_key=user, api_token=token)
         n = yield pn.sendNotification({'message': "Buildbot Pushover test passed!"})
         j = yield n.json()

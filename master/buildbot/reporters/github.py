@@ -86,8 +86,8 @@ class GitHubStatusPush(ReporterBase):
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
 
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master,
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice,
             baseURL,
             headers={'User-Agent': 'Buildbot'},
             debug=self.debug,

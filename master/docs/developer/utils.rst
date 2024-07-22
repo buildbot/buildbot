@@ -1195,6 +1195,91 @@ For example, a particular daily scheduler could be configured on multiple master
 
         This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
+        This function has been deprecated. Please use ``HTTPSession``.
+
+
+    .. py:method:: get(endpoint, params=None)
+
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``GET``. This function has been deprecated. Please use ``HTTPSession``.
+
+
+    .. py:method:: delete(endpoint, params=None)
+
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``DELETE``. This function has been deprecated. Please use ``HTTPSession``.
+
+    .. py:method:: post(endpoint, data=None, json=None, params=None)
+
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``POST``. This function has been deprecated. Please use ``HTTPSession``.
+
+        .. note::
+
+            json and data cannot be used at the same time.
+
+    .. py:method:: put(endpoint, data=None, json=None, params=None)
+
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``PUT``. This function has been deprecated. Please use ``HTTPSession``.
+
+        .. note::
+
+            json and data cannot be used at the same time.
+
+    .. py:method:: update_headers(headers)
+
+        :param headers: dictionary of string key-value pairs containing headers to add to the
+            session.
+
+        Adds or updates the session with the given headers. All subsequent HTTP requests will
+        contain the additional headers specified in this call.
+
+.. py:class:: HTTPSession
+
+    A class that encapsulates certain parameters of connection to HTTP URLs and allows to perform
+    connections to them.
+
+    Example usage in a service.
+
+    .. code-block:: python
+
+        s = HTTPSession(self.master.httpservice, "https://api.github.com")
+        r = await s.get("/repos/buildbot/buildbot/releases")
+        print(r.json())
+
+    Usually ``HTTPSession`` is used by creating an instance of it in service constructor and reusing
+    it throughout the life of the service.
+
+    .. py:method:: __init__(http: HTTPClientService, base_url: str, auth=None, headers=None, debug=None, verify=None)
+
+        :param http: the instance of HTTPClientService to use. It is available as
+            ``self.master.httpservice`` for all the :py:class:`BuildbotService` instances.
+        :param base_url: The base http url of the server to access. e.g. ``http://github.com/``
+        :param auth: Authentication information. If auth is a tuple then ``BasicAuth`` will be used. e.g ``('user', 'passwd')``
+            It can also be a :mod:`requests.auth` authentication plugin.
+            In this case `txrequests`_ will be forced, and `treq`_ cannot be used.
+        :param headers: The headers to pass to every requests for this url
+        :param debug: log every requests and every response.
+        :param verify: disable the SSL verification.
+
+        Creates a ``HTTPSession`` instance.
 
     .. py:method:: get(endpoint, params=None)
 
@@ -1285,7 +1370,6 @@ For example, a particular daily scheduler could be configured on multiple master
     It implements the same APIs as :class:`buildbot.util.httpclientservice.HTTPClientService`, plus one that should be used to register the expectations.
     It should be registered by the test case before the tested service actually requests an HTTPClientService instance, with the same parameters.
     It will then replace the original implementation automatically (no need to patch anything).
-    The testing methodology is based on `AngularJS ngMock`_.
 
     .. py:method:: getService(cls, master, case, *args, **kwargs)
 
@@ -1325,13 +1409,13 @@ For example, a particular daily scheduler could be configured on multiple master
             from buildbot.util import service
 
 
-            class myTestedService(service.BuildbotService):
+            class MyTestedService(service.BuildbotService):
                 name = 'myTestedService'
 
                 @defer.inlineCallbacks
                 def reconfigService(self, baseurl):
-                    self._http = yield httpclientservice.HTTPClientService.getService(
-                        self.master, baseurl)
+                    self._http = yield httpclientservice.HTTPSession(
+                        self.master.httpservice, baseurl)
 
                 @defer.inlineCallbacks
                 def doGetRoot(self):
@@ -1345,32 +1429,32 @@ For example, a particular daily scheduler could be configured on multiple master
                     return res_json
 
 
-            class Test(unittest.SynchronousTestCase):
+            class Test(unittest.TestCase):
 
+                @defer.inlineCallbacks
                 def setUp(self):
                     baseurl = 'http://127.0.0.1:8080'
                     self.parent = service.MasterService()
-                    self._http = self.successResultOf(
-                        fakehttpclientservice.HTTPClientService.getService(self.parent, self,
-                                                                           baseurl))
+                    self._http = \
+                        yield fakehttpclientservice.HTTPClientService.getService(self.parent, self,
+                                                                                 baseurl))
                     self.tested = myTestedService(baseurl)
 
-                    self.successResultOf(self.tested.setServiceParent(self.parent))
-                    self.successResultOf(self.parent.startService())
+                    yield self.tested.setServiceParent(self.parent)
+                    yield self.parent.startService()
 
                 def test_root(self):
                     self._http.expect("get", "/", content_json={'foo': 'bar'})
 
-                    response = self.successResultOf(self.tested.doGetRoot())
+                    response = yield self.tested.doGetRoot()
                     self.assertEqual(response, {'foo': 'bar'})
 
                 def test_root_error(self):
                     self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
 
-                    response = self.failureResultOf(self.tested.doGetRoot())
-                    self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
-
-.. _AngularJS ngMock: https://docs.angularjs.org/api/ngMock/service/$httpBackend
+                    with self.assertRaises(RuntimeError) as e:
+                        yield self.tested.doGetRoot()
+                    self.assertIn('404: server did not succeed', str(e.exception))
 
 :py:mod:`buildbot.util.ssl`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

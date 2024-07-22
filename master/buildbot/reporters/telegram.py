@@ -1000,7 +1000,7 @@ class TelegramBot(service.BuildbotService):
 
     def _get_http(self, bot_token):
         base_url = "https://api.telegram.org/bot" + bot_token
-        return httpclientservice.HTTPClientService.getService(self.master, base_url)
+        return httpclientservice.HTTPSession(self.master.httpservice, base_url)
 
     def checkConfig(
         self,

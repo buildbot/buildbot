@@ -25,3 +25,16 @@ Testing support
 The ``build_files``, ``worker_env`` and ``worker_version`` arguments of
 ``TestBuildStepMixin.setup_step()`` have been removed. As a replacement, call
 ``TestBuildStepMixin.setup_build()`` before ``setup_step``.
+
+HTTP service
+============
+
+The following methods of ``httpclientservice.HTTPClientService`` have been deprecated:
+
+ - ``get``
+ - ``delete``
+ - ``post``
+ - ``put``
+ - ``updateHeaders``
+
+As a replacement, use ``httpclientservice.HTTPSession`` and call corresponding methods on it.

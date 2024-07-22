@@ -84,8 +84,8 @@ class GitLabStatusPush(ReporterBase):
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
         self.baseURL = baseURL
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master,
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice,
             baseURL,
             headers={'PRIVATE-TOKEN': token},
             debug=self.debug,

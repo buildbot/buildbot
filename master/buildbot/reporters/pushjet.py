@@ -68,7 +68,7 @@ class PushjetNotifier(ReporterBase):
             self.levels = {}
         else:
             self.levels = levels
-        self._http = yield httpclientservice.HTTPClientService.getService(self.master, base_url)
+        self._http = yield httpclientservice.HTTPSession(self.master.httpservice, base_url)
 
     def _create_default_generators(self):
         formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
