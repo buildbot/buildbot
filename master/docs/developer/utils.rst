@@ -1324,7 +1324,7 @@ For example, a particular daily scheduler could be configured on multiple master
             from buildbot.util import service
 
 
-            class myTestedService(service.BuildbotService):
+            class MyTestedService(service.BuildbotService):
                 name = 'myTestedService'
 
                 @defer.inlineCallbacks
@@ -1344,30 +1344,32 @@ For example, a particular daily scheduler could be configured on multiple master
                     return res_json
 
 
-            class Test(unittest.SynchronousTestCase):
+            class Test(unittest.TestCase):
 
+                @defer.inlineCallbacks
                 def setUp(self):
                     baseurl = 'http://127.0.0.1:8080'
                     self.parent = service.MasterService()
-                    self._http = self.successResultOf(
-                        fakehttpclientservice.HTTPClientService.getService(self.parent, self,
-                                                                           baseurl))
+                    self._http = \
+                        yield fakehttpclientservice.HTTPClientService.getService(self.parent, self,
+                                                                                 baseurl))
                     self.tested = myTestedService(baseurl)
 
-                    self.successResultOf(self.tested.setServiceParent(self.parent))
-                    self.successResultOf(self.parent.startService())
+                    yield self.tested.setServiceParent(self.parent)
+                    yield self.parent.startService()
 
                 def test_root(self):
                     self._http.expect("get", "/", content_json={'foo': 'bar'})
 
-                    response = self.successResultOf(self.tested.doGetRoot())
+                    response = yield self.tested.doGetRoot()
                     self.assertEqual(response, {'foo': 'bar'})
 
                 def test_root_error(self):
                     self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
 
-                    response = self.failureResultOf(self.tested.doGetRoot())
-                    self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
+                    with self.assertRaises(RuntimeError) as e:
+                        yield self.tested.doGetRoot()
+                    self.assertIn('404: server did not succeed', str(e.exception))
 
 :py:mod:`buildbot.util.ssl`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
