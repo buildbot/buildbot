@@ -71,17 +71,20 @@ class HTTPClientService(service.SharedService):
     ):
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
-        self._base_url = base_url
-        self._auth = auth
+        self._session = httpclientservice.HTTPSession(
+            self,
+            base_url,
+            auth=auth,
+            headers=headers,
+            debug=debug,
+            verify=verify,
+            skip_encoding=skipEncoding,
+        )
 
-        self._headers = headers
-        self._session = None
         self._expected = []
 
     def updateHeaders(self, headers):
-        if self._headers is None:
-            self._headers = {}
-        self._headers.update(headers)
+        self._session.update_headers(headers)
 
     @classmethod
     @defer.inlineCallbacks
@@ -143,8 +146,9 @@ class HTTPClientService(service.SharedService):
         )
 
     @defer.inlineCallbacks
-    def _doRequest(
+    def _do_request(
         self,
+        session,
         method,
         ep,
         params=None,
@@ -233,13 +237,13 @@ class HTTPClientService(service.SharedService):
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
-        return self._doRequest('get', ep, **kwargs)
+        return self._do_request(self._session, 'get', ep, **kwargs)
 
     def put(self, ep, **kwargs):
-        return self._doRequest('put', ep, **kwargs)
+        return self._do_request(self._session, 'put', ep, **kwargs)
 
     def delete(self, ep, **kwargs):
-        return self._doRequest('delete', ep, **kwargs)
+        return self._do_request(self._session, 'delete', ep, **kwargs)
 
     def post(self, ep, **kwargs):
-        return self._doRequest('post', ep, **kwargs)
+        return self._do_request(self._session, 'post', ep, **kwargs)

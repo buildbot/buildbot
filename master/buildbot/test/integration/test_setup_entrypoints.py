@@ -121,6 +121,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.git.GitStepAuth',
             'buildbot.util.giturlparse.GitUrl',
             'buildbot.util.httpclientservice.HTTPClientService',
+            'buildbot.util.httpclientservice.HTTPSession',
             'buildbot.util.httpclientservice.TreqResponseWrapper',
             'buildbot.util.httpclientservice.TxRequestsResponseWrapper',
             'buildbot.util.kubeclientservice.KubeClientService',
