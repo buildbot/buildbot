@@ -65,24 +65,28 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
     ]
 
     @defer.inlineCallbacks
-    def get_http(self, bot_token):
-        base_url = "https://api.telegram.org/telegram" + bot_token
-        http = yield fakehttpclientservice.HTTPClientService.getService(self.master, self, base_url)
-        # This is necessary as Telegram will make requests in the reconfig
-        http.expect("post", "/getMe", content_json={'ok': 1, 'result': {'username': 'testbot'}})
-        http.expect(
+    def setup_http_service(self, bot_token):
+        base_url = "https://api.telegram.org/bot" + bot_token
+        self.http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master, self, base_url
+        )
+
+    def expect_telegram_requests(self, bot_token):
+        self.http.expect(
+            "post", "/getMe", content_json={'ok': 1, 'result': {'username': 'testbot'}}
+        )
+        self.http.expect(
             "post", "/setMyCommands", json={'commands': self._commands}, content_json={'ok': 1}
         )
         if bot_token == 'poll':
-            http.expect("post", "/deleteWebhook", content_json={'ok': 1})
+            self.http.expect("post", "/deleteWebhook", content_json={'ok': 1})
         else:
-            http.expect(
+            self.http.expect(
                 "post",
                 "/setWebhook",
                 json={'url': bytes2unicode(self.bot_url)},
                 content_json={'ok': 1},
             )
-        return http
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -141,13 +145,15 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
         self.agent = client.Agent(reactor)
 
+        self.bot_url = self.url + b"telegram12345:secret"
+        yield self.setup_http_service('12345:secret')
+        self.expect_telegram_requests('12345:secret')
+
         # create a telegram bot service
         tb = master.config.services['TelegramBot'] = telegram.TelegramBot(
             bot_token='12345:secret', useWebhook=True, chat_ids=[-123456], notify_events=['worker']
         )
-        tb._get_http = self.get_http
         yield tb.setServiceParent(self.master)
-        self.bot_url = self.url + b"telegram12345:secret"
 
         yield tb.startService()
 
@@ -197,6 +203,9 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
     @defer.inlineCallbacks
     def testReconfig(self):
+        # initial config and reconfig will issue requests twice
+        self.expect_telegram_requests('12345:secret')
+
         tb = self.master.config.services['TelegramBot']
         yield tb.reconfigService(
             bot_token='12345:secret', useWebhook=True, chat_ids=[-123456], notify_events=['problem']

@@ -41,8 +41,8 @@ class ZulipStatusPush(ReporterBase):
         self.debug = debug
         self.verify = verify
         yield super().reconfigService(generators=[BuildStartEndStatusGenerator()])
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, endpoint, debug=self.debug, verify=self.verify
+        self._http = yield httpclientservice.HTTPSession(
+            self.master.httpservice, endpoint, debug=self.debug, verify=self.verify
         )
         self.token = token
         self.stream = stream
