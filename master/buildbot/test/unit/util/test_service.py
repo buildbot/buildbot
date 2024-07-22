@@ -23,6 +23,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
+from buildbot.util.twisted import async_to_deferred
 
 
 class DeferredStartStop(service.AsyncService):
@@ -747,6 +748,17 @@ class BuildbotServiceManager(unittest.TestCase):
         service = self.manager.namedServices['basic']
         test = yield service.renderSecrets(('user', Interpolate('test_string')))
         self.assertEqual(test, ('user', 'test_string'))
+
+    @async_to_deferred
+    async def test_service_name_collision(self):
+        with self.assertRaises(config.ConfigErrors):
+            self.master.config = fakeConfig()
+            service = MyService(1, name="service")
+            self.master.config.services = [service, service]
+            self.manager = service.BuildbotServiceManager()
+            await self.manager.setServiceParent(self.master)
+            await self.master.startService()
+            await self.master.reconfigServiceWithBuildbotConfig(self.master.config)
 
 
 class UnderTestSharedService(service.SharedService):

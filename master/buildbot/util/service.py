@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
 
 from twisted.application import service
@@ -22,6 +24,7 @@ from twisted.python import log
 from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
+import buildbot.config
 from buildbot import util
 from buildbot.util import bytes2unicode
 from buildbot.util import config
@@ -442,18 +445,30 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
             'childs': [v.getConfigDict() for v in self.namedServices.values()],
         }
 
+    def get_service_config(self, new_config) -> dict[str, AsyncService]:
+        new_config_attr = getattr(new_config, self.config_attr)
+        if isinstance(new_config_attr, list):
+            service_dict = {}
+            for s in new_config_attr:
+                if s.name in service_dict:
+                    buildbot.config.error(
+                        f"Two services share the same name '{s.name}'."
+                        "This will result in only one service being configured."
+                    )
+
+                service_dict[s.name] = s
+            return service_dict
+        if isinstance(new_config_attr, dict):
+            return new_config_attr
+
+        raise TypeError(f"config.{self.config_attr} should be a list or dictionary")
+
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # arrange childs by name
         old_by_name = self.namedServices
         old_set = set(old_by_name)
-        new_config_attr = getattr(new_config, self.config_attr)
-        if isinstance(new_config_attr, list):
-            new_by_name = {s.name: s for s in new_config_attr}
-        elif isinstance(new_config_attr, dict):
-            new_by_name = new_config_attr
-        else:
-            raise TypeError(f"config.{self.config_attr} should be a list or dictionary")
+        new_by_name = self.get_service_config(new_config)
         new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs
