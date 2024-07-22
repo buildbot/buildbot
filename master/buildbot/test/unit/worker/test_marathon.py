@@ -102,13 +102,16 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
             code=201,
             content_json={'Id': 'id'},
         )
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         yield d
 
         self.assertEqual(worker.instance, {'Id': 'id'})
-        # teardown makes sure all containers are cleaned up
+
+        yield worker.insubstantiate()
 
     @defer.inlineCallbacks
     def test_start_worker_but_no_connection_and_shutdown(self):
@@ -136,10 +139,12 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
             code=201,
             content_json={'Id': 'id'},
         )
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
 
         worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertEqual(worker.instance, {'Id': 'id'})
-        # teardown makes sure all containers are cleaned up
+
+        yield worker.insubstantiate()
 
     @defer.inlineCallbacks
     def test_start_worker_but_error(self):
@@ -206,10 +211,13 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
             code=201,
             content_json={'Id': 'id'},
         )
+        self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
+
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         yield d
 
         self.assertEqual(worker.instance, {'Id': 'id'})
-        # teardown makes sure all containers are cleaned up
+
+        yield worker.insubstantiate()
