@@ -100,6 +100,9 @@ class HTTPClientService(service.SharedService):
         service = yield super().getService(master, *args, **kwargs)
         service.case = case
         case.addCleanup(service.assertNoOutstanding)
+
+        master.httpservice = service
+
         return service
 
     def expect(

@@ -46,6 +46,7 @@ from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
 from buildbot.util import check_functional_environment
+from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
@@ -137,6 +138,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
+        self.httpservice = yield httpclientservice.HTTPClientService.getService(self, '')
 
         self.metrics = metrics.MetricLogObserver()
         yield self.metrics.setServiceParent(self)
