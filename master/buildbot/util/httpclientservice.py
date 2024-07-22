@@ -221,16 +221,19 @@ class HTTPClientService(service.SharedService):
         res = yield getattr(treq, method)(url, **kwargs)
         return IHttpResponse(TreqResponseWrapper(res))
 
-    # lets be nice to the auto completers, and don't generate that code
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.get()")
     def get(self, ep, **kwargs):
         return self._do_request(self._session, 'get', ep, **kwargs)
 
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.put()")
     def put(self, ep, **kwargs):
         return self._do_request(self._session, 'put', ep, **kwargs)
 
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.delete()")
     def delete(self, ep, **kwargs):
         return self._do_request(self._session, 'delete', ep, **kwargs)
 
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.post()")
     def post(self, ep, **kwargs):
         return self._do_request(self._session, 'post', ep, **kwargs)
 

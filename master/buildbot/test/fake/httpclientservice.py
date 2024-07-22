@@ -17,6 +17,8 @@
 import json as jsonmodule
 
 from twisted.internet import defer
+from twisted.python import deprecate
+from twisted.python import versions
 from twisted.logger import Logger
 from zope.interface import implementer
 
@@ -26,6 +28,7 @@ from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
+
 
 log = Logger()
 
@@ -261,14 +264,18 @@ class HTTPClientService(service.SharedService):
         return ResponseWrapper(expect['code'], expect['content'])
 
     # lets be nice to the auto completers, and don't generate that code
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
     def get(self, ep, **kwargs):
         return self._do_request(self._session, 'get', ep, **kwargs)
 
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
     def put(self, ep, **kwargs):
         return self._do_request(self._session, 'put', ep, **kwargs)
 
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
     def delete(self, ep, **kwargs):
         return self._do_request(self._session, 'delete', ep, **kwargs)
 
+    @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
     def post(self, ep, **kwargs):
         return self._do_request(self._session, 'post', ep, **kwargs)

@@ -31,6 +31,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.test.util.warnings import assertProducesWarning
+
 
 try:
     from requests.auth import HTTPDigestAuth
@@ -65,21 +67,24 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_get(self):
-        yield self._http.get('/bar')
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.get('/bar')
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'get', 'http://foo/bar', headers={}, background_callback=mock.ANY
         )
 
     @defer.inlineCallbacks
     def test_get_full_url(self):
-        yield self._http.get('http://other/bar')
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.get('http://other/bar')
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'get', 'http://other/bar', headers={}, background_callback=mock.ANY
         )
 
     @defer.inlineCallbacks
     def test_put(self):
-        yield self._http.put('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.put('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
@@ -89,7 +94,8 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_post(self):
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
@@ -99,7 +105,8 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_delete(self):
-        yield self._http.delete('/bar')
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.delete('/bar')
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'delete', 'http://foo/bar', background_callback=mock.ANY, headers={}
         )
@@ -107,7 +114,8 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
     @defer.inlineCallbacks
     def test_post_headers(self):
         self.base_headers.update({'X-TOKEN': 'XXXYYY'})
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -123,7 +131,8 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', auth=('user', 'pa$$')
         )
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -148,7 +157,8 @@ class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_post_raw(self):
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': 'application/json'}
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -157,7 +167,8 @@ class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_post_rawlist(self):
-        yield self._http.post('/bar', json=[{'foo': 'bar'}])
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json=[{'foo': 'bar'}])
         jsonStr = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': 'application/json'}
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -176,14 +187,16 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_get(self):
-        yield self._http.get('/bar')
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.get('/bar')
         httpclientservice.treq.get.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, headers={}
         )
 
     @defer.inlineCallbacks
     def test_put(self):
-        yield self._http.put('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.put('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.put.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
@@ -191,7 +204,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_post(self):
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.post.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
@@ -199,7 +213,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_delete(self):
-        yield self._http.delete('/bar')
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.delete('/bar')
         httpclientservice.treq.delete.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, headers={}
         )
@@ -207,7 +222,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
     @defer.inlineCallbacks
     def test_post_headers(self):
         self.base_headers.update({'X-TOKEN': 'XXXYYY'})
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json'], 'X-TOKEN': ['XXXYYY']}
         httpclientservice.treq.post.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
@@ -218,7 +234,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', auth=('user', 'pa$$')
         )
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         headers = {
             'Content-Type': ['application/json'],
         }
@@ -236,7 +253,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', auth=auth
         )
-        yield self._http.post('/bar', data={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', data={'foo': 'bar'})
         # if digest auth, we don't use treq! we use txrequests
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'post',
@@ -261,7 +279,8 @@ class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_post_raw(self):
-        yield self._http.post('/bar', json={'foo': 'bar'})
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
         json_str = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.post.assert_called_once_with(
@@ -270,7 +289,8 @@ class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
 
     @defer.inlineCallbacks
     def test_post_rawlist(self):
-        yield self._http.post('/bar', json=[{'foo': 'bar'}])
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json=[{'foo': 'bar'}])
         json_str = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.post.assert_called_once_with(
@@ -353,28 +373,32 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_content(self):
         self.expect('get', '/', content_json={})
-        res = yield self._http.get('/')
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.get('/')
         content = yield res.content()
         self.assertEqual(content, b'{}')
 
     @defer.inlineCallbacks
     def test_content_with_params(self):
         self.expect('get', '/', params={"a": 'b'}, content_json={"a": ['b']})
-        res = yield self._http.get('/', params={"a": 'b'})
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.get('/', params={"a": 'b'})
         content = yield res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
 
     @defer.inlineCallbacks
     def test_post_content_with_params(self):
         self.expect('post', '/', params={"a": 'b'}, content_json={"a": ['b']})
-        res = yield self._http.post('/', params={"a": 'b'})
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.post('/', params={"a": 'b'})
         content = yield res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
 
     @defer.inlineCallbacks
     def test_put_content_with_data(self):
         self.expect('post', '/', data={"a": 'b'}, content_json={"a": ['b']})
-        res = yield self._http.post('/', data={"a": 'b'})
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.post('/', data={"a": 'b'})
         content = yield res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
 
@@ -382,7 +406,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     def test_put_content_with_json(self):
         exp_content_json = {"json_received": {"a": 'b'}}
         self.expect('post', '/', json={"a": 'b'}, content_json=exp_content_json)
-        res = yield self._http.post('/', json={"a": 'b'})
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.post('/', json={"a": 'b'})
         content = yield res.content()
         content = bytes2unicode(content)
         content = json.loads(content)
@@ -393,7 +418,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         exp_content_json = {"json_received": {"a": 'b', "ts": 12}}
         dt = datetime.datetime.fromtimestamp(12, datetime.timezone.utc)
         self.expect('post', '/', json={"a": 'b', "ts": dt}, content_json=exp_content_json)
-        res = yield self._http.post('/', json={"a": 'b', "ts": dt})
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.post('/', json={"a": 'b', "ts": dt})
         content = yield res.content()
         content = bytes2unicode(content)
         content = json.loads(content)
@@ -402,7 +428,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_json(self):
         self.expect('get', '/', content_json={})
-        res = yield self._http.get('/')
+        with assertProducesWarning(DeprecationWarning):
+            res = yield self._http.get('/')
         content = yield res.json()
         self.assertEqual(content, {})
         self.assertEqual(res.code, 200)
@@ -418,7 +445,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         # use for benchmarking (txrequests: 3ms per request treq: 1ms per
         # request)
         for _ in range(self.NUM_PARALLEL):
-            res = yield self._http.get('/', params={"a": 'b'})
+            with assertProducesWarning(DeprecationWarning):
+                res = yield self._http.get('/', params={"a": 'b'})
             content = yield res.content()
             self.assertEqual(content, b'{"a": ["b"]}')
 
@@ -430,7 +458,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         # use for benchmarking (txrequests: 3ms per request treq: 11ms per
         # request (!?))
         def oneReq():
-            d = self._http.get('/', params={"a": 'b'})
+            with assertProducesWarning(DeprecationWarning):
+                d = self._http.get('/', params={"a": 'b'})
 
             @d.addCallback
             def content(res):
