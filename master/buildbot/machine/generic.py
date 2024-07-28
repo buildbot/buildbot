@@ -23,6 +23,7 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot.interfaces import IMachineAction
 from buildbot.machine.latent import AbstractLatentMachine
+from buildbot.util import httpclientservice
 from buildbot.util import misc
 from buildbot.util import private_tempdir
 from buildbot.util import runprocess
@@ -163,3 +164,90 @@ class RemoteSshSuspendAction(_SshActionMixin):
         if remoteCommand is None:
             remoteCommand = ['systemctl', 'suspend']
         self.setupSsh(sshBin, host, remoteCommand, sshKey=sshKey, sshHostKey=sshHostKey)
+
+
+@implementer(IMachineAction)
+class HttpAction:
+    def __init__(
+        self,
+        url,
+        method,
+        params=None,
+        data=None,
+        json=None,
+        headers=None,
+        cookies=None,
+        files=None,
+        auth=None,
+        timeout=None,
+        allow_redirects=None,
+        proxies=None,
+    ):
+        self.url = url
+        self.method = method
+        self.params = params
+        self.data = data
+        self.json = json
+        self.headers = headers
+        self.cookies = cookies
+        self.files = files
+        self.auth = auth
+        self.timeout = timeout
+        self.allow_redirects = allow_redirects
+        self.proxies = proxies
+
+    @defer.inlineCallbacks
+    def perform(self, manager):
+        (
+            url,
+            method,
+            params,
+            data,
+            json,
+            headers,
+            cookies,
+            files,
+            auth,
+            timeout,
+            allow_redirects,
+            proxies,
+        ) = yield manager.renderSecrets((
+            self.url,
+            self.method,
+            self.params,
+            self.data,
+            self.json,
+            self.headers,
+            self.cookies,
+            self.files,
+            self.auth,
+            self.timeout,
+            self.allow_redirects,
+            self.proxies,
+        ))
+
+        http = httpclientservice.HTTPSession(manager.master.httpservice, base_url=url)
+        if method == 'get':
+            fn = http.get
+        elif method == 'put':
+            fn = http.put
+        elif method == 'delete':
+            fn = http.delete
+        elif method == 'post':
+            fn = http.post
+        else:
+            config.error(f'Invalid method {method}')
+
+        yield fn(
+            ep='',
+            params=params,
+            data=data,
+            json=json,
+            headers=headers,
+            cookies=cookies,
+            files=files,
+            auth=auth,
+            timeout=timeout,
+            allow_redirects=allow_redirects,
+            proxies=proxies,
+        )
