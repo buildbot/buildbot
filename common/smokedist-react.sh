@@ -16,8 +16,8 @@ do
         virtualenv --python python$python $VE
     fi
     . $VE/bin/activate
-    pip install -U pip
-    pip install requests flask
+    pip install pip==24.1.2
+    pip install requests==2.32.3 flask==3.0.3
     pip install dist/buildbot-[0-9]*.$suffix
     pip install dist/buildbot?pkg*.$suffix
     pip install dist/*.$suffix
