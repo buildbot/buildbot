@@ -17,9 +17,9 @@
 import json as jsonmodule
 
 from twisted.internet import defer
+from twisted.logger import Logger
 from twisted.python import deprecate
 from twisted.python import versions
-from twisted.logger import Logger
 from zope.interface import implementer
 
 from buildbot import util
@@ -161,12 +161,16 @@ class HTTPClientService(service.SharedService):
         ep,
         params=None,
         headers=None,
+        cookies=None,  # checks are not implemented
         data=None,
         json=None,
         files=None,
+        auth=None,  # checks are not implemented
         timeout=None,
         verify=None,
         cert=None,
+        allow_redirects=None,  # checks are not implemented
+        proxies=None,  # checks are not implemented
     ):
         if ep.startswith('http://') or ep.startswith('https://'):
             pass
