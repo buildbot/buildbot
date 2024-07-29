@@ -17,7 +17,6 @@ import io
 import os
 import re
 import shutil
-import sys
 import tarfile
 
 from twisted.internet import defer
@@ -365,8 +364,6 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         return self.test_simple('gz')
 
     # except bz2 can't operate in stream mode on py24
-    if sys.version_info[:2] <= (2, 4):
-        test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
 
     @defer.inlineCallbacks
     def test_out_of_space_unpack(self):
@@ -529,7 +526,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 1),
             (
                 'stderr',
-                "Cannot open file '{0}' for download".format(os.path.join(self.basedir, 'dir')),
+                "Cannot open file '{}' for download".format(os.path.join(self.basedir, 'dir')),
             ),
         ])
 
@@ -556,7 +553,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 1),
             (
                 'stderr',
-                "Maximum filesize reached, truncating file '{0}'".format(
+                "Maximum filesize reached, truncating file '{}'".format(
                     os.path.join(self.basedir, 'data')
                 ),
             ),

@@ -613,7 +613,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertStdoutEqual("mkdir {0}\n".format(os.path.join("bdir", "info")))
+            self.assertStdoutEqual("mkdir {}\n".format(os.path.join("bdir", "info")))
 
     def testMkdirError(self):
         """
@@ -654,7 +654,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         # call _makeInfoFiles() and check that correct exception is raised
         with self.assertRaisesRegex(
             create_worker.CreateWorkerError,
-            "could not write {0}: info-err-msg".format(_regexp_path("bdir", "info", "admin")),
+            "could not write {}: info-err-msg".format(_regexp_path("bdir", "info", "admin")),
         ):
             create_worker._makeInfoFiles("bdir", quiet)
 

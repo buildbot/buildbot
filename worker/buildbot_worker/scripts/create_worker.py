@@ -187,7 +187,7 @@ def _makeInfoFiles(basedir, quiet):
 
         if not quiet:
             print(
-                "Creating {0}, you need to edit it appropriately.".format(
+                "Creating {}, you need to edit it appropriately.".format(
                     os.path.join("info", file)
                 )
             )
@@ -220,7 +220,7 @@ def _makeInfoFiles(basedir, quiet):
     if not os.path.exists(access_uri):
         if not quiet:
             print(
-                "Not creating {0} - add it if you wish".format(os.path.join("info", "access_uri"))
+                "Not creating {} - add it if you wish".format(os.path.join("info", "access_uri"))
             )
 
     if created and not quiet:
@@ -238,7 +238,7 @@ def createWorker(config):
         _makeBuildbotTac(basedir, contents, quiet)
         _makeInfoFiles(basedir, quiet)
     except CreateWorkerError as exception:
-        print("{0}\nfailed to configure worker in {1}".format(exception, config['basedir']))
+        print("{}\nfailed to configure worker in {}".format(exception, config['basedir']))
         return 1
 
     if not quiet:

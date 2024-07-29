@@ -21,7 +21,6 @@
 import datetime
 import os
 import re
-import sys
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
@@ -47,7 +46,7 @@ def gitDescribeToPep440(version):
             dev = int(v.group('dev'))
             return f"{major}.{minor}.{patch}.dev{dev}"
         if v.group('post'):
-            return "{0}.{1}.{2}.post{3}".format(major, minor, patch, v.group('post'))
+            return "{}.{}.{}.post{}".format(major, minor, patch, v.group('post'))
         return f"{major}.{minor}.{patch}"
 
     return v
@@ -60,10 +59,7 @@ def mTimeVersion(init_file):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
 
-    if sys.version_info >= (3, 3):
-        d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
-    else:
-        d = datetime.datetime.utcfromtimestamp(m)
+    d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
     return d.strftime("%Y.%m.%d")
 
 

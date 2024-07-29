@@ -44,7 +44,7 @@ class Application:
 
     def __repr__(self):
         return (
-            "www.plugin.Application(version=%(version)s, "
-            "description=%(description)s, "
-            "static_dir=%(static_dir)s)"
-        ) % self.__dict__
+            "www.plugin.Application(version={version}, "
+            "description={description}, "
+            "static_dir={static_dir})"
+        ).format(**self.__dict__)

@@ -145,7 +145,7 @@ class Command:
         missingArgs = [arg for arg in self.requiredArgs if arg not in args]
         if missingArgs:
             raise ValueError(
-                "{0} is missing args: {1}".format(self.__class__.__name__, ", ".join(missingArgs))
+                "{} is missing args: {}".format(self.__class__.__name__, ", ".join(missingArgs))
             )
         self.setup(args)
 

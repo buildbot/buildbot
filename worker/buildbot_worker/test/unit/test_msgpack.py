@@ -15,7 +15,6 @@
 
 import base64
 import os
-import sys
 import time
 
 from parameterized import parameterized
@@ -35,26 +34,17 @@ try:
 except ImportError:
     from unittest import mock
 
-if sys.version_info >= (3, 6):
-    import msgpack
+import msgpack
 
-    # pylint: disable=ungrouped-imports
-    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
-    from buildbot_worker.msgpack import decode_http_authorization_header
-    from buildbot_worker.msgpack import encode_http_authorization_header
-    from buildbot_worker.pb import BotMsgpack  # pylint: disable=ungrouped-imports
-else:
-    msgpack = None
-    BuildbotWebSocketClientProtocol = None
-    decode_http_authorization_header = None
-    encode_http_authorization_header = None
-    BotMsgpack = None
+# pylint: disable=ungrouped-imports
+from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
+from buildbot_worker.msgpack import decode_http_authorization_header
+from buildbot_worker.msgpack import encode_http_authorization_header
+from buildbot_worker.pb import BotMsgpack
 
 
 class TestHttpAuthorization(unittest.TestCase):
     maxDiff = None
-    if sys.version_info < (3, 6):
-        skip = "Not python 3.6 or newer"
 
     def test_encode(self):
         result = encode_http_authorization_header(b'name', b'pass')
@@ -127,8 +117,6 @@ class FakeBot(base.BotBase):
 
 class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.TestCase):
     maxDiff = None
-    if sys.version_info < (3, 6):
-        skip = "Not python 3"
 
     def setUp(self):
         self.protocol = BuildbotWebSocketClientProtocol()
@@ -515,7 +503,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'why': 'test_reason',
             })
             mock_log.assert_any_call(
-                'asked to interrupt current command: {0}'.format('test_reason')
+                'asked to interrupt current command: {}'.format('test_reason')
             )
             mock_log.assert_any_call(' .. but none was running')
 

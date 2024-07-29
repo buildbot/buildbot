@@ -76,7 +76,7 @@ if runtime.platformType == 'win32':  # pragma: no cover
             list = os.listdir(dir)
         except WindowsError as e:
             msg = (
-                "rmdirRecursive: unable to listdir {0} ({1}). Trying to "
+                "rmdirRecursive: unable to listdir {} ({}). Trying to "
                 "remove like a dir".format(dir, e.strerror.decode('mbcs'))
             )
             log.msg(msg.encode('utf-8'))

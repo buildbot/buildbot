@@ -236,7 +236,7 @@ class BotBase(service.MultiService):
                         try:
                             files[f] = bytes2unicode(fin.read())
                         except UnicodeDecodeError:
-                            log.err(failure.Failure(), 'error while reading file: %s' % (filename))
+                            log.err(failure.Failure(), f'error while reading file: {filename}')
 
         self._read_os_release(self.os_release_file, files)
 

@@ -260,10 +260,7 @@ class GlobPath(base.Command):
 
         try:
             # recursive matching is only support in python3.5+
-            if sys.version_info[:2] >= (3, 5):
-                files = glob.glob(pathname, recursive=True)
-            else:
-                files = glob.glob(pathname)
+            files = glob.glob(pathname, recursive=True)
             self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
             self.log_msg(f"GlobPath {pathname} failed: {e}")

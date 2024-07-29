@@ -87,7 +87,7 @@ def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
         text += f'Keys in expectation missing from command: {missing_in_cmd!r}\n'
     if diff:
         formatted_diff = [f'"{d[0]}":\nexpected: {d[1]!r}\ngot:      {d[2]!r}\n' for d in diff]
-        text += 'Key differences between expectation and command: {0}\n'.format(
+        text += 'Key differences between expectation and command: {}\n'.format(
             '\n'.join(formatted_diff)
         )
 

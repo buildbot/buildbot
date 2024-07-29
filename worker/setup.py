@@ -141,19 +141,10 @@ setup_args['install_requires'] = [
     'twisted ' + twisted_ver,
 ]
 
-if sys.version_info >= (3, 6):
-    # Message pack is only supported on Python 3.6 and newer
-    setup_args['install_requires'] += [
-        'autobahn >= 0.16.0',
-        'msgpack >= 0.6.0',
-    ]
-else:
-    # Automat 20.2.0 is the last version that supports Python 2.7. Unfortunately the package
-    # did not update its metadata and thus newer versions advertise Python 2.7 support even
-    # though they are broken.
-    setup_args['install_requires'] += [
-        'Automat <= 20.2.0',
-    ]
+setup_args['install_requires'] += [
+    'autobahn >= 0.16.0',
+    'msgpack >= 0.6.0',
+]
 
 # buildbot_worker_windows_service needs pywin32
 if sys.platform == "win32":
@@ -163,11 +154,6 @@ if sys.platform == "win32":
 test_deps = [
     'psutil',
 ]
-if sys.version_info < (3, 3):
-    # unittest.mock added in Python 3.3
-    test_deps += [
-        'mock',
-    ]
 
 setup_args['tests_require'] = test_deps
 
