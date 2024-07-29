@@ -534,8 +534,8 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         # check that buildbot.tac.new file was created with expected contents
         tac_file_path = os.path.join("bdir", "buildbot.tac")
         self.open.assert_has_calls([
-            mock.call(tac_file_path, "rt"),
-            mock.call(tac_file_path + ".new", "wt"),
+            mock.call(tac_file_path),
+            mock.call(tac_file_path + ".new", "w"),
         ])
         self.fileobj.write.assert_called_once_with("new-tac-contents")
         self.chmod.assert_called_once_with(tac_file_path + ".new", 0o600)
@@ -575,7 +575,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
 
         # check that buildbot.tac file was created with expected contents
         tac_file_path = os.path.join("bdir", "buildbot.tac")
-        self.open.assert_called_once_with(tac_file_path, "wt")
+        self.open.assert_called_once_with(tac_file_path, "w")
         self.fileobj.write.assert_called_once_with("test-tac-contents")
         self.chmod.assert_called_once_with(tac_file_path, 0o600)
 
@@ -716,8 +716,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
 
         # check open() calls
         self.open.assert_has_calls([
-            mock.call(os.path.join(info_path, "admin"), "wt"),
-            mock.call(os.path.join(info_path, "host"), "wt"),
+            mock.call(os.path.join(info_path, "admin"), "w"),
+            mock.call(os.path.join(info_path, "host"), "w"),
         ])
 
         # check write() calls
