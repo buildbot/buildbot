@@ -50,9 +50,7 @@ def encode_http_authorization_header(name, password):
 
 
 def remote_print(self, message):
-    log.msg(
-        f"WorkerForBuilder.remote_print({self.name}): message from master: {message}"
-    )
+    log.msg(f"WorkerForBuilder.remote_print({self.name}): message from master: {message}")
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):

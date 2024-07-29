@@ -195,6 +195,7 @@ class CopyDirectory(base.Command):
             @d.addCallback
             def send_rc(rc):
                 self.sendStatus([('rc', rc)])
+
         else:
             if not os.path.exists(os.path.dirname(to_path)):
                 os.makedirs(os.path.dirname(to_path))

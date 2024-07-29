@@ -120,9 +120,7 @@ class AutoLoginPBFactory(PBClientFactory):
 
         self._failedAttempts += 1
         delay = self._timeoutForAttempt(self._failedAttempts)
-        log.msg(
-            f"Scheduling retry {self._failedAttempts} to getPerspective in {delay} seconds."
-        )
+        log.msg(f"Scheduling retry {self._failedAttempts} to getPerspective in {delay} seconds.")
 
         # Delay the retry according to the backoff policy
         try:

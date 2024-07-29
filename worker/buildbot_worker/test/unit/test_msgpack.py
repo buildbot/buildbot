@@ -502,9 +502,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'command_id': '123',
                 'why': 'test_reason',
             })
-            mock_log.assert_any_call(
-                'asked to interrupt current command: {}'.format('test_reason')
-            )
+            mock_log.assert_any_call('asked to interrupt current command: {}'.format('test_reason'))
             mock_log.assert_any_call(' .. but none was running')
 
         self.protocol.factory.command.doInterrupt.assert_not_called()

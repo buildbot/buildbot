@@ -168,8 +168,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if self.debug:
             self.log_msg(
-                'WorkerFileUploadCommand._writeBlock(): '
-                + f'allowed={length} readlen={len(data)}'
+                'WorkerFileUploadCommand._writeBlock(): ' + f'allowed={length} readlen={len(data)}'
             )
         if not data:
             self.log_msg("EOF: callRemote(close)")

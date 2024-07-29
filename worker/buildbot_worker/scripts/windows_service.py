@@ -284,9 +284,7 @@ class BBService(win32serviceutil.ServiceFramework):
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
-                self.warning(
-                    f"BuildBot process at {bbdir!r} failed to terminate - killing it"
-                )
+                self.warning(f"BuildBot process at {bbdir!r} failed to terminate - killing it")
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
@@ -512,9 +510,7 @@ def ConfigureLogOnAsAServicePolicy(accountName):
             privileges = []
 
         if SE_SERVICE_LOGON_RIGHT in privileges:
-            print(
-                f"Account {accountName}({sid}) has granted {SE_SERVICE_LOGON_RIGHT} privilege."
-            )
+            print(f"Account {accountName}({sid}) has granted {SE_SERVICE_LOGON_RIGHT} privilege.")
         else:
             print(
                 f"error: Account {accountName}({sid}) does not have {SE_SERVICE_LOGON_RIGHT} privilege."

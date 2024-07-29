@@ -106,6 +106,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
             @self.assertArgSpecMatches(self.ep.get)
             def get(self, resultSpec, kwargs):
                 pass
+
         except trial.unittest.FailTest:
 
             @self.assertArgSpecMatches(self.ep.get)

@@ -138,9 +138,7 @@ def make_ref_target_directive(ref_type, indextemplates=None, **kwargs):
     """
     class_vars = dict(ref_type=ref_type, indextemplates=indextemplates)
     class_vars.update(kwargs)
-    return type(
-        f"BB{ref_type.capitalize()}RefTargetDirective", (BBRefTargetDirective,), class_vars
-    )
+    return type(f"BB{ref_type.capitalize()}RefTargetDirective", (BBRefTargetDirective,), class_vars)
 
 
 class BBIndex(Index):
@@ -182,9 +180,7 @@ def make_index(name, localname):
     """
     Create and return a L{BBIndex} subclass, for use in the domain's C{indices}
     """
-    return type(
-        f"BB{name.capitalize()}Index", (BBIndex,), dict(name=name, localname=localname)
-    )
+    return type(f"BB{name.capitalize()}Index", (BBIndex,), dict(name=name, localname=localname))
 
 
 class BBDomain(Domain):

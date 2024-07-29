@@ -124,9 +124,7 @@ def _makeBaseDir(basedir, quiet):
     try:
         os.mkdir(basedir)
     except OSError as exception:
-        raise CreateWorkerError(
-            f"error creating directory {basedir}: {exception.strerror}"
-        )
+        raise CreateWorkerError(f"error creating directory {basedir}: {exception.strerror}")
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -187,9 +185,7 @@ def _makeInfoFiles(basedir, quiet):
 
         if not quiet:
             print(
-                "Creating {}, you need to edit it appropriately.".format(
-                    os.path.join("info", file)
-                )
+                "Creating {}, you need to edit it appropriately.".format(os.path.join("info", file))
             )
 
         try:
@@ -205,9 +201,7 @@ def _makeInfoFiles(basedir, quiet):
         try:
             os.mkdir(path)
         except OSError as exception:
-            raise CreateWorkerError(
-                f"error creating directory {path}: {exception.strerror}"
-            )
+            raise CreateWorkerError(f"error creating directory {path}: {exception.strerror}")
 
     # create 'info/admin' file
     created = createFile(path, "admin", "Your Name Here <admin@youraddress.invalid>\n")
@@ -219,9 +213,7 @@ def _makeInfoFiles(basedir, quiet):
 
     if not os.path.exists(access_uri):
         if not quiet:
-            print(
-                "Not creating {} - add it if you wish".format(os.path.join("info", "access_uri"))
-            )
+            print("Not creating {} - add it if you wish".format(os.path.join("info", "access_uri")))
 
     if created and not quiet:
         print(f"Please edit the files in {path} appropriately.")

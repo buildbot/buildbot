@@ -264,9 +264,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg(
-            f"WorkerForBuilder.remote_print({self.name}): message from master: {message}"
-        )
+        log.msg(f"WorkerForBuilder.remote_print({self.name}): message from master: {message}")
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -366,9 +364,7 @@ class BotPbLike(BotBase):
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
-                    log.msg(
-                        f"changing builddir for builder {name} from {b.builddir} to {builddir}"
-                    )
+                    log.msg(f"changing builddir for builder {name} from {b.builddir} to {builddir}")
                     b.setBuilddir(builddir)
             else:
                 b = self.WorkerForBuilder(
@@ -458,12 +454,12 @@ class BotMsgpack(BotBase):
 
     def start_command(self, protocol, command_id, command, args):
         """
-            This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
-            part of various master-side BuildSteps, to start various commands
-            that actually do the build. I return nothing. Eventually I will call
-            .commandComplete() to notify the master-side RemoteCommand that I'm
-            done.
-            """
+        This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
+        part of various master-side BuildSteps, to start various commands
+        that actually do the build. I return nothing. Eventually I will call
+        .commandComplete() to notify the master-side RemoteCommand that I'm
+        done.
+        """
         command = decode(command)
         args = decode(args)
 
@@ -556,9 +552,7 @@ class BotFactory(AutoLoginPBFactory):
             if not self.keepaliveInterval:
                 self.keepaliveInterval = 10 * 60
         if self.keepaliveInterval:
-            log.msg(
-                f"sending application-level keepalives every {self.keepaliveInterval} seconds"
-            )
+            log.msg(f"sending application-level keepalives every {self.keepaliveInterval} seconds")
             self.startTimers()
 
     def startTimers(self):

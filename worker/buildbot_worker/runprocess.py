@@ -378,8 +378,7 @@ class RunProcess:
                 if v is not None:
                     if not isinstance(v, str):
                         raise RuntimeError(
-                            "'env' values must be strings or "
-                            f"lists; key '{key}' is incorrect"
+                            "'env' values must be strings or " f"lists; key '{key}' is incorrect"
                         )
                     newenv[key] = p.sub(subst, v)
 
@@ -704,7 +703,9 @@ class RunProcess:
 
     def doTimeout(self):
         self.ioTimeoutTimer = None
-        msg = f"command timed out: {self.timeout} seconds without output running {self.fake_command}"
+        msg = (
+            f"command timed out: {self.timeout} seconds without output running {self.fake_command}"
+        )
         self.send_update([("failure_reason", "timeout_without_output")])
         self.kill(msg)
 
@@ -767,9 +768,7 @@ class RunProcess:
                     self.process.pgid = None
                     hit = 1
                 except OSError:
-                    self.log_msg(
-                        f'failed to kill process group (ignored): {sys.exc_info()[1]}'
-                    )
+                    self.log_msg(f'failed to kill process group (ignored): {sys.exc_info()[1]}')
                     # probably no-such-process, maybe because there is no process
                     # group
 

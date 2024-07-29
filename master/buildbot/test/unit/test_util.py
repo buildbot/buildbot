@@ -143,9 +143,7 @@ class safeTranslate(unittest.TestCase):
         self.assertEqual(util.safeTranslate("full"), b"full")
 
     def test_str_bad(self):
-        self.assertEqual(
-            util.safeTranslate("speed=slow;quality=high"), b"speed_slow_quality_high"
-        )
+        self.assertEqual(util.safeTranslate("speed=slow;quality=high"), b"speed_slow_quality_high")
 
     def test_str_pathological(self):
         # if you needed proof this wasn't for use with sensitive data
@@ -157,9 +155,7 @@ class safeTranslate(unittest.TestCase):
         self.assertEqual(util.safeTranslate("full"), b"full")
 
     def test_unicode_bad(self):
-        self.assertEqual(
-            util.safeTranslate("speed=slow;quality=high"), b"speed_slow_quality_high"
-        )
+        self.assertEqual(util.safeTranslate("speed=slow;quality=high"), b"speed_slow_quality_high")
 
     def test_unicode_pathological(self):
         self.assertEqual(util.safeTranslate("\u0109"), b"\xc4\x89")  # yuck!

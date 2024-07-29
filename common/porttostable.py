@@ -1,4 +1,3 @@
-
 import os
 from subprocess import CalledProcessError
 from subprocess import check_output

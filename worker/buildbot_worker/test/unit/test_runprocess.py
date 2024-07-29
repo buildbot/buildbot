@@ -464,9 +464,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         headers = "".join([
             list(update.values())[0] for update in self.updates if list(update) == ["header"]
         ])
-        self.assertFalse(
-            re.match(f'\bPYTHONPATH=a{os.pathsep}', headers), "got:\n" + headers
-        )
+        self.assertFalse(re.match(f'\bPYTHONPATH=a{os.pathsep}', headers), "got:\n" + headers)
 
     @defer.inlineCallbacks
     def testEnvironArray(self):
@@ -509,9 +507,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             usePTY=False,
             childFDs=None,
         ):
-            self.assertTrue(
-                args[0].lower().endswith("cmd.exe"), f"{args[0]} is not cmd.exe"
-            )
+            self.assertTrue(args[0].lower().endswith("cmd.exe"), f"{args[0]} is not cmd.exe")
 
         self.patch(runprocess.reactor, "spawnProcess", spawnProcess)
         tempEnviron = os.environ.copy()
