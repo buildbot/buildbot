@@ -150,9 +150,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     if not claimed:
                         q = q.where((claims_tbl.c.claimed_at == NULL) & (reqs_tbl.c.complete == 0))
                     else:
-                        q = q.where((claims_tbl.c.claimed_at != NULL))
+                        q = q.where(claims_tbl.c.claimed_at != NULL)
                 else:
-                    q = q.where((claims_tbl.c.masterid == claimed))
+                    q = q.where(claims_tbl.c.masterid == claimed)
             if builderid is not None:
                 q = q.where(reqs_tbl.c.builderid == builderid)
             if complete is not None:

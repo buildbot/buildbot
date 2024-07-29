@@ -22,4 +22,4 @@ class AbandonChain(Exception):
     The second is an optional error message."""
 
     def __repr__(self):
-        return "<AbandonChain rc={0}>".format(self.args[0])
+        return f"<AbandonChain rc={self.args[0]}>"

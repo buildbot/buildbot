@@ -23,7 +23,7 @@ from twisted.python.procutils import which
 def getCommand(name):
     possibles = which(name)
     if not possibles:
-        raise RuntimeError("Couldn't find executable for '{0}'".format(name))
+        raise RuntimeError(f"Couldn't find executable for '{name}'")
     #
     # Under windows, if there is more than one executable "thing"
     # that matches (e.g. *.bat, *.cmd and *.exe), we not just use

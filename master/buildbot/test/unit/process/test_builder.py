@@ -471,8 +471,8 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         yield self.bldr.setup_properties(props)
 
-        self.assertEquals(props.getProperty('bar'), 'bleh')
-        self.assertEquals(props.getProperty('cuckoo'), 42)
+        self.assertEqual(props.getProperty('bar'), 'bleh')
+        self.assertEqual(props.getProperty('cuckoo'), 42)
 
 
 class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):

@@ -21,7 +21,7 @@ from buildbot_worker.scripts import base
 from buildbot_worker.util import rewrap
 
 
-class Follower(object):
+class Follower:
     def follow(self):
         from twisted.internet import reactor
 
@@ -38,7 +38,7 @@ class Follower(object):
     def _success(self, processtype):
         from twisted.internet import reactor
 
-        print("The {0} appears to have (re)started correctly.".format(processtype))
+        print(f"The {processtype} appears to have (re)started correctly.")
         self.rc = 0
         reactor.stop()
 

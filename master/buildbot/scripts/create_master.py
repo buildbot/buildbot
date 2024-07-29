@@ -45,7 +45,7 @@ def makeTAC(config):
 
     tacfile = os.path.join(config['basedir'], "buildbot.tac")
     if os.path.exists(tacfile):
-        with open(tacfile, "rt", encoding='utf-8') as f:
+        with open(tacfile, encoding='utf-8') as f:
             oldcontents = f.read()
         if oldcontents == contents:
             if not config['quiet']:
@@ -55,7 +55,7 @@ def makeTAC(config):
             print("not touching existing buildbot.tac")
             print("creating buildbot.tac.new instead")
         tacfile += ".new"
-    with open(tacfile, "wt", encoding='utf-8') as f:
+    with open(tacfile, "w", encoding='utf-8') as f:
         f.write(contents)
 
 
@@ -64,11 +64,11 @@ def makeSampleConfig(config):
     target = os.path.join(config['basedir'], "master.cfg.sample")
     if not config['quiet']:
         print(f"creating {target}")
-    with open(source, "rt", encoding='utf-8') as f:
+    with open(source, encoding='utf-8') as f:
         config_sample = f.read()
     if config['db']:
         config_sample = config_sample.replace('sqlite:///state.sqlite', config['db'])
-    with open(target, "wt", encoding='utf-8') as f:
+    with open(target, "w", encoding='utf-8') as f:
         f.write(config_sample)
     os.chmod(target, 0o600)
 

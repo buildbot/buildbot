@@ -69,5 +69,5 @@ class SecretInPass(SecretProviderBase):
             if rc != 0:
                 return None
             return output.decode("utf-8", "ignore").splitlines()[0]
-        except IOError:
+        except OSError:
             return None

@@ -45,10 +45,10 @@ def gitDescribeToPep440(version):
         if v.group('dev'):
             patch += 1
             dev = int(v.group('dev'))
-            return "{0}.{1}.{2}.dev{3}".format(major, minor, patch, dev)
+            return f"{major}.{minor}.{patch}.dev{dev}"
         if v.group('post'):
             return "{0}.{1}.{2}.post{3}".format(major, minor, patch, v.group('post'))
-        return "{0}.{1}.{2}".format(major, minor, patch)
+        return f"{major}.{minor}.{patch}"
 
     return v
 
@@ -111,7 +111,7 @@ def getVersion(init_file):
         fn = os.path.join(cwd, 'VERSION')
         with open(fn) as f:
             return f.read().strip()
-    except IOError:
+    except OSError:
         pass
 
     version = getVersionFromArchiveId()

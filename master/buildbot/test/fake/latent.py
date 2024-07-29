@@ -212,7 +212,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
         if self._controller.state == States.STOPPED:
             return True
 
-        requested_kind = yield build_props.render((self._controller.kind))
+        requested_kind = yield build_props.render(self._controller.kind)
         curr_kind = yield self._controller.get_started_kind()
         return requested_kind == curr_kind
 

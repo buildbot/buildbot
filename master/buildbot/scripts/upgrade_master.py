@@ -31,29 +31,29 @@ from buildbot.util import stripUrlPassword
 
 
 def installFile(config, target, source, overwrite=False):
-    with open(source, "rt", encoding='utf-8') as f:
+    with open(source, encoding='utf-8') as f:
         new_contents = f.read()
     if os.path.exists(target):
-        with open(target, "rt", encoding='utf-8') as f:
+        with open(target, encoding='utf-8') as f:
             old_contents = f.read()
         if old_contents != new_contents:
             if overwrite:
                 if not config['quiet']:
                     print(f"{target} has old/modified contents")
                     print(" overwriting it with new contents")
-                with open(target, "wt", encoding='utf-8') as f:
+                with open(target, "w", encoding='utf-8') as f:
                     f.write(new_contents)
             else:
                 if not config['quiet']:
                     print(f"{target} has old/modified contents")
                     print(f" writing new contents to {target}.new")
-                with open(target + ".new", "wt", encoding='utf-8') as f:
+                with open(target + ".new", "w", encoding='utf-8') as f:
                     f.write(new_contents)
         # otherwise, it's up to date
     else:
         if not config['quiet']:
             print(f"creating {target}")
-        with open(target, "wt", encoding='utf-8') as f:
+        with open(target, "w", encoding='utf-8') as f:
             f.write(new_contents)
 
 

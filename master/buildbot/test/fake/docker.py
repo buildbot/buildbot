@@ -102,7 +102,7 @@ class Client:
         del self._containers[id]
 
     def logs(self, id, tail=None):
-        return f"log for {id}\n1\n2\n3\nend\n".encode("utf-8")
+        return f"log for {id}\n1\n2\n3\nend\n".encode()
 
     def close(self):
         # dummy close, no connection to cleanup

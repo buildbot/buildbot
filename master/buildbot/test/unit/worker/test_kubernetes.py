@@ -466,7 +466,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "delete",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e",
             params={"graceperiod": 0},
-            headers={"Authorization": "Basic " + str(base64.b64encode("name:10".encode("utf-8")))},
+            headers={"Authorization": "Basic " + str(base64.b64encode(b"name:10"))},
             verify="/path/to/pem",
             code=200,
             content_json={},
@@ -474,7 +474,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self._http.expect(
             "get",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e/status",
-            headers={"Authorization": "Basic " + str(base64.b64encode("name:10".encode("utf-8")))},
+            headers={"Authorization": "Basic " + str(base64.b64encode(b"name:10"))},
             verify="/path/to/pem",
             code=404,
             content_json={"kind": "Status", "reason": "NotFound"},

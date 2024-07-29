@@ -49,7 +49,7 @@ def now(_reactor=None):
     return time.time()
 
 
-class Obfuscated(object):
+class Obfuscated:
     """An obfuscated string in a command"""
 
     def __init__(self, real, fake):

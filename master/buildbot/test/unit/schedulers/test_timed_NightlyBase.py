@@ -40,9 +40,9 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
     def do_getNextBuildTime_test(self, sched, *expectations):
         for lastActuated, expected in expectations:
             # convert from tuples to epoch time (in local timezone)
-            lastActuated_ep, expected_ep = [
+            lastActuated_ep, expected_ep = (
                 time.mktime(t + (0,) * (8 - len(t)) + (-1,)) for t in (lastActuated, expected)
-            ]
+            )
             got_ep = yield sched.getNextBuildTime(lastActuated_ep)
             self.assertEqual(
                 got_ep, expected_ep, f"{lastActuated} -> {time.localtime(got_ep)} != {expected}"

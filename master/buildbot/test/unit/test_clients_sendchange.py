@@ -277,17 +277,17 @@ class Sender(unittest.TestCase):
         s = sendchange.Sender('localhost:1234')
 
         yield s.send(
-            '\N{DEGREE SIGN}'.encode('utf8'),
-            '\U0001f49e'.encode('utf8'),
-            '\N{POSTAL MARK FACE}'.encode('utf8'),
-            ['\U0001f4c1'.encode('utf8')],
-            project='\N{SKULL AND CROSSBONES}'.encode('utf8'),
-            repository='\N{SNOWMAN}'.encode('utf8'),
-            who='\N{THAI CHARACTER KHOMUT}'.encode('utf8'),
-            category='\U0001f640'.encode('utf8'),
+            '\N{DEGREE SIGN}'.encode(),
+            '\U0001f49e'.encode(),
+            '\N{POSTAL MARK FACE}'.encode(),
+            ['\U0001f4c1'.encode()],
+            project='\N{SKULL AND CROSSBONES}'.encode(),
+            repository='\N{SNOWMAN}'.encode(),
+            who='\N{THAI CHARACTER KHOMUT}'.encode(),
+            category='\U0001f640'.encode(),
             when=1234,
-            properties={'\N{LATIN SMALL LETTER A WITH MACRON}'.encode('utf8'): 'b'},
-            revlink='\U0001f517'.encode('utf8'),
+            properties={'\N{LATIN SMALL LETTER A WITH MACRON}'.encode(): 'b'},
+            revlink='\U0001f517'.encode(),
         )
 
         self.assertProcess(

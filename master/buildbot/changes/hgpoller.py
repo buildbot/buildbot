@@ -258,7 +258,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
 
         if rc != 0:
             self._stopOnFailure()
-            raise EnvironmentError(f'{self}: repository init failed with exit code {rc}')
+            raise OSError(f'{self}: repository init failed with exit code {rc}')
 
         log.msg(f"hgpoller: finished initializing working dir {self.workdir}")
 
@@ -367,7 +367,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         )
 
         if rc != 0:
-            raise EnvironmentError(f'{self}: could not get rev node list: {rc}')
+            raise OSError(f'{self}: could not get rev node list: {rc}')
 
         results = stdout.decode(self.encoding)
 

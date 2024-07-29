@@ -322,7 +322,7 @@ class BBService(win32serviceutil.ServiceFramework):
             # that the event log is full.  We don't want this to kill us
             try:
                 print("FAILED to write INFO event", event, ":", details)
-            except IOError:
+            except OSError:
                 # No valid stdout!  Ignore it.
                 pass
 
@@ -335,7 +335,7 @@ class BBService(win32serviceutil.ServiceFramework):
             try:
                 print("FAILED to write event log entry:", details)
                 print(msg)
-            except IOError:
+            except OSError:
                 pass
 
     def info(self, s):
@@ -528,7 +528,7 @@ def DetermineRunner(bbdir):
 
         return buildbot.scripts.runner.run
 
-    with open(tacfile, 'r', encoding='utf-8') as f:
+    with open(tacfile, encoding='utf-8') as f:
         contents = f.read()
 
     try:

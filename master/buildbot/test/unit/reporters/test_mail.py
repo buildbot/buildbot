@@ -326,8 +326,8 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         self.assertIsInstance(fakeSenderFactory.call_args, tuple)
         self.assertTrue(len(fakeSenderFactory.call_args) > 0)
         self.assertTrue(len(fakeSenderFactory.call_args[0]) > 3)
-        self.assertEquals(fakeSenderFactory.call_args[0][2], 'john.doe@domain.tld')
-        self.assertEquals(fakeSenderFactory.call_args[0][3], ['jane.doe@domain.tld'])
+        self.assertEqual(fakeSenderFactory.call_args[0][2], 'john.doe@domain.tld')
+        self.assertEqual(fakeSenderFactory.call_args[0][3], ['jane.doe@domain.tld'])
 
     @defer.inlineCallbacks
     def do_test_sendMessage(self, **mn_kwargs):

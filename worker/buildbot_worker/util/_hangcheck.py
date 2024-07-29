@@ -18,7 +18,6 @@ def _noop():
 
 class HangCheckProtocol(
     proxyForInterface(IProtocol, '_wrapped_protocol'),
-    object,
 ):
     """
     Wrap a protocol, so the underlying connection will disconnect if
@@ -88,7 +87,6 @@ class HangCheckProtocol(
 
 class HangCheckFactory(
     proxyForInterface(IProtocolFactory, '_wrapped_factory'),
-    object,
 ):
     """
     Wrap a protocol factory, so the underlying connection will

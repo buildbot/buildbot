@@ -35,7 +35,7 @@ from buildbot_worker.test.util import command
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 class TestBot(unittest.TestCase):
@@ -46,7 +46,7 @@ class TestBot(unittest.TestCase):
         os.makedirs(self.basedir)
 
         # create test-release-file
-        with open("{}/test-release-file".format(self.basedir), "w") as fout:
+        with open(f"{self.basedir}/test-release-file", "w") as fout:
             fout.write("""
 # unit test release file
 OS_NAME="Test"
@@ -57,7 +57,7 @@ PRETTY_NAME="Test 1.0 Generic"
 VERSION_ID="1"
 """)
         self.real_bot = pb.BotPbLike(self.basedir, False)
-        self.real_bot.setOsReleaseFile("{}/test-release-file".format(self.basedir))
+        self.real_bot.setOsReleaseFile(f"{self.basedir}/test-release-file")
         self.real_bot.startService()
 
         self.bot = FakeRemote(self.real_bot)
@@ -179,7 +179,7 @@ VERSION_ID="1"
         return defer.gatherResults([d1, d2])
 
 
-class FakeStep(object):
+class FakeStep:
     "A fake master-side BuildStep that records its activities."
 
     def __init__(self):
@@ -397,7 +397,7 @@ class TestBotFactory(unittest.TestCase):
         self.bf.startTimers()
         clock.callLater(100, self.bf.stopTimers)
 
-        clock.pump((1 for _ in range(150)))
+        clock.pump(1 for _ in range(150))
         self.assertEqual(calls, [35, 70])
 
     def test_timers_exception(self):

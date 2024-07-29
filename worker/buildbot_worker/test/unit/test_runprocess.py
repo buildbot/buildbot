@@ -39,7 +39,7 @@ from buildbot_worker.test.util.misc import nl
 try:
     from unittest.mock import Mock
 except ImportError:
-    from mock import Mock
+    from unittest.mock import Mock
 
 
 def catCommand():
@@ -47,15 +47,15 @@ def catCommand():
 
 
 def stdoutCommand(output):
-    return [sys.executable, '-c', 'import sys; sys.stdout.write("{0}\\n")'.format(output)]
+    return [sys.executable, '-c', f'import sys; sys.stdout.write("{output}\\n")']
 
 
 def stderrCommand(output):
-    return [sys.executable, '-c', 'import sys; sys.stderr.write("{0}\\n")'.format(output)]
+    return [sys.executable, '-c', f'import sys; sys.stderr.write("{output}\\n")']
 
 
 def sleepCommand(dur):
-    return [sys.executable, '-c', 'import time; time.sleep({0})'.format(dur)]
+    return [sys.executable, '-c', f'import time; time.sleep({dur})']
 
 
 def scriptCommand(function, *args):
@@ -128,7 +128,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertFalse(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
@@ -151,7 +151,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf(('stderr', nl('hello\n')) not in self.updates, self.show())
+        self.assertFalse(('stderr', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
@@ -162,7 +162,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf(('stderr', nl('hello\n')) in self.updates, self.show())
+        self.assertFalse(('stderr', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
@@ -465,7 +465,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             list(update.values())[0] for update in self.updates if list(update) == ["header"]
         ])
         self.assertFalse(
-            re.match('\bPYTHONPATH=a{0}'.format(os.pathsep), headers), "got:\n" + headers
+            re.match(f'\bPYTHONPATH=a{os.pathsep}', headers), "got:\n" + headers
         )
 
     @defer.inlineCallbacks
@@ -484,7 +484,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         headers = "".join([
             list(update.values())[0] for update in self.updates if list(update) == ["header"]
         ])
-        self.assertFalse(re.match('\bFOO=a{0}b\b'.format(os.pathsep), headers), "got:\n" + headers)
+        self.assertFalse(re.match(f'\bFOO=a{os.pathsep}b\b', headers), "got:\n" + headers)
 
     def testEnvironInt(self):
         with self.assertRaises(RuntimeError):
@@ -510,7 +510,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             childFDs=None,
         ):
             self.assertTrue(
-                args[0].lower().endswith("cmd.exe"), "{0} is not cmd.exe".format(args[0])
+                args[0].lower().endswith("cmd.exe"), f"{args[0]} is not cmd.exe"
             )
 
         self.patch(runprocess.reactor, "spawnProcess", spawnProcess)
@@ -574,7 +574,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def newPidfile(self):
-        pidfile = os.path.abspath("test-{0}.pid".format(len(self.pidfiles)))
+        pidfile = os.path.abspath(f"test-{len(self.pidfiles)}.pid")
         if os.path.exists(pidfile):
             os.unlink(pidfile)
         self.pidfiles.append(pidfile)
@@ -587,13 +587,13 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
         def poll():
             if reactor.seconds() > until:
-                d.errback(RuntimeError("pidfile {0} never appeared".format(pidfile)))
+                d.errback(RuntimeError(f"pidfile {pidfile} never appeared"))
                 return
             if os.path.exists(pidfile):
                 try:
                     with open(pidfile) as f:
                         pid = int(f.read())
-                except (IOError, TypeError, ValueError):
+                except (OSError, TypeError, ValueError):
                     pid = None
 
                 if pid is not None:
@@ -608,10 +608,10 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         try:
             os.kill(pid, 0)
         except OSError:
-            self.fail("pid {0} still alive".format(pid))
+            self.fail(f"pid {pid} still alive")
 
     def assertDead(self, pid, timeout=5):
-        log.msg("checking pid {0!r}".format(pid))
+        log.msg(f"checking pid {pid!r}")
 
         def check():
             try:
@@ -632,7 +632,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             time.sleep(0.01)
             if check():
                 return
-        self.fail("pid {0} still alive after {1}s".format(pid, timeout))
+        self.fail(f"pid {pid} still alive after {timeout}s")
 
     # tests
 
@@ -867,7 +867,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def new_pid_file(self):
-        pidfile = os.path.abspath("test-{0}.pid".format(len(self.pidfiles)))
+        pidfile = os.path.abspath(f"test-{len(self.pidfiles)}.pid")
         if os.path.exists(pidfile):
             os.unlink(pidfile)
         self.pidfiles.append(pidfile)
@@ -880,13 +880,13 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
 
         def poll():
             if reactor.seconds() > until:
-                d.errback(RuntimeError("pidfile {0} never appeared".format(pidfile)))
+                d.errback(RuntimeError(f"pidfile {pidfile} never appeared"))
                 return
             if os.path.exists(pidfile):
                 try:
                     with open(pidfile) as f:
                         pid = int(f.read())
-                except (IOError, TypeError, ValueError):
+                except (OSError, TypeError, ValueError):
                     pid = None
 
                 if pid is not None:
@@ -899,10 +899,10 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
 
     def assert_alive(self, pid):
         if not psutil.pid_exists(pid):
-            self.fail("pid {0} dead, but expected it to be alive".format(pid))
+            self.fail(f"pid {pid} dead, but expected it to be alive")
 
     def assert_dead(self, pid, timeout=5):
-        log.msg("checking pid {0!r}".format(pid))
+        log.msg(f"checking pid {pid!r}")
 
         # check immediately
         if not psutil.pid_exists(pid):
@@ -916,7 +916,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
             time.sleep(0.01)
             if not psutil.pid_exists(pid):
                 return
-        self.fail("pid {0} still alive after {1}s".format(pid, timeout))
+        self.fail(f"pid {pid} still alive after {timeout}s")
 
     # tests
 
@@ -1063,7 +1063,7 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         if os.path.exists(test_filename):
             os.remove(test_filename)
         lf = runprocess.LogFileWatcher(rp, 'test', test_filename, False)
-        self.assertFalse(lf.statFile(), "{} doesn't exist".format(test_filename))
+        self.assertFalse(lf.statFile(), f"{test_filename} doesn't exist")
 
     def test_statFile_exists(self):
         rp = self.makeRP()

@@ -54,8 +54,8 @@ class TestSecretInPass(
     def test_check_config_secret_in_pass_service(self):
         self.assertEqual(self.srvpass.name, "SecretInPass")
         env = self.srvpass._env
-        self.assertEquals(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password")
-        self.assertEquals(env["PASSWORD_STORE_DIR"], self.tmp_dir)
+        self.assertEqual(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password")
+        self.assertEqual(env["PASSWORD_STORE_DIR"], self.tmp_dir)
 
     def test_check_config_binary_error_secret_in_pass_service(self):
         expected_error_msg = "pass does not exist in PATH"
@@ -76,8 +76,8 @@ class TestSecretInPass(
             yield self.srvpass.reconfigService("password2", otherdir)
         self.assertEqual(self.srvpass.name, "SecretInPass")
         env = self.srvpass._env
-        self.assertEquals(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password2")
-        self.assertEquals(env["PASSWORD_STORE_DIR"], otherdir)
+        self.assertEqual(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password2")
+        self.assertEqual(env["PASSWORD_STORE_DIR"], otherdir)
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass(self):

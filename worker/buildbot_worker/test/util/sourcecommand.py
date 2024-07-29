@@ -41,7 +41,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
 
         def readSourcedata():
             if self.sourcedata is None:
-                raise IOError("File not found")
+                raise OSError("File not found")
             return self.sourcedata
 
         cmd.readSourcedata = readSourcedata

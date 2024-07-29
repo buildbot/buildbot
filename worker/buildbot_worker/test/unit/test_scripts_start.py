@@ -21,7 +21,7 @@ from buildbot_worker.test.util import misc
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):

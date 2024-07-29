@@ -29,7 +29,6 @@ from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 
-
 log = Logger()
 
 

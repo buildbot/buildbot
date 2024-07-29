@@ -107,7 +107,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if tags:
             if not isinstance(tags, list):
                 error(f"builder '{name}': tags must be a list")
-            bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
+            bad_tags = any(tag for tag in tags if not isinstance(tag, str))
             if bad_tags:
                 error(f"builder '{name}': tags list contains something that is not a string")
 

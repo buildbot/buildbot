@@ -33,7 +33,7 @@ from buildbot_worker.test.util import command
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 if sys.version_info >= (3, 6):
     import msgpack
@@ -100,7 +100,7 @@ class TestException(Exception):
     pass
 
 
-class FakeStep(object):
+class FakeStep:
     "A fake master-side BuildStep that records its activities."
 
     def __init__(self):
@@ -212,7 +212,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         with mock.patch('twisted.python.log.msg') as mock_log:
             yield self.send_message(msg)
-            mock_log.assert_any_call('Invalid message from master: {}'.format(msg))
+            mock_log.assert_any_call(f'Invalid message from master: {msg}')
 
         self.assert_sent_messages([])
 
@@ -269,9 +269,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {
                 'op': 'response',
                 'seq_number': 1,
-                'result': '\'message did not contain obligatory "{0}" key\''.format(
-                    missing_parameter
-                ),
+                'result': f'\'message did not contain obligatory "{missing_parameter}" key\'',
                 'is_exception': True,
             }
         ])
@@ -357,7 +355,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
                 'args': [
                     ['rc', 1],
                     ['elapsed', 0],
-                    ['header', ['mkdir: test_error: {}\n'.format(path), [35], [123.0]]],
+                    ['header', [f'mkdir: test_error: {path}\n', [35], [123.0]]],
                 ],
                 'command_id': '123',
                 'seq_number': 0,

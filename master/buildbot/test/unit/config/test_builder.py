@@ -45,7 +45,7 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
     def test_utf8_name(self):
         with self.assertRaisesConfigError("builder names must be unicode or ASCII"):
             BuilderConfig(
-                name="\N{SNOWMAN}".encode('utf-8'), factory=self.factory, workernames=['a']
+                name="\N{SNOWMAN}".encode(), factory=self.factory, workernames=['a']
             )
 
     def test_no_factory(self):

@@ -31,7 +31,7 @@ from buildbot_worker.test.util import misc
 try:
     from unittest.mock import Mock
 except ImportError:
-    from mock import Mock
+    from unittest.mock import Mock
 
 
 # I don't see any simple way to test the PB equipment without actually setting
@@ -52,7 +52,7 @@ class MasterPerspective(pb.Avatar):
 
 
 @implementer(portal.IRealm)
-class MasterRealm(object):
+class MasterRealm:
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment

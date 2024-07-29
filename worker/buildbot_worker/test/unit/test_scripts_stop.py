@@ -27,7 +27,7 @@ from buildbot_worker.test.util import misc
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 class TestStopWorker(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
@@ -83,7 +83,7 @@ class TestStopWorker(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Test
         self.assertEqual(exit_code, 0)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM), mock.call(self.PID, 0)])
 
-        self.assertStdoutEqual("worker process {0} is dead\n".format(self.PID))
+        self.assertStdoutEqual(f"worker process {self.PID} is dead\n")
 
     @compat.skipUnlessPlatformIs("posix")
     def test_stop_timeout(self):

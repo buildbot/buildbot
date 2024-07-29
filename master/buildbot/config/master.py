@@ -65,9 +65,9 @@ def loadConfigDict(basedir, configFileName):
         raise ConfigErrors([f"configuration file '{filename}' does not exist"])
 
     try:
-        with open(filename, "r", encoding='utf-8'):
+        with open(filename, encoding='utf-8'):
             pass
-    except IOError as e:
+    except OSError as e:
         raise ConfigErrors([f"unable to open configuration file {repr(filename)}: {e}"]) from e
 
     log.msg(f"Loading configuration from {repr(filename)}")

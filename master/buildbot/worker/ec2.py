@@ -160,7 +160,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                     aws_id_file_path = default_path
             if aws_id_file_path:
                 log.msg('WARNING: EC2LatentWorker is using deprecated aws_id file')
-                with open(aws_id_file_path, 'r', encoding='utf-8') as aws_file:
+                with open(aws_id_file_path, encoding='utf-8') as aws_file:
                     identifier = aws_file.readline().strip()
                     secret_identifier = aws_file.readline().strip()
         else:
