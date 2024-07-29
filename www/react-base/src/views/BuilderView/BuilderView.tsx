@@ -204,6 +204,7 @@ export const BuilderView = observer(() => {
     <ul className="list-inline bb-builder-workers-container">
     {
       !workers.isResolved() ? <LoadingSpan/> :
+      workers.array.length === 0 ? <span>None</span> :
       workers.array.map(worker => (
         <li><WorkerBadge key={worker.name} worker={worker} showWorkerName={true}/></li>
       ))
