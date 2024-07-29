@@ -193,7 +193,7 @@ End-to-end tests
 ~~~~~~~~~~~~~~~~
 
 Tests in this category run the end-to-end tests by launching a full Buildbot instance, clicking on buttons on the web UI and testing the results.
-It is represented by **bb/smokes/** test names in the Buildbot CI.
+It is represented by **bb/e2e**/** test names in the Buildbot CI.
 The tests are sometimes unstable: if you didn't change the front end code and see a failure then it's most likely an instability.
 To run locally, install a Chrome-compatible browser and execute the following:
 
