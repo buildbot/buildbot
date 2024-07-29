@@ -1,7 +1,7 @@
 {
-  "name": "smokes-react",
+  "name": "buildbot-e2e",
   "version": "1.0.0",
-  "description": "smoke tests for buildbot with cypress",
+  "description": "smoke tests for buildbot with playwright",
   "main": "index.js",
   "dependencies": {
     "@playwright/test": "^1.40.1",

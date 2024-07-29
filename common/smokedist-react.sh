@@ -21,5 +21,5 @@ do
     pip install dist/buildbot-[0-9]*.$suffix
     pip install dist/buildbot?pkg*.$suffix
     pip install dist/*.$suffix
-    smokes-react/run.sh
+    e2e/run.sh
 done
