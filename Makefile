@@ -106,8 +106,7 @@ docker-buildbot-master:
 
 $(VENV_NAME):
 	$(VENV_CREATE) $(VENV_NAME)
-	$(VENV_PYTHON) -m pip install --upgrade pip
-	$(PIP) install -U setuptools wheel
+	$(PIP) install -r requirements-pip.txt
 
 # helper for virtualenv creation
 virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
