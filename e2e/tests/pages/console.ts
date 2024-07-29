@@ -17,10 +17,12 @@
 
 import './imports';
 import {Page} from "@playwright/test";
+import {BasePage} from "./base";
 
 export class ConsolePage {
   static async goto(page: Page) {
     await page.goto("/#/console");
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async countSuccess(page: Page) {

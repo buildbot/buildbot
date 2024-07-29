@@ -29,6 +29,7 @@ export class BasePage {
 
   static async loginUser(page: Page, user: string, password: string) {
     await page.goto(`http://${user}:${password}@localhost:8011/auth/login`);
+    await BasePage.waitUntilFinishedLoading(page);
     await expect(page.locator('.dropdown').first()).not.toContainText("Anonymous");
   }
 

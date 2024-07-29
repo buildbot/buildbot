@@ -16,7 +16,6 @@
 */
 
 import {expect, test} from "@playwright/test";
-import {BasePage} from "./pages/base";
 import {BuilderPage} from './pages/builder';
 import {ForcePage} from "./pages/force";
 import {HomePage} from './pages/home';

@@ -21,6 +21,7 @@ import {BasePage} from "./base";
 export class BuilderPage {
   static async gotoBuildersList(page: Page) {
     await page.goto('/#/builders');
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async goto(page: Page, builder: string) {

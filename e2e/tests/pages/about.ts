@@ -16,9 +16,11 @@
 */
 
 import {Page} from "@playwright/test";
+import {BasePage} from "./base";
 
 export class AboutPage {
   static async goto(page: Page) {
     await page.goto('/#/about');
+    await BasePage.waitUntilFinishedLoading(page);
   }
 }
