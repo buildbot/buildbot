@@ -43,7 +43,22 @@ export class BasePage {
 
   static async waitUntilUrlChanged(page: Page, urlChangeFunction: () => Promise<void>) {
     const url = page.url();
-    await urlChangeFunction();
-    await expect.poll(async () => page.url(), {message: "URL changed"}).not.toEqual(url);
+    for (let i = 0; i < 5; ++i) {
+      // repeat a few times as just a single action is often insufficient
+      await urlChangeFunction();
+      for (let j = 0; j < 50; j++) {
+        if (page.url() !== url) {
+          await BasePage.waitUntilFinishedLoading(page);
+          return;
+        }
+        await page.waitForTimeout(100);
+      }
+      // make sure URL is checked again just before urlChangeFunction
+      if (page.url() !== url) {
+        await BasePage.waitUntilFinishedLoading(page);
+        return;
+      }
+    }
+    throw new Error('URL has not changed');
   }
 }
