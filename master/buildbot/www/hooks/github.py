@@ -237,6 +237,7 @@ class GitHubEventHandler(PullRequestMixin):
         if self._token:
             p = Properties()
             p.master = self.master
+            p.setProperty("full_name", repo, "change_hook")
             token = yield p.render(self._token)
             headers['Authorization'] = 'token ' + token
 
@@ -268,6 +269,7 @@ class GitHubEventHandler(PullRequestMixin):
         if self._token:
             p = Properties()
             p.master = self.master
+            p.setProperty("full_name", repo, "change_hook")
             token = yield p.render(self._token)
             headers["Authorization"] = "token " + token
 
