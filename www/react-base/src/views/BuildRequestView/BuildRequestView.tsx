@@ -101,7 +101,7 @@ export const BuildRequestView = observer(() => {
   const project = projectsQuery.getNthOrNull(0);
   const buildset = buildsetQuery.getNthOrNull(0);
 
-  const buildsetPropertiesQuery = useDataApiSinglePropertiesQuery(buildset,
+  const buildsetPropertiesQuery = useDataApiSinglePropertiesQuery(buildset, [],
     bs => bs.getProperties());
 
   const [isCancelling, setIsCancelling] = useState(false);

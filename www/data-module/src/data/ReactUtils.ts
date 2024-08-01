@@ -125,8 +125,8 @@ export function useDataApiSingleElementQuery<T extends BaseClass, U extends Base
 }
 
 export function useDataApiSinglePropertiesQuery<T extends BaseClass>(
-  el: T | null, callback: (el: T) => DataPropertiesCollection): DataPropertiesCollection {
-  return useDataApiDynamicQuery([el === null],
+  el: T | null, dependencies: any[], callback: (el: T) => DataPropertiesCollection): DataPropertiesCollection {
+  return useDataApiDynamicQuery([el === null, ...dependencies],
     () => el === null ? new DataPropertiesCollection() : callback(el));
 }
 
