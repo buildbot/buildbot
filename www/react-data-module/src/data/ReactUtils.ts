@@ -16,10 +16,10 @@ import {DataPropertiesCollection} from "./DataPropertiesCollection";
 // The default value is not used as the context is injected
 export const DataClientContext = createContext<DataClient>(undefined as any);
 
-export function useDataAccessor<T>(dependency: (T|null)[]): IDataAccessor {
+export function useDataAccessor<T>(dependency: any[]): IDataAccessor {
   const dataClient = useContext(DataClientContext);
 
-  const storedDependency = useRef<(T|null)[]>([]);
+  const storedDependency = useRef<any[]>([]);
   const accessor= useRef<IDataAccessor|null>(null);
 
   if (accessor.current === null) {
@@ -55,7 +55,7 @@ export function useDataApiQuery<Collection extends IDataCollection>(
   return storedCollection.current;
 }
 
-function arrayElementsEqual<T>(a: (T|null)[], b: (T|null)[]) {
+function arrayElementsEqual<T>(a: any[], b: any[]) {
   if (a.length !== b.length) {
     return false;
   }
@@ -68,8 +68,8 @@ function arrayElementsEqual<T>(a: (T|null)[], b: (T|null)[]) {
 }
 
 export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
-    dependency: (T|null)[], callback: () => Collection): Collection {
-  const storedDependency = useRef<(T|null)[]>([]);
+    dependency: any[], callback: () => Collection): Collection {
+  const storedDependency = useRef<any[]>([]);
   let storedCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
@@ -89,8 +89,8 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
 // useDataApiDynamicQuery() will return empty collection whenever it is refreshed whereas
 // this function will wait until the replacement query is resolved.
 export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollection>(
-  dependency: (T|null)[], callback: () => Collection): Collection {
-  const storedDependency = useRef<(T|null)[]>([]);
+  dependency: any[], callback: () => Collection): Collection {
+  const storedDependency = useRef<any[]>([]);
   let storedCollection = useRef<Collection|null>(null);
   let storedNewCollection = useRef<Collection|null>(null);
 
