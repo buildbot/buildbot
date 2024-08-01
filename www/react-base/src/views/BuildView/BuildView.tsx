@@ -164,8 +164,8 @@ const BuildView = observer(() => {
   const build = findOrNull(buildsQuery.array, b => b.number === buildnumber);
   const nextBuild = findOrNull(buildsQuery.array, b => b.number === buildnumber + 1);
 
-  const changesQuery = useDataApiSingleElementQuery(build, b => b.getChanges());
-  const buildrequestsQuery = useDataApiSingleElementQuery(build,
+  const changesQuery = useDataApiSingleElementQuery(build, [], b => b.getChanges());
+  const buildrequestsQuery = useDataApiSingleElementQuery(build, [],
     b => b.buildrequestid === null
       ? new DataCollection<Buildrequest>()
       : Buildrequest.getAll(accessor, {id: b.buildrequestid.toString()}));
@@ -179,7 +179,7 @@ const BuildView = observer(() => {
   const propertiesQuery = useDataApiDynamicQuery([build === null],
     () => build === null ? new DataPropertiesCollection() : build.getProperties());
 
-  const workersQuery = useDataApiSingleElementQuery(build,
+  const workersQuery = useDataApiSingleElementQuery(build, [],
     b => Worker.getAll(accessor, {id: b.workerid.toString()}));
 
   const projectsQuery = useDataApiQuery(() => buildersQuery.getRelated(builder => {
@@ -216,6 +216,7 @@ const BuildView = observer(() => {
   );
   const rebuiltBuildRequestQuery = useDataApiSingleElementQuery(
     rebuiltBuildsetQuery.getNthOrNull(0),
+    [],
     (bs: Buildset) => Buildrequest.getAll(
       accessor, {
       query: {

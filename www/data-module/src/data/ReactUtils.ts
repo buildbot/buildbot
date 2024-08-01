@@ -119,8 +119,8 @@ export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollec
 }
 
 export function useDataApiSingleElementQuery<T extends BaseClass, U extends BaseClass>(
-    el: T | null, callback: (el: T) => DataCollection<U>): DataCollection<U> {
-  return useDataApiDynamicQuery([el === null],
+    el: T | null, dependencies: any[], callback: (el: T) => DataCollection<U>): DataCollection<U> {
+  return useDataApiDynamicQuery([el === null, ...dependencies],
     () => el === null ? new DataCollection<U>() : callback(el));
 }
 
