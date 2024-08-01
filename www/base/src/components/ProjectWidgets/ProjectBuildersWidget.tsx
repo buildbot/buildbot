@@ -55,7 +55,7 @@ export const ProjectBuildersWidget = observer(({projectid, filterManager}: Proje
       projectid: projectid
     }}));
   const project = projectQuery.getNthOrNull(0);
-  const builders = useDataApiSingleElementQuery(project, p => p.getBuilders());
+  const builders = useDataApiSingleElementQuery(project, [], p => p.getBuilders());
   const showOldBuilders = buildbotGetSettings().getBooleanSetting("Builders.show_old_builders");
 
   // as there is usually lots of builders, it's better to get the overall
