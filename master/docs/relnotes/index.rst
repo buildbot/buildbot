@@ -8,6 +8,24 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.0.2`` ( ``2024-08-01`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed ``GitPoller`` when repourl has the port specified (:issue:`7822`)
+- Fixed ``ChoiceStringParameter`` fields with ``multiple`` would not store the selected values
+- Fixed unnecessary trimming of spaces in logs showed in the web UI (:issue:`7774`)
+- Fixed favicon colors on build views in the web UI
+- Fixed the icon on the about page in the web UI
+- Fixed a regression where builds in waterfall view were no longer linking to the build page.
+
+Changes
+-------
+
+- Buildbot will now error when configured with multiple services of the same type are configured with the same name (:issue:`6987`)
+
 Buildbot ``4.0.1`` ( ``2024-07-12`` )
 =====================================
 

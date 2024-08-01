@@ -1,1 +1,0 @@
-Buildbot will now error when configured with multiple services of the same type are configured with the same name (:issue:6987)
