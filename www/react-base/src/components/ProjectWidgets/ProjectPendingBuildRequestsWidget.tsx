@@ -38,7 +38,7 @@ export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectP
       projectid: projectid
     }}));
   const project = projectQuery.getNthOrNull(0);
-  const builders = useDataApiSingleElementQuery(project, p => p.getBuilders());
+  const builders = useDataApiSingleElementQuery(project, [], p => p.getBuilders());
   const builderIds = builders.array.map(builder => builder.builderid);
 
   const buildRequestFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
