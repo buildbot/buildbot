@@ -1,1 +1,0 @@
-Fix an issue that would cause non-ui www plugins to not be configured (such as buildbot-badges) (:issue:7665)
