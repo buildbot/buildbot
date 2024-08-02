@@ -17,7 +17,7 @@
 
 import {observer} from "mobx-react";
 import {useState} from "react";
-import {buildbotSetupPlugin} from "buildbot-plugin-support";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Builder,
@@ -25,10 +25,17 @@ import {
   DataCollection,
   Forcescheduler,
   Project,
-  useDataAccessor,
+  useDataAccessor, useDataApiDynamicQuery,
   useDataApiQuery
 } from "buildbot-data-js";
-import {getBuildLinkDisplayProperties, TopbarAction, useTopbarItems, useTopbarActions, WorkerBadge} from "buildbot-ui";
+import {
+  getBuildLinkDisplayProperties,
+  TopbarAction,
+  useTopbarItems,
+  useTopbarActions,
+  WorkerBadge,
+  useLoadMoreItemsState
+} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {useNavigate, useParams} from "react-router-dom";
@@ -98,14 +105,16 @@ export const BuilderView = observer(() => {
 
   const accessor = useDataAccessor([builderid]);
 
-  const numBuilds = 200;
+  const initialBuildsFetchLimit = 200;
+  const [buildsFetchLimit, onLoadMoreBuilds] =
+      useLoadMoreItemsState(initialBuildsFetchLimit, initialBuildsFetchLimit);
 
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
-  const buildsQuery = useDataApiQuery(() =>
+  const buildsQuery = useDataApiDynamicQuery([buildsFetchLimit], () =>
     buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
         builderid: builder.builderid,
         property: ["owners", "workername", "branch", "revision", ...getBuildLinkDisplayProperties()],
-        limit: numBuilds,
+        limit: buildsFetchLimit,
         order: '-number'
       }
     })));
@@ -224,7 +233,8 @@ export const BuilderView = observer(() => {
           <Tab eventKey={1} title="Builds">
             <TableHeading>Builds requests:</TableHeading>
             <BuildRequestsTable buildrequests={buildrequests}/>
-            <BuildsTable builds={builds} builders={null}/>
+            <BuildsTable builds={builds} builders={null} fetchLimit={buildsFetchLimit}
+                         onLoadMore={onLoadMoreBuilds}/>
           </Tab>
           <Tab eventKey={2} title="Workers">
             {renderWorkers()}
@@ -240,7 +250,6 @@ export const BuilderView = observer(() => {
     </div>
   );
   // TODO: reimplement build duration tab
-  // TODO: display more than 100 builds
 });
 
 buildbotSetupPlugin((reg) => {

@@ -17,7 +17,7 @@
 
 import './BuildsTable.scss';
 import {observer} from "mobx-react";
-import {Table} from "react-bootstrap";
+import {Button, Table} from "react-bootstrap";
 import {
   Build,
   Builder,
@@ -38,10 +38,13 @@ import {TableHeading} from "../TableHeading/TableHeading";
 import {buildbotGetSettings, buildbotSetupPlugin} from "../../../../plugin_support";
 import {FaHome} from "react-icons/fa";
 import {HomeView} from "../../views/HomeView/HomeView";
+import {LoadMoreListItem} from "../LoadMoreListItem/LoadMoreListItem";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
   builders: DataCollection<Builder> | null;
+  fetchLimit: number;
+  onLoadMore: (() => void)|null;
 }
 
 const BUILD_TIME_BASE_START_TIME = 'Start time and duration';
@@ -67,7 +70,7 @@ const getBuildTimeElement = (build: Build, buildTimeBase: string, now: number) =
   )
 }
 
-export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
+export const BuildsTable = observer(({builds, builders, fetchLimit, onLoadMore}: BuildsTableProps) => {
   const now = useCurrentTime();
   const sortedBuilds = builds.array.slice().sort((a, b) => b.started_at - a.started_at);
 
@@ -120,6 +123,13 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
     );
   });
 
+  const maybeRenderLoadMore = () => {
+    if (!builds.isResolved() || onLoadMore === null || fetchLimit >= builds.array.length) {
+      return <></>;
+    }
+    return <LoadMoreListItem onLoadMore={onLoadMore}/>;
+  };
+
   const tableElement = () => {
     return (
       <Table hover striped size="sm">
@@ -135,6 +145,7 @@ export const BuildsTable = observer(({builds, builders}: BuildsTableProps) => {
             <td>Status</td>
           </tr>
           {rowElements}
+          {maybeRenderLoadMore()}
         </tbody>
       </Table>
     );
