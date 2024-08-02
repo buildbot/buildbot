@@ -1308,9 +1308,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         """
         controller, _ = yield self.create_single_worker_config()
 
-        controller.worker.substantiate(None, None)
+        d = controller.worker.substantiate(None, None)
         yield controller.start_instance(True)
         self.assertTrue(controller.started)
+        yield d
 
         d = controller.worker.insubstantiate()
         yield controller.stop_instance(True)
@@ -1326,9 +1327,10 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             controller_kwargs={"build_wait_timeout": 1}
         )
 
-        controller.worker.substantiate(None, None)
+        d = controller.worker.substantiate(None, None)
         yield controller.start_instance(True)
         self.assertTrue(controller.started)
+        yield d
 
         self.create_build_request([builder_id])
         stepcontroller.finish_step(SUCCESS)
