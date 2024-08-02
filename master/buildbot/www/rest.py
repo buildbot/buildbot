@@ -339,16 +339,18 @@ class V2RootResource(resource.Resource):
                 request.setHeader(b"Pragma", b"no-cache")
 
             # filter out blanks if necessary and render the data
+            encoder = json.encoder.JSONEncoder(default=toJson, sort_keys=True)
             if compact:
-                data = json.dumps(data, default=toJson, sort_keys=True, separators=(',', ':'))
+                encoder.item_separator, encoder.key_separator = (',', ':')
             else:
-                data = json.dumps(data, default=toJson, sort_keys=True, indent=2)
+                encoder.indent = 2
 
-            if request.method == b"HEAD":
-                request.setHeader(b"content-length", unicode2bytes(str(len(data))))
-            else:
-                data = unicode2bytes(data)
-                request.write(data)
+            content_length = sum(len(unicode2bytes(chunk)) for chunk in encoder.iterencode(data))
+            request.setHeader(b"content-length", unicode2bytes(str(content_length)))
+
+            if request.method != b"HEAD":
+                for chunk in encoder.iterencode(data):
+                    request.write(unicode2bytes(chunk))
 
     def reconfigResource(self, new_config):
         # buildbotURL may contain reverse proxy path, Origin header is just
