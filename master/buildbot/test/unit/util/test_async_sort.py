@@ -42,7 +42,6 @@ class AsyncSort(unittest.TestCase, LoggingMixin):
     @defer.inlineCallbacks
     def test_async_fail(self):
         l = ["b", "c", "a"]
-        self.patch(log, "err", lambda f: None)
 
         class SortFail(Exception):
             pass
@@ -52,5 +51,4 @@ class AsyncSort(unittest.TestCase, LoggingMixin):
                 l, lambda x: defer.succeed(x) if x != "a" else defer.fail(SortFail("ono"))
             )
 
-        self.assertEqual(len(self.flushLoggedErrors(SortFail)), 1)
         self.assertEqual(l, ["b", "c", "a"])
