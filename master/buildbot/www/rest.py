@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from twisted.internet import defer
+from twisted.internet.error import ConnectionDone
 from twisted.python import log
 from twisted.web.error import Error
 
@@ -137,6 +138,9 @@ class V2RootResource(resource.Resource):
     def handleErrors(self, writeError):
         try:
             yield
+        except ConnectionDone:
+            # Connection was cleanly closed
+            pass
         except exceptions.InvalidPathError as e:
             msg = unicode2bytes(e.args[0])
             writeError(
@@ -298,7 +302,14 @@ class V2RootResource(resource.Resource):
         kwargs: dict[str, Any],
     ):
         assert ep.kind in (EndpointKind.RAW, EndpointKind.RAW_INLINE)
-        data = await ep.get(rspec, kwargs)
+
+        is_stream_data = False
+        try:
+            data = await ep.stream(rspec, kwargs)
+            is_stream_data = True
+        except NotImplementedError:
+            data = await ep.get(rspec, kwargs)
+
         if data is None:
             self._write_not_found_rest_error(request, ep, rspec=rspec, kwargs=kwargs)
             return
@@ -308,7 +319,17 @@ class V2RootResource(resource.Resource):
             request.setHeader(
                 b"content-disposition", b'attachment; filename=' + unicode2bytes(data['filename'])
             )
-        request.write(unicode2bytes(data['raw']))
+
+        if not is_stream_data:
+            request.write(unicode2bytes(data['raw']))
+            return
+
+        async for chunk in data['raw']:
+            if request.finished or request.channel is None:
+                # In case of lost connection, request is not marked as finished
+                # detect this case with `channel` being None
+                return
+            request.write(unicode2bytes(chunk))
 
     @defer.inlineCallbacks
     def renderRest(self, request: server.Request):
