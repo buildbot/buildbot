@@ -17,9 +17,10 @@
 
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
-import {Project, useDataAccessor, useDataApiQuery, Change} from "buildbot-data-js";
+import {Project, useDataAccessor, useDataApiQuery, Change, useDataApiDynamicQuery} from "buildbot-data-js";
 import {buildbotGetSettings} from "buildbot-plugin-support";
 import {ChangesTable} from "../ChangesTable/ChangesTable";
+import {useLoadMoreItemsState} from "../../../../ui/src/util/React";
 
 
 export type ProjectChangesWidgetProps = {
@@ -33,18 +34,24 @@ export const ProjectChangesWidget = observer(({projectid}: ProjectChangesWidgetP
       projectid: projectid
     }}));
 
-  const changesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
-  const changesMultiQuery = useDataApiQuery(() => projectQuery.getRelated(
-    project => Change.getAll(accessor, {query: {
-      limit: changesFetchLimit, project__eq: project.name, order: '-changeid'
-    }})));
+  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
+  const [changesFetchLimit, onLoadMoreChanges] =
+      useLoadMoreItemsState(initialChangesFetchLimit, initialChangesFetchLimit);
+
+  const changesMultiQuery = useDataApiDynamicQuery(
+      [changesFetchLimit],
+      () => projectQuery.getRelated(
+        project => Change.getAll(accessor, {query: {
+          limit: changesFetchLimit, project__eq: project.name, order: '-changeid'
+        }}))
+  );
 
   const changesQuery = changesMultiQuery.getParentCollectionOrEmpty(projectid.toString());
 
   return (
     <Card>
       <Card.Body>
-        <ChangesTable changes={changesQuery}/>
+        <ChangesTable changes={changesQuery} fetchLimit={changesFetchLimit} onLoadMore={onLoadMoreChanges}/>
       </Card.Body>
     </Card>
   );
