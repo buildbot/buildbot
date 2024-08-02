@@ -22,14 +22,13 @@ import {
   Build,
   Builder,
   Buildrequest,
-  DataCollection, DataMultiCollection,
+  DataCollection,
   Forcescheduler,
   Project,
   useDataAccessor,
-  useDataApiQuery,
-  useDataApiSingleElementQuery
+  useDataApiQuery
 } from "buildbot-data-js";
-import {TopbarAction, useTopbarItems, useTopbarActions, TopbarItem} from "buildbot-ui";
+import {TopbarAction, useTopbarItems, useTopbarActions, WorkerBadge} from "buildbot-ui";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {BuildRequestsTable} from "../../components/BuildrequestsTable/BuildrequestsTable";
 import {useNavigate, useParams} from "react-router-dom";
@@ -38,6 +37,8 @@ import {ForceBuildModal} from "../../components/ForceBuildModal/ForceBuildModal"
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 import {FaStop, FaSpinner} from "react-icons/fa";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
+import { Tab, Tabs } from "react-bootstrap";
+import { LoadingSpan } from "../../components/LoadingSpan/LoadingSpan";
 
 const anyCancellableBuilds = (builds: DataCollection<Build>,
                               buildrequests: DataCollection<Buildrequest>) => {
@@ -123,11 +124,18 @@ export const BuilderView = observer(() => {
     : Project.getAll(accessor, {id: builder.projectid.toString()})
   }));
 
+  const workersQuery = useDataApiQuery(() =>
+    buildersQuery.getRelated(builder => builder.getWorkers({query: {
+      order: 'name'
+    }
+  })));
+
   const builder = buildersQuery.getNthOrNull(0);
   const builds = buildsQuery.getParentCollectionOrEmpty(builderid.toString());
   const buildrequests = buildrequestsQuery.getParentCollectionOrEmpty(builderid.toString());
   const forceschedulers = forceSchedulersQuery.getParentCollectionOrEmpty(builderid.toString());
   const project = projectsQuery.getNthOrNull(0);
+  const workers = workersQuery.getParentCollectionOrEmpty(builderid.toString());
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -191,6 +199,19 @@ export const BuilderView = observer(() => {
     }
   };
 
+  const renderWorkers = () => {
+    return (
+    <ul className="list-inline bb-builder-workers-container">
+    {
+      !workers.isResolved() ? <LoadingSpan/> :
+      workers.array.length === 0 ? <span>None</span> :
+      workers.array.map(worker => (
+        <li><WorkerBadge key={worker.name} worker={worker} showWorkerName={true}/></li>
+      ))
+    }
+    </ul>);
+  };
+
   return (
     <div className="container">
       <AlertNotification text={errorMsg}/>
@@ -198,8 +219,19 @@ export const BuilderView = observer(() => {
         ? renderDescription(builder)
         : <></>
       }
-      <BuildRequestsTable buildrequests={buildrequests}/>
-      <BuildsTable builds={builds} builders={null}/>
+      <div>
+        <Tabs defaultActiveKey={1}>
+          <Tab eventKey={1} title="Builds">
+            <TableHeading>Builds requests:</TableHeading>
+            <BuildRequestsTable buildrequests={buildrequests}/>
+            <BuildsTable builds={builds} builders={null}/>
+          </Tab>
+          <Tab eventKey={2} title="Workers">
+            {renderWorkers()}
+          </Tab>
+        </Tabs>
+      </div>
+
       {shownForceScheduler !== null
         ? <ForceBuildModal scheduler={shownForceScheduler} builderid={builderid}
                            onClose={onForceBuildModalClose}/>
