@@ -138,9 +138,11 @@ The GitHub hook has the following parameters:
 ``github_api_endpoint`` (default ``https://api.github.com``)
     If you have a self-host GitHub Enterprise installation, please set this URL properly.
 
-``token``
-    If your GitHub or GitHub Enterprise instance does not allow anonymous communication, you need to provide an access token.
-    Instructions can be found `here <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>`_.
+``token`` If your GitHub or GitHub Enterprise instance does not allow anonymous communication, you
+    need to provide an access token.  Instructions can be found `here
+    <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>`_. This
+    attribute is rendered using the :class:`~buildbot.interfaces.IRenderable` interface, the only
+    property available is ``full_name``, of the format ``{owner}/{full_name}``.
 
 ``pullrequest_ref`` (default ``merge``)
     Remote ref to test if a pull request is sent to the endpoint.
