@@ -74,7 +74,7 @@ export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: Changes
   }
 
   const maybeRenderLoadMore = () => {
-    if (!changes.isResolved() || onLoadMore === null || changes.array.length >= fetchLimit) {
+    if (!changes.isResolved() || onLoadMore === null || changes.array.length < fetchLimit) {
       return <></>;
     }
     return <LoadMoreListItem onLoadMore={onLoadMore}/>;
