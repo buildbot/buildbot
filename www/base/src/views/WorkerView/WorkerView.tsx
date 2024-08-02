@@ -23,11 +23,12 @@ import {
   Master,
   Worker,
   useDataAccessor,
-  useDataApiQuery
+  useDataApiQuery,
+  useDataApiDynamicQuery
 } from "buildbot-data-js";
 import {useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
-import {getBuildLinkDisplayProperties} from "buildbot-ui";
+import {getBuildLinkDisplayProperties, useLoadMoreItemsState} from "buildbot-ui";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
@@ -36,14 +37,18 @@ export const WorkerView = observer(() => {
   const workerid = Number.parseInt(useParams<"workerid">().workerid ?? "");
   const accessor = useDataAccessor([workerid]);
 
+  const initialBuildsFetchLimit = 100;
+  const [buildsFetchLimit, onLoadMoreBuilds] =
+      useLoadMoreItemsState(initialBuildsFetchLimit, initialBuildsFetchLimit);
+
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {id: workerid.toString()}));
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
-  const buildsQuery = useDataApiQuery(() =>
+  const buildsQuery = useDataApiDynamicQuery([buildsFetchLimit], () =>
     Build.getAll(accessor, {query: {
         property: ["owners", "workername", "branch", "revision", ...getBuildLinkDisplayProperties()],
         workerid__eq: workerid,
-        limit: 100,
+        limit: buildsFetchLimit,
         order: "-buildid",
       }
     }));
@@ -61,7 +66,8 @@ export const WorkerView = observer(() => {
                               onClose={() => setWorkerForActions(null)}/>
         : <></>
       }
-      <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
+      <BuildsTable builds={buildsQuery} builders={buildersQuery} fetchLimit={buildsFetchLimit}
+                   onLoadMore={onLoadMoreBuilds}/>
     </div>
   );
 });
