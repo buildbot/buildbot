@@ -122,7 +122,7 @@ export const BuildsTable = observer(({builds, builders, fetchLimit, onLoadMore}:
   });
 
   const maybeRenderLoadMore = () => {
-    if (!builds.isResolved() || onLoadMore === null || fetchLimit >= builds.array.length) {
+    if (!builds.isResolved() || onLoadMore === null || builds.array.length < fetchLimit) {
       return <></>;
     }
     return <LoadMoreListItem onLoadMore={onLoadMore}/>;
