@@ -11,6 +11,7 @@ import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 import {Log, logDescriptor} from "./Log";
+import {TestResultSet, testResultSetDescriptor} from "./TestResultSet";
 
 export type StepUrl = {
   name: string;
@@ -71,6 +72,10 @@ export class Step extends BaseClass {
 
   getLogs(query: RequestQuery = {}) {
     return this.get<Log>("logs", query, logDescriptor);
+  }
+
+  getTestResultSets(query: RequestQuery = {}) {
+    return this.get<TestResultSet>("test_result_sets", query, testResultSetDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {

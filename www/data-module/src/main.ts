@@ -21,6 +21,8 @@ export * from "./data/classes/Properties";
 export * from "./data/classes/Scheduler";
 export * from "./data/classes/Sourcestamp";
 export * from "./data/classes/Step";
+export * from "./data/classes/TestResult";
+export * from "./data/classes/TestResultSet";
 export * from "./data/classes/Worker";
 
 export * from "./data/ApplicationSpec";
