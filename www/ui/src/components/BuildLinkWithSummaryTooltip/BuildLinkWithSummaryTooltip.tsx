@@ -53,7 +53,7 @@ export const formatBuildLinkText = (build: Build): string => {
       if (value === undefined || value === null || value === '') {
         continue;
       }
-      replacements.set(repl, value);
+      replacements.set(repl, value[0]);
     }
   }
 
