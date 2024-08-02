@@ -15,6 +15,7 @@ import {Buildrequest, buildrequestDescriptor} from "./Buildrequest";
 import {Forcescheduler, forceschedulerDescriptor} from "./Forcescheduler";
 import {Worker, workerDescriptor} from "./Worker";
 import {Master, masterDescriptor} from "./Master";
+import {TestResultSet, testResultSetDescriptor} from "./TestResultSet";
 
 export class Builder extends BaseClass {
   @observable builderid!: number;
@@ -72,6 +73,10 @@ export class Builder extends BaseClass {
 
   getMasters(query: RequestQuery = {}) {
     return this.get<Master>("masters", query, masterDescriptor);
+  }
+
+  getTestResultSets(query: RequestQuery = {}) {
+    return this.get<TestResultSet>("test_result_sets", query, testResultSetDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {

@@ -12,6 +12,7 @@ import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
 import {Change, changeDescriptor} from "./Change";
 import {Step, stepDescriptor} from "./Step";
+import {TestResultSet, testResultSetDescriptor} from "./TestResultSet";
 
 export class Build extends BaseClass {
   @observable buildid!: number;
@@ -78,6 +79,10 @@ export class Build extends BaseClass {
 
   getProperties(query: RequestQuery = {}) {
     return this.getPropertiesImpl("properties", query);
+  }
+
+  getTestResultSets(query: RequestQuery = {}) {
+    return this.get<TestResultSet>("test_result_sets", query, testResultSetDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
