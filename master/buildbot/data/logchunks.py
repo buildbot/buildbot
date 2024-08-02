@@ -13,14 +13,58 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import AsyncGenerator
+
+    from buildbot.db.logs import LogModel
+
 
 class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
+    @staticmethod
+    async def get_raw_log_lines(log_lines_generator: AsyncGenerator[str, None]) -> str:
+        parts = []
+        async for chunk in log_lines_generator:
+            parts.append(chunk)
+        return ''.join(parts)
+
+    async def get_log_lines(
+        self,
+        log_dict: LogModel,
+        log_prefix: str,
+        lines_batch: int = 1000,
+    ) -> AsyncGenerator[str, None]:
+        if log_prefix:
+            yield log_prefix
+
+        lastline = max(0, log_dict.num_lines)
+        lines_batch = max(lines_batch, 1)
+
+        for idx in range(0, lastline, lines_batch):
+            line_start = idx
+            line_end = min(lastline - 1, idx + lines_batch)
+            # TODO: Add a new API to db.logs that yield lines
+            lines: str = await self.master.db.logs.getLogLines(log_dict.id, line_start, line_end)
+
+            if log_dict.type == 's':
+                # for stdio logs, the first char is the stream type
+                # ref: https://buildbot.readthedocs.io/en/latest/developer/raml/logchunk.html#logchunk
+                for line in lines.splitlines(keepends=True):
+                    yield line[1:]
+
+                continue
+
+            yield lines
+
     @defer.inlineCallbacks
     def get_log_lines_raw_data(self, kwargs):
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
@@ -28,33 +72,21 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         if log_dict is None:
             return None, None, None
 
-        lastline = max(0, log_dict.num_lines - 1)
+        # The following should be run sequentially instead of in gatherResults(), so that
+        # they don't all start a query on step dict each.
+        step_dict = yield retriever.get_step_dict()
+        build_dict = yield retriever.get_build_dict()
+        builder_dict = yield retriever.get_builder_dict()
+        worker_dict = yield retriever.get_worker_dict()
 
-        @defer.inlineCallbacks
-        def get_info():
-            # The following should be run sequentially instead of in gatherResults(), so that
-            # they don't all start a query on step dict each.
-            step_dict = yield retriever.get_step_dict()
-            build_dict = yield retriever.get_build_dict()
-            builder_dict = yield retriever.get_builder_dict()
-            worker_dict = yield retriever.get_worker_dict()
-            return step_dict, build_dict, builder_dict, worker_dict
-
-        log_lines, (step_dict, build_dict, builder_dict, worker_dict) = yield defer.gatherResults([
-            self.master.db.logs.getLogLines(log_dict.id, 0, lastline),
-            get_info(),
-        ])
-
+        log_prefix = ''
         if log_dict.type == 's':
-            log_prefix = ''
             if builder_dict is not None:
                 log_prefix += f'Builder: {builder_dict.name}\n'
             if build_dict is not None:
                 log_prefix += f'Build number: {build_dict.number}\n'
             if worker_dict is not None:
                 log_prefix += f'Worker name: {worker_dict.name}\n'
-
-            log_lines = log_prefix + "\n".join([line[1:] for line in log_lines.splitlines()])
 
         informative_parts = []
         if builder_dict is not None:
@@ -66,7 +98,7 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         informative_parts += ['log', log_dict.slug]
         informative_slug = '_'.join(informative_parts)
 
-        return log_lines, log_dict.type, informative_slug
+        return self.get_log_lines(log_dict, log_prefix), log_dict.type, informative_slug
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
@@ -131,13 +163,23 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        log_lines, log_type, log_slug = yield self.get_log_lines_raw_data(kwargs)
+        data = yield defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
+        if data is None:
+            return None
 
-        if log_lines is None:
+        data["raw"] = yield defer.Deferred.fromCoroutine(
+            self.get_raw_log_lines(log_lines_generator=data["raw"])
+        )
+        return data
+
+    async def stream(self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]):
+        log_lines_generator, log_type, log_slug = await self.get_log_lines_raw_data(kwargs)
+
+        if log_lines_generator is None:
             return None
 
         return {
-            'raw': log_lines,
+            'raw': log_lines_generator,
             'mime-type': 'text/html' if log_type == 'h' else 'text/plain',
             'filename': log_slug,
         }
@@ -158,13 +200,25 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        log_lines, log_type, _ = yield self.get_log_lines_raw_data(kwargs)
+        data = yield defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
 
-        if log_lines is None:
+        if data is None:
+            return None
+
+        data["raw"] = yield defer.Deferred.fromCoroutine(
+            self.get_raw_log_lines(log_lines_generator=data["raw"])
+        )
+
+        return data
+
+    async def stream(self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]):
+        log_lines_generator, log_type, _ = await self.get_log_lines_raw_data(kwargs)
+
+        if log_lines_generator is None:
             return None
 
         return {
-            'raw': log_lines,
+            'raw': log_lines_generator,
             'mime-type': 'text/html' if log_type == 'h' else 'text/plain',
         }
 
