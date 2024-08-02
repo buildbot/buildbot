@@ -17,20 +17,23 @@
 
 import {observer} from "mobx-react";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
-import {Change, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {Change, useDataAccessor, useDataApiDynamicQuery} from "buildbot-data-js";
+import {useLoadMoreItemsState} from "buildbot-ui";
 import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
-
 
 export const ChangesView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const changesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
-  const changesQuery = useDataApiQuery(
+  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
+  const [changesFetchLimit, onLoadMoreChanges] =
+      useLoadMoreItemsState(initialChangesFetchLimit, initialChangesFetchLimit);
+
+  const changesQuery = useDataApiDynamicQuery([changesFetchLimit],
     () => Change.getAll(accessor, {query: {limit: changesFetchLimit, order: '-changeid'}}));
 
   return (
     <div className="container">
-      <ChangesTable changes={changesQuery}/>
+      <ChangesTable changes={changesQuery} fetchLimit={changesFetchLimit} onLoadMore={onLoadMoreChanges}/>
     </div>
   );
 });
@@ -56,7 +59,7 @@ buildbotSetupPlugin((reg) => {
     items: [{
       type: 'integer',
       name: 'changesFetchLimit',
-      caption: 'Maximum number of changes to fetch',
+      caption: 'Initial number of changes to fetch',
       defaultValue: 50
     }]
   });
