@@ -59,13 +59,10 @@ export const ChangeBuildsView = observer(() => {
       return Builder.getAll(accessor, {query: {builderid__eq: builderIds}})
     });
 
-  const [showDetails, setShowDetails] = useState(false);
-
   return (
     <div className="container">
       { change !== null
-        ? <ChangeDetails change={change} compact={false}
-                         showDetails={showDetails} setShowDetails={setShowDetails}/>
+        ? <ChangeDetails change={change} compact={false} showDetails={true} setShowDetails={null}/>
         : <LoadingDiv/>
       }
       { buildsQuery.array.length > 0
