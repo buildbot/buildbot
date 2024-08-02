@@ -15,6 +15,7 @@
 
 
 import gc
+import platform
 import random
 import string
 
@@ -179,6 +180,9 @@ class LRUCacheTest(unittest.TestCase):
             self.check_result(res, short('a'), i + 1, 1)
 
     def test_weakrefs(self):
+        if platform.python_implementation() == 'PyPy':
+            raise unittest.SkipTest('PyPy has different behavior with regards to weakref dicts')
+
         res_a = self.lru.get('a')
         self.check_result(res_a, short('a'))
         # note that res_a keeps a reference to this value
@@ -422,6 +426,9 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_weakrefs(self):
+        if platform.python_implementation() == 'PyPy':
+            raise unittest.SkipTest('PyPy has different behavior with regards to weakref dicts')
+
         res_a = yield self.lru.get('a')
         self.check_result(res_a, short('a'))
         # note that res_a keeps a reference to this value
