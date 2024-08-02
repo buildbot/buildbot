@@ -1,0 +1,1 @@
+Fix logs ``/raw`` and ``/raw_inline`` endpoint requiring large memory on master (more than full log size) (:issue:`3011`)
