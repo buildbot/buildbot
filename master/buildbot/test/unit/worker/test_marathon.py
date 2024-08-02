@@ -141,10 +141,12 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         )
         self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
 
-        worker.substantiate(None, fakebuild.FakeBuildForRendering())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertEqual(worker.instance, {'Id': 'id'})
 
         yield worker.insubstantiate()
+        with self.assertRaises(LatentWorkerSubstantiatiationCancelled):
+            yield d
 
     @defer.inlineCallbacks
     def test_start_worker_but_error(self):

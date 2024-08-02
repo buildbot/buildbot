@@ -60,7 +60,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     def do_request_collapse(self, rows, brids, exp):
         yield self.master.db.insert_test_data(rows)
         brCollapser = buildrequest.BuildRequestCollapser(self.master, brids)
-        self.assertEqual(exp, (yield brCollapser.collapse()))
+        self.assertEqual(exp, sorted((yield brCollapser.collapse())))
 
     def test_collapseRequests_no_other_request(self):
         def collapseRequests_fn(master, builder, brdict1, brdict2):

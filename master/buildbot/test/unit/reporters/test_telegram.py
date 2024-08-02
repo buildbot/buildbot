@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+import platform
 import sys
 from unittest.case import SkipTest
 
@@ -608,11 +609,12 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.assertNotIn((-12345678, 123456789), bot.contacts)
         self.assertNotIn(-12345678, bot.channels)
 
-        self.assertEqual(sys.getrefcount(u), 2)  # local, sys
-        c = u.channel
-        self.assertEqual(sys.getrefcount(c), 3)  # local, contact, sys
-        del u
-        self.assertEqual(sys.getrefcount(c), 2)  # local, sys
+        if platform.python_implementation() != 'PyPy':
+            self.assertEqual(sys.getrefcount(u), 2)  # local, sys
+            c = u.channel
+            self.assertEqual(sys.getrefcount(c), 3)  # local, contact, sys
+            del u
+            self.assertEqual(sys.getrefcount(c), 2)  # local, sys
 
     @defer.inlineCallbacks
     def test_getContact_valid(self):

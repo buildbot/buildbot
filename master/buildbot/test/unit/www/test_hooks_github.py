@@ -15,6 +15,7 @@
 # Copyright Buildbot Team Members
 
 import hmac
+import platform
 from copy import deepcopy
 from hashlib import sha1
 from io import BytesIO
@@ -787,9 +788,13 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.request = _prepare_request(b'push', b'')
 
         yield self.request.test_render(self.changeHook)
-        expected = b"Expecting value: line 1 column 1 (char 0)"
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
-        self.assertEqual(self.request.written, expected)
+
+        if platform.python_implementation() == 'PyPy':
+            expected = b"Unexpected '\x00': line 1 column 1 (char 0)"
+        else:
+            expected = b"Expecting value: line 1 column 1 (char 0)"
+        self.assertIn(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
 
     @defer.inlineCallbacks
