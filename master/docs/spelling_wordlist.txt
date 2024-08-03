@@ -684,6 +684,7 @@ pyjade
 pylint
 pypi
 pypugjs
+pypy
 pysqlite
 pythonic
 Pythonic

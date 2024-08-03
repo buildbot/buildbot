@@ -15,6 +15,8 @@ Python: https://www.python.org
   Buildbot master works with Python 3.8+.
   Buildbot worker works with Python 3.5+.
 
+  Pypy can be used for faster execution. Lowest tested version is 7.3.11.
+
   .. note::
 
     This should be a "normal" build of Python.
