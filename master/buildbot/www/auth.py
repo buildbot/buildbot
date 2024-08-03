@@ -207,7 +207,7 @@ class CustomAuth(TwistedICredAuthBase):
         return defer.fail(UnauthorizedLogin())
 
     @abstractmethod
-    def check_credentials(username, password):  # noqa pylint: disable=no-self-argument
+    def check_credentials(self, username, password):
         return False
 
 
