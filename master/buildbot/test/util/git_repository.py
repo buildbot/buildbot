@@ -16,14 +16,14 @@
 from __future__ import annotations
 
 import datetime
+import os
 import shutil
 import subprocess
-from os import PathLike
 from pathlib import Path
 
 
 class TestGitRepository:
-    def __init__(self, repository_path: PathLike, git_bin: PathLike | None = None):
+    def __init__(self, repository_path: os.PathLike, git_bin: os.PathLike | None = None):
         if git_bin is None:
             git_bin = shutil.which('git')
             if git_bin is None:
@@ -34,13 +34,38 @@ class TestGitRepository:
         self.repository_path = Path(repository_path)
         self.repository_path.mkdir(parents=True, exist_ok=True)
 
+        self.curr_date = datetime.datetime(2024, 6, 8, 14, 0, 0, tzinfo=datetime.timezone.utc)
+        self.curr_author_name = 'test user'
+        self.curr_author_email = 'user@example.com'
+
         self.exec_git(['init', '--quiet', '--initial-branch=main'])
 
+    def advance_time(self, timedelta):
+        self.curr_date += timedelta
+
+    def create_file_text(self, relative_path: str, contents: str):
+        path = self.repository_path / relative_path
+        path.write_text(contents)
+        os.utime(path, (self.curr_date.timestamp(), self.curr_date.timestamp()))
+
+    def amend_file_text(self, relative_path: str, contents: str):
+        path = self.repository_path / relative_path
+        with path.open('a') as fp:
+            fp.write(contents)
+        os.utime(path, (self.curr_date.timestamp(), self.curr_date.timestamp()))
+
     def exec_git(self, args: list[str], env: dict[str] | None = None):
+        final_env = self.git_author_env(
+            author_name=self.curr_author_name, author_mail=self.curr_author_email
+        )
+        final_env.update(self.git_date_env(self.curr_date))
+        if env is not None:
+            final_env.update(env)
+
         subprocess.check_call(
             [str(self.git_bin), *args],
             cwd=self.repository_path,
-            env=env,
+            env=final_env,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -48,7 +73,7 @@ class TestGitRepository:
     def commit(
         self,
         message: str,
-        files: list[PathLike] | None = None,
+        files: list[os.PathLike] | None = None,
         env: dict[str] | None = None,
     ) -> str:
         args = ['commit', '--quiet', f'--message={message}']

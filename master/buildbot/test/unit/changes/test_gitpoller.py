@@ -2628,45 +2628,26 @@ class TestGitPollerBareRepository(
 
     @async_to_deferred
     async def prepare_repository(self):
-        author_env_vars = self.repo.git_author_env(
-            author_name="test user", author_mail="user@example.com"
-        )
-        base_date = datetime.datetime(2024, 6, 8, 14, 0, 0, tzinfo=datetime.timezone.utc)
-
-        def _date(delta: datetime.timedelta):
-            return base_date + delta
-
-        def _commit_env(delta: datetime.timedelta):
-            return {**author_env_vars, **TestGitRepository.git_date_env(_date(delta))}
-
-        readme_path = self.repo.repository_path / "README.md"
-
-        def _set_utime(date: datetime.datetime):
-            os.utime(readme_path, (date.timestamp(), date.timestamp()))
-
         # create initial commit with README
-        readme_path.write_text("initial\n")
-        _set_utime(_date(datetime.timedelta(minutes=1)))
-
-        self.repo.exec_git(['add', str(readme_path.relative_to(self.repo.repository_path))])
+        self.repo.advance_time(datetime.timedelta(minutes=1))
+        self.repo.create_file_text('README.md', 'initial\n')
+        self.repo.exec_git(['add', 'README.md'])
 
         initial_commit_hash = self.repo.commit(
             message="Initial",
-            files=[readme_path.relative_to(self.repo.repository_path)],
-            env=_commit_env(datetime.timedelta(minutes=1)),
+            files=['README.md'],
         )
         self.assertEqual(initial_commit_hash, self.INITIAL_SHA)
 
         # Create fix/1 branch
         self.repo.exec_git(['checkout', '-b', 'fix/1'])
-        with readme_path.open('a') as fp:
-            fp.write('\nfix 1\n')
-        _set_utime(_date(datetime.timedelta(minutes=2)))
+        self.repo.advance_time(datetime.timedelta(minutes=1))
+        self.repo.amend_file_text('README.md', '\nfix 1\n')
+        self.repo.exec_git(['add', 'README.md'])
 
         fix_1_hash = self.repo.commit(
             message="Fix 1",
-            files=[readme_path.relative_to(self.repo.repository_path)],
-            env=_commit_env(datetime.timedelta(minutes=2)),
+            files=['README.md'],
         )
         self.assertEqual(fix_1_hash, self.FIX_1_SHA)
 
@@ -2676,38 +2657,34 @@ class TestGitPollerBareRepository(
 
         # create feature/1 branch
         self.repo.exec_git(['checkout', '-b', 'feature/1', initial_commit_hash])
-        with readme_path.open('a') as fp:
-            fp.write('\nfeature 1\n')
-        _set_utime(_date(datetime.timedelta(minutes=3)))
+
+        self.repo.advance_time(datetime.timedelta(minutes=1))
+        self.repo.amend_file_text('README.md', '\nfeature 1\n')
 
         feature_1_hash = self.repo.commit(
             message="Feature 1",
-            files=[readme_path.relative_to(self.repo.repository_path)],
-            env=_commit_env(datetime.timedelta(minutes=3)),
+            files=['README.md'],
         )
         self.assertEqual(feature_1_hash, self.FEATURE_1_SHA)
 
         # merge no-ff feature/1 into main, this will conflict
+        self.repo.advance_time(datetime.timedelta(minutes=1))
         self.repo.exec_git(['checkout', 'main'])
         # use --strategy so the command don't error due to merge conflict
         try:
             self.repo.exec_git(
                 ['merge', '--no-ff', '--no-commit', '--strategy=ours', 'feature/1'],
-                env=_commit_env(datetime.timedelta(minutes=4)),
             )
         except CalledProcessError as process_error:
             # merge conflict cause git to error with 128 code
             if process_error.returncode not in (0, 128):
                 raise
 
-        with readme_path.open('a') as fp:
-            fp.write("initial\n\nfix 1\nfeature 1\n")
-        _set_utime(_date(datetime.timedelta(minutes=5)))
-
-        self.repo.exec_git(['add', str(readme_path.relative_to(self.repo.repository_path))])
+        self.repo.advance_time(datetime.timedelta(minutes=1))
+        self.repo.amend_file_text('README.md', "initial\n\nfix 1\nfeature 1\n")
+        self.repo.exec_git(['add', 'README.md'])
         merge_feature_1_hash = self.repo.commit(
             message="Merge branch 'feature/1'",
-            env=_commit_env(datetime.timedelta(minutes=5)),
         )
         self.assertEqual(merge_feature_1_hash, self.MERGE_FEATURE_1_SHA)
 
