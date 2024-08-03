@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.python import log
 from twisted.trial import unittest
 
 from buildbot.test.util.logging import LoggingMixin
