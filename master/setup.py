@@ -295,6 +295,10 @@ setup_args = {
                 [
                     ('buildbot.process.buildstep', ['BuildStep']),
                     ('buildbot.steps.cmake', ['CMake']),
+                    (
+                        'buildbot.steps.configurable',
+                        ['BuildbotTestCiTrigger', 'BuildbotCiSetupSteps'],
+                    ),
                     ('buildbot.steps.cppcheck', ['Cppcheck']),
                     ('buildbot.steps.gitdiffinfo', ['GitDiffInfo']),
                     (
