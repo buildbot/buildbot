@@ -44,6 +44,9 @@ matrix:
     - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.11 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=pypy3.9-7.3.11 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=pypy3.9-7.3.16 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=pypy3.10-7.3.16 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
 
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=dev_virtualenv
 
@@ -71,12 +74,23 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL='postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
 
+    - env: PYTHON=pypy3.9-7.3.11 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db{TEST_ID}.sqlite DB_TYPE=sqlite
+    - env: PYTHON=pypy3.9-7.3.11 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID} DB_TYPE=mysql
+    - env: PYTHON=pypy3.9-7.3.11 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
+    - env: PYTHON=pypy3.9-7.3.11 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL='postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
+
 # Dependencies installation commands
 install:
-  - title: setup virtualenv
+  - title: setup virtualenv (python)
+    condition: PYTHON[0:4] != "pypy"
     cmd: |
       rm -rf /tmp/bbvenv
       python$PYTHON -m venv /tmp/bbvenv
+  - title: setup virtualenv (pypy)
+    condition: PYTHON[0:4] == "pypy"
+    cmd: |
+      rm -rf /tmp/bbvenv
+      $PYTHON -m venv /tmp/bbvenv
   - /tmp/bbvenv/bin/pip install -r requirements-pip.txt
   - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
