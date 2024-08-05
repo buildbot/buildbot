@@ -332,6 +332,16 @@ class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, T
         return [self.build_scheduler_for_env(scheduler_name, env) for env in self.config.matrix]
 
 
+eval_model = base_eval_model.clone()
+eval_model.nodes.append('Mul')
+eval_model.nodes.append('Tuple')
+
+
+def evaluate_condition(condition, local_dict):
+    expr = Expr(condition, eval_model)
+    return bool(expr.eval(local_dict))
+
+
 class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, buildstep.BuildStep):
     name = "setup-steps"
     haltOnFailure = True
@@ -355,7 +365,8 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
 
         if condition is not None:
             try:
-                if not self.test_condition(condition):
+                local_dict = {k: v for k, (v, s) in self.build.getProperties().properties.items()}
+                if not evaluate_condition(condition, local_dict):
                     return
             except Exception:
                 self.descriptionDone = "Problem parsing condition"
@@ -384,11 +395,6 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
                 env=render_env,
             )
         self.build.addStepsAfterLastStep([step])
-
-    def test_condition(self, condition):
-        local_dict = {k: v for k, (v, s) in self.build.getProperties().properties.items()}
-        expr = Expr(condition, base_eval_model)
-        return expr.eval(condition, local_dict)
 
     def _name_from_command(self, name):
         name = name.lstrip("#").lstrip(" ").split("\n")[0]
