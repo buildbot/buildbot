@@ -28,6 +28,7 @@ from buildbot.plugins import util
 from buildbot.plugins.db import get_plugins
 from buildbot.process import buildstep
 from buildbot.process.properties import Properties
+from buildbot.process.properties import renderer
 from buildbot.process.results import SUCCESS
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.trigger import Trigger
@@ -357,8 +358,16 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
             if name is None:
                 name = self._name_from_command(command)
 
+            @renderer
+            def render_env(props):
+                return {str(k): str(v[0]) for k, v in props.properties.items()}
+
             step = ShellCommand(
-                name=name, description=command, command=command, doStepIf=not self.disable
+                name=name,
+                description=command,
+                command=command,
+                doStepIf=not self.disable,
+                env=render_env,
             )
         self.build.addStepsAfterLastStep([step])
 
