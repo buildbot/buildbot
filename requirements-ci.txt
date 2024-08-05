@@ -116,7 +116,7 @@ testtools==2.7.2
 toml==0.10.2
 tomli==2.0.1
 tomlkit==0.13.0
-towncrier==23.11.0
+towncrier==24.7.1
 treq==23.11.0;  python_version >= "3.9"
 treq==22.2.0;  python_version < "3.9" # pyup: ignore
 Twisted==24.3.0
