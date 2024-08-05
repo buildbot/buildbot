@@ -18,6 +18,7 @@ from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
 from buildbot.steps.configurable import BuildbotCiYml
+from buildbot.steps.configurable import evaluate_condition
 from buildbot.steps.configurable import parse_env_string
 from buildbot.steps.shell import ShellCommand
 
@@ -85,6 +86,30 @@ class TestParseEnvString(unittest.TestCase):
             parse_env_string('K1=VE1 K2=VE2', {'K2': 'VG1', 'K3': 'VG3'}),
             {'K1': 'VE1', 'K2': 'VE2', 'K3': 'VG3'},
         )
+
+
+class TestEvaluateCondition(unittest.TestCase):
+    def test_bool(self):
+        self.assertTrue(evaluate_condition('True', {}))
+        self.assertFalse(evaluate_condition('False', {}))
+
+    def test_string_empty(self):
+        self.assertFalse(evaluate_condition('VALUE', {'VALUE': ''}))
+        self.assertTrue(evaluate_condition('VALUE', {'VALUE': 'abc'}))
+
+    def test_string_equal(self):
+        self.assertTrue(evaluate_condition('VALUE == "a"', {'VALUE': 'a'}))
+        self.assertFalse(evaluate_condition('VALUE == "a"', {'VALUE': 'b'}))
+
+    def test_string_in_tuple(self):
+        cond = 'VALUE in ("a", "b", "c", "d")'
+        self.assertTrue(evaluate_condition(cond, {'VALUE': 'a'}))
+        self.assertFalse(evaluate_condition(cond, {'VALUE': 'not'}))
+
+    def test_string_not_in_tuple(self):
+        cond = 'VALUE not in ("a", "b", "c", "d")'
+        self.assertFalse(evaluate_condition(cond, {'VALUE': 'a'}))
+        self.assertTrue(evaluate_condition(cond, {'VALUE': 'not'}))
 
 
 class TestLoading(unittest.TestCase):
