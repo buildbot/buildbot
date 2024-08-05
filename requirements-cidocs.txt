@@ -3,7 +3,7 @@ Sphinx==8.0.2;  python_version >= "3.9"
 sphinx-jinja==2.0.2
 sphinx-rtd-theme==2.0.0
 sphinxcontrib-applehelp==1.0.4;  python_version < "3.9" # pyup: ignore
-sphinxcontrib-applehelp==1.0.8;  python_version >= "3.9"
+sphinxcontrib-applehelp==2.0.0;  python_version >= "3.9"
 sphinxcontrib-devhelp==1.0.2;  python_version < "3.9" # pyup: ignore
 sphinxcontrib-devhelp==1.0.6;  python_version >= "3.9"
 sphinxcontrib-htmlhelp==2.0.1;  python_version < "3.9" # pyup: ignore
