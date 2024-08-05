@@ -58,7 +58,7 @@ hvac==2.3.0
 hyperlink==21.0.0
 idna==3.7
 imagesize==1.4.1
-importlib-metadata==8.0.0
+importlib-metadata==8.2.0
 importlib-resources==6.4.0;  python_version < "3.9"
 incremental==22.10.0
 ipaddress==1.0.23
