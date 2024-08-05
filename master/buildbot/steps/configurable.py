@@ -49,7 +49,7 @@ def parse_env_string(env_str, parent_env=None):
 
     lexer = shlex(env_str, posix=True)  # posix=True is needed to properly handle escaping
     lexer.whitespace = ' '
-    lexer.wordchars += '=.,'
+    lexer.wordchars += '=.,?{}[]()/<>'
 
     for word in lexer:
         k, v = word.split('=', maxsplit=1)
