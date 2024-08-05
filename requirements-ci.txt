@@ -39,7 +39,7 @@ click==8.1.7
 configparser==7.0.0
 constantly==23.10.4
 cookies==2.2.1
-coverage==7.6.0
+coverage==7.6.1
 croniter==2.0.5
 cryptography==42.0.8
 decorator==5.1.1
