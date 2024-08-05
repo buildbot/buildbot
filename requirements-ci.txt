@@ -5,9 +5,15 @@
 buildbot-www==4.0.1
 
 Markdown==3.6
+coverage==7.6.0
+docker==7.1.0
+hvac==2.3.0
 pylint==3.2.5
 mypy==1.10.1
 mypy-zope==1.0.5
+graphql-core==3.3.0a4; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
+graphql-core==3.2.3; python_version < "3.12"
+psutil==6.0.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
@@ -37,22 +43,17 @@ click==8.1.7
 configparser==7.0.0
 constantly==23.10.4
 cookies==2.2.1
-coverage==7.6.0
 croniter==2.0.5
 cryptography==42.0.8
 decorator==5.1.1
 dicttoxml==1.7.16
 dill==0.3.8
-docker==7.1.0
 docutils==0.20.1  # pyup: ignore (sphinx-rtd-theme 2.0.0 requires docutils<0.21)
 evalidate==2.0.3
 extras==1.0.0
 fixtures==4.1.0
 funcsigs==1.0.2
-graphql-core==3.3.0a4; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
-graphql-core==3.2.3; python_version < "3.12"
 greenlet==3.0.3
-hvac==2.3.0
 hyperlink==21.0.0
 idna==3.7
 imagesize==1.4.1
@@ -83,7 +84,6 @@ pathlib2==2.3.7.post1
 pbr==6.0.0
 Pillow==10.4.0
 platformdirs==4.2.2
-psutil==6.0.0
 pyaml==24.4.0
 pyasn1==0.6.0
 pyasn1-modules==0.4.0
