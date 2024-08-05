@@ -55,9 +55,17 @@ class TestParseEnvString(unittest.TestCase):
 
     @parameterized.expand([
         ('dot', 'ABC=1.0', {'ABC': '1.0'}),
+        ('dash', 'ABC=1-0', {'ABC': '1-0'}),
+        ('plus', 'ABC=1+0', {'ABC': '1+0'}),
+        ('multiply', 'ABC=1*0', {'ABC': '1*0'}),
+        ('tilde', 'ABC=1~0', {'ABC': '1~0'}),
+        ('hat', 'ABC=1^0', {'ABC': '1^0'}),
         ('comma', 'ABC=1,0', {'ABC': '1,0'}),
         ('colon', 'ABC=1:0', {'ABC': '1:0'}),
         ('slash', 'ABC=1/0', {'ABC': '1/0'}),
+        ('pipe', 'ABC=1|0', {'ABC': '1|0'}),
+        ('excl_mark', 'ABC=1!0', {'ABC': '1!0'}),
+        ('question_mark', 'ABC=1?0', {'ABC': '1?0'}),
         ('left_paren', 'ABC=1(0', {'ABC': '1(0'}),
         ('right_paren', 'ABC=1)0', {'ABC': '1)0'}),
         ('left_brace', 'ABC=1[0', {'ABC': '1[0'}),
