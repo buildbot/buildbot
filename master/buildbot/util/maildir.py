@@ -74,7 +74,7 @@ class MaildirService(service.BuildbotService):
                 self.dnotify = dnotify.DNotify(
                     self.newdir, self.dnotify_callback, [dnotify.DNotify.DN_CREATE]
                 )
-        except (IOError, OverflowError):
+        except (OSError, OverflowError):
             # IOError is probably linux<2.4.19, which doesn't support
             # dnotify. OverflowError will occur on some 64-bit machines
             # because of a python bug
@@ -135,7 +135,7 @@ class MaildirService(service.BuildbotService):
             # open the file before moving it, because I'm afraid that once
             # it's in cur/, someone might delete it at any moment
             path = os.path.join(self.newdir, filename)
-            f = open(path, "r", encoding='utf-8')
+            f = open(path, encoding='utf-8')
             os.rename(os.path.join(self.newdir, filename), os.path.join(self.curdir, filename))
         elif runtime.platformType == "win32":
             # do this backwards under windows, because you can't move a file

@@ -230,8 +230,8 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         tb = self.master.config.services['TelegramBot']
         yield tb.bot.loadState()
         c = tb.bot.getContact({'id': 123456789}, {'id': 123456789})
-        self.assertEquals(c.channel.notify_events, {'started', 'finished'})
-        self.assertEquals(c.channel.missing_workers, {12})
+        self.assertEqual(c.channel.notify_events, {'started', 'finished'})
+        self.assertEqual(c.channel.missing_workers, {12})
 
     @defer.inlineCallbacks
     def testSaveState(self):
@@ -267,7 +267,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
         tb = self.master.config.services['TelegramBot']
         channel = tb.bot.getChannel(-123456)
-        self.assertEquals(channel.notify_events, {'worker'})
+        self.assertEqual(channel.notify_events, {'worker'})
 
         yield self.master.data.updates.workerMissing(
             workerid=1,
@@ -275,7 +275,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
             last_connection='long time ago',
             notify=['admin@worker.org'],
         )
-        self.assertEquals(
+        self.assertEqual(
             self.sent_messages[0][1],
             "Worker `local1` is missing. It was seen last on long time ago.",
         )
@@ -285,4 +285,4 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
             masterid=self.master.masterid,
             workerinfo={},
         )
-        self.assertEquals(self.sent_messages[1][1], "Worker `local1` is back online.")
+        self.assertEqual(self.sent_messages[1][1], "Worker `local1` is back online.")

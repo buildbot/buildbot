@@ -36,7 +36,7 @@ def nl(s):
     return s.replace('\n', os.linesep)
 
 
-class BasedirMixin(object):
+class BasedirMixin:
     """Mix this in and call setUpBasedir and tearDownBasedir to set up
     a clean basedir with a name given in self.basedir."""
 
@@ -50,7 +50,7 @@ class BasedirMixin(object):
             shutil.rmtree(self.basedir)
 
 
-class IsWorkerDirMixin(object):
+class IsWorkerDirMixin:
     """
     Mixin for setting up mocked base.isWorkerDir() function
     """
@@ -60,7 +60,7 @@ class IsWorkerDirMixin(object):
         self.patch(base, "isWorkerDir", self.isWorkerDir)
 
 
-class PatcherMixin(object):
+class PatcherMixin:
     """
     Mix this in to get a few special-cased patching methods
     """
@@ -79,7 +79,7 @@ class PatcherMixin(object):
             os.uname = replacement
 
 
-class FileIOMixin(object):
+class FileIOMixin:
     """
     Mixin for patching open(), read() and write() to simulate successful
     I/O operations and various I/O errors.
@@ -119,7 +119,7 @@ class FileIOMixin(object):
 
         # Add side_effect so that calling fakeOpen() will always
         # raise an IOError.
-        fakeOpen.side_effect = IOError(errno, strerror, filename)
+        fakeOpen.side_effect = OSError(errno, strerror, filename)
         self.open = fakeOpen
         self.patch(builtins, "open", self.open)
 
@@ -142,7 +142,7 @@ class FileIOMixin(object):
 
         # Add side_effect so that calling read() will always
         # raise an IOError.
-        self.fileobj.read.side_effect = IOError(errno, strerror, filename)
+        self.fileobj.read.side_effect = OSError(errno, strerror, filename)
 
         # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)
@@ -166,14 +166,14 @@ class FileIOMixin(object):
 
         # Add side_effect so that calling write() will always
         # raise an IOError.
-        self.fileobj.write.side_effect = IOError(errno, strerror, filename)
+        self.fileobj.write.side_effect = OSError(errno, strerror, filename)
 
         # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(builtins, "open", self.open)
 
 
-class LoggingMixin(object):
+class LoggingMixin:
     def setUpLogging(self):
         self._logEvents = []
         log.addObserver(self._logEvents.append)
@@ -186,13 +186,13 @@ class LoggingMixin(object):
                 msg = log.textFromEventDict(event)
                 if msg is not None and r.search(msg):
                     return
-            self.fail("{0!r} not matched in log output.\n{1} ".format(regexp, self._logEvents))
+            self.fail(f"{regexp!r} not matched in log output.\n{self._logEvents} ")
 
     def assertWasQuiet(self):
         self.assertEqual(self._logEvents, [])
 
 
-class StdoutAssertionsMixin(object):
+class StdoutAssertionsMixin:
     """
     Mix this in to be able to assert on stdout during the test
     """

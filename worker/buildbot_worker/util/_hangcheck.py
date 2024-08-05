@@ -18,7 +18,6 @@ def _noop():
 
 class HangCheckProtocol(
     proxyForInterface(IProtocol, '_wrapped_protocol'),
-    object,
 ):
     """
     Wrap a protocol, so the underlying connection will disconnect if
@@ -51,16 +50,16 @@ class HangCheckProtocol(
         # because we only care about noticing data received, not
         # sent.
         self.transport = transport
-        super(HangCheckProtocol, self).makeConnection(transport)
+        super().makeConnection(transport)
         self._startHungConnectionTimer()
 
     def dataReceived(self, data):
         self._stopHungConnectionTimer()
-        super(HangCheckProtocol, self).dataReceived(data)
+        super().dataReceived(data)
 
     def connectionLost(self, reason):
         self._stopHungConnectionTimer()
-        super(HangCheckProtocol, self).connectionLost(reason)
+        super().connectionLost(reason)
 
     def _startHungConnectionTimer(self):
         """
@@ -88,7 +87,6 @@ class HangCheckProtocol(
 
 class HangCheckFactory(
     proxyForInterface(IProtocolFactory, '_wrapped_factory'),
-    object,
 ):
     """
     Wrap a protocol factory, so the underlying connection will

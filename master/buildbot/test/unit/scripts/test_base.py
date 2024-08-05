@@ -84,7 +84,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         if contents is None:
             contents = '#dummy'
         tacfile = os.path.join(self.basedir, "buildbot.tac")
-        with open(tacfile, "wt", encoding='utf-8') as f:
+        with open(tacfile, "w", encoding='utf-8') as f:
             f.write(contents)
         return tacfile
 
@@ -287,7 +287,7 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCa
         self.tearDownDirs()
 
     def activeBasedir(self, extra_lines=()):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
+        with open(os.path.join('test', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write("from twisted.application import service\n")
             f.write("service.Application('buildmaster')\n")
             f.write("\n".join(extra_lines))

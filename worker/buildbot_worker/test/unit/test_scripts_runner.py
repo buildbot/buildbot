@@ -26,21 +26,21 @@ from buildbot_worker.test.util import misc
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
-class OptionsMixin(object):
+class OptionsMixin:
     def assertOptions(self, opts, exp):
         got = {k: opts[k] for k in exp}
         if got != exp:
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(" {0}: expected {1!r}, got {2!r}".format(k, exp[k], opts[k]))
+                    msg.append(f" {k}: expected {exp[k]!r}, got {opts[k]!r}")
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
-class BaseDirTestsMixin(object):
+class BaseDirTestsMixin:
     """
     Common tests for Options classes with 'basedir' parameter
     """

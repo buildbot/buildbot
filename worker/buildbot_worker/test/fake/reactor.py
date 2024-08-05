@@ -37,13 +37,13 @@ from zope.interface import implementer
 
 
 @implementer(IReactorCore)
-class CoreReactor(object):
+class CoreReactor:
     """
     Partial implementation of ``IReactorCore``.
     """
 
     def __init__(self):
-        super(CoreReactor, self).__init__()
+        super().__init__()
         self._triggers = {}
 
     def addSystemEventTrigger(self, phase, eventType, f, *args, **kw):
@@ -64,7 +64,7 @@ class CoreReactor(object):
         f(*args, **kwargs)
 
 
-class NonThreadPool(object):
+class NonThreadPool:
     """
     A stand-in for ``twisted.python.threadpool.ThreadPool`` so that the
     majority of the test suite does not need to use multithreading.
@@ -101,7 +101,7 @@ class NonThreadPool(object):
 
 
 @implementer(IReactorThreads)
-class NonReactor(object):
+class NonReactor:
     """
     A partial implementation of ``IReactorThreads`` which fits into
     the execution model defined by ``NonThreadPool``.
@@ -116,7 +116,7 @@ class NonReactor(object):
 
 class TestReactor(NonReactor, CoreReactor, Clock):
     def __init__(self):
-        super(TestReactor, self).__init__()
+        super().__init__()
 
         # whether there are calls that should run right now
         self._pendingCurrentCalls = False
@@ -156,7 +156,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         if when <= 0 and not self._pendingCurrentCalls:
             reactor.callLater(0, self._executeCurrentDelayedCalls)
 
-        return super(TestReactor, self).callLater(when, self._catchPrintExceptions, what, *a, **kw)
+        return super().callLater(when, self._catchPrintExceptions, what, *a, **kw)
 
     def stop(self):
         # first fire pending calls until the current time. Note that the real

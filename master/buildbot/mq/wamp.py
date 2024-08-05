@@ -77,7 +77,7 @@ class QueueRef(base.QueueRef):
     def subscribe(self, connector_service, wamp_service, _filter):
         self.filter = _filter
         self.emulated = False
-        options = {"details_arg": str('details')}
+        options = {"details_arg": 'details'}
         if None in _filter:
             options["match"] = "wildcard"
         options = SubscribeOptions(**options)

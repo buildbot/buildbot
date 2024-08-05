@@ -103,7 +103,7 @@ def getVersion(init_file):
         fn = os.path.join(cwd, 'VERSION')
         with open(fn, encoding='utf-8') as f:
             return f.read().strip()
-    except IOError:
+    except OSError:
         pass
 
     version = getVersionFromArchiveId()

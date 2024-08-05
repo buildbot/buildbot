@@ -31,10 +31,10 @@ class NestedExample(NestedParameter):
         self.params = {self.PIZZA: pizzaInput, self.INGREDIENTS: ingredientsInput}
         self.allIngredients = set(sum([ingr for ingr in Api.pizzaIngredients.values()], []))
         fields = self.params.values()
-        super(NestedExample, self).__init__(self.type, label='', fields=fields, **kw)
+        super().__init__(self.type, label='', fields=fields, **kw)
 
     def createNestedPropertyName(self, propertyName):
-        return "{}_{}".format(self.type, propertyName)
+        return f"{self.type}_{propertyName}"
 
     @defer.inlineCallbacks
     def validateProperties(self, collector, properties):
@@ -50,7 +50,7 @@ class NestedExample(NestedParameter):
 
     @defer.inlineCallbacks
     def updateFromKwargs(self, kwargs, properties, collector, **kw):
-        yield super(NestedExample, self).updateFromKwargs(kwargs, properties, collector, **kw)
+        yield super().updateFromKwargs(kwargs, properties, collector, **kw)
         # the properties we have are in the form
         # {nestedexample: {input: <url>,
         #                 ingredients: <ingredients>}}

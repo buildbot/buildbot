@@ -100,12 +100,12 @@ class TestCreateMasterFunctions(
         self.tearDownDirs()
 
     def assertInTacFile(self, str):
-        with open(os.path.join('test', 'buildbot.tac'), 'rt', encoding='utf-8') as f:
+        with open(os.path.join('test', 'buildbot.tac'), encoding='utf-8') as f:
             content = f.read()
         self.assertIn(str, content)
 
     def assertNotInTacFile(self, str):
-        with open(os.path.join('test', 'buildbot.tac'), 'rt', encoding='utf-8') as f:
+        with open(os.path.join('test', 'buildbot.tac'), encoding='utf-8') as f:
             content = f.read()
         self.assertNotIn(str, content)
 
@@ -187,7 +187,7 @@ class TestCreateMasterFunctions(
             create_master.makeTAC(mkconfig(basedir='test', **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
+        with open(os.path.join('test', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write('WRONG')
         create_master.makeTAC(mkconfig(basedir='test'))
         self.assertInTacFile("WRONG")
@@ -195,7 +195,7 @@ class TestCreateMasterFunctions(
         self.assertInStdout('not touching existing buildbot.tac')
 
     def test_makeTAC_existing_incorrect_quiet(self):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
+        with open(os.path.join('test', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write('WRONG')
         create_master.makeTAC(mkconfig(basedir='test', quiet=True))
         self.assertInTacFile("WRONG")
@@ -214,7 +214,7 @@ class TestCreateMasterFunctions(
 
     def test_makeSampleConfig_db(self):
         create_master.makeSampleConfig(mkconfig(basedir='test', db='XXYYZZ', quiet=True))
-        with open(os.path.join('test', 'master.cfg.sample'), 'rt', encoding='utf-8') as f:
+        with open(os.path.join('test', 'master.cfg.sample'), encoding='utf-8') as f:
             self.assertIn("XXYYZZ", f.read())
         self.assertWasQuiet()
 

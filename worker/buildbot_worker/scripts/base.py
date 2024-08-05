@@ -21,18 +21,18 @@ import os
 
 def isWorkerDir(dir):
     def print_error(error_message):
-        print("{0}\ninvalid worker directory '{1}'".format(error_message, dir))
+        print(f"{error_message}\ninvalid worker directory '{dir}'")
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
         with open(buildbot_tac) as f:
             contents = f.read()
-    except IOError as exception:
-        print_error("error reading '{0}': {1}".format(buildbot_tac, exception.strerror))
+    except OSError as exception:
+        print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
         return False
 
     if "Application('buildbot-worker')" not in contents:
-        print_error("unexpected content in '{0}'".format(buildbot_tac))
+        print_error(f"unexpected content in '{buildbot_tac}'")
         return False
 
     return True

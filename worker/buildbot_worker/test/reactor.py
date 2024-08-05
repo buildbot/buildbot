@@ -21,7 +21,7 @@ from buildbot_worker.test.fake.reactor import NonThreadPool
 from buildbot_worker.test.fake.reactor import TestReactor
 
 
-class TestReactorMixin(object):
+class TestReactorMixin:
     """
     Mix this in to get TestReactor as self.reactor which is correctly cleaned up
     at the end

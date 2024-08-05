@@ -131,7 +131,7 @@ def isBuildmasterDir(dir):
     try:
         with open(buildbot_tac, encoding='utf-8') as f:
             contents = f.read()
-    except IOError as exception:
+    except OSError as exception:
         print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
         return False
 
@@ -249,7 +249,7 @@ class SubcommandOptions(usage.Options):
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
                     try:
-                        with open(optfile, "r", encoding='utf-8') as f:
+                        with open(optfile, encoding='utf-8') as f:
                             options = f.read()
                         exec(options, localDict)  # pylint: disable=exec-used
                     except Exception:

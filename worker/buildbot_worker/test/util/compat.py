@@ -22,7 +22,7 @@ from twisted.python import runtime
 def skipUnlessPlatformIs(platform):
     def closure(test):
         if runtime.platformType != platform:
-            test.skip = "not a {0} platform".format(platform)
+            test.skip = f"not a {platform} platform"
         return test
 
     return closure
