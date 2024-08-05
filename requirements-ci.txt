@@ -24,7 +24,6 @@ alabaster==0.7.16; python_version >= "3.9"
 alabaster==0.7.13; python_version < "3.9" # pyup: ignore 0.7.14 dropped support for Python 3.8 and earlier
 alembic==1.13.2
 appdirs==1.4.4
-asn1crypto==1.5.1
 astroid==3.2.3
 attrs==23.2.0
 autobahn==23.6.2;  python_version >= "3.9"
