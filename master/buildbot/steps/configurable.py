@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+import re
 import traceback
 import warnings
-from shlex import shlex
 
 import yaml
 from evalidate import Expr
@@ -39,8 +39,13 @@ class BuildbotCiYmlInvalid(Exception):
     pass
 
 
+_env_string_key_re = re.compile(r'^\s*(\w+)=')
+_env_string_value_re = re.compile(r'''(?:"((?:\\.|[^"])*?)"|'([^']*?)'|(\S*))''')
+
+
 def parse_env_string(env_str, parent_env=None):
     env_str = env_str.strip()
+    orig_env_str = env_str
 
     props = {}
     if parent_env:
@@ -48,15 +53,21 @@ def parse_env_string(env_str, parent_env=None):
     if not env_str:
         return props
 
-    lexer = shlex(env_str, posix=True)  # posix=True is needed to properly handle escaping
-    lexer.whitespace = ' '
-    lexer.wordchars += '=-+*~:.,?{}[]()/<>!?^|'
+    while env_str:
+        m = _env_string_key_re.match(env_str)
+        if m is None:
+            raise ValueError(f'Could not parse \'{orig_env_str}\': splitting \'{env_str}\' failed')
+        k = m.group(1)
 
-    for word in lexer:
-        split = word.split('=', maxsplit=1)
-        if len(split) == 1:
-            raise ValueError(f'Could not parse \'{env_str}\': splitting \'{word}\' failed')
-        k, v = split
+        env_str = env_str[m.end() :]
+
+        m = _env_string_value_re.match(env_str)
+        if m is None:
+            raise ValueError(f'Could not parse \'{orig_env_str}\': splitting \'{env_str}\' failed')
+
+        env_str = env_str[m.end() :]
+
+        v = m.group(1) or m.group(2) or m.group(3) or ''
         props[k] = v
 
     return props
