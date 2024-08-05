@@ -91,7 +91,7 @@ pycodestyle==2.12.1;  python_version >= "3.8.1"
 pycparser==2.22
 pyenchant==3.2.2
 pyflakes==3.2.0
-PyJWT==2.8.0
+PyJWT==2.9.0
 pyOpenSSL==24.1.0
 pyparsing==3.1.2
 pypugjs==5.11.0
