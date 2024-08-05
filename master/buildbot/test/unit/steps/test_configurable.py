@@ -26,6 +26,8 @@ class TestParseEnvString(unittest.TestCase):
     @parameterized.expand([
         ('single', 'ABC=1', {'ABC': '1'}),
         ('multiple', 'ABC=1 EFG=2', {'ABC': '1', 'EFG': '2'}),
+        ('multiple_empty_quotes', 'ABC=\'\' EFG=2', {'ABC': '', 'EFG': '2'}),
+        ('multiple_empty_double_quotes', 'ABC="" EFG=2', {'ABC': '', 'EFG': '2'}),
         ('multiple_single_quotes', 'ABC=\'1\' EFG=2', {'ABC': '1', 'EFG': '2'}),
         ('multiple_double_quotes', 'ABC="1" EFG=2', {'ABC': '1', 'EFG': '2'}),
         ('multiple_with_equals_in_value', 'ABC=1=2 EFG=2', {'ABC': '1=2', 'EFG': '2'}),
