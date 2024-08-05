@@ -25,8 +25,6 @@ from buildbot.steps.shell import ShellCommand
 class TestParseEnvString(unittest.TestCase):
     @parameterized.expand([
         ('single', 'ABC=1', {'ABC': '1'}),
-        ('single_with_dot', 'ABC=1.0', {'ABC': '1.0'}),
-        ('single_with_comma', 'ABC=1,0', {'ABC': '1,0'}),
         ('multiple', 'ABC=1 EFG=2', {'ABC': '1', 'EFG': '2'}),
         ('multiple_single_quotes', 'ABC=\'1\' EFG=2', {'ABC': '1', 'EFG': '2'}),
         ('multiple_double_quotes', 'ABC="1" EFG=2', {'ABC': '1', 'EFG': '2'}),
@@ -53,6 +51,22 @@ class TestParseEnvString(unittest.TestCase):
         ),
     ])
     def test_one(self, name, value, expected):
+        self.assertEqual(parse_env_string(value), expected)
+
+    @parameterized.expand([
+        ('dot', 'ABC=1.0', {'ABC': '1.0'}),
+        ('comma', 'ABC=1,0', {'ABC': '1,0'}),
+        ('slash', 'ABC=1/0', {'ABC': '1/0'}),
+        ('left_paren', 'ABC=1(0', {'ABC': '1(0'}),
+        ('right_paren', 'ABC=1)0', {'ABC': '1)0'}),
+        ('left_brace', 'ABC=1[0', {'ABC': '1[0'}),
+        ('right_brace', 'ABC=1]0', {'ABC': '1]0'}),
+        ('left_curly_brace', 'ABC=1{0', {'ABC': '1{0'}),
+        ('right_curly_brace', 'ABC=1}0', {'ABC': '1}0'}),
+        ('left_angled_brace', 'ABC=1<0', {'ABC': '1<0'}),
+        ('right_angled_brace', 'ABC=1>0', {'ABC': '1>0'}),
+    ])
+    def test_special_characters(self, name, value, expected):
         self.assertEqual(parse_env_string(value), expected)
 
     def test_global_overridden(self):
