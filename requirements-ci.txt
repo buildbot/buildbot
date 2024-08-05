@@ -4,7 +4,7 @@
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==4.0.2
 
-autobahn==23.6.2;  python_version >= "3.9"
+autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
 boto3==1.34.144
 msgpack==1.0.8
