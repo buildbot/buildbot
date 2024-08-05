@@ -52,7 +52,10 @@ def parse_env_string(env_str, parent_env=None):
     lexer.wordchars += '=.,?{}[]()/<>'
 
     for word in lexer:
-        k, v = word.split('=', maxsplit=1)
+        split = word.split('=', maxsplit=1)
+        if len(split) == 1:
+            raise ValueError(f'Could not parse \'{env_str}\': splitting \'{word}\' failed')
+        k, v = split
         props[k] = v
 
     return props
