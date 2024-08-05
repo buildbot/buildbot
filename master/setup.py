@@ -660,6 +660,7 @@ setup_args['install_requires'] = [
     'Twisted ' + twisted_ver,
     'treq >= 20.9',
     'Jinja2 >= 2.1',
+    'evalidate >= 2.0.0',
     'msgpack >= 0.6.0',
     "croniter >= 1.3.0",
     'importlib-resources >= 5; python_version < "3.9"',
