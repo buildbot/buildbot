@@ -59,19 +59,23 @@ export const ChangeBuildsView = observer(() => {
       return Builder.getAll(accessor, {query: {builderid__eq: builderIds}})
     });
 
-  const [showDetails, setShowDetails] = useState(false);
+  const renderBuilds = () => {
+    if (!buildsQuery.isResolved()) {
+      return <LoadingDiv/>;
+    }
+    if (buildsQuery.array.length === 0) {
+      return <>None</>
+    }
+    return <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
+  };
 
   return (
     <div className="container">
       { change !== null
-        ? <ChangeDetails change={change} compact={false}
-                         showDetails={showDetails} setShowDetails={setShowDetails}/>
+        ? <ChangeDetails change={change} compact={false} showDetails={true} setShowDetails={null}/>
         : <LoadingDiv/>
       }
-      { buildsQuery.array.length > 0
-        ? <BuildsTable builds={buildsQuery} builders={buildersQuery}/>
-        : <LoadingDiv/>
-      }
+      {renderBuilds()}
     </div>
   );
 });
