@@ -92,7 +92,7 @@ pycparser==2.22
 pyenchant==3.2.2
 pyflakes==3.2.0
 PyJWT==2.9.0
-pyOpenSSL==24.1.0
+pyOpenSSL==24.2.1
 pyparsing==3.1.2
 pypugjs==5.11.0
 python-dateutil==2.9.0.post0
