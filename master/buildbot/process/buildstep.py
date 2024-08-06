@@ -409,6 +409,8 @@ class BuildStep(
             elif self.max_lines_reached:
                 stepsumm += " (max lines reached)"
 
+        if self.build is not None:
+            stepsumm = self.build.properties.cleanupTextFromSecrets(stepsumm)
         return {'step': stepsumm}
 
     @defer.inlineCallbacks
@@ -1039,6 +1041,9 @@ class ShellMixin:
                     summary += " (timed out)"
                 elif self.max_lines_reached:
                     summary += " (max lines)"
+
+            if self.build is not None:
+                summary = self.build.properties.cleanupTextFromSecrets(summary)
             return {'step': summary}
         return super().getResultSummary()
 

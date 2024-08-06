@@ -949,6 +949,7 @@ class TestBuildStep(
         step.master.reactor = self.reactor
         step.build = mock.Mock()
         step.build._locks_to_acquire = []
+        step.build.properties.cleanupTextFromSecrets = lambda s: s
         step.build.builder.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])
         step.locks = []
         step.renderables = []
@@ -1511,30 +1512,22 @@ class TestShellMixin(
     async def test_step_with_secret_success(self):
         self.setup_step(SimpleShellCommand(command=["echo", Secret("s3cr3t")]))
         self.expect_commands(
-            ExpectShell(
-                workdir="wkdir",
-                command=["echo", "really_safe_string"],
-            ).exit(0)
+            ExpectShell(workdir="wkdir", command=["echo", 'really_safe_string']).exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="'echo <s3cr3t>'")
-        # FIXME: faulty, does not obfuscate secret
-        faulty_summary = "'echo really_safe_string'"
-        self.expect_result_summary({'step': faulty_summary})
-        self.expect_build_result_summary({'step': faulty_summary})
+        summary = "'echo <s3cr3t>'"
+        self.expect_result_summary({'step': summary})
+        self.expect_build_result_summary({'step': summary})
         await self.run_step()
 
     @async_to_deferred
     async def test_step_with_secret_failure(self):
         self.setup_step(SimpleShellCommand(command=["echo", Secret("s3cr3t")]))
         self.expect_commands(
-            ExpectShell(
-                workdir="wkdir",
-                command=["echo", "really_safe_string"],
-            ).exit(1)
+            ExpectShell(workdir="wkdir", command=["echo", 'really_safe_string']).exit(1)
         )
         self.expect_outcome(result=FAILURE, state_string="'echo <s3cr3t>' (failure)")
-        # FIXME: faulty, does not obfuscate secret
-        faulty_summary = "'echo really_safe_string' (failure)"
-        self.expect_result_summary({'step': faulty_summary})
-        self.expect_build_result_summary({'step': faulty_summary, 'build': faulty_summary})
+        summary = "'echo <s3cr3t>' (failure)"
+        self.expect_result_summary({'step': summary})
+        self.expect_build_result_summary({'step': summary, 'build': summary})
         await self.run_step()
