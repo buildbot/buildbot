@@ -32,6 +32,7 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.locks import get_real_locks_from_accesses
+from buildbot.process.properties import Secret
 from buildbot.process.properties import renderer
 from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import CANCELLED
@@ -54,6 +55,7 @@ from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.util.eventual import eventually
+from buildbot.util.twisted import async_to_deferred
 
 
 class NewStyleStep(buildstep.BuildStep):
@@ -1220,7 +1222,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        yield self.setup_test_build_step()
+        yield self.setup_test_build_step(with_secrets={"s3cr3t": "really_safe_string"})
 
     def tearDown(self):
         return self.tear_down_test_build_step()
@@ -1504,3 +1506,35 @@ class TestShellMixin(
         self.setup_step(SimpleShellCommand(command=['a', ['b', 'c']]))
         self.get_nth_step(0).results = SUCCESS
         self.assertEqual(self.get_nth_step(0).getResultSummary(), {'step': "'a b ...'"})
+
+    @async_to_deferred
+    async def test_step_with_secret_success(self):
+        self.setup_step(SimpleShellCommand(command=["echo", Secret("s3cr3t")]))
+        self.expect_commands(
+            ExpectShell(
+                workdir="wkdir",
+                command=["echo", "really_safe_string"],
+            ).exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string="'echo <s3cr3t>'")
+        # FIXME: faulty, does not obfuscate secret
+        faulty_summary = "'echo really_safe_string'"
+        self.expect_result_summary({'step': faulty_summary})
+        self.expect_build_result_summary({'step': faulty_summary})
+        await self.run_step()
+
+    @async_to_deferred
+    async def test_step_with_secret_failure(self):
+        self.setup_step(SimpleShellCommand(command=["echo", Secret("s3cr3t")]))
+        self.expect_commands(
+            ExpectShell(
+                workdir="wkdir",
+                command=["echo", "really_safe_string"],
+            ).exit(1)
+        )
+        self.expect_outcome(result=FAILURE, state_string="'echo <s3cr3t>' (failure)")
+        # FIXME: faulty, does not obfuscate secret
+        faulty_summary = "'echo really_safe_string' (failure)"
+        self.expect_result_summary({'step': faulty_summary})
+        self.expect_build_result_summary({'step': faulty_summary, 'build': faulty_summary})
+        await self.run_step()

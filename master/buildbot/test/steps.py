@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import stat
 import tarfile
 from io import BytesIO
@@ -656,7 +658,13 @@ class TestBuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setup_test_build_step(self, want_data=True, want_db=False, want_mq=False):
+    def setup_test_build_step(
+        self,
+        want_data=True,
+        want_db=False,
+        want_mq=False,
+        with_secrets: dict | None = None,
+    ):
         if not hasattr(self, 'reactor'):
             raise RuntimeError('Reactor has not yet been setup for step')
 
@@ -666,7 +674,11 @@ class TestBuildStepMixin:
         self._expected_commands_popped = 0
 
         self.master = fakemaster.make_master(
-            self, wantData=want_data, wantDb=want_db, wantMq=want_mq
+            self,
+            wantData=want_data,
+            wantDb=want_db,
+            wantMq=want_mq,
+            with_secrets=with_secrets,
         )
 
         self.patch(runprocess, "create_process", self._patched_create_process)
