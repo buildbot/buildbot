@@ -308,8 +308,6 @@ class RunProcess:
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
         """
-        self.command_id = command
-
         if logfiles is None:
             logfiles = {}
 
@@ -321,6 +319,9 @@ class RunProcess:
                 return w
 
             command = [obfus(w) for w in command]
+
+        self.command_id = command
+
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the worker.  This is mostly platform
         # specific, but can be overridden in the worker's buildbot.tac file.
