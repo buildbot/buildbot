@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import weakref
 from unittest import mock
@@ -22,6 +23,7 @@ from twisted.internet import reactor
 
 from buildbot import config
 from buildbot.data.graphql import GraphQLConnector
+from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import endpoint
@@ -31,6 +33,7 @@ from buildbot.test.fake import msgmanager
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.fake.machine import FakeMachineManager
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.util import service
 
 
@@ -136,6 +139,7 @@ def make_master(
     wantData=False,
     wantRealReactor=False,
     wantGraphql=False,
+    with_secrets: dict | None = None,
     url=None,
     **kwargs,
 ):
@@ -171,4 +175,10 @@ def make_master(
             master.graphql.reconfigServiceWithBuildbotConfig(master.config)
         except ImportError:
             pass
+    if with_secrets is not None:
+        secret_service = SecretManager()
+        secret_service.services = [FakeSecretStorage(secretdict=with_secrets)]
+        # This should be awaited, but no other call to `setServiceParent` are awaited here
+        secret_service.setServiceParent(master)
+
     return master
