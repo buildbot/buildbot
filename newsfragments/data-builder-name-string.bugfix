@@ -1,0 +1,1 @@
+Fix data API query using buildername to correctly work with buildername containing spaces and unicode (:issue:7752)

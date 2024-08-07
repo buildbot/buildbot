@@ -52,8 +52,8 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         /builds/n:buildid/steps/n:step_number
         /builders/n:builderid/builds/n:build_number/steps/i:step_name
         /builders/n:builderid/builds/n:build_number/steps/n:step_number
-        /builders/i:buildername/builds/n:build_number/steps/i:step_name
-        /builders/i:buildername/builds/n:build_number/steps/n:step_number
+        /builders/s:buildername/builds/n:build_number/steps/i:step_name
+        /builders/s:buildername/builds/n:build_number/steps/n:step_number
         """
 
     @defer.inlineCallbacks
@@ -75,7 +75,7 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     pathPatterns = """
         /builds/n:buildid/steps
         /builders/n:builderid/builds/n:build_number/steps
-        /builders/i:buildername/builds/n:build_number/steps
+        /builders/s:buildername/builds/n:build_number/steps
     """
 
     @defer.inlineCallbacks

@@ -46,7 +46,7 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builders/n:builderid/test_result_sets
-        /builders/i:buildername/test_result_sets
+        /builders/s:buildername/test_result_sets
         /builds/n:buildid/test_result_sets
         /steps/n:stepid/test_result_sets
         """

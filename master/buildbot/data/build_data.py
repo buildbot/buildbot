@@ -40,7 +40,7 @@ class BuildDatasNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data
-        /builders/i:buildername/builds/n:build_number/data
+        /builders/s:buildername/builds/n:build_number/data
         /builds/n:buildid/data
         """
 
@@ -60,7 +60,7 @@ class BuildDataNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name
-        /builders/i:buildername/builds/n:build_number/data/i:name
+        /builders/s:buildername/builds/n:build_number/data/i:name
         /builds/n:buildid/data/i:name
     """
 
@@ -78,7 +78,7 @@ class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.RAW
     pathPatterns = """
         /builders/n:builderid/builds/n:build_number/data/i:name/value
-        /builders/i:buildername/builds/n:build_number/data/i:name/value
+        /builders/s:buildername/builds/n:build_number/data/i:name/value
         /builds/n:buildid/data/i:name/value
     """
 

@@ -12,7 +12,7 @@ Builders connector
     Builders are represented by a :class:`BuilderModel` dataclass with the following fields:
 
     * ``id`` -- the ID of this builder
-    * ``name``  -- the builder name, a 20-character :ref:`identifier <type-identifier>`
+    * ``name``  -- the builder name
     * ``description`` -- the builder's description (optional)
     * ``description_format`` -- the format of builder's description (optional)
     * ``description_html`` -- the builder description rendered as html (optional, depends on ``description_format``)
@@ -23,7 +23,7 @@ Builders connector
     .. py:method:: findBuilderId(name, autoCreate=True)
 
         :param name: name of this builder
-        :type name: 20-character :ref:`identifier <type-identifier>`
+        :type name: string
         :param autoCreate: automatically create the builder if name not found
         :type autoCreate: bool
         :returns: builder id via Deferred
