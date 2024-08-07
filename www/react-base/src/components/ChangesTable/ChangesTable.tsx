@@ -23,6 +23,7 @@ import {Change, DataCollection} from "buildbot-data-js";
 import {ChangeDetails} from "buildbot-ui";
 import {observer, useLocalObservable} from "mobx-react";
 import {resizeArray} from "../../util/Array";
+import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 
 class ChangesTableState {
   showDetails = observable.array<boolean>();
@@ -62,12 +63,19 @@ export const ChangesTable = observer(({changes}: ChangesTableProps) => {
     );
   });
 
+  const renderChangesCount = () => {
+    if (changes.isResolved()) {
+      return <>{changes.array.length} changes</>;
+    }
+    return <LoadingSpan/>
+  }
+
   return (
     <div className="container-fluid">
       <div className="navbar navbar-default">
         <div className="container-fluid">
           <div className="navbar-header">
-            <div className="navbar-brand">{changes.array.length} changes</div>
+            <div className="navbar-brand">{renderChangesCount()}</div>
           </div>
           <div className="navbar-form navbar-right">
             <div className="form-group">
