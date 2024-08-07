@@ -141,13 +141,13 @@ const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
 }
 
 const BuildView = observer(() => {
-  const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
+  const builderid = useParams<"builderid">().builderid;
   const buildnumber = Number.parseInt(useParams<"buildnumber">().buildnumber ?? "");
   const navigate = useNavigate();
 
   const accessor = useDataAccessor([builderid, buildnumber]);
 
-  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
+  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid}));
   const builder = buildersQuery.getNthOrNull(0);
 
   const now = useCurrentTime();
@@ -155,14 +155,17 @@ const BuildView = observer(() => {
   // get the build plus the previous and next
   // note that this registers to the updates for all the builds for that builder
   // need to see how that scales
-  const buildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
-        builderid: builderid,
+  const buildsQuery = useDataApiQuery(() =>
+    buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
+        builderid: builder.builderid,
         number__eq: [buildnumber - 1, buildnumber, buildnumber + 1]}
-    }));
+    }
+  )));
 
-  const prevBuild = findOrNull(buildsQuery.array, b => b.number === buildnumber - 1);
-  const build = findOrNull(buildsQuery.array, b => b.number === buildnumber);
-  const nextBuild = findOrNull(buildsQuery.array, b => b.number === buildnumber + 1);
+  const buildsArray = buildsQuery.getParentCollectionOrEmpty(builder?.id ?? "").array;
+  const prevBuild = findOrNull(buildsArray, b => b.number === buildnumber - 1);
+  const build = findOrNull(buildsArray, b => b.number === buildnumber);
+  const nextBuild = findOrNull(buildsArray, b => b.number === buildnumber + 1);
 
   const changesQuery = useDataApiSingleElementQuery(build, [], b => b.getChanges());
   const buildrequestsQuery = useDataApiSingleElementQuery(build, [],
@@ -233,13 +236,12 @@ const BuildView = observer(() => {
   const project = projectsQuery.getNthOrNull(0);
   const rebuiltBuildRequest = rebuiltBuildRequestQuery.getNthOrNull(0);
 
+  const shouldNavigateToBuilder = buildersQuery.isResolved() && buildsQuery.isResolved() && build === null;
   useEffect(() => {
-    // note that in case buildsQuery.array was updated, we have to recalculate build value
-    const build = findOrNull(buildsQuery.array, b => b.number === buildnumber);
-    if (buildsQuery.resolved && build === null) {
+    if (shouldNavigateToBuilder) {
       navigate(`/builders/${builderid}`);
     }
-  }, [buildsQuery.resolved, build === null]);
+  }, [builderid, navigate, shouldNavigateToBuilder]);
 
   const responsibleUsers = computed(() => getResponsibleUsers(propertiesQuery, changesQuery)).get();
   /*
