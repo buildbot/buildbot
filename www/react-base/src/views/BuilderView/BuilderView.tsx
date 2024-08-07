@@ -204,6 +204,7 @@ export const BuilderView = observer(() => {
     <ul className="list-inline bb-builder-workers-container">
     {
       !workers.isResolved() ? <LoadingSpan/> :
+      workers.array.length === 0 ? <span>None</span> :
       workers.array.map(worker => (
         <li><WorkerBadge key={worker.name} worker={worker} showWorkerName={true}/></li>
       ))
@@ -220,8 +221,10 @@ export const BuilderView = observer(() => {
       }
       <div>
         <Tabs defaultActiveKey={1}>
-          <Tab eventKey={1} title="Build requests">
+          <Tab eventKey={1} title="Builds">
+            <TableHeading>Builds requests:</TableHeading>
             <BuildRequestsTable buildrequests={buildrequests}/>
+            <BuildsTable builds={builds} builders={null}/>
           </Tab>
           <Tab eventKey={2} title="Workers">
             {renderWorkers()}
@@ -229,7 +232,6 @@ export const BuilderView = observer(() => {
         </Tabs>
       </div>
 
-      <BuildsTable builds={builds} builders={null}/>
       {shownForceScheduler !== null
         ? <ForceBuildModal scheduler={shownForceScheduler} builderid={builderid}
                            onClose={onForceBuildModalClose}/>
