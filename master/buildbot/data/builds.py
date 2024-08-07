@@ -87,7 +87,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     pathPatterns = """
         /builds/n:buildid
         /builders/n:builderid/builds/n:build_number
-        /builders/i:buildername/builds/n:build_number
+        /builders/s:buildername/builds/n:build_number
     """
 
     @defer.inlineCallbacks
@@ -144,7 +144,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     pathPatterns = """
         /builds
         /builders/n:builderid/builds
-        /builders/i:buildername/builds
+        /builders/s:buildername/builds
         /buildrequests/n:buildrequestid/builds
         /changes/n:changeid/builds
         /workers/n:workerid/builds

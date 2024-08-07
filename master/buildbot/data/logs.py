@@ -50,8 +50,8 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         /builds/n:buildid/steps/n:step_number/logs/i:log_slug
         /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug
         /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug
-        /builders/i:buildername/builds/n:build_number/steps/i:step_name/logs/i:log_slug
-        /builders/i:buildername/builds/n:build_number/steps/n:step_number/logs/i:log_slug
+        /builders/s:buildername/builds/n:build_number/steps/i:step_name/logs/i:log_slug
+        /builders/s:buildername/builds/n:build_number/steps/n:step_number/logs/i:log_slug
     """
 
     @defer.inlineCallbacks
@@ -77,8 +77,8 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         /builds/n:buildid/steps/n:step_number/logs
         /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs
         /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs
-        /builders/i:buildername/builds/n:build_number/steps/i:step_name/logs
-        /builders/i:buildername/builds/n:build_number/steps/n:step_number/logs
+        /builders/s:buildername/builds/n:build_number/steps/i:step_name/logs
+        /builders/s:buildername/builds/n:build_number/steps/n:step_number/logs
     """
 
     @defer.inlineCallbacks

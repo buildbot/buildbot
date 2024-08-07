@@ -38,7 +38,7 @@ class Matcher:
         return f'<Matcher {repr(self._patterns)}>'
 
     path_elt_re = re.compile('^(.?):([a-z0-9_.]+)$')
-    type_fns = {"n": int, "i": ident}
+    type_fns = {"n": int, "i": ident, "s": str}
 
     def __getitem__(self, path):
         if self._dirty:

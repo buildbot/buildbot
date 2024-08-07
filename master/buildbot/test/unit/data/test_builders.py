@@ -26,6 +26,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.util.twisted import async_to_deferred
 
 
 class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -37,6 +38,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return self.db.insert_test_data([
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
+            fakedb.Builder(id=3, name='builder unicode \N{SNOWMAN}'),
             fakedb.Master(id=13),
             fakedb.BuilderMaster(id=1, builderid=2, masterid=13),
         ])
@@ -56,6 +58,22 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builder = yield self.callGet(('builders', 99))
 
         self.assertEqual(builder, None)
+
+    @async_to_deferred
+    async def test_get_by_name(self):
+        builder = await self.callGet(('builders', 'builderb'))
+
+        self.validateData(builder)
+        self.assertEqual(builder['builderid'], 2)
+        self.assertEqual(builder['name'], 'builderb')
+
+    @async_to_deferred
+    async def test_get_unicode_by_name(self):
+        builder = await self.callGet(('builders', 'builder unicode \N{SNOWMAN}'))
+
+        self.validateData(builder)
+        self.assertEqual(builder['builderid'], 3)
+        self.assertEqual(builder['name'], 'builder unicode \N{SNOWMAN}')
 
     @defer.inlineCallbacks
     def test_get_missing_with_name(self):

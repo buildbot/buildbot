@@ -43,7 +43,7 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builders/n:builderid
-        /builders/i:buildername
+        /builders/s:buildername
         /masters/n:masterid/builders/n:builderid
     """
 
@@ -96,7 +96,7 @@ class Builder(base.ResourceType):
 
     class EntityType(types.Entity):
         builderid = types.Integer()
-        name = types.Identifier(70)
+        name = types.String()
         masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
         description_format = types.NoneOk(types.String())

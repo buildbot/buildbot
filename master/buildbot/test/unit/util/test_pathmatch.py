@@ -60,6 +60,10 @@ class Matcher(unittest.TestCase):
         self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
         self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')], ('AB', {"a": 'abc', "b": 'x-z-B'}))
 
+    def test_pattern_variables_string(self):
+        self.m[('A', 's:a')] = 'A'
+        self.assertEqual(self.m[('A', 'unicode \N{SNOWMAN}')], ('A', {"a": 'unicode \N{SNOWMAN}'}))
+
     def test_pattern_variables_num_invalid(self):
         self.m[('A', 'n:a')] = 'AB'
         with self.assertRaises(KeyError):
