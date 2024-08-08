@@ -141,15 +141,19 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
     return null;
   }
 
+  const renderAmount = (count: number, what: string) => {
+    return `${count} ${what}${count === 1 ? "" : "s"}`
+  }
+
   const maybeRenderPendingBuildCount = () => {
     if (stepInfo.buildrequests.length === 0) {
       return null;
     }
     return (
-      <span>
-        {stepInfo.builds.length} builds,
-        {stepInfo.buildrequests.length - stepInfo.builds.length} pending builds
-      </span>
+        <span className="bb-build-build-progress">
+            {renderAmount(stepInfo.buildrequests.length, "build")},
+            {renderAmount(stepInfo.buildrequests.length - stepInfo.builds.length, "pending build")}
+        </span>
     );
   }
 
