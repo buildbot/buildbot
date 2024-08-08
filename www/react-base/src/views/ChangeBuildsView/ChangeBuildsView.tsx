@@ -42,7 +42,7 @@ export const ChangeBuildsView = observer(() => {
   const changeQuery = useDataApiQuery(() => Change.getAll(accessor, {id: changeid.toString()}));
   const change = changeQuery.getNthOrNull(0);
 
-  const buildsQuery = useDataApiSingleElementQuery(change,
+  const buildsQuery = useDataApiSingleElementQuery(change, [],
     c => c.getBuilds({query: {
         property: ["owners", "workername", "branch", "revision", ...getBuildLinkDisplayProperties()],
         limit: buildsFetchLimit
