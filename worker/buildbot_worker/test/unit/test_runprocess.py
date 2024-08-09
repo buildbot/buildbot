@@ -961,13 +961,13 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         )
 
         taskkill_calls = []
-        orig_taskkill = s._taskkill
+        orig_taskkill = s._win32_taskkill
 
         def mock_taskkill(pid, force):
             taskkill_calls.append(force)
             orig_taskkill(pid, force)
 
-        s._taskkill = mock_taskkill
+        s._win32_taskkill = mock_taskkill
 
         runproc_d = s.start()
         pid = yield self.wait_for_pidfile(pidfile)
@@ -1009,8 +1009,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_with_child_parent_dies(self):
         # when a spawned process spawns another process, and then dies itself
-        # (either intentionally or accidentally), we can't kill the child process.
-        # In the future we should be able to fix this as Windows has CREATE_NEW_PROCESS_GROUP.
+        # (either intentionally or accidentally), we kill the child processes.
         parent_pidfile = self.new_pid_file()
         child_pidfile = self.new_pid_file()
 
@@ -1022,7 +1021,6 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
             self.send_update,
         )
         runproc_d = s.start()
-
         # wait for both processes to start up, then call s.kill
         parent_pid = yield self.wait_for_pidfile(parent_pidfile)
         child_pid = yield self.wait_for_pidfile(child_pidfile)
@@ -1033,7 +1031,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         yield runproc_d
 
         self.assert_dead(parent_pid)
-        self.assert_alive(child_pid)
+        self.assert_dead(child_pid)
 
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):

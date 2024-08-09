@@ -26,6 +26,13 @@ You can also specify the command with a single string, in which case the string 
 On Windows, commands are run via ``cmd.exe /c`` which works well.
 However, if you're running a batch file, the error level does not get propagated correctly unless you add 'call' before your batch file's name: ``cmd=['call', 'myfile.bat', ...]``.
 
+``ShellCommand`` includes all sub-processes created by the command in ``JobObject``. This ensures
+that all child processes are managed together with the parent process. When the main command is
+terminated, all sub-processes are also terminated automatically, preventing any orphaned processes.
+This enhancement aligns the behavior of Windows systems with POSIX systems, where similar process
+management has been in place.
+
+
 The :bb:step:`ShellCommand` arguments are:
 
 ``command``
