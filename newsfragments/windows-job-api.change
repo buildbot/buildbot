@@ -1,0 +1,1 @@
+Buildbot worker will now run process in `JobObject`, so child processes can be killed if main process dies itself either intentionally or accidentally.

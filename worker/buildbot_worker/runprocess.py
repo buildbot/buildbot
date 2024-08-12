@@ -47,6 +47,10 @@ from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process
+if runtime.platformType == 'win32':
+    import win32api
+    import win32con
+    import win32job
 
 
 def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
@@ -396,6 +400,7 @@ class RunProcess(object):
         self.killTimer = None
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
+        self.job_object = None
 
         assert usePTY in (
             True,
@@ -588,6 +593,20 @@ class RunProcess(object):
         for w in self.logFileWatchers:
             w.start()
 
+    def _create_job_object(self):
+        job = win32job.CreateJobObject(None, "")
+        extented_info = win32job.QueryInformationJobObject(
+            job, win32job.JobObjectExtendedLimitInformation
+        )
+        extented_info['BasicLimitInformation']['LimitFlags'] = (
+            win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            | win32job.JOB_OBJECT_TERMINATE_AT_END_OF_JOB
+        )
+        win32job.SetInformationJobObject(
+            job, win32job.JobObjectExtendedLimitInformation, extented_info
+        )
+        return job
+
     def _spawnProcess(
         self,
         processProtocol,
@@ -605,16 +624,30 @@ class RunProcess(object):
         if env is None:
             env = {}
 
+        if runtime.platformType == 'win32':
+            if self.using_comspec:
+                process = self._spawnAsBatch(
+                    processProtocol, executable, args, env, path, usePTY=usePTY
+                )
+            else:
+                process = reactor.spawnProcess(
+                    processProtocol, executable, args, env, path, usePTY=usePTY
+                )
+            pHandle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, False, int(process.pid))
+
+            # use JobObject to group subprocesses
+            self.job_object = self._create_job_object()
+            win32job.AssignProcessToJobObject(self.job_object, pHandle)
+            return process
+
         # use the ProcGroupProcess class, if available
-        if runtime.platformType == 'posix':
+        elif runtime.platformType == 'posix':
             if self.useProcGroup and not usePTY:
                 return ProcGroupProcess(
                     reactor, executable, args, env, path, processProtocol, uid, gid, childFDs
                 )
 
         # fall back
-        if self.using_comspec:
-            return self._spawnAsBatch(processProtocol, executable, args, env, path, usePTY=usePTY)
         return reactor.spawnProcess(processProtocol, executable, args, env, path, usePTY=usePTY)
 
     def _spawnAsBatch(self, processProtocol, executable, args, env, path, usePTY):
@@ -748,6 +781,10 @@ class RunProcess(object):
             # blocks here until the process has terminated, while closing
             # stderr. This is weird.
             self.pp.transport.loseConnection()
+        elif runtime.platformType == 'win32':
+            if self.job_object is not None:
+                win32job.TerminateJobObject(self.job_object, 0)
+                self.job_object.Close()
 
         if self.deferred:
             # finished ought to be called momentarily. Just in case it doesn't,
@@ -783,12 +820,12 @@ class RunProcess(object):
         elif runtime.platformType == "win32":
             if interruptSignal is None:
                 self.log_msg("interruptSignal==None, only pretending to kill child")
-            elif self.process.pid is not None:
+            elif self.process.pid is not None or self.job_object is not None:
                 if interruptSignal == "TERM":
-                    self._taskkill(self.process.pid, force=False)
+                    self._win32_taskkill(self.process.pid, force=False)
                     hit = 1
                 elif interruptSignal == "KILL":
-                    self._taskkill(self.process.pid, force=True)
+                    self._win32_taskkill(self.process.pid, force=True)
                     hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
@@ -808,17 +845,26 @@ class RunProcess(object):
 
         return hit
 
-    def _taskkill(self, pid, force):
+    def _win32_taskkill(self, pid, force):
         try:
             if force:
                 cmd = "TASKKILL /F /PID {0} /T".format(pid)
             else:
                 cmd = "TASKKILL /PID {0} /T".format(pid)
-
+            if self.job_object is not None:
+                pr_info = win32job.QueryInformationJobObject(
+                    self.job_object, win32job.JobObjectBasicProcessIdList
+                )
+                if force or len(pr_info) < 2:
+                    win32job.TerminateJobObject(self.job_object, 1)
+            self.log_msg(f"terminating job object with pids {str(pr_info)}")
+            if pid is None:
+                return
             self.log_msg("using {0} to kill pid {1}".format(cmd, pid))
             subprocess.check_call(cmd)
             self.log_msg("taskkill'd pid {0}".format(pid))
-
+        except win32job.error:
+            self.log_msg("failed to terminate job object")
         except subprocess.CalledProcessError as e:
             # taskkill may return 128 or 255 as exit code when the child has already exited.
             # We can't handle this race condition in any other way than just interpreting the kill
