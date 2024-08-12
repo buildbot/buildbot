@@ -1,0 +1,1 @@
+Fix ReactUI authentication when Buildbot is hosted behind a reverse proxy not at url's root. (:issue:`7814`)
