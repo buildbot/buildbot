@@ -29,7 +29,6 @@ import {
 } from "buildbot-data-js";
 import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
-import {getBuildLinkDisplayProperties} from "buildbot-ui";
 
 const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean) => {
   if (showOldWorkers) {
@@ -78,7 +77,7 @@ export const WorkersView = observer(() => {
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
   const buildsQuery = useDataApiQuery(() =>
     Build.getAll(accessor, {query: {
-        property: ["owners", "workername", "branch", ...getBuildLinkDisplayProperties()],
+        property: ["owners", "workername", "branch"],
         limit: 200,
         order: '-buildid'
       }
