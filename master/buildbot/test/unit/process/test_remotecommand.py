@@ -96,6 +96,7 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
             want_stderr=1,
             timeout=20 * 60,
             maxTime=None,
+            max_lines=None,
             sigtermTime=None,
             logfiles=None,
             usePTY=None,

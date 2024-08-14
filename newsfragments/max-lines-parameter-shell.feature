@@ -1,0 +1,1 @@
+Added `max_lines` parameter to the shell command, allowing processes to be terminated if they exceed a specified line count.

@@ -33,6 +33,7 @@ class WorkerShellCommand(base.Command):
             environ=args.get('env'),
             timeout=args.get('timeout', None),
             maxTime=args.get('maxTime', None),
+            max_lines=args.get('max_lines', None),
             sigtermTime=args.get('sigtermTime', None),
             sendStdout=args.get('want_stdout', True),
             sendStderr=args.get('want_stderr', True),

@@ -67,6 +67,21 @@ def printArgsCommand():
     return [sys.executable, '-c', 'import sys; sys.stdout.write(repr(sys.argv[1:]))']
 
 
+def print_text_command(lines, phrase):
+    return [
+        sys.executable,
+        '-c',
+        f'''
+import time
+import sys
+for _ in range({lines}):
+    sys.stdout.write("{phrase}\\n")
+    sys.stdout.flush()
+    time.sleep(0.2)
+''',
+    ]
+
+
 # windows returns rc 1, because exit status cannot indicate "signalled";
 # posix returns rc -1 for "signalled"
 FATAL_RC = -1
@@ -333,6 +348,25 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
         self.assertTrue(("failure_reason", "timeout") in self.updates, self.show())
+
+    @defer.inlineCallbacks
+    def test_command_max_lines(self):
+        s = runprocess.RunProcess(
+            0,
+            print_text_command(5, 'hello'),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            sendStdout=True,
+            max_lines=1,
+        )
+
+        d = s.start()
+        yield d
+
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
+        self.assertTrue(("failure_reason", "max_lines_failure") in self.updates, self.show())
 
     @compat.skipUnlessPlatformIs("posix")
     @defer.inlineCallbacks

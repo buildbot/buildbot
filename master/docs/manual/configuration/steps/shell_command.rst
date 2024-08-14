@@ -166,6 +166,10 @@ The :bb:step:`ShellCommand` arguments are:
     If the command takes longer than this many seconds, it will be killed.
     This is disabled by default.
 
+``max_lines``
+    If the command outputs more lines than this maximum lines, it will be killed.
+    This is disabled by default.
+
 ``logEnviron``
     If ``True`` (the default), then the step's logfile will describe the environment variables on the worker.
     In situations where the environment is not relevant and is long, it may be easier to set it to ``False``.

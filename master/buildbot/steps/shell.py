@@ -166,6 +166,7 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 'want_stderr',
                 'timeout',
                 'maxTime',
+                'max_lines',
                 'sigtermTime',
                 'logfiles',
                 'lazylogfiles',
