@@ -82,3 +82,11 @@ warnings.filterwarnings(
     r"to deadlocks in the child\.",
     category=DeprecationWarning,
 )
+
+# Warnings comes from attr 24.1.0 because of automat
+warnings.filterwarnings(
+    "ignore",
+    r"The `hash` argument is deprecated in favor of `unsafe_hash` "
+    r"and will be removed in or after August 2025\.",
+    category=DeprecationWarning,
+)
