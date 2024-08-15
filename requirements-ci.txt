@@ -11,7 +11,7 @@ hvac==2.3.0
 ldap3==2.9.1
 mypy==1.10.1
 mypy-zope==1.0.5
-graphql-core==3.3.0a4; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
+graphql-core==3.3.0a6; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.3; python_version < "3.12"
 psutil==6.0.0
 
