@@ -41,5 +41,5 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
         newfiles = os.listdir(self.newdir)
         tmpfiles = os.listdir(self.tmpdir)
         self.assertEqual((len(newfiles), len(tmpfiles)), (1, 0))
-        with open(os.path.join(self.newdir, newfiles[0]), 'rt', encoding='utf-8') as f:
+        with open(os.path.join(self.newdir, newfiles[0]), encoding='utf-8') as f:
             self.assertEqual(f.read(), 'this is my try job')

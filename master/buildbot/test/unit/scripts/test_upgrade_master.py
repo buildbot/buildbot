@@ -123,11 +123,11 @@ class TestUpgradeMasterFunctions(
         self.tearDownDirs()
 
     def writeFile(self, path, contents):
-        with open(path, 'wt', encoding='utf-8') as f:
+        with open(path, "w", encoding='utf-8') as f:
             f.write(contents)
 
     def readFile(self, path):
-        with open(path, 'rt', encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             return f.read()
 
     # tests

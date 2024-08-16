@@ -84,7 +84,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         if self.autoRelease:
             relfile = f"{os.path.basename(self.specfile).split('.')[0]}.release"
             try:
-                with open(relfile, 'r', encoding='utf-8') as rfile:
+                with open(relfile, encoding='utf-8') as rfile:
                     rel = int(rfile.readline().strip())
             except (OSError, TypeError, ValueError):
                 rel = 0

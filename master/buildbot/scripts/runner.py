@@ -303,7 +303,7 @@ class SendChangeOptions(base.SubcommandOptions):
         super().postOptions()
 
         if self.get("revision_file"):
-            with open(self["revision_file"], "r", encoding='utf-8') as f:
+            with open(self["revision_file"], encoding='utf-8') as f:
                 self['revision'] = f.read()
 
         if self.get('when'):
@@ -318,7 +318,7 @@ class SendChangeOptions(base.SubcommandOptions):
             if self['logfile'] == "-":
                 self['comments'] = sys.stdin.read()
             else:
-                with open(self['logfile'], "rt", encoding='utf-8') as f:
+                with open(self['logfile'], encoding='utf-8') as f:
                     self['comments'] = f.read()
         if self.get('comments') is None:
             self['comments'] = ""

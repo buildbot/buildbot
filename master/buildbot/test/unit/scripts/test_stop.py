@@ -43,10 +43,10 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     # tests
 
     def do_test_stop(self, config, kill_sequence, is_running=True, **kwargs):
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write("Application('buildmaster')")
         if is_running:
-            with open("basedir/twistd.pid", 'wt', encoding='utf-8') as f:
+            with open("basedir/twistd.pid", "w", encoding='utf-8') as f:
                 f.write('1234')
 
         def sleep(t):

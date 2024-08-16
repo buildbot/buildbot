@@ -206,7 +206,7 @@ class BotBase(service.MultiService):
         if not os.path.exists(os_release_file):
             return
 
-        with open(os_release_file, "r") as fin:
+        with open(os_release_file) as fin:
             for line in fin:
                 line = line.strip("\r\n")
                 # as per man page: Lines beginning with "#" shall be ignored as comments.
@@ -232,7 +232,7 @@ class BotBase(service.MultiService):
             for f in os.listdir(basedir):
                 filename = os.path.join(basedir, f)
                 if os.path.isfile(filename):
-                    with open(filename, "r") as fin:
+                    with open(filename) as fin:
                         try:
                             files[f] = bytes2unicode(fin.read())
                         except UnicodeDecodeError:

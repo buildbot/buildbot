@@ -597,7 +597,7 @@ def DetermineRunner(bbdir):
         tacfile = os.path.join(bbdir, 'buildbot.tac')
 
         if os.path.exists(tacfile):
-            with open(tacfile, 'r') as f:
+            with open(tacfile) as f:
                 contents = f.read()
                 if 'import Worker' in contents:
                     return buildbot_worker.scripts.runner.run

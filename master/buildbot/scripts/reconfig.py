@@ -36,7 +36,7 @@ class Reconfigurator:
             print("Reconfig (through SIGHUP) is not supported on Windows.")
             return None
 
-        with open(os.path.join(basedir, "twistd.pid"), "rt", encoding='utf-8') as f:
+        with open(os.path.join(basedir, "twistd.pid"), encoding='utf-8') as f:
             self.pid = int(f.read().strip())
         if quiet:
             os.kill(self.pid, signal.SIGHUP)
