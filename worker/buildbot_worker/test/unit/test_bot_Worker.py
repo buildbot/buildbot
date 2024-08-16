@@ -31,7 +31,7 @@ from buildbot_worker.test.util import misc
 try:
     from unittest.mock import Mock
 except ImportError:
-    from mock import Mock
+    from unittest.mock import Mock
 
 
 # I don't see any simple way to test the PB equipment without actually setting

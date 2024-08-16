@@ -35,7 +35,7 @@ from buildbot_worker.test.util import command
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 class TestBot(unittest.TestCase):

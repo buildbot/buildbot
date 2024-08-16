@@ -33,7 +33,7 @@ from buildbot_worker.test.util import command
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 if sys.version_info >= (3, 6):
     import msgpack

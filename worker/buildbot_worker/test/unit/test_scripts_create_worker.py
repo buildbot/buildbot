@@ -23,7 +23,7 @@ from buildbot_worker.test.util import misc
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 def _regexp_path(name, *names):
