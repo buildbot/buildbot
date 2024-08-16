@@ -26,7 +26,7 @@ from twisted.python.failure import Failure
 from buildbot_worker.compat import unicode2bytes
 
 
-class FakeTransport(object):
+class FakeTransport:
     disconnecting = False
 
 

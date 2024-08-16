@@ -90,7 +90,7 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
     return " ".join(quote(e) for e in cmd_list)
 
 
-class LogFileWatcher(object):
+class LogFileWatcher:
     POLL_INTERVAL = 2
 
     def __init__(self, command, name, logfile, follow=False, poll=True):
@@ -251,7 +251,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.command.finished(sig, rc)
 
 
-class RunProcess(object):
+class RunProcess:
     """
     This is a helper class, used by worker commands to run programs in a child
     shell.

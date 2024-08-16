@@ -21,7 +21,7 @@ from buildbot_worker.scripts import base
 from buildbot_worker.util import rewrap
 
 
-class Follower(object):
+class Follower:
     def follow(self):
         from twisted.internet import reactor
 

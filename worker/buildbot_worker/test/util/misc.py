@@ -36,7 +36,7 @@ def nl(s):
     return s.replace('\n', os.linesep)
 
 
-class BasedirMixin(object):
+class BasedirMixin:
     """Mix this in and call setUpBasedir and tearDownBasedir to set up
     a clean basedir with a name given in self.basedir."""
 
@@ -50,7 +50,7 @@ class BasedirMixin(object):
             shutil.rmtree(self.basedir)
 
 
-class IsWorkerDirMixin(object):
+class IsWorkerDirMixin:
     """
     Mixin for setting up mocked base.isWorkerDir() function
     """
@@ -60,7 +60,7 @@ class IsWorkerDirMixin(object):
         self.patch(base, "isWorkerDir", self.isWorkerDir)
 
 
-class PatcherMixin(object):
+class PatcherMixin:
     """
     Mix this in to get a few special-cased patching methods
     """
@@ -79,7 +79,7 @@ class PatcherMixin(object):
             os.uname = replacement
 
 
-class FileIOMixin(object):
+class FileIOMixin:
     """
     Mixin for patching open(), read() and write() to simulate successful
     I/O operations and various I/O errors.
@@ -173,7 +173,7 @@ class FileIOMixin(object):
         self.patch(builtins, "open", self.open)
 
 
-class LoggingMixin(object):
+class LoggingMixin:
     def setUpLogging(self):
         self._logEvents = []
         log.addObserver(self._logEvents.append)
@@ -192,7 +192,7 @@ class LoggingMixin(object):
         self.assertEqual(self._logEvents, [])
 
 
-class StdoutAssertionsMixin(object):
+class StdoutAssertionsMixin:
     """
     Mix this in to be able to assert on stdout during the test
     """

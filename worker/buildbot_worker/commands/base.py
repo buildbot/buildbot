@@ -71,7 +71,7 @@ command_version = "3.2"
 
 
 @implementer(IWorkerCommand)
-class Command(object):
+class Command:
     """This class defines one command that can be invoked by the build master.
     The command is executed on the worker side, and always sends back a
     completion message when it finishes. It may also send intermediate status

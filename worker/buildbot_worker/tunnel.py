@@ -113,7 +113,7 @@ class HTTPTunnelFactory(protocol.ClientFactory):
 
 
 @implementer(interfaces.IStreamClientEndpoint)
-class HTTPTunnelEndpoint(object):
+class HTTPTunnelEndpoint:
     """This handles the connection to buildbot master on given 'host'
     and 'port' through the proxy server given as 'proxyEndpoint'.
     """

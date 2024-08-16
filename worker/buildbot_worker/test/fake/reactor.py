@@ -37,7 +37,7 @@ from zope.interface import implementer
 
 
 @implementer(IReactorCore)
-class CoreReactor(object):
+class CoreReactor:
     """
     Partial implementation of ``IReactorCore``.
     """
@@ -64,7 +64,7 @@ class CoreReactor(object):
         f(*args, **kwargs)
 
 
-class NonThreadPool(object):
+class NonThreadPool:
     """
     A stand-in for ``twisted.python.threadpool.ThreadPool`` so that the
     majority of the test suite does not need to use multithreading.
@@ -101,7 +101,7 @@ class NonThreadPool(object):
 
 
 @implementer(IReactorThreads)
-class NonReactor(object):
+class NonReactor:
     """
     A partial implementation of ``IReactorThreads`` which fits into
     the execution model defined by ``NonThreadPool``.

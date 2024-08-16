@@ -52,7 +52,7 @@ class MasterPerspective(pb.Avatar):
 
 
 @implementer(portal.IRealm)
-class MasterRealm(object):
+class MasterRealm:
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment

@@ -29,7 +29,7 @@ except ImportError:
     import mock
 
 
-class OptionsMixin(object):
+class OptionsMixin:
     def assertOptions(self, opts, exp):
         got = {k: opts[k] for k in exp}
         if got != exp:
@@ -40,7 +40,7 @@ class OptionsMixin(object):
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
-class BaseDirTestsMixin(object):
+class BaseDirTestsMixin:
     """
     Common tests for Options classes with 'basedir' parameter
     """

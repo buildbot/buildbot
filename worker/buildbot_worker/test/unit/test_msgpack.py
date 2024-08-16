@@ -100,7 +100,7 @@ class TestException(Exception):
     pass
 
 
-class FakeStep(object):
+class FakeStep:
     "A fake master-side BuildStep that records its activities."
 
     def __init__(self):

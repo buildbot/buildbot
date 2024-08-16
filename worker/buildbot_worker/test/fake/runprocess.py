@@ -16,7 +16,7 @@
 from twisted.internet import defer
 
 
-class Expect(object):
+class Expect:
     """
     An expected instantiation of RunProcess.  Usually used within a RunProcess
     expect invocation:
@@ -67,7 +67,7 @@ class Expect(object):
         return self
 
 
-class FakeRunProcess(object):
+class FakeRunProcess:
     """
     A fake version of L{buildbot_worker.runprocess.RunProcess} which will
     simulate running external processes without actually running them (which is

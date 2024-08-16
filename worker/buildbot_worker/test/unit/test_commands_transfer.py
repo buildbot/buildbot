@@ -31,7 +31,7 @@ from buildbot_worker.test.fake.remote import FakeRemote
 from buildbot_worker.test.util.command import CommandTestMixin
 
 
-class FakeMasterMethods(object):
+class FakeMasterMethods:
     # a fake to represent any of:
     # - FileWriter
     # - FileDirectoryWriter
