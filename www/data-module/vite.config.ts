@@ -19,6 +19,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
+      formats: ["es", "cjs"],
       name: "buildbot-data-js",
       fileName: "buildbot-data-js",
     },
