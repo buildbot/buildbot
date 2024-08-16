@@ -26,7 +26,7 @@ from buildbot_worker.commands.base import Command
 class TransferCommand(Command):
     def finished(self, res):
         if self.debug:
-            self.log_msg('finished: stderr={0!r}, rc={1!r}'.format(self.stderr, self.rc))
+            self.log_msg(f'finished: stderr={self.stderr!r}, rc={self.rc!r}')
 
         # don't use self.sendStatus here, since we may no longer be running
         # if we have been interrupted
@@ -86,15 +86,15 @@ class WorkerFileUploadCommand(TransferCommand):
 
             self.fp = open(self.path, 'rb')
             if self.debug:
-                self.log_msg("Opened '{0}' for upload".format(self.path))
+                self.log_msg(f"Opened '{self.path}' for upload")
         except Exception:
             self.fp = None
-            self.stderr = "Cannot open file '{0}' for upload".format(self.path)
+            self.stderr = f"Cannot open file '{self.path}' for upload"
             self.rc = 1
             if self.debug:
-                self.log_msg("Cannot open file '{0}' for upload".format(self.path))
+                self.log_msg(f"Cannot open file '{self.path}' for upload")
 
-        self.sendStatus([('header', "sending {0}\n".format(self.path))])
+        self.sendStatus([('header', f"sending {self.path}\n")])
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -160,7 +160,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file \'{0}\''.format(self.path)
+                self.stderr = f'Maximum filesize reached, truncating file \'{self.path}\''
                 self.rc = 1
             data = ''
         else:
@@ -168,8 +168,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if self.debug:
             self.log_msg(
-                'WorkerFileUploadCommand._writeBlock(): '
-                + 'allowed={0} readlen={1}'.format(length, len(data))
+                'WorkerFileUploadCommand._writeBlock(): ' + f'allowed={length} readlen={len(data)}'
             )
         if not data:
             self.log_msg("EOF: callRemote(close)")
@@ -204,7 +203,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
             self.log_msg('WorkerDirectoryUploadCommand started')
 
         if self.debug:
-            self.log_msg("path: {0!r}".format(self.path))
+            self.log_msg(f"path: {self.path!r}")
 
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp(prefix='buildbot-transfer-')
@@ -221,7 +220,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
                 archive.add(self.path, '')
             except OSError as e:
                 # if directory does not exist, bail out with an error
-                self.stderr = "Cannot read directory '{0}' for upload: {1}".format(self.path, e)
+                self.stderr = f"Cannot read directory '{self.path}' for upload: {e}"
                 self.rc = 1
                 archive.close()  # need to close it before self.finished() runs below
                 d = defer.succeed(False)
@@ -231,7 +230,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Transfer it
         self.fp.seek(0)
 
-        self.sendStatus([('header', "sending {0}\n".format(self.path))])
+        self.sendStatus([('header', f"sending {self.path}\n")])
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -297,7 +296,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         try:
             self.fp = open(self.path, 'wb')
             if self.debug:
-                self.log_msg("Opened '{0}' for download".format(self.path))
+                self.log_msg(f"Opened '{self.path}' for download")
             if self.mode is not None:
                 # note: there is a brief window during which the new file
                 # will have the worker's default (umask) mode before we
@@ -312,10 +311,10 @@ class WorkerFileDownloadCommand(TransferCommand):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            self.stderr = "Cannot open file '{0}' for download".format(self.path)
+            self.stderr = f"Cannot open file '{self.path}' for download"
             self.rc = 1
             if self.debug:
-                self.log_msg("Cannot open file '{0}' for download".format(self.path))
+                self.log_msg(f"Cannot open file '{self.path}' for download")
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -360,7 +359,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(self.path)
+                self.stderr = f"Maximum filesize reached, truncating file '{self.path}'"
                 self.rc = 1
             return True
         else:
@@ -370,7 +369,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
     def _writeData(self, data):
         if self.debug:
-            self.log_msg('WorkerFileDownloadCommand._readBlock(): readlen={0}'.format(len(data)))
+            self.log_msg(f'WorkerFileDownloadCommand._readBlock(): readlen={len(data)}')
         if not data:
             return True
 

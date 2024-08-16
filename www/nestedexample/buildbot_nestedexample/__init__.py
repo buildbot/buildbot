@@ -34,7 +34,7 @@ class NestedExample(NestedParameter):
         super().__init__(self.type, label='', fields=fields, **kw)
 
     def createNestedPropertyName(self, propertyName):
-        return "{}_{}".format(self.type, propertyName)
+        return f"{self.type}_{propertyName}"
 
     @defer.inlineCallbacks
     def validateProperties(self, collector, properties):

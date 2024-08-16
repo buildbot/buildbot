@@ -150,7 +150,7 @@ class Command:
         self.setup(args)
 
     def log_msg(self, msg, *args):
-        log.msg("(command {0}): {1}".format(self.command_id, msg), *args)
+        log.msg(f"(command {self.command_id}): {msg}", *args)
 
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
@@ -179,7 +179,7 @@ class Command:
     def sendStatus(self, status):
         """Send a status update to the master."""
         if self.debug:
-            self.log_msg("sendStatus: {0}".format(status))
+            self.log_msg(f"sendStatus: {status}")
         if not self.running:
             self.log_msg("would sendStatus but not .running")
             return
@@ -198,7 +198,7 @@ class Command:
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):
-            self.log_msg("weird, _abandonOnFailure was given rc={0} ({1})".format(rc, type(rc)))
+            self.log_msg(f"weird, _abandonOnFailure was given rc={rc} ({type(rc)})")
         assert isinstance(rc, int)
         if rc != 0:
             raise AbandonChain(rc)

@@ -61,7 +61,7 @@ class FakeMasterMethods:
                 f = failure.Failure(RuntimeError("out of space"))
                 return defer.fail(f)
         if self.count_writes:
-            self.add_update('write {0}'.format(len(data)))
+            self.add_update(f'write {len(data)}')
         elif not self.written:
             self.add_update('write(s)')
             self.written = True
@@ -77,7 +77,7 @@ class FakeMasterMethods:
 
     def remote_read(self, length):
         if self.count_reads:
-            self.add_update('read {0}'.format(length))
+            self.add_update(f'read {length}')
         elif not self.read:
             self.add_update('read(s)')
             self.read = True
@@ -99,7 +99,7 @@ class FakeMasterMethods:
         return None
 
     def remote_utime(self, accessed_modified):
-        self.add_update('utime - {0}'.format(accessed_modified[0]))
+        self.add_update(f'utime - {accessed_modified[0]}')
 
     def remote_close(self):
         self.add_update('close')
@@ -148,7 +148,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datafile)),
+            ('header', f'sending {self.datafile}\n'),
             'write 64',
             'write 64',
             'write 52',
@@ -175,12 +175,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datafile)),
+            ('header', f'sending {self.datafile}\n'),
             'write 64',
             'write 36',
             'close',
             ('rc', 1),
-            ('stderr', "Maximum filesize reached, truncating file '{0}'".format(self.datafile)),
+            ('stderr', f"Maximum filesize reached, truncating file '{self.datafile}'"),
         ])
 
     @defer.inlineCallbacks
@@ -201,10 +201,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         df = self.datafile + "-nosuch"
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(df)),
+            ('header', f'sending {df}\n'),
             'close',
             ('rc', 1),
-            ('stderr', "Cannot open file '{0}' for upload".format(df)),
+            ('stderr', f"Cannot open file '{df}' for upload"),
         ])
 
     @defer.inlineCallbacks
@@ -227,7 +227,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datafile)),
+            ('header', f'sending {self.datafile}\n'),
             'write 64',
             'close',
             ('rc', 1),
@@ -264,7 +264,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datafile)),
+            ('header', f'sending {self.datafile}\n'),
             'write(s)',
             'close',
             ('rc', 1),
@@ -290,12 +290,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datafile)),
+            ('header', f'sending {self.datafile}\n'),
             'write 64',
             'write 64',
             'write 52',
             'close',
-            'utime - {0}'.format(timestamp[0]),
+            f'utime - {timestamp[0]}',
             ('rc', 0),
         ])
 
@@ -341,7 +341,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         yield self.run_command()
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datadir)),
+            ('header', f'sending {self.datadir}\n'),
             'write(s)',
             'unpack',  # note no 'close"
             ('rc', 0),
@@ -387,7 +387,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         yield self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
-            ('header', 'sending {0}\n'.format(self.datadir)),
+            ('header', f'sending {self.datadir}\n'),
             'write(s)',
             'unpack',
             ('rc', 1),

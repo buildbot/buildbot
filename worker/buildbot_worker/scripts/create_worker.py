@@ -124,9 +124,7 @@ def _makeBaseDir(basedir, quiet):
     try:
         os.mkdir(basedir)
     except OSError as exception:
-        raise CreateWorkerError(
-            "error creating directory {0}: {1}".format(basedir, exception.strerror)
-        )
+        raise CreateWorkerError(f"error creating directory {basedir}: {exception.strerror}")
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -147,7 +145,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
             with open(tacfile) as f:
                 oldcontents = f.read()
         except OSError as exception:
-            raise CreateWorkerError("error reading {0}: {1}".format(tacfile, exception.strerror))
+            raise CreateWorkerError(f"error reading {tacfile}: {exception.strerror}")
 
         if oldcontents == tac_file_contents:
             if not quiet:
@@ -165,7 +163,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
             f.write(tac_file_contents)
         os.chmod(tacfile, 0o600)
     except OSError as exception:
-        raise CreateWorkerError("could not write {0}: {1}".format(tacfile, exception.strerror))
+        raise CreateWorkerError(f"could not write {tacfile}: {exception.strerror}")
 
 
 def _makeInfoFiles(basedir, quiet):
@@ -195,7 +193,7 @@ def _makeInfoFiles(basedir, quiet):
         try:
             open(filepath, "w").write(contents)
         except OSError as exception:
-            raise CreateWorkerError("could not write {0}: {1}".format(filepath, exception.strerror))
+            raise CreateWorkerError(f"could not write {filepath}: {exception.strerror}")
         return True
 
     path = os.path.join(basedir, "info")
@@ -205,9 +203,7 @@ def _makeInfoFiles(basedir, quiet):
         try:
             os.mkdir(path)
         except OSError as exception:
-            raise CreateWorkerError(
-                "error creating directory {0}: {1}".format(path, exception.strerror)
-            )
+            raise CreateWorkerError(f"error creating directory {path}: {exception.strerror}")
 
     # create 'info/admin' file
     created = createFile(path, "admin", "Your Name Here <admin@youraddress.invalid>\n")
@@ -224,7 +220,7 @@ def _makeInfoFiles(basedir, quiet):
             )
 
     if created and not quiet:
-        print("Please edit the files in {0} appropriately.".format(path))
+        print(f"Please edit the files in {path} appropriately.")
 
 
 def createWorker(config):
@@ -242,6 +238,6 @@ def createWorker(config):
         return 1
 
     if not quiet:
-        print("worker configured in {0}".format(basedir))
+        print(f"worker configured in {basedir}")
 
     return 0

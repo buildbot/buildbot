@@ -50,9 +50,7 @@ def encode_http_authorization_header(name, password):
 
 
 def remote_print(self, message):
-    log.msg(
-        "WorkerForBuilder.remote_print({0}): message from master: {1}".format(self.name, message)
-    )
+    log.msg(f"WorkerForBuilder.remote_print({self.name}): message from master: {message}")
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
@@ -200,11 +198,11 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
     def onConnect(self, response):
         if self.debug:
-            log.msg("Server connected: {0}".format(response.peer))
+            log.msg(f"Server connected: {response.peer}")
 
     def onConnecting(self, transport_details):
         if self.debug:
-            log.msg("Connecting; transport details: {}".format(transport_details))
+            log.msg(f"Connecting; transport details: {transport_details}")
 
         auth_header = encode_http_authorization_header(self.factory.name, self.factory.password)
 
@@ -229,7 +227,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def contains_msg_key(self, msg, keys):
         for k in keys:
             if k not in msg:
-                raise KeyError('message did not contain obligatory "{}" key'.format(k))
+                raise KeyError(f'message did not contain obligatory "{k}" key')
 
     def onOpen(self):
         if self.debug:
@@ -347,7 +345,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         self.maybe_log_master_to_worker_msg(msg)
 
         if 'seq_number' not in msg or 'op' not in msg:
-            log.msg('Invalid message from master: {}'.format(msg))
+            log.msg(f'Invalid message from master: {msg}')
             return
         if msg['op'] == "print":
             self._deferwaiter.add(self.call_print(msg))
@@ -390,7 +388,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
     def onClose(self, wasClean, code, reason):
         if self.debug:
-            log.msg("WebSocket connection closed: {0}".format(reason))
+            log.msg(f"WebSocket connection closed: {reason}")
         # stop waiting for the responses of all commands
         for seq_number in self.seq_num_to_waiters_map:
             self.seq_num_to_waiters_map[seq_number].errback(ConnectionLostError("Connection lost"))

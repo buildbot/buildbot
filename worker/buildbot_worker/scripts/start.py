@@ -38,7 +38,7 @@ class Follower:
     def _success(self, processtype):
         from twisted.internet import reactor
 
-        print("The {0} appears to have (re)started correctly.".format(processtype))
+        print(f"The {processtype} appears to have (re)started correctly.")
         self.rc = 0
         reactor.stop()
 

@@ -70,10 +70,10 @@ def gitDescribeToPep440(version):
         if v.group('dev'):
             patch += 1
             dev = int(v.group('dev'))
-            return "{}.{}.{}.dev{}".format(major, minor, patch, dev)
+            return f"{major}.{minor}.{patch}.dev{dev}"
         if v.group('post'):
             return "{}.{}.{}.post{}".format(major, minor, patch, v.group('post'))
-        return "{}.{}.{}".format(major, minor, patch)
+        return f"{major}.{minor}.{patch}"
 
     return v
 

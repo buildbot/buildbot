@@ -450,7 +450,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpOpenError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = "error reading {0}: dummy-msg".format(self.tac_file_path)
+        expected_message = f"error reading {self.tac_file_path}: dummy-msg"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -463,7 +463,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpReadError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = "error reading {0}: dummy-msg".format(self.tac_file_path)
+        expected_message = f"error reading {self.tac_file_path}: dummy-msg"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -476,7 +476,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpWriteError(0)
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = "could not write {0}: dummy-msg".format(self.tac_file_path)
+        expected_message = f"could not write {self.tac_file_path}: dummy-msg"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -649,7 +649,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         elif error_type == "write":
             self.setUpWriteError(strerror="info-err-msg")
         else:
-            self.fail("unexpected error_type '{0}'".format(error_type))
+            self.fail(f"unexpected error_type '{error_type}'")
 
         # call _makeInfoFiles() and check that correct exception is raised
         with self.assertRaisesRegex(

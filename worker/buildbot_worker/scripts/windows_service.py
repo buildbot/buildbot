@@ -133,7 +133,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(msg_file):
                 servicemanager.Initialize("BuildBot", msg_file)
             else:
-                self.warning("Strange - '{0}' does not exist".format(msg_file))
+                self.warning(f"Strange - '{msg_file}' does not exist")
 
     def _checkConfig(self):
         # Locate our child process runner (but only when run from source)
@@ -154,7 +154,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if me.endswith(".pyc") or me.endswith(".pyo"):
                 me = me[:-1]
 
-            self.runner_prefix = '"{0}" "{1}"'.format(python_exe, me)
+            self.runner_prefix = f'"{python_exe}" "{me}"'
         else:
             # Running from a py2exe built executable - our child process is
             # us (but with the funky cmdline args!)
@@ -193,7 +193,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(sentinal):
                 self.dirs.append(d)
             else:
-                msg = "Directory '{0}' is not a buildbot dir - ignoring".format(d)
+                msg = f"Directory '{d}' is not a buildbot dir - ignoring"
                 self.warning(msg)
         if not self.dirs:
             self.error("No valid buildbot directories were specified.\nStopping the service.")
@@ -224,11 +224,11 @@ class BBService(win32serviceutil.ServiceFramework):
         child_infos = []
 
         for bbdir in self.dirs:
-            self.info("Starting BuildBot in directory '{0}'".format(bbdir))
+            self.info(f"Starting BuildBot in directory '{bbdir}'")
             # hWaitStop is the Handle and the command needs the int associated
             # to that Handle
             hstop = int(self.hWaitStop)
-            cmd = '{} --spawn {} start --nodaemon {}'.format(self.runner_prefix, hstop, bbdir)
+            cmd = f'{self.runner_prefix} --spawn {hstop} start --nodaemon {bbdir}'
 
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
@@ -258,9 +258,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 )
 
             self.warning(
-                "BuildBot for directory {0!r} terminated with exit code {1}.\n{2}".format(
-                    bbdir, status, output
-                )
+                f"BuildBot for directory {bbdir!r} terminated with exit code {status}.\n{output}"
             )
 
             del child_infos[index]
@@ -286,9 +284,7 @@ class BBService(win32serviceutil.ServiceFramework):
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
-                self.warning(
-                    "BuildBot process at {0!r} failed to terminate - killing it".format(bbdir)
-                )
+                self.warning(f"BuildBot process at {bbdir!r} failed to terminate - killing it")
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
@@ -317,7 +313,7 @@ class BBService(win32serviceutil.ServiceFramework):
             servicemanager.LogMsg(
                 servicemanager.EVENTLOG_INFORMATION_TYPE,
                 event,
-                (self._svc_name_, " ({0})".format(self._svc_display_name_)),
+                (self._svc_name_, f" ({self._svc_display_name_})"),
             )
         except win32api.error as details:
             # Failed to write a log entry - most likely problem is
@@ -407,7 +403,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.
                 if err.winerror != winerror.ERROR_BROKEN_PIPE:
-                    self.warning("Error reading output from process: {0}".format(err))
+                    self.warning(f"Error reading output from process: {err}")
                 break
             captured_blocks.append(data)
             del captured_blocks[CHILDCAPTURE_MAX_BLOCKS:]
@@ -497,7 +493,7 @@ def ConfigureLogOnAsAServicePolicy(accountName):
         accountSid = account[0]
         sid = win32security.ConvertSidToStringSid(accountSid)
     except win32api.error as err:
-        print("error {} ({}): {}".format(err.winerror, err.funcname, err.strerror))
+        print(f"error {err.winerror} ({err.funcname}): {err.strerror}")
         return
 
     with GetLocalSecurityPolicyHandle('', win32security.POLICY_ALL_ACCESS) as policy:
@@ -510,19 +506,15 @@ def ConfigureLogOnAsAServicePolicy(accountName):
         except win32api.error as err:
             # If no account rights are found or if the function fails for any other reason,
             # the function returns throws winerror.ERROR_FILE_NOT_FOUND or any other
-            print("error {} ({}): {}".format(err.winerror, err.funcname, err.strerror))
+            print(f"error {err.winerror} ({err.funcname}): {err.strerror}")
             privileges = []
 
         if SE_SERVICE_LOGON_RIGHT in privileges:
-            print(
-                "Account {}({}) has granted {} privilege.".format(
-                    accountName, sid, SE_SERVICE_LOGON_RIGHT
-                )
-            )
+            print(f"Account {accountName}({sid}) has granted {SE_SERVICE_LOGON_RIGHT} privilege.")
         else:
             print(
-                ("error: Account {}({}) does not have {} privilege.").format(
-                    accountName, sid, SE_SERVICE_LOGON_RIGHT
+                (
+                    f"error: Account {accountName}({sid}) does not have {SE_SERVICE_LOGON_RIGHT} privilege."
                 )
             )
 
