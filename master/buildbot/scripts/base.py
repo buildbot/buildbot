@@ -131,7 +131,7 @@ def isBuildmasterDir(dir):
     try:
         with open(buildbot_tac, encoding='utf-8') as f:
             contents = f.read()
-    except IOError as exception:
+    except OSError as exception:
         print_error(f"error reading '{buildbot_tac}': {exception.strerror}")
         return False
 

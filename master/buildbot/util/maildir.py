@@ -74,7 +74,7 @@ class MaildirService(service.BuildbotService):
                 self.dnotify = dnotify.DNotify(
                     self.newdir, self.dnotify_callback, [dnotify.DNotify.DN_CREATE]
                 )
-        except (IOError, OverflowError):
+        except (OSError, OverflowError):
             # IOError is probably linux<2.4.19, which doesn't support
             # dnotify. OverflowError will occur on some 64-bit machines
             # because of a python bug

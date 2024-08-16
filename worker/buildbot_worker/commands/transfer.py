@@ -307,7 +307,7 @@ class WorkerFileDownloadCommand(TransferCommand):
                 # call, but cleaning up from exceptions properly is more of a
                 # nuisance that way).
                 os.chmod(self.path, self.mode)
-        except IOError:
+        except OSError:
             # TODO: this still needs cleanup
             if self.fp:
                 self.fp.close()

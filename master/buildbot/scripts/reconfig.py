@@ -65,7 +65,7 @@ class Reconfigurator:
                 errors, correct them, then try 'buildbot reconfig' again.
                 """)
             )
-        except IOError:
+        except OSError:
             # we were probably unable to open the file in the first place
             self.sighup()
         except Exception as e:

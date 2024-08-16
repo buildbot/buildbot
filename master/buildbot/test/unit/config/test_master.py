@@ -138,7 +138,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         """
 
         def raise_IOError(*args, **kwargs):
-            raise IOError("error_msg")
+            raise OSError("error_msg")
 
         self.install_config_file('#dummy')
 

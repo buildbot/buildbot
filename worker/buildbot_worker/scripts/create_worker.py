@@ -146,7 +146,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         try:
             with open(tacfile, "rt") as f:
                 oldcontents = f.read()
-        except IOError as exception:
+        except OSError as exception:
             raise CreateWorkerError("error reading {0}: {1}".format(tacfile, exception.strerror))
 
         if oldcontents == tac_file_contents:
@@ -164,7 +164,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         with open(tacfile, "wt") as f:
             f.write(tac_file_contents)
         os.chmod(tacfile, 0o600)
-    except IOError as exception:
+    except OSError as exception:
         raise CreateWorkerError("could not write {0}: {1}".format(tacfile, exception.strerror))
 
 
@@ -194,7 +194,7 @@ def _makeInfoFiles(basedir, quiet):
 
         try:
             open(filepath, "wt").write(contents)
-        except IOError as exception:
+        except OSError as exception:
             raise CreateWorkerError("could not write {0}: {1}".format(filepath, exception.strerror))
         return True
 

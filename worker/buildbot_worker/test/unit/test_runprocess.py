@@ -593,7 +593,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
                 try:
                     with open(pidfile) as f:
                         pid = int(f.read())
-                except (IOError, TypeError, ValueError):
+                except (OSError, TypeError, ValueError):
                     pid = None
 
                 if pid is not None:
@@ -886,7 +886,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
                 try:
                     with open(pidfile) as f:
                         pid = int(f.read())
-                except (IOError, TypeError, ValueError):
+                except (OSError, TypeError, ValueError):
                     pid = None
 
                 if pid is not None:

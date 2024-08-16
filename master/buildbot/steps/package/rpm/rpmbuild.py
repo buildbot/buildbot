@@ -86,7 +86,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
             try:
                 with open(relfile, 'r', encoding='utf-8') as rfile:
                     rel = int(rfile.readline().strip())
-            except (IOError, TypeError, ValueError):
+            except (OSError, TypeError, ValueError):
                 rel = 0
             rpm_extras_dict['_release'] = rel
             with open(relfile, 'w', encoding='utf-8') as rfile:

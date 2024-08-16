@@ -276,7 +276,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         )
 
         if rc != 0:
-            raise EnvironmentError(f'{self}: Got error when retrieving svn prefix')
+            raise OSError(f'{self}: Got error when retrieving svn prefix')
 
         try:
             doc = xml.dom.minidom.parseString(output)
@@ -326,7 +326,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         )
 
         if rc != 0:
-            raise EnvironmentError(f'{self}: Got error when retrieving svn logs')
+            raise OSError(f'{self}: Got error when retrieving svn logs')
 
         return output
 

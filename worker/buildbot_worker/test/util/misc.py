@@ -119,7 +119,7 @@ class FileIOMixin:
 
         # Add side_effect so that calling fakeOpen() will always
         # raise an IOError.
-        fakeOpen.side_effect = IOError(errno, strerror, filename)
+        fakeOpen.side_effect = OSError(errno, strerror, filename)
         self.open = fakeOpen
         self.patch(builtins, "open", self.open)
 
@@ -142,7 +142,7 @@ class FileIOMixin:
 
         # Add side_effect so that calling read() will always
         # raise an IOError.
-        self.fileobj.read.side_effect = IOError(errno, strerror, filename)
+        self.fileobj.read.side_effect = OSError(errno, strerror, filename)
 
         # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)
@@ -166,7 +166,7 @@ class FileIOMixin:
 
         # Add side_effect so that calling write() will always
         # raise an IOError.
-        self.fileobj.write.side_effect = IOError(errno, strerror, filename)
+        self.fileobj.write.side_effect = OSError(errno, strerror, filename)
 
         # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)

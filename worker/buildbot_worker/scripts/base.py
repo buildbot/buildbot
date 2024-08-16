@@ -27,7 +27,7 @@ def isWorkerDir(dir):
     try:
         with open(buildbot_tac) as f:
             contents = f.read()
-    except IOError as exception:
+    except OSError as exception:
         print_error("error reading '{0}': {1}".format(buildbot_tac, exception.strerror))
         return False
 

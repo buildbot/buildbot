@@ -43,7 +43,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
     os.chdir(basedir)
     try:
         f = open("twistd.pid", "rt")
-    except IOError:
+    except OSError:
         raise WorkerNotRunning()
 
     pid = int(f.read().strip())
