@@ -60,10 +60,7 @@ def mTimeVersion(init_file):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
 
-    if sys.version_info >= (3, 3):
-        d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
-    else:
-        d = datetime.datetime.utcfromtimestamp(m)
+    d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
     return d.strftime("%Y.%m.%d")
 
 

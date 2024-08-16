@@ -365,8 +365,6 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         return self.test_simple('gz')
 
     # except bz2 can't operate in stream mode on py24
-    if sys.version_info[:2] <= (2, 4):
-        test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
 
     @defer.inlineCallbacks
     def test_out_of_space_unpack(self):
