@@ -46,7 +46,7 @@ class Expect:
         other_kwargs = self.kwargs.copy()
         del other_kwargs['command']
         del other_kwargs['workdir']
-        return "Command: {0}\n  workdir: {1}\n  kwargs: {2}\n  result: {3}\n".format(
+        return "Command: {}\n  workdir: {}\n  kwargs: {}\n  result: {}\n".format(
             self.kwargs['command'], self.kwargs['workdir'], other_kwargs, self.result
         )
 
@@ -144,7 +144,7 @@ class FakeRunProcess:
             if msg:
                 msg.insert(
                     0,
-                    'did not get expected __init__ arguments for\n {0}'.format(
+                    'did not get expected __init__ arguments for\n {}'.format(
                         " ".join(map(repr, kwargs.get('command', ['unknown command'])))
                     ),
                 )

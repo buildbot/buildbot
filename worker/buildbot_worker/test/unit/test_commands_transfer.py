@@ -527,7 +527,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 1),
             (
                 'stderr',
-                "Cannot open file '{0}' for download".format(os.path.join(self.basedir, 'dir')),
+                "Cannot open file '{}' for download".format(os.path.join(self.basedir, 'dir')),
             ),
         ])
 
@@ -554,7 +554,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 1),
             (
                 'stderr',
-                "Maximum filesize reached, truncating file '{0}'".format(
+                "Maximum filesize reached, truncating file '{}'".format(
                     os.path.join(self.basedir, 'data')
                 ),
             ),
