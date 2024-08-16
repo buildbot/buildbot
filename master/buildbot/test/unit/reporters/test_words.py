@@ -240,7 +240,7 @@ class TestContact(ContactMixin, unittest.TestCase):
         missing_worker(
             (None, None, 'missing'), {"workerid": 1, "name": 'work', "last_connection": 'sometime'}
         )
-        self.assertEquals(self.sent[1], "Worker `work` is missing. It was seen last on sometime.")
+        self.assertEqual(self.sent[1], "Worker `work` is missing. It was seen last on sometime.")
         self.assertIn(1, self.contact.channel.missing_workers)
 
     @defer.inlineCallbacks
@@ -253,7 +253,7 @@ class TestContact(ContactMixin, unittest.TestCase):
             (None, None, 'connected'),
             {"workerid": 1, "name": 'work', "last_connection": 'sometime'},
         )
-        self.assertEquals(self.sent[1], "Worker `work` is back online.")
+        self.assertEqual(self.sent[1], "Worker `work` is back online.")
         self.assertNotIn(1, self.contact.channel.missing_workers)
 
     @defer.inlineCallbacks

@@ -128,7 +128,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertFalse(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
@@ -151,7 +151,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf(('stderr', nl('hello\n')) not in self.updates, self.show())
+        self.assertFalse(('stderr', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
@@ -162,7 +162,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         yield s.start()
 
-        self.failIf(('stderr', nl('hello\n')) in self.updates, self.show())
+        self.assertFalse(('stderr', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
