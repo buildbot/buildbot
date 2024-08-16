@@ -397,7 +397,7 @@ class TestBotFactory(unittest.TestCase):
         self.bf.startTimers()
         clock.callLater(100, self.bf.stopTimers)
 
-        clock.pump((1 for _ in range(150)))
+        clock.pump(1 for _ in range(150))
         self.assertEqual(calls, [35, 70])
 
     def test_timers_exception(self):

@@ -125,7 +125,7 @@ class BBRefTargetDirective(Directive):
             todocname, targetname = targets[target]
         except KeyError:
             logger.warning(
-                (f"{fromdocname}:{node.line}: Missing BB reference: bb:{cls.ref_type}:{target}")
+                f"{fromdocname}:{node.line}: Missing BB reference: bb:{cls.ref_type}:{target}"
             )
             return None
 

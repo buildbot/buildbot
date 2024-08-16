@@ -812,7 +812,7 @@ class RunProcess:
                     hit = 1
                 except OSError:
                     self.log_msg(
-                        'failed to kill process group (ignored): {0}'.format((sys.exc_info()[1]))
+                        'failed to kill process group (ignored): {0}'.format(sys.exc_info()[1])
                     )
                     # probably no-such-process, maybe because there is no process
                     # group

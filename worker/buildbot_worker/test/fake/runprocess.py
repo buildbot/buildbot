@@ -55,7 +55,7 @@ class Expect:
         return self
 
     def updates(self, updates):
-        self.status_updates.append((updates))
+        self.status_updates.append(updates)
         return self
 
     def exit(self, rc_code):
