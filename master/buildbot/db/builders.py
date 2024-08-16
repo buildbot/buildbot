@@ -71,7 +71,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
     ):
         # convert to tag IDs first, as necessary
         def toTagid(tag):
-            if isinstance(tag, type(1)):
+            if isinstance(tag, int):
                 return defer.succeed(tag)
             ssConnector = self.master.db.tags
             return ssConnector.findTagId(tag)
