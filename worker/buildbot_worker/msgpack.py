@@ -194,7 +194,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     debug = True
 
     def __init__(self):
-        super(BuildbotWebSocketClientProtocol, self).__init__()
+        super().__init__()
         self.seq_num_to_waiters_map = {}
         self._deferwaiter = deferwaiter.DeferWaiter()
 

@@ -51,16 +51,16 @@ class HangCheckProtocol(
         # because we only care about noticing data received, not
         # sent.
         self.transport = transport
-        super(HangCheckProtocol, self).makeConnection(transport)
+        super().makeConnection(transport)
         self._startHungConnectionTimer()
 
     def dataReceived(self, data):
         self._stopHungConnectionTimer()
-        super(HangCheckProtocol, self).dataReceived(data)
+        super().dataReceived(data)
 
     def connectionLost(self, reason):
         self._stopHungConnectionTimer()
-        super(HangCheckProtocol, self).connectionLost(reason)
+        super().connectionLost(reason)
 
     def _startHungConnectionTimer(self):
         """
