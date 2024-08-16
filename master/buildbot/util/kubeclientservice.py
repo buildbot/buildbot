@@ -94,7 +94,7 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
     def getAuthorization(self):
         if self.basicAuth is not None:
             basicAuth = yield self.renderSecrets(self.basicAuth)
-            authstring = f"{basicAuth['user']}:{basicAuth['password']}".encode('utf-8')
+            authstring = f"{basicAuth['user']}:{basicAuth['password']}".encode()
             encoded = base64.b64encode(authstring)
             return f"Basic {encoded}"
 

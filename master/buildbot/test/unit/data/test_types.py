@@ -94,7 +94,7 @@ class String(TypeMixin, unittest.TestCase):
     bad = [None, b'', b'hello', 10]
     stringValues = [
         (b'hello', 'hello'),
-        ('\N{SNOWMAN}'.encode('utf-8'), '\N{SNOWMAN}'),
+        ('\N{SNOWMAN}'.encode(), '\N{SNOWMAN}'),
     ]
     badStringValues = ['\xe0\xe0']
     cmpResults = [('bbb', 'aaa', 1)]
@@ -102,7 +102,7 @@ class String(TypeMixin, unittest.TestCase):
 
 class Binary(TypeMixin, unittest.TestCase):
     klass = types.Binary
-    good = [b'', b'\x01\x80\xfe', '\N{SNOWMAN}'.encode('utf-8')]
+    good = [b'', b'\x01\x80\xfe', '\N{SNOWMAN}'.encode()]
     bad = [None, 10, 'xyz']
     stringValues = [('hello', 'hello')]
     cmpResults = [('\x00\x80', '\x10\x10', -1)]
