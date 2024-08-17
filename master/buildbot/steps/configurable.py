@@ -334,6 +334,7 @@ class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, T
 
 eval_model = base_eval_model.clone()
 eval_model.nodes.append('Mul')
+eval_model.nodes.append('Slice')
 eval_model.nodes.append('Tuple')
 
 
