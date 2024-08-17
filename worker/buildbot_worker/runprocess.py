@@ -285,6 +285,7 @@ class RunProcess(object):
         sendRC=True,
         timeout=None,
         maxTime=None,
+        max_lines=None,
         sigtermTime=None,
         initialStdin=None,
         keepStdout=False,
@@ -351,6 +352,8 @@ class RunProcess(object):
         self.unicode_encoding = unicode_encoding
         self.send_update = send_update
         self.process = None
+        self.line_count = 0
+        self.max_line_kill = False
         if not os.path.exists(workdir):
             os.makedirs(workdir)
         if environ:
@@ -396,6 +399,7 @@ class RunProcess(object):
         self.ioTimeoutTimer = None
         self.sigtermTime = sigtermTime
         self.maxTime = maxTime
+        self.max_lines = max_lines
         self.maxTimeoutTimer = None
         self.killTimer = None
         self.keepStdout = keepStdout
@@ -681,6 +685,7 @@ class RunProcess(object):
 
     def addStdout(self, data):
         if self.sendStdout:
+            self._check_max_lines(data)
             self.send_update([('stdout', data)])
 
         if self.keepStdout:
@@ -690,6 +695,7 @@ class RunProcess(object):
 
     def addStderr(self, data):
         if self.sendStderr:
+            self._check_max_lines(data)
             self.send_update([('stderr', data)])
 
         if self.keepStderr:
@@ -752,6 +758,22 @@ class RunProcess(object):
             self.maxTime, self.fake_command
         )
         self.send_update([("failure_reason", "timeout")])
+        self.kill(msg)
+
+    def _check_max_lines(self, data):
+        if self.max_lines is not None:
+            self.line_count += len(re.findall(r"\r\n|\r|\n", data))
+            if self.line_count > self.max_lines and not self.max_line_kill:
+                self.pp.transport.closeStdout()
+                self.max_line_kill = True
+                self.do_max_lines()
+
+    def do_max_lines(self):
+        msg = (
+            f"command exceeds max lines: {self.line_count}/{self.max_lines} "
+            f"written/allowed running {self.fake_command}"
+        )
+        self.send_update([("failure_reason", "max_lines_failure")])
         self.kill(msg)
 
     def isDead(self):

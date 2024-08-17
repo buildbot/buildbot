@@ -176,7 +176,7 @@ RemoteCommand
 
         Add data to a logfile other than ``stdio``.
 
-.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False, collectStderr=False, interruptSignal=None, initialStdin=None, decodeRC=None, stdioLogName='stdio')
+.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, max_lines=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False, collectStderr=False, interruptSignal=None, initialStdin=None, decodeRC=None, stdioLogName='stdio')
 
     :param workdir: directory in which the command should be executed, relative to the builder's basedir
     :param command: shell command to run
@@ -185,6 +185,7 @@ RemoteCommand
     :param want_stderr: If false, then no updates will be sent for stderr
     :param timeout: Maximum time without output before the command is killed
     :param maxTime: Maximum overall time from the start before the command is killed
+    :param max_lines: Maximum lines command can produce to stdout, then command is killed.
     :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interruptSignal`` or SIGKILL if it's not defined.
                         If None, SIGTERM will not be fired
     :param env: A dictionary of environment variables to augment or replace the existing environment on the worker

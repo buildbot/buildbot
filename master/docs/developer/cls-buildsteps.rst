@@ -560,6 +560,7 @@ This class can only be used in new-style steps.
     .. py:attribute:: lazylogfiles
     .. py:attribute:: timeout
     .. py:attribute:: maxTime
+    .. py:attribute:: max_lines
     .. py:attribute:: logEnviron
     .. py:attribute:: interruptSignal
     .. py:attribute:: sigtermTime

@@ -791,6 +791,12 @@ Runs a ``shell`` command on the worker.
     Even if command is still running and giving the output, ``maxTime`` variable sets the maximum time the command is allowed to be performing.
     If ``maxTime`` is set to ``None``, command runs for as long as it needs unless ``timeout`` specifies otherwise.
 
+``max_lines``
+    Value is an integer and is optional.
+    If value is not specified, the default is ``None``.
+    It represents, how many produced lines a worker should wait before killing a process.
+    If ``max_lines`` is set to ``None``, command runs for as long as it needs unless ``timeout`` or ``maxTime`` specifies otherwise.
+
 ``sigtermTime``
     Value is an integer and is optional.
     If value is not specified, the default is ``None``.
@@ -829,6 +835,7 @@ Runs a ``shell`` command on the worker.
 
      - ``timeout`` if the command timed out due to time specified by the ``maxTime`` parameter being exceeded.
      - ``timeout_without_output`` if the command timed out due to time specified by the ``timeout`` parameter being exceeded.
+     - ``max_lines_failure`` if the command is killed due to the number of lines specified by the ``max_lines`` parameter being exceeded.
 
     The basic structure of worker ``update`` message is explained in section :ref:`MsgPack_Keys_And_Values_Message`.
 
@@ -1159,6 +1166,7 @@ Commands may have their own update names so only common ones are described here.
 
      - ``timeout`` if the command timed out due to time specified by the ``maxTime`` parameter being exceeded.
      - ``timeout_without_output`` if the command timed out due to time specified by the ``timeout`` parameter being exceeded.
+     - ``max_lines_failure`` if the command is killed due to the number of lines specified by the ``max_lines`` parameter being exceeded.
 
 ``header``
     Value is a string of a header.

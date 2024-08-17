@@ -114,6 +114,7 @@ class FakeRunProcess(object):
             "sendRC": True,
             "timeout": None,
             "maxTime": None,
+            "max_lines": None,
             "sigtermTime": None,
             "initialStdin": None,
             "keepStdout": False,
