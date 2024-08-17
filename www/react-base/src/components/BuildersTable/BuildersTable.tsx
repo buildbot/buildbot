@@ -28,7 +28,6 @@ import {
 } from "buildbot-data-js";
 import {Link} from "react-router-dom";
 import {
-  getBuildLinkDisplayProperties,
   BuildLinkWithSummaryTooltip,
   WorkerBadge,
   TagFilterManager,
@@ -64,7 +63,7 @@ export const BuildersTable = observer(
             limit: buildFetchLimit,
             order: '-started_at',
             builderid__eq: builderIds,
-            property: ['branch', ...getBuildLinkDisplayProperties()],
+            property: 'branch',
           }})
       });
 

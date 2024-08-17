@@ -19,10 +19,8 @@ import './BuildLinkWithSummaryTooltip.scss';
 import {Link} from "react-router-dom";
 import {OverlayTrigger, Tooltip} from "react-bootstrap";
 import {Build, results2class} from "buildbot-data-js";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {observer} from "mobx-react";
 import {Builder} from "buildbot-data-js";
-import {fillTemplate, parseTemplate} from "../../util/TemplateFormat";
 import {BuildSummaryTooltip} from "../BuildSummaryTooltip/BuildSummaryTooltip";
 import {BadgeRound} from "../BadgeRound/BadgeRound";
 
@@ -30,35 +28,6 @@ type BuildLinkWithSummaryTooltipProps = {
   build: Build;
   builder?: Builder | null;
 };
-
-export const getBuildLinkDisplayProperties = () => {
-  var template = buildbotGetSettings().getStringSetting('Links.build_link_template');
-  if (template === "")
-    return [];
-  return [...parseTemplate(template).replacements.values()]
-    .filter(x => x.startsWith("prop:"))
-    .map(x => x.substring(5));
-}
-
-export const formatBuildLinkText = (build: Build): string => {
-  var template = buildbotGetSettings().getStringSetting('Links.build_link_template');
-  if (template === "") {
-    return `${build.number}`;
-  }
-  var replacements = new Map<string, string>([['build_number', `${build.number}`]]);
-  for (const repl of parseTemplate(template).replacements.values()) {
-    if (repl.startsWith("prop:")) {
-      const prop = repl.substring(5);
-      const value = build.properties[prop];
-      if (value === undefined || value === null || value === '') {
-        continue;
-      }
-      replacements.set(repl, value[0]);
-    }
-  }
-
-  return fillTemplate(template, replacements);
-}
 
 export const BuildLinkWithSummaryTooltip =
   observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {
@@ -74,7 +43,10 @@ export const BuildLinkWithSummaryTooltip =
     </Tooltip>
   );
 
-  const buildText = formatBuildLinkText(build);
+  const buildText = ('branch' in build.properties) && (build.properties['branch'][0] !== null) &&
+                    (build.properties['branch'][0] !== "")
+    ? `${build.properties['branch'][0]} (${build.number})`
+    : `${build.number}`;
 
   const linkText = builder !== undefined
     ? `${builder.name} / ${buildText}`
@@ -90,18 +62,4 @@ export const BuildLinkWithSummaryTooltip =
       </OverlayTrigger>
     </Link>
   );
-});
-
-buildbotSetupPlugin((reg) => {
-  reg.registerSettingGroup({
-    name: 'Links',
-    caption: 'Settings related to links between pages',
-    items: [{
-      type: 'string',
-      name: 'build_link_template',
-      caption: 'Format of data displayed in build badges. Use %(prop:build_property) to include ' +
-        'build properties, %(build_number) to include build number',
-      defaultValue: '%(prop:branch) (%(build_number))'
-    }
-  ]});
 });
