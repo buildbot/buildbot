@@ -21,7 +21,7 @@ psutil==6.0.0
 # while to remove no longer needed dependencies.
 
 alembic==1.13.2
-attrs==24.1.0
+attrs==24.2.0
 autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
 Automat==22.10.0
