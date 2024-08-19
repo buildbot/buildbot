@@ -31,5 +31,5 @@ txaio==23.1.1;  python_version >= "3.6"
 typing-extensions==4.12.2;  python_version >= "3.7"
 typing-extensions==4.12.2;  python_version < "3.7" and python_version >= "3.5"
 zope.interface==5.4.0;  python_version < "3.6"  # pyup: ignore
-zope.interface==6.4.post2;  python_version >= "3.6"
+zope.interface==7.0.1;  python_version >= "3.6"
 -e worker
