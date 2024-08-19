@@ -24,7 +24,7 @@ alembic==1.13.2
 attrs==24.2.0
 autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
-Automat==22.10.0
+Automat==24.8.0
 boto==2.49.0
 boto3==1.34.161
 botocore==1.34.161
