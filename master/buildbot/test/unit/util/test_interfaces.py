@@ -32,6 +32,7 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             @self.assertArgSpecMatches(myfunc)
             def myfunc3(x, y=3, *args):
                 pass
+
         except Exception as e:
             error = e
         else:
@@ -59,6 +60,7 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             @self.assertArgSpecMatches(myfunc, myfunc3)
             def myfunc5(x, y):
                 pass
+
         except Exception as e:
             error = e
         else:
@@ -72,6 +74,7 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             @self.assertArgSpecMatches(myfunc, myfunc3)
             def myfunc6(xx, yy):
                 pass
+
         except Exception as e:
             error = e
         else:

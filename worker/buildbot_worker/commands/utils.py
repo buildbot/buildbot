@@ -103,6 +103,7 @@ if runtime.platformType == 'win32':  # pragma: no cover
                     os.chmod(full_name, 0o700)
                 os.remove(full_name)
         os.rmdir(dir)
+
 else:
     # use rmtree on POSIX
     import shutil
