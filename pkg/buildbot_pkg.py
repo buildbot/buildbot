@@ -230,7 +230,12 @@ class BuildJsCommand(Command):
 
             for command in commands:
                 logging.info('Running command: {}'.format(str(" ".join(command))))
-                subprocess.check_call(command, shell=shell)
+                try:
+                    subprocess.check_call(command, shell=shell)
+                except subprocess.CalledProcessError as e:
+                    raise Exception(
+                        f"Exception = {e} command was called in directory = {os.getcwd()}"
+                    ) from e
 
         self.copy_tree(
             os.path.join(package, 'static'), os.path.join("build", "lib", package, "static")
