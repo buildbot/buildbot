@@ -70,7 +70,7 @@ six==1.16.0
 SQLAlchemy==2.0.32
 treq==23.11.0;  python_version >= "3.9"
 treq==22.2.0;  python_version < "3.9" # pyup: ignore
-Twisted==24.3.0
+Twisted==24.7.0
 txaio==23.1.1
 txrequests==0.9.6
 typing_extensions==4.12.2
