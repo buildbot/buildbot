@@ -17,10 +17,10 @@ export class MockWebSocket implements WebSocket {
   readyState: number = WebSocket.CONNECTING;
   readonly url: string = '';
   close(code?: number, reason?: string): void {}
-  readonly CLOSED: number = WebSocket.CLOSED;
-  readonly CLOSING: number = WebSocket.CLOSING;
-  readonly CONNECTING: number = WebSocket.CONNECTING;
-  readonly OPEN: number = WebSocket.OPEN;
+  readonly CLOSED = WebSocket.CLOSED;
+  readonly CLOSING = WebSocket.CLOSING;
+  readonly CONNECTING = WebSocket.CONNECTING;
+  readonly OPEN = WebSocket.OPEN;
 
   addEventListener<K extends keyof WebSocketEventMap>(
     type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
