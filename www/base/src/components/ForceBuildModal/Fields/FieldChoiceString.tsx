@@ -17,9 +17,11 @@
 
 import {ForceSchedulerFieldChoiceString} from "buildbot-data-js";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
+import {FaRegQuestionCircle} from "react-icons/fa";
 import {observer} from "mobx-react";
 import {FieldBase} from "./FieldBase";
 import {Form} from "react-bootstrap";
+import {Tooltip} from 'react-tooltip'
 
 type FieldChoiceStringProps = {
   field: ForceSchedulerFieldChoiceString;
@@ -47,7 +49,14 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <Form.Label className="col-sm-10">{field.label}</Form.Label>
+      <Form.Label className="col-sm-10">{field.label}
+        {field.tooltip && (
+          <span data-tooltip-id="my-tooltip" data-tooltip-html={field.tooltip}>
+            <FaRegQuestionCircle className="tooltip-icon"/>
+          </span>
+        )}
+        <Tooltip id="my-tooltip" clickable/>
+      </Form.Label>
       <div className="col-sm-10">
         <Form.Control data-bb-test-id={`force-field-${field.fullName}`}
                       as="select" multiple={field.multiple} value={state.value}

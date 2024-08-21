@@ -25,6 +25,7 @@ export type ForceSchedulerFieldBase = {
   hide: boolean;
   maxsize: number | null;
   autopopulate: boolean | null;
+  tooltip: string;
 }
 
 export type ForceSchedulerFieldFixed = ForceSchedulerFieldBase & {
@@ -78,6 +79,7 @@ export class Forcescheduler extends BaseClass {
   @observable builder_names!: string[];
   @observable button_name!: string;
   @observable label!: string;
+  @observable tooltip!: string;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
     super(accessor, endpoint, object.name);
@@ -91,6 +93,7 @@ export class Forcescheduler extends BaseClass {
     this.builder_names = object.builder_names;
     this.button_name = object.button_name;
     this.label = object.label;
+    this.tooltip = object.tooltip;
   }
 
   toObject() {
@@ -100,6 +103,7 @@ export class Forcescheduler extends BaseClass {
       builder_names: this.builder_names,
       button_name: this.button_name,
       label: this.label,
+      tooltip: this.tooltip,
     };
   }
 

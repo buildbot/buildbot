@@ -42,6 +42,7 @@ function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
     hide: false,
     maxsize: null,
     autopopulate: null,
+    tooltip: 'dummy',
     choices: ['A', 'B', 'C'],
     strict: options.strict ?? true,
   }

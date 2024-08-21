@@ -17,8 +17,10 @@
 
 import {ForceSchedulerFieldText} from "buildbot-data-js";
 import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
+import {FaRegQuestionCircle} from "react-icons/fa";
 import {observer} from "mobx-react";
 import {FieldBase} from "./FieldBase";
+import {Tooltip} from 'react-tooltip'
 
 type FieldTextProps = {
   field: ForceSchedulerFieldText;
@@ -30,7 +32,14 @@ export const FieldText = observer(({field, fieldsState}: FieldTextProps) => {
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <label htmlFor={field.fullName} className="control-label col-sm-10">{field.label}</label>
+      <label htmlFor={field.fullName} className="control-label col-sm-10">{field.label}
+      {field.tooltip && (
+        <span data-tooltip-id="my-tooltip" data-tooltip-html={field.tooltip}>
+          <FaRegQuestionCircle className="tooltip-icon"/>
+        </span>
+      )}
+      <Tooltip id="my-tooltip" clickable/>
+      </label>
       <div className="col-sm-10">
         <textarea data-bb-test-id={`force-field-${field.fullName}`}
                   className="form-control" rows={field.rows} value={state.value}

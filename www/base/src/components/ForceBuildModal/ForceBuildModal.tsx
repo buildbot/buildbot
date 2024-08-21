@@ -87,6 +87,7 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
     hide: false,
     maxsize: null,
     autopopulate: null,
+    tooltip: 'dummy',
   };
 
   const [error, setError] = useState<string|null>(null);

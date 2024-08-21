@@ -48,6 +48,7 @@
     "react-icons": "^4.8.0",
     "react-refresh": "^0.8.3",
     "react-router-dom": "^6.3.0",
+    "react-tooltip": "^5.28.0",
     "react-virtualized-auto-sizer": "^1.0.7",
     "resolve": "1.18.1",
     "ts-pnp": "1.2.0",

@@ -614,7 +614,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "text", "default": "", "required": false, '
             '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-            '"size": 10, "autopopulate": null}',
+            '"size": 10, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_StringParameter_Required(self):
@@ -652,7 +652,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "file", "default": "", "required": false, '
             '"multiple": false, "regex": null, "hide": false, '
-            '"maxsize": 10485760, "autopopulate": null}',
+            '"maxsize": 10485760, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_PatchParameter(self):
@@ -660,24 +660,24 @@ class TestForceScheduler(
             '{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
             '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
             '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-            '"layout": "vertical", "columns": 1, "fields": [{"name": "body", '
+            '"layout": "vertical", "columns": 1, "tooltip": "", "fields": [{"name": "body", '
             '"fullName": "p1_body", "label": "body", "tablabel": "body", "autopopulate": null, '
             '"type": "file", "default": "", "required": false, "multiple": false, '
-            '"regex": null, "hide": false, "maxsize": 10485760}, {"name": "level", '
+            '"regex": null, "hide": false, "maxsize": 10485760, "tooltip": ""}, {"name": "level", '
             '"fullName": "p1_level", "label": "level", "tablabel": "level", '
             '"type": "int", "default": 1, "required": false, "multiple": false, '
-            '"regex": null, "hide": false, "maxsize": null, "size": 10, "autopopulate": null}, '
+            '"regex": null, "hide": false, "maxsize": null, "size": 10, "autopopulate": null, "tooltip": ""}, '
             '{"name": "author", "fullName": "p1_author", "label": "author", '
             '"tablabel": "author", "type": "text", "default": "", "autopopulate": null, '
             '"required": false, "multiple": false, "regex": null, "hide": false, '
-            '"maxsize": null, "size": 10}, {"name": "comment", "autopopulate": null, '
+            '"maxsize": null, "size": 10, "tooltip": ""}, {"name": "comment", "autopopulate": null, '
             '"fullName": "p1_comment", "label": "comment", "tablabel": "comment", '
             '"type": "text", "default": "", "required": false, "multiple": false, '
-            '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
+            '"regex": null, "hide": false, "maxsize": null, "size": 10, "tooltip": ""}, '
             '{"name": "subdir", "fullName": "p1_subdir", "label": "subdir", '
             '"tablabel": "subdir", "type": "text", "default": ".", "autopopulate": null, '
             '"required": false, "multiple": false, "regex": null, "hide": false, '
-            '"maxsize": null, "size": 10}]}'
+            '"maxsize": null, "size": 10, "tooltip": ""}]}'
         )
 
         self.do_ParameterTest(
@@ -695,7 +695,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "int", "default": 0, "required": false, '
             '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-            '"size": 10, "autopopulate": null}',
+            '"size": 10, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_FixedParameter(self):
@@ -707,7 +707,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "fixed", "default": "321", '
             '"required": false, "multiple": false, "regex": null, "hide": true, '
-            '"maxsize": null, "autopopulate": null}',
+            '"maxsize": null, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_BooleanParameter_True(self):
@@ -720,7 +720,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "bool", "default": "", "required": false, '
             '"multiple": false, "regex": null, "hide": false, '
-            '"maxsize": null, "autopopulate": null}',
+            '"maxsize": null, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_BooleanParameter_False(self):
@@ -734,7 +734,7 @@ class TestForceScheduler(
             '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
             '"default": "", "required": false, "multiple": false, "regex": null, '
             '"hide": false, "maxsize": null, "size": 30, '
-            '"need_email": true, "autopopulate": null}'
+            '"need_email": true, "autopopulate": null, "tooltip": ""}'
         )
         self.do_ParameterTest(
             value=email,
@@ -752,7 +752,7 @@ class TestForceScheduler(
             '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
             '"default": "", "required": false, "multiple": false, "regex": null, '
             '"hide": false, "maxsize": null, "size": 30, '
-            '"need_email": true, "autopopulate": null}'
+            '"need_email": true, "autopopulate": null, "tooltip": ""}'
         )
         self.do_ParameterTest(
             value=email,
@@ -770,7 +770,7 @@ class TestForceScheduler(
             '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
             '"default": "", "required": false, "multiple": false, "regex": null, '
             '"hide": false, "maxsize": null, "size": 30, '
-            '"need_email": true, "autopopulate": null}'
+            '"need_email": true, "autopopulate": null, "tooltip": ""}'
         )
         self.do_ParameterTest(
             value=email,
@@ -790,7 +790,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "list", "default": "", "required": false, '
             '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-            '"choices": ["t1", "t2"], "strict": true, "autopopulate": null}',
+            '"choices": ["t1", "t2"], "strict": true, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_ChoiceParameterError(self):
@@ -818,7 +818,7 @@ class TestForceScheduler(
             expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
             '"tablabel": "p1", "type": "list", "default": "", "required": false, '
             '"multiple": true, "regex": null, "hide": false, "maxsize": null, '
-            '"choices": ["t1", "t2"], "strict": true, "autopopulate": null}',
+            '"choices": ["t1", "t2"], "strict": true, "autopopulate": null, "tooltip": ""}',
         )
 
     def test_ChoiceParameterMultipleError(self):
@@ -838,10 +838,10 @@ class TestForceScheduler(
             '{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
             '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
             '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-            '"layout": "vertical", "columns": 1, "fields": [{"name": "foo", '
+            '"layout": "vertical", "columns": 1, "tooltip": "", "fields": [{"name": "foo", '
             '"fullName": "p1_foo", "label": "foo", "tablabel": "foo", "autopopulate": null, '
             '"type": "int", "default": 0, "required": false, "multiple": false, '
-            '"regex": null, "hide": false, "maxsize": null, "size": 10}]}'
+            '"regex": null, "hide": false, "maxsize": null, "size": 10, "tooltip": ""}]}'
         )
         self.do_ParameterTest(
             req={"p1_foo": '123', "reason": 'because'},
