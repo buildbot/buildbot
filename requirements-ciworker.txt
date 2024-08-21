@@ -1,11 +1,11 @@
 attrs==21.4.0;  python_version < "3.6"  # pyup: ignore
-attrs==24.1.0;  python_version >= "3.6"
+attrs==24.2.0;  python_version >= "3.6"
 autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 Automat==20.2.0;  python_version < "3.6"  # pyup: ignore
-Automat==22.10.0;  python_version >= "3.6"
-cffi==1.16.0;  python_version >= "3.6"
+Automat==24.8.0;  python_version >= "3.6"
+cffi==1.17.0;  python_version >= "3.6"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
 cryptography==43.0.0;  python_version >= "3.6"
@@ -31,5 +31,5 @@ txaio==23.1.1;  python_version >= "3.6"
 typing-extensions==4.12.2;  python_version >= "3.7"
 typing-extensions==4.12.2;  python_version < "3.7" and python_version >= "3.5"
 zope.interface==5.4.0;  python_version < "3.6"  # pyup: ignore
-zope.interface==6.4.post2;  python_version >= "3.6"
+zope.interface==7.0.1;  python_version >= "3.6"
 -e worker
