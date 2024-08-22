@@ -33,6 +33,8 @@ buildbot checkconfig workdir
 # on docker buildbot might be a little bit slower to start, so sleep another 20s in case of start to slow.
 buildbot start workdir || sleep 20
 buildbot-worker start workdir/worker
+
+trap finish EXIT
 cat workdir/twistd.log &
 
 yarn install --pure-lockfile
