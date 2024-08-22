@@ -51,6 +51,7 @@ class DataConnector(service.AsyncService):
         'buildbot.data.changes',
         'buildbot.data.changesources',
         'buildbot.data.masters',
+        'buildbot.data.messageinfo',
         'buildbot.data.sourcestamps',
         'buildbot.data.schedulers',
         'buildbot.data.forceschedulers',
