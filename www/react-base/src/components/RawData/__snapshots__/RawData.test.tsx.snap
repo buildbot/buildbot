@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RawData component object with array of objects 1`] = `
+exports[`RawData component > object with array of objects 1`] = `
 <dl
   className="dl-horizontal"
 >
@@ -19,7 +19,7 @@ exports[`RawData component object with array of objects 1`] = `
         stroke="currentColor"
         strokeWidth="0"
         style={
-          Object {
+          {
             "color": undefined,
           }
         }
@@ -39,7 +39,7 @@ exports[`RawData component object with array of objects 1`] = `
 </dl>
 `;
 
-exports[`RawData component object with array of objects expanded 1`] = `
+exports[`RawData component > object with array of objects expanded 1`] = `
 <dl
   className="dl-horizontal"
 >
@@ -58,7 +58,7 @@ exports[`RawData component object with array of objects expanded 1`] = `
         stroke="currentColor"
         strokeWidth="0"
         style={
-          Object {
+          {
             "color": undefined,
           }
         }
@@ -179,7 +179,7 @@ exports[`RawData component object with array of objects expanded 1`] = `
 </dl>
 `;
 
-exports[`RawData component observable object 1`] = `
+exports[`RawData component > observable object 1`] = `
 <dl
   className="dl-horizontal"
 >
@@ -263,7 +263,7 @@ exports[`RawData component observable object 1`] = `
 </dl>
 `;
 
-exports[`RawData component observable object with array of objects 1`] = `
+exports[`RawData component > observable object with array of objects 1`] = `
 <dl
   className="dl-horizontal"
 >
@@ -282,7 +282,7 @@ exports[`RawData component observable object with array of objects 1`] = `
         stroke="currentColor"
         strokeWidth="0"
         style={
-          Object {
+          {
             "color": undefined,
           }
         }
@@ -302,7 +302,7 @@ exports[`RawData component observable object with array of objects 1`] = `
 </dl>
 `;
 
-exports[`RawData component simple object 1`] = `
+exports[`RawData component > simple object 1`] = `
 <dl
   className="dl-horizontal"
 >

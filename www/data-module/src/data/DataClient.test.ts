@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import axios from "axios";
 import {WebSocketClient} from "./WebSocketClient";
 import {MockWebSocket} from "./MockWebSocket";
@@ -58,7 +59,7 @@ describe('Data service', () => {
   let client: DataClient;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['nextTick'] });
     mock = new MockAdapter(axios);
     restClient = new RestClient(rootUrl);
     webSocket = new MockWebSocket();
@@ -71,9 +72,9 @@ describe('Data service', () => {
     mock.reset();
   });
 
-  function flushPromisesAndTimers() {
-    jest.runAllTimers();
-    return new Promise(resolve => setImmediate(resolve));
+  const flushPromisesAndTimers = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await vi.runAllTimersAsync();
   }
 
   describe('get()', () => {
@@ -198,7 +199,7 @@ describe('Data service', () => {
       const collection = data.get<TestDataClass>('/tests', {subscribe: false}, testDescriptor);
       await flushPromisesAndTimers();
       expect(collection.array.length).toBe(3);
-      const spyClose = jest.spyOn(collection, 'close');
+      const spyClose = vi.spyOn(collection, 'close');
       data.close();
       expect(collection.close).toHaveBeenCalled();
     });

@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {Builder, IDataAccessor} from "buildbot-data-js";
 import {sortBuildersByTags, TagLineConfig} from "./ConsoleView";
 

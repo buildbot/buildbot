@@ -23,7 +23,7 @@ VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
 
 WWW_PKGS := www/base www/react-base www/console_view www/react-console_view www/grid_view www/react-grid_view www/waterfall_view www/react-waterfall_view www/wsgi_dashboards www/react-wsgi_dashboards www/badges
-WWW_EX_PKGS := www/nestedexample www/codeparameter
+WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 

@@ -41,13 +41,14 @@
   SOFTWARE.
 */
 
+import {beforeEach, describe, expect, it, vi} from "vitest";
 import React, {createRef, memo} from 'react';
 import {createRoot} from 'react-dom/client';
 import renderer from "react-test-renderer";
 import {Simulate} from 'react-dom/test-utils';
 import {FixedSizeList, FixedSizeListProps} from './FixedSizeList';
 import * as domHelpers from './domHelpers';
-import Mock = jest.Mock;
+import Mock = vi.Mock;
 
 const simulateScroll = (instance: FixedSizeList<any>, scrollOffset: number, direction = 'vertical') => {
   if (direction === 'horizontal') {
@@ -78,7 +79,8 @@ async function renderWithReactDom(children: React.ReactNode) {
   const instance = createRoot(document.createElement('div'));
   instance.render(children);
   await waitForAnimationFrame();
-  jest.runAllTimers();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await vi.runAllTimersAsync();
   await waitForAnimationFrame();
 }
 
@@ -93,7 +95,7 @@ describe('FixedSizeList', () => {
   let mockedScrollWidth = Number.MAX_SAFE_INTEGER;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['nextTick'] });
 
     mockedScrollHeight = Number.MAX_SAFE_INTEGER;
     mockedScrollWidth = Number.MAX_SAFE_INTEGER;
@@ -125,12 +127,13 @@ describe('FixedSizeList', () => {
     });
 
     // Mock the DOM helper util for testing purposes.
-    getScrollbarSize = (domHelpers as any).getScrollbarSize = jest.fn(() => 0);
+    getScrollbarSize = vi.spyOn(domHelpers, "getScrollbarSize");
+    getScrollbarSize.mockImplementation(() => 0);
 
-    onItemsRendered = jest.fn();
+    onItemsRendered = vi.fn();
 
 
-    itemRenderer = jest.fn(({ style, ...rest }) => (
+    itemRenderer = vi.fn(({ style, ...rest }) => (
       <div style={style}>{JSON.stringify(rest, null, 2)}</div>
     ));
 
@@ -348,13 +351,13 @@ describe('FixedSizeList', () => {
       itemRenderer.mockClear();
       simulateScroll(ref.current!, 100);
 
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(itemRenderer.mock.calls[0][0].isScrolling).toBe(true);
       itemRenderer.mockClear();
 
       await waitForAnimationFrame();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(itemRenderer.mock.calls[0][0].isScrolling).toBe(false);
     });*/
@@ -366,7 +369,7 @@ describe('FixedSizeList', () => {
 
       simulateScroll(ref.current!, 100);
       itemRenderer.mockClear();
-      jest.runAllTimers();
+      vi.runAllTimers();
       expect(itemRenderer).not.toHaveBeenCalled();
     });
   });
@@ -386,7 +389,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should ignore values less than zero', async () => {
-      const onScroll = jest.fn();
+      const onScroll = vi.fn();
       const ref = createRef<FixedSizeList<any>>();
       await renderWithReactDom(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref}/>);
 
@@ -404,7 +407,7 @@ describe('FixedSizeList', () => {
 
   describe('scrollToItem method', () => {
     it('should not set invalid offsets when the list contains few items', () => {
-      const onScroll = jest.fn();
+      const onScroll = vi.fn();
       const ref = createRef<FixedSizeList<any>>();
       renderer.create(
         <FixedSizeList {...defaultProps} itemCount={3} onScroll={onScroll} ref={ref}/>
@@ -618,7 +621,7 @@ describe('FixedSizeList', () => {
   // onItemsRendered is pretty well covered by other snapshot tests
   describe('onScroll', () => {
     it('should call onScroll after mount', () => {
-      const onScroll = jest.fn();
+      const onScroll = vi.fn();
       renderer.create(
         <FixedSizeList {...defaultProps} onScroll={onScroll} />
       );
@@ -626,7 +629,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should call onScroll when scroll position changes', () => {
-      const onScroll = jest.fn();
+      const onScroll = vi.fn();
       const ref = createRef<FixedSizeList<any>>();
       renderer.create(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref}/>);
 
@@ -636,7 +639,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should distinguish between "onScroll" events and scrollTo() calls', async () => {
-      const onScroll = jest.fn();
+      const onScroll = vi.fn();
       // Use ReactDOM renderer so the container ref and "onScroll" event work correctly.
       const ref = createRef<FixedSizeList<any>>();
 
@@ -694,7 +697,7 @@ describe('FixedSizeList', () => {
 
   describe('itemKey', () => {
     it('should be used', () => {
-      const itemKey = jest.fn(index => index);
+      const itemKey = vi.fn(index => index);
       renderer.create(
         <FixedSizeList {...defaultProps} itemCount={3} itemKey={itemKey} />
       );
@@ -706,13 +709,13 @@ describe('FixedSizeList', () => {
 
     it('should allow items to be moved within the collection without causing caching problems', () => {
       const keyMap = ['0', '1', '2'];
-      const keyMapItemRenderer = jest.fn(({ index, style }) => (
+      const keyMapItemRenderer = vi.fn(({ index, style }) => (
         <div style={style}>{keyMap[index]}</div>
       ));
 
       const ref = createRef<FixedSizeList<any>>();
 
-      const itemKey = jest.fn(index => keyMap[index]);
+      const itemKey = vi.fn(index => keyMap[index]);
       renderer.create(
         <FixedSizeList {...defaultProps} itemCount={3} itemKey={itemKey} ref={ref}>
           {memo((props) => keyMapItemRenderer(props))}
@@ -743,7 +746,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should receive a data value if itemData is provided', () => {
-      const itemKey = jest.fn(index => index);
+      const itemKey = vi.fn(index => index);
       const itemData = {};
       renderer.create(
         <FixedSizeList
@@ -761,8 +764,8 @@ describe('FixedSizeList', () => {
 
   describe('refs', () => {
     it('should pass through innerRef and outerRef ref functions', async () => {
-      const innerRef = jest.fn();
-      const outerRef = jest.fn();
+      const innerRef = vi.fn();
+      const outerRef = vi.fn();
       await renderWithReactDom(
         <FixedSizeList
           {...defaultProps}

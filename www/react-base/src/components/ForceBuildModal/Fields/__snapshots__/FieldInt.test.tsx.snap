@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ForceFieldInt component change state on click 1`] = `
+exports[`ForceFieldInt component > change state on click 1`] = `
 <div>
   <div
     className="form-group"
@@ -32,7 +32,7 @@ exports[`ForceFieldInt component change state on click 1`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render default value 1`] = `
+exports[`ForceFieldInt component > render default value 1`] = `
 <div>
   <div
     className="form-group"
@@ -64,7 +64,7 @@ exports[`ForceFieldInt component render default value 1`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render default value 2`] = `
+exports[`ForceFieldInt component > render default value 2`] = `
 <div>
   <div
     className="form-group"
@@ -96,7 +96,7 @@ exports[`ForceFieldInt component render default value 2`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render default value 3`] = `
+exports[`ForceFieldInt component > render default value 3`] = `
 <div>
   <div
     className="form-group"
@@ -128,7 +128,7 @@ exports[`ForceFieldInt component render default value 3`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render default value 4`] = `
+exports[`ForceFieldInt component > render default value 4`] = `
 <div>
   <div
     className="form-group"
@@ -160,7 +160,7 @@ exports[`ForceFieldInt component render default value 4`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render non-default value 1`] = `
+exports[`ForceFieldInt component > render non-default value 1`] = `
 <div>
   <div
     className="form-group"
@@ -192,7 +192,7 @@ exports[`ForceFieldInt component render non-default value 1`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render non-default value 2`] = `
+exports[`ForceFieldInt component > render non-default value 2`] = `
 <div>
   <div
     className="form-group"
@@ -224,7 +224,7 @@ exports[`ForceFieldInt component render non-default value 2`] = `
 </div>
 `;
 
-exports[`ForceFieldInt component render non-default value 3`] = `
+exports[`ForceFieldInt component > render non-default value 3`] = `
 <div>
   <div
     className="form-group"

@@ -59,4 +59,7 @@ export default defineConfig({
     outDir: outDir,
     emptyOutDir: true,
   },
+  test: {
+    environment: "jsdom"
+  },
 });
