@@ -1,0 +1,38 @@
+.message-info {
+    text-align: center;
+    position: relative;
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
+  .message-info p {
+    padding: 10px 40px 10px 40px;
+    margin-bottom: 0;
+  }
+
+  .message-info.closed {
+    max-height: 0;
+  }
+
+  .float-icon {
+    position: fixed;
+    z-index: 999;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #ff4a59;
+  }
+
+  .close-button {
+    position: absolute;
+    z-index: 999;
+    cursor: pointer;
+    font-size: 20px;
+    color: #ff4a59;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto 0;
+    border: none;
+}

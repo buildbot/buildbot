@@ -27,6 +27,7 @@ export * from "./data/classes/Step";
 export * from "./data/classes/TestResult";
 export * from "./data/classes/TestResultSet";
 export * from "./data/classes/Worker";
+export * from "./data/classes/MessageInfoClass";
 
 export * from "./data/ApplicationSpec";
 export * from "./data/BasicDataMultiCollection";
