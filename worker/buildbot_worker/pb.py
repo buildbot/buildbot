@@ -40,14 +40,9 @@ from buildbot_worker.pbutil import AutoLoginPBFactory
 from buildbot_worker.pbutil import decode
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
-if sys.version_info >= (3, 6):
-    from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
-    from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
-    from buildbot_worker.msgpack import ProtocolCommandMsgpack
-else:
-    BuildbotWebSocketClientFactory = None
-    BuildbotWebSocketClientProtocol = None
-    ProtocolCommandMsgpack = None
+from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
+from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
+from buildbot_worker.msgpack import ProtocolCommandMsgpack
 
 
 class UnknownCommand(pb.Error):
@@ -236,7 +231,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         self.protocol_command = None
 
     def __repr__(self):
-        return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
+        return f"<WorkerForBuilder '{self.name}' at {id(self)}>"
 
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
@@ -271,11 +266,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg(
-            "WorkerForBuilder.remote_print({0}): message from master: {1}".format(
-                self.name, message
-            )
-        )
+        log.msg(f"WorkerForBuilder.remote_print({self.name}): message from master: {message}")
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -329,7 +320,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
             command_ref,
         )
 
-        log.msg("(command {0}): startCommand:{1}".format(command_id, command))
+        log.msg(f"(command {command_id}): startCommand:{command}")
         self.protocol_command.protocol_notify_on_disconnect()
         d = self.protocol_command.command.doStart()
         d.addCallback(lambda res: None)
@@ -338,7 +329,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
 
     def remote_interruptCommand(self, command_id, why):
         """Halt the current step."""
-        log.msg("(command {0}): asked to interrupt: reason {1}".format(command_id, why))
+        log.msg(f"(command {command_id}): asked to interrupt: reason {why}")
         if not self.protocol_command:
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running
@@ -353,7 +344,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         silence it, and then forget about it."""
         if not self.protocol_command:
             return
-        log.msg("stopCommand: halting current command {0}".format(self.protocol_command.command))
+        log.msg(f"stopCommand: halting current command {self.protocol_command.command}")
         self.protocol_command.command.doInterrupt()
         self.protocol_command = None
 
@@ -375,11 +366,7 @@ class BotPbLike(BotBase):
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
-                    log.msg(
-                        "changing builddir for builder {0} from {1} to {2}".format(
-                            name, b.builddir, builddir
-                        )
-                    )
+                    log.msg(f"changing builddir for builder {name} from {b.builddir} to {builddir}")
                     b.setBuilddir(builddir)
             else:
                 b = self.WorkerForBuilder(
@@ -412,18 +399,18 @@ class BotPbLike(BotBase):
                 if dir not in wanted_dirs:
                     if self.delete_leftover_dirs:
                         log.msg(
-                            "Deleting directory '{0}' that is not being "
-                            "used by the buildmaster".format(dir)
+                            f"Deleting directory '{dir}' that is not being "
+                            "used by the buildmaster"
                         )
                         try:
                             shutil.rmtree(dir)
                         except OSError as e:
-                            log.msg("Cannot remove directory '{0}': {1}".format(dir, e))
+                            log.msg(f"Cannot remove directory '{dir}': {e}")
                     else:
                         log.msg(
-                            "I have a leftover directory '{0}' that is not "
+                            f"I have a leftover directory '{dir}' that is not "
                             "being used by the buildmaster: you can delete "
-                            "it now".format(dir)
+                            "it now"
                         )
 
         defer.returnValue(retval)
@@ -433,95 +420,93 @@ class BotPb(BotPbLike, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
 
 
-if sys.version_info >= (3, 6):
+class BotMsgpack(BotBase):
+    def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
+        BotBase.__init__(
+            self,
+            basedir,
+            unicode_encoding=unicode_encoding,
+            delete_leftover_dirs=delete_leftover_dirs,
+        )
+        self.protocol_commands = {}
 
-    class BotMsgpack(BotBase):
-        def __init__(self, basedir, unicode_encoding=None, delete_leftover_dirs=False):
-            BotBase.__init__(
-                self,
-                basedir,
-                unicode_encoding=unicode_encoding,
-                delete_leftover_dirs=delete_leftover_dirs,
-            )
-            self.protocol_commands = {}
+    @defer.inlineCallbacks
+    def startService(self):
+        yield BotBase.startService(self)
 
-        @defer.inlineCallbacks
-        def startService(self):
-            yield BotBase.startService(self)
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield BotBase.stopService(self)
 
-        @defer.inlineCallbacks
-        def stopService(self):
-            yield BotBase.stopService(self)
+        # Make any currently-running command die, with no further status
+        # output. This is used when the worker is shutting down or the
+        # connection to the master has been lost.
+        for protocol_command in self.protocol_commands:
+            protocol_command.builder_is_running = False
+            log.msg(f"stopCommand: halting current command {protocol_command.command}")
+            protocol_command.command.doInterrupt()
+        self.protocol_commands = {}
 
-            # Make any currently-running command die, with no further status
-            # output. This is used when the worker is shutting down or the
-            # connection to the master has been lost.
-            for protocol_command in self.protocol_commands:
-                protocol_command.builder_is_running = False
-                log.msg("stopCommand: halting current command {0}".format(protocol_command.command))
-                protocol_command.command.doInterrupt()
-            self.protocol_commands = {}
+    def calculate_basedir(self, builddir):
+        return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
 
-        def calculate_basedir(self, builddir):
-            return os.path.join(bytes2unicode(self.basedir), bytes2unicode(builddir))
+    def create_dirs(self, basedir):
+        if not os.path.isdir(basedir):
+            os.makedirs(basedir)
 
-        def create_dirs(self, basedir):
-            if not os.path.isdir(basedir):
-                os.makedirs(basedir)
+    def start_command(self, protocol, command_id, command, args):
+        """
+        This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
+        part of various master-side BuildSteps, to start various commands
+        that actually do the build. I return nothing. Eventually I will call
+        .commandComplete() to notify the master-side RemoteCommand that I'm
+        done.
+        """
+        command = decode(command)
+        args = decode(args)
 
-        def start_command(self, protocol, command_id, command, args):
-            """
-            This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
-            part of various master-side BuildSteps, to start various commands
-            that actually do the build. I return nothing. Eventually I will call
-            .commandComplete() to notify the master-side RemoteCommand that I'm
-            done.
-            """
-            command = decode(command)
-            args = decode(args)
+        def on_command_complete():
+            del self.protocol_commands[command_id]
 
-            def on_command_complete():
-                del self.protocol_commands[command_id]
+        protocol_command = ProtocolCommandMsgpack(
+            self.unicode_encoding,
+            self.basedir,
+            self.buffer_size,
+            self.buffer_timeout,
+            self.max_line_length,
+            self.newline_re,
+            self.running,
+            on_command_complete,
+            protocol,
+            command_id,
+            command,
+            args,
+        )
 
-            protocol_command = ProtocolCommandMsgpack(
-                self.unicode_encoding,
-                self.basedir,
-                self.buffer_size,
-                self.buffer_timeout,
-                self.max_line_length,
-                self.newline_re,
-                self.running,
-                on_command_complete,
-                protocol,
-                command_id,
-                command,
-                args,
-            )
+        self.protocol_commands[command_id] = protocol_command
 
-            self.protocol_commands[command_id] = protocol_command
+        log.msg(f" startCommand:{command} [id {command_id}]")
+        protocol_command.protocol_notify_on_disconnect()
+        d = protocol_command.command.doStart()
+        d.addCallback(lambda res: None)
+        d.addBoth(protocol_command.command_complete)
+        return None
 
-            log.msg(" startCommand:{0} [id {1}]".format(command, command_id))
-            protocol_command.protocol_notify_on_disconnect()
-            d = protocol_command.command.doStart()
-            d.addCallback(lambda res: None)
-            d.addBoth(protocol_command.command_complete)
-            return None
+    def interrupt_command(self, command_id, why):
+        """Halt the current step."""
+        log.msg(f"asked to interrupt current command: {why}")
 
-        def interrupt_command(self, command_id, why):
-            """Halt the current step."""
-            log.msg("asked to interrupt current command: {0}".format(why))
-
-            if command_id not in self.protocol_commands:
-                # TODO: just log it, a race could result in their interrupting a
-                # command that wasn't actually running
-                log.msg(" .. but none was running")
-                return
-            d = self.protocol_commands[command_id].flush_command_output()
-            d.addErrback(
-                self.protocol_commands[command_id]._ack_failed,
-                "ProtocolCommandMsgpack.flush_command_output",
-            )
-            self.protocol_commands[command_id].command.doInterrupt()
+        if command_id not in self.protocol_commands:
+            # TODO: just log it, a race could result in their interrupting a
+            # command that wasn't actually running
+            log.msg(" .. but none was running")
+            return
+        d = self.protocol_commands[command_id].flush_command_output()
+        d.addErrback(
+            self.protocol_commands[command_id]._ack_failed,
+            "ProtocolCommandMsgpack.flush_command_output",
+        )
+        self.protocol_commands[command_id].command.doInterrupt()
 
 
 class BotFactory(AutoLoginPBFactory):
@@ -569,11 +554,7 @@ class BotFactory(AutoLoginPBFactory):
             if not self.keepaliveInterval:
                 self.keepaliveInterval = 10 * 60
         if self.keepaliveInterval:
-            log.msg(
-                "sending application-level keepalives every {0} seconds".format(
-                    self.keepaliveInterval
-                )
-            )
+            log.msg(f"sending application-level keepalives every {self.keepaliveInterval} seconds")
             self.startTimers()
 
     def startTimers(self):
@@ -681,13 +662,9 @@ class Worker(WorkerBase):
         if protocol == 'pb':
             bot_class = BotPb
         elif protocol == 'msgpack_experimental_v7':
-            if sys.version_info < (3, 6):
-                raise NotImplementedError(
-                    'Msgpack protocol is only supported on Python 3.6 and newer'
-                )
             bot_class = BotMsgpack
         else:
-            raise ValueError('Unknown protocol {}'.format(protocol))
+            raise ValueError(f'Unknown protocol {protocol}')
 
         WorkerBase.__init__(
             self,
@@ -728,12 +705,12 @@ class Worker(WorkerBase):
             bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
         elif protocol == 'msgpack_experimental_v7':
             if connection_string is None:
-                ws_conn_string = "ws://{}:{}".format(buildmaster_host, port)
+                ws_conn_string = f"ws://{buildmaster_host}:{port}"
             else:
                 from urllib.parse import urlparse
 
                 parsed_url = urlparse(connection_string)
-                ws_conn_string = "ws://{}:{}".format(parsed_url.hostname, parsed_url.port)
+                ws_conn_string = f"ws://{parsed_url.hostname}:{parsed_url.port}"
 
             bf = self.bf = BuildbotWebSocketClientFactory(ws_conn_string)
             bf.protocol = BuildbotWebSocketClientProtocol
@@ -741,7 +718,7 @@ class Worker(WorkerBase):
             self.bf.name = name
             self.bf.password = passwd
         else:
-            raise ValueError('Unknown protocol {}'.format(protocol))
+            raise ValueError(f'Unknown protocol {protocol}')
 
         def get_connection_string(host, port):
             if useTls:
@@ -785,7 +762,7 @@ class Worker(WorkerBase):
             log.msg("Setting up SIGHUP handler to initiate shutdown")
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         elif self.allow_shutdown == 'file':
-            log.msg("Watching {0}'s mtime to initiate shutdown".format(self.shutdown_file))
+            log.msg(f"Watching {self.shutdown_file}'s mtime to initiate shutdown")
             if os.path.exists(self.shutdown_file):
                 self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
             self.shutdown_loop = loop = task.LoopingCall(self._checkShutdownFile)
@@ -808,7 +785,7 @@ class Worker(WorkerBase):
             os.path.exists(self.shutdown_file)
             and os.path.getmtime(self.shutdown_file) > self.shutdown_mtime
         ):
-            log.msg("Initiating shutdown because {0} was touched".format(self.shutdown_file))
+            log.msg(f"Initiating shutdown because {self.shutdown_file} was touched")
             self.gracefulShutdown()
 
             # In case the shutdown fails, update our mtime so we don't keep

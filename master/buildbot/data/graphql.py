@@ -88,10 +88,7 @@ class GraphQLConnector(service.AsyncService):
                 # policy, so this concern does not matter in practice.
                 #
                 # Note that asyncio.get_event_loop() is deprecated in favor of get_running_loop()
-                if sys.version_info[:2] >= (3, 7):
-                    loop = asyncio.get_running_loop()
-                else:
-                    loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
         except RuntimeError:
             # get_running_loop throws if there's no current loop.
             # get_event_loop throws is there's no current loop and we're not on main thread.

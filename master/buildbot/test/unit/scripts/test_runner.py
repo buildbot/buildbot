@@ -624,7 +624,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_revision_file(self):
-        with open('revfile', 'wt', encoding='utf-8') as f:
+        with open('revfile', "w", encoding='utf-8') as f:
             f.write('my-rev')
         self.addCleanup(lambda: os.unlink('revfile'))
         opts = self.parse('--revision_file', 'revfile', *self.master_and_who)
@@ -639,7 +639,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, {"comments": 'foo'})
 
     def test_logfile(self):
-        with open('comments', 'wt', encoding='utf-8') as f:
+        with open('comments', "w", encoding='utf-8') as f:
             f.write('hi')
         self.addCleanup(lambda: os.unlink('comments'))
         opts = self.parse('--logfile', 'comments', *self.master_and_who)

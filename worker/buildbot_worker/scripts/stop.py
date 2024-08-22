@@ -42,8 +42,8 @@ def stopWorker(basedir, quiet, signame="TERM"):
 
     os.chdir(basedir)
     try:
-        f = open("twistd.pid", "rt")
-    except IOError:
+        f = open("twistd.pid")
+    except OSError:
         raise WorkerNotRunning()
 
     pid = int(f.read().strip())
@@ -62,7 +62,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                print("worker process {0} is dead".format(pid))
+                print(f"worker process {pid} is dead")
             return 0
         timer += 1
         time.sleep(1)

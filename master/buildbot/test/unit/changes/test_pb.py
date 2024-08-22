@@ -411,9 +411,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
         yield cp.perspective_addChange({
-            "author": "\N{SNOWMAN}".encode('utf8'),
-            "comments": "\N{SNOWMAN}".encode('utf8'),
-            "files": ['\N{VERY MUCH GREATER-THAN}'.encode('utf8')],
+            "author": "\N{SNOWMAN}".encode(),
+            "comments": "\N{SNOWMAN}".encode(),
+            "files": ['\N{VERY MUCH GREATER-THAN}'.encode()],
         })
 
         self.assertEqual(

@@ -63,7 +63,7 @@ class BBRefTargetDirective(Directive):
         self.env = env = self.state.document.settings.env
         # normalize whitespace in fullname like XRefRole does
         fullname = ws_re.sub(' ', self.arguments[0].strip())
-        targetname = '{}-{}'.format(self.ref_type, fullname)
+        targetname = f'{self.ref_type}-{fullname}'
 
         # keep the target; this may be used to generate a BBIndex later
         targets = env.domaindata['bb']['targets'].setdefault(self.ref_type, {})
@@ -101,7 +101,7 @@ class BBRefTargetDirective(Directive):
             signode = addnodes.desc_signature(fullname, '')
 
             if self.name_annotation:
-                annotation = "{} ".format(self.name_annotation)
+                annotation = f"{self.name_annotation} "
                 signode += addnodes.desc_annotation(annotation, annotation)
             signode += addnodes.desc_name(fullname, fullname)
             descnode += signode
@@ -125,7 +125,7 @@ class BBRefTargetDirective(Directive):
             todocname, targetname = targets[target]
         except KeyError:
             logger.warning(
-                (f"{fromdocname}:{node.line}: Missing BB reference: bb:{cls.ref_type}:{target}")
+                f"{fromdocname}:{node.line}: Missing BB reference: bb:{cls.ref_type}:{target}"
             )
             return None
 
@@ -138,9 +138,7 @@ def make_ref_target_directive(ref_type, indextemplates=None, **kwargs):
     """
     class_vars = dict(ref_type=ref_type, indextemplates=indextemplates)
     class_vars.update(kwargs)
-    return type(
-        "BB{}RefTargetDirective".format(ref_type.capitalize()), (BBRefTargetDirective,), class_vars
-    )
+    return type(f"BB{ref_type.capitalize()}RefTargetDirective", (BBRefTargetDirective,), class_vars)
 
 
 class BBIndex(Index):
@@ -169,7 +167,7 @@ class BBIndex(Index):
         using the index's C{localname} as the content of the link.
         """
         # indexes appear to be automatically generated at doc DOMAIN-NAME
-        todocname = "bb-{}".format(target)
+        todocname = f"bb-{target}"
 
         node = nodes.reference('', '', internal=True)
         node['refuri'] = builder.get_relative_uri(fromdocname, todocname)
@@ -182,9 +180,7 @@ def make_index(name, localname):
     """
     Create and return a L{BBIndex} subclass, for use in the domain's C{indices}
     """
-    return type(
-        "BB{}Index".format(name.capitalize()), (BBIndex,), dict(name=name, localname=localname)
-    )
+    return type(f"BB{name.capitalize()}Index", (BBIndex,), dict(name=name, localname=localname))
 
 
 class BBDomain(Domain):
@@ -392,7 +388,7 @@ class BBDomain(Domain):
                 if idx.name == target:
                     break
             else:
-                raise KeyError("no index named '{}'".format(target))
+                raise KeyError(f"no index named '{target}'")
             return idx.resolve_ref(self, env, fromdocname, builder, typ, target, node, contnode)
         elif typ in self.directives:
             dir = self.directives[typ]
@@ -418,17 +414,13 @@ class BBDomain(Domain):
                     if other_data[target_name] == self_data[target_name]:
                         continue
 
-                    self_path = '{0}#{1}'.format(
-                        self.env.doc2path(self_data[target_name][0]), self_data[target_name][1]
-                    )
+                    self_path = f'{self.env.doc2path(self_data[target_name][0])}#{self_data[target_name][1]}'
 
-                    other_path = '{0}#{1}'.format(
-                        self.env.doc2path(other_data[target_name][0]), other_data[target_name][1]
-                    )
+                    other_path = f'{self.env.doc2path(other_data[target_name][0])}#{other_data[target_name][1]}'
 
                     logger.warning(
-                        ('Duplicate index {} reference {} in {}, other instance in {}').format(
-                            typ, target_name, self_path, other_path
+                        (
+                            f'Duplicate index {typ} reference {target_name} in {self_path}, other instance in {other_path}'
                         )
                     )
                 else:

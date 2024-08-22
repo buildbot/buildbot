@@ -329,7 +329,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(bs.instance.metadata, meta_arg)
+        self.assertEqual(bs.instance.metadata, meta_arg)
 
     @defer.inlineCallbacks
     def test_start_instance_check_meta_renderable(self):
@@ -338,7 +338,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(
+        self.assertEqual(
             bs.instance.metadata, {'some_key': 'value', 'BUILDBOT:instance': self.masterhash}
         )
 
@@ -350,7 +350,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(bs.instance.boot_kwargs['some-key'], 'some-value')
+        self.assertEqual(bs.instance.boot_kwargs['some-key'], 'some-value')
 
     @defer.inlineCallbacks
     def test_start_instance_check_nova_args_renderable(self):
@@ -360,7 +360,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
-        self.assertEquals(bs.instance.boot_kwargs['some-key'], 'value')
+        self.assertEqual(bs.instance.boot_kwargs['some-key'], 'value')
 
     @defer.inlineCallbacks
     def test_interpolate_renderables_for_new_build(self):

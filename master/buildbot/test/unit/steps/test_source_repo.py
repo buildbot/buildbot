@@ -155,7 +155,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             ]
         )
         for i, command in enumerate(commands):
-            self.expect_commands(command.exit((which_fail == i and 1 or 0)))
+            self.expect_commands(command.exit(which_fail == i and 1 or 0))
             if which_fail == i and breakatfail:
                 break
 

@@ -70,9 +70,7 @@ class ProtocolCommandBase:
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand(
-                "(command {0}): unrecognized WorkerCommand '{1}'".format(command_id, command)
-            )
+            raise UnknownCommand(f"(command {command_id}): unrecognized WorkerCommand '{command}'")
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
@@ -84,7 +82,7 @@ class ProtocolCommandBase:
         self.is_complete = False
 
     def log_msg(self, msg):
-        log.msg("(command {0}): {1}".format(self.command_id, msg))
+        log.msg(f"(command {self.command_id}): {msg}")
 
     def split_lines(self, stream, text, text_time):
         try:
@@ -134,13 +132,13 @@ class ProtocolCommandBase:
                     self.buffer.append(key, value)
 
     def _ack_failed(self, why, where):
-        self.log_msg("ProtocolCommandBase._ack_failed: {0}".format(where))
+        self.log_msg(f"ProtocolCommandBase._ack_failed: {where}")
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def command_complete(self, failure):
         if failure:
-            self.log_msg("ProtocolCommandBase.command_complete (failure) {0}".format(self.command))
+            self.log_msg(f"ProtocolCommandBase.command_complete (failure) {self.command}")
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -148,7 +146,7 @@ class ProtocolCommandBase:
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            self.log_msg("ProtocolCommandBase.command_complete (success) {0}".format(self.command))
+            self.log_msg(f"ProtocolCommandBase.command_complete (success) {self.command}")
 
         self.on_command_complete()
         if not self.builder_is_running:
@@ -206,7 +204,7 @@ class BotBase(service.MultiService):
         if not os.path.exists(os_release_file):
             return
 
-        with open(os_release_file, "r") as fin:
+        with open(os_release_file) as fin:
             for line in fin:
                 line = line.strip("\r\n")
                 # as per man page: Lines beginning with "#" shall be ignored as comments.
@@ -215,7 +213,7 @@ class BotBase(service.MultiService):
                 # parse key-values
                 key, value = line.split("=", 1)
                 if value:
-                    key = 'os_{}'.format(key.lower())
+                    key = f'os_{key.lower()}'
                     props[key] = value.strip('"')
 
     def remote_getWorkerInfo(self):
@@ -232,11 +230,13 @@ class BotBase(service.MultiService):
             for f in os.listdir(basedir):
                 filename = os.path.join(basedir, f)
                 if os.path.isfile(filename):
-                    with open(filename, "r") as fin:
+                    with open(filename) as fin:
                         try:
                             files[f] = bytes2unicode(fin.read())
                         except UnicodeDecodeError:
-                            log.err(failure.Failure(), 'error while reading file: %s' % (filename))
+                            log.err(
+                                failure.Failure(), 'error while reading file: {}'.format(filename)
+                            )
 
         self._read_os_release(self.os_release_file, files)
 
@@ -293,7 +293,7 @@ class WorkerBase(service.MultiService):
         self.basedir = basedir
 
     def startService(self):
-        log.msg("Starting Worker -- version: {0}".format(buildbot_worker.version))
+        log.msg(f"Starting Worker -- version: {buildbot_worker.version}")
 
         if self.umask is not None:
             os.umask(self.umask)
@@ -316,6 +316,6 @@ class WorkerBase(service.MultiService):
 
         try:
             with open(filename, "w") as f:
-                f.write("{0}\n".format(hostname))
+                f.write(f"{hostname}\n")
         except Exception:
             log.msg("failed - ignoring")

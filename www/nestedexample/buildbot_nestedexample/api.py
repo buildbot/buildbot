@@ -21,6 +21,6 @@ class Api:
             return defer.succeed(json.dumps("invalid request"))
         pizza = pizzaArgument[0].lower()
         res = self.pizzaIngredients.get(
-            pizza, ["only {} are supported for now".format(self.pizzaIngredients.keys())]
+            pizza, [f"only {self.pizzaIngredients.keys()} are supported for now"]
         )
         return defer.succeed(json.dumps(res))

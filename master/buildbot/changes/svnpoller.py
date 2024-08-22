@@ -173,7 +173,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
             try:
-                with open(self.cachepath, "r", encoding='utf-8') as f:
+                with open(self.cachepath, encoding='utf-8') as f:
                     self.last_change = int(f.read().strip())
                     log.msg(
                         f"SVNPoller: SVNPoller({self.repourl}) setting last_change "
@@ -276,7 +276,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         )
 
         if rc != 0:
-            raise EnvironmentError(f'{self}: Got error when retrieving svn prefix')
+            raise OSError(f'{self}: Got error when retrieving svn prefix')
 
         try:
             doc = xml.dom.minidom.parseString(output)
@@ -326,7 +326,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         )
 
         if rc != 0:
-            raise EnvironmentError(f'{self}: Got error when retrieving svn logs')
+            raise OSError(f'{self}: Got error when retrieving svn logs')
 
         return output
 

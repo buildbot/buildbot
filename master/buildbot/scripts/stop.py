@@ -39,7 +39,7 @@ def stop(config, signame="TERM", wait=None):
 
     pidfile = os.path.join(basedir, 'twistd.pid')
     try:
-        with open(pidfile, "rt", encoding='utf-8') as f:
+        with open(pidfile, encoding='utf-8') as f:
             pid = int(f.read().strip())
     except Exception:
         if not config['quiet']:

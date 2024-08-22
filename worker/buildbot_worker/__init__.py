@@ -45,10 +45,10 @@ def gitDescribeToPep440(version):
         if v.group('dev'):
             patch += 1
             dev = int(v.group('dev'))
-            return "{0}.{1}.{2}.dev{3}".format(major, minor, patch, dev)
+            return f"{major}.{minor}.{patch}.dev{dev}"
         if v.group('post'):
-            return "{0}.{1}.{2}.post{3}".format(major, minor, patch, v.group('post'))
-        return "{0}.{1}.{2}".format(major, minor, patch)
+            return "{}.{}.{}.post{}".format(major, minor, patch, v.group('post'))
+        return f"{major}.{minor}.{patch}"
 
     return v
 
@@ -60,10 +60,7 @@ def mTimeVersion(init_file):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
 
-    if sys.version_info >= (3, 3):
-        d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
-    else:
-        d = datetime.datetime.utcfromtimestamp(m)
+    d = datetime.datetime.fromtimestamp(m, datetime.timezone.utc)
     return d.strftime("%Y.%m.%d")
 
 
@@ -111,7 +108,7 @@ def getVersion(init_file):
         fn = os.path.join(cwd, 'VERSION')
         with open(fn) as f:
             return f.read().strip()
-    except IOError:
+    except OSError:
         pass
 
     version = getVersionFromArchiveId()

@@ -177,7 +177,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         # add sourcestamps
         ssids = []
         for ss in sourcestamps:
-            if not isinstance(ss, type(1)):
+            if not isinstance(ss, int):
                 ss = yield self.db.sourcestamps.findSourceStampId(**ss)
             ssids.append(ss)
         self.buildset_sourcestamps[bsid] = ssids

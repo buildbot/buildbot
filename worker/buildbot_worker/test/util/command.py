@@ -22,7 +22,7 @@ from buildbot_worker.test.fake import runprocess
 from buildbot_worker.test.fake.protocolcommand import FakeProtocolCommand
 
 
-class CommandTestMixin(object):
+class CommandTestMixin:
     """
     Support for testing Command subclasses.
     """

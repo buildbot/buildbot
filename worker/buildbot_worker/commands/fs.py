@@ -42,9 +42,9 @@ class MakeDirectory(base.Command):
                 if not os.path.isdir(dirname):
                     os.makedirs(dirname)
             except OSError as e:
-                self.log_msg("MakeDirectory {0} failed: {1}".format(dirname, e))
+                self.log_msg(f"MakeDirectory {dirname} failed: {e}")
                 self.sendStatus([
-                    ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
+                    ('header', f'{self.header}: {e.strerror}: {dirname}'),
                     ('rc', e.errno),
                 ])
                 return
@@ -202,9 +202,7 @@ class CopyDirectory(base.Command):
             if os.path.exists(to_path):
                 # I don't think this happens, but just in case..
                 self.log_msg(
-                    ("cp target '{0}' already exists -- cp will not do what you think!").format(
-                        to_path
-                    )
+                    (f"cp target '{to_path}' already exists -- cp will not do what you think!")
                 )
 
             if platform.system().lower().find('solaris') >= 0:
@@ -245,9 +243,9 @@ class StatFile(base.Command):
             stat = os.stat(filename)
             self.sendStatus([('stat', tuple(stat)), ('rc', 0)])
         except OSError as e:
-            self.log_msg("StatFile {0} failed: {1}".format(filename, e))
+            self.log_msg(f"StatFile {filename} failed: {e}")
             self.sendStatus([
-                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, filename)),
+                ('header', f'{self.header}: {e.strerror}: {filename}'),
                 ('rc', e.errno),
             ])
 
@@ -263,15 +261,12 @@ class GlobPath(base.Command):
 
         try:
             # recursive matching is only support in python3.5+
-            if sys.version_info[:2] >= (3, 5):
-                files = glob.glob(pathname, recursive=True)
-            else:
-                files = glob.glob(pathname)
+            files = glob.glob(pathname, recursive=True)
             self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
-            self.log_msg("GlobPath {0} failed: {1}".format(pathname, e))
+            self.log_msg(f"GlobPath {pathname} failed: {e}")
             self.sendStatus([
-                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
+                ('header', f'{self.header}: {e.strerror}: {pathname}'),
                 ('rc', e.errno),
             ])
 
@@ -289,9 +284,9 @@ class ListDir(base.Command):
             files = os.listdir(dirname)
             self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:
-            self.log_msg("ListDir {0} failed: {1}".format(dirname, e))
+            self.log_msg(f"ListDir {dirname} failed: {e}")
             self.sendStatus([
-                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)),
+                ('header', f'{self.header}: {e.strerror}: {dirname}'),
                 ('rc', e.errno),
             ])
 
@@ -309,8 +304,8 @@ class RemoveFile(base.Command):
             os.remove(pathname)
             self.sendStatus([('rc', 0)])
         except OSError as e:
-            self.log_msg("remove file {0} failed: {1}".format(pathname, e))
+            self.log_msg(f"remove file {pathname} failed: {e}")
             self.sendStatus([
-                ('header', '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)),
+                ('header', f'{self.header}: {e.strerror}: {pathname}'),
                 ('rc', e.errno),
             ])

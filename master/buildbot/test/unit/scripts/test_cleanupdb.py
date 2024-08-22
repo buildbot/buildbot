@@ -63,7 +63,7 @@ class TestCleanupDb(
     def setUp(self):
         self.setup_test_reactor()
         self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), 'wt', encoding='utf-8') as f:
+        with open(os.path.join('basedir', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write(
                 textwrap.dedent("""
                 from twisted.application import service
@@ -89,7 +89,7 @@ class TestCleanupDb(
     def createMasterCfg(self, extraconfig=""):
         db_url = db.resolve_test_index_in_db_url(os.environ["BUILDBOT_TEST_DB_URL"])
 
-        with open(os.path.join('basedir', 'master.cfg'), 'wt', encoding='utf-8') as f:
+        with open(os.path.join('basedir', 'master.cfg'), "w", encoding='utf-8') as f:
             f.write(
                 textwrap.dedent(f"""
                 from buildbot.plugins import *

@@ -292,8 +292,8 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
         wrkr.setupProperties(props)
 
-        self.assertEquals(props.getProperty('bar'), 'bleh')
-        self.assertEquals(props.getProperty('cuckoo'), 42)
+        self.assertEqual(props.getProperty('bar'), 'bleh')
+        self.assertEqual(props.getProperty('cuckoo'), 42)
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):

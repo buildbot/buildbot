@@ -26,7 +26,7 @@ from twisted.python.failure import Failure
 from buildbot_worker.compat import unicode2bytes
 
 
-class FakeTransport(object):
+class FakeTransport:
     disconnecting = False
 
 
@@ -39,7 +39,7 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(unicode2bytes(data))
 
     def errReceived(self, data):
-        print("ERR: '{0}'".format(data))
+        print(f"ERR: '{data}'")
 
 
 class LogWatcher(LineOnlyReceiver):

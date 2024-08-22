@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Buildbot documentation build configuration file, created by
 # sphinx-quickstart on Tue Aug 10 15:13:31 2010.

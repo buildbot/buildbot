@@ -26,7 +26,7 @@ from buildbot.www import avatar
 
 class TestAvatar(avatar.AvatarBase):
     def getUserAvatar(self, email, username, size, defaultAvatarUrl):
-        user_avatar = f'{repr(email)} {repr(size)} {repr(defaultAvatarUrl)}'.encode('utf-8')
+        user_avatar = f'{repr(email)} {repr(size)} {repr(defaultAvatarUrl)}'.encode()
         return defer.succeed((b"image/png", user_avatar))
 
 

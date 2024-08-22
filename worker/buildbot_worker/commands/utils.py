@@ -23,7 +23,7 @@ from twisted.python.procutils import which
 def getCommand(name):
     possibles = which(name)
     if not possibles:
-        raise RuntimeError("Couldn't find executable for '{0}'".format(name))
+        raise RuntimeError(f"Couldn't find executable for '{name}'")
     #
     # Under windows, if there is more than one executable "thing"
     # that matches (e.g. *.bat, *.cmd and *.exe), we not just use
@@ -76,8 +76,9 @@ if runtime.platformType == 'win32':  # pragma: no cover
             list = os.listdir(dir)
         except WindowsError as e:
             msg = (
-                "rmdirRecursive: unable to listdir {0} ({1}). Trying to "
-                "remove like a dir".format(dir, e.strerror.decode('mbcs'))
+                "rmdirRecursive: unable to listdir {} ({}). Trying to " "remove like a dir".format(
+                    dir, e.strerror.decode('mbcs')
+                )
             )
             log.msg(msg.encode('utf-8'))
             os.rmdir(dir)

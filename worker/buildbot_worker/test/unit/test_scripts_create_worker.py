@@ -23,7 +23,7 @@ from buildbot_worker.test.util import misc
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 def _regexp_path(name, *names):
@@ -450,7 +450,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpOpenError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = "error reading {0}: dummy-msg".format(self.tac_file_path)
+        expected_message = f"error reading {self.tac_file_path}: dummy-msg"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -463,7 +463,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpReadError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = "error reading {0}: dummy-msg".format(self.tac_file_path)
+        expected_message = f"error reading {self.tac_file_path}: dummy-msg"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -476,7 +476,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpWriteError(0)
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = "could not write {0}: dummy-msg".format(self.tac_file_path)
+        expected_message = f"could not write {self.tac_file_path}: dummy-msg"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -534,8 +534,8 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         # check that buildbot.tac.new file was created with expected contents
         tac_file_path = os.path.join("bdir", "buildbot.tac")
         self.open.assert_has_calls([
-            mock.call(tac_file_path, "rt"),
-            mock.call(tac_file_path + ".new", "wt"),
+            mock.call(tac_file_path),
+            mock.call(tac_file_path + ".new", "w"),
         ])
         self.fileobj.write.assert_called_once_with("new-tac-contents")
         self.chmod.assert_called_once_with(tac_file_path + ".new", 0o600)
@@ -575,7 +575,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
 
         # check that buildbot.tac file was created with expected contents
         tac_file_path = os.path.join("bdir", "buildbot.tac")
-        self.open.assert_called_once_with(tac_file_path, "wt")
+        self.open.assert_called_once_with(tac_file_path, "w")
         self.fileobj.write.assert_called_once_with("test-tac-contents")
         self.chmod.assert_called_once_with(tac_file_path, 0o600)
 
@@ -613,7 +613,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertStdoutEqual("mkdir {0}\n".format(os.path.join("bdir", "info")))
+            self.assertStdoutEqual("mkdir {}\n".format(os.path.join("bdir", "info")))
 
     def testMkdirError(self):
         """
@@ -649,12 +649,12 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         elif error_type == "write":
             self.setUpWriteError(strerror="info-err-msg")
         else:
-            self.fail("unexpected error_type '{0}'".format(error_type))
+            self.fail(f"unexpected error_type '{error_type}'")
 
         # call _makeInfoFiles() and check that correct exception is raised
         with self.assertRaisesRegex(
             create_worker.CreateWorkerError,
-            "could not write {0}: info-err-msg".format(_regexp_path("bdir", "info", "admin")),
+            "could not write {}: info-err-msg".format(_regexp_path("bdir", "info", "admin")),
         ):
             create_worker._makeInfoFiles("bdir", quiet)
 
@@ -716,8 +716,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
 
         # check open() calls
         self.open.assert_has_calls([
-            mock.call(os.path.join(info_path, "admin"), "wt"),
-            mock.call(os.path.join(info_path, "host"), "wt"),
+            mock.call(os.path.join(info_path, "admin"), "w"),
+            mock.call(os.path.join(info_path, "host"), "w"),
         ])
 
         # check write() calls

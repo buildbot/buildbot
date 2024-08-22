@@ -166,7 +166,7 @@ class FakeBuildersComponent(FakeDBComponent):
             # add tags
             tagids = []
             for tag in tags:
-                if not isinstance(tag, type(1)):
+                if not isinstance(tag, int):
                     tag = yield self.db.tags.findTagId(tag)
                 tagids.append(tag)
             self.builders_tags[builderid] = tagids

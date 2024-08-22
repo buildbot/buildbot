@@ -24,7 +24,6 @@ import re
 import sys
 import textwrap
 import time
-from builtins import bytes
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit

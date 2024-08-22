@@ -39,7 +39,7 @@ class HTTPTunnelClient(protocol.Protocol):
         self._connectedDeferred = connectedDeferred
 
     def connectionMade(self):
-        request = "CONNECT {}:{} HTTP/1.1\r\n\r\n".format(self.factory.host, self.factory.port)
+        request = f"CONNECT {self.factory.host}:{self.factory.port} HTTP/1.1\r\n\r\n"
         self.transport.write(request.encode())
 
     def connectionLost(self, reason):
@@ -113,7 +113,7 @@ class HTTPTunnelFactory(protocol.ClientFactory):
 
 
 @implementer(interfaces.IStreamClientEndpoint)
-class HTTPTunnelEndpoint(object):
+class HTTPTunnelEndpoint:
     """This handles the connection to buildbot master on given 'host'
     and 'port' through the proxy server given as 'proxyEndpoint'.
     """

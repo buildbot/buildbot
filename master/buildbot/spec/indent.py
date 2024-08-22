@@ -7,7 +7,7 @@ import sys
 spaces = re.compile("^ +")
 for fn in sys.argv[1:]:
     lines = []
-    with open(fn, 'r') as f:
+    with open(fn) as f:
         for line in f:
             lines.append(line)
 

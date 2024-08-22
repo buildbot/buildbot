@@ -432,9 +432,9 @@ class TestIrcStatusBot(unittest.TestCase):
         b.getContact(channel='c1', user='u')
         b.getContact(channel='c2', user='u')
         b.getContact(user='u')
-        self.assertEquals(len(b.contacts), 3)
+        self.assertEqual(len(b.contacts), 3)
         b.userQuit('u', 'm')
-        self.assertEquals(len(b.contacts), 0)
+        self.assertEqual(len(b.contacts), 0)
 
     def test_other(self):
         # these methods just log, but let's get them covered anyway
@@ -444,11 +444,11 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def test_format_build_status(self):
         b = self.makeBot()
-        self.assertEquals(b.format_build_status({'results': SUCCESS}), "completed successfully")
+        self.assertEqual(b.format_build_status({'results': SUCCESS}), "completed successfully")
 
     def test_format_build_status_short(self):
         b = self.makeBot()
-        self.assertEquals(b.format_build_status({'results': SUCCESS}, True), ", Success")
+        self.assertEqual(b.format_build_status({'results': SUCCESS}, True), ", Success")
 
     def test_format_build_status_colors(self):
         b = self.makeBot()
