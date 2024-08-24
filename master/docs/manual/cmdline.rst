@@ -94,6 +94,10 @@ The option `--nodaemon` option instructs Buildbot to skip daemonizing.
 The process will start in the foreground.
 It will only return to the command-line when it is stopped.
 
+Additionally, the user can set the environment variable `START_TIMEOUT`
+to specify the amount of time the script waits for the master to start
+until it declares the operation as failure.
+
 .. bb:cmdline:: restart (buildbot)
 
 restart
