@@ -152,6 +152,8 @@ def start(config):
 
     # this is the parent
     timeout = config.get('start_timeout', None)
+    if timeout is None:
+        timeout = os.getenv('START_TIMEOUT', None)
     if timeout is not None:
         try:
             timeout = float(timeout)
