@@ -28,7 +28,7 @@ type ChangeDetailsProps = {
   change: Change;
   compact: boolean;
   showDetails: boolean;
-  setShowDetails: (show: boolean) => void;
+  setShowDetails: ((show: boolean) => void) | null;
 }
 
 export const ChangeDetails = observer(({change, compact, showDetails, setShowDetails}: ChangeDetailsProps) => {
@@ -110,9 +110,15 @@ export const ChangeDetails = observer(({change, compact, showDetails, setShowDet
     );
   }
 
+  const onHeadingClicked = () => {
+    if (setShowDetails === null)
+      return;
+    setShowDetails(!showDetails);
+  }
+
   return (
     <div className="changedetails">
-      <div className="changedetails-heading" onClick={() => setShowDetails(!showDetails)}>
+      <div className="changedetails-heading" onClick={onHeadingClicked}>
         { !compact
           ? <ChangeUserAvatar name={changeAuthorName} email={changeEmail} showName={false}/>
           : <></>
@@ -133,7 +139,7 @@ export const ChangeDetails = observer(({change, compact, showDetails, setShowDet
             </OverlayTrigger>
           : <></>
         }
-        <ArrowExpander isExpanded={showDetails}/>
+        {setShowDetails !== null ? <ArrowExpander isExpanded={showDetails}/> : <></>}
       </div>
       {showDetails ? renderChangeDetails() : <></>}
     </div>
