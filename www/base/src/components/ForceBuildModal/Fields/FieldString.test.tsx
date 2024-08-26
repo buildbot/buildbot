@@ -34,6 +34,7 @@ function assertRenderToSnapshot(defaultValue: string, stateValue?: string, updat
     hide: false,
     maxsize: null,
     autopopulate: null,
+    tooltip: 'dummy',
     size: 0,
   }
   const state = new ForceBuildModalFieldsState();

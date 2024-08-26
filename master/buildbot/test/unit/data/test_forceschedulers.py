@@ -43,6 +43,7 @@ expected_default = {
                     'size': 30,
                     'tablabel': 'Your name:',
                     'type': 'username',
+                    'tooltip': '',
                 },
                 {
                     'default': 'force build',
@@ -58,6 +59,7 @@ expected_default = {
                     'size': 20,
                     'tablabel': 'reason',
                     'type': 'text',
+                    'tooltip': '',
                 },
                 {
                     'default': 0,
@@ -73,6 +75,7 @@ expected_default = {
                     'size': 10,
                     'tablabel': 'priority',
                     'type': 'int',
+                    'tooltip': '',
                 },
             ],
             'fullName': None,
@@ -86,6 +89,7 @@ expected_default = {
             'required': False,
             'tablabel': '',
             'type': 'nested',
+            'tooltip': '',
         },
         {
             'columns': 2,
@@ -105,6 +109,7 @@ expected_default = {
                     'size': 10,
                     'tablabel': 'Branch:',
                     'type': 'text',
+                    'tooltip': '',
                 },
                 {
                     'default': '',
@@ -120,6 +125,7 @@ expected_default = {
                     'size': 10,
                     'tablabel': 'Project:',
                     'type': 'text',
+                    'tooltip': '',
                 },
                 {
                     'default': '',
@@ -135,6 +141,7 @@ expected_default = {
                     'size': 10,
                     'tablabel': 'Repository:',
                     'type': 'text',
+                    'tooltip': '',
                 },
                 {
                     'default': '',
@@ -150,6 +157,7 @@ expected_default = {
                     'size': 10,
                     'tablabel': 'Revision:',
                     'type': 'text',
+                    'tooltip': '',
                 },
             ],
             'autopopulate': None,
@@ -164,6 +172,7 @@ expected_default = {
             'required': False,
             'tablabel': '',
             'type': 'nested',
+            'tooltip': '',
         },
     ],
     'builder_names': ['builder'],

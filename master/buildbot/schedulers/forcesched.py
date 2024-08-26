@@ -79,6 +79,7 @@ class BaseParameter:
         "hide",
         "maxsize",
         "autopopulate",
+        "tooltip",
     ]
     name = ""
     parentName = None
@@ -93,6 +94,7 @@ class BaseParameter:
     hide = False
     maxsize = None
     autopopulate = None
+    tooltip = ""
 
     @property
     def fullName(self):

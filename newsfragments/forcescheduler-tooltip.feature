@@ -1,0 +1,1 @@
+Added `tooltip` parameter to the forcescheduler, allowing passing help text to FE for user about parameters.

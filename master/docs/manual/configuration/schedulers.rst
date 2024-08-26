@@ -1204,6 +1204,11 @@ All parameter types have a few common arguments:
     The maximum size of a field (in bytes).
     Buildbot will ensure the field sent by the user is not too large.
 
+``tooltip`` (optional; default "")
+
+    The tooltip of the parameter.
+    This will show help text next to the field name, if set.
+
 ``autopopulate`` (optional; default: None)
 
     If not None, ``autopopulate`` is a dictionary which describes how other parameters are updated if this one changes.
@@ -1453,7 +1458,7 @@ Example of scheduler allowing to choose which worker to run on:
           BuilderConfig(name='mybuild', factory=f, nextWorker=nextWorker,
                 workernames=worker_list),
         ]
-        
+
 
 .. bb:sched:: CodebaseParameter
 
