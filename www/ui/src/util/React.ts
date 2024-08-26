@@ -62,3 +62,12 @@ export function useWindowSize() {
 
   return size;
 }
+
+export function useLoadMoreItemsState(defaultCount: number, increment: number) : [number, () => void] {
+  const [count, setCount] = useState<number>(defaultCount);
+
+  const onLoadMore = () => {
+    setCount(c => c + increment);
+  }
+  return [count, onLoadMore];
+}
