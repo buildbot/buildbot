@@ -142,7 +142,7 @@ export const HomeView = observer(() => {
                           <Card.Body>
                             {
                               Object.values(b.builds)
-                                .sort((a, b) => a.number - b.number)
+                                .sort((a, b) => b.number - a.number)
                                 .map(build => {
                                   return (
                                     <span key={build.id}>
