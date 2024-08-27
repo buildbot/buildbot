@@ -96,7 +96,7 @@ class FakeRunProcess:
         have not taken place, this will raise the appropriate AssertionError.
         """
         if cls._expectations:
-            raise AssertionError((f"{len(cls._expectations)} expected instances not created"))
+            raise AssertionError(f"{len(cls._expectations)} expected instances not created")
         del cls._expectations
 
     def __init__(self, command_id, command, workdir, unicode_encoding, send_update, **kwargs):

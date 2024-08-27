@@ -202,7 +202,7 @@ class CopyDirectory(base.Command):
             if os.path.exists(to_path):
                 # I don't think this happens, but just in case..
                 self.log_msg(
-                    (f"cp target '{to_path}' already exists -- cp will not do what you think!")
+                    f"cp target '{to_path}' already exists -- cp will not do what you think!"
                 )
 
             if platform.system().lower().find('solaris') >= 0:

@@ -419,9 +419,7 @@ class BBDomain(Domain):
                     other_path = f'{self.env.doc2path(other_data[target_name][0])}#{other_data[target_name][1]}'
 
                     logger.warning(
-                        (
-                            f'Duplicate index {typ} reference {target_name} in {self_path}, other instance in {other_path}'
-                        )
+                        f'Duplicate index {typ} reference {target_name} in {self_path}, other instance in {other_path}'
                     )
                 else:
                     self_data[target_name] = target_data
