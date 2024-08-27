@@ -3,8 +3,9 @@
   "version": "4.0.0",
   "description": "Buildbot React data module and utilities",
   "author": "Povilas Kanapickas <povilas@radix.lt>",
-  "main": "dist/buildbot-data-js.umd.js",
-  "module": "dist/buildbot-data-js.mjs",
+  "module": "dist/buildbot-data-js.js",
+  "main": "dist/buildbot-data-js.cjs",
+  "type": "module",
   "types": "dist/main.d.ts",
   "scripts": {
     "start": "vite",
@@ -33,9 +34,9 @@
     "testEnvironment": "jsdom",
     "testRunner": "./node_modules/jest-circus/runner.js",
     "transform": {
-      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.cjs",
+      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.cjs",
+      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.cjs"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
