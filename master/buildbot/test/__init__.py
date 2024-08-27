@@ -90,3 +90,27 @@ warnings.filterwarnings(
     r"and will be removed in or after August 2025\.",
     category=DeprecationWarning,
 )
+
+warnings.filterwarnings(
+    "ignore",
+    r"twisted.web.resource._UnsafeErrorPage.__init__ was deprecated in "
+    r"Twisted 22.10.0; please use Use twisted.web.pages.errorPage instead, "
+    r"which properly escapes HTML. instead",
+    category=DeprecationWarning,
+)
+
+warnings.filterwarnings(
+    "ignore",
+    r"twisted.web.resource._UnsafeNoResource.__init__ was deprecated in "
+    r"Twisted 22.10.0; please use Use twisted.web.pages.notFound instead, "
+    r"which properly escapes HTML. instead",
+    category=DeprecationWarning,
+)
+
+warnings.filterwarnings(
+    "ignore",
+    r"twisted.web.resource._UnsafeForbiddenResource.__init__ was deprecated in "
+    r"Twisted 22.10.0; please use Use twisted.web.pages.forbidden instead, "
+    r"which properly escapes HTML. instead",
+    category=DeprecationWarning,
+)
