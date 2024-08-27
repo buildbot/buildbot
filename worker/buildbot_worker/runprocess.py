@@ -460,13 +460,11 @@ class RunProcess:
             self._startCommand()
         except Exception as e:
             log.err(failure.Failure(), "error in RunProcess._startCommand")
-            self.send_update([
-                ('stderr', "error in RunProcess._startCommand ({})\n".format(str(e)))
-            ])
+            self.send_update([('stderr', f"error in RunProcess._startCommand ({str(e)})\n")])
 
             self.send_update([('stderr', traceback.format_exc())])
             # pretend it was a shell error
-            self.deferred.errback(AbandonChain(-1, 'Got exception ({})'.format(str(e))))
+            self.deferred.errback(AbandonChain(-1, f'Got exception ({str(e)})'))
         return self.deferred
 
     def _startCommand(self):
