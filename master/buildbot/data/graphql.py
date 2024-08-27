@@ -16,7 +16,6 @@
 
 import asyncio
 import functools
-import sys
 import textwrap
 
 from buildbot.asyncio import AsyncIOLoopWithTwisted

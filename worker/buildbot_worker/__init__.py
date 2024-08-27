@@ -21,7 +21,6 @@
 import datetime
 import os
 import re
-import sys
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen

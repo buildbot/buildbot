@@ -17,7 +17,6 @@ import io
 import os
 import re
 import shutil
-import sys
 import tarfile
 
 from twisted.internet import defer

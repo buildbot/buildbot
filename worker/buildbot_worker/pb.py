@@ -16,7 +16,6 @@
 import os.path
 import shutil
 import signal
-import sys
 
 from twisted.application import service
 from twisted.application.internet import ClientService
