@@ -93,7 +93,7 @@ export default defineConfig({
   // path prefix, like my-domain.com/custom-buildbot-path/
   base: './',
   build: {
-    target: ['es2015'],
+    target: ['es2020'],
     outDir: outDir,
     emptyOutDir: true,
   },
