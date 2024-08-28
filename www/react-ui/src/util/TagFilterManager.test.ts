@@ -32,6 +32,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {computeToggledTag3Way, computeToggledTagOnOff} from "./TagFilterManager";
 
 describe('TagFilterManager', () => {

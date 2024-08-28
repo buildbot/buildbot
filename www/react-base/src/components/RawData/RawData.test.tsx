@@ -15,6 +15,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import renderer, {act} from 'react-test-renderer';
 import {MemoryRouter} from "react-router-dom";
 import {RawData} from './RawData';

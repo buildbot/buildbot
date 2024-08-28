@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ForceFieldChoiceString component change multiple state on click 1`] = `
+exports[`ForceFieldChoiceString component > change multiple state on click 1`] = `
 <div>
   <div
     className="form-group"
@@ -25,7 +25,7 @@ exports[`ForceFieldChoiceString component change multiple state on click 1`] = `
         multiple={true}
         onChange={[Function]}
         value={
-          Array [
+          [
             "B",
             "C",
           ]
@@ -46,7 +46,7 @@ exports[`ForceFieldChoiceString component change multiple state on click 1`] = `
 </div>
 `;
 
-exports[`ForceFieldChoiceString component change state on click 1`] = `
+exports[`ForceFieldChoiceString component > change state on click 1`] = `
 <div>
   <div
     className="form-group"
@@ -87,7 +87,7 @@ exports[`ForceFieldChoiceString component change state on click 1`] = `
 </div>
 `;
 
-exports[`ForceFieldChoiceString component render default value 1`] = `
+exports[`ForceFieldChoiceString component > render default value 1`] = `
 <div>
   <div
     className="form-group"
@@ -128,7 +128,7 @@ exports[`ForceFieldChoiceString component render default value 1`] = `
 </div>
 `;
 
-exports[`ForceFieldChoiceString component render default value 2`] = `
+exports[`ForceFieldChoiceString component > render default value 2`] = `
 <div>
   <div
     className="form-group"
@@ -169,7 +169,7 @@ exports[`ForceFieldChoiceString component render default value 2`] = `
 </div>
 `;
 
-exports[`ForceFieldChoiceString component render multiple default value 1`] = `
+exports[`ForceFieldChoiceString component > render multiple default value 1`] = `
 <div>
   <div
     className="form-group"
@@ -194,7 +194,7 @@ exports[`ForceFieldChoiceString component render multiple default value 1`] = `
         multiple={true}
         onChange={[Function]}
         value={
-          Array [
+          [
             "A",
           ]
         }
@@ -214,7 +214,7 @@ exports[`ForceFieldChoiceString component render multiple default value 1`] = `
 </div>
 `;
 
-exports[`ForceFieldChoiceString component render multiple default value 2`] = `
+exports[`ForceFieldChoiceString component > render multiple default value 2`] = `
 <div>
   <div
     className="form-group"
@@ -239,7 +239,7 @@ exports[`ForceFieldChoiceString component render multiple default value 2`] = `
         multiple={true}
         onChange={[Function]}
         value={
-          Array [
+          [
             "A",
             "B",
           ]
@@ -260,7 +260,7 @@ exports[`ForceFieldChoiceString component render multiple default value 2`] = `
 </div>
 `;
 
-exports[`ForceFieldChoiceString component render multiple non-default value 1`] = `
+exports[`ForceFieldChoiceString component > render multiple non-default value 1`] = `
 <div>
   <div
     className="form-group"
@@ -285,7 +285,7 @@ exports[`ForceFieldChoiceString component render multiple non-default value 1`] 
         multiple={true}
         onChange={[Function]}
         value={
-          Array [
+          [
             "B",
             "C",
           ]
@@ -306,7 +306,7 @@ exports[`ForceFieldChoiceString component render multiple non-default value 1`] 
 </div>
 `;
 
-exports[`ForceFieldChoiceString component render non-default value 1`] = `
+exports[`ForceFieldChoiceString component > render non-default value 1`] = `
 <div>
   <div
     className="form-group"

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PropertiesTable component rendering 1`] = `
+exports[`PropertiesTable component > rendering 1`] = `
 <table
   className="table table-sm table-striped table-hover"
 >
@@ -46,7 +46,7 @@ exports[`PropertiesTable component rendering 1`] = `
           stroke="currentColor"
           strokeWidth="0"
           style={
-            Object {
+            {
               "color": undefined,
             }
           }
@@ -87,7 +87,7 @@ exports[`PropertiesTable component rendering 1`] = `
           stroke="currentColor"
           strokeWidth="0"
           style={
-            Object {
+            {
               "color": undefined,
             }
           }
@@ -128,7 +128,7 @@ exports[`PropertiesTable component rendering 1`] = `
           stroke="currentColor"
           strokeWidth="0"
           style={
-            Object {
+            {
               "color": undefined,
             }
           }
@@ -169,7 +169,7 @@ exports[`PropertiesTable component rendering 1`] = `
           stroke="currentColor"
           strokeWidth="0"
           style={
-            Object {
+            {
               "color": undefined,
             }
           }
@@ -210,7 +210,7 @@ exports[`PropertiesTable component rendering 1`] = `
           stroke="currentColor"
           strokeWidth="0"
           style={
-            Object {
+            {
               "color": undefined,
             }
           }
@@ -251,7 +251,7 @@ exports[`PropertiesTable component rendering 1`] = `
           stroke="currentColor"
           strokeWidth="0"
           style={
-            Object {
+            {
               "color": undefined,
             }
           }

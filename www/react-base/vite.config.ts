@@ -1,5 +1,6 @@
 import {defineConfig, PluginOption, ViteDevServer} from "vite";
 import react from "@vitejs/plugin-react";
+import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
 import checker from 'vite-plugin-checker';
 import path from 'path';
@@ -87,6 +88,10 @@ export default defineConfig({
     }),
     checker({typescript: true}),
     serveBuildbotPlugins(),
+    nodePolyfills({
+      include: ['util'],
+      globals: { process: true },
+    }),
     visualizer(),
   ],
   // this makes all path references into relative paths, thus Buildbot can be hosted at a custom
@@ -96,6 +101,9 @@ export default defineConfig({
     target: ['es2020'],
     outDir: outDir,
     emptyOutDir: true,
+  },
+  test: {
+    environment: "jsdom",
   },
   server: {
     proxy: {
@@ -134,6 +142,7 @@ export default defineConfig({
       'react',
       'react-dom',
       'react-router-dom'
-    ]
+    ],
+    mainFields: ['module', 'main']
   },
 });

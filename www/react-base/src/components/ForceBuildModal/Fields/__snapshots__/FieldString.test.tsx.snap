@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ForceFieldString component change state on click 1`] = `
+exports[`ForceFieldString component > change state on click 1`] = `
 <div>
   <div
     className="form-group"
@@ -34,7 +34,7 @@ exports[`ForceFieldString component change state on click 1`] = `
 </div>
 `;
 
-exports[`ForceFieldString component render default value 1`] = `
+exports[`ForceFieldString component > render default value 1`] = `
 <div>
   <div
     className="form-group"
@@ -68,7 +68,7 @@ exports[`ForceFieldString component render default value 1`] = `
 </div>
 `;
 
-exports[`ForceFieldString component render default value 2`] = `
+exports[`ForceFieldString component > render default value 2`] = `
 <div>
   <div
     className="form-group"
@@ -102,7 +102,7 @@ exports[`ForceFieldString component render default value 2`] = `
 </div>
 `;
 
-exports[`ForceFieldString component render non-default value 1`] = `
+exports[`ForceFieldString component > render non-default value 1`] = `
 <div>
   <div
     className="form-group"
