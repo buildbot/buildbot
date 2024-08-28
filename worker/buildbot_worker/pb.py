@@ -16,7 +16,6 @@
 import os.path
 import shutil
 import signal
-import sys
 
 from twisted.application import service
 from twisted.application.internet import ClientService
@@ -36,13 +35,12 @@ from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
-from buildbot_worker.pbutil import AutoLoginPBFactory
-from buildbot_worker.pbutil import decode
-from buildbot_worker.tunnel import HTTPTunnelEndpoint
-
 from buildbot_worker.msgpack import BuildbotWebSocketClientFactory
 from buildbot_worker.msgpack import BuildbotWebSocketClientProtocol
 from buildbot_worker.msgpack import ProtocolCommandMsgpack
+from buildbot_worker.pbutil import AutoLoginPBFactory
+from buildbot_worker.pbutil import decode
+from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
 
 class UnknownCommand(pb.Error):

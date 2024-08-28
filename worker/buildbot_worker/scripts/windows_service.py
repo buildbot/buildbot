@@ -513,9 +513,7 @@ def ConfigureLogOnAsAServicePolicy(accountName):
             print(f"Account {accountName}({sid}) has granted {SE_SERVICE_LOGON_RIGHT} privilege.")
         else:
             print(
-                (
-                    f"error: Account {accountName}({sid}) does not have {SE_SERVICE_LOGON_RIGHT} privilege."
-                )
+                f"error: Account {accountName}({sid}) does not have {SE_SERVICE_LOGON_RIGHT} privilege."
             )
 
 

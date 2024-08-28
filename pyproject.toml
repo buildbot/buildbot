@@ -29,6 +29,8 @@ target-version = "py38"
         # maybe we should fix these?
         "PLR2004", # magic-value-comparison
         "PLW2901", # redefined-loop-name
+
+        "UP027", # unpacked-list-comprehension Deprecated, see: https://github.com/astral-sh/ruff/issues/12754
     ]
 
 [tool.ruff.lint.isort]
