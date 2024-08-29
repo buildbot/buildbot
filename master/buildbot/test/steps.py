@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import stat
 import tarfile
 from io import BytesIO
@@ -656,7 +658,13 @@ class TestBuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
-    def setup_test_build_step(self, want_data=True, want_db=False, want_mq=False):
+    def setup_test_build_step(
+        self,
+        want_data=True,
+        want_db=False,
+        want_mq=False,
+        with_secrets: dict | None = None,
+    ):
         if not hasattr(self, 'reactor'):
             raise RuntimeError('Reactor has not yet been setup for step')
 
@@ -666,7 +674,11 @@ class TestBuildStepMixin:
         self._expected_commands_popped = 0
 
         self.master = fakemaster.make_master(
-            self, wantData=want_data, wantDb=want_db, wantMq=want_mq
+            self,
+            wantData=want_data,
+            wantDb=want_db,
+            wantMq=want_mq,
+            with_secrets=with_secrets,
         )
 
         self.patch(runprocess, "create_process", self._patched_create_process)
@@ -679,7 +691,7 @@ class TestBuildStepMixin:
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
 
-        self._steps = []
+        self._steps: list[buildstep.BuildStep] = []
         self.build = None
 
         # expectations
@@ -694,6 +706,8 @@ class TestBuildStepMixin:
         self._exp_test_result_sets = []
         self._exp_test_results = []
         self._exp_build_data = {}
+        self._exp_result_summaries = []
+        self._exp_build_result_summaries = []
 
     def tear_down_test_build_step(self):
         pass
@@ -889,6 +903,12 @@ class TestBuildStepMixin:
     def expect_test_results(self, results):
         self._exp_test_results = results
 
+    def expect_result_summary(self, *summaries):
+        self._exp_result_summaries.extend(summaries)
+
+    def expect_build_result_summary(self, *summaries):
+        self._exp_build_result_summaries.extend(summaries)
+
     def add_run_process_expect_env(self, d):
         self._master_run_process_expect_env.update(d)
 
@@ -940,6 +960,16 @@ class TestBuildStepMixin:
                     f"expected state_string {exp_state_string!r}, got "
                     f"{stepStateString[stepids[0]]!r}",
                 )
+
+            if self._exp_result_summaries and (exp_summary := self._exp_result_summaries.pop(0)):
+                step_result_summary = yield step.getResultSummary()
+                self.assertEqual(exp_summary, step_result_summary)
+
+            if self._exp_build_result_summaries and (
+                exp_build_summary := self._exp_build_result_summaries.pop(0)
+            ):
+                step_build_result_summary = yield step.getBuildResultSummary()
+                self.assertEqual(exp_build_summary, step_build_result_summary)
 
             properties = self.build.getProperties()
 
