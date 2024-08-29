@@ -1,0 +1,44 @@
+import requests
+import json
+
+# Replace with your API key from Deriv
+API_KEY = 'YOUR_API_KEY'
+API_URL = 'https://api.deriv.com'
+
+# Function to send requests to Deriv API
+def send_request(endpoint, data):
+    headers = {
+        'Authorization': f'Bearer {API_KEY}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.post(f'{API_URL}/{endpoint}', headers=headers, data=json.dumps(data))
+    return response.json()
+
+# Function to get account balance
+def get_balance():
+    endpoint = 'account_balance'  # Replace with correct endpoint
+    data = {}
+    response = send_request(endpoint, data)
+    return response
+
+# Function to place a trade
+def place_trade(symbol, amount, direction):
+    endpoint = 'trade'  # Replace with correct endpoint
+    data = {
+        'symbol': symbol,
+        'amount': amount,
+        'direction': direction
+        # Add any other necessary parameters
+    }
+    response = send_request(endpoint, data)
+    return response
+
+# Example Usage
+if __name__ == "__main__":
+    # Get balance
+    balance = get_balance()
+    print('Account Balance:', balance)
+    
+    # Place a trade (example values)
+    trade_response = place_trade('USDJPY', 10, 'CALL')  # Replace with your parameters
+    print('Trade Response:', trade_response)
