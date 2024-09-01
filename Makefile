@@ -24,7 +24,9 @@ WWW_EX_PKGS := www/nestedexample www/codeparameter
 WWW_DEP_PKGS := www/guanlecoja-ui www/data_module www/plugin_support www/react-data-module www/react-ui
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
-WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-grid_view www/react-wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_REACT_UNIT_TESTS := $(filter-out www/guanlecoja-ui www/badges www/plugin_support www/data_module www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/react-grid_view www/react-wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+
+WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/react-base www/react-console_view www/react-grid_view www/react-waterfall_view www/react-wsgi_dashboards www/react-data-module www/react-ui, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -84,6 +86,12 @@ frontend_tests_headless: frontend_deps
 		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test $$(if [ $$i != "www/react-base" -a $$i != "www/react-data-module" -a $$i != "www/react-ui" -a $$i != "www/react-grid_view" -a $$i != "www/react-console_view" -a $$i != "www/react-waterfall_view" ]; then echo --browsers BBChromeHeadless; fi) || exit 1) || exit 1; done
+
+frontend_tests_headless_react: frontend_deps
+	for i in $(WWW_PKGS); \
+		do (cd $$i; $(YARN) install --pure-lockfile); done
+	for i in $(WWW_PKGS_FOR_REACT_UNIT_TESTS); \
+		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test $$(if [ $$i == "www/react-base" -a $$i == "www/react-data-module" -a $$i == "www/react-ui" -a $$i == "www/react-grid_view" -a $$i == "www/react-console_view" -a $$i == "www/react-waterfall_view" ]; then echo --browsers BBChromeHeadless; fi) || exit 1) || exit 1; done
 
 # rebuild front-end from source
 frontend: frontend_deps
