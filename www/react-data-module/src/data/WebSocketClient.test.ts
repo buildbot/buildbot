@@ -5,6 +5,7 @@
   Copyright Buildbot Team Members
 */
 
+import {describe, expect, it} from "vitest";
 import {getWebSocketUrl, WebSocketClient} from "./WebSocketClient";
 import {MockWebSocket} from "./MockWebSocket";
 

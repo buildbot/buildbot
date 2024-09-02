@@ -19,7 +19,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
-      formats: ["es", "cjs"],
+      formats: ["es"],
       name: "buildbot-data-js",
       fileName: "buildbot-data-js",
     },
@@ -38,5 +38,8 @@ export default defineConfig({
     outDir: outDir,
     emptyOutDir: true,
     minify: false,
+  },
+  test: {
+    environment: "jsdom"
   },
 });
