@@ -173,6 +173,12 @@ script:
       export PATH=/tmp/bbvenv/bin/:$PATH
       make frontend_tests_headless
 
+  - title: frontend unit tests
+    condition: TESTS == "js_unit"
+    cmd: |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make frontend_tests_headless_react
+
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial")
     cmd: /tmp/bbvenv/bin/trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test
