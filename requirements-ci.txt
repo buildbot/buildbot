@@ -38,7 +38,7 @@ dill==0.3.8
 evalidate==2.0.3
 greenlet==3.0.3
 hyperlink==21.0.0
-idna==3.7
+idna==3.8
 incremental==24.7.2
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
 Jinja2==3.1.4
