@@ -11,7 +11,7 @@ constantly==15.1.0; python_version < "3.8"  # pyup: ignore
 cryptography==43.0.0;  python_version >= "3.6"
 funcsigs==1.0.2
 hyperlink==21.0.0
-idna==3.7
+idna==3.8
 incremental==24.7.2
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
 incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
