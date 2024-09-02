@@ -38,6 +38,21 @@ function pushTickValue(ticks: number[], y: WaterfallYScale, value: number) {
   }
 }
 
+function link(formatter) {
+  function linkImpl(this: d3.BaseType, d: unknown) {
+    const el = this as Element;
+    if (el.parentNode === null) {
+      return;
+    }
+    const p = d3.select(el.parentElement);
+    const a = p.append('a')
+      .attr('xlink:href', formatter(d));
+    a.node()?.appendChild(el);
+  };
+  return linkImpl;
+};
+
+
 export class Visualizer {
   minColumnWidth: number;
   showBuildNumberBackground: boolean;
@@ -275,25 +290,12 @@ export class Visualizer {
 
     const xAxisSelect = axis.call(xAxis);
 
-    // Add link
-    function link(this: d3.BaseType, builderid: unknown) {
-      const el = this as Element;
-      if (el.parentNode === null) {
-        return;
-      }
-
-      const p = d3.select(el.parentElement);
-      const a = p.append('a')
-        .attr('xlink:href', `#/builders/${builderid}`);
-      a.node()?.appendChild(el);
-    };
-
     // Rotate text
     xAxisSelect.selectAll('text')
       .style('text-anchor', 'start')
       .attr('transform', 'translate(0, -16) rotate(-25)')
       .attr('dy', '0.75em')
-      .each(link);
+      .each(link(builderid => `#/builders/${builderid}`));
 
     // Rotate tick lines
     xAxisSelect.selectAll('line')
@@ -507,11 +509,14 @@ export class Visualizer {
           (y.getCoord(build.complete_at ?? 0) ?? 0)));
     }
 
+    const buildlink = link(b => `#/builders/${b.builderid}/builds/${b.number}`);
+
     builds.append('rect')
       .attr('class', b => results2class(b, null))
       .attr('width', x.bandwidth())
       .attr('height', height)
-      .classed('fill', true);
+      .classed('fill', true)
+      .each(buildlink);
 
     // Optional: grey rectangle below buildids
     if (this.showBuildNumberBackground) {
@@ -527,7 +532,8 @@ export class Visualizer {
       .attr('class', 'id')
       .attr('x', x.bandwidth() / 2)
       .attr('y', -3)
-      .text(build => build.number);
+      .text(build => build.number)
+      .each(buildlink);
 
     const self = this;
 
