@@ -81,14 +81,6 @@ check_long_lines() {
 }
 
 
-check_yield_defer_returnValue() {
-    local yields=false
-    if git diff "$REVRANGE" | grep '+.*yield defer.returnValue'; then
-        yields=true
-    fi
-    $yields
-}
-
 check_relnotes() {
     if git diff --exit-code "$REVRANGE" master/docs/relnotes/index.rst >/dev/null 2>&1; then
         return 1
@@ -168,7 +160,6 @@ fi
 status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
 check_long_lines && warning "$REVRANGE adds long lines"
-check_yield_defer_returnValue && not_ok "$REVRANGE yields defer.returnValue"
 
 status "checking for use of sa.Table"
 check_sa_Table || warning "use (buildbot.util.)sautils.Table instead of sa.Table"

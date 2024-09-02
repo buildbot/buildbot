@@ -65,7 +65,7 @@ class MasterRealm:
         if self.on_attachment:
             yield self.on_attachment(mind)
 
-        defer.returnValue((pb.IPerspective, self.perspective, lambda: None))
+        return pb.IPerspective, self.perspective, lambda: None
 
     def shutdown(self):
         return self.mind.broker.transport.loseConnection()

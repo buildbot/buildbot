@@ -116,7 +116,7 @@ class AutoLoginPBFactory(PBClientFactory):
         else:
             log.err(why, 'While trying to connect:')
             reactor.stop()
-            defer.returnValue(None)
+            return
 
         self._failedAttempts += 1
         delay = self._timeoutForAttempt(self._failedAttempts)
