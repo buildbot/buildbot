@@ -80,5 +80,5 @@ urllib3==1.26.19  # pyup: ignore
 Werkzeug==3.0.4
 xmltodict==0.13.0
 zope.event==5.0
-zope.interface==7.0.1
+zope.interface==7.0.3
 zope.schema==7.0.1
