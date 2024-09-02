@@ -91,7 +91,7 @@ frontend_tests_headless_react: frontend_deps
 	for i in $(WWW_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_REACT_UNIT_TESTS); \
-		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test $$(if [ $$i == "www/react-base" -a $$i == "www/react-data-module" -a $$i == "www/react-ui" -a $$i == "www/react-grid_view" -a $$i == "www/react-console_view" -a $$i == "www/react-waterfall_view" ]; then echo --browsers BBChromeHeadless; fi) || exit 1) || exit 1; done
+		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test || exit 1) || exit 1; done
 
 # rebuild front-end from source
 frontend: frontend_deps
