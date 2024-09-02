@@ -1,0 +1,2 @@
+Master running with Twisted >= 24.7.0 does not work with buildbot-worker 0.8.
+Use Twisted 24.3.0 on master if you need to communicate with buildbot-worker 0.8.
