@@ -61,7 +61,9 @@ export default defineConfig({
     emptyOutDir: true,
   },
   test: {
-    environment: "jsdom"
+    environment: "jsdom",
+    // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
+    pool: "threads"
   },
   define: {
     'process.env.NODE_ENV': '"production"',
