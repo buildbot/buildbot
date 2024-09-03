@@ -24,7 +24,7 @@
   "peerDependencies": {
     "axios": "~1.7.7",
     "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
+    "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -38,7 +38,7 @@
     "buildbot-plugin-support": "link:../plugin_support",
     "jsdom": "^25.0.0",
     "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
+    "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-app-polyfill": "~3.0.0",

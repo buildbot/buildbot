@@ -29,7 +29,7 @@
     "eslint-plugin-testing-library": "^3.9.2",
     "jquery": "^3.6.0",
     "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
+    "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "outdated-browser-rework": "^3.0.1",
     "popper.js": "^1.16.1",
