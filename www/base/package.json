@@ -14,7 +14,7 @@
     "@types/underscore": "^1.11.4",
     "@typescript-eslint/eslint-plugin": "^4.5.0",
     "@typescript-eslint/parser": "^4.5.0",
-    "axios": "1.7.2",
+    "axios": "~1.7.7",
     "bootstrap": "^4.6.2",
     "buildbot-data-js": "link:../data-module",
     "buildbot-plugin-support": "link:../plugin_support",

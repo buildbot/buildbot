@@ -22,7 +22,7 @@
     ]
   },
   "peerDependencies": {
-    "axios": "1.7.2",
+    "axios": "~1.7.7",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
     "moment": "^2.29.4",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "~4.3.1",
-    "axios": "1.7.2",
+    "axios": "~1.7.7",
     "axios-mock-adapter": "^1.21.1",
     "buildbot-data-js": "link:../data-module",
     "buildbot-plugin-support": "link:../plugin_support",
