@@ -16,30 +16,31 @@
 */
 
 import {describe, expect, it} from "vitest";
-import renderer, {act} from 'react-test-renderer';
+import {render} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {MemoryRouter} from "react-router-dom";
 import {RawData} from './RawData';
 import {observable} from "mobx";
 
 function assertRenderSnapshot(data: {[key: string]: any}) {
-  const component = renderer.create(
+  const component = render(
     <MemoryRouter>
       <RawData data={data}/>
     </MemoryRouter>
   );
-  expect(component.toJSON()).toMatchSnapshot();
+  expect(component.asFragment()).toMatchSnapshot();
 }
 
-function assertRenderSnapshotExpanded(data: {[key: string]: any}) {
-  const component = renderer.create(
+async function assertRenderSnapshotExpanded(data: {[key: string]: any}) {
+  const component = render(
     <MemoryRouter>
       <RawData data={data}/>
     </MemoryRouter>
   );
-  act(() =>
-    component.root.findByType("svg").props.onClick()
-  );
-  expect(component.toJSON()).toMatchSnapshot();
+  const elements = component.container.querySelectorAll("svg")
+  expect(elements.length).toBe(1);
+  await userEvent.click(elements[0]);
+  expect(component.asFragment()).toMatchSnapshot();
 }
 
 describe('RawData component', function() {
@@ -86,7 +87,7 @@ describe('RawData component', function() {
     assertRenderSnapshot(obj);
   });
 
-  it('object with array of objects expanded', () => {
+  it('object with array of objects expanded', async () => {
     const obj = {
       array: [
         {str: "string"},
@@ -98,7 +99,7 @@ describe('RawData component', function() {
       ],
     };
 
-    assertRenderSnapshotExpanded(obj);
+    await assertRenderSnapshotExpanded(obj);
   });
 
   it('observable object with array of objects', () => {
