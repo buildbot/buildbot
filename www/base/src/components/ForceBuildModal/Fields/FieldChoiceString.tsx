@@ -22,29 +22,45 @@ import {observer} from "mobx-react";
 import {FieldBase} from "./FieldBase";
 import {Form} from "react-bootstrap";
 import {Tooltip} from 'react-tooltip'
+import Select, { ActionMeta, PropsValue, SingleValue, MultiValue } from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 type FieldChoiceStringProps = {
   field: ForceSchedulerFieldChoiceString;
   fieldsState: ForceBuildModalFieldsState;
 }
 
+interface SelectOption {
+  readonly value: string,
+  readonly label: string,
+}
+
+const ValueToSelectOption = (value: string): SelectOption => { return {value: value, label: value} };
+
 export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps) => {
   const state = fieldsState.fields.get(field.fullName)!;
+  if (field.multiple && !Array.isArray(state.value)) {
+    fieldsState.setValue(field.fullName, state.value ? [state.value] : []);
+  }
 
-  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!field.multiple) {
-      fieldsState.setValue(field.fullName, event.target.value);
-    }
-    else {
-      const currentValue = new Set(state.value);
-      if (currentValue.has(event.target.value)) {
-        currentValue.delete(event.target.value);
-      }
-      else {
-        currentValue.add(event.target.value);
-      }
-      fieldsState.setValue(field.fullName, [...currentValue]);
-    }
+  const onChange = (
+    newValue: PropsValue<SelectOption>,
+    _actionMeta: ActionMeta<SelectOption>
+  ) => {
+    fieldsState.setValue(
+      field.fullName,
+      (
+        field.multiple  ? (newValue as MultiValue<SelectOption>).map(e => e.value)
+                        : (newValue as SingleValue<SelectOption>)?.value ?? null
+      )
+    );
+  };
+
+  const props = {
+    isMulti: field.multiple,
+    defaultValue: field.multiple ? (state.value as string[]).map(ValueToSelectOption) : ValueToSelectOption(state.value as string),
+    onChange: onChange,
+    options: field.choices.map(ValueToSelectOption),
   };
 
   return (
@@ -57,17 +73,11 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
         )}
         <Tooltip id="my-tooltip" clickable/>
       </Form.Label>
-      <div className="col-sm-10">
-        <Form.Control data-bb-test-id={`force-field-${field.fullName}`}
-                      as="select" multiple={field.multiple} value={state.value}
-                      onChange={onChange}>
-          {field.choices.map(choice => (<option key={`force-field-${field.fullName}-option-${choice}`}>{choice}</option>))}
-        </Form.Control>
-        { !field.strict && !field.multiple
-          ? <input data-bb-test-id={`force-field-non-strict-${field.fullName}`}
-                   className="select-editable form-control" type="text" value={state.value}
-                   onChange={onChange}/>
-          : <></>
+      <div className="col-sm-10" data-bb-test-id={`force-field-${field.fullName}`}>
+        {
+          field.strict ?
+          <Select<SelectOption, boolean> {...props} /> :
+          <CreatableSelect<SelectOption, boolean> {...props} />
         }
       </div>
     </FieldBase>
