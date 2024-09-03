@@ -34,7 +34,7 @@
     "@types/react": "^18.0.32",
     "@vitejs/plugin-react": "~4.3.1",
     "axios": "~1.7.7",
-    "axios-mock-adapter": "~1.22.0",
+    "axios-mock-adapter": "~2.0.0",
     "jsdom": "^24.1.0",
     "mobx": "^6.6.1",
     "moment": "^2.29.4",

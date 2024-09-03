@@ -34,7 +34,7 @@
     "@types/d3": "^4.13.12",
     "@vitejs/plugin-react": "~4.3.1",
     "axios": "~1.7.7",
-    "axios-mock-adapter": "^1.21.1",
+    "axios-mock-adapter": "~2.0.0",
     "buildbot-data-js": "link:../data-module",
     "buildbot-plugin-support": "link:../plugin_support",
     "jsdom": "^24.1.0",

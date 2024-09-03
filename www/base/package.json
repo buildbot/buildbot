@@ -83,7 +83,7 @@
     "@types/jquery": "^3.5.16",
     "@types/react-test-renderer": "^18.0.0",
     "@vitejs/plugin-react": "~4.3.1",
-    "axios-mock-adapter": "~1.22.0",
+    "axios-mock-adapter": "~2.0.0",
     "buffer": "^5.5.0",
     "jsdom": "^24.1.0",
     "less": "^3.0.0",
