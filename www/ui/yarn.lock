@@ -2826,7 +2826,7 @@ pkg-types@^1.0.3, pkg-types@^1.1.1:
     mlly "^1.7.1"
     pathe "^1.1.2"
 
-postcss@^8.4.39, postcss@^8.4.43:
+postcss@^8.4.43:
   version "8.4.44"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.44.tgz#d56834ef6508610ba224bb22b2457b2169ed0480"
   integrity sha512-Aweb9unOEpQ3ezu4Q00DPvvM2ZTUitJdNKeP/+uQgr1IBIqu574IaZoURId7BKtWMREwzKa9OgzPzezWGPWFQw==
@@ -3115,7 +3115,7 @@ reusify@^1.0.4:
   resolved "https://registry.yarnpkg.com/reusify/-/reusify-1.0.4.tgz#90da382b1e126efc02146e90845a88db12925d76"
   integrity sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==
 
-rollup@^4.13.0, rollup@^4.20.0:
+rollup@^4.20.0:
   version "4.21.2"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-4.21.2.tgz#f41f277a448d6264e923dd1ea179f0a926aaf9b7"
   integrity sha512-e3TapAgYf9xjdLvKQCkQTnbTKd4a6jwlpQSJJFokHGaX2IVjoEqkIIhiQfqsi0cdwlOD+tQGuOd5AJkc5RngBw==
@@ -3470,7 +3470,7 @@ vite-plugin-static-copy@~1.0.5:
     fs-extra "^11.1.0"
     picocolors "^1.0.0"
 
-vite@^5.0.0:
+vite@^5.0.0, vite@~5.4.3:
   version "5.4.3"
   resolved "https://registry.yarnpkg.com/vite/-/vite-5.4.3.tgz#771c470e808cb6732f204e1ee96c2ed65b97a0eb"
   integrity sha512-IH+nl64eq9lJjFqU+/yrRnrHPVTlgy42/+IzbOdaFDVlyLgI/wDlf+FCobXLX1cT0X5+7LMyH1mIy2xJdLfo8Q==
@@ -3478,17 +3478,6 @@ vite@^5.0.0:
     esbuild "^0.21.3"
     postcss "^8.4.43"
     rollup "^4.20.0"
-  optionalDependencies:
-    fsevents "~2.3.3"
-
-vite@~5.3.1:
-  version "5.3.5"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-5.3.5.tgz#b847f846fb2b6cb6f6f4ed50a830186138cb83d8"
-  integrity sha512-MdjglKR6AQXQb9JGiS7Rc2wC6uMjcm7Go/NHNO63EwiJXfuk9PgqiP/n5IDJCziMkfw9n4Ubp7lttNwz+8ZVKA==
-  dependencies:
-    esbuild "^0.21.3"
-    postcss "^8.4.39"
-    rollup "^4.13.0"
   optionalDependencies:
     fsevents "~2.3.3"
 
