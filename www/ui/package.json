@@ -48,7 +48,7 @@
     "babel-preset-react-app": "^10.0.0",
     "bootstrap": "^4.6.2",
     "buildbot-plugin-support": "link:../plugin_support",
-    "jsdom": "^24.1.0",
+    "jsdom": "^25.0.0",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
     "moment": "^2.29.4",
