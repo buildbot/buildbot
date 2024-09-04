@@ -36,6 +36,7 @@ import {
 } from "buildbot-ui";
 import {BuildersTable} from "../../components/BuildersTable/BuildersTable";
 import {SettingCheckbox} from "../../components/SettingCheckbox/SettingCheckbox";
+import {makePagination} from "../../util/Pagination";
 
 const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
                            masters: DataCollection<Master>, showOldBuilders: boolean) => {
@@ -50,6 +51,7 @@ export const BuildersView = observer(() => {
 
   const filterManager = useTagFilterManager("tags");
   const [builderNameFilter, setBuilderNameFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useTopbarItems([
     {caption: "Builders", route: "/builders"}
@@ -59,14 +61,20 @@ export const BuildersView = observer(() => {
 
   // as there is usually lots of builders, its better to get the overall
   // list of workers, masters, and builds and then associate by builder
-  const builders= useDataApiQuery(() => Builder.getAll(accessor));
-  const masters= useDataApiQuery(() => Master.getAll(accessor));
-  const workers= useDataApiQuery(() => Worker.getAll(accessor));
+  const builders = useDataApiQuery(() => Builder.getAll(accessor));
+  const masters = useDataApiQuery(() => Master.getAll(accessor));
+  const workers = useDataApiQuery(() => Worker.getAll(accessor));
 
   const filteredBuilders = builders.array.filter(builder => {
     return isBuilderFiltered(builder, filterManager, masters, showOldBuilders) &&
         (builderNameFilter === null || builder.name.indexOf(builderNameFilter) >= 0)
   }).sort((a, b) => a.name.localeCompare(b.name));
+
+  const [paginatedBuilders, paginationElement] = makePagination(
+    currentPage, setCurrentPage,
+    buildbotGetSettings().getIntegerSetting("Builders.page_size"),
+    filteredBuilders
+  );
 
   return (
     <div className="bb-builders-view-container">
@@ -75,10 +83,11 @@ export const BuildersView = observer(() => {
                onChange={e => setBuilderNameFilter(e.target.value)}
                placeholder="Search for builders" className="bb-builders-view-form-control"/>
       </form>
-      <BuildersTable builders={filteredBuilders} allWorkers={workers}
+      <BuildersTable builders={paginatedBuilders} allWorkers={workers}
                      isLoading={!builders.isResolved() || !workers.isResolved()}
                      filterManager={filterManager}/>
       <div>
+        {paginationElement}
         <SettingCheckbox value={showOldBuilders} label="Show old builders"
                          settingSelector="Builders.show_old_builders"/>
       </div>
