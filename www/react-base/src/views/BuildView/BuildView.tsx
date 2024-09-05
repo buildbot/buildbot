@@ -364,7 +364,7 @@ const BuildView = observer(() => {
         </Tab>
         <Tab eventKey="changes" title="Changes">
           {build !== null
-            ? <ChangesTable changes={changesQuery}/>
+            ? <ChangesTable changes={changesQuery} fetchLimit={0} onLoadMore={null}/>
             : <></>
           }
         </Tab>

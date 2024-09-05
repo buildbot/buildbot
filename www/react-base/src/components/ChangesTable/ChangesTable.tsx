@@ -23,6 +23,8 @@ import {ChangeDetails} from "buildbot-ui";
 import {observer, useLocalObservable} from "mobx-react";
 import {resizeArray} from "../../util/Array";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
+import {Button} from "react-bootstrap";
+import {LoadMoreListItem} from "../LoadMoreListItem/LoadMoreListItem";
 
 class ChangesTableState {
   showDetails = observable.array<boolean>();
@@ -45,10 +47,12 @@ class ChangesTableState {
 }
 
 type ChangesTableProps = {
-  changes: DataCollection<Change>
+  changes: DataCollection<Change>;
+  fetchLimit: number;
+  onLoadMore: (() => void)|null;
 }
 
-export const ChangesTable = observer(({changes}: ChangesTableProps) => {
+export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: ChangesTableProps) => {
   const tableState = useLocalObservable(() => new ChangesTableState());
   tableState.resizeTable(changes.array.length, false);
 
@@ -68,6 +72,13 @@ export const ChangesTable = observer(({changes}: ChangesTableProps) => {
     }
     return <LoadingSpan/>
   }
+
+  const maybeRenderLoadMore = () => {
+    if (!changes.isResolved() || onLoadMore === null || changes.array.length >= fetchLimit) {
+      return <></>;
+    }
+    return <LoadMoreListItem onLoadMore={onLoadMore}/>;
+  };
 
   return (
     <div className="container-fluid">
@@ -92,6 +103,7 @@ export const ChangesTable = observer(({changes}: ChangesTableProps) => {
       </div>
       <ul className="list-group">
         {changeElements}
+        {maybeRenderLoadMore()}
       </ul>
     </div>
   );
