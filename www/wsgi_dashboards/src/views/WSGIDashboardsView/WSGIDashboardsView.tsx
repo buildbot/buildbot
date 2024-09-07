@@ -101,12 +101,12 @@ buildbotSetupPlugin((reg, config) => {
       caption: caption,
       icon: createElement(icon, {}),
       order: dashboard.order,
-      route: `/wsgi/${name}`,
+      route: `/${name}`,
       parentName: null,
     });
   
     reg.registerRoute({
-      route: `/wsgi/${name}`,
+      route: `/${name}`,
       group: name,
       element: () => <WSGIDashboardsView name={name}/>,
     });
