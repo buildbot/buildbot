@@ -179,9 +179,6 @@ The key points to notice here:
 * Use the decorator form of ``inlineCallbacks``.
 * In most cases, the result of a ``yield`` expression should be assigned to a variable.
   It can be used in a larger expression, but remember that Python requires that you enclose the expression in its own set of parentheses.
-* Python does not permit returning a value from a generator, so statements like ``return xval + y`` are invalid.
-  Instead, yield the result of ``defer.returnValue``.
-  For clarity, follow it with a bare ``return``, unless it is the last statement in the function.
 
 The great advantage of ``inlineCallbacks`` is that it allows you to use all of the usual Pythonic control structures in their natural form.
 In particular, it is easy to represent a loop or even nested loops in this style without losing any readability.

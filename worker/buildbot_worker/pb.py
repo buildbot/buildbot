@@ -411,7 +411,7 @@ class BotPbLike(BotBase):
                             "it now"
                         )
 
-        defer.returnValue(retval)
+        return retval
 
 
 class BotPb(BotPbLike, pb.Referenceable):

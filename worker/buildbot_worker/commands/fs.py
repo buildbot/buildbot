@@ -124,15 +124,13 @@ class RemoveDirectory(base.Command):
         # permissions and re-try the rm -rf.
         if not chmodDone:
             rc = yield self._tryChmod(rc, path)
-        defer.returnValue(rc)
+        return rc
 
     @defer.inlineCallbacks
     def _tryChmod(self, rc, path):
         assert isinstance(rc, int)
         if rc == 0:
-            defer.returnValue(0)
-            # pylint: disable=unreachable
-            return  # pragma: no cover
+            return 0
         # Attempt a recursive chmod and re-try the rm -rf after.
 
         command = ["chmod", "-Rf", "u+rwx", path]
@@ -158,7 +156,7 @@ class RemoveDirectory(base.Command):
         self.command = c
         rc = yield c.start()
         rc = yield self._clobber(rc, path, True)
-        defer.returnValue(rc)
+        return rc
 
 
 class CopyDirectory(base.Command):

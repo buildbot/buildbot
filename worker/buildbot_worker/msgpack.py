@@ -384,7 +384,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         self.seq_number = self.seq_number + 1
         self.sendMessage(msg, isBinary=True)
         res1 = yield d
-        defer.returnValue(res1)
+        return res1
 
     def onClose(self, wasClean, code, reason):
         if self.debug:
