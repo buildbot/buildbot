@@ -30,10 +30,10 @@
     ]
   },
   "peerDependencies": {
-    "axios": "1.7.2",
+    "axios": "~1.7.7",
     "bootstrap": "^4.6.2",
     "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
+    "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -43,30 +43,30 @@
     "@types/react-dom": "^18.2.7",
     "@types/react-test-renderer": "^18.0.0",
     "@vitejs/plugin-react": "~4.3.1",
-    "axios": "1.7.2",
-    "axios-mock-adapter": "^1.21.1",
+    "axios": "~1.7.7",
+    "axios-mock-adapter": "~2.0.0",
     "babel-preset-react-app": "^10.0.0",
     "bootstrap": "^4.6.2",
     "buildbot-plugin-support": "link:../plugin_support",
-    "jsdom": "^24.1.0",
+    "jsdom": "^25.0.0",
     "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
+    "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "react": "^18.2.0",
-    "react-app-polyfill": "^2.0.0",
+    "react-app-polyfill": "~3.0.0",
     "react-bootstrap": "^1.6.5",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "react-test-renderer": "^18.2.0",
     "sass": "^1.56.0",
-    "vite": "~5.3.1",
-    "vite-plugin-dts": "^2.1.0",
+    "vite": "~5.4.3",
+    "vite-plugin-dts": "^4.1.0",
     "vite-plugin-static-copy": "~1.0.5",
-    "vitest": "~1.6.0"
+    "vitest": "~2.0.5"
   },
   "license": "GPL-2.0",
   "dependencies": {
     "buildbot-data-js": "link:../data-module",
-    "react-icons": "^4.8.0"
+    "react-icons": "^5.3.0"
   }
 }

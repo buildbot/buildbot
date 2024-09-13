@@ -103,6 +103,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
+    pool: "threads"
   },
   server: {
     proxy: {

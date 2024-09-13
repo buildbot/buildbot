@@ -40,6 +40,8 @@ export default defineConfig({
     minify: false,
   },
   test: {
-    environment: "jsdom"
+    environment: "jsdom",
+    // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
+    pool: "threads"
   },
 });
