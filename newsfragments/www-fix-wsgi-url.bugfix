@@ -1,0 +1,1 @@
+Fix URL of WGSI dashboards to keep backward compatibility with the 3.x WSGI plugin.
