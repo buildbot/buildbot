@@ -124,10 +124,16 @@ export const BuildsTable = observer(({builds, builders, fetchLimit, onLoadMore}:
   });
 
   const maybeRenderLoadMore = () => {
-    if (!builds.isResolved() || onLoadMore === null || fetchLimit >= builds.array.length) {
+    if (!builds.isResolved() || onLoadMore === null || builds.array.length < fetchLimit) {
       return <></>;
     }
-    return <LoadMoreListItem onLoadMore={onLoadMore}/>;
+    return (
+      <tr>
+        <td colSpan={builders !== null ? 8 : 7}>
+          <Button variant="outline-secondary" onClick={onLoadMore}>Load more</Button>
+        </td>
+      </tr>
+    );
   };
 
   const tableElement = () => {
