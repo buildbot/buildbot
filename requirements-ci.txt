@@ -67,7 +67,7 @@ s3transfer==0.10.2
 service-identity==24.1.0
 setuptools-trial==0.6.0
 six==1.16.0
-SQLAlchemy==2.0.32
+SQLAlchemy==2.0.34
 treq==23.11.0;  python_version >= "3.9"
 treq==22.2.0;  python_version < "3.9" # pyup: ignore
 Twisted==24.3.0
