@@ -36,7 +36,7 @@ croniter==3.0.3
 cryptography==43.0.1
 dill==0.3.8
 evalidate==2.0.3
-greenlet==3.0.3
+greenlet==3.1.0
 hyperlink==21.0.0
 idna==3.7
 incremental==24.7.2
