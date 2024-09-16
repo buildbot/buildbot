@@ -29,7 +29,7 @@ boto==2.49.0
 boto3==1.35.19
 botocore==1.35.19
 certifi==2024.8.30
-cffi==1.17.0
+cffi==1.17.1
 charset-normalizer==3.3.2
 constantly==23.10.4
 croniter==3.0.3
