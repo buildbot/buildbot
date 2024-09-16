@@ -47,7 +47,7 @@ lz4==4.3.3
 Mako==1.3.5
 MarkupSafe==2.1.5
 moto==5.0.14
-msgpack==1.0.8
+msgpack==1.1.0
 mypy-extensions==1.0.0
 packaging==24.1
 parameterized==0.9.0
