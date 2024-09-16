@@ -5,7 +5,7 @@ autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: i
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 Automat==20.2.0;  python_version < "3.6"  # pyup: ignore
 Automat==24.8.1;  python_version >= "3.6"
-cffi==1.17.0;  python_version >= "3.6"
+cffi==1.17.1;  python_version >= "3.6"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
 cryptography==43.0.0;  python_version >= "3.6"
