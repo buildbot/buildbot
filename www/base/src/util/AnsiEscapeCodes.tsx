@@ -75,7 +75,9 @@ export function stripAnsiSgrEntry(ansiEntry: string): string {
 
 export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
   if (ansiClasses.length === 0) {
-    return cssClasses;
+    // According to ECMA-48 standard empty parameter set is interpreted as zero,
+    // which is a color reset code
+    return {};
   }
 
   const fgbg: {[key: string]: string} = {'38': 'fg', '48': 'bg'};

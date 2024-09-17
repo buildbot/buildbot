@@ -140,8 +140,8 @@ describe('AnsiEscapeCodes', () => {
       const ret = parseEscapeCodesToSimple("\x1b[32m.\x1b[m\x1b[31mF\x1b[m\x1b[32m.\x1b[39m\x1b[32m.\x1b[m");
       expect(ret).toEqual([
         {class: "ansi32", text: "."},
-        {class: "ansi32 ansi31", text: "F"},
-        {class: "ansi32 ansi31", text: "."},
+        {class: "ansi31", text: "F"},
+        {class: "ansi32", text: "."},
         {class: "ansi32", text: "."},
       ]);
     });
