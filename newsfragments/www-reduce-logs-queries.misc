@@ -1,0 +1,1 @@
+Reduce log queries in BuildView (`builders/:builderid/builds/:buildnumber`) when logs won't be displayed.
