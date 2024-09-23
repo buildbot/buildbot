@@ -15,6 +15,7 @@
 
 
 import json
+import zlib
 from unittest import mock
 
 from twisted.internet import defer
@@ -22,6 +23,7 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
+from twisted.web.http_headers import Headers
 
 from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
@@ -32,6 +34,7 @@ from buildbot.test.util import db
 from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
 from buildbot.www import auth
 from buildbot.www import authz
 from buildbot.www import service as wwwservice
@@ -186,6 +189,51 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         res = yield self.apiGet(self.link(b'masters/7'))
         self.assertEqual(
             res,
+            {
+                'masters': [
+                    {
+                        'active': False,
+                        'masterid': 7,
+                        'name': 'some:master',
+                        'last_active': SOMETIME,
+                    },
+                ],
+                'meta': {},
+            },
+        )
+
+    @async_to_deferred
+    async def test_compression(self):
+        await self.insert_test_data([
+            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
+        ])
+
+        pg = await self.agent.request(
+            b'GET',
+            self.link(b'masters/7'),
+            headers=Headers({b'accept-encoding': [b'gzip']}),
+        )
+
+        # this is kind of obscene, but protocols are like that
+        d = defer.Deferred()
+        bodyReader = BodyReader(d)
+        pg.deliverBody(bodyReader)
+        body = await d
+
+        self.assertEqual(pg.headers.getRawHeaders(b'content-encoding'), [b'gzip'])
+
+        response = json.loads(
+            bytes2unicode(
+                zlib.decompress(
+                    body,
+                    # use largest wbits possible as twisted customize it
+                    # see: https://docs.python.org/3/library/zlib.html#zlib.decompress
+                    wbits=47,
+                )
+            )
+        )
+        self.assertEqual(
+            response,
             {
                 'masters': [
                     {

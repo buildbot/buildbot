@@ -1,0 +1,1 @@
+Buildbot now compress REST API responses with the appropriate 'accept-encoding' is set.
