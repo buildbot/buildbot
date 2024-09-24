@@ -531,6 +531,16 @@ class RealTests(Tests):
         self.db.master.config.logCompressionMethod = "lz4"
         await self._test_compress_big_chunk(compression.LZ4Compressor.dumps, 3)
 
+    @async_to_deferred
+    async def test_zstd_compress_big_chunk(self):
+        try:
+            import zstandard  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("zstandard not installed, skip the test") from e
+
+        self.db.master.config.logCompressionMethod = "zstd"
+        await self._test_compress_big_chunk(compression.ZStdCompressor.dumps, 4)
+
     @defer.inlineCallbacks
     def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
         if chunk.endswith("\n"):

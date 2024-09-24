@@ -28,6 +28,7 @@ from buildbot.db.compression import BZipCompressor
 from buildbot.db.compression import CompressorInterface
 from buildbot.db.compression import GZipCompressor
 from buildbot.db.compression import LZ4Compressor
+from buildbot.db.compression import ZStdCompressor
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -95,6 +96,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     }
     if LZ4Compressor.available:
         COMPRESSION_BYID[3] = LZ4Compressor
+    if ZStdCompressor.available:
+        COMPRESSION_BYID[4] = ZStdCompressor
 
     COMPRESSION_MODE = {
         compressor.name: (compressor_id, compressor)

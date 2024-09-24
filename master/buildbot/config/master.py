@@ -360,8 +360,8 @@ class MasterConfig(util.ComparableMixin):
         copy_int_param('logCompressionLimit')
 
         self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
-        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
-            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4', 'zstd'):
+            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4' or 'zstd'")
 
         if self.logCompressionMethod == "lz4":
             try:
@@ -372,6 +372,16 @@ class MasterConfig(util.ComparableMixin):
                 error(
                     "To set c['logCompressionMethod'] to 'lz4' "
                     "you must install the lz4 library ('pip install lz4')"
+                )
+        elif self.logCompressionMethod == "zstd":
+            try:
+                import zstandard  # pylint: disable=import-outside-toplevel
+
+                [zstandard]
+            except ImportError:
+                error(
+                    "To set c['logCompressionMethod'] to 'zstd' "
+                    "you must install the zstandard Buildbot extra ('pip install buildbot[zstd]')"
                 )
 
         copy_int_param('logMaxSize')

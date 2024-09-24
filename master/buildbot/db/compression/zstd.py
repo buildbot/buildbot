@@ -13,16 +13,26 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.db.compression.lz4 import LZ4Compressor
-from buildbot.db.compression.native import BZipCompressor
-from buildbot.db.compression.native import GZipCompressor
-from buildbot.db.compression.protocol import CompressorInterface
-from buildbot.db.compression.zstd import ZStdCompressor
+from __future__ import annotations
 
-__all__ = [
-    'BZipCompressor',
-    'CompressorInterface',
-    'GZipCompressor',
-    'LZ4Compressor',
-    'ZStdCompressor',
-]
+from buildbot.db.compression.protocol import CompressorInterface
+
+try:
+    import zstandard
+
+    HAS_ZSTD = True
+except ImportError:
+    HAS_ZSTD = False
+
+
+class ZStdCompressor(CompressorInterface):
+    name = "zstd"
+    available = HAS_ZSTD
+
+    @staticmethod
+    def dumps(data: bytes) -> bytes:
+        return zstandard.compress(data, level=9)
+
+    @staticmethod
+    def read(data: bytes) -> bytes:
+        return zstandard.decompress(data)

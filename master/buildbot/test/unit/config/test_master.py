@@ -453,7 +453,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.cfg.load_global(self.filename, {'logCompressionMethod': 'foo'})
 
         self.assertConfigError(
-            errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'"
+            errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4' or 'zstd'"
         )
 
     def test_load_global_codebaseGenerator(self):
