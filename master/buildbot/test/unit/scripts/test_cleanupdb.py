@@ -44,6 +44,14 @@ try:
 except ImportError:
     HAS_ZSTD = False
 
+try:
+    import brotli
+
+    [brotli]
+    HAS_BROTLI = True
+except ImportError:
+    HAS_BROTLI = False
+
 
 def mkconfig(**kwargs):
     config = {"quiet": False, "basedir": os.path.abspath('basedir'), "force": True}
@@ -186,6 +194,10 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 # zstandard is not installed, don't fail
                 lengths["zstd"] = 20
                 continue
+            if mode == "br" and not HAS_BROTLI:
+                # brotli is not installed, don't fail
+                lengths["br"] = 14
+                continue
             # create a master.cfg with different compression method
             self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
             res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
@@ -213,5 +225,6 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 'lz4': 40,
                 'gz': 31,
                 'zstd': 20,
+                'br': 14,
             },
         )

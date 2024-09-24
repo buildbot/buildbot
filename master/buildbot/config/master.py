@@ -360,8 +360,8 @@ class MasterConfig(util.ComparableMixin):
         copy_int_param('logCompressionLimit')
 
         self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
-        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4', 'zstd'):
-            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4' or 'zstd'")
+        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4', 'zstd', 'br'):
+            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4', 'br' or 'zstd'")
 
         if self.logCompressionMethod == "lz4":
             try:
@@ -382,6 +382,16 @@ class MasterConfig(util.ComparableMixin):
                 error(
                     "To set c['logCompressionMethod'] to 'zstd' "
                     "you must install the zstandard Buildbot extra ('pip install buildbot[zstd]')"
+                )
+        elif self.logCompressionMethod == "br":
+            try:
+                import brotli  # pylint: disable=import-outside-toplevel
+
+                [brotli]
+            except ImportError:
+                error(
+                    "To set c['logCompressionMethod'] to 'br' "
+                    "you must install the brotli Buildbot extra ('pip install buildbot[brotli]')"
                 )
 
         copy_int_param('logMaxSize')

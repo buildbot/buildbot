@@ -541,6 +541,16 @@ class RealTests(Tests):
         self.db.master.config.logCompressionMethod = "zstd"
         await self._test_compress_big_chunk(compression.ZStdCompressor.dumps, 4)
 
+    @async_to_deferred
+    async def test_br_compress_big_chunk(self):
+        try:
+            import brotli  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("brotli not installed, skip the test") from e
+
+        self.db.master.config.logCompressionMethod = "br"
+        await self._test_compress_big_chunk(compression.BrotliCompressor.dumps, 5)
+
     @defer.inlineCallbacks
     def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
         if chunk.endswith("\n"):

@@ -13,18 +13,26 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.db.compression.brotli import BrotliCompressor
-from buildbot.db.compression.lz4 import LZ4Compressor
-from buildbot.db.compression.native import BZipCompressor
-from buildbot.db.compression.native import GZipCompressor
-from buildbot.db.compression.protocol import CompressorInterface
-from buildbot.db.compression.zstd import ZStdCompressor
+from __future__ import annotations
 
-__all__ = [
-    'BrotliCompressor',
-    'BZipCompressor',
-    'CompressorInterface',
-    'GZipCompressor',
-    'LZ4Compressor',
-    'ZStdCompressor',
-]
+from buildbot.db.compression.protocol import CompressorInterface
+
+try:
+    import brotli
+
+    HAS_BROTLI = True
+except ImportError:
+    HAS_BROTLI = False
+
+
+class BrotliCompressor(CompressorInterface):
+    name = "br"
+    available = HAS_BROTLI
+
+    @staticmethod
+    def dumps(data: bytes) -> bytes:
+        return brotli.compress(data, mode=brotli.MODE_TEXT, quality=11)
+
+    @staticmethod
+    def read(data: bytes) -> bytes:
+        return brotli.decompress(data)

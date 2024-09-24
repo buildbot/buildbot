@@ -24,6 +24,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import base
+from buildbot.db.compression import BrotliCompressor
 from buildbot.db.compression import BZipCompressor
 from buildbot.db.compression import CompressorInterface
 from buildbot.db.compression import GZipCompressor
@@ -98,6 +99,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         COMPRESSION_BYID[3] = LZ4Compressor
     if ZStdCompressor.available:
         COMPRESSION_BYID[4] = ZStdCompressor
+    if BrotliCompressor.available:
+        COMPRESSION_BYID[5] = BrotliCompressor
 
     COMPRESSION_MODE = {
         compressor.name: (compressor_id, compressor)
