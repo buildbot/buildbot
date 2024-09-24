@@ -106,8 +106,6 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4},
     }
     COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.values())
-    total_raw_bytes = 0
-    total_compressed_bytes = 0
 
     def _getLog(self, whereclause) -> defer.Deferred[LogModel | None]:
         def thd_getLog(conn) -> LogModel | None:
@@ -206,7 +204,6 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def thdCompressChunk(self, chunk: bytes) -> tuple[bytes, int]:
         # Set the default compressed mode to "raw" id
         compressed_id = self.COMPRESSION_MODE["raw"]["id"]
-        self.total_raw_bytes += len(chunk)
         # Do we have to compress the chunk?
         if self.master.config.logCompressionMethod != "raw":
             compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
@@ -215,7 +212,6 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if len(chunk) > len(compressed_chunk):
                 compressed_id = compressed_mode["id"]
                 chunk = compressed_chunk
-        self.total_compressed_bytes += len(chunk)
         return chunk, compressed_id
 
     def thdSplitAndAppendChunk(
