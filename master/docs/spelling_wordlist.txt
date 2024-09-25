@@ -1042,5 +1042,6 @@ xvfb
 yaml
 Zope
 zsh
+zstd
 zulip
 Zulip

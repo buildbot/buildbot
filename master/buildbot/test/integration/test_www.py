@@ -265,3 +265,18 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         except ImportError as e:
             raise unittest.SkipTest("brotli not installed, skip the test") from e
         await self._test_compression(b'br', decompress_fn=brotli.decompress)
+
+    @async_to_deferred
+    async def test_zstandard_compression(self):
+        try:
+            import zstandard  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("zstandard not installed, skip the test") from e
+
+        def _decompress(data):
+            # zstd cannot decompress data compressed with stream api with a non stream api
+            decompressor = zstandard.ZstdDecompressor()
+            decompressobj = decompressor.decompressobj()
+            return decompressobj.decompress(data) + decompressobj.flush()
+
+        await self._test_compression(b'zstd', decompress_fn=_decompress)

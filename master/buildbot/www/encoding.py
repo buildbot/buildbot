@@ -25,6 +25,11 @@ try:
 except ImportError:
     brotli = None
 
+try:
+    import zstandard
+except ImportError:
+    zstandard = None
+
 
 @implementer(iweb._IRequestEncoderFactory)
 class _EncoderFactoryBase:
@@ -59,6 +64,11 @@ class _EncoderFactoryBase:
 class BrotliEncoderFactory(_EncoderFactoryBase):
     def __init__(self) -> None:
         super().__init__(b'br', _BrotliEncoder if brotli is not None else None)
+
+
+class ZstandardEncoderFactory(_EncoderFactoryBase):
+    def __init__(self) -> None:
+        super().__init__(b'zstd', _ZstdEncoder if zstandard is not None else None)
 
 
 @implementer(iweb._IRequestEncoder)
@@ -104,4 +114,26 @@ class _BrotliEncoder(_EncoderBase):
             data = self._compressor.finish()
             self._compressor = None
             return data
+        return b''
+
+
+class _ZstdEncoder(_EncoderBase):
+    def __init__(self, request):
+        super().__init__(request)
+        self._compressor = (
+            zstandard.ZstdCompressor(write_content_size=True) if zstandard is not None else None
+        )
+        self._compressobj = self._compressor.compressobj() if zstandard is not None else None
+
+    def _compress(self, data: bytes) -> bytes:
+        if self._compressor is not None:
+            return self._compressobj.compress(data)
+        return data
+
+    def _flush(self) -> bytes:
+        if self._compressor is not None:
+            c_data = self._compressobj.flush()
+            self._compressor = None
+            self._compressobj = None
+            return c_data
         return b''
