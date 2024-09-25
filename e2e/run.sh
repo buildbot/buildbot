@@ -50,4 +50,4 @@ cat workdir/twistd.log &
 
 yarn install --pure-lockfile
 yarn playwright install
-yarn playwright test
+LIBGL_ALWAYS_SOFTWARE=1 yarn playwright test
