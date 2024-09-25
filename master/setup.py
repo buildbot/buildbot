@@ -736,6 +736,12 @@ setup_args['extras_require'] = {
         'sphinx-jinja',
         'towncrier',
     ],
+    'brotli': [
+        'Brotli>=1.1.0',
+    ],
+    'zstd': [
+        'zstandard>=0.23.0',
+    ],
 }
 
 if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:

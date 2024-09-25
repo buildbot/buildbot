@@ -129,6 +129,7 @@ buildsystem
 buildtep
 builtin
 bulidslave
+brotli
 bytestring
 bytestrings
 bzip
@@ -1041,5 +1042,6 @@ xvfb
 yaml
 Zope
 zsh
+zstd
 zulip
 Zulip

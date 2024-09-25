@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
+import zlib
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -22,6 +25,7 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
+from twisted.web.http_headers import Headers
 
 from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
@@ -32,9 +36,13 @@ from buildbot.test.util import db
 from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
 from buildbot.www import auth
 from buildbot.www import authz
 from buildbot.www import service as wwwservice
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
@@ -198,3 +206,77 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                 'meta': {},
             },
         )
+
+    async def _test_compression(
+        self,
+        encoding: bytes,
+        decompress_fn: Callable[[bytes], bytes],
+    ) -> None:
+        await self.insert_test_data([
+            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
+        ])
+
+        pg = await self.agent.request(
+            b'GET',
+            self.link(b'masters/7'),
+            headers=Headers({b'accept-encoding': [encoding]}),
+        )
+
+        # this is kind of obscene, but protocols are like that
+        d = defer.Deferred()
+        bodyReader = BodyReader(d)
+        pg.deliverBody(bodyReader)
+        body = await d
+
+        self.assertEqual(pg.headers.getRawHeaders(b'content-encoding'), [encoding])
+
+        response = json.loads(bytes2unicode(decompress_fn(body)))
+        self.assertEqual(
+            response,
+            {
+                'masters': [
+                    {
+                        'active': False,
+                        'masterid': 7,
+                        'name': 'some:master',
+                        'last_active': SOMETIME,
+                    },
+                ],
+                'meta': {},
+            },
+        )
+
+    @async_to_deferred
+    async def test_gzip_compression(self):
+        await self._test_compression(
+            b'gzip',
+            decompress_fn=lambda body: zlib.decompress(
+                body,
+                # use largest wbits possible as twisted customize it
+                # see: https://docs.python.org/3/library/zlib.html#zlib.decompress
+                wbits=47,
+            ),
+        )
+
+    @async_to_deferred
+    async def test_brotli_compression(self):
+        try:
+            import brotli  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("brotli not installed, skip the test") from e
+        await self._test_compression(b'br', decompress_fn=brotli.decompress)
+
+    @async_to_deferred
+    async def test_zstandard_compression(self):
+        try:
+            import zstandard  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("zstandard not installed, skip the test") from e
+
+        def _decompress(data):
+            # zstd cannot decompress data compressed with stream api with a non stream api
+            decompressor = zstandard.ZstdDecompressor()
+            decompressobj = decompressor.decompressobj()
+            return decompressobj.decompress(data) + decompressobj.flush()
+
+        await self._test_compression(b'zstd', decompress_fn=_decompress)
