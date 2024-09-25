@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
 import zlib
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -38,6 +40,9 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.www import auth
 from buildbot.www import authz
 from buildbot.www import service as wwwservice
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
@@ -202,8 +207,11 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             },
         )
 
-    @async_to_deferred
-    async def test_compression(self):
+    async def _test_compression(
+        self,
+        encoding: bytes,
+        decompress_fn: Callable[[bytes], bytes],
+    ) -> None:
         await self.insert_test_data([
             fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
         ])
@@ -211,7 +219,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         pg = await self.agent.request(
             b'GET',
             self.link(b'masters/7'),
-            headers=Headers({b'accept-encoding': [b'gzip']}),
+            headers=Headers({b'accept-encoding': [encoding]}),
         )
 
         # this is kind of obscene, but protocols are like that
@@ -220,18 +228,9 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         pg.deliverBody(bodyReader)
         body = await d
 
-        self.assertEqual(pg.headers.getRawHeaders(b'content-encoding'), [b'gzip'])
+        self.assertEqual(pg.headers.getRawHeaders(b'content-encoding'), [encoding])
 
-        response = json.loads(
-            bytes2unicode(
-                zlib.decompress(
-                    body,
-                    # use largest wbits possible as twisted customize it
-                    # see: https://docs.python.org/3/library/zlib.html#zlib.decompress
-                    wbits=47,
-                )
-            )
-        )
+        response = json.loads(bytes2unicode(decompress_fn(body)))
         self.assertEqual(
             response,
             {
@@ -246,3 +245,23 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                 'meta': {},
             },
         )
+
+    @async_to_deferred
+    async def test_gzip_compression(self):
+        await self._test_compression(
+            b'gzip',
+            decompress_fn=lambda body: zlib.decompress(
+                body,
+                # use largest wbits possible as twisted customize it
+                # see: https://docs.python.org/3/library/zlib.html#zlib.decompress
+                wbits=47,
+            ),
+        )
+
+    @async_to_deferred
+    async def test_brotli_compression(self):
+        try:
+            import brotli  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("brotli not installed, skip the test") from e
+        await self._test_compression(b'br', decompress_fn=brotli.decompress)

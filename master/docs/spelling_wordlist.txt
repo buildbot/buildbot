@@ -129,6 +129,7 @@ buildsystem
 buildtep
 builtin
 bulidslave
+brotli
 bytestring
 bytestrings
 bzip

@@ -38,6 +38,7 @@ from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
+from buildbot.www.encoding import BrotliEncoderFactory
 
 if TYPE_CHECKING:
     from typing import Any
@@ -80,6 +81,7 @@ class RestRootResource(resource.Resource):
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
         encoders = [
+            BrotliEncoderFactory(),
             GzipEncoderFactory(),
         ]
 
