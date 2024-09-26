@@ -40,10 +40,14 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    {
+    // Webkit is disabled due to an internal bug that occurs when tests are run under gvisor.
+    // https://bugs.webkit.org/show_bug.cgi?id=280366.
+    // https://github.com/WebKit/WebKit/pull/34268 should fix it, once it's in WebKit version
+    // used by playwright, webkit can be re-enabled.
+    /*{
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-    },
+    },*/
 
     /* Test against mobile viewports. */
     // {
