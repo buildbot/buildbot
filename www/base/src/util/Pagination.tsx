@@ -63,6 +63,7 @@ export function makePagination<T>(
           pageItemIndexes.map(itemIdx => {
             return (
               <Pagination.Item
+                key={itemIdx}
                 active={itemIdx === clampedPage}
                 onClick={_ => setCurrentPage(itemIdx)}
               >
