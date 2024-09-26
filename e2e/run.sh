@@ -48,6 +48,20 @@ buildbot-worker start workdir/worker
 trap finish EXIT
 cat workdir/twistd.log &
 
-yarn install --pure-lockfile
-yarn playwright install
-LIBGL_ALWAYS_SOFTWARE=1 yarn playwright test
+YARNPROG=""
+
+for Y in yarnpkg yarn; do
+    $Y --version > /dev/null
+    if [ $? -eq 0 ]; then
+        YARNPROG=$Y
+    fi
+done
+
+if [ -z $YARNPROG ]; then
+    echo "Neither yarn nor yarnpkg is installed"
+    exit 1
+fi
+
+$YARNPROG install --pure-lockfile
+$YARNPROG playwright install
+LIBGL_ALWAYS_SOFTWARE=1 $YARNPROG playwright test
