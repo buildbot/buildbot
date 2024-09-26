@@ -16,7 +16,7 @@
 */
 
 import {describe, expect, it} from "vitest";
-import renderer from 'react-test-renderer';
+import {render} from '@testing-library/react';
 import {Build, Builder, FAILURE, SUCCESS} from "buildbot-data-js";
 import {BuildSticker} from "./BuildSticker";
 import {MemoryRouter} from "react-router-dom";
@@ -26,14 +26,14 @@ function assertBuildStickerRenderSnapshot(build: Build, builder: Builder) {
   const timeStore = new TimeStore();
   timeStore.setTimeFromString("2022-01-01T00:00:00.000Z");
 
-  const component = renderer.create(
+  const component = render(
     <MemoryRouter>
       <TimeContext.Provider value={timeStore}>
         <BuildSticker build={build} builder={builder}/>
       </TimeContext.Provider>
     </MemoryRouter>
   );
-  expect(component.toJSON()).toMatchSnapshot();
+  expect(component.asFragment()).toMatchSnapshot();
 }
 
 describe('buildsticker component', function() {

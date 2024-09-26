@@ -1,23 +1,24 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`AnsiEscapeCodes > ansi2html > simple 1`] = `
-[
+<DocumentFragment>
   <span
-    className="ansi36"
+    class="ansi36"
   >
     DEBUG [plugin]: 
-  </span>,
+  </span>
   <span
-    className=""
+    class=""
   >
     Loading plugin karma-jasmine.
-  </span>,
-]
+  </span>
+</DocumentFragment>
 `;
 
 exports[`AnsiEscapeCodes > generateStyleElement > simple 1`] = `
-<style>
-  pre.log .ansifg-0 { color: #000; }
+<DocumentFragment>
+  <style>
+    pre.log .ansifg-0 { color: #000; }
 pre.log .ansibg-0 { background-color: #000; }
 pre.log .ansifg-1 { color: #800; }
 pre.log .ansibg-1 { background-color: #800; }
@@ -530,5 +531,6 @@ pre.log .ansibg-254 { background-color: #e2e2e2; }
 pre.log .ansifg-255 { color: #ececec; }
 pre.log .ansibg-255 { background-color: #ececec; }
 
-</style>
+  </style>
+</DocumentFragment>
 `;

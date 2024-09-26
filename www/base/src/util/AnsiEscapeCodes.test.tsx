@@ -22,7 +22,7 @@ import {
   parseAnsiSgrEntry,
   parseEscapeCodesToClasses, stripAnsiSgrEntry, stripLineEscapeCodes,
 } from "./AnsiEscapeCodes";
-import renderer from "react-test-renderer";
+import {render} from '@testing-library/react';
 
 describe('AnsiEscapeCodes', () => {
 
@@ -163,15 +163,15 @@ describe('AnsiEscapeCodes', () => {
   describe('ansi2html', () => {
     it('simple', () => {
       const generated = ansi2html("\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.");
-      const component = renderer.create(<>{generated}</>);
-      expect(component.toJSON()).toMatchSnapshot();
+      const component = render(<>{generated}</>);
+      expect(component.asFragment()).toMatchSnapshot();
     });
   });
 
   describe('generateStyleElement', () => {
     it('simple', () => {
-      const component = renderer.create(generateStyleElement("pre.log"));
-      expect(component.toJSON()).toMatchSnapshot();
+      const component = render(generateStyleElement("pre.log"));
+      expect(component.asFragment()).toMatchSnapshot();
     });
   });
 });

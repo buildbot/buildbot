@@ -16,12 +16,13 @@
 */
 
 import {describe, expect, it} from "vitest";
-import renderer from 'react-test-renderer';
+import {render} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { FieldString } from "./FieldString";
 import { ForceSchedulerFieldString } from 'buildbot-data-js';
 import { ForceBuildModalFieldsState } from '../ForceBuildModalFieldsState';
 
-function assertRenderToSnapshot(defaultValue: string, stateValue?: string, updateValue?: string) {
+async function assertRenderToSnapshot(defaultValue: string, stateValue?: string, updateValue?: string) {
   const field: ForceSchedulerFieldString = {
     name: 'dummy',
     fullName: 'fullDummy',
@@ -43,34 +44,31 @@ function assertRenderToSnapshot(defaultValue: string, stateValue?: string, updat
     state.setValue(field.fullName, stateValue.toString());
   }
 
-  const component = renderer.create(
+  const component = render(
     <FieldString field={field} fieldsState={state} />
   );
-  expect(component.toJSON()).toMatchSnapshot();
+  expect(component.asFragment()).toMatchSnapshot();
 
   if (updateValue !== undefined) {
     const expectedState = updateValue;
-    renderer.act(() => {
-      const elements = component.root.findAllByProps({'data-bb-test-id': `force-field-${field.fullName}`}, {deep: true});
-      expect(elements.length).toBe(1);
-      const input = elements[0];
-      input.props.onChange({target: {value: expectedState}});
-    });
+    const input = component.getByTestId(`force-field-${field.fullName}`);
+    await userEvent.clear(input);
+    await userEvent.type(input, expectedState);
     expect(state.getValue(field.fullName)).toBe(expectedState);
   }
 }
 
 describe('ForceFieldString component', function () {
-  it('render default value', () => {
-    assertRenderToSnapshot("");
-    assertRenderToSnapshot("default");
+  it('render default value', async () => {
+    await assertRenderToSnapshot("");
+    await assertRenderToSnapshot("default");
   });
 
-  it('render non-default value', () => {
-    assertRenderToSnapshot("default", "stateValue");
+  it('render non-default value', async () => {
+    await assertRenderToSnapshot("default", "stateValue");
   });
 
-  it('change state on click', () => {
-    assertRenderToSnapshot("default", "stateValue", "updateValue");
+  it('change state on click', async () => {
+    await assertRenderToSnapshot("default", "stateValue", "updateValue");
   });
 });
