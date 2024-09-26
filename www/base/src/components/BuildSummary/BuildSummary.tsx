@@ -100,11 +100,10 @@ const getStepLogsInDisplayOrder = (logs: DataCollection<Log>) => {
 type BuildSummaryStepLineProps = {
   build: Build;
   step: Step;
-  logs: DataCollection<Log>;
   parentFullDisplay: boolean
 }
 
-const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: BuildSummaryStepLineProps) => {
+const BuildSummaryStepLine = observer(({build, step, parentFullDisplay}: BuildSummaryStepLineProps) => {
   const config = useContext(ConfigContext);
   const now = useCurrentTime();
 
@@ -116,6 +115,8 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
 
   const [fullDisplay, setFullDisplay] = useStateWithParentTrackingWithDefaultIfNotSet(
     parentFullDisplay, () => !step.complete || (step.results !== SUCCESS));
+
+  const logs = useDataApiQuery(() => step.getLogs());
 
   const renderState = () => {
     if (step.started_at === null) {
@@ -194,7 +195,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
             </li>
           ))}
         </ul>
-        {renderStepLogs()}
+        {fullDisplay ? renderStepLogs() : <></>}
       </div>
     );
   }
@@ -240,7 +241,6 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
     () => parentBuild === null
       ? new DataCollection<Builder>()
       : Builder.getAll(accessor, {id: parentBuild.builderid.toString()}));
-  const logsQuery = useDataApiQuery(() => stepsQuery.getRelated(step => step.getLogs()));
 
   const [detailLevel, setDetailLevel] =
     useState<DetailLevel>(condensed ? DetailLevel.None : DetailLevel.Everything);
@@ -280,7 +280,6 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
 
   const stepElements = stepsToDisplay.map(step => (
     <BuildSummaryStepLine key={step.id} build={build} step={step}
-                          logs={logsQuery.getParentCollectionOrEmpty(step.id)}
                           parentFullDisplay={fullDisplay}/>
   ));
 
