@@ -50,7 +50,7 @@ global_defaults = {
     "titleURL": 'http://buildbot.net/',
     "buildbotURL": 'http://localhost:8080/',
     "logCompressionLimit": 4096,
-    "logCompressionMethod": 'gz',
+    "logCompressionMethod": 'zstd',
     "logEncoding": 'utf-8',
     "logMaxTailSize": None,
     "logMaxSize": None,

@@ -337,7 +337,8 @@ The default value is 4096, which should be a reasonable default on most file sys
 This setting has no impact on status plugins, and merely affects the required disk space on the master for build logs.
 
 The :bb:cfg:`logCompressionMethod` controls what type of compression is used for build logs.
-The default is 'gz', and the other valid option are 'raw' (no compression), 'gz', 'lz4' (required lz4 package), 'br' (requires buildbot[brotli] extra) or 'zstd' (requires buildbot[zstd] extra).
+Valid option are 'raw' (no compression), 'gz', 'lz4' (required lz4 package), 'br' (requires buildbot[brotli] extra) or 'zstd' (requires buildbot[zstd] extra).
+The default is 'zstd' if the ``buildbot[zstd]`` is installed, otherwise defaults to 'gz'.
 
 Please find below some stats extracted from 50x "trial Pyflakes" runs (results may differ according to log type).
 
