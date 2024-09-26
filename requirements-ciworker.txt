@@ -4,14 +4,14 @@ autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" and python_version >= "3.7"  # pyup: ignore
 autobahn==20.12.3;  python_version < "3.7" and python_version >= "3.6"  # pyup: ignore
 Automat==20.2.0;  python_version < "3.6"  # pyup: ignore
-Automat==24.8.0;  python_version >= "3.6"
-cffi==1.17.0;  python_version >= "3.6"
+Automat==24.8.1;  python_version >= "3.6"
+cffi==1.17.1;  python_version >= "3.6"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
-cryptography==43.0.0;  python_version >= "3.6"
+cryptography==43.0.1;  python_version >= "3.6"
 funcsigs==1.0.2
 hyperlink==21.0.0
-idna==3.7
+idna==3.10
 incremental==24.7.2
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
 incremental==17.5.0;  python_version < "3.0"  # pyup: ignore
@@ -19,17 +19,17 @@ mock==3.0.5;  python_version < "3.6"  # pyup: ignore
 mock==5.1.0;  python_version >= "3.6"
 parameterized==0.8.1;  python_version < "3.6"  # pyup: ignore
 parameterized==0.9.0;  python_version >= "3.6"
-pbr==6.0.0
+pbr==6.1.0
 # pin PyHamcrest, because 2.x no longer supports Python 2.7
 PyHamcrest==1.9.0  # pyup: ignore
 psutil==6.0.0
 pycparser==2.22;  python_version >= "3.6"
 six==1.16.0
-Twisted==24.3.0;  python_version >= "3.6"
+Twisted==24.7.0;  python_version >= "3.6"
 Twisted==20.3.0;  python_version < "3.6"  # pyup: ignore
 txaio==23.1.1;  python_version >= "3.6"
 typing-extensions==4.12.2;  python_version >= "3.7"
 typing-extensions==4.12.2;  python_version < "3.7" and python_version >= "3.5"
 zope.interface==5.4.0;  python_version < "3.6"  # pyup: ignore
-zope.interface==7.0.1;  python_version >= "3.6"
+zope.interface==7.0.3;  python_version >= "3.6"
 -e worker

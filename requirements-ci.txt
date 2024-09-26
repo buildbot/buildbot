@@ -12,7 +12,7 @@ ldap3==2.9.1
 mypy==1.10.1
 mypy-zope==1.0.5
 graphql-core==3.3.0a6; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
-graphql-core==3.2.3; python_version < "3.12"
+graphql-core==3.2.4; python_version < "3.12"
 psutil==6.0.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
@@ -24,21 +24,21 @@ alembic==1.13.2
 attrs==24.2.0
 autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9" # pyup: ignore
-Automat==24.8.0
+Automat==24.8.1
 boto==2.49.0
-boto3==1.35.0
-botocore==1.35.0
-certifi==2024.7.4
-cffi==1.17.0
+boto3==1.35.19
+botocore==1.35.19
+certifi==2024.8.30
+cffi==1.17.1
 charset-normalizer==3.3.2
 constantly==23.10.4
 croniter==3.0.3
-cryptography==43.0.0
+cryptography==43.0.1
 dill==0.3.8
 evalidate==2.0.3
-greenlet==3.0.3
+greenlet==3.1.0
 hyperlink==21.0.0
-idna==3.7
+idna==3.10
 incremental==24.7.2
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
 Jinja2==3.1.4
@@ -46,39 +46,39 @@ jmespath==1.0.1
 lz4==4.3.3
 Mako==1.3.5
 MarkupSafe==2.1.5
-moto==5.0.13
-msgpack==1.0.8
+moto==5.0.14
+msgpack==1.1.0
 mypy-extensions==1.0.0
 packaging==24.1
 parameterized==0.9.0
 pyasn1==0.6.0
-pyasn1-modules==0.4.0
+pyasn1-modules==0.4.1
 pycparser==2.22
 PyJWT==2.9.0
 pyOpenSSL==24.2.1
 pypugjs==5.11.0
 python-dateutil==2.9.0.post0
-pytz==2024.1
+pytz==2024.2
 PyYAML==6.0.2
 requests==2.32.3
 responses==0.25.3
-ruff==0.6.1
+ruff==0.6.5
 s3transfer==0.10.2
 service-identity==24.1.0
 setuptools-trial==0.6.0
 six==1.16.0
-SQLAlchemy==2.0.32
+SQLAlchemy==2.0.34
 treq==23.11.0;  python_version >= "3.9"
 treq==22.2.0;  python_version < "3.9" # pyup: ignore
-Twisted==24.3.0
+Twisted==24.7.0
 txaio==23.1.1
 txrequests==0.9.6
 typing_extensions==4.12.2
 unidiff==0.7.5
 # botocore depends on urllib3<1.27
 urllib3==1.26.19  # pyup: ignore
-Werkzeug==3.0.3
+Werkzeug==3.0.4
 xmltodict==0.13.0
 zope.event==5.0
-zope.interface==7.0.1
+zope.interface==7.0.3
 zope.schema==7.0.1
