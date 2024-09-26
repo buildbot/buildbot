@@ -13,22 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import base64
-import bz2
 import textwrap
-import zlib
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.db import compression
 from buildbot.db import logs
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 
 class Tests(interfaces.InterfaceTests):
@@ -472,118 +477,59 @@ class RealTests(Tests):
             {'logid': 201, 'first_line': 7, 'last_line': 7, 'content': b'abc', 'compressed': 0},
         )
 
-    @defer.inlineCallbacks
-    def test_raw_compress_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
+    async def _test_compress_big_chunk(
+        self,
+        dumps: Callable[[bytes], bytes],
+        compressed_id: int,
+    ) -> None:
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
+        self.assertEqual((await self.db.logs.appendLog(201, line + '\n')), (7, 7))
+
+        def thd(conn):
+            res = conn.execute(
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = await self.db.pool.do(thd)
+        self.assertEqual(
+            newRow,
+            {
+                'logid': 201,
+                'first_line': 7,
+                'last_line': 7,
+                'content': dumps(unicode2bytes(line)),
+                'compressed': compressed_id,
+            },
+        )
+
+    @async_to_deferred
+    async def test_raw_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "raw"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(lambda d: d, 0)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': unicode2bytes(line),
-                'compressed': 0,
-            },
-        )
-
-    @defer.inlineCallbacks
-    def test_gz_compress_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 10000
+    @async_to_deferred
+    async def test_gz_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "gz"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(compression.GZipCompressor.dumps, 1)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': zlib.compress(unicode2bytes(line), 9),
-                'compressed': 1,
-            },
-        )
-
-    @defer.inlineCallbacks
-    def test_bz2_compress_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 10000
+    @async_to_deferred
+    async def test_bz2_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "bz2"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(compression.BZipCompressor.dumps, 2)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': bz2.compress(unicode2bytes(line), 9),
-                'compressed': 2,
-            },
-        )
-
-    @defer.inlineCallbacks
-    def test_lz4_compress_big_chunk(self):
+    @async_to_deferred
+    async def test_lz4_compress_big_chunk(self):
         try:
             import lz4  # noqa pylint: disable=unused-import,import-outside-toplevel
         except ImportError as e:
             raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "lz4"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
-
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': logs.dumps_lz4(line.encode('utf-8')),
-                'compressed': 3,
-            },
-        )
+        await self._test_compress_big_chunk(compression.LZ4Compressor.dumps, 3)
 
     @defer.inlineCallbacks
     def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):

@@ -16,9 +16,7 @@
 
 from __future__ import annotations
 
-import bz2
 import dataclasses
-import zlib
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -26,23 +24,16 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import base
+from buildbot.db.compression import BZipCompressor
+from buildbot.db.compression import CompressorInterface
+from buildbot.db.compression import GZipCompressor
+from buildbot.db.compression import LZ4Compressor
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from typing import Literal
 
     LogType = Literal['s', 't', 'h', 'd']
-
-try:
-    from lz4.block import compress as dumps_lz4
-    from lz4.block import decompress as read_lz4
-except ImportError:
-    # config.py actually forbid this code path
-    def dumps_lz4(data):
-        return data
-
-    def read_lz4(data):
-        return data
 
 
 class LogSlugExistsError(KeyError):
@@ -77,20 +68,16 @@ class LogModel:
         raise KeyError(key)
 
 
-def dumps_gzip(data):
-    return zlib.compress(data, 9)
+class RawCompressor(CompressorInterface):
+    name = "raw"
 
+    @staticmethod
+    def dumps(data: bytes) -> bytes:
+        return data
 
-def read_gzip(data):
-    return zlib.decompress(data)
-
-
-def dumps_bz2(data):
-    return bz2.compress(data, 9)
-
-
-def read_bz2(data):
-    return bz2.decompress(data)
+    @staticmethod
+    def read(data: bytes) -> bytes:
+        return data
 
 
 class LogsConnectorComponent(base.DBConnectorComponent):
@@ -99,13 +86,20 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     # note that MAX_CHUNK_SIZE is equal to BUFFER_SIZE in buildbot_worker.runprocess
     MAX_CHUNK_SIZE = 65536  # a chunk may not be bigger than this
     MAX_CHUNK_LINES = 1000  # a chunk may not have more lines than this
-    COMPRESSION_MODE = {
-        "raw": {"id": 0, "dumps": lambda x: x, "read": lambda x: x},
-        "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
-        "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
-        "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4},
+
+    NO_COMPRESSION_ID = 0
+    COMPRESSION_BYID: dict[int, type[CompressorInterface]] = {
+        NO_COMPRESSION_ID: RawCompressor,
+        1: GZipCompressor,
+        2: BZipCompressor,
     }
-    COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.values())
+    if LZ4Compressor.available:
+        COMPRESSION_BYID[3] = LZ4Compressor
+
+    COMPRESSION_MODE = {
+        compressor.name: (compressor_id, compressor)
+        for compressor_id, compressor in COMPRESSION_BYID.items()
+    }
 
     def _getLog(self, whereclause) -> defer.Deferred[LogModel | None]:
         def thd_getLog(conn) -> LogModel | None:
@@ -155,7 +149,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
                 # Note that row.content is stored as bytes, and our caller expects unicode
-                data = self.COMPRESSION_BYID[row.compressed]["read"](row.content)
+                data = self.COMPRESSION_BYID.get(row.compressed, RawCompressor).read(row.content)
                 content = data.decode('utf-8')
 
                 if row.first_line < first_line:
@@ -202,17 +196,20 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thdAddLog)
 
     def thdCompressChunk(self, chunk: bytes) -> tuple[bytes, int]:
-        # Set the default compressed mode to "raw" id
-        compressed_id = self.COMPRESSION_MODE["raw"]["id"]
+        compress_method: str = self.master.config.logCompressionMethod
+        compressed_id, compressor = self.COMPRESSION_MODE.get(
+            compress_method,
+            # if compression method is not available, default to no compression
+            (self.NO_COMPRESSION_ID, RawCompressor),
+        )
         # Do we have to compress the chunk?
-        if self.master.config.logCompressionMethod != "raw":
-            compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
-            compressed_chunk = compressed_mode["dumps"](chunk)
+        if compressed_id != self.NO_COMPRESSION_ID:
+            compressed_chunk = compressor.dumps(chunk)
             # Is it useful to compress the chunk?
             if len(chunk) > len(compressed_chunk):
-                compressed_id = compressed_mode["id"]
-                chunk = compressed_chunk
-        return chunk, compressed_id
+                return compressed_chunk, compressed_id
+
+        return chunk, self.NO_COMPRESSION_ID
 
     def thdSplitAndAppendChunk(
         self, conn, logid: int, content: bytes, first_line: int
@@ -370,11 +367,14 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(tbl.c.last_line <= todo_last_line)
                 q = q.order_by(tbl.c.first_line)
                 rows = conn.execute(q)
-                chunk = b""
+                chunks: list[bytes] = []
                 for row in rows:
-                    if chunk:
-                        chunk += b"\n"
-                    chunk += self.COMPRESSION_BYID[row.compressed]["read"](row.content)
+                    compressed_chunk = self.COMPRESSION_BYID.get(
+                        row.compressed,
+                        RawCompressor,
+                    ).read(row.content)
+                    if compressed_chunk:
+                        chunks.append(compressed_chunk)
                 rows.close()
 
                 # we remove the chunks that we are compressing
@@ -388,7 +388,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     conn.execute(d).close()
 
                     # and we recompress them in one big chunk
-                    chunk, compressed_id = self.thdCompressChunk(chunk)
+                    chunk, compressed_id = self.thdCompressChunk(b'\n'.join(chunks))
                     conn.execute(
                         tbl.insert(),
                         {
