@@ -8,6 +8,47 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.0.3`` ( ``2024-09-27`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed function signature for `CustomAuth.check_credentials`.
+- Fixed ReactUI authentication when Buildbot is hosted behind a reverse proxy not at url's root. (:issue:`7814`)
+- Made Tags column in Builders page take less space when there are no tags
+- Fixed cropped change author avatar image in web UI.
+- Fixed pluralization of build count in build summaries in the web UI.
+- The change details page no longer requires an additional mouse click to show the change details.
+- Fixed showing misleading "Loading" spinner when a change has no builds.
+- Fixed too small spacing in change header text in web UI.
+- Fixed showing erroneous zero changes count in the web UI when loading changes.
+- Cleaned up build and worker tabs in builders view in web UI.
+- Fixed links to external URLs in the about pages.
+- Fixed missing warnings on old browsers.
+- Builds in the home page are now sorted to show the latest one first.
+- Fixed loading of plugins settings (e.g. from master's `ui_default_config`)
+- Improved visual separation between pending build count and build status in trigger build steps in web UI.
+
+Changes
+-------
+
+- Buildbot has migrated to `quay.io` container registry for storing released container images.
+  In order to migrate to the new registry container image name in `FROM` instruction in Dockerfiles
+  needs to be adjusted to `quay.io/buildbot/buildbot-master` or `quay.io/buildbot/buildbot-worker`.
+- GitHubStatusPush will now render github tokens right before the request.
+  This allow to update the token in the configuration file without restarting the server,
+  which is useful for Github App installations where tokens are rotated every hour.
+- The list of supported browsers has been updated to Chrome >=80, Firefox >= 80, Edge >=80,
+  Safari >= 14, Opera >=67.
+
+Features
+--------
+
+- The text displayed in build links is now configurable and can use any build property.
+  It was showing build number or branch and build number before.
+- Changes and builds tables in various places in the web UI now have a button to load more items.
+
 Buildbot ``4.0.2`` ( ``2024-08-01`` )
 =====================================
 
