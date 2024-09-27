@@ -1,3 +1,37 @@
+Buildbot ``3.11.8`` ( ``2024-09-27`` )
+======================================
+
+Bug fixes
+---------
+
+- Made Tags column in Builders page take less space when there are no tags.
+- Fixed cropped change author avatar image in web UI.
+- Correctly pluralize build count in build summaries in the web UI.
+- The change details page no longer requires an additional mouse click to show the change details.
+- Fixed showing misleading "Loading" spinner when a change has no builds.
+- Fixed too small spacing in change header text in web UI.
+- Fixed showing erroneous zero changes count in the web UI when loading changes.
+- Cleaned up build and worker tabs in builders view in web UI.
+- Improved visual separation between pending build count and build status in trigger build steps in web UI.
+
+Changes
+-------
+
+- Buildbot has migrated to ``quay.io`` container registry for storing released container images.
+  In order to migrate to the new registry container image name in ``FROM`` instruction in Dockerfiles
+  needs to be adjusted to ``quay.io/buildbot/buildbot-master`` or ``quay.io/buildbot/buildbot-worker``.
+- The list of supported browsers has been updated to Chrome >=80, Firefox >= 80, Edge >=80,
+  Safari >= 14, Opera >=67.
+
+Features
+--------
+
+- Add a "Workers" tab to the Builder view listing workers that are assigned to this builder (:issue:`7162`)
+- The text displayed in build links is now configurable and can use any build property.
+  It was showing build number or branch and build number before.
+- Changes and builds tables in various places in the web UI now have a button to load more items.
+
+
 Buildbot ``3.11.7`` ( ``2024-08-01`` )
 ======================================
 
