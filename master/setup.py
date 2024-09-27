@@ -147,6 +147,7 @@ setup_args = {
         "buildbot.config",
         "buildbot.data",
         "buildbot.db",
+        "buildbot.db.compression",
         "buildbot.db.migrations",
         "buildbot.db.migrations.versions",
         "buildbot.db.types",

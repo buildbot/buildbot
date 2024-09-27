@@ -32,6 +32,7 @@ from buildbot.config.builder import BuilderConfig
 from buildbot.config.errors import ConfigErrors
 from buildbot.config.errors import capture_config_errors
 from buildbot.config.errors import error
+from buildbot.db.compression import ZStdCompressor
 from buildbot.interfaces import IRenderable
 from buildbot.process.project import Project
 from buildbot.revlinks import default_revlink_matcher
@@ -55,6 +56,12 @@ def set_is_in_unit_tests(in_tests):
 
 def get_is_in_unit_tests():
     return _in_unit_tests
+
+
+def _default_log_compression_method():
+    if ZStdCompressor.available:
+        return ZStdCompressor.name
+    return 'gz'
 
 
 def loadConfigDict(basedir, configFileName):
@@ -138,7 +145,7 @@ class MasterConfig(util.ComparableMixin):
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
         self.logCompressionLimit = 4 * 1024
-        self.logCompressionMethod = 'gz'
+        self.logCompressionMethod = _default_log_compression_method()
         self.logEncoding = 'utf-8'
         self.logMaxSize = None
         self.logMaxTailSize = None
@@ -359,9 +366,12 @@ class MasterConfig(util.ComparableMixin):
         copy_int_param('changeHorizon')
         copy_int_param('logCompressionLimit')
 
-        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
-        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
-            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+        self.logCompressionMethod = config_dict.get(
+            'logCompressionMethod',
+            _default_log_compression_method(),
+        )
+        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4', 'zstd', 'br'):
+            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4', 'br' or 'zstd'")
 
         if self.logCompressionMethod == "lz4":
             try:
@@ -372,6 +382,26 @@ class MasterConfig(util.ComparableMixin):
                 error(
                     "To set c['logCompressionMethod'] to 'lz4' "
                     "you must install the lz4 library ('pip install lz4')"
+                )
+        elif self.logCompressionMethod == "zstd":
+            try:
+                import zstandard  # pylint: disable=import-outside-toplevel
+
+                [zstandard]
+            except ImportError:
+                error(
+                    "To set c['logCompressionMethod'] to 'zstd' "
+                    "you must install the zstandard Buildbot extra ('pip install buildbot[zstd]')"
+                )
+        elif self.logCompressionMethod == "br":
+            try:
+                import brotli  # pylint: disable=import-outside-toplevel
+
+                [brotli]
+            except ImportError:
+                error(
+                    "To set c['logCompressionMethod'] to 'br' "
+                    "you must install the brotli Buildbot extra ('pip install buildbot[brotli]')"
                 )
 
         copy_int_param('logMaxSize')

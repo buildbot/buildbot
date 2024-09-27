@@ -13,22 +13,43 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import base64
-import bz2
 import textwrap
-import zlib
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.db import compression
 from buildbot.db import logs
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from typing import Callable
+
+
+class FakeUnavailableCompressor(compression.CompressorInterface):
+    name = "fake"
+    available = False
+
+    HEADER = b"[FakeHeader]"
+
+    @staticmethod
+    def dumps(data: bytes) -> bytes:
+        return FakeUnavailableCompressor.HEADER + data
+
+    @staticmethod
+    def read(data: bytes) -> bytes:
+        assert data.startswith(FakeUnavailableCompressor.HEADER)
+        return data[len(FakeUnavailableCompressor.HEADER) :]
 
 
 class Tests(interfaces.InterfaceTests):
@@ -472,118 +493,79 @@ class RealTests(Tests):
             {'logid': 201, 'first_line': 7, 'last_line': 7, 'content': b'abc', 'compressed': 0},
         )
 
-    @defer.inlineCallbacks
-    def test_raw_compress_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
+    async def _test_compress_big_chunk(
+        self,
+        dumps: Callable[[bytes], bytes],
+        compressed_id: int,
+    ) -> None:
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
+        self.assertEqual((await self.db.logs.appendLog(201, line + '\n')), (7, 7))
+
+        def thd(conn):
+            res = conn.execute(
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
+            ).mappings()
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = await self.db.pool.do(thd)
+        self.assertEqual(
+            newRow,
+            {
+                'logid': 201,
+                'first_line': 7,
+                'last_line': 7,
+                'content': dumps(unicode2bytes(line)),
+                'compressed': compressed_id,
+            },
+        )
+
+    @async_to_deferred
+    async def test_raw_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "raw"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(lambda d: d, 0)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': unicode2bytes(line),
-                'compressed': 0,
-            },
-        )
-
-    @defer.inlineCallbacks
-    def test_gz_compress_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 10000
+    @async_to_deferred
+    async def test_gz_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "gz"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(compression.GZipCompressor.dumps, 1)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': zlib.compress(unicode2bytes(line), 9),
-                'compressed': 1,
-            },
-        )
-
-    @defer.inlineCallbacks
-    def test_bz2_compress_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 10000
+    @async_to_deferred
+    async def test_bz2_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "bz2"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(compression.BZipCompressor.dumps, 2)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
-
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': bz2.compress(unicode2bytes(line), 9),
-                'compressed': 2,
-            },
-        )
-
-    @defer.inlineCallbacks
-    def test_lz4_compress_big_chunk(self):
+    @async_to_deferred
+    async def test_lz4_compress_big_chunk(self):
         try:
             import lz4  # noqa pylint: disable=unused-import,import-outside-toplevel
         except ImportError as e:
             raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 10000
         self.db.master.config.logCompressionMethod = "lz4"
-        self.assertEqual((yield self.db.logs.appendLog(201, line + '\n')), (7, 7))
+        await self._test_compress_big_chunk(compression.LZ4Compressor.dumps, 3)
 
-        def thd(conn):
-            res = conn.execute(
-                self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
-            res.close()
-            return dict(row)
+    @async_to_deferred
+    async def test_zstd_compress_big_chunk(self):
+        try:
+            import zstandard  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("zstandard not installed, skip the test") from e
 
-        newRow = yield self.db.pool.do(thd)
-        self.assertEqual(
-            newRow,
-            {
-                'logid': 201,
-                'first_line': 7,
-                'last_line': 7,
-                'content': logs.dumps_lz4(line.encode('utf-8')),
-                'compressed': 3,
-            },
-        )
+        self.db.master.config.logCompressionMethod = "zstd"
+        await self._test_compress_big_chunk(compression.ZStdCompressor.dumps, 4)
+
+    @async_to_deferred
+    async def test_br_compress_big_chunk(self):
+        try:
+            import brotli  # noqa pylint: disable=unused-import,import-outside-toplevel
+        except ImportError as e:
+            raise unittest.SkipTest("brotli not installed, skip the test") from e
+
+        self.db.master.config.logCompressionMethod = "br"
+        await self._test_compress_big_chunk(compression.BrotliCompressor.dumps, 5)
 
     @defer.inlineCallbacks
     def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
@@ -713,6 +695,120 @@ class RealTests(Tests):
             # we make sure we can still getLogLines, it will just return empty value
             lines = yield self.db.logs.getLogLines(logid, 0, logdict.num_lines)
             self.assertEqual(lines, '')
+
+    @async_to_deferred
+    async def test_insert_logs_non_existing_compression_method(self):
+        LOG_ID = 201
+        await self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Log(
+                    id=LOG_ID,
+                    stepid=101,
+                    name='stdio',
+                    slug='stdio',
+                    complete=0,
+                    num_lines=1,
+                    type='s',
+                ),
+                fakedb.LogChunk(
+                    logid=LOG_ID,
+                    first_line=0,
+                    last_line=0,
+                    compressed=0,
+                    content=b'fake_log_chunk\n',
+                ),
+            ]
+        )
+
+        def _thd_get_log_chunks(conn):
+            res = conn.execute(
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.logid == LOG_ID)
+            ).mappings()
+            return [dict(row) for row in res]
+
+        self.db.master.config.logCompressionMethod = "non_existing"
+        await self.db.logs.compressLog(LOG_ID)
+
+        self.assertEqual(
+            await self.db.pool.do(_thd_get_log_chunks),
+            [
+                {
+                    'compressed': 0,
+                    'content': b'fake_log_chunk\n',
+                    'first_line': 0,
+                    'last_line': 0,
+                    'logid': LOG_ID,
+                }
+            ],
+        )
+
+        await self.db.logs.appendLog(LOG_ID, 'other_chunk\n')
+
+        self.assertEqual(
+            await self.db.pool.do(_thd_get_log_chunks),
+            [
+                {
+                    'compressed': 0,
+                    'content': b'fake_log_chunk\n',
+                    'first_line': 0,
+                    'last_line': 0,
+                    'logid': LOG_ID,
+                },
+                {
+                    'compressed': 0,
+                    'content': b'other_chunk',
+                    'first_line': 1,
+                    'last_line': 1,
+                    'logid': LOG_ID,
+                },
+            ],
+        )
+
+    @async_to_deferred
+    async def test_get_logs_non_existing_compression_method(self):
+        LOG_ID = 201
+
+        # register fake compressor
+        FAKE_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
+        self.db.logs.COMPRESSION_BYID[FAKE_COMPRESSOR_ID] = FakeUnavailableCompressor
+        NON_EXISTING_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
+
+        await self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Log(
+                    id=LOG_ID,
+                    stepid=101,
+                    name='stdio',
+                    slug='stdio',
+                    complete=0,
+                    num_lines=1,
+                    type='s',
+                ),
+                fakedb.LogChunk(
+                    logid=LOG_ID,
+                    first_line=0,
+                    last_line=0,
+                    compressed=FAKE_COMPRESSOR_ID,
+                    content=b'fake_log_chunk\n',
+                ),
+                fakedb.LogChunk(
+                    logid=LOG_ID,
+                    first_line=1,
+                    last_line=1,
+                    compressed=NON_EXISTING_COMPRESSOR_ID,
+                    content=b'fake_log_chunk\n',
+                ),
+            ]
+        )
+
+        with self.assertRaises(logs.LogCompressionFormatUnavailableError):
+            await self.db.logs.getLogLines(logid=LOG_ID, first_line=0, last_line=0)
+
+        with self.assertRaises(logs.LogCompressionFormatUnavailableError):
+            await self.db.logs.getLogLines(logid=LOG_ID, first_line=1, last_line=1)
+        self.flushLoggedErrors(logs.LogCompressionFormatUnavailableError)
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):

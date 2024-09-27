@@ -265,7 +265,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('first_line', sa.Integer, nullable=False),
         sa.Column('last_line', sa.Integer, nullable=False),
         # log contents, including a terminating newline, encoded in utf-8 or,
-        # if 'compressed' is not 0, compressed with gzip, bzip2 or lz4
+        # if 'compressed' is not 0, compressed with gzip, bzip2, lz4, br or zstd
         sa.Column('content', sa.LargeBinary(65536)),
         sa.Column('compressed', sa.SmallInteger, nullable=False),
     )
