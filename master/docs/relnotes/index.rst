@@ -9,7 +9,7 @@ Release Notes
 .. towncrier release notes start
 
 
-Buildbot ``3.11.8`` ( ``2024-09-25`` )
+Buildbot ``3.11.8`` ( ``2024-09-27`` )
 ======================================
 
 Bug fixes
@@ -28,6 +28,9 @@ Bug fixes
 Changes
 -------
 
+- Buildbot has migrated to ``quay.io`` container registry for storing released container images.
+  In order to migrate to the new registry container image name in ``FROM`` instruction in Dockerfiles
+  needs to be adjusted to ``quay.io/buildbot/buildbot-master`` or ``quay.io/buildbot/buildbot-worker``.
 - The list of supported browsers has been updated to Chrome >=80, Firefox >= 80, Edge >=80,
   Safari >= 14, Opera >=67.
 
