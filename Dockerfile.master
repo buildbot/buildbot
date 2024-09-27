@@ -14,7 +14,7 @@
 # which get installed in the final image.
 # This allows us to avoid installing build tools like gcc in the final image.
 
-FROM        debian:11 AS buildbot-build
+FROM docker.io/library/debian:11 AS buildbot-build
 MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
@@ -91,7 +91,7 @@ RUN mkdir -p /wheels && \
 # Note that the UI and worker packages are the latest version published on pypi
 # This is to avoid pulling node inside this container
 
-FROM        debian:11-slim
+FROM docker.io/library/debian:11-slim
 MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
