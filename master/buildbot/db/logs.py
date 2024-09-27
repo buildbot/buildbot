@@ -42,6 +42,10 @@ class LogSlugExistsError(KeyError):
     pass
 
 
+class LogCompressionFormatUnavailableError(LookupError):
+    pass
+
+
 @dataclasses.dataclass
 class LogModel:
     id: int
@@ -94,18 +98,28 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         NO_COMPRESSION_ID: RawCompressor,
         1: GZipCompressor,
         2: BZipCompressor,
+        3: LZ4Compressor,
+        4: ZStdCompressor,
+        5: BrotliCompressor,
     }
-    if LZ4Compressor.available:
-        COMPRESSION_BYID[3] = LZ4Compressor
-    if ZStdCompressor.available:
-        COMPRESSION_BYID[4] = ZStdCompressor
-    if BrotliCompressor.available:
-        COMPRESSION_BYID[5] = BrotliCompressor
 
     COMPRESSION_MODE = {
         compressor.name: (compressor_id, compressor)
         for compressor_id, compressor in COMPRESSION_BYID.items()
     }
+
+    def _get_compressor(self, compressor_id: int) -> type[CompressorInterface]:
+        compressor = self.COMPRESSION_BYID.get(compressor_id)
+        if compressor is None:
+            msg = f"Unknown compression method ID {compressor_id}"
+            raise LogCompressionFormatUnavailableError(msg)
+        if not compressor.available:
+            msg = (
+                f"Log compression method {compressor.name} is not available. "
+                "You might be missing a dependency."
+            )
+            raise LogCompressionFormatUnavailableError(msg)
+        return compressor
 
     def _getLog(self, whereclause) -> defer.Deferred[LogModel | None]:
         def thd_getLog(conn) -> LogModel | None:
@@ -155,7 +169,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
                 # Note that row.content is stored as bytes, and our caller expects unicode
-                data = self.COMPRESSION_BYID.get(row.compressed, RawCompressor).read(row.content)
+                data = self._get_compressor(row.compressed).read(row.content)
                 content = data.decode('utf-8')
 
                 if row.first_line < first_line:
@@ -203,19 +217,21 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     def thdCompressChunk(self, chunk: bytes) -> tuple[bytes, int]:
         compress_method: str = self.master.config.logCompressionMethod
-        compressed_id, compressor = self.COMPRESSION_MODE.get(
-            compress_method,
-            # if compression method is not available, default to no compression
-            (self.NO_COMPRESSION_ID, RawCompressor),
-        )
-        # Do we have to compress the chunk?
-        if compressed_id != self.NO_COMPRESSION_ID:
-            compressed_chunk = compressor.dumps(chunk)
-            # Is it useful to compress the chunk?
-            if len(chunk) > len(compressed_chunk):
-                return compressed_chunk, compressed_id
+        # unknown compression method
+        if compress_method not in self.COMPRESSION_MODE:
+            return chunk, self.NO_COMPRESSION_ID
 
-        return chunk, self.NO_COMPRESSION_ID
+        compressed_id, compressor = self.COMPRESSION_MODE[compress_method]
+        # compression method is not available (missing dependency most likely)
+        if not compressor.available or compressed_id == self.NO_COMPRESSION_ID:
+            return chunk, self.NO_COMPRESSION_ID
+
+        compressed_chunk = compressor.dumps(chunk)
+        # Is it useful to compress the chunk?
+        if len(chunk) <= len(compressed_chunk):
+            return chunk, self.NO_COMPRESSION_ID
+
+        return compressed_chunk, compressed_id
 
     def thdSplitAndAppendChunk(
         self, conn, logid: int, content: bytes, first_line: int
@@ -375,10 +391,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 rows = conn.execute(q)
                 chunks: list[bytes] = []
                 for row in rows:
-                    compressed_chunk = self.COMPRESSION_BYID.get(
-                        row.compressed,
-                        RawCompressor,
-                    ).read(row.content)
+                    compressed_chunk = self._get_compressor(row.compressed).read(row.content)
                     if compressed_chunk:
                         chunks.append(compressed_chunk)
                 rows.close()

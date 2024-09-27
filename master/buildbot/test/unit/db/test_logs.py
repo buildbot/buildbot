@@ -36,6 +36,22 @@ if TYPE_CHECKING:
     from typing import Callable
 
 
+class FakeUnavailableCompressor(compression.CompressorInterface):
+    name = "fake"
+    available = False
+
+    HEADER = b"[FakeHeader]"
+
+    @staticmethod
+    def dumps(data: bytes) -> bytes:
+        return FakeUnavailableCompressor.HEADER + data
+
+    @staticmethod
+    def read(data: bytes) -> bytes:
+        assert data.startswith(FakeUnavailableCompressor.HEADER)
+        return data[len(FakeUnavailableCompressor.HEADER) :]
+
+
 class Tests(interfaces.InterfaceTests):
     TIMESTAMP_STEP101 = 100000
     TIMESTAMP_STEP102 = 200000
@@ -679,6 +695,120 @@ class RealTests(Tests):
             # we make sure we can still getLogLines, it will just return empty value
             lines = yield self.db.logs.getLogLines(logid, 0, logdict.num_lines)
             self.assertEqual(lines, '')
+
+    @async_to_deferred
+    async def test_insert_logs_non_existing_compression_method(self):
+        LOG_ID = 201
+        await self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Log(
+                    id=LOG_ID,
+                    stepid=101,
+                    name='stdio',
+                    slug='stdio',
+                    complete=0,
+                    num_lines=1,
+                    type='s',
+                ),
+                fakedb.LogChunk(
+                    logid=LOG_ID,
+                    first_line=0,
+                    last_line=0,
+                    compressed=0,
+                    content=b'fake_log_chunk\n',
+                ),
+            ]
+        )
+
+        def _thd_get_log_chunks(conn):
+            res = conn.execute(
+                self.db.model.logchunks.select().where(self.db.model.logchunks.c.logid == LOG_ID)
+            ).mappings()
+            return [dict(row) for row in res]
+
+        self.db.master.config.logCompressionMethod = "non_existing"
+        await self.db.logs.compressLog(LOG_ID)
+
+        self.assertEqual(
+            await self.db.pool.do(_thd_get_log_chunks),
+            [
+                {
+                    'compressed': 0,
+                    'content': b'fake_log_chunk\n',
+                    'first_line': 0,
+                    'last_line': 0,
+                    'logid': LOG_ID,
+                }
+            ],
+        )
+
+        await self.db.logs.appendLog(LOG_ID, 'other_chunk\n')
+
+        self.assertEqual(
+            await self.db.pool.do(_thd_get_log_chunks),
+            [
+                {
+                    'compressed': 0,
+                    'content': b'fake_log_chunk\n',
+                    'first_line': 0,
+                    'last_line': 0,
+                    'logid': LOG_ID,
+                },
+                {
+                    'compressed': 0,
+                    'content': b'other_chunk',
+                    'first_line': 1,
+                    'last_line': 1,
+                    'logid': LOG_ID,
+                },
+            ],
+        )
+
+    @async_to_deferred
+    async def test_get_logs_non_existing_compression_method(self):
+        LOG_ID = 201
+
+        # register fake compressor
+        FAKE_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
+        self.db.logs.COMPRESSION_BYID[FAKE_COMPRESSOR_ID] = FakeUnavailableCompressor
+        NON_EXISTING_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
+
+        await self.insert_test_data(
+            self.backgroundData
+            + [
+                fakedb.Log(
+                    id=LOG_ID,
+                    stepid=101,
+                    name='stdio',
+                    slug='stdio',
+                    complete=0,
+                    num_lines=1,
+                    type='s',
+                ),
+                fakedb.LogChunk(
+                    logid=LOG_ID,
+                    first_line=0,
+                    last_line=0,
+                    compressed=FAKE_COMPRESSOR_ID,
+                    content=b'fake_log_chunk\n',
+                ),
+                fakedb.LogChunk(
+                    logid=LOG_ID,
+                    first_line=1,
+                    last_line=1,
+                    compressed=NON_EXISTING_COMPRESSOR_ID,
+                    content=b'fake_log_chunk\n',
+                ),
+            ]
+        )
+
+        with self.assertRaises(logs.LogCompressionFormatUnavailableError):
+            await self.db.logs.getLogLines(logid=LOG_ID, first_line=0, last_line=0)
+
+        with self.assertRaises(logs.LogCompressionFormatUnavailableError):
+            await self.db.logs.getLogLines(logid=LOG_ID, first_line=1, last_line=1)
+        self.flushLoggedErrors(logs.LogCompressionFormatUnavailableError)
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
