@@ -1,0 +1,3 @@
+Buildbot has migrated to `quay.io` container registry for storing released container images.
+In order to migrate to the new registry container image name in `FROM` instruction in Dockerfiles
+needs to be adjusted to `quay.io/buildbot/buildbot-master` or `quay.io/buildbot/buildbot-worker`.
