@@ -19,7 +19,7 @@ MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2023-04-16
+ENV         security_updates_as_of 2024-09-27
 
 RUN \
     apt-get update && \
@@ -39,7 +39,7 @@ RUN \
     wget --quiet -O - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor > "$KEYRING" && \
     gpg --no-default-keyring --keyring "$KEYRING" --list-keys && \
     chmod a+r /usr/share/keyrings/nodesource.gpg && \
-    VERSION=node_16.x && \
+    VERSION=node_18.x && \
     DISTRO=bullseye && \
     echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
     echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
@@ -96,7 +96,7 @@ MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2023-04-16
+ENV         security_updates_as_of 2024-09-27
 
 RUN \
     apt-get update && \
