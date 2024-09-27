@@ -446,7 +446,7 @@ class TestBuildbotPlugins(unittest.TestCase):
         plugins = db.get_plugins('interface', interface=ITestInterface)
 
         with self.assertRaises(AttributeError):
-            getattr(plugins, 'bad')
+            plugins.bad
         with self.assertRaises(PluginDBError):
             plugins.get('bad')
         with self.assertRaises(PluginDBError):

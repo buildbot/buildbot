@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+from typing import Optional
 from unittest import SkipTest
 
 from twisted.internet import defer
@@ -39,7 +40,9 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
         return fakehttpclientservice.HTTPClientService.getService(self.master, self, base_url)
 
     @defer.inlineCallbacks
-    def setupPushjetNotifier(self, secret=Interpolate("1234"), **kwargs):
+    def setupPushjetNotifier(self, secret: Optional[Interpolate] = None, **kwargs):
+        if secret is None:
+            secret = Interpolate("1234")
         pn = PushjetNotifier(secret, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()

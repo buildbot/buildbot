@@ -15,6 +15,7 @@
 
 
 import os
+from typing import Optional
 from unittest import SkipTest
 
 from twisted.internet import defer
@@ -42,7 +43,11 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         )
 
     @defer.inlineCallbacks
-    def setupPushoverNotifier(self, user_key="1234", api_token=Interpolate("abcd"), **kwargs):
+    def setupPushoverNotifier(
+        self, user_key="1234", api_token: Optional[Interpolate] = None, **kwargs
+    ):
+        if api_token is None:
+            api_token = Interpolate("abcd")
         pn = PushoverNotifier(user_key, api_token, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()

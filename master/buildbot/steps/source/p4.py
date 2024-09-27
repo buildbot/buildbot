@@ -15,6 +15,7 @@
 # Portions Copyright 2013 Bad Dog Consulting
 
 import re
+from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -70,7 +71,7 @@ class P4(Source):
         p4line_end='local',
         p4viewspec=None,
         p4viewspec_suffix='...',
-        p4client=Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s'),
+        p4client: Optional[Interpolate] = None,
         p4client_spec_options='allwrite rmdir',
         p4client_type=None,
         p4extra_args=None,
@@ -92,6 +93,8 @@ class P4(Source):
         self.p4viewspec = p4viewspec
         self.p4viewspec_suffix = p4viewspec_suffix
         self.p4line_end = p4line_end
+        if p4client is None:
+            p4client = Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s')
         self.p4client = p4client
         self.p4client_spec_options = p4client_spec_options
         self.p4client_type = p4client_type

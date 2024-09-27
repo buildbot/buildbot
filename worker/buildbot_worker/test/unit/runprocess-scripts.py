@@ -124,7 +124,7 @@ def assert_stdin_closed():
         if r == [0]:
             return  # success!
         if time.time() > bail_at:
-            assert False  # failure :(
+            raise AssertionError()  # failure :(
 
 
 # make sure this process dies if necessary
