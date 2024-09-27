@@ -71,7 +71,7 @@ RUN \
 
 COPY . /usr/src/buildbot
 
-RUN cd /usr/src/buildbot && make tarballs
+RUN cd /usr/src/buildbot && NODE_OPTIONS=--openssl-legacy-provider make tarballs
 RUN virtualenv --python=python3 /buildbot_venv && \
     /buildbot_venv/bin/pip3 install -r /usr/src/buildbot/requirements-master-docker-extras.txt && \
     env CRYPTOGRAPHY_DONT_BUILD_RUST=1 /buildbot_venv/bin/pip3 install /usr/src/buildbot/dist/*.whl
