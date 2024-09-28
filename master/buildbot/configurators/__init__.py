@@ -35,15 +35,10 @@ class ConfiguratorBase:
 
     def configure(self, config_dict):
         self.config_dict = c = config_dict
-        if 'schedulers' not in c:
-            c['schedulers'] = []
-        self.schedulers = c['schedulers']
-        if 'protocols' not in c:
-            c['protocols'] = {}
-        self.protocols = c['protocols']
-        if 'builders' not in c:
-            c['builders'] = []
-        self.builders = c['builders']
-        if 'workers' not in c:
-            c['workers'] = []
-        self.workers = c['workers']
+        self.schedulers = c.setdefault('schedulers', [])
+        self.protocols = c.setdefault('protocols', {})
+        self.builders = c.setdefault('builders', [])
+        self.workers = c.setdefault('workers', [])
+        self.projects = c.setdefault('projects', [])
+        self.secretsProviders = c.setdefault('secretsProviders', [])
+        self.www = c.setdefault('www', {})
