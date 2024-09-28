@@ -104,20 +104,20 @@ include and an exclude will be excluded.''',
         self['excludes'] = None
 
     def opt_include(self, arg):
-        self._includes.append('.*%s.*' % (arg,))
+        self._includes.append(f'.*{arg}.*')
 
     opt_filter = opt_include
 
     def opt_exclude(self, arg):
-        self._excludes.append('.*%s.*' % (arg,))
+        self._excludes.append(f'.*{arg}.*')
 
     def postOptions(self):
         if self['repository'] is None:
             raise usage.error("You must pass --repository")
         if self._includes:
-            self['includes'] = '(%s)' % ('|'.join(self._includes),)
+            self['includes'] = '({})'.format('|'.join(self._includes))
         if self._excludes:
-            self['excludes'] = '(%s)' % ('|'.join(self._excludes),)
+            self['excludes'] = '({})'.format('|'.join(self._excludes))
 
 
 def split_file_dummy(changed_file):
@@ -145,7 +145,7 @@ def split_file_branches(changed_file):
     # all just funny-named branches, and let the Schedulers ignore them.
     # return (pieces[0], os.path.join(*pieces[1:]))
 
-    raise RuntimeError("cannot determine branch for '%s'" % changed_file)
+    raise RuntimeError(f"cannot determine branch for '{changed_file}'")
 
 
 split_file = split_file_dummy
@@ -162,16 +162,16 @@ class ChangeSender:
         print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
-            rev_arg = '-r %s' % (opts['revision'],)
-        changed = subprocess.check_output('svnlook changed %s "%s"' % (rev_arg, repo), shell=True)
+            rev_arg = '-r {}'.format(opts['revision'])
+        changed = subprocess.check_output(f'svnlook changed {rev_arg} "{repo}"', shell=True)
         changed = changed.decode(sys.stdout.encoding)
         changed = changed.split('\n')
         # the first 4 columns can contain status information
         changed = [x[4:] for x in changed]
 
-        message = subprocess.check_output('svnlook log %s "%s"' % (rev_arg, repo), shell=True)
+        message = subprocess.check_output(f'svnlook log {rev_arg} "{repo}"', shell=True)
         message = message.decode(sys.stdout.encoding)
-        who = subprocess.check_output('svnlook author %s "%s"' % (rev_arg, repo), shell=True)
+        who = subprocess.check_output(f'svnlook author {rev_arg} "{repo}"', shell=True)
         who = who.decode(sys.stdout.encoding)
         revision = opts.get('revision')
         if revision is not None:
@@ -193,11 +193,10 @@ class ChangeSender:
         if len(included.difference(excluded)) == 0:
             print(changestring)
             print(
-                """\
-    Buildbot was not interested, no changes matched any of these filters:\n %s
-    or all the changes matched these exclusions:\n %s\
+                f"""\
+    Buildbot was not interested, no changes matched any of these filters:\n {fltpat}
+    or all the changes matched these exclusions:\n {expat}\
     """
-                % (fltpat, expat)
             )
             sys.exit(0)
 
@@ -254,7 +253,7 @@ class ChangeSender:
             opts.parseOptions()
         except usage.error as ue:
             print(opts)
-            print("%s: %s" % (sys.argv[0], ue))
+            print(f"{sys.argv[0]}: {ue}")
             sys.exit()
 
         changes = self.getChanges(opts)

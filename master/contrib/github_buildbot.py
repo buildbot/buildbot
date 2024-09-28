@@ -144,7 +144,7 @@ class GitHubBuildBot(resource.Resource):
         else:
             who = change['author']['name']
         if 'email' in change['author']:
-            who = "%s <%s>" % (who, change['author']['email'])
+            who = "{} <{}>".format(who, change['author']['email'])
 
         comments = change['message']
         if len(comments) > 1024:
@@ -183,10 +183,9 @@ class GitHubBuildBot(resource.Resource):
         refname = payload['ref']
 
         if self.filter_push_branch:
-            if refname != "refs/heads/%s" % self.filter_push_branch:
+            if refname != f"refs/heads/{self.filter_push_branch}":
                 logging.info(
-                    "Ignoring refname '%s': Not a push to branch '%s'"
-                    % (refname, self.filter_push_branch)
+                    f"Ignoring refname '{refname}': Not a push to branch '{self.filter_push_branch}'"
                 )
                 return changes
 

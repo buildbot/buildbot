@@ -36,8 +36,8 @@ def usage():
     """
     Prints out usage information to stderr.
     """
-    print_err('Usage: %s git-binary since' % sys.argv[0])
-    print_err('Example: %s /usr/bin/git f5067523dfae9c7cdefc82' '8721ec593ac7be62db' % sys.argv[0])
+    print_err(f'Usage: {sys.argv[0]} git-binary since')
+    print_err(f'Example: {sys.argv[0]} /usr/bin/git f5067523dfae9c7cdefc82' '8721ec593ac7be62db')
 
 
 def main(args):
@@ -56,7 +56,7 @@ def main(args):
         return 1
 
     if not os.access(git_bin, os.X_OK):
-        print_err('Can not access %s' % git_bin)
+        print_err(f'Can not access {git_bin}')
         return 1
 
     # Open a pipe and force the format

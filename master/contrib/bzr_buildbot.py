@@ -223,7 +223,7 @@ if DEFINE_POLLER:
             self.category = category
 
         def startService(self):
-            twisted.python.log.msg("BzrPoller(%s) starting" % self.url)
+            twisted.python.log.msg(f"BzrPoller({self.url}) starting")
             if self.branch_name is FULL:
                 ourbranch = self.url
             elif self.branch_name is SHORT:
@@ -247,11 +247,11 @@ if DEFINE_POLLER:
             buildbot.changes.base.PollingChangeSource.startService(self)
 
         def stopService(self):
-            twisted.python.log.msg("BzrPoller(%s) shutting down" % self.url)
+            twisted.python.log.msg(f"BzrPoller({self.url}) shutting down")
             return buildbot.changes.base.PollingChangeSource.stopService(self)
 
         def describe(self):
-            return "BzrPoller watching %s" % self.url
+            return f"BzrPoller watching {self.url}"
 
         @defer.inlineCallbacks
         def poll(self):
@@ -332,8 +332,7 @@ def _installed_hook(branch):
         value = value.strip().lower()
         if value not in (PUSH_VALUE, COMMIT_VALUE, CHANGE_VALUE):
             raise bzrlib.errors.BzrError(
-                '%s, if set, must be one of %s, %s, or %s'
-                % (HOOK_KEY, PUSH_VALUE, COMMIT_VALUE, CHANGE_VALUE)
+                f'{HOOK_KEY}, if set, must be one of {PUSH_VALUE}, {COMMIT_VALUE}, or {CHANGE_VALUE}'
             )
     return value
 

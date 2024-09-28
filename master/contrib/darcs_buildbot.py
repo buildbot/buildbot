@@ -163,7 +163,7 @@ def sendChanges(master):
 
     def _send(res, c):
         branch = None
-        print(" %s" % c['revision'])
+        print(" {}".format(c['revision']))
         return s.send(
             branch, c.get('context'), c['comments'], c['files'], c['username'], vc='darcs'
         )

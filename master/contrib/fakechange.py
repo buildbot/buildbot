@@ -72,7 +72,7 @@ def send_change(remote):
     change = {'who': who, 'files': files, 'comments': comments}
     d = remote.callRemote('addChange', change)
     d.addCallback(done)
-    print("%s: %s" % (who, " ".join(files)))
+    print("{}: {}".format(who, " ".join(files)))
 
 
 f = pb.PBClientFactory()

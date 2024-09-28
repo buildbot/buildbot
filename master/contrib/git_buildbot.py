@@ -152,7 +152,7 @@ def grab_commit_info(c, rev):
         # Show the full diff for merges to avoid losing changes
         # when builds are not triggered for merged in commits
         options += " --diff-merges=first-parent"
-    f = subprocess.Popen(shlex.split("git show %s %s" % (options, rev)), stdout=subprocess.PIPE)
+    f = subprocess.Popen(shlex.split(f"git show {options} {rev}"), stdout=subprocess.PIPE)
 
     files = []
     comments = []
@@ -227,11 +227,11 @@ def gen_create_branch_changes(newrev, refname, branch):
 
     logging.info("Branch `%s' created", branch)
 
-    p = subprocess.Popen(shlex.split("git rev-parse %s" % refname), stdout=subprocess.PIPE)
+    p = subprocess.Popen(shlex.split(f"git rev-parse {refname}"), stdout=subprocess.PIPE)
     branchref = p.communicate()[0].strip().decode(encoding)
     f = subprocess.Popen(shlex.split("git rev-parse --not --branches"), stdout=subprocess.PIPE)
     f2 = subprocess.Popen(
-        shlex.split("grep -v %s" % branchref), stdin=f.stdout, stdout=subprocess.PIPE
+        shlex.split(f"grep -v {branchref}"), stdin=f.stdout, stdout=subprocess.PIPE
     )
     options = "--reverse --pretty=oneline --stdin"
     if first_parent:
@@ -239,7 +239,7 @@ def gen_create_branch_changes(newrev, refname, branch):
         # changes, as they should only be done for first parent commits
         options += " --first-parent"
     f3 = subprocess.Popen(
-        shlex.split("git rev-list %s %s" % (options, newrev)),
+        shlex.split(f"git rev-list {options} {newrev}"),
         stdin=f2.stdout,
         stdout=subprocess.PIPE,
     )
@@ -258,7 +258,7 @@ def gen_create_tag_changes(newrev, refname, tag):
 
     logging.info("Tag `%s' created", tag)
     f = subprocess.Popen(
-        shlex.split("git log -n 1 --pretty=oneline %s" % newrev), stdout=subprocess.PIPE
+        shlex.split(f"git log -n 1 --pretty=oneline {newrev}"), stdout=subprocess.PIPE
     )
     gen_changes(f, tag)
     status = f.wait()
@@ -295,7 +295,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         logging.info("Branch %s was rewound to %s", branch, baserev[:8])
         files = []
         f = subprocess.Popen(
-            shlex.split("git diff --raw %s..%s" % (oldrev, baserev)),
+            shlex.split(f"git diff --raw {oldrev}..{baserev}"),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )
@@ -336,7 +336,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             # have already been tested.
             options += ' --first-parent'
         f = subprocess.Popen(
-            shlex.split("git rev-list %s %s..%s" % (options, baserev, newrev)),
+            shlex.split(f"git rev-list {options} {baserev}..{newrev}"),
             stdout=subprocess.PIPE,
         )
         gen_changes(f, branch)
@@ -424,7 +424,7 @@ def parse_options():
     parser.add_option(
         "-v", "--verbose", action="count", help="Be more verbose. Ignored if -l is not specified."
     )
-    master_help = "Build master to push to. Default is %(master)s" % {'master': master}
+    master_help = f"Build master to push to. Default is {master}"
     parser.add_option("-m", "--master", action="store", type="string", help=master_help)
     parser.add_option(
         "-c", "--category", action="store", type="string", help="Scheduler category to notify."
@@ -434,16 +434,11 @@ def parse_options():
     )
     parser.add_option("-p", "--project", action="store", type="string", help="Project to send.")
     parser.add_option("--codebase", action="store", type="string", help="Codebase to send.")
-    encoding_help = (
-        "Encoding to use when converting strings to "
-        "unicode. Default is %(encoding)s." % {"encoding": encoding}
-    )
+    encoding_help = "Encoding to use when converting strings to " f"unicode. Default is {encoding}."
     parser.add_option("-e", "--encoding", action="store", type="string", help=encoding_help)
-    username_help = "Username used in PB connection auth, defaults to " "%(username)s." % {
-        "username": username
-    }
+    username_help = "Username used in PB connection auth, defaults to " f"{username}."
     parser.add_option("-u", "--username", action="store", type="string", help=username_help)
-    auth_help = "Password used in PB connection auth, defaults to " "%(auth)s." % {"auth": auth}
+    auth_help = "Password used in PB connection auth, defaults to " f"{auth}."
     # 'a' instead of 'p' due to collisions with the project short option
     parser.add_option("-a", "--auth", action="store", type="string", help=auth_help)
     first_parent_help = "If set, don't trigger builds for merged in commits"

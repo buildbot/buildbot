@@ -153,7 +153,7 @@ from mercurial.node import nullid
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     if hooktype != 'changegroup':
-        ui.status('hgbuildbot: hooktype %s not supported.\n' % hooktype)
+        ui.status(f'hgbuildbot: hooktype {hooktype} not supported.\n')
         return
 
     # Read config parameters
@@ -169,7 +169,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     venv = ui.config('hgbuildbot', 'venv', None)
     if venv is not None:
         if not os.path.isdir(venv):
-            ui.write('* Virtualenv "%s" does not exist.\n' % venv)
+            ui.write(f'* Virtualenv "{venv}" does not exist.\n')
         else:
             activate_this = os.path.join(venv, "bin/activate_this.py")
             with open(activate_this) as f:

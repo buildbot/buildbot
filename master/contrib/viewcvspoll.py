@@ -40,30 +40,29 @@ class ViewCvsPoller:
 
         cursor = self.cvsdb.cursor()
         cursor.execute(
-            """SELECT whoid, descid, fileid, dirid, branchid, \
-ci_when FROM checkins WHERE ci_when>='%s'"""
-            % self.last_checkin
+            f"""SELECT whoid, descid, fileid, dirid, branchid, \
+ci_when FROM checkins WHERE ci_when>='{self.last_checkin}'"""
         )
         last_checkin = None
         for whoid, descid, fileid, dirid, branchid, ci_when in cursor.fetchall():
             if branchid != 1:  # only head
                 continue
-            cursor.execute("""SELECT who from people where id=%s""" % whoid)
+            cursor.execute(f"""SELECT who from people where id={whoid}""")
             who = cursor.fetchone()[0]
-            cursor.execute("""SELECT description from descs where id=%s""" % (descid))
+            cursor.execute(f"""SELECT description from descs where id={descid}""")
             desc = cursor.fetchone()[0]
-            cursor.execute("""SELECT file from files where id=%s""" % fileid)
+            cursor.execute(f"""SELECT file from files where id={fileid}""")
             filename = cursor.fetchone()[0]
-            cursor.execute("""SELECT dir from dirs where id=%s""" % dirid)
+            cursor.execute(f"""SELECT dir from dirs where id={dirid}""")
             dirname = cursor.fetchone()[0]
             if who == change["who"] and desc == change["comments"]:
-                change["files"].append("%s/%s" % (dirname, filename))
+                change["files"].append(f"{dirname}/{filename}")
             elif change["who"]:
                 changes.append(change)
                 change = empty_change()
             else:
                 change["who"] = who
-                change["files"].append("%s/%s" % (dirname, filename))
+                change["files"].append(f"{dirname}/{filename}")
                 change["comments"] = desc
             if last_checkin is None or ci_when > last_checkin:
                 last_checkin = ci_when

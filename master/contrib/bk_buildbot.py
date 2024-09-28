@@ -72,9 +72,9 @@ class ChangeSender:
         print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
-            rev_arg = '-r"%s"' % (opts['revision'],)
+            rev_arg = '-r"{}"'.format(opts['revision'])
         changed = subprocess.check_output(
-            "bk changes -v %s -d':GFILE:\\n' '%s'" % (rev_arg, repo), shell=True
+            f"bk changes -v {rev_arg} -d':GFILE:\\n' '{repo}'", shell=True
         )
         changed = changed.decode(sys.stdout.encoding)
         changed = changed.split('\n')
@@ -84,7 +84,7 @@ class ChangeSender:
         del changed[0]
 
         change_info = subprocess.check_output(
-            "bk changes %s -d':USER:\\n$each(:C:){(:C:)\\n}' '%s'" % (rev_arg, repo), shell=True
+            f"bk changes {rev_arg} -d':USER:\\n$each(:C:){{(:C:)\\n}}' '{repo}'", shell=True
         )
         change_info = change_info.decode(sys.stdout.encoding)
         change_info = change_info.split('\n')
@@ -132,7 +132,7 @@ class ChangeSender:
 
         except usage.error as ue:
             print(opts)
-            print("%s: %s" % (sys.argv[0], ue))
+            print(f"{sys.argv[0]}: {ue}")
             sys.exit()
 
         changes = self.getChanges(opts)
@@ -150,7 +150,7 @@ class ChangeSender:
 
         @d.addErrback(failed)
         def failed(f):
-            print("FAILURE: %s" % f)
+            print(f"FAILURE: {f}")
             reactor.stop()
 
         d.addCallback(quit, "SUCCESS")

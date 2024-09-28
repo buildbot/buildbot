@@ -303,9 +303,9 @@ urlDict = buildURL(options)
 params = urllib.urlencode(urlDict)
 headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 if options.amTesting:
-    print("params: %s" % params)
-    print("host: %s" % options.host)
-    print("urlpath: %s" % options.urlpath)
+    print(f"params: {params}")
+    print(f"host: {options.host}")
+    print(f"urlpath: {options.urlpath}")
 else:
     conn = httplib.HTTPConnection(options.host)
     conn.request("POST", options.urlpath, params, headers)
@@ -317,6 +317,6 @@ else:
     if options.verbosity >= 1:
         print(response.status, response.reason)
         if options.verbosity >= 2:
-            print("Raw response: %s" % (data))
+            print(f"Raw response: {data}")
     conn.close()
     os._exit(exitCode)

@@ -69,19 +69,19 @@ class BitBucketBuildBot(resource.Resource):
                 Service Hook.
         """
         if self.private:
-            repo_url = 'ssh://hg@%s%s' % (
+            repo_url = 'ssh://hg@{}{}'.format(
                 self.bitbucket,
                 payload['repository']['absolute_url'],
             )
         else:
-            repo_url = 'http://%s%s' % (
+            repo_url = 'http://{}{}'.format(
                 self.bitbucket,
                 payload['repository']['absolute_url'],
             )
         changes = []
         for commit in payload['commits']:
             files = [file_info['file'] for file_info in commit['files']]
-            revlink = 'http://%s%s/changeset/%s/' % (
+            revlink = 'http://{}{}/changeset/{}/'.format(
                 self.bitbucket,
                 payload['repository']['absolute_url'],
                 commit['node'],

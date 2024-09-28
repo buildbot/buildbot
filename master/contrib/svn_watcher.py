@@ -42,8 +42,9 @@ def getoutput(cmd):
                     break  # process ended.
                 if waited > timeout:
                     print(
-                        "WARNING: Timeout of %s seconds reached while trying to run: %s"
-                        % (timeout, ' '.join(cmd))
+                        "WARNING: Timeout of {} seconds reached while trying to run: {}".format(
+                            timeout, ' '.join(cmd)
+                        )
                     )
                     break
                 waited += 1
@@ -54,7 +55,9 @@ def getoutput(cmd):
                 if p.returncode == 0:
                     break  # ok: exit retry loop
                 else:
-                    print('WARNING: "%s" returned status code: %s' % (' '.join(cmd), p.returncode))
+                    print(
+                        'WARNING: "{}" returned status code: {}'.format(' '.join(cmd), p.returncode)
+                    )
                     if stdout is not None:
                         print(stdout)
             else:
@@ -62,8 +65,9 @@ def getoutput(cmd):
 
             if currentry > maxtries:
                 print(
-                    "ERROR: Reached maximum number of tries (%s) to run: %s"
-                    % (maxtries, ' '.join(cmd))
+                    "ERROR: Reached maximum number of tries ({}) to run: {}".format(
+                        maxtries, ' '.join(cmd)
+                    )
                 )
                 sys.exit(1)
             currentry += 1
@@ -74,20 +78,20 @@ def sendchange_cmd(master, revisionData):
     cmd = [
         "buildbot",
         "sendchange",
-        "--master=%s" % master,
-        "--revision=%s" % revisionData['revision'],
-        "--who=%s" % revisionData['author'],
-        "--comments=%s" % revisionData['comments'],
-        "--vc=%s" % 'svn',
+        f"--master={master}",
+        "--revision={}".format(revisionData['revision']),
+        "--who={}".format(revisionData['author']),
+        "--comments={}".format(revisionData['comments']),
+        "--vc={}".format('svn'),
     ]
     if opts.revlink:
-        cmd.append("--revlink=%s/%s" % (opts.revlink, revisionData['revision']))
+        cmd.append("--revlink={}/{}".format(opts.revlink, revisionData['revision']))
     if opts.category:
-        cmd.append("--category=%s" % opts.category)
+        cmd.append(f"--category={opts.category}")
     if opts.branch:
-        cmd.append("--branch=%s" % opts.branch)
+        cmd.append(f"--branch={opts.branch}")
     if opts.auth:
-        cmd.append("--auth=%s" % opts.auth)
+        cmd.append(f"--auth={opts.auth}")
     for path in revisionData['paths']:
         cmd.append(path)
 
@@ -182,10 +186,12 @@ def checkChanges(repo, master, oldRevision=-1):
         cmd = sendchange_cmd(master, revisionData)
         status = getoutput(cmd)
 
-        print("%s Revision %s: %s" % (pretty_time, revisionData['revision'], status))
+        print("{} Revision {}: {}".format(pretty_time, revisionData['revision'], status))
 
     else:
-        print("%s nothing has changed since revision %s" % (pretty_time, revisionData['revision']))
+        print(
+            "{} nothing has changed since revision {}".format(pretty_time, revisionData['revision'])
+        )
 
     return revisionData['revision']
 
@@ -295,7 +301,7 @@ if __name__ == '__main__':
     # if watch is specified, run until stopped
     if opts.watch or opts.interval:
         oldRevision = -1
-        print("Watching for changes in repo %s for master %s." % (repo_url, bbmaster))
+        print(f"Watching for changes in repo {repo_url} for master {bbmaster}.")
         while True:
             try:
                 oldRevision = checkChanges(repo_url, bbmaster, oldRevision)

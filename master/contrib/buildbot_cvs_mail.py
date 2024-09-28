@@ -73,7 +73,7 @@ rfc822_specials_re = re.compile(r'[\(\)<>@,;:\\\"\.\[\]]')
 
 def quotename(name):
     if name and rfc822_specials_re.search(name):
-        return '"%s"' % name.replace('"', '\\"')
+        return '"{}"'.format(name.replace('"', '\\"'))
     else:
         return name
 
@@ -97,7 +97,7 @@ def send_mail(options):
             domain = 'testing.com'
         else:
             domain = socket.getfqdn()
-    address = '%s@%s' % (user, domain)
+    address = f'{user}@{domain}'
     s = StringIO()
     datestamp = time.strftime('%a, %d %b %Y %H:%M:%S +0000', time.gmtime(time.time()))
     fileList = ' '.join(map(str, options.files))
@@ -105,35 +105,33 @@ def send_mail(options):
     vars = {
         'author': formataddr((name, address)),
         'email': options.email,
-        'subject': 'cvs update for project %s' % options.project,
+        'subject': f'cvs update for project {options.project}',
         'version': __version__,
         'date': datestamp,
     }
     print(
         '''\
-From: %(author)s
-To: %(email)s'''
-        % vars,
+From: {author}
+To: {email}'''.format(**vars),
         file=s,
     )
     if options.replyto:
-        print('Reply-To: %s' % options.replyto, file=s)
+        print(f'Reply-To: {options.replyto}', file=s)
     print(
         '''\
-Subject: %(subject)s
-Date: %(date)s
-X-Mailer: Python buildbot-cvs-mail %(version)s
-'''
-        % vars,
+Subject: {subject}
+Date: {date}
+X-Mailer: Python buildbot-cvs-mail {version}
+'''.format(**vars),
         file=s,
     )
-    print('Cvsmode: %s' % options.cvsmode, file=s)
-    print('Category: %s' % options.category, file=s)
-    print('CVSROOT: %s' % options.cvsroot, file=s)
-    print('Files: %s' % fileList, file=s)
+    print(f'Cvsmode: {options.cvsmode}', file=s)
+    print(f'Category: {options.category}', file=s)
+    print(f'CVSROOT: {options.cvsroot}', file=s)
+    print(f'Files: {fileList}', file=s)
     if options.path:
-        print('Path: %s' % options.path, file=s)
-    print('Project: %s' % options.project, file=s)
+        print(f'Path: {options.path}', file=s)
+    print(f'Project: {options.project}', file=s)
     cvs_input = sys.stdin.read()
 
     # On Python 2, sys.stdin.read() returns bytes, but
@@ -303,7 +301,7 @@ def main():
     options = get_options()
 
     if options.verbose:
-        print('Mailing %s...' % options.email)
+        print(f'Mailing {options.email}...')
         print('Generating notification message...')
     if options.amTesting:
         send_mail(options)
