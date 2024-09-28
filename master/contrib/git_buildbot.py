@@ -120,7 +120,7 @@ def addChanges(remote, changei, src='git'):
     def iter():
         try:
             c = next(changei)
-            logging.info("CHANGE:", c)
+            logging.info("CHANGE: %s", c)
             d = addChange(c)
             # handle successful completion by re-iterating, but not immediately
             # as that will blow out the Python stack

@@ -97,7 +97,6 @@ Maintainer/author: gary.poster@canonical.com
 
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
-import operator
 import socket
 
 import bzrlib.branch
@@ -371,7 +370,7 @@ def deferToThreadInReactor(reactor, f, *args, **kwargs):
 class ThreadedResolver(twisted.internet.base.ThreadedResolver):
     def getHostByName(self, name, timeout=(1, 3, 11, 45)):
         if timeout:
-            timeoutDelay = reduce(operator.add, timeout)
+            timeoutDelay = sum(timeout)
         else:
             timeoutDelay = 60
         userDeferred = defer.Deferred()

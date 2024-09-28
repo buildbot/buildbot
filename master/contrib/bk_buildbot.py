@@ -148,7 +148,7 @@ class ChangeSender:
             print("quitting! because", why)
             reactor.stop()
 
-        @d.addErrback(failed)
+        @d.addErrback
         def failed(f):
             print(f"FAILURE: {f}")
             reactor.stop()

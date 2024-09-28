@@ -26,7 +26,7 @@ def main():
 
     print(server.ehlo(LOCAL_HOST))
 
-    user = raw_input('user: ')
+    user = input('user: ')
     password = getpass('password: ')
 
     print(server.login(user, password))
