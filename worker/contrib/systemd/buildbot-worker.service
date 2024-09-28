@@ -1,0 +1,17 @@
+[Unit]
+Description=Buildbot Worker
+Wants=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/srv/buildbot-worker/linux-worker/twistd.pid
+WorkingDirectory=/srv/buildbot-worker
+ExecStart=/usr/bin/buildbot-worker start linux-worker
+ExecReload=/usr/bin/buildbot-worker restart linux-worker
+ExecStop=/usr/bin/buildbot-worker stop linux-worker
+Restart=always
+User=buildbot-worker
+
+[Install]
+WantedBy=multi-user.target

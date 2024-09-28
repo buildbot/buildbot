@@ -101,6 +101,8 @@ docker: docker-buildbot-worker docker-buildbot-master
 	echo done
 docker-buildbot-worker:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
+docker-buildbot-worker-node:
+	$(DOCKERBUILD) -t buildbot/buildbot-worker-node:master master/contrib/docker/pythonnode_worker
 docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
 

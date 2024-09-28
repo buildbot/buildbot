@@ -203,5 +203,5 @@ More information on the python debugger can be found here: https://docs.python.o
 Contrib Scripts
 ~~~~~~~~~~~~~~~
 
-While some features of Buildbot are included in the distribution, others are only available in :contrib-src:`master/contrib/` in the ``buildbot-contrib`` source directory.
-The latest versions of such scripts are available at :contrib-src:`master/contrib`.
+While some features of Buildbot are included in the distribution, others are only available in :src:`master/contrib/` in the source directory.
+The latest versions of such scripts are available at :src:`master/contrib`.

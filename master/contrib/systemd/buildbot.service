@@ -1,0 +1,17 @@
+[Unit]
+Description=Buildbot Master
+Wants=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/srv/buildbot/master/twistd.pid
+WorkingDirectory=/srv/buildbot
+ExecStart=/usr/bin/buildbot start master
+ExecReload=/usr/bin/buildbot reconfig master
+ExecStop=/usr/bin/buildbot stop master
+Restart=always
+User=buildbot
+
+[Install]
+WantedBy=multi-user.target
