@@ -1,0 +1,26 @@
+# This template file assumes the buildbot master lives in a subdirectory of
+# /var/lib/buildbot
+# Usage:
+#   cd /var/lib/buildbot
+#   buildbot create-master [directory]
+#   systemctl enable --now buildbot@[directory].service
+# You may also want to install extra files per common/contrib/systemd/README.md
+# to create the buildbot user/group and the /var/lib/buildbot directory
+[Unit]
+Description=Buildbot Master
+After=network.target
+
+[Service]
+User=buildbot
+Group=buildbot
+WorkingDirectory=/var/lib/buildbot
+ExecStart=/usr/bin/buildbot --verbose start --nodaemon %I
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+ProtectSystem=full
+ProtectHome=yes
+PrivateDevices=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

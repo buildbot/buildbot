@@ -1,0 +1,11 @@
+WORKER_RUNNER=/usr/bin/buildbot-worker
+
+# 'true|yes|1' values in WORKER_ENABLED to enable instance and 'false|no|0' to 
+# disable. Other values will be considered as syntax error.
+
+WORKER_ENABLED[1]=0                    # 1-enabled, 0-disabled
+WORKER_NAME[1]="buildbot-worker #1"    # short name printed on start/stop
+WORKER_USER[1]="buildbot"              # user to run worker as
+WORKER_BASEDIR[1]=""                   # basedir to worker (absolute path)
+WORKER_OPTIONS[1]=""                   # buildbot options
+WORKER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
