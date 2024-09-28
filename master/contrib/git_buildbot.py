@@ -27,6 +27,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
+
 try:
     from future.utils import text_type
 except ImportError:
@@ -42,12 +43,15 @@ from optparse import OptionParser
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
+
 try:
     from twisted.spread import pb
 except ImportError:
-    raise ImportError('Twisted version conflicts.\
+    raise ImportError(
+        'Twisted version conflicts.\
                       Upgrade to latest version may solve this problem.\
-                      try:  pip install --upgrade twisted')
+                      try:  pip install --upgrade twisted'
+    )
 
 # Modify this to fit your setup, or pass in --master server:port on the
 # command line
@@ -98,8 +102,7 @@ changes = []
 
 
 def connectFailed(error):
-    logging.error(
-        "Could not connect to %s: %s", master, error.getErrorMessage())
+    logging.error("Could not connect to %s: %s", master, error.getErrorMessage())
     return error
 
 
@@ -127,6 +130,7 @@ def addChanges(remote, changei, src='git'):
 
             def cb(_):
                 reactor.callLater(0, iter)
+
             d.addCallback(cb)
             # and pass errors along to the outer deferred
             d.addErrback(finished_d.errback)
@@ -151,8 +155,7 @@ def grab_commit_info(c, rev):
         # Show the full diff for merges to avoid losing changes
         # when builds are not triggered for merged in commits
         options += " --diff-merges=first-parent"
-    f = subprocess.Popen(shlex.split("git show %s %s" % (options, rev)),
-                         stdout=subprocess.PIPE)
+    f = subprocess.Popen(shlex.split("git show %s %s" % (options, rev)), stdout=subprocess.PIPE)
 
     files = []
     comments = []
@@ -196,9 +199,10 @@ def gen_changes(input, branch):
         logging.debug("Change: %s", line)
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
-        c = {'revision': m.group(1),
-             'branch': text_type(branch),
-             }
+        c = {
+            'revision': m.group(1),
+            'branch': text_type(branch),
+        }
 
         if category:
             c['category'] = text_type(category)
@@ -229,17 +233,19 @@ def gen_create_branch_changes(newrev, refname, branch):
     p = subprocess.Popen(shlex.split("git rev-parse %s" % refname), stdout=subprocess.PIPE)
     branchref = p.communicate()[0].strip().decode(encoding)
     f = subprocess.Popen(shlex.split("git rev-parse --not --branches"), stdout=subprocess.PIPE)
-    f2 = subprocess.Popen(shlex.split("grep -v %s" % branchref),
-                          stdin=f.stdout,
-                          stdout=subprocess.PIPE)
+    f2 = subprocess.Popen(
+        shlex.split("grep -v %s" % branchref), stdin=f.stdout, stdout=subprocess.PIPE
+    )
     options = "--reverse --pretty=oneline --stdin"
     if first_parent:
         # Don't add merged commits to avoid running builds twice for the same
         # changes, as they should only be done for first parent commits
         options += " --first-parent"
-    f3 = subprocess.Popen(shlex.split("git rev-list %s %s" % (options, newrev)),
-                          stdin=f2.stdout,
-                          stdout=subprocess.PIPE)
+    f3 = subprocess.Popen(
+        shlex.split("git rev-list %s %s" % (options, newrev)),
+        stdin=f2.stdout,
+        stdout=subprocess.PIPE,
+    )
 
     gen_changes(f3, branch)
 
@@ -254,8 +260,9 @@ def gen_create_tag_changes(newrev, refname, tag):
     # the "branch" attribute will hold the tag name.
 
     logging.info("Tag `%s' created", tag)
-    f = subprocess.Popen(shlex.split("git log -n 1 --pretty=oneline %s" % newrev),
-                         stdout=subprocess.PIPE)
+    f = subprocess.Popen(
+        shlex.split("git log -n 1 --pretty=oneline %s" % newrev), stdout=subprocess.PIPE
+    )
     gen_changes(f, tag)
     status = f.wait()
     if status:
@@ -271,26 +278,30 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     # newrev. Then, generate Change events for each commit between the
     # common ancestor and newrev.
 
-    logging.info(
-        "Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
+    logging.info("Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
 
     mergebasecommand = subprocess.Popen(
-        ["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE)
+        ["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE
+    )
     (baserev, err) = mergebasecommand.communicate()
     baserev = baserev.strip()  # remove newline
     baserev = baserev.decode(encoding)
 
     logging.debug("oldrev=%s newrev=%s baserev=%s", oldrev, newrev, baserev)
     if baserev != oldrev:
-        c = {'revision': baserev,
-             'comments': "Rewind branch",
-             'branch': text_type(branch),
-             'who': "dummy",
-             }
+        c = {
+            'revision': baserev,
+            'comments': "Rewind branch",
+            'branch': text_type(branch),
+            'who': "dummy",
+        }
         logging.info("Branch %s was rewound to %s", branch, baserev[:8])
         files = []
-        f = subprocess.Popen(shlex.split("git diff --raw %s..%s" % (oldrev, baserev)),
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        f = subprocess.Popen(
+            shlex.split("git diff --raw %s..%s" % (oldrev, baserev)),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
         while True:
             line = f.stdout.readline().decode(encoding)
             if not line:
@@ -327,9 +338,10 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             # Add the --first-parent to avoid adding the merge commits which
             # have already been tested.
             options += ' --first-parent'
-        f = subprocess.Popen(shlex.split("git rev-list %s %s..%s" %
-                             (options, baserev, newrev)),
-                             stdout=subprocess.PIPE)
+        f = subprocess.Popen(
+            shlex.split("git rev-list %s %s..%s" % (options, baserev, newrev)),
+            stdout=subprocess.PIPE,
+        )
         gen_changes(f, branch)
 
         status = f.wait()
@@ -409,39 +421,36 @@ def send_changes():
 
 def parse_options():
     parser = OptionParser()
-    parser.add_option("-l", "--logfile", action="store", type="string",
-                      help="Log to the specified file")
-    parser.add_option("-v", "--verbose", action="count",
-                      help="Be more verbose. Ignored if -l is not specified.")
-    master_help = ("Build master to push to. Default is %(master)s" %
-                   {'master': master})
-    parser.add_option("-m", "--master", action="store", type="string",
-                      help=master_help)
-    parser.add_option("-c", "--category", action="store",
-                      type="string", help="Scheduler category to notify.")
-    parser.add_option("-r", "--repository", action="store",
-                      type="string", help="Git repository URL to send.")
-    parser.add_option("-p", "--project", action="store",
-                      type="string", help="Project to send.")
-    parser.add_option("--codebase", action="store",
-                      type="string", help="Codebase to send.")
-    encoding_help = ("Encoding to use when converting strings to "
-                     "unicode. Default is %(encoding)s." %
-                     {"encoding": encoding})
-    parser.add_option("-e", "--encoding", action="store", type="string",
-                      help=encoding_help)
-    username_help = ("Username used in PB connection auth, defaults to "
-                     "%(username)s." % {"username": username})
-    parser.add_option("-u", "--username", action="store", type="string",
-                      help=username_help)
-    auth_help = ("Password used in PB connection auth, defaults to "
-                 "%(auth)s." % {"auth": auth})
+    parser.add_option(
+        "-l", "--logfile", action="store", type="string", help="Log to the specified file"
+    )
+    parser.add_option(
+        "-v", "--verbose", action="count", help="Be more verbose. Ignored if -l is not specified."
+    )
+    master_help = "Build master to push to. Default is %(master)s" % {'master': master}
+    parser.add_option("-m", "--master", action="store", type="string", help=master_help)
+    parser.add_option(
+        "-c", "--category", action="store", type="string", help="Scheduler category to notify."
+    )
+    parser.add_option(
+        "-r", "--repository", action="store", type="string", help="Git repository URL to send."
+    )
+    parser.add_option("-p", "--project", action="store", type="string", help="Project to send.")
+    parser.add_option("--codebase", action="store", type="string", help="Codebase to send.")
+    encoding_help = (
+        "Encoding to use when converting strings to "
+        "unicode. Default is %(encoding)s." % {"encoding": encoding}
+    )
+    parser.add_option("-e", "--encoding", action="store", type="string", help=encoding_help)
+    username_help = "Username used in PB connection auth, defaults to " "%(username)s." % {
+        "username": username
+    }
+    parser.add_option("-u", "--username", action="store", type="string", help=username_help)
+    auth_help = "Password used in PB connection auth, defaults to " "%(auth)s." % {"auth": auth}
     # 'a' instead of 'p' due to collisions with the project short option
-    parser.add_option("-a", "--auth", action="store", type="string",
-                      help=auth_help)
-    first_parent_help = ("If set, don't trigger builds for merged in commits")
-    parser.add_option("--first-parent", action="store_true",
-                      help=first_parent_help)
+    parser.add_option("-a", "--auth", action="store", type="string", help=auth_help)
+    first_parent_help = "If set, don't trigger builds for merged in commits"
+    parser.add_option("--first-parent", action="store_true", help=first_parent_help)
     options, args = parser.parse_args()
     return options
 

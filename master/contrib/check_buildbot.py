@@ -34,26 +34,19 @@ def exit(level, msg):
 
 def main():
     from optparse import OptionParser
+
     parser = OptionParser(__doc__)
-    parser.set_defaults(
-        hostname=None,
-        httpport=None,
-        url=None,
-        verbosity=0
+    parser.set_defaults(hostname=None, httpport=None, url=None, verbosity=0)
+    parser.add_option("-H", "--host", dest="hostname", help="Hostname")
+    parser.add_option("-p", "--port", dest="httpport", type="int", help="WebStatus port")
+    parser.add_option("-u", "--url", dest="url", help="Metrics url")
+    parser.add_option(
+        "-v", "--verbose", dest="verbosity", action="count", help="Increase verbosity"
     )
-    parser.add_option("-H", "--host", dest="hostname",
-                      help="Hostname")
-    parser.add_option("-p", "--port", dest="httpport",
-                      type="int", help="WebStatus port")
-    parser.add_option("-u", "--url", dest="url",
-                      help="Metrics url")
-    parser.add_option("-v", "--verbose", dest="verbosity",
-                      action="count", help="Increase verbosity")
     options, args = parser.parse_args()
 
     if options.hostname and options.httpport:
-        url = "http://%s:%s/json/metrics" % (options.hostname,
-                                             options.httpport)
+        url = "http://%s:%s/json/metrics" % (options.hostname, options.httpport)
     elif options.url:
         url = options.url
     else:
@@ -83,8 +76,7 @@ def main():
             alarm_code = STATUS_CODES[alarm_state[0]]
         except (KeyError, IndexError):
             status = UNKNOWN
-            messages.append("%s has unknown alarm state %s" %
-                            (alarm_name, alarm_state))
+            messages.append("%s has unknown alarm state %s" % (alarm_name, alarm_state))
             continue
 
         status = max(status, alarm_code)
@@ -94,6 +86,7 @@ def main():
     if not messages and status == OK:
         messages.append("no problems")
     exit(status, ";".join(messages))
+
 
 if __name__ == '__main__':
     main()

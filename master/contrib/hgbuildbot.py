@@ -163,8 +163,10 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # Read config parameters
     masters = ui.configlist('hgbuildbot', 'master')
     if not masters:
-        ui.write('* You must add a [hgbuildbot] section to .hg/hgrc in '
-                 'order to use the Buildbot hook\n')
+        ui.write(
+            '* You must add a [hgbuildbot] section to .hg/hgrc in '
+            'order to use the Buildbot hook\n'
+        )
         return
 
     # - virtualenv
@@ -191,10 +193,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     branch = ui.config('hgbuildbot', 'branch', None)
 
     # - repo URL
-    baseurl = ui.config('hgbuildbot', 'baseurl',
-                        ui.config('web', 'baseurl', ''))
-    stripcount = int(ui.config('hgbuildbot', 'strip',
-                               ui.config('notify', 'strip', 0)))
+    baseurl = ui.config('hgbuildbot', 'baseurl', ui.config('web', 'baseurl', ''))
+    stripcount = int(ui.config('hgbuildbot', 'strip', ui.config('notify', 'strip', 0)))
 
     # - category, project and codebase
     category = ui.config('hgbuildbot', 'category', None)
@@ -253,9 +253,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
             if not response.ok:
-                ui.warn("couldn't notify buildbot about {}: {} {}".format(
-                    hex(node)[:12], response.status_code, response.reason
-                ))
+                ui.warn(
+                    "couldn't notify buildbot about {}: {} {}".format(
+                        hex(node)[:12], response.status_code, response.reason
+                    )
+                )
             else:
                 ui.status("notified buildbot about {}".format(hex(node)[:12]))
 

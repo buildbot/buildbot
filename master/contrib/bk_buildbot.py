@@ -46,18 +46,12 @@ if DEBUG:
 
 class Options(usage.Options):
     optParameters = [
-        ['repository', 'r', None,
-         "The repository that was changed."],
-        ['revision', 'v', None,
-         "The revision that we want to examine (default: latest)"],
-        ['branch', 'b', None,
-         "Name of the branch to insert into the branch field. (REQUIRED)"],
-        ['category', 'c', None,
-         "Schedular category."],
-        ['bbserver', 's', 'localhost',
-         "The hostname of the server that buildbot is running on"],
-        ['bbport', 'p', 8007,
-         "The port that buildbot is listening on"]
+        ['repository', 'r', None, "The repository that was changed."],
+        ['revision', 'v', None, "The revision that we want to examine (default: latest)"],
+        ['branch', 'b', None, "Name of the branch to insert into the branch field. (REQUIRED)"],
+        ['category', 'c', None, "Schedular category."],
+        ['bbserver', 's', 'localhost', "The hostname of the server that buildbot is running on"],
+        ['bbport', 'p', 8007, "The port that buildbot is listening on"],
     ]
     optFlags = [
         ['dryrun', 'n', "Do not actually send changes"],
@@ -72,7 +66,6 @@ class Options(usage.Options):
 
 
 class ChangeSender:
-
     def getChanges(self, opts):
         """Generate and stash a list of Change dictionaries, ready to be sent
         to the buildmaster's PBChangeSource."""
@@ -82,9 +75,10 @@ class ChangeSender:
         print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
-            rev_arg = '-r"%s"' % (opts['revision'], )
-        changed = subprocess.check_output("bk changes -v %s -d':GFILE:\\n' '%s'" % (
-            rev_arg, repo), shell=True)
+            rev_arg = '-r"%s"' % (opts['revision'],)
+        changed = subprocess.check_output(
+            "bk changes -v %s -d':GFILE:\\n' '%s'" % (rev_arg, repo), shell=True
+        )
         changed = changed.decode(sys.stdout.encoding)
         changed = changed.split('\n')
 
@@ -92,8 +86,9 @@ class ChangeSender:
         # (annoying)
         del changed[0]
 
-        change_info = subprocess.check_output("bk changes %s -d':USER:\\n$each(:C:){(:C:)\\n}' '%s'" % (
-            rev_arg, repo), shell=True)
+        change_info = subprocess.check_output(
+            "bk changes %s -d':USER:\\n$each(:C:){(:C:)\\n}' '%s'" % (rev_arg, repo), shell=True
+        )
         change_info = change_info.decode(sys.stdout.encoding)
         change_info = change_info.split('\n')
 
@@ -106,11 +101,13 @@ class ChangeSender:
         message = '\n'.join(change_info)
         revision = opts.get('revision')
 
-        changes = {'who': who,
-                   'branch': branch,
-                   'files': changed,
-                   'comments': message,
-                   'revision': revision}
+        changes = {
+            'who': who,
+            'branch': branch,
+            'files': changed,
+            'comments': message,
+            'revision': revision,
+        }
 
         if opts.get('category'):
             changes['category'] = opts.get('category')

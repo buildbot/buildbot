@@ -31,7 +31,6 @@ print("Will run these tests:", files)
 i = 0
 
 for testlist in files:
-
     print("===========================")
     print("running tests from testlist", orderfiles[i])
     print("---------------------------")

@@ -29,10 +29,10 @@ class Options(usage.Options):
 
 
 class MyReporter(SummaryReporter):
-
     def report(self, outfile=None, sortby="uncovered"):
-        self.find_code_units(None, ["/System", "/Library", "/usr/lib",
-                                    "buildbot/test", "simplejson"])
+        self.find_code_units(
+            None, ["/System", "/Library", "/usr/lib", "buildbot/test", "simplejson"]
+        )
 
         # Prepare the formatting strings
         max_name = max([len(cu.name) for cu in self.code_units] + [5])
@@ -115,6 +115,7 @@ def report(o):
     c.load()
     r = MyReporter(c, show_missing=False, ignore_errors=False)
     r.report(sortby=o['sortby'])
+
 
 if __name__ == '__main__':
     o = Options()

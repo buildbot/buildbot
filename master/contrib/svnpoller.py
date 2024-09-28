@@ -1,8 +1,8 @@
 #!/usr/bin/python
 """
- svn.py
- Script for BuildBot to monitor a remote Subversion repository.
- Copyright (C) 2006 John Pye
+svn.py
+Script for BuildBot to monitor a remote Subversion repository.
+Copyright (C) 2006 John Pye
 """
 # This script is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -35,8 +35,8 @@ statefilename = "~/changemonitor/config.ini"
 buildmaster = "buildbot.example.org:9989"  # connects to a PBChangeSource
 
 xml1 = subprocess.check_output(
-    "svn log --non-interactive --verbose --xml --limit=1 " + svnurl,
-    shell=True)
+    "svn log --non-interactive --verbose --xml --limit=1 " + svnurl, shell=True
+)
 xml1 = xml1.decode(sys.stdout.encoding)
 # print "XML\n-----------\n"+xml1+"\n\n"
 
@@ -44,10 +44,8 @@ try:
     doc = xml.dom.minidom.parseString(xml1)
     el = doc.getElementsByTagName("logentry")[0]
     revision = el.getAttribute("revision")
-    author = "".join([t.data for t in el.getElementsByTagName(
-        "author")[0].childNodes])
-    comments = "".join([t.data for t in el.getElementsByTagName(
-        "msg")[0].childNodes])
+    author = "".join([t.data for t in el.getElementsByTagName("author")[0].childNodes])
+    comments = "".join([t.data for t in el.getElementsByTagName("msg")[0].childNodes])
 
     pathlist = el.getElementsByTagName("paths")[0]
     paths = []
@@ -62,6 +60,7 @@ except xml.parsers.expat.ExpatError as e:
     print("RECEIVED TEXT:")
     print(xml1)
     import sys
+
     sys.exit(1)
 
 fname = statefilename
@@ -85,11 +84,21 @@ except ConfigParser.NoSectionError:
     lastrevision = -1
 
 if lastrevision != revision:
-
     # comments = codecs.encodings.unicode_escape.encode(comments)
-    cmd = "buildbot sendchange --master=" + buildmaster + " --branch=trunk \
---revision=\"" + revision + "\" --who=\"" + author + "\" --vc=\"svn\" \
---comments=\"" + comments + "\" " + " ".join(paths)
+    cmd = (
+        "buildbot sendchange --master="
+        + buildmaster
+        + " --branch=trunk \
+--revision=\""
+        + revision
+        + "\" --who=\""
+        + author
+        + "\" --vc=\"svn\" \
+--comments=\""
+        + comments
+        + "\" "
+        + " ".join(paths)
+    )
 
     # print cmd
     res = subprocess.check_output(cmd)

@@ -55,11 +55,9 @@ PROGRAM = sys.argv[0]
 
 
 class SmtplibMock:
+    """I stand in for smtplib for testing purposes."""
 
-    """I stand in for smtplib for testing purposes.
-    """
     class SMTP:
-
         """I stand in for smtplib.SMTP connection for testing purposes.
         I copy the message to stdout.
         """
@@ -85,7 +83,7 @@ def quotename(name):
 
 
 def send_mail(options):
-        # Create the smtp connection to the localhost
+    # Create the smtp connection to the localhost
     conn = options.smtplib.SMTP()
     conn.connect(options.mailhost, options.mailport)
     if pwd:
@@ -105,26 +103,34 @@ def send_mail(options):
             domain = socket.getfqdn()
     address = '%s@%s' % (user, domain)
     s = StringIO()
-    datestamp = time.strftime('%a, %d %b %Y %H:%M:%S +0000',
-                              time.gmtime(time.time()))
+    datestamp = time.strftime('%a, %d %b %Y %H:%M:%S +0000', time.gmtime(time.time()))
     fileList = ' '.join(map(str, options.files))
 
-    vars = {'author': formataddr((name, address)),
-            'email': options.email,
-            'subject': 'cvs update for project %s' % options.project,
-            'version': __version__,
-            'date': datestamp,
-            }
-    print('''\
+    vars = {
+        'author': formataddr((name, address)),
+        'email': options.email,
+        'subject': 'cvs update for project %s' % options.project,
+        'version': __version__,
+        'date': datestamp,
+    }
+    print(
+        '''\
 From: %(author)s
-To: %(email)s''' % vars, file=s)
+To: %(email)s'''
+        % vars,
+        file=s,
+    )
     if options.replyto:
         print('Reply-To: %s' % options.replyto, file=s)
-    print('''\
+    print(
+        '''\
 Subject: %(subject)s
 Date: %(date)s
 X-Mailer: Python buildbot-cvs-mail %(version)s
-''' % vars, file=s)
+'''
+        % vars,
+        file=s,
+    )
     print('Cvsmode: %s' % options.cvsmode, file=s)
     print('Category: %s' % options.category, file=s)
     print('CVSROOT: %s' % options.cvsroot, file=s)
@@ -155,70 +161,119 @@ def fork_and_send_mail(options):
         send_mail(options)
         os._exit(0)
 
+
 description = """
 This script is used to provide email notifications of changes to the CVS
 repository to a buildbot master.  It is invoked via a CVS loginfo file (see
 $CVSROOT/CVSROOT/loginfo).  See the Buildbot manual for more information.
 """
 usage = "%prog [options] %{sVv}"
-parser = optparse.OptionParser(description=description,
-                               usage=usage,
-                               add_help_option=True,
-                               version=__version__)
+parser = optparse.OptionParser(
+    description=description, usage=usage, add_help_option=True, version=__version__
+)
 
-parser.add_option("-C", "--category", dest='category', metavar="CAT",
-                  help=textwrap.dedent("""\
+parser.add_option(
+    "-C",
+    "--category",
+    dest='category',
+    metavar="CAT",
+    help=textwrap.dedent("""\
             Category for change. This becomes the Change.category attribute, which
             can be used within the buildmaster to filter changes.
-            """))
-parser.add_option("-c", "--cvsroot", dest='cvsroot', metavar="PATH",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-c",
+    "--cvsroot",
+    dest='cvsroot',
+    metavar="PATH",
+    help=textwrap.dedent("""\
             CVSROOT for use by buildbot workers to checkout code.
             This becomes the Change.repository attribute.
             Exmaple: :ext:myhost:/cvsroot
-            """))
-parser.add_option("-e", "--email", dest='email', metavar="EMAIL",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-e",
+    "--email",
+    dest='email',
+    metavar="EMAIL",
+    help=textwrap.dedent("""\
             Email address of the buildbot.
-            """))
-parser.add_option("-f", "--fromhost", dest='fromhost', metavar="HOST",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-f",
+    "--fromhost",
+    dest='fromhost',
+    metavar="HOST",
+    help=textwrap.dedent("""\
             The hostname that email messages appear to be coming from.  The From:
             header of the outgoing message will look like user@hostname.  By
             default, hostname is the machine's fully qualified domain name.
-            """))
-parser.add_option("-m", "--mailhost", dest='mailhost', metavar="HOST",
-                  default="localhost",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-m",
+    "--mailhost",
+    dest='mailhost',
+    metavar="HOST",
+    default="localhost",
+    help=textwrap.dedent("""\
             The hostname of an available SMTP server.  The default is
             'localhost'.
-            """))
-parser.add_option("--mailport", dest='mailport', metavar="PORT",
-                  default=25, type="int",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "--mailport",
+    dest='mailport',
+    metavar="PORT",
+    default=25,
+    type="int",
+    help=textwrap.dedent("""\
             The port number of SMTP server.  The default is '25'.
-            """))
-parser.add_option("-q", "--quiet", dest='verbose', action="store_false",
-                  default=True,
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-q",
+    "--quiet",
+    dest='verbose',
+    action="store_false",
+    default=True,
+    help=textwrap.dedent("""\
             Don't print as much status to stdout.
-            """))
-parser.add_option("-p", "--path", dest='path', metavar="PATH",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-p",
+    "--path",
+    dest='path',
+    metavar="PATH",
+    help=textwrap.dedent("""\
             The path for the files in this update. This comes from the %p parameter
             in loginfo for CVS version 1.12.x. Do not use this for CVS version 1.11.x
-            """))
-parser.add_option("-P", "--project", dest='project', metavar="PROJ",
-                  help=textwrap.dedent("""\
+            """),
+)
+parser.add_option(
+    "-P",
+    "--project",
+    dest='project',
+    metavar="PROJ",
+    help=textwrap.dedent("""\
             The project for the source. Often set to the CVS module being modified. This becomes
             the Change.project attribute.
-            """))
-parser.add_option("-R", "--reply-to", dest='replyto', metavar="ADDR",
-                  help=textwrap.dedent("""\
-            Add a "Reply-To: ADDR" header to the email message.
-            """))
+            """),
+)
 parser.add_option(
-    "-t", "--testing", action="store_true", dest="amTesting", default=False)
+    "-R",
+    "--reply-to",
+    dest='replyto',
+    metavar="ADDR",
+    help=textwrap.dedent("""\
+            Add a "Reply-To: ADDR" header to the email message.
+            """),
+)
+parser.add_option("-t", "--testing", action="store_true", dest="amTesting", default=False)
 parser.set_defaults(smtplib=smtplib)
 
 
@@ -244,6 +299,7 @@ def get_options():
 
     return options
 
+
 # scan args for options
 
 
@@ -261,6 +317,7 @@ def main():
     if options.verbose:
         print('Generating notification message... done.')
     return 0
+
 
 if __name__ == '__main__':
     ret = main()

@@ -64,37 +64,37 @@ if DEBUG:
 
 class Options(usage.Options):
     optParameters = [
-        ['repository', 'r', None,
-         "The repository that was changed."],
-        ['worker-repo', 'c', None,
-            "In case the repository differs for the workers."],
-        ['revision', 'v', None,
-         "The revision that we want to examine (default: latest)"],
-        ['bbserver', 's', 'localhost',
-         "The hostname of the server that buildbot is running on"],
-        ['bbport', 'p', 8007,
-         "The port that buildbot is listening on"],
-        ['username', 'u', 'change',
-         "Username used in PB connection auth"],
-        ['auth', 'a', 'changepw',
-         "Password used in PB connection auth"],
-        ['include', 'f', None,
-         '''\
+        ['repository', 'r', None, "The repository that was changed."],
+        ['worker-repo', 'c', None, "In case the repository differs for the workers."],
+        ['revision', 'v', None, "The revision that we want to examine (default: latest)"],
+        ['bbserver', 's', 'localhost', "The hostname of the server that buildbot is running on"],
+        ['bbport', 'p', 8007, "The port that buildbot is listening on"],
+        ['username', 'u', 'change', "Username used in PB connection auth"],
+        ['auth', 'a', 'changepw', "Password used in PB connection auth"],
+        [
+            'include',
+            'f',
+            None,
+            '''\
 Search the list of changed files for this regular expression, and if there is
 at least one match notify buildbot; otherwise buildbot will not do a build.
 You may provide more than one -f argument to try multiple
-patterns.  If no filter is given, buildbot will always be notified.'''],
+patterns.  If no filter is given, buildbot will always be notified.''',
+        ],
         ['filter', 'f', None, "Same as --include.  (Deprecated)"],
-        ['exclude', 'F', None,
-         '''\
+        [
+            'exclude',
+            'F',
+            None,
+            '''\
 The inverse of --filter.  Changed files matching this expression will never
 be considered for a build.
 You may provide more than one -F argument to try multiple
 patterns.  Excludes override includes, that is, patterns that match both an
-include and an exclude will be excluded.'''],
-        ['encoding', 'e', "utf8",
-         "The encoding of the strings from subversion (default: utf8)"],
-        ['project', 'P', None, "The project for the source."]
+include and an exclude will be excluded.''',
+        ],
+        ['encoding', 'e', "utf8", "The encoding of the strings from subversion (default: utf8)"],
+        ['project', 'P', None, "The project for the source."],
     ]
     optFlags = [
         ['dryrun', 'n', "Do not actually send changes"],
@@ -108,20 +108,20 @@ include and an exclude will be excluded.'''],
         self['excludes'] = None
 
     def opt_include(self, arg):
-        self._includes.append('.*%s.*' % (arg, ))
+        self._includes.append('.*%s.*' % (arg,))
 
     opt_filter = opt_include
 
     def opt_exclude(self, arg):
-        self._excludes.append('.*%s.*' % (arg, ))
+        self._excludes.append('.*%s.*' % (arg,))
 
     def postOptions(self):
         if self['repository'] is None:
             raise usage.error("You must pass --repository")
         if self._includes:
-            self['includes'] = '(%s)' % ('|'.join(self._includes), )
+            self['includes'] = '(%s)' % ('|'.join(self._includes),)
         if self._excludes:
-            self['excludes'] = '(%s)' % ('|'.join(self._excludes), )
+            self['excludes'] = '(%s)' % ('|'.join(self._excludes),)
 
 
 def split_file_dummy(changed_file):
@@ -142,8 +142,7 @@ def split_file_dummy(changed_file):
 def split_file_branches(changed_file):
     pieces = changed_file.split(os.sep)
     if pieces[0] == 'branches':
-        return (os.path.join(*pieces[:2]),
-                os.path.join(*pieces[2:]))
+        return (os.path.join(*pieces[:2]), os.path.join(*pieces[2:]))
     if pieces[0] == 'trunk':
         return (pieces[0], os.path.join(*pieces[1:]))
     # there are other sibilings of 'trunk' and 'branches'. Pretend they are
@@ -157,7 +156,6 @@ split_file = split_file_dummy
 
 
 class ChangeSender:
-
     def getChanges(self, opts):
         """Generate and stash a list of Change dictionaries, ready to be sent
         to the buildmaster's PBChangeSource."""
@@ -168,9 +166,8 @@ class ChangeSender:
         print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
-            rev_arg = '-r %s' % (opts['revision'], )
-        changed = subprocess.check_output('svnlook changed %s "%s"' % (
-            rev_arg, repo), shell=True)
+            rev_arg = '-r %s' % (opts['revision'],)
+        changed = subprocess.check_output('svnlook changed %s "%s"' % (rev_arg, repo), shell=True)
         changed = changed.decode(sys.stdout.encoding)
         changed = changed.split('\n')
         # the first 4 columns can contain status information
@@ -199,10 +196,13 @@ class ChangeSender:
             excluded = sets.Set([])
         if len(included.difference(excluded)) == 0:
             print(changestring)
-            print("""\
+            print(
+                """\
     Buildbot was not interested, no changes matched any of these filters:\n %s
     or all the changes matched these exclusions:\n %s\
-    """ % (fltpat, expat))
+    """
+                % (fltpat, expat)
+            )
             sys.exit(0)
 
         # now see which branches are involved
@@ -218,13 +218,14 @@ class ChangeSender:
         changes = []
         encoding = opts['encoding']
         for branch in files_per_branch.keys():
-            d = {'who': text_type(who, encoding=encoding),
-                 'repository': text_type(worker_repo, encoding=encoding),
-                 'comments': text_type(message, encoding=encoding),
-                 'revision': revision,
-                 'project': text_type(opts['project'] or "", encoding=encoding),
-                 'src': 'svn',
-                 }
+            d = {
+                'who': text_type(who, encoding=encoding),
+                'repository': text_type(worker_repo, encoding=encoding),
+                'comments': text_type(message, encoding=encoding),
+                'revision': revision,
+                'project': text_type(opts['project'] or "", encoding=encoding),
+                'src': 'svn',
+            }
             if branch:
                 d['branch'] = text_type(branch, encoding=encoding)
             else:
@@ -248,8 +249,7 @@ class ChangeSender:
         return d
 
     def sendAllChanges(self, remote, changes):
-        dl = [remote.callRemote('addChange', change)
-              for change in changes]
+        dl = [remote.callRemote('addChange', change) for change in changes]
         return defer.gatherResults(dl, consumeErrors=True)
 
     def run(self):

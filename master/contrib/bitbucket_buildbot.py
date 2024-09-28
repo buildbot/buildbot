@@ -34,11 +34,11 @@ except ImportError:
 
 
 class BitBucketBuildBot(resource.Resource):
-
     """
     BitBucketBuildBot creates the webserver that responds to the
     BitBucket POST Service Hook.
     """
+
     isLeaf = True
     bitbucket = None
     master = None
@@ -106,8 +106,7 @@ class BitBucketBuildBot(resource.Resource):
         host, port = self.master.split(':')
         port = int(port)
         factory = pb.PBClientFactory()
-        deferred = factory.login(credentials.UsernamePassword("change",
-                                                              "changepw"))
+        deferred = factory.login(credentials.UsernamePassword("change", "changepw"))
         logging.debug('Trying to connect to: %s:%d', host, port)
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed)
@@ -117,8 +116,7 @@ class BitBucketBuildBot(resource.Resource):
         """
         If connection is failed.  Logs the error.
         """
-        logging.error("Could not connect to master: %s",
-                      error.getErrorMessage())
+        logging.error("Could not connect to master: %s", error.getErrorMessage())
         return error
 
     def addChange(self, dummy, remote, changei, src='hg'):
@@ -155,30 +153,45 @@ def main():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage)
     parser.add_option(
-        "-p", "--port",
+        "-p",
+        "--port",
         help="Port the HTTP server listens to for the Bitbucket Service Hook"
-        " [default: %default]", default=4000, type=int, dest="port")
-    parser.add_option(
-        "-m", "--buildmaster",
-        help="Buildbot Master host and port. ie: localhost:9989 [default:"
-        + " %default]", default="localhost:9989", dest="buildmaster")
-    parser.add_option(
-        "-l", "--log",
-        help="The absolute path, including filename, to save the log to"
         " [default: %default]",
+        default=4000,
+        type=int,
+        dest="port",
+    )
+    parser.add_option(
+        "-m",
+        "--buildmaster",
+        help="Buildbot Master host and port. ie: localhost:9989 [default:" + " %default]",
+        default="localhost:9989",
+        dest="buildmaster",
+    )
+    parser.add_option(
+        "-l",
+        "--log",
+        help="The absolute path, including filename, to save the log to" " [default: %default]",
         default=tempfile.gettempdir() + "/bitbucket_buildbot.log",
-        dest="log")
+        dest="log",
+    )
     parser.add_option(
-        "-L", "--level",
-        help="The logging level: debug, info, warn, error, fatal [default:"
-        " %default]", default='warn', dest="level")
+        "-L",
+        "--level",
+        help="The logging level: debug, info, warn, error, fatal [default:" " %default]",
+        default='warn',
+        dest="level",
+    )
     parser.add_option(
-        "-g", "--bitbucket",
+        "-g",
+        "--bitbucket",
         help="The bitbucket serve [default: %default]",
         default='bitbucket.org',
-        dest="bitbucket")
+        dest="bitbucket",
+    )
     parser.add_option(
-        '-P', '--private',
+        '-P',
+        '--private',
         help='Use SSH to connect, for private repositories.',
         dest='private',
         default=False,
@@ -195,8 +208,7 @@ def main():
     }
     filename = options.log
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(filename=filename, format=log_format,
-                        level=levels[options.level])
+    logging.basicConfig(filename=filename, format=log_format, level=levels[options.level])
     # Start listener.
     bitbucket_bot = BitBucketBuildBot()
     bitbucket_bot.bitbucket = options.bitbucket

@@ -37,7 +37,6 @@ except ImportError:
     import simplejson as json
 
 
-
 ACCEPTED = 202
 BAD_REQUEST = 400
 INTERNAL_SERVER_ERROR = 500
@@ -45,11 +44,11 @@ OK = 200
 
 
 class GitHubBuildBot(resource.Resource):
-
     """
     GitHubBuildBot creates the webserver that responds to the GitHub Service
     Hook.
     """
+
     isLeaf = True
     master = None
     port = None
@@ -107,12 +106,10 @@ class GitHubBuildBot(resource.Resource):
         event_type = request.getHeader(b"X-GitHub-Event")
         logging.debug(b"X-GitHub-Event: " + event_type)
 
-        handler = getattr(self, u'handle_' + event_type.decode("ascii"), None)
+        handler = getattr(self, 'handle_' + event_type.decode("ascii"), None)
 
         if handler is None:
-            logging.info(
-                "Rejecting request. Received unsupported event %r.",
-                event_type)
+            logging.info("Rejecting request. Received unsupported event %r.", event_type)
             request.setResponseCode(BAD_REQUEST)
             return json.dumps({"error": "Bad Request."})
 
@@ -125,8 +122,8 @@ class GitHubBuildBot(resource.Resource):
                 payload = json.loads(request.args["payload"][0])
             else:
                 logging.info(
-                    "Rejecting request.  Unknown 'Content-Type', received %r",
-                    content_type)
+                    "Rejecting request.  Unknown 'Content-Type', received %r", content_type
+                )
                 request.setResponseCode(BAD_REQUEST)
                 return json.dumps({"error": "Bad Request."})
 
@@ -155,16 +152,18 @@ class GitHubBuildBot(resource.Resource):
         comments = change['message']
         if len(comments) > 1024:
             trim = " ... (trimmed, commit message exceeds 1024 characters)"
-            comments = comments[:1024 - len(trim)] + trim
+            comments = comments[: 1024 - len(trim)] + trim
 
-        info_change = {'revision': change['id'],
-             'revlink': change['url'],
-             'who': who,
-             'comments': comments,
-             'repository': repo_url,
-             'files': files,
-             'project': repo,
-             'branch': branch}
+        info_change = {
+            'revision': change['id'],
+            'revlink': change['url'],
+            'who': who,
+            'comments': comments,
+            'repository': repo_url,
+            'files': files,
+            'project': repo,
+            'branch': branch,
+        }
 
         if self.category:
             info_change['category'] = self.category
@@ -188,14 +187,15 @@ class GitHubBuildBot(resource.Resource):
 
         if self.filter_push_branch:
             if refname != "refs/heads/%s" % self.filter_push_branch:
-                logging.info("Ignoring refname '%s': Not a push to branch '%s'"
-                             % (refname, self.filter_push_branch))
+                logging.info(
+                    "Ignoring refname '%s': Not a push to branch '%s'"
+                    % (refname, self.filter_push_branch)
+                )
                 return changes
 
         m = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not m:
-            logging.info(
-                "Ignoring refname '%s': Not a branch or a tag", refname)
+            logging.info("Ignoring refname '%s': Not a branch or a tag", refname)
             return changes
 
         refname = m.group(2)
@@ -205,11 +205,11 @@ class GitHubBuildBot(resource.Resource):
         else:
             changes = []
             for change in payload['commits']:
-                if (self.head_commit or m.group(1) == 'tags') \
-                        and change['id'] != payload['head_commit']['id']:
+                if (self.head_commit or m.group(1) == 'tags') and change['id'] != payload[
+                    'head_commit'
+                ]['id']:
                     continue
-                changes.append(self.process_change(
-                    change, refname, repo, repo_url))
+                changes.append(self.process_change(change, refname, repo, repo_url))
         return changes
 
     def handle_pull_request(self, payload, repo, repo_url):
@@ -226,8 +226,7 @@ class GitHubBuildBot(resource.Resource):
         branch = "refs/pull/{}/head".format(payload['number'])
 
         if payload['action'] not in ("opened", "synchronize"):
-            logging.info("PR %r %r, ignoring",
-                         payload['number'], payload['action'])
+            logging.info("PR %r %r, ignoring", payload['number'], payload['action'])
             return None
         else:
             changes = []
@@ -246,8 +245,7 @@ class GitHubBuildBot(resource.Resource):
                 'modified': [],
             }
 
-            changes.append(self.process_change(
-                change, branch, repo, repo_url))
+            changes.append(self.process_change(change, branch, repo, repo_url))
         return changes
 
     def send_changes(self, changes, request):
@@ -279,11 +277,9 @@ class GitHubBuildBot(resource.Resource):
         """
         If connection is failed.  Logs the error.
         """
-        logging.error("Could not connect to master: %s",
-                      error.getErrorMessage())
+        logging.error("Could not connect to master: %s", error.getErrorMessage())
         request.setResponseCode(INTERNAL_SERVER_ERROR)
-        request.write(
-            json.dumps({"error": "Failed to connect to buildbot master."}))
+        request.write(json.dumps({"error": "Failed to connect to buildbot master."}))
         request.finish()
         return error
 
@@ -328,64 +324,94 @@ def setup_options():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage)
 
-    parser.add_option("-p", "--port",
-                      help="Port the HTTP server listens to for the GitHub "
-                           "Service Hook [default: %default]",
-                      default=9001, type=int, dest="port")
+    parser.add_option(
+        "-p",
+        "--port",
+        help="Port the HTTP server listens to for the GitHub " "Service Hook [default: %default]",
+        default=9001,
+        type=int,
+        dest="port",
+    )
 
-    parser.add_option("-m", "--buildmaster",
-                      help="Buildbot Master host and port. ie: localhost:9989 "
-                           "[default: %default]",
-                      default="localhost:9989", dest="buildmaster")
+    parser.add_option(
+        "-m",
+        "--buildmaster",
+        help="Buildbot Master host and port. ie: localhost:9989 " "[default: %default]",
+        default="localhost:9989",
+        dest="buildmaster",
+    )
 
-    parser.add_option("--auth",
-                      help="The username and password, separated by a colon, "
-                           "to use when connecting to buildbot over the "
-                           "perspective broker.",
-                      default="change:changepw", dest="auth")
+    parser.add_option(
+        "--auth",
+        help="The username and password, separated by a colon, "
+        "to use when connecting to buildbot over the "
+        "perspective broker.",
+        default="change:changepw",
+        dest="auth",
+    )
 
-    parser.add_option("--head-commit", action="store_true",
-                      help="If set, only trigger builds for commits at head")
+    parser.add_option(
+        "--head-commit", action="store_true", help="If set, only trigger builds for commits at head"
+    )
 
-    parser.add_option("--secret",
-                      help="If provided then use the X-Hub-Signature header "
-                           "to verify that the request is coming from "
-                           "github. [default: %default]",
-                      default=None, dest="secret")
+    parser.add_option(
+        "--secret",
+        help="If provided then use the X-Hub-Signature header "
+        "to verify that the request is coming from "
+        "github. [default: %default]",
+        default=None,
+        dest="secret",
+    )
 
-    parser.add_option("-l", "--log",
-                      help="The absolute path, including filename, to save the "
-                           "log to [default: %default].  This may also be "
-                           "'stdout' indicating logs should output directly to "
-                           "standard output instead.",
-                      default="github_buildbot.log", dest="log")
+    parser.add_option(
+        "-l",
+        "--log",
+        help="The absolute path, including filename, to save the "
+        "log to [default: %default].  This may also be "
+        "'stdout' indicating logs should output directly to "
+        "standard output instead.",
+        default="github_buildbot.log",
+        dest="log",
+    )
 
-    parser.add_option("-L", "--level",
-                      help="The logging level: debug, info, warn, error, "
-                           "fatal [default: %default]", default='warn',
-                      dest="level",
-                      choices=("debug", "info", "warn", "error", "fatal"))
+    parser.add_option(
+        "-L",
+        "--level",
+        help="The logging level: debug, info, warn, error, " "fatal [default: %default]",
+        default='warn',
+        dest="level",
+        choices=("debug", "info", "warn", "error", "fatal"),
+    )
 
-    parser.add_option("-g", "--github",
-                      help="The github server.  Changing this is useful if"
-                           " you've specified a specific HOST handle in "
-                           "~/.ssh/config for github [default: %default]",
-                      default='github.com', dest="github")
+    parser.add_option(
+        "-g",
+        "--github",
+        help="The github server.  Changing this is useful if"
+        " you've specified a specific HOST handle in "
+        "~/.ssh/config for github [default: %default]",
+        default='github.com',
+        dest="github",
+    )
 
-    parser.add_option("--pidfile",
-                      help="Write the process identifier (PID) to this "
-                           "file on start. The file is removed on clean "
-                           "exit. [default: %default]",
-                      default=None, dest="pidfile")
+    parser.add_option(
+        "--pidfile",
+        help="Write the process identifier (PID) to this "
+        "file on start. The file is removed on clean "
+        "exit. [default: %default]",
+        default=None,
+        dest="pidfile",
+    )
 
-    parser.add_option("--category",
-                      help="Category for the build change",
-                      default=None, dest="category")
+    parser.add_option(
+        "--category", help="Category for the build change", default=None, dest="category"
+    )
 
-    parser.add_option("--filter-push-branch",
-                      help="Only trigger builds for pushes to a given "
-                      "branch name.",
-                      default=None, dest="filter_push_branch")
+    parser.add_option(
+        "--filter-push-branch",
+        help="Only trigger builds for pushes to a given " "branch name.",
+        default=None,
+        dest="filter_push_branch",
+    )
 
     (options, _) = parser.parse_args()
 
@@ -399,13 +425,15 @@ def setup_options():
     filename = options.log
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
     if options.log != "stdout":
-        logging.basicConfig(filename=filename, format=log_format,
-                            level=logging._levelNames[options.level.upper()])
+        logging.basicConfig(
+            filename=filename, format=log_format, level=logging._levelNames[options.level.upper()]
+        )
     else:
-        logging.basicConfig(format=log_format,
-                            handlers=[
-                                logging.StreamHandler(stream=sys.stdout)],
-                            level=logging._levelNames[options.level.upper()])
+        logging.basicConfig(
+            format=log_format,
+            handlers=[logging.StreamHandler(stream=sys.stdout)],
+            level=logging._levelNames[options.level.upper()],
+        )
 
     return options
 

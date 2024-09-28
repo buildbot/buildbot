@@ -101,6 +101,7 @@ from __future__ import print_function
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
 import operator
+
 #
 import socket
 
@@ -132,10 +133,10 @@ else:
 #
 # This is the code that the poller and the hooks share.
 
-def generate_change(branch,
-                    old_revno=None, old_revid=None,
-                    new_revno=None, new_revid=None,
-                    blame_merge_author=False):
+
+def generate_change(
+    branch, old_revno=None, old_revid=None, new_revno=None, new_revid=None, blame_merge_author=False
+):
     """Return a dict of information about a change to the branch.
 
     Dict has keys of "files", "who", "comments", and "revision", as used by
@@ -167,8 +168,7 @@ def generate_change(branch,
     new_rev = repository.get_revision(new_revid)
     if blame_merge_author:
         # this is a pqm commit or something like it
-        change['who'] = repository.get_revision(
-            new_rev.parent_ids[-1]).get_apparent_authors()[0]
+        change['who'] = repository.get_revision(new_rev.parent_ids[-1]).get_apparent_authors()[0]
     else:
         change['who'] = new_rev.get_apparent_authors()[0]
     # maybe useful to know:
@@ -176,11 +176,12 @@ def generate_change(branch,
     change['comments'] = new_rev.message
     change['revision'] = new_revno
     files = change['files'] = []
-    changes = repository.revision_tree(new_revid).changes_from(
-        repository.revision_tree(old_revid))
-    for (collection, name) in ((changes.added, 'ADDED'),
-                               (changes.removed, 'REMOVED'),
-                               (changes.modified, 'MODIFIED')):
+    changes = repository.revision_tree(new_revid).changes_from(repository.revision_tree(old_revid))
+    for collection, name in (
+        (changes.added, 'ADDED'),
+        (changes.removed, 'REMOVED'),
+        (changes.modified, 'MODIFIED'),
+    ):
         for info in collection:
             path = info[0]
             kind = info[2]
@@ -193,23 +194,27 @@ def generate_change(branch,
         files.append(' '.join(elements))
     return change
 
+
 #
 # poller
 
 # We don't want to make the hooks unnecessarily depend on buildbot being
 # installed locally, so we conditionally create the BzrPoller class.
 if DEFINE_POLLER:
-
     FULL = object()
     SHORT = object()
 
-    class BzrPoller(buildbot.changes.base.PollingChangeSource,
-                    buildbot.util.ComparableMixin):
+    class BzrPoller(buildbot.changes.base.PollingChangeSource, buildbot.util.ComparableMixin):
+        compare_attrs = 'url'
 
-        compare_attrs = ('url')
-
-        def __init__(self, url, poll_interval=10 * 60, blame_merge_author=False,
-                     branch_name=None, category=None):
+        def __init__(
+            self,
+            url,
+            poll_interval=10 * 60,
+            blame_merge_author=False,
+            branch_name=None,
+            category=None,
+        ):
             # poll_interval is in seconds, so default poll_interval is 10
             # minutes.
             # bzr+ssh://bazaar.launchpad.net/~launchpad-pqm/launchpad/devel/
@@ -260,8 +265,7 @@ if DEFINE_POLLER:
             # can take awhile. So we just push the bzr work off to a
             # thread.
             try:
-                changes = yield twisted.internet.threads.deferToThread(
-                    self.getRawChanges)
+                changes = yield twisted.internet.threads.deferToThread(self.getRawChanges)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except Exception:
@@ -281,18 +285,18 @@ if DEFINE_POLLER:
             else:  # presumably a string or maybe None
                 branch_name = self.branch_name
             changes = []
-            change = generate_change(
-                branch, blame_merge_author=self.blame_merge_author)
-            if (self.last_revision is None or
-                    change['revision'] > self.last_revision):
+            change = generate_change(branch, blame_merge_author=self.blame_merge_author)
+            if self.last_revision is None or change['revision'] > self.last_revision:
                 change['branch'] = branch_name
                 change['category'] = self.category
                 changes.append(change)
                 if self.last_revision is not None:
                     while self.last_revision + 1 < change['revision']:
                         change = generate_change(
-                            branch, new_revno=change['revision'] - 1,
-                            blame_merge_author=self.blame_merge_author)
+                            branch,
+                            new_revno=change['revision'] - 1,
+                            blame_merge_author=self.blame_merge_author,
+                        )
                         change['branch'] = branch_name
                         changes.append(change)
             changes.reverse()
@@ -302,9 +306,8 @@ if DEFINE_POLLER:
             d = defer.Deferred()
 
             def _add_change():
-                d.callback(
-                    self.master.data.updates.addChange(src='bzr',
-                                                       **change_kwargs))
+                d.callback(self.master.data.updates.addChange(src='bzr', **change_kwargs))
+
             twisted.internet.reactor.callLater(0, _add_change)
             return d
 
@@ -326,8 +329,7 @@ CHANGE_VALUE = 'change'
 
 def _is_true(config, key):
     val = config.get_user_option(key)
-    return val is not None and val.lower().strip() in (
-        'y', 'yes', 't', 'true')
+    return val is not None and val.lower().strip() in ('y', 'yes', 't', 'true')
 
 
 def _installed_hook(branch):
@@ -336,8 +338,9 @@ def _installed_hook(branch):
         value = value.strip().lower()
         if value not in (PUSH_VALUE, COMMIT_VALUE, CHANGE_VALUE):
             raise bzrlib.errors.BzrError(
-                '%s, if set, must be one of %s, %s, or %s' % (
-                    HOOK_KEY, PUSH_VALUE, COMMIT_VALUE, CHANGE_VALUE))
+                '%s, if set, must be one of %s, %s, or %s'
+                % (HOOK_KEY, PUSH_VALUE, COMMIT_VALUE, CHANGE_VALUE)
+            )
     return value
 
 
@@ -356,6 +359,7 @@ def _putResultInDeferred(reactor, deferred, f, args, kwargs):
     else:
         reactor.callFromThread(deferred.callback, result)
 
+
 # would be a proposed addition.  deferToThread could use it
 
 
@@ -367,24 +371,24 @@ def deferToThreadInReactor(reactor, f, *args, **kwargs):
     reactor.callInThread(_putResultInDeferred, reactor, d, f, args, kwargs)
     return d
 
+
 # uses its own reactor for the threaded calls, unlike Twisted's
 
 
 class ThreadedResolver(twisted.internet.base.ThreadedResolver):
-
     def getHostByName(self, name, timeout=(1, 3, 11, 45)):
         if timeout:
             timeoutDelay = reduce(operator.add, timeout)
         else:
             timeoutDelay = 60
         userDeferred = defer.Deferred()
-        lookupDeferred = deferToThreadInReactor(
-            self.reactor, socket.gethostbyname, name)
-        cancelCall = self.reactor.callLater(
-            timeoutDelay, self._cleanup, name, lookupDeferred)
+        lookupDeferred = deferToThreadInReactor(self.reactor, socket.gethostbyname, name)
+        cancelCall = self.reactor.callLater(timeoutDelay, self._cleanup, name, lookupDeferred)
         self._runningQueries[lookupDeferred] = (userDeferred, cancelCall)
         lookupDeferred.addBoth(self._checkTimeout, name, lookupDeferred)
         return userDeferred
+
+
 #
 
 
@@ -393,12 +397,17 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     server = config.get_user_option(SERVER_KEY)
     if not server:
         bzrlib.trace.warning(
-            'bzr_buildbot: ERROR.  If %s is set, %s must be set',
-            HOOK_KEY, SERVER_KEY)
+            'bzr_buildbot: ERROR.  If %s is set, %s must be set', HOOK_KEY, SERVER_KEY
+        )
         return
     change = generate_change(
-        branch, old_revno, old_revid, new_revno, new_revid,
-        blame_merge_author=_is_true(config, PQM_KEY))
+        branch,
+        old_revno,
+        old_revid,
+        new_revno,
+        new_revid,
+        blame_merge_author=_is_true(config, PQM_KEY),
+    )
     if _is_true(config, SEND_BRANCHNAME_KEY):
         change['branch'] = branch.nick
     # as of this writing (in Buildbot 0.7.9), 9989 is the default port when
@@ -406,9 +415,9 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     port = int(config.get_user_option(PORT_KEY) or 9989)
     # if dry run, stop.
     if _is_true(config, DRYRUN_KEY):
-        bzrlib.trace.note("bzr_buildbot DRY RUN "
-                          "(*not* sending changes to %s:%d on %s)",
-                          server, port, hook)
+        bzrlib.trace.note(
+            "bzr_buildbot DRY RUN " "(*not* sending changes to %s:%d on %s)", server, port, hook
+        )
         keys = sorted(change.keys())
         for k in keys:
             bzrlib.trace.note("[%10s]: %s", k, change[k])
@@ -426,8 +435,7 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
         user, passwd = [s.strip() for s in auth.split(':', 1)]
     else:
         user, passwd = ('change', 'changepw')
-    deferred = pbcf.login(
-        twisted.cred.credentials.UsernamePassword(user, passwd))
+    deferred = pbcf.login(twisted.cred.credentials.UsernamePassword(user, passwd))
 
     @deferred.addCallback
     def sendChanges(remote):
@@ -449,37 +457,53 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
 
     reactor.callLater(60, quit, None, "TIMEOUT")
     bzrlib.trace.note(
-        "bzr_buildbot: SENDING CHANGES to buildbot master %s:%d on %s",
-        server, port, hook)
+        "bzr_buildbot: SENDING CHANGES to buildbot master %s:%d on %s", server, port, hook
+    )
     reactor.run(installSignalHandlers=False)  # run in a thread when in server
 
 
-def post_commit(local_branch, master_branch,  # branch is the master_branch
-                old_revno, old_revid, new_revno, new_revid):
+def post_commit(
+    local_branch,
+    master_branch,  # branch is the master_branch
+    old_revno,
+    old_revid,
+    new_revno,
+    new_revid,
+):
     if _installed_hook(master_branch) == COMMIT_VALUE:
-        send_change(master_branch,
-                    old_revid, old_revid, new_revno, new_revid, COMMIT_VALUE)
+        send_change(master_branch, old_revid, old_revid, new_revno, new_revid, COMMIT_VALUE)
 
 
 def post_push(result):
     if _installed_hook(result.target_branch) == PUSH_VALUE:
-        send_change(result.target_branch,
-                    result.old_revid, result.old_revid,
-                    result.new_revno, result.new_revid, PUSH_VALUE)
+        send_change(
+            result.target_branch,
+            result.old_revid,
+            result.old_revid,
+            result.new_revno,
+            result.new_revid,
+            PUSH_VALUE,
+        )
 
 
 def post_change_branch_tip(result):
     if _installed_hook(result.branch) == CHANGE_VALUE:
-        send_change(result.branch,
-                    result.old_revid, result.old_revid,
-                    result.new_revno, result.new_revid, CHANGE_VALUE)
+        send_change(
+            result.branch,
+            result.old_revid,
+            result.old_revid,
+            result.new_revno,
+            result.new_revid,
+            CHANGE_VALUE,
+        )
+
 
 bzrlib.branch.Branch.hooks.install_named_hook(
-    'post_commit', post_commit,
-    'send change to buildbot master')
+    'post_commit', post_commit, 'send change to buildbot master'
+)
 bzrlib.branch.Branch.hooks.install_named_hook(
-    'post_push', post_push,
-    'send change to buildbot master')
+    'post_push', post_push, 'send change to buildbot master'
+)
 bzrlib.branch.Branch.hooks.install_named_hook(
-    'post_change_branch_tip', post_change_branch_tip,
-    'send change to buildbot master')
+    'post_change_branch_tip', post_change_branch_tip, 'send change to buildbot master'
+)

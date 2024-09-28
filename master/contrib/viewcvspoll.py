@@ -18,18 +18,17 @@ from twisted.spread import pb
 
 
 class ViewCvsPoller:
-
     def __init__(self):
-
         def _load_rc():
             import user
+
             ret = {}
-            for line in open(os.path.join(
-                    user.home, ".cvsblamerc")).readlines():
+            for line in open(os.path.join(user.home, ".cvsblamerc")).readlines():
                 if line.find("=") != -1:
                     key, val = line.split("=")
                     ret[key.strip()] = val.strip()
             return ret
+
         # maybe add your own keys here db=xxx, user=xxx, passwd=xxx
         self.cvsdb = MySQLdb.connect("cvs", **_load_rc())
         # self.last_checkin = "2005-05-11" # for testing
@@ -40,20 +39,22 @@ class ViewCvsPoller:
 
         def empty_change():
             return {'who': None, 'files': [], 'comments': None}
+
         change = empty_change()
 
         cursor = self.cvsdb.cursor()
-        cursor.execute("""SELECT whoid, descid, fileid, dirid, branchid, \
-ci_when FROM checkins WHERE ci_when>='%s'""" % self.last_checkin)
+        cursor.execute(
+            """SELECT whoid, descid, fileid, dirid, branchid, \
+ci_when FROM checkins WHERE ci_when>='%s'"""
+            % self.last_checkin
+        )
         last_checkin = None
-        for whoid, descid, fileid, dirid, branchid, ci_when in \
-                cursor.fetchall():
+        for whoid, descid, fileid, dirid, branchid, ci_when in cursor.fetchall():
             if branchid != 1:  # only head
                 continue
             cursor.execute("""SELECT who from people where id=%s""" % whoid)
             who = cursor.fetchone()[0]
-            cursor.execute("""SELECT description from descs where id=%s""" % (
-                descid))
+            cursor.execute("""SELECT description from descs where id=%s""" % (descid))
             desc = cursor.fetchone()[0]
             cursor.execute("""SELECT file from files where id=%s""" % fileid)
             filename = cursor.fetchone()[0]

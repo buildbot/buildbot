@@ -28,6 +28,7 @@ from xml.parsers.expat import ExpatError
 if sys.platform == 'win32':
     import win32pipe
 
+
 def getoutput(cmd):
     timeout = 120
     maxtries = 3
@@ -37,22 +38,25 @@ def getoutput(cmd):
         f.close()
     else:
         currentry = 1
-        while True: # retry loop
+        while True:  # retry loop
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             waited = 0
-            while True: # wait loop
+            while True:  # wait loop
                 if p.poll() != None:
-                    break # process ended.
+                    break  # process ended.
                 if waited > timeout:
-                    print("WARNING: Timeout of %s seconds reached while trying to run: %s" % ( timeout,' '.join(cmd)) )
+                    print(
+                        "WARNING: Timeout of %s seconds reached while trying to run: %s"
+                        % (timeout, ' '.join(cmd))
+                    )
                     break
                 waited += 1
                 time.sleep(1)
 
-            if p.returncode != None: # process has endend
+            if p.returncode != None:  # process has endend
                 stdout = p.stdout.read()
                 if p.returncode == 0:
-                    break # ok: exit retry loop
+                    break  # ok: exit retry loop
                 else:
                     print('WARNING: "%s" returned status code: %s' % (' '.join(cmd), p.returncode))
                     if stdout is not None:
@@ -61,10 +65,14 @@ def getoutput(cmd):
                 p.kill()
 
             if currentry > maxtries:
-                print("ERROR: Reached maximum number of tries (%s) to run: %s" % ( maxtries,' '.join(cmd)) )
+                print(
+                    "ERROR: Reached maximum number of tries (%s) to run: %s"
+                    % (maxtries, ' '.join(cmd))
+                )
                 sys.exit(1)
             currentry += 1
     return stdout
+
 
 def sendchange_cmd(master, revisionData):
     cmd = [
@@ -127,16 +135,18 @@ def parseChangeXML(raw_xml):
 
     # grab the appropriate meta data we need
     data['revision'] = log_entry.getAttribute("revision")
-    data['author'] = "".join([t.data for t in
-                              log_entry.getElementsByTagName("author")[0].childNodes])
-    data['comments'] = "".join([t.data for t in
-                                log_entry.getElementsByTagName("msg")[0].childNodes])
+    data['author'] = "".join([
+        t.data for t in log_entry.getElementsByTagName("author")[0].childNodes
+    ])
+    data['comments'] = "".join([
+        t.data for t in log_entry.getElementsByTagName("msg")[0].childNodes
+    ])
 
     # grab the appropriate file paths that changed.
     pathlist = log_entry.getElementsByTagName("paths")[0]
     paths = []
     if opts.branch:
-        branchtoken =  "/" + opts.branch.strip("/") + "/"
+        branchtoken = "/" + opts.branch.strip("/") + "/"
     for path in pathlist.getElementsByTagName("path"):
         filename = "".join([t.data for t in path.childNodes])
         if opts.branch:
@@ -153,10 +163,9 @@ def parseChangeXML(raw_xml):
 # This is an example of a svn query we could do to get allo those changes:
 # svn log --xml --non-interactive -r ${lastrevchecked}:HEAD https://repo.url/branch
 
-def checkChanges(repo, master, oldRevision=-1):
 
-    cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose",
-           "--limit=1", repo]
+def checkChanges(repo, master, oldRevision=-1):
+    cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose", "--limit=1", repo]
 
     if opts.verbose:
         print("Getting last revision of repository: " + repo)
@@ -174,17 +183,13 @@ def checkChanges(repo, master, oldRevision=-1):
         print(revisionData['paths'])
 
     if revisionData['revision'] != oldRevision:
-
         cmd = sendchange_cmd(master, revisionData)
         status = getoutput(cmd)
 
-        print("%s Revision %s: %s" % (pretty_time, revisionData['revision'],
-                                      status))
+        print("%s Revision %s: %s" % (pretty_time, revisionData['revision'], status))
 
     else:
-
-        print("%s nothing has changed since revision %s" % (pretty_time,
-                                                            revisionData['revision']))
+        print("%s nothing has changed since revision %s" % (pretty_time, revisionData['revision']))
 
     return revisionData['revision']
 
@@ -194,37 +199,65 @@ def build_parser():
     parser = OptionParser(usage=usagestr)
 
     parser.add_option(
-        "-c", "--category", dest="category", action="store", default="",
-        help="""Store a category name to be associated with sendchange msg."""
+        "-c",
+        "--category",
+        dest="category",
+        action="store",
+        default="",
+        help="""Store a category name to be associated with sendchange msg.""",
     )
 
     parser.add_option(
-        "-i", "--interval", dest="interval", action="store", default=0,
+        "-i",
+        "--interval",
+        dest="interval",
+        action="store",
+        default=0,
         help="Implies watch option and changes the time in minutes to the value specified.",
     )
 
     parser.add_option(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False,
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
         help="Enables more information to be presented on the command line.",
     )
 
     parser.add_option(
-        "-b", "--branch", dest="branch", action="store", default=None,
+        "-b",
+        "--branch",
+        dest="branch",
+        action="store",
+        default=None,
         help="Watch only changes for this branch and send the branch info.",
     )
 
     parser.add_option(
-        "-a", "--auth", dest="auth", action="store", default=None,
+        "-a",
+        "--auth",
+        dest="auth",
+        action="store",
+        default=None,
         help="Authentication token - username:password.",
     )
 
     parser.add_option(
-        "-l", "--link", dest="revlink", action="store", default=None,
+        "-l",
+        "--link",
+        dest="revlink",
+        action="store",
+        default=None,
         help="A base URL for the revision links.",
     )
 
     parser.add_option(
-        "", "--watch", dest="watch", action="store_true", default=False,
+        "",
+        "--watch",
+        dest="watch",
+        action="store_true",
+        default=False,
         help="Automatically check the repo url every 10 minutes.",
     )
 
@@ -244,7 +277,6 @@ def validate_args(args):
 
 
 if __name__ == '__main__':
-
     # build our parser and validate our args
     parser = build_parser()
     (opts, args) = parser.parse_args()
@@ -267,8 +299,7 @@ if __name__ == '__main__':
     # if watch is specified, run until stopped
     if opts.watch or opts.interval:
         oldRevision = -1
-        print("Watching for changes in repo %s for master %s." %
-              (repo_url, bbmaster))
+        print("Watching for changes in repo %s for master %s." % (repo_url, bbmaster))
         while True:
             try:
                 oldRevision = checkChanges(repo_url, bbmaster, oldRevision)

@@ -34,9 +34,7 @@ from buildbot.clients import sendchange
 
 
 def getText(node):
-    return "".join([cn.data
-                    for cn in node.childNodes
-                    if cn.nodeType == cn.TEXT_NODE])
+    return "".join([cn.data for cn in node.childNodes if cn.nodeType == cn.TEXT_NODE])
 
 
 def getTextFromChild(parent, childtype):
@@ -49,8 +47,7 @@ def getTextFromChild(parent, childtype):
 def makeChange(p):
     author = p.getAttribute("author")
     revision = p.getAttribute("hash")
-    comments = (getTextFromChild(p, "name") + "\n" +
-                getTextFromChild(p, "comment"))
+    comments = getTextFromChild(p, "name") + "\n" + getTextFromChild(p, "comment")
 
     summary = p.getElementsByTagName("summary")[0]
     files = []
@@ -135,9 +132,10 @@ def findNewChanges():
                 newchanges.reverse()
                 return newchanges
         if 2 * lookback > 100:
-            raise RuntimeError("unable to find our most recent change "
-                               "(%s) in the last %d changes" % (lastchange,
-                                                                lookback))
+            raise RuntimeError(
+                "unable to find our most recent change "
+                "(%s) in the last %d changes" % (lastchange, lookback)
+            )
         lookback = 2 * lookback
 
 
@@ -169,8 +167,10 @@ def sendChanges(master):
     def _send(res, c):
         branch = None
         print(" %s" % c['revision'])
-        return s.send(branch, c.get('context'), c['comments'], c['files'],
-                      c['username'], vc='darcs')
+        return s.send(
+            branch, c.get('context'), c['comments'], c['files'], c['username'], vc='darcs'
+        )
+
     for c in changes:
         d.addCallback(_send, c)
 
