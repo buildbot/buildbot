@@ -1,8 +1,5 @@
 #! /usr/bin/python
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os.path
 import random
@@ -13,7 +10,6 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
-
 
 """
 This is an example of how to use the remote ChangeMaster interface, which is

@@ -16,17 +16,13 @@
 # edit your svn-repository/hooks/post-commit file, and add lines that look
 # like this:
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import text_type
-
 import os
 import re
-import sets
 import subprocess
 import sys
 
+import sets
+from future.utils import text_type
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor

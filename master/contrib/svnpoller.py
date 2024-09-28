@@ -19,15 +19,12 @@ Copyright (C) 2006 John Pye
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import ConfigParser
 import os.path
 import subprocess
 import sys
 import xml.dom.minidom
+
+import ConfigParser
 
 # change these settings to match your project
 svnurl = "https://pse.cheme.cmu.edu/svn/ascend/code/trunk"

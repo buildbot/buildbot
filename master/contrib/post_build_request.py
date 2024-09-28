@@ -16,16 +16,14 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 OpenGamma Inc. and the OpenGamma group of companies
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import getpass
-import httplib
 import optparse
 import os
 import textwrap
 import urllib
+
+import httplib
 
 # Find a working json module.  Code is from
 # Paul Wise <pabs@debian.org>:
@@ -39,8 +37,8 @@ except ImportError:
 try:
     _tmp = json.loads
 except AttributeError:
-    import warnings
     import sys
+    import warnings
 
     warnings.warn("Use simplejson, not the old json module.")
     sys.modules.pop('json')  # get rid of the bad json module
@@ -314,7 +312,7 @@ else:
     response = conn.getresponse()
     data = response.read()
     exitCode = 0
-    if response.status is not 202:
+    if response.status != 202:
         exitCode = 1
     if options.verbosity >= 1:
         print(response.status, response.reason)

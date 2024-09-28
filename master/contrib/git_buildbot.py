@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding:utf8
 
 # This script expects one line for each new revision on the form
 #   <oldrev> <newrev> <refname>
@@ -24,8 +23,6 @@
 #
 # Largely based on contrib/hooks/post-receive-email from git.
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import iteritems
 
 try:
@@ -35,8 +32,8 @@ except ImportError:
 
 import logging
 import re
-import subprocess
 import shlex
+import subprocess
 import sys
 from optparse import OptionParser
 
@@ -469,8 +466,7 @@ try:
     level = logging.WARNING
     if options.verbose:
         level -= 10 * options.verbose
-        if level < 0:
-            level = 0
+        level = max(level, 0)
 
     if options.logfile:
         logfile = logging.FileHandler(options.logfile)

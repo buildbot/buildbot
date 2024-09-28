@@ -95,16 +95,14 @@ Contact Information
 Maintainer/author: gary.poster@canonical.com
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
 import operator
-
-#
 import socket
 
+import bzrlib.branch
+import bzrlib.errors
+import bzrlib.trace
 import twisted.cred.credentials
 import twisted.internet.base
 import twisted.internet.reactor
@@ -116,14 +114,10 @@ import twisted.spread.pb
 from twisted.internet import defer
 from twisted.python import failure
 
-import bzrlib.branch
-import bzrlib.errors
-import bzrlib.trace
-
 try:
-    import buildbot.util
     import buildbot.changes.base
     import buildbot.changes.changes
+    import buildbot.util
 except ImportError:
     DEFINE_POLLER = False
 else:
@@ -387,9 +381,6 @@ class ThreadedResolver(twisted.internet.base.ThreadedResolver):
         self._runningQueries[lookupDeferred] = (userDeferred, cancelCall)
         lookupDeferred.addBoth(self._checkTimeout, name, lookupDeferred)
         return userDeferred
-
-
-#
 
 
 def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):

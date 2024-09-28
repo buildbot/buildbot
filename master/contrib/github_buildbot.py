@@ -13,10 +13,6 @@ This version of github_buildbot.py parses v3 of the github webhook api, with the
 
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import hmac
 import logging
 import os
@@ -25,6 +21,7 @@ import sys
 from hashlib import sha1
 from optparse import OptionParser
 
+from future.utils import iteritems
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb

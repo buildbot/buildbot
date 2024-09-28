@@ -1,14 +1,10 @@
 #! /usr/bin/python
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os.path
 import time
 
 import MySQLdb  # @UnresolvedImport
-
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log

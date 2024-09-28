@@ -140,16 +140,12 @@
 # This would strip everything until (and including) the 4th "/" in the repo's
 # path leaving only "myrepo" left.  This would then be append to the base URL.
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-
 import json
 import os
 import os.path
 
 import requests
-
+from future.builtins import range
 from mercurial.encoding import fromlocal
 from mercurial.node import hex
 from mercurial.node import nullid
@@ -254,12 +250,10 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             )
             if not response.ok:
                 ui.warn(
-                    "couldn't notify buildbot about {}: {} {}".format(
-                        hex(node)[:12], response.status_code, response.reason
-                    )
+                    f"couldn't notify buildbot about {hex(node)[:12]}: {response.status_code} {response.reason}"
                 )
             else:
-                ui.status("notified buildbot about {}".format(hex(node)[:12]))
+                ui.status(f"notified buildbot about {hex(node)[:12]}")
 
 
 def strip(path, count):

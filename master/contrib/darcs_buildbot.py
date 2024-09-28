@@ -17,9 +17,6 @@
 # machine. You will also need the Python/XML distribution installed (the
 # "python2.3-xml" package under debian).
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import subprocess
@@ -114,7 +111,7 @@ LASTCHANGEFILE = ".darcs_buildbot-lastchange"
 
 def findNewChanges():
     if os.path.exists(LASTCHANGEFILE):
-        f = open(LASTCHANGEFILE, "r")
+        f = open(LASTCHANGEFILE)
         lastchange = f.read()
         f.close()
     else:
