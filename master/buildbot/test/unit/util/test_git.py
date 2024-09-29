@@ -155,7 +155,8 @@ class TestAdjustCommandParamsForSshPrivateKey(GitMixin, unittest.TestCase):
 
         command = []
         env = {}
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
+            self.setupGit()
             self.adjustCommandParamsForSshPrivateKey(command, env, 'path/to/key')
 
 

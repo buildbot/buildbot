@@ -23,7 +23,7 @@ class TestRaml(unittest.TestCase):
         self.assertIsNone(render_description("description", None))
 
     def test_unknown(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             render_description("description", "unknown")
 
     def test_markdown(self):

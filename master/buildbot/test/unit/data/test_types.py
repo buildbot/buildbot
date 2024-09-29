@@ -40,7 +40,7 @@ class TypeMixin:
                 self.ty.valueFromString(string), expValue, f"value of string {repr(string)}"
             )
         for string in self.badStringValues:
-            with self.assertRaises(Exception):
+            with self.assertRaises(TypeError):
                 self.ty.valueFromString(string, f"expected error for {repr(string)}")
 
     def test_cmp(self):
