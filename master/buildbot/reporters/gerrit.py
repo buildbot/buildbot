@@ -57,7 +57,8 @@ def _old_add_label(label, value):
     elif label == GERRIT_LABEL_REVIEWED:
         return [f"--code-review {int(value)}"]
     warnings.warn(
-        'Gerrit older than 2.6 does not support custom labels. ' f'Setting {label} is ignored.'
+        'Gerrit older than 2.6 does not support custom labels. ' f'Setting {label} is ignored.',
+        stacklevel=1,
     )
     return []
 
