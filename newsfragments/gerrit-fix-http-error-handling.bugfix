@@ -1,0 +1,1 @@
+Fixed very confusing error messages in case of HTTP errors that occur when connecting to Gerrit server.

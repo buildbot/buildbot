@@ -526,6 +526,10 @@ class GerritHttpEventLogPollerConnector:
         res = yield self._http.get(
             "/plugins/events-log/events/", params={"t1": last_event_formatted}
         )
+        if res.code != 200:
+            log.msg(f'{self._change_source.name}: Polling gerrit: got HTTP error code {res.code}')
+            return
+
         lines = yield res.content()
         yield self._on_lines_received_cb(lines.splitlines())
 
