@@ -215,6 +215,8 @@ def getDetailsForBuilds(
                         l['url'] = get_url_for_log(
                             master, build['builderid'], build['number'], s['number'], l['slug']
                         )
+                        l['url_raw'] = get_url_for_log_raw(master, l['logid'], 'raw')
+                        l['url_raw_inline'] = get_url_for_log_raw(master, l['logid'], 'raw_inline')
                         if should_attach_log(logs_config, l):
                             l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
@@ -318,6 +320,11 @@ def get_url_for_log(master, builderid, build_number, step_number, log_slug):
         f"{prefix}#/builders/{builderid}/builds/{build_number}/"
         + f"steps/{step_number}/logs/{log_slug}"
     )
+
+
+def get_url_for_log_raw(master, logid, suffix):
+    prefix = master.config.buildbotURL
+    return f"{prefix}api/v2/logs/{logid}/{suffix}"
 
 
 @renderer
