@@ -145,10 +145,10 @@ class Trigger(BuildStep):
         # this allow to quickly find schedulers instance by name
         schedulers = self.master.scheduler_manager.namedServices
         if name not in schedulers:
-            raise ValueError(f"unknown triggered scheduler: {repr(name)}")
+            raise ValueError(f"unknown triggered scheduler: {name!r}")
         sch = schedulers[name]
         if not ITriggerableScheduler.providedBy(sch):
-            raise ValueError(f"triggered scheduler is not ITriggerableScheduler: {repr(name)}")
+            raise ValueError(f"triggered scheduler is not ITriggerableScheduler: {name!r}")
         return sch
 
     # This customization endpoint allows users to dynamically select which

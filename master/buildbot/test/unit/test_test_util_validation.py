@@ -26,13 +26,13 @@ from buildbot.util import UTC
 class VerifyDict(unittest.TestCase):
     def doValidationTest(self, validator, good, bad):
         for g in good:
-            log.msg(f'expect {repr(g)} to be good')
+            log.msg(f'expect {g!r} to be good')
             msgs = list(validator.validate('g', g))
-            self.assertEqual(msgs, [], f'messages for {repr(g)}')
+            self.assertEqual(msgs, [], f'messages for {g!r}')
         for b in bad:
-            log.msg(f'expect {repr(b)} to be bad')
+            log.msg(f'expect {b!r} to be bad')
             msgs = list(validator.validate('b', b))
-            self.assertNotEqual(msgs, [], f'no messages for {repr(b)}')
+            self.assertNotEqual(msgs, [], f'no messages for {b!r}')
             log.msg('..got messages:')
             for msg in msgs:
                 log.msg("  " + msg)

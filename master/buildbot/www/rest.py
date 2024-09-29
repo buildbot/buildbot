@@ -203,7 +203,7 @@ class V2RootResource(resource.Resource):
         try:
             data = json.loads(bytes2unicode(request.content.read()))
         except Exception as e:
-            raise BadJsonRpc2(f"JSON parse error: {str(e)}", JSONRPC_CODES["parse_error"]) from e
+            raise BadJsonRpc2(f"JSON parse error: {e!s}", JSONRPC_CODES["parse_error"]) from e
 
         if isinstance(data, list):
             raise BadJsonRpc2(
@@ -299,8 +299,7 @@ class V2RootResource(resource.Resource):
         self._write_rest_error(
             request=request,
             msg=(
-                f"not found while getting from {repr(ep)} with "
-                f"arguments {repr(rspec)} and {str(kwargs)}"
+                f"not found while getting from {ep!r} with " f"arguments {rspec!r} and {kwargs!s}"
             ),
         )
 

@@ -56,7 +56,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
             if pp == '/':
                 continue
             if not pp.startswith('/') or pp.endswith('/'):
-                raise AssertionError(f"invalid pattern {repr(pp)}")
+                raise AssertionError(f"invalid pattern {pp!r}")
         pathPatterns = [tuple(pp.split('/')[1:]) for pp in pathPatterns]
         for pp in pathPatterns:
             self.matcher[pp] = self.ep

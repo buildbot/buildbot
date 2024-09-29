@@ -79,7 +79,7 @@ def timed_do_fn(f):
         for name in locals:
             if name in ('self', 'thd'):
                 continue
-            log.msg(f"{descr} - {name} = {repr(locals[name])}")
+            log.msg(f"{descr} - {name} = {locals[name]!r}")
 
         # wrap the callable to log the begin and end of the actual thread
         # function

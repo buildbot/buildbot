@@ -161,7 +161,7 @@ class CaptureBuildTimes(Capture):
                 raise CaptureCallbackError(
                     f"{self._err_msg(msg, builder_info['name'])} "
                     f"Exception raised: {type(e).__name__} "
-                    f"with message: {str(e)}"
+                    f"with message: {e!s}"
                 ) from e
 
             context = self._defaultContext(msg, builder_info['name'])
@@ -340,7 +340,7 @@ class CaptureDataBase(Capture):
                     f"CaptureData failed for build {build_data['number']} "
                     f"of builder {builder_info['name']}. "
                     f"Exception generated: {type(e).__name__} "
-                    f"with message {str(e)}"
+                    f"with message {e!s}"
                 ) from e
             post_data = ret_val
             series_name = f"{builder_info['name']}-{self._data_name}"

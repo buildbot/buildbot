@@ -380,7 +380,7 @@ class ExpectUploadFile(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectUploadFile({repr(self.args['workdir'])},{repr(self.args['workersrc'])})"
+        return f"ExpectUploadFile({self.args['workdir']!r},{self.args['workersrc']!r})"
 
 
 class ExpectUploadDirectory(Expect):
@@ -435,10 +435,7 @@ class ExpectUploadDirectory(Expect):
         return self
 
     def __repr__(self):
-        return (
-            f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
-            f"{repr(self.args['workersrc'])})"
-        )
+        return f"ExpectUploadDirectory({self.args['workdir']!r}, " f"{self.args['workersrc']!r})"
 
 
 class ExpectDownloadFile(Expect):
@@ -486,10 +483,7 @@ class ExpectDownloadFile(Expect):
         return self
 
     def __repr__(self):
-        return (
-            f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
-            f"{repr(self.args['workerdest'])})"
-        )
+        return f"ExpectUploadDirectory({self.args['workdir']!r}, " f"{self.args['workerdest']!r})"
 
 
 class ExpectMkdir(Expect):
@@ -501,7 +495,7 @@ class ExpectMkdir(Expect):
         super().__init__('mkdir', args)
 
     def __repr__(self):
-        return f"ExpectMkdir({repr(self.args['dir'])})"
+        return f"ExpectMkdir({self.args['dir']!r})"
 
 
 class ExpectRmdir(Expect):
@@ -517,7 +511,7 @@ class ExpectRmdir(Expect):
         super().__init__('rmdir', args)
 
     def __repr__(self):
-        return f"ExpectRmdir({repr(self.args['dir'])})"
+        return f"ExpectRmdir({self.args['dir']!r})"
 
 
 class ExpectCpdir(Expect):
@@ -533,7 +527,7 @@ class ExpectCpdir(Expect):
         super().__init__('cpdir', args)
 
     def __repr__(self):
-        return f"ExpectCpdir({repr(self.args['fromdir'])}, {repr(self.args['todir'])})"
+        return f"ExpectCpdir({self.args['fromdir']!r}, {self.args['todir']!r})"
 
 
 class ExpectGlob(Expect):
@@ -551,7 +545,7 @@ class ExpectGlob(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectGlob({repr(self.args['path'])})"
+        return f"ExpectGlob({self.args['path']!r})"
 
 
 class ExpectListdir(Expect):
@@ -567,7 +561,7 @@ class ExpectListdir(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectListdir({repr(self.args['dir'])})"
+        return f"ExpectListdir({self.args['dir']!r})"
 
 
 class ExpectRmfile(Expect):
@@ -579,7 +573,7 @@ class ExpectRmfile(Expect):
         super().__init__('rmfile', args)
 
     def __repr__(self):
-        return f"ExpectRmfile({repr(self.args['path'])})"
+        return f"ExpectRmfile({self.args['path']!r})"
 
 
 def _check_env_is_expected(test, expected_env, env):
@@ -588,7 +582,7 @@ def _check_env_is_expected(test, expected_env, env):
 
     env = env or {}
     for var, value in expected_env.items():
-        test.assertEqual(env.get(var), value, f'Expected environment to have {var} = {repr(value)}')
+        test.assertEqual(env.get(var), value, f'Expected environment to have {var} = {value!r}')
 
 
 class ExpectMasterShell:

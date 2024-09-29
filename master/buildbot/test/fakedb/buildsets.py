@@ -138,7 +138,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         priority=0,
     ):
         # We've gotten this wrong a couple times.
-        assert isinstance(waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
+        assert isinstance(waited_for, bool), f'waited_for should be boolean: {waited_for!r}'
 
         # calculate submitted at
         if submitted_at is not None:

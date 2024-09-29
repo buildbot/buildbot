@@ -80,7 +80,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         args = [
             '-c',
             'from buildbot.scripts.start import start; import sys; '
-            f'sys.exit(start({repr(mkconfig(**config))}))',
+            f'sys.exit(start({mkconfig(**config)!r}))',
         ]
         env = os.environ.copy()
         env['PYTHONPATH'] = os.pathsep.join(sys.path)

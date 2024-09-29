@@ -327,7 +327,7 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
         return self.comparator(v1, v2)
 
     def __repr__(self):
-        return f'{repr(self.v1)} {str(self.cstr)} {repr(self.v2)}'
+        return f'{self.v1!r} {self.cstr!s} {self.v2!r}'
 
 
 class _PropertyMap:
@@ -473,17 +473,17 @@ class _Lookup(util.ComparableMixin):
     def __repr__(self):
         parts = [repr(self.index)]
         if self.default is not None:
-            parts.append(f', default={repr(self.default)}')
+            parts.append(f', default={self.default!r}')
         if not self.defaultWhenFalse:
             parts.append(', defaultWhenFalse=False')
         if self.hasKey != _notHasKey:
-            parts.append(f', hasKey={repr(self.hasKey)}')
+            parts.append(f', hasKey={self.hasKey!r}')
         if self.elideNoneAs is not None:
-            parts.append(f', elideNoneAs={repr(self.elideNoneAs)}')
+            parts.append(f', elideNoneAs={self.elideNoneAs!r}')
 
         parts_str = ''.join(parts)
 
-        return f'_Lookup({repr(self.value)}, {parts_str})'
+        return f'_Lookup({self.value!r}, {parts_str})'
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
@@ -594,7 +594,7 @@ class _Lazy(util.ComparableMixin):
         return self.value
 
     def __repr__(self):
-        return f'_Lazy({repr(self.value)})'
+        return f'_Lazy({self.value!r})'
 
 
 @implementer(IRenderable)
@@ -620,10 +620,10 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
 
     def __repr__(self):
         if self.args:
-            return f'Interpolate({repr(self.fmtstring)}, *{repr(self.args)})'
+            return f'Interpolate({self.fmtstring!r}, *{self.args!r})'
         elif self.kwargs:
-            return f'Interpolate({repr(self.fmtstring)}, **{repr(self.kwargs)})'
-        return f'Interpolate({repr(self.fmtstring)})'
+            return f'Interpolate({self.fmtstring!r}, **{self.kwargs!r})'
+        return f'Interpolate({self.fmtstring!r})'
 
     def _parse_substitution_prop(self, arg):
         try:
@@ -898,8 +898,8 @@ class _Renderer(util.ComparableMixin):
 
     def __repr__(self):
         if self.args or self.kwargs:
-            return f'renderer({repr(self.fn)}, args={repr(self.args)}, kwargs={repr(self.kwargs)})'
-        return f'renderer({repr(self.fn)})'
+            return f'renderer({self.fn!r}, args={self.args!r}, kwargs={self.kwargs!r})'
+        return f'renderer({self.fn!r})'
 
 
 def renderer(fn):

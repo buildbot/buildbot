@@ -83,11 +83,11 @@ class TestResults(unittest.TestCase):
                                 self, result, previousResult
                             )
                             log.msg(
-                                f"res={repr(results.Results[result])} "
-                                f"prevRes={repr(results.Results[previousResult])} "
-                                f"hof={repr(hof)} fow={repr(fow)} fof={repr(fof)} "
-                                f"wow={repr(wow)} wof={repr(wof)} => "
-                                f"{repr(results.Results[nr])} {repr(term)}"
+                                f"res={results.Results[result]!r} "
+                                f"prevRes={results.Results[previousResult]!r} "
+                                f"hof={hof!r} fow={fow!r} fof={fof!r} "
+                                f"wow={wow!r} wof={wof!r} => "
+                                f"{results.Results[nr]!r} {term!r}"
                             )
                             self.assertEqual(
                                 (nr, term), (newResult, terminate), "see test.log for details"
