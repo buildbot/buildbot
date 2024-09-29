@@ -3,7 +3,7 @@ line-length = 100
 target-version = "py38"
 
 [tool.ruff.lint]
-    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B"]
+    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B", "RUF"]
     ignore = [
         "E711", # comparison to None should be 'if cond is None:'
         "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
