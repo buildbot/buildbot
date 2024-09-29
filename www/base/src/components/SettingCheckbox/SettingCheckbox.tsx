@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {buildbotGetSettings} from "../../../../plugin_support";
+import {buildbotGetSettings} from "buildbot-plugin-support";
 
 export type SettingCheckboxProps = {
   value: boolean;

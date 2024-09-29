@@ -35,7 +35,7 @@ import {
 import {Link} from "react-router-dom";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {TableHeading} from "../TableHeading/TableHeading";
-import {buildbotGetSettings, buildbotSetupPlugin} from "../../../../plugin_support";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
