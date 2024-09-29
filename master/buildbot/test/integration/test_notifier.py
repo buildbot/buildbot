@@ -112,7 +112,7 @@ class NotifierMaster(RunMasterBase):
         self.assertEqual(recipients, ["author@foo.com"])
         self.assertIn("From: bot@foo.com", mail)
         self.assertIn(
-            f"Subject: =?utf-8?q?=E2=98=BA_Buildbot_=28Buildbot=29=3A_{what}_-_build_successful_=28master=29?=\n",  # noqa pylint: disable=line-too-long
+            f"Subject: =?utf-8?q?=E2=98=BA_Buildbot_=28Buildbot=29=3A_{what}_-_build_successful_=28master=29?=\n",
             mail,
         )
         self.assertEncodedIn("A passing build has been detected on builder testy while", mail)

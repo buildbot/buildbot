@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from sqlalchemy.future.engine import Engine
 
 # from http:
-# www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct  # noqa pylint: disable=line-too-long
+# www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
 # _execution_options per
 # http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
 # (UpdateBase requires sqlalchemy 0.7.0)

@@ -239,7 +239,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         updates = decode(updates)
         self.worker.messageReceivedFromWorker()
         max_updatenum = 0
-        for update, num in updates:  # noqa pylint: disable=too-many-nested-blocks
+        for update, num in updates:
             # log.msg("update[%d]:" % num)
             try:
                 if self.active and not self.ignore_updates:

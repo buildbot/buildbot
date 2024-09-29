@@ -118,7 +118,7 @@ buidbot ALL=(ALL) NOPASSWD:ALL
 EOF
 sudo -H -u buildbot bash -c "buildbot-worker create-worker /buildworker {masterFQDN} upcloud{i} pass"
 sudo -H -u buildbot bash -c "buildbot-worker start /buildworker"
-"""  # noqa pylint: disable=line-too-long
+"""
         }
         c['workers'].append(
             UpcloudLatentWorker(

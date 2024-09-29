@@ -208,7 +208,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def _modelFromRow(self, row):
-        return buildrequests.BuildRequestsConnectorComponent._modelFromRow(row)  # noqa pylint: disable=protected-access
+        return buildrequests.BuildRequestsConnectorComponent._modelFromRow(row)
 
     # fake methods
 

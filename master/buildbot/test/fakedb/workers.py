@@ -221,7 +221,7 @@ class FakeWorkersComponent(FakeDBComponent):
         del_conn = {"masterid": masterid, "workerid": workerid}
         for id, conn in self.connected.items():
             if conn == del_conn:
-                del self.connected[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
+                del self.connected[id]
                 break
         return defer.succeed(None)
 
