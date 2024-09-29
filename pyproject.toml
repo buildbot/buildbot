@@ -31,6 +31,8 @@ target-version = "py38"
         "PLW2901", # redefined-loop-name
 
         "UP027", # unpacked-list-comprehension Deprecated, see: https://github.com/astral-sh/ruff/issues/12754
+
+        "B007", # unused-loop-control-variable
     ]
 
 [tool.ruff.lint.isort]
