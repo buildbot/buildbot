@@ -199,10 +199,16 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
-        return cmd.results()
+        # If merge_stderr is True, merge stderr into stdout
+        if self.merge_stderr:
+            cmd = yield self.makeRemoteShellCommand(stderr=subprocess.STDOUT)
+        else:
+            cmd = yield self.makeRemoteShellCommand()
 
+        yield self.runCommand(cmd)
+        yield self.finish_logs()
+        yield self.createSummary()
+        return self.evaluateCommand(cmd)
 
 class Configure(ShellCommand):
     name = "configure"
