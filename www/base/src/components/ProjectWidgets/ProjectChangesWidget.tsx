@@ -20,7 +20,7 @@ import {Card} from "react-bootstrap";
 import {Project, useDataAccessor, useDataApiQuery, Change, useDataApiDynamicQuery} from "buildbot-data-js";
 import {buildbotGetSettings} from "buildbot-plugin-support";
 import {ChangesTable} from "../ChangesTable/ChangesTable";
-import {useLoadMoreItemsState} from "../../../../ui/src/util/React";
+import {useLoadMoreItemsState} from "buildbot-ui";
 
 
 export type ProjectChangesWidgetProps = {

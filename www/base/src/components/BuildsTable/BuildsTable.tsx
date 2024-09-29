@@ -35,11 +35,7 @@ import {
 import {Link} from "react-router-dom";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {TableHeading} from "../TableHeading/TableHeading";
-import {durationFormat} from "buildbot-ui";
-import {buildbotGetSettings, buildbotSetupPlugin} from "../../../../plugin_support";
-import {FaHome} from "react-icons/fa";
-import {HomeView} from "../../views/HomeView/HomeView";
-import {LoadMoreListItem} from "../LoadMoreListItem/LoadMoreListItem";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
