@@ -49,7 +49,7 @@ class _FailingBuilderConfig:
 
 
 class FailingBuildsetCanceller(BuildbotService):
-    compare_attrs = BuildbotService.compare_attrs + ('filters',)
+    compare_attrs = (*BuildbotService.compare_attrs, 'filters')
 
     def checkConfig(self, name, filters):
         FailingBuildsetCanceller.check_filters(filters)

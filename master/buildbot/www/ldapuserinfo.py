@@ -130,7 +130,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                 c,
                 self.accountBase,
                 pattern,
-                attributes=[self.accountEmail, self.accountFullName] + self.accountExtraFields,
+                attributes=[self.accountEmail, self.accountFullName, *self.accountExtraFields],
             )
             if len(res) != 1:
                 raise KeyError(f"ldap search \"{pattern}\" returned {len(res)} results")

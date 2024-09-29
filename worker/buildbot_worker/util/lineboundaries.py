@@ -85,7 +85,7 @@ class LineBoundaryFinder:
             times = []
             if ret_line_count > 1:
                 times = [time] * (ret_line_count - 1)
-            line_times = [time_partial_line] + times
+            line_times = [time_partial_line, *times]
         else:
             line_times = ret_line_count * [time]
 

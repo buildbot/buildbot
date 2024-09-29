@@ -105,7 +105,7 @@ class ResourceType:
             msg = self.sanitizeMessage(msg)
             for path in self.eventPaths:
                 path = path.format(**msg)
-                routingKey = tuple(path.split("/")) + (event,)
+                routingKey = (*tuple(path.split("/")), event)
                 self.master.mq.produce(routingKey, msg)
 
 

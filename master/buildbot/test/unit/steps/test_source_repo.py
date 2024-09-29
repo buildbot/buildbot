@@ -129,31 +129,27 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             syncoptions = ["-c"]
         if override_commands is None:
             override_commands = []
-        commands = (
-            [
-                self.ExpectShell(command=['bash', '-c', self.get_nth_step(0)._getCleanupCommand()]),
-                self.ExpectShell(
-                    command=[
-                        'repo',
-                        'init',
-                        '-u',
-                        'git://myrepo.com/manifest.git',
-                        '-b',
-                        'mb',
-                        '-m',
-                        'mf',
-                        '--depth',
-                        str(depth),
-                    ]
-                    + initoptions
-                ),
-            ]
-            + override_commands
-            + [
-                self.ExpectShell(command=['repo', 'sync', '--force-sync'] + syncoptions),
-                self.ExpectShell(command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml']),
-            ]
-        )
+        commands = [
+            self.ExpectShell(command=["bash", "-c", self.get_nth_step(0)._getCleanupCommand()]),
+            self.ExpectShell(
+                command=[
+                    "repo",
+                    "init",
+                    "-u",
+                    "git://myrepo.com/manifest.git",
+                    "-b",
+                    "mb",
+                    "-m",
+                    "mf",
+                    "--depth",
+                    str(depth),
+                    *initoptions,
+                ]
+            ),
+            *override_commands,
+            self.ExpectShell(command=["repo", "sync", "--force-sync", *syncoptions]),
+            self.ExpectShell(command=["repo", "manifest", "-r", "-o", "manifest-original.xml"]),
+        ]
         for i, command in enumerate(commands):
             self.expect_commands(command.exit(which_fail == i and 1 or 0))
             if which_fail == i and breakatfail:
@@ -281,7 +277,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.mySetupStep(tarball="/tarball." + suffix)
         self.expectClobber()
         self.expect_commands(
-            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix]).exit(0)
+            self.ExpectShell(command=["tar", *option, "-xvf", "/tarball." + suffix]).exit(0)
         )
         self.expectRepoSync()
         self.expect_commands(
@@ -291,9 +287,9 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             self.ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10001 + 7 * 24 * 3600))
             .exit(0),
-            self.ExpectShell(
-                command=['tar'] + option + ['-cvf', '/tarball.' + suffix, '.repo']
-            ).exit(0),
+            self.ExpectShell(command=["tar", *option, "-cvf", "/tarball." + suffix, ".repo"]).exit(
+                0
+            ),
         )
         return self.myRunStep()
 
@@ -326,7 +322,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.mySetupStep(tarball="/tarball." + suffix)
         self.expectClobber()
         self.expect_commands(
-            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix]).exit(1),
+            self.ExpectShell(command=["tar", *option, "-xvf", "/tarball." + suffix]).exit(1),
             self.ExpectShell(command=['rm', '-f', '/tarball.tar']).exit(0),
             ExpectRmdir(dir='wkdir/.repo', log_environ=False).exit(0),
         )
@@ -338,9 +334,9 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             self.ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10001 + 7 * 24 * 3600))
             .exit(0),
-            self.ExpectShell(
-                command=['tar'] + option + ['-cvf', '/tarball.' + suffix, '.repo']
-            ).exit(0),
+            self.ExpectShell(command=["tar", *option, "-cvf", "/tarball." + suffix, ".repo"]).exit(
+                0
+            ),
         )
         return self.myRunStep()
 
@@ -352,7 +348,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.build.setProperty("repo_download", "repo download test/bla 564/12", "test")
         self.expectClobber()
         self.expect_commands(
-            self.ExpectShell(command=['tar'] + option + ['-xvf', '/tarball.' + suffix]).exit(0)
+            self.ExpectShell(command=["tar", *option, "-xvf", "/tarball." + suffix]).exit(0)
         )
         self.expectRepoSync()
         self.expect_commands(
@@ -362,9 +358,9 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             self.ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10001 + 7 * 24 * 3600))
             .exit(0),
-            self.ExpectShell(
-                command=['tar'] + option + ['-cvf', '/tarball.' + suffix, '.repo']
-            ).exit(1),
+            self.ExpectShell(command=["tar", *option, "-cvf", "/tarball." + suffix, ".repo"]).exit(
+                1
+            ),
             self.ExpectShell(command=['rm', '-f', '/tarball.tar']).exit(0),
             self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12']).exit(0),
         )

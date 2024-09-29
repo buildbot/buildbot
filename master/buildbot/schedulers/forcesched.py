@@ -641,11 +641,12 @@ class ForceScheduler(base.BaseScheduler):
     builds. For example, a web form be populated to trigger a build.
     """
 
-    compare_attrs = base.BaseScheduler.compare_attrs + (
-        'builderNames',
-        'reason',
-        'username',
-        'forcedProperties',
+    compare_attrs = (
+        *base.BaseScheduler.compare_attrs,
+        "builderNames",
+        "reason",
+        "username",
+        "forcedProperties",
     )
 
     def __init__(

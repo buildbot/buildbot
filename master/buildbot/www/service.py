@@ -115,7 +115,7 @@ class BuildbotSession(server.Session):
         else:
             cookieString = b"TWISTED_SECURE_SESSION"
 
-        cookiename = b"_".join([cookieString] + request.sitepath)
+        cookiename = b"_".join([cookieString, *request.sitepath])
         request.addCookie(cookiename, self.uid, path=b"/", secure=secure)
 
     def expire(self):

@@ -3601,19 +3601,25 @@ class TestGit(
         )
         prefix = ['git', '-c', f'{name}={value}']
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command=prefix + ['--version'])
+            ExpectShell(workdir='wkdir', command=[*prefix, '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
             ExpectListdir(dir='wkdir').files(['.git']).exit(0),
-            ExpectShell(workdir='wkdir', command=prefix + ['clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(workdir='wkdir', command=[*prefix, 'clean', '-f', '-f', '-d']).exit(0),
             ExpectShell(
                 workdir='wkdir',
-                command=prefix
-                + ['fetch', '-f', '--progress', f'{value}/buildbot/buildbot.git', 'HEAD'],
+                command=[
+                    *prefix,
+                    'fetch',
+                    '-f',
+                    '--progress',
+                    f'{value}/buildbot/buildbot.git',
+                    'HEAD',
+                ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=prefix + ['checkout', '-f', 'FETCH_HEAD']).exit(0),
-            ExpectShell(workdir='wkdir', command=prefix + ['rev-parse', 'HEAD'])
+            ExpectShell(workdir='wkdir', command=[*prefix, 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=[*prefix, 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
         )
@@ -3961,9 +3967,7 @@ class TestGit(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'credential',
                     'approve',
                 ],
@@ -3983,9 +3987,7 @@ class TestGit(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'fetch',
                     '-f',
                     '--progress',
@@ -4570,9 +4572,7 @@ class TestGitPush(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'credential',
                     'approve',
                 ],
@@ -4590,9 +4590,7 @@ class TestGitPush(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'push',
                     url,
                     'testbranch',

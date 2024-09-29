@@ -443,7 +443,8 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_limited_by_workers(self):
         self.addWorkers({'test-worker1': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
         ]
@@ -455,7 +456,8 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_sorted_by_submit_time(self):
         # same as "limited_by_workers" but with rows swapped
         self.addWorkers({'test-worker1': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
@@ -466,7 +468,8 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_limited_by_available_workers(self):
         self.addWorkers({'test-worker1': 0, 'test-worker2': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
@@ -491,7 +494,8 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.master.db.buildrequests.getBuildRequests = longGetBuildRequests
 
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
@@ -520,7 +524,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.canStartBuild = _canStartBuild
 
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1, 'test-worker3': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
             fakedb.BuildRequest(id=12, buildsetid=11, builderid=77, submitted_at=140000),
@@ -564,7 +569,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.canStartBuild = _canStartBuild
 
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1, 'test-worker3': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
             fakedb.BuildRequest(id=12, buildsetid=11, builderid=77, submitted_at=140000),
@@ -592,7 +598,8 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_unlimited(self):
         self.bldr.config.nextWorker = nth_worker(-1)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
@@ -615,7 +622,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.maybeStartBuild = maybeStartBuild
 
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
@@ -640,7 +648,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.maybeStartBuild = maybeStartBuild
 
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
@@ -666,9 +675,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_limited_by_requests(self):
         self.bldr.config.nextWorker = nth_worker(1)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
+        rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         yield self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[11], exp_builds=[('test-worker2', [11])]
         )
@@ -677,36 +684,28 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_nextWorker_None(self):
         self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(None)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
+        rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
     @defer.inlineCallbacks
     def test_nextWorker_bogus(self):
         self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(mock.Mock())
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
+        rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
     @defer.inlineCallbacks
     def test_nextBuild_None(self):
         self.bldr.config.nextBuild = lambda _1, _2: defer.succeed(None)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
+        rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
     @defer.inlineCallbacks
     def test_nextBuild_bogus(self):
         self.bldr.config.nextBuild = lambda _1, _2: mock.Mock()
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
+        rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
     @defer.inlineCallbacks
@@ -716,9 +715,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.bldr.config.nextBuild = nextBuildRaises
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
+        rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         result = self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         yield result
@@ -744,7 +741,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.db.buildrequests.claimBuildRequests = claimBuildRequests
 
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
+        rows = [
+            *self.base_rows,
             fakedb.BuildRequest(
                 id=10, buildsetid=11, builderid=77, submitted_at=130000
             ),  # will turn out to be claimed!

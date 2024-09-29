@@ -292,7 +292,7 @@ class FakeUpdates(service.AsyncService):
     def forget_about_it(self, name):
         validation.verifyType(self.testcase, 'scheduler name', name, validation.StringValidator())
         if name not in self.schedulerIds:
-            self.schedulerIds[name] = max([0] + list(self.schedulerIds.values())) + 1
+            self.schedulerIds[name] = max([0, *list(self.schedulerIds.values())]) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
@@ -300,7 +300,7 @@ class FakeUpdates(service.AsyncService):
             self.testcase, 'changesource name', name, validation.StringValidator()
         )
         if name not in self.changesourceIds:
-            self.changesourceIds[name] = max([0] + list(self.changesourceIds.values())) + 1
+            self.changesourceIds[name] = max([0, *list(self.changesourceIds.values())]) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):
@@ -420,7 +420,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
         validation.verifyType(self.testcase, 'type', type, validation.IdentifierValidator(1))
-        logid = max([0] + list(self.logs)) + 1
+        logid = max([0, *list(self.logs)]) + 1
         self.logs[logid] = {"name": name, "type": type, "content": [], "finished": False}
         return defer.succeed(logid)
 

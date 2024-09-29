@@ -116,7 +116,7 @@ def getProcessOutputAndValueWithInput(executable, args, input):
     p = _SubprocessProtocol(input, d)
 
     (executable, args) = encodeExecutableAndArgs(executable, args)
-    reactor.spawnProcess(p, executable, (executable,) + tuple(args))
+    reactor.spawnProcess(p, executable, (executable, *tuple(args)))
     return d
 
 
