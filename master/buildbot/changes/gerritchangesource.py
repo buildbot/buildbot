@@ -273,7 +273,10 @@ class GerritSshStreamEventsConnector:
         @defer.inlineCallbacks
         def outLineReceived(self, line):
             if self.connector.debug:
-                log.msg(f"{self.connector.name} stdout: {line.decode('utf-8', errors='replace')}")
+                log.msg(
+                    f"{self.connector.change_source.name} "
+                    + f"stdout: {line.decode('utf-8', errors='replace')}"
+                )
 
             self.connector._append_line_for_debug(line)
             if self._output_enabled:
@@ -281,7 +284,10 @@ class GerritSshStreamEventsConnector:
 
         def errLineReceived(self, line):
             if self.connector.debug:
-                log.msg(f"{self.connector.name} stderr: {line.decode('utf-8', errors='replace')}")
+                log.msg(
+                    f"{self.connector.change_source.name} "
+                    + f"stderr: {line.decode('utf-8', errors='replace')}"
+                )
             if self._output_enabled:
                 self.connector._append_line_for_debug(line)
 
@@ -515,7 +521,7 @@ class GerritHttpEventLogPollerConnector:
         last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
 
         if self.debug:
-            log.msg(f"{self.change_source.name}: Polling gerrit: {last_event_formatted}")
+            log.msg(f"{self._change_source.name}: Polling gerrit: {last_event_formatted}")
 
         res = yield self._http.get(
             "/plugins/events-log/events/", params={"t1": last_event_formatted}
