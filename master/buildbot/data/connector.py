@@ -159,7 +159,7 @@ class DataConnector(service.AsyncService):
         rsrc = self.getResourceType(rtype)
         return rsrc.produceEvent(msg, event)
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def allEndpoints(self):
         """return the full spec of the connector as a list of dicts"""
         paths = []
