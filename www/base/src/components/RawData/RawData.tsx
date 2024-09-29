@@ -16,6 +16,7 @@
 */
 
 import './RawData.scss';
+import moment from "moment";
 import {useState} from "react";
 import _ from "underscore";
 import {isObservableArray, isObservableObject} from "mobx";
@@ -32,11 +33,35 @@ const isArrayOfObjectsRaw = (v: any) => {
   return isArrayRaw(v) && v.length > 0 && isObjectRaw(v[0]);
 }
 
-type RawDataProps = {
-  data: {[key: string]: any};
+export const displayBuildRequestEntry = (key: string, value: any) : string => {
+  if (key === "claimed_at" || key === "complete_at" || key === "submitted_at") {
+    try {
+      return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
+    } catch (error) {
+      return value.toString();
+    }
+  }
+  return value.toString();
 }
 
-export const RawData = ({data}: RawDataProps) => {
+export const displayBuildsetEntry = (key: string, value: any) : string => {
+  if (key === "complete_at" || key === "created_at") {
+    // created_at is for dictionaries in sourcestamps list
+    try {
+      return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
+    } catch (error) {
+      return value.toString();
+    }
+  }
+  return value.toString();
+}
+
+type RawDataProps = {
+  data: {[key: string]: any};
+  displayCallback?: (key: string, value: any) => string;
+}
+
+export const RawData = ({data, displayCallback}: RawDataProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const renderArrayElements = (value: any[]) => {
@@ -51,7 +76,7 @@ export const RawData = ({data}: RawDataProps) => {
     );
   }
 
-  const renderDataElement = (value: any) => {
+  const renderDataElement = (key: string, value: any) => {
     if (value === null) {
       return <dd>{"null"}&nbsp;</dd>;
     }
@@ -70,12 +95,14 @@ export const RawData = ({data}: RawDataProps) => {
       return (
         <dd>
           <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded}/>
-          {isExpanded ? <div><RawData data={value}/></div> : <></>}
+          {isExpanded ? <div><RawData data={value} displayCallback={displayCallback}/></div> : <></>}
         </dd>
       )
     }
 
-    return <dd>{value.toString()}&nbsp;</dd>;
+    const displayValue = displayCallback === undefined ? value.toString() : displayCallback(key, value);
+
+    return <dd>{displayValue}&nbsp;</dd>;
   }
 
   const renderElements = () => {
@@ -89,7 +116,7 @@ export const RawData = ({data}: RawDataProps) => {
       return (
         <div className={'bb-raw-data-key-value'} key={key}>
           <dt>{key}</dt>
-          {renderDataElement(value)}
+          {renderDataElement(key, value)}
         </div>
       );
     });
