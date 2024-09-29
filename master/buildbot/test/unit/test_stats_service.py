@@ -120,7 +120,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             import influxdb  # pylint: disable=import-outside-toplevel
 
             # consume it somehow to please pylint
-            [influxdb]
+            _ = influxdb
         except ImportError:
             with self.assertRaises(config.ConfigErrors):
                 InfluxStorageService(

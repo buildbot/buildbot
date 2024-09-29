@@ -377,7 +377,7 @@ class MasterConfig(util.ComparableMixin):
             try:
                 import lz4  # pylint: disable=import-outside-toplevel
 
-                [lz4]
+                _ = lz4
             except ImportError:
                 error(
                     "To set c['logCompressionMethod'] to 'lz4' "
@@ -387,7 +387,7 @@ class MasterConfig(util.ComparableMixin):
             try:
                 import zstandard  # pylint: disable=import-outside-toplevel
 
-                [zstandard]
+                _ = zstandard
             except ImportError:
                 error(
                     "To set c['logCompressionMethod'] to 'zstd' "
@@ -397,7 +397,7 @@ class MasterConfig(util.ComparableMixin):
             try:
                 import brotli  # pylint: disable=import-outside-toplevel
 
-                [brotli]
+                _ = brotli
             except ImportError:
                 error(
                     "To set c['logCompressionMethod'] to 'br' "
