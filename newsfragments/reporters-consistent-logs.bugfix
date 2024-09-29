@@ -1,0 +1,3 @@
+The reports produced by report generators now contain consistent logs data. In particular, ``stepname``
+key is consistently attached to logs regardless if they come with build steps or with the global
+``logs`` key.

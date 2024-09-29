@@ -54,6 +54,7 @@ def getDetailsForBuildset(
     want_steps=False,
     want_previous_build=False,
     want_logs=False,
+    add_logs=None,
     want_logs_content=False,
 ):
     # Here we will do a bunch of data api calls on behalf of the reporters
@@ -83,6 +84,7 @@ def getDetailsForBuildset(
             want_steps=want_steps,
             want_previous_build=want_previous_build,
             want_logs=want_logs,
+            add_logs=add_logs,
             want_logs_content=want_logs_content,
         )
 
@@ -97,6 +99,7 @@ def getDetailsForBuild(
     want_steps=False,
     want_previous_build=False,
     want_logs=False,
+    add_logs=None,
     want_logs_content=False,
 ):
     buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
@@ -120,6 +123,7 @@ def getDetailsForBuild(
         want_steps=want_steps,
         want_previous_build=want_previous_build,
         want_logs=want_logs,
+        add_logs=add_logs,
         want_logs_content=want_logs_content,
     )
     return ret
@@ -162,6 +166,7 @@ def getDetailsForBuilds(
     want_steps=False,
     want_previous_build=False,
     want_logs=False,
+    add_logs=None,
     want_logs_content=False,
 ):
     builderids = {build['builderid'] for build in builds}
@@ -184,7 +189,14 @@ def getDetailsForBuilds(
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 
-    if want_logs_content is not False:
+    if add_logs is not None:
+        logs_config = add_logs
+    elif want_logs_content is not None:
+        logs_config = want_logs_content
+    else:
+        logs_config = False
+
+    if logs_config is not False:
         want_logs = True
     if want_logs:
         want_steps = True
@@ -199,10 +211,11 @@ def getDetailsForBuilds(
                     logs = yield master.data.get(("steps", s['stepid'], 'logs'))
                     s['logs'] = list(logs)
                     for l in s['logs']:
+                        l['stepname'] = s['name']
                         l['url'] = get_url_for_log(
                             master, build['builderid'], build['number'], s['number'], l['slug']
                         )
-                        if should_attach_log(want_logs_content, l):
+                        if should_attach_log(logs_config, l):
                             l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
