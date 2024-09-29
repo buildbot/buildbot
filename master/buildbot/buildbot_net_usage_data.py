@@ -49,7 +49,7 @@ def linux_distribution():
             for line in f:
                 try:
                     k, v = line.strip().split("=")
-                    meta_data[k] = v.strip('""')
+                    meta_data[k] = v.strip('"')
                 except Exception:
                     pass
 

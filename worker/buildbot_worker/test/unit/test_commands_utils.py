@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import sys
 
 import twisted.python.procutils
 from twisted.python import runtime
