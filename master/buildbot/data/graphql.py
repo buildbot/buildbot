@@ -113,7 +113,7 @@ class GraphQLConnector(service.AsyncService):
 
         return super().stopService()
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def get_schema(self):
         """Return the graphQL Schema of the buildbot data model"""
         types = {}

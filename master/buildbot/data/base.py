@@ -72,7 +72,7 @@ class ResourceType:
             pathPatterns[i] = pp
         self.eventPaths = pathPatterns
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def getEndpoints(self):
         endpoints = self.endpoints[:]
         for i, ep in enumerate(endpoints):
@@ -81,14 +81,14 @@ class ResourceType:
             endpoints[i] = ep(self, self.master)
         return endpoints
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def getDefaultEndpoint(self):
         for ep in self.getEndpoints():
             if ep.kind != EndpointKind.COLLECTION:
                 return ep
         return None
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def getCollectionEndpoint(self):
         for ep in self.getEndpoints():
             if ep.kind == EndpointKind.COLLECTION or ep.isPseudoCollection:
