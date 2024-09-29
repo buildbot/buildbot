@@ -273,7 +273,10 @@ class GerritSshStreamEventsConnector:
         @defer.inlineCallbacks
         def outLineReceived(self, line):
             if self.connector.debug:
-                log.msg(f"{self.connector.name} stdout: {line.decode('utf-8', errors='replace')}")
+                log.msg(
+                    f"{self.connector.change_source.name} "
+                    + f"stdout: {line.decode('utf-8', errors='replace')}"
+                )
 
             self.connector._append_line_for_debug(line)
             if self._output_enabled:
@@ -281,7 +284,10 @@ class GerritSshStreamEventsConnector:
 
         def errLineReceived(self, line):
             if self.connector.debug:
-                log.msg(f"{self.connector.name} stderr: {line.decode('utf-8', errors='replace')}")
+                log.msg(
+                    f"{self.connector.change_source.name} "
+                    + f"stderr: {line.decode('utf-8', errors='replace')}"
+                )
             if self._output_enabled:
                 self.connector._append_line_for_debug(line)
 
@@ -515,11 +521,15 @@ class GerritHttpEventLogPollerConnector:
         last_event_formatted = last_event.strftime("%Y-%m-%d %H:%M:%S")
 
         if self.debug:
-            log.msg(f"{self.change_source.name}: Polling gerrit: {last_event_formatted}")
+            log.msg(f"{self._change_source.name}: Polling gerrit: {last_event_formatted}")
 
         res = yield self._http.get(
             "/plugins/events-log/events/", params={"t1": last_event_formatted}
         )
+        if res.code != 200:
+            log.msg(f'{self._change_source.name}: Polling gerrit: got HTTP error code {res.code}')
+            return
+
         lines = yield res.content()
         yield self._on_lines_received_cb(lines.splitlines())
 
@@ -774,7 +784,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         try:
             event = json.loads(bytes2unicode(line))
         except ValueError:
-            log.msg(f"bad json line: {line}")
+            log.msg(f"{self.name}: bad json line: {line}")
             return
 
         if not is_event_valid(event):
@@ -829,7 +839,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line}")
                 continue
 
             if not is_event_valid(event):
@@ -985,7 +995,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line}")
                 continue
 
             if not is_event_valid(event):
