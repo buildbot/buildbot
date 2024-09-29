@@ -129,7 +129,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             )
 
             response['SpotInstanceRequests'][0]['Status']['Code'] = 'fulfilled'
-            response['SpotInstanceRequests'][0]['InstanceId'] = list(instances)[0].id
+            response['SpotInstanceRequests'][0]['InstanceId'] = next(iter(instances)).id
             return response
 
         self.patch(
@@ -357,7 +357,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         )
         instances = list(instances)
         instance = instances[0]
-        sdz = [bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz'][0]
+        sdz = next(bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz')
         self.assertEqual(vol.id, sdz['Ebs']['VolumeId'])
 
     @mock_aws

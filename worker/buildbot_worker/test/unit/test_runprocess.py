@@ -208,7 +208,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             INVALID_UTF8.decode('utf-8')
         pp.outReceived(INVALID_UTF8)
         yield s.start()
-        stdout = [value for key, value in self.updates if key == 'stdout'][0]
+        stdout = next(value for key, value in self.updates if key == 'stdout')
         # On Python < 2.7 bytes is used, on Python >= 2.7 unicode
         self.assertIn(stdout, (b'\xef\xbf\xbd', '\ufffd'))
         self.assertTrue(('rc', 0) in self.updates, self.show())
@@ -442,7 +442,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         yield s.start()
 
         headers = "".join([
-            list(update.values())[0] for update in self.updates if list(update) == ["header"]
+            next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertTrue("FOO=BAR" not in headers, "got:\n" + headers)
 
@@ -478,7 +478,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         yield s.start()
 
         headers = "".join([
-            list(update.values())[0] for update in self.updates if list(update) == ["header"]
+            next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertFalse(re.match('\bPATH=', headers), "got:\n" + headers)
 
@@ -496,7 +496,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         yield s.start()
 
         headers = "".join([
-            list(update.values())[0] for update in self.updates if list(update) == ["header"]
+            next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertFalse(re.match(f'\bPYTHONPATH=a{os.pathsep}', headers), "got:\n" + headers)
 
@@ -514,7 +514,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         yield s.start()
 
         headers = "".join([
-            list(update.values())[0] for update in self.updates if list(update) == ["header"]
+            next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertFalse(re.match(f'\bFOO=a{os.pathsep}b\b', headers), "got:\n" + headers)
 
