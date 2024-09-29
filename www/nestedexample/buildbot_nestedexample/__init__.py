@@ -7,6 +7,8 @@ from buildbot.schedulers.forcesched import ValidationError
 from buildbot.www.plugin import Application
 
 from .api import Api
+import functools
+import operator
 
 
 class NestedExample(NestedParameter):
@@ -29,7 +31,9 @@ class NestedExample(NestedParameter):
             choices=[],
         )
         self.params = {self.PIZZA: pizzaInput, self.INGREDIENTS: ingredientsInput}
-        self.allIngredients = set(sum([ingr for ingr in Api.pizzaIngredients.values()], []))
+        self.allIngredients = set(
+            functools.reduce(operator.iadd, [ingr for ingr in Api.pizzaIngredients.values()], [])
+        )
         fields = self.params.values()
         super().__init__(self.type, label='', fields=fields, **kw)
 
