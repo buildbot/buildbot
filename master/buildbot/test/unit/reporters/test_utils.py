@@ -346,6 +346,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                         'stepname': 'step1',
                                         'type': 's',
                                         'url': 'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio',
+                                        'url_raw': 'http://localhost:8080/api/v2/logs/80/raw',
+                                        'url_raw_inline': 'http://localhost:8080/api/v2/logs/80/raw_inline',
                                     }
                                 ],
                                 'name': 'step1',
@@ -470,6 +472,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                         'stepname': 'step1',
                                         'type': 's',
                                         'url': 'http://localhost:8080/#/builders/80/builds/3/steps/29/logs/stdio',
+                                        'url_raw': 'http://localhost:8080/api/v2/logs/81/raw',
+                                        'url_raw_inline': 'http://localhost:8080/api/v2/logs/81/raw_inline',
                                     }
                                 ],
                                 'name': 'step1',

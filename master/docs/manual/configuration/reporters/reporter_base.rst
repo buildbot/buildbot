@@ -62,6 +62,13 @@ This documents frequently used keys within the dictionaries that are passed to t
 
     - ``stepname`` (string) The name of the step that produced the log.
 
+    - ``url`` (string) The URL to the interactive page that displays the log contents
+
+    - ``url_raw`` (string) The URL to the page that downloads the log contents as a file
+
+    - ``url_raw_inline`` (string) The URL to the page that shows the log contents directly in the
+        browser.
+
     - ``content`` (optional string) The content of the log. The content of the log is attached only
         if directed by ``want_logs_content`` argument of message formatters or ``add_logs``
         argument of report generators.
