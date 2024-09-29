@@ -171,6 +171,11 @@ class RunSteps(RunFakeMasterTestCase):
             },
         )
 
+    def _check_and_pop_dynamic_properties(self, properties):
+        for property in ('builddir', 'basedir'):
+            self.assertIn(property, properties)
+            properties.pop(property)
+
     @defer.inlineCallbacks
     def test_all_properties(self):
         builder_id = yield self.create_config_for_step(SucceedingCustomStep())
@@ -178,9 +183,7 @@ class RunSteps(RunFakeMasterTestCase):
         yield self.do_test_build(builder_id)
 
         properties = yield self.master.data.get(("builds", 1, "properties"))
-
-        self.assertIn("builddir", properties)
-        properties.pop("builddir")
+        self._check_and_pop_dynamic_properties(properties)
 
         self.assertEqual(
             properties,
@@ -204,9 +207,7 @@ class RunSteps(RunFakeMasterTestCase):
         yield self.do_test_build(builder_id)
 
         properties = yield self.master.data.get(('builds', 1, 'properties'))
-
-        self.assertIn('builddir', properties)
-        properties.pop('builddir')
+        self._check_and_pop_dynamic_properties(properties)
 
         self.assertEqual(
             properties,

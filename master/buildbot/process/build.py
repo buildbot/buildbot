@@ -258,16 +258,18 @@ class Build(properties.PropertiesMixin):
             props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
 
-    def setupWorkerBuildirProperty(self, workerforbuilder):
+    def setupWorkerProperties(self, workerforbuilder):
         path_module = workerforbuilder.worker.path_module
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        if workerforbuilder.worker.worker_basedir:
+        worker_basedir = workerforbuilder.worker.worker_basedir
+        if worker_basedir:
             builddir = path_module.join(
-                bytes2unicode(workerforbuilder.worker.worker_basedir),
+                bytes2unicode(worker_basedir),
                 bytes2unicode(self.builder.config.workerbuilddir),
             )
+            self.setProperty("basedir", worker_basedir, "Worker")
             self.setProperty("builddir", builddir, "Worker")
 
     def setupWorkerForBuilder(self, workerforbuilder: AbstractWorkerForBuilder):
@@ -434,11 +436,11 @@ class Build(properties.PropertiesMixin):
 
         self.conn = workerforbuilder.worker.conn
 
-        # To retrieve the builddir property, the worker must be attached as we
-        # depend on its path_module. Latent workers become attached only after
-        # preparing them, so we can't setup the builddir property earlier like
-        # the rest of properties
-        self.setupWorkerBuildirProperty(workerforbuilder)
+        # To retrieve the worker properties, the worker must be attached as we depend on its
+        # path_module for at least the builddir property. Latent workers become attached only after
+        # preparing them, so we can't setup the builddir property earlier like the rest of
+        # properties
+        self.setupWorkerProperties(workerforbuilder)
         self.setupWorkerForBuilder(workerforbuilder)
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
