@@ -26,10 +26,10 @@ from buildbot.util import in_reactor
 def _loadConfig(basedir, configFile, quiet):
     try:
         FileLoader(basedir, configFile).loadConfig()
-    except ConfigErrors as e:
+    except ConfigErrors as err:
         if not quiet:
             print("Configuration Errors:", file=sys.stderr)
-            for e in e.errors:
+            for e in err.errors:
                 print("  " + e, file=sys.stderr)
         return 1
 

@@ -46,8 +46,8 @@ class ValidationErrorCollector:
         res = None
         try:
             res = yield fn(*args, **kwargs)
-        except CollectedValidationError as e:
-            for error_name, e in e.errors.items():
+        except CollectedValidationError as err:
+            for error_name, e in err.errors.items():
                 self.errors[error_name] = e
         except ValueError as e:
             self.errors[name] = str(e)
