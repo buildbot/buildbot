@@ -334,6 +334,7 @@ class MasterConfig(util.ComparableMixin):
             warnings.warn(
                 'WARNING: Title is too long to be displayed. ' + '"Buildbot" will be used instead.',
                 category=ConfigWarning,
+                stacklevel=1,
             )
 
         copy_str_url_param_with_trailing_slash('titleURL')
@@ -360,6 +361,7 @@ class MasterConfig(util.ComparableMixin):
                     'You can `opt-out` by setting this variable to None.\n'
                     'Or `opt-in` for more information by setting it to "full".\n',
                     category=ConfigWarning,
+                    stacklevel=1,
                 )
         copy_str_or_callable_param('buildbotNetUsageData')
 
@@ -637,6 +639,7 @@ class MasterConfig(util.ComparableMixin):
                         "Perhaps you meant to specify workerbuilddir instead."
                     ),
                     category=ConfigWarning,
+                    stacklevel=1,
                 )
 
         self.builders = builders

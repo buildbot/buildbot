@@ -57,7 +57,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
 
     @property
     def expectations(self):
-        warnings.warn("'Builder.expectations' is deprecated.")
+        warnings.warn("'Builder.expectations' is deprecated.", stacklevel=2)
         return None
 
     def __init__(self, name):

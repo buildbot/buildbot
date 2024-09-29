@@ -64,7 +64,7 @@ class FakeEntry:
         handle loading
         """
         for w in self._warnings:
-            warnings.warn(w, DeprecationWarning)
+            warnings.warn(w, DeprecationWarning, stacklevel=2)
         return self._value
 
 

@@ -40,7 +40,9 @@ except AttributeError:
     import sys
     import warnings
 
-    warnings.warn("Use simplejson, not the old json module.")
+    warnings.warn(
+        "Use simplejson, not the old json module.", category=DeprecationWarning, stacklevel=1
+    )
     sys.modules.pop('json')  # get rid of the bad json module
     import simplejson as json
 
