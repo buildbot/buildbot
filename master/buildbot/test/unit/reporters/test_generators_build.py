@@ -60,6 +60,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         g = BuildStatusGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
+        g.formatter.want_logs_content = False
         g.formatter.format_message_for_build.return_value = message
 
         return g, build, buildset
@@ -308,8 +309,10 @@ class TestBuildStartEndGenerator(
         g = BuildStartEndStatusGenerator(**kwargs)
 
         g.start_formatter = Mock(spec=g.start_formatter)
+        g.start_formatter.want_logs_content = False
         g.start_formatter.format_message_for_build.return_value = start_message
         g.end_formatter = Mock(spec=g.end_formatter)
+        g.end_formatter.want_logs_content = False
         g.end_formatter.format_message_for_build.return_value = end_message
 
         return g
