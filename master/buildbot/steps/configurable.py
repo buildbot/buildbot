@@ -158,7 +158,7 @@ class BuildbotCiYml:
         try:
             config_dict = yaml.load(config_input, Loader=BuildbotCiLoader)
         except Exception as e:
-            raise BuildbotCiYmlInvalid(f"Invalid YAML data\n{e}")
+            raise BuildbotCiYmlInvalid(f"Invalid YAML data\n{e}") from e
 
         return cls.load_from_dict(config_dict)
 
@@ -263,7 +263,7 @@ class BuildbotTestCiReadConfigMixin:
         except BuildbotCiYmlInvalid as e:
             self.descriptionDone = f'bad configuration file {filename}'
             self.addCompleteLog('error', f'Bad configuration file:\n{e}')
-            raise buildstep.BuildStepFailed(f'bad configuration file {filename}')
+            raise buildstep.BuildStepFailed(f'bad configuration file {filename}') from e
 
         return config
 

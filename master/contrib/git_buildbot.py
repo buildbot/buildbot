@@ -43,12 +43,12 @@ from twisted.internet import reactor
 
 try:
     from twisted.spread import pb
-except ImportError:
+except ImportError as e:
     raise ImportError(
         'Twisted version conflicts.\
                       Upgrade to latest version may solve this problem.\
                       try:  pip install --upgrade twisted'
-    )
+    ) from e
 
 # Modify this to fit your setup, or pass in --master server:port on the
 # command line

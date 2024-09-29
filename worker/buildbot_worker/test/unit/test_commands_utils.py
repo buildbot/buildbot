@@ -89,10 +89,9 @@ class RmdirRecursive(unittest.TestCase):
         try:
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
-        except Exception:
+        except OSError as e:
             # this test will probably fail anyway
-            e = sys.exc_info()[0]
-            raise unittest.SkipTest(f"could not clean before test: {e}")
+            raise unittest.SkipTest("could not clean before test") from e
 
         # fill it with some files
         os.mkdir(os.path.join(self.target))

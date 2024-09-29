@@ -352,7 +352,7 @@ class BuildStep(
                     # python will then swallow the attribute error and call
                     # __getattr__ from worker_transition
                     _, _, traceback = sys.exc_info()
-                    raise CallableAttributeError(e).with_traceback(traceback)
+                    raise CallableAttributeError(e).with_traceback(traceback) from e
                     # we re-raise the original exception by changing its type,
                     # but keeping its stacktrace
             else:
