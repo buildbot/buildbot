@@ -29,12 +29,16 @@ import {
 import {BadgeRound, dateFormat, durationFromNowFormat, useCurrentTime} from "buildbot-ui";
 import {useScrollToAnchor} from "../../util/AnchorLinks";
 import {AnchorLink} from "../AnchorLink/AnchorLink";
+import {LoadMoreTableRow} from "../LoadMoreTableRow/LoadMoreTableRow";
 
 export type PendingBuildRequestsTableProps = {
   buildRequestsQuery: DataCollection<Buildrequest>;
+  fetchLimit: number;
+  onLoadMore: (() => void)|null;
 };
 
-export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: PendingBuildRequestsTableProps) => {
+export const PendingBuildRequestsTable = observer(
+    ({buildRequestsQuery, fetchLimit, onLoadMore}: PendingBuildRequestsTableProps) => {
   const now = useCurrentTime();
   const accessor = useDataAccessor([]);
 
@@ -44,6 +48,13 @@ export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: Pending
     buildRequestsQuery.getRelated(br => Builder.getAll(accessor, {id: br.builderid.toString()})));
 
   useScrollToAnchor(buildRequestsQuery.array.map(buildRequest => buildRequest.id));
+
+  const maybeRenderLoadMore = () => {
+    if (!buildRequestsQuery.isResolved() || onLoadMore === null || buildRequestsQuery.array.length < fetchLimit) {
+      return <></>;
+    }
+    return <LoadMoreTableRow colSpan={6} onLoadMore={onLoadMore}/>;
+  };
 
   const renderBuildRequests = () => {
     return buildRequestsQuery.array.map(buildRequest => {
@@ -109,6 +120,7 @@ export const PendingBuildRequestsTable = observer(({buildRequestsQuery}: Pending
         <td width="150px">Properties</td>
       </tr>
       {renderBuildRequests()}
+      {maybeRenderLoadMore()}
       </tbody>
     </Table>
   );

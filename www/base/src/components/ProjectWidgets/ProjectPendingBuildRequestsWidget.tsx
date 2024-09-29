@@ -24,6 +24,7 @@ import {
   useDataApiSingleElementQuery, Buildrequest, useDataApiDynamicQuery,
 } from "buildbot-data-js";
 import {buildbotGetSettings} from "buildbot-plugin-support";
+import {useLoadMoreItemsState} from "../../../../ui";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
 import {PendingBuildRequestsTable} from "../PendingBuildRequestsTable/PendingBuildRequestsTable";
 
@@ -41,10 +42,12 @@ export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectP
   const builders = useDataApiSingleElementQuery(project, [], p => p.getBuilders());
   const builderIds = builders.array.map(builder => builder.builderid);
 
-  const buildRequestFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
+  const initialRequestsFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
+  const [requestsFetchLimit, onLoadMoreRequests] =
+    useLoadMoreItemsState(initialRequestsFetchLimit, initialRequestsFetchLimit);
   const buildRequestsQuery = useDataApiDynamicQuery(builderIds,
     () => Buildrequest.getAll(accessor, {query: {
-        limit: buildRequestFetchLimit,
+        limit: requestsFetchLimit,
         order: ['-priority', '-submitted_at'],
         claimed: false,
         builderid__eq: builderIds,
@@ -58,7 +61,9 @@ export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectP
       return <span>None</span>
     }
     return (
-      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}/>
+      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}
+                                 fetchLimit={requestsFetchLimit}
+                                 onLoadMore={onLoadMoreRequests}/>
     );
   }
 
