@@ -48,6 +48,10 @@ export function dateFormat(time: number) {
   return moment.unix(time).format('LLL');
 }
 
+export function dateFormatSeconds(time: number) {
+  return moment.unix(time).format('LL LTS');
+}
+
 export function durationFromNowFormat(time: number, now: number) {
   return moment.unix(time).from(moment.unix(now), false);
 }

@@ -26,7 +26,6 @@ import {
   BadgeStatus,
   ConfigContext,
   analyzeStepUrls,
-  buildDurationFormatWithLocks,
   stepDurationFormatWithLocks,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
@@ -52,6 +51,7 @@ import {BuildRequestSummary} from "../BuildRequestSummary/BuildRequestSummary";
 import {Card} from "react-bootstrap";
 import {useScrollToAnchor} from "../../util/AnchorLinks";
 import {AnchorLink} from "../AnchorLink/AnchorLink";
+import {BuildSummaryStepDurationSpan, BuildSummaryBuildDurationSpan} from "./BuildSummaryDurationSpan";
 
 enum DetailLevel {
   None = 0,
@@ -124,8 +124,8 @@ const BuildSummaryStepLine = observer(({build, step, parentFullDisplay}: BuildSu
     }
 
     return (
-      <span className="bb-build-summary-time">
-          {stepDurationFormatWithLocks(step, now)}
+      <span className="bb-build-summary-step-details">
+        <BuildSummaryStepDurationSpan step={step} now={now}/>
         &nbsp;
         {step.state_string}
         </span>
@@ -283,8 +283,6 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
                           parentFullDisplay={fullDisplay}/>
   ));
 
-  const durationString = buildDurationFormatWithLocks(build, now);
-
   return (
     <Card className={"bb-build-summary " + results2class(build, null)}>
       <Card.Header>
@@ -306,7 +304,7 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
         }
         {reason !== null ? <span>| {reason}</span> : <></>}
         <div className={"bb-build-summary-details"}>
-          <span>{durationString}&nbsp;</span>
+          <BuildSummaryBuildDurationSpan build={build} now={now}/>&nbsp;
           <span>{build.state_string}&nbsp;</span>
           <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
           {renderParentBuildLink()}
