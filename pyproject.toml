@@ -33,6 +33,9 @@ target-version = "py38"
         "UP027", # unpacked-list-comprehension Deprecated, see: https://github.com/astral-sh/ruff/issues/12754
 
         "B007", # unused-loop-control-variable
+
+        # Might be nice to have in future, but requires significant refactoring for now.
+        "RUF012", # mutable-class-default
     ]
 
 [tool.ruff.lint.isort]
