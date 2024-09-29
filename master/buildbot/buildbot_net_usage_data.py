@@ -193,7 +193,7 @@ def _sendWithUrlib(url, data):
         url, data, {'Content-Type': 'application/json', 'Content-Length': clen}
     )
     try:
-        f = urllib_request.urlopen(req)  # noqa pylint: disable=consider-using-with
+        f = urllib_request.urlopen(req)
     except urllib_error.URLError:
         return None
     res = f.read()

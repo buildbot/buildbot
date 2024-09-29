@@ -26,7 +26,7 @@ from buildbot.worker import local
 
 class TestLocalWorker(TestReactorMixin, unittest.TestCase):
     try:
-        from buildbot_worker.bot import LocalWorker as _  # noqa
+        from buildbot_worker.bot import LocalWorker as _
     except ImportError:
         skip = "buildbot-worker package is not installed"
 

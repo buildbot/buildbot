@@ -1,3 +1,6 @@
+import functools
+import operator
+
 from twisted.internet import defer
 
 from buildbot.schedulers.forcesched import ChoiceStringParameter
@@ -7,8 +10,6 @@ from buildbot.schedulers.forcesched import ValidationError
 from buildbot.www.plugin import Application
 
 from .api import Api
-import functools
-import operator
 
 
 class NestedExample(NestedParameter):

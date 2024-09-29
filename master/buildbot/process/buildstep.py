@@ -101,7 +101,7 @@ class _BuildStepFactory(util.ComparableMixin):
         try:
             step = object.__new__(self.step_class)
             step._factory = self
-            step.__init__(*self.args, **self.kwargs)  # noqa pylint: disable=unnecessary-dunder-call
+            step.__init__(*self.args, **self.kwargs)
             return step
         except Exception:
             log.msg(

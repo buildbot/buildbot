@@ -176,7 +176,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             branches = [branch]
         elif not branches:
             if only_tags:
-                branches = lambda ref: ref.startswith('refs/tags/')  # noqa: E731
+                branches = lambda ref: ref.startswith('refs/tags/')
             else:
                 branches = None
 

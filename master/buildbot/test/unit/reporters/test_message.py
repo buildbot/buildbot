@@ -441,7 +441,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                     )
                     </li>
 
-                </ul>"""),  # noqa pylint: disable=line-too-long
+                </ul>"""),
             },
         )
 
