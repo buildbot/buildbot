@@ -364,9 +364,9 @@ class _PropertyMap:
             # if prop exists and is true (nonempty), use it; otherwise, use
             # repl
             prop, repl = mo.group(1, 2)
-            if prop in self.temp_vals and self.temp_vals[prop]:
+            if self.temp_vals.get(prop):
                 return self.temp_vals[prop]
-            elif prop in properties and properties[prop]:
+            elif prop in properties and properties[prop]: # noqa: RUF019
                 return properties[prop]
             return repl
 

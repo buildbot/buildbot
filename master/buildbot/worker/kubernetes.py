@@ -190,7 +190,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
 
         kwargs = {}
 
-        if "headers" in config and config["headers"]:
+        if config.get("headers"):
             kwargs.setdefault("headers", {}).update(config["headers"])
 
         auth = yield self._kube_config.getAuthorization()

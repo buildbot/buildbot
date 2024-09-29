@@ -191,7 +191,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             if not res:
                 return None
             ldap_infos = res[0]['raw_attributes']
-            if self.avatarData in ldap_infos and ldap_infos[self.avatarData]:
+            if ldap_infos.get(self.avatarData):
                 data = ldap_infos[self.avatarData][0]
                 return self.findAvatarMime(data)
             return None

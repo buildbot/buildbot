@@ -37,7 +37,7 @@ class Validator:
     class __metaclass__(type):
         def __new__(mcs, name, bases, attrs):
             cls = type.__new__(mcs, name, bases, attrs)
-            if 'name' in attrs and attrs['name']:
+            if attrs.get('name'):
                 assert attrs['name'] not in validatorsByName
                 validatorsByName[attrs['name']] = cls
             return cls
