@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import re
+import subprocess
 
 from twisted.internet import defer
 
@@ -153,7 +154,9 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
 class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
     name = 'shell'
 
-    def __init__(self, **kwargs):
+    def __init__(self, merge_stderr=False, **kwargs):
+        # Accept the new merge_stderr argument
+        self.merge_stderr = merge_stderr
         if self.is_exact_step_class(ShellCommand):
             if 'command' not in kwargs:
                 config.error("ShellCommand's `command' argument is not specified")
@@ -418,8 +421,13 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     @defer.inlineCallbacks
     def run(self):
         yield self.setup_suppression()
+        # If merge_stderr is True, merge stderr into stdout
+        if self.merge_stderr:
+            cmd = yield self.makeRemoteShellCommand(stderr=subprocess.STDOUT)
+        else:
+            # Use normal command execution if not merging
+            cmd = yield self.makeRemoteShellCommand()
 
-        cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
         yield self.finish_logs()
