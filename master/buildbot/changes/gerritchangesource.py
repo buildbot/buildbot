@@ -774,7 +774,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         try:
             event = json.loads(bytes2unicode(line))
         except ValueError:
-            log.msg(f"bad json line: {line}")
+            log.msg(f"{self.name}: bad json line: {line}")
             return
 
         if not is_event_valid(event):
@@ -829,7 +829,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line}")
                 continue
 
             if not is_event_valid(event):
@@ -985,7 +985,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line}")
                 continue
 
             if not is_event_valid(event):
