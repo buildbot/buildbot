@@ -69,8 +69,10 @@ class ProtocolCommandBase:
 
         try:
             factory = registry.getFactory(command)
-        except KeyError:
-            raise UnknownCommand(f"(command {command_id}): unrecognized WorkerCommand '{command}'")
+        except KeyError as e:
+            raise UnknownCommand(
+                f"(command {command_id}): unrecognized WorkerCommand '{command}'"
+            ) from e
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
