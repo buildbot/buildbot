@@ -45,7 +45,7 @@ export const displayBuildRequestEntry = (key: string, value: any) : string => {
 }
 
 export const displayBuildsetEntry = (key: string, value: any) : string => {
-  if (key === "complete_at" || key === "created_at") {
+  if (key === "complete_at" || key === "created_at" || key === "submitted_at") {
     // created_at is for dictionaries in sourcestamps list
     try {
       return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
@@ -69,7 +69,7 @@ export const RawData = ({data, displayCallback}: RawDataProps) => {
       <ul>
         {value.map((v, index) => (
           <li key={index}>
-            <RawData data={v}/>
+            <RawData data={v} displayCallback={displayCallback}/>
           </li>
         ))}
       </ul>
