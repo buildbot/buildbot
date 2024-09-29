@@ -24,7 +24,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
-from buildbot.reporters.utils import should_attach_log
 from buildbot.warnings import warn_deprecated
 
 
@@ -207,7 +206,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
     def build_message(self, formatter, master, reporter, build):
         patches = self._get_patches_for_build(build)
 
-        logs = yield self._get_logs_for_build(master, build, formatter)
+        logs = self._get_logs_for_build(build)
 
         users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
@@ -239,26 +238,16 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             "extra_info": buildmsg["extra_info"],
         }
 
-    @defer.inlineCallbacks
-    def _get_logs_for_build(self, master, build, formatter):
-        if self.add_logs is not None:
-            logs_config = self.add_logs
-        elif formatter.want_logs_content is not None:
-            logs_config = formatter.want_logs_content
-        else:
-            return []
-
-        if not logs_config:
+    def _get_logs_for_build(self, build):
+        if 'steps' not in build:
             return []
 
         all_logs = []
-        steps = yield master.data.get(('builds', build['buildid'], "steps"))
-        for step in steps:
-            logs = yield master.data.get(("steps", step['stepid'], 'logs'))
-            for l in logs:
-                l['stepname'] = step['name']
-                if should_attach_log(logs_config, l):
-                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+        for step in build['steps']:
+            if 'logs' not in step:
+                continue
+            for l in step['logs']:
+                if 'content' in l:
                     all_logs.append(l)
         return all_logs
 

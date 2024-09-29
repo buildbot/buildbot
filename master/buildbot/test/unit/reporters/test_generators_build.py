@@ -39,14 +39,28 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def insert_build_finished_get_props(self, results, **kwargs):
+    def insert_build_finished_get_props(
+        self, results, add_logs=None, want_logs_content=False, **kwargs
+    ):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
+        yield utils.getDetailsForBuild(
+            self.master,
+            build,
+            want_properties=True,
+            add_logs=add_logs,
+            want_logs_content=want_logs_content,
+        )
         return build
 
     @defer.inlineCallbacks
     def setup_generator(
-        self, results=SUCCESS, message=None, db_args=None, want_logs_content=False, **kwargs
+        self,
+        results=SUCCESS,
+        message=None,
+        db_args=None,
+        add_logs=None,
+        want_logs_content=False,
+        **kwargs,
     ):
         if message is None:
             message = {
@@ -58,10 +72,12 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         if db_args is None:
             db_args = {}
 
-        build = yield self.insert_build_finished_get_props(results, **db_args)
+        build = yield self.insert_build_finished_get_props(
+            results, want_logs_content=want_logs_content, add_logs=add_logs, **db_args
+        )
         buildset = yield self.get_inserted_buildset()
 
-        g = BuildStatusGenerator(**kwargs)
+        g = BuildStatusGenerator(add_logs=add_logs, **kwargs)
 
         g.formatter = Mock(spec=g.formatter)
         g.formatter.want_logs_content = want_logs_content
@@ -284,9 +300,17 @@ class TestBuildStartEndGenerator(
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def insert_build_finished_get_props(self, results, **kwargs):
+    def insert_build_finished_get_props(
+        self, results, add_logs=None, want_logs_content=False, **kwargs
+    ):
         build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
+        yield utils.getDetailsForBuild(
+            self.master,
+            build,
+            want_properties=True,
+            add_logs=add_logs,
+            want_logs_content=want_logs_content,
+        )
         return build
 
     @parameterized.expand([
@@ -436,7 +460,7 @@ class TestBuildStartEndGenerator(
             message_pattern=".*argument add_logs have been deprecated.*",
         ):
             g = yield self.setup_generator(add_logs=True)
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+        build = yield self.insert_build_finished_get_props(SUCCESS, add_logs=True)
         report = yield self.build_message(g, build)
 
         self.assertEqual(report['logs'][0]['logid'], 60)
@@ -445,7 +469,7 @@ class TestBuildStartEndGenerator(
     @defer.inlineCallbacks
     def test_build_message_want_logs_content(self):
         g = yield self.setup_generator(want_logs_content=True)
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+        build = yield self.insert_build_finished_get_props(SUCCESS, want_logs_content=True)
         report = yield self.build_message(g, build)
 
         self.assertEqual(report['logs'][0]['logid'], 60)

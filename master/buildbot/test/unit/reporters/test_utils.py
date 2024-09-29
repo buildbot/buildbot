@@ -343,6 +343,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                         'num_lines': 2,
                                         'slug': 'stdio',
                                         'stepid': 120,
+                                        'stepname': 'step1',
                                         'type': 's',
                                         'url': 'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio',
                                     }
@@ -466,6 +467,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                         'num_lines': 2,
                                         'slug': 'stdio',
                                         'stepid': 121,
+                                        'stepname': 'step1',
                                         'type': 's',
                                         'url': 'http://localhost:8080/#/builders/80/builds/3/steps/29/logs/stdio',
                                     }
