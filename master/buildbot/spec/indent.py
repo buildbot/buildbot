@@ -5,7 +5,9 @@ import re
 import sys
 
 spaces = re.compile("^ +")
-for fn in sys.argv[1:]:
+
+
+def indent_file(fn: str) -> None:
     lines = []
     with open(fn) as f:
         for line in f:
@@ -31,3 +33,8 @@ for fn in sys.argv[1:]:
     with open(fn, 'w') as f:
         for line in lines:
             f.write(line)
+
+
+def main() -> None:
+    for fn in sys.argv[1:]:
+        indent_file(fn)
