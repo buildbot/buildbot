@@ -26,7 +26,11 @@ import {
 } from "buildbot-data-js";
 import {BuildLinkWithSummaryTooltip} from "buildbot-ui";
 import {LoadingDiv} from "../../components/LoadingDiv/LoadingDiv";
-import {RawData} from "../../components/RawData/RawData";
+import {
+  RawData,
+  displayBuildRequestEntry,
+  displayBuildsetEntry
+} from "../../components/RawData/RawData";
 import {TableHeading} from "../../components/TableHeading/TableHeading";
 
 export type BuildViewDebugTabProps = {
@@ -76,9 +80,9 @@ export const BuildViewDebugTab = observer(({build, buildset, buildrequest}:
       <TableHeading>
         <Link to={`/buildrequests/${buildrequest.id}`}>Buildrequest:</Link>
       </TableHeading>
-      <RawData data={buildrequest.toObject()}/>
+      <RawData data={buildrequest.toObject()} displayCallback={displayBuildRequestEntry}/>
       <TableHeading>Buildset:</TableHeading>
-      <RawData data={buildset.toObject()}/>
+      <RawData data={buildset.toObject()} displayCallback={displayBuildsetEntry}/>
       <TableHeading>Previous builds on the same build directory:</TableHeading>
       {renderPrevBuildOnBuildDir()}
     </>
