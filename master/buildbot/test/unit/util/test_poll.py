@@ -82,7 +82,7 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_start_twice_error(self):
         self.poll.start(interval=1)
-        with self.assertRaises(Exception):
+        with self.assertRaises(AssertionError):
             self.poll.start(interval=2)
         yield self.poll.stop()
 

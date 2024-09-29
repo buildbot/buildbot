@@ -175,7 +175,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(0.1)
-        with self.assertRaises(Exception):
+        with self.assertRaises(AssertionError):
             yield d
         self.assertEqual(worker.instance, None)
         # teardown makes sure all containers are cleaned up

@@ -50,5 +50,5 @@ class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
     def test_secret_rendered_not_found(self):
         new = FakeServiceUsingSecrets(foo=Secret("foo"))
         yield self.srvtest.reconfigServiceWithSibling(new)
-        with self.assertRaises(Exception):
+        with self.assertRaises(AttributeError):
             self.srvtest.returnRenderedSecrets("more")

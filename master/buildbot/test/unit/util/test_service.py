@@ -779,7 +779,7 @@ class SharedService(unittest.TestCase):
     @defer.inlineCallbacks
     def test_bad_constructor(self):
         parent = service.AsyncMultiService()
-        with self.assertRaises(Exception):
+        with self.assertRaises(TypeError):
             yield UnderTestSharedService.getService(parent, arg2="foo")
 
     @defer.inlineCallbacks

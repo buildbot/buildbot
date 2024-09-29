@@ -126,7 +126,7 @@ class KubeClientServiceTestKubeHardcodedConfig(
         )
 
     def test_cannot_pass_both_bearer_and_basic_auth(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             kubeclientservice.KubeHardcodedConfig(
                 master_url="http://localhost:8001",
                 namespace="default",
