@@ -139,6 +139,20 @@ def get_details_for_buildrequest(master, buildrequest: BuildRequestModel, build)
     build['complete'] = False
 
 
+def should_attach_log(logs_config, log):
+    if isinstance(logs_config, bool):
+        return logs_config
+
+    if log['name'] in logs_config:
+        return True
+
+    long_name = f"{log['stepname']}.{log['name']}"
+    if long_name in logs_config:
+        return True
+
+    return False
+
+
 @defer.inlineCallbacks
 def getDetailsForBuilds(
     master,
@@ -170,7 +184,7 @@ def getDetailsForBuilds(
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 
-    if want_logs_content:
+    if want_logs_content is not False:
         want_logs = True
     if want_logs:
         want_steps = True
@@ -188,7 +202,7 @@ def getDetailsForBuilds(
                         l['url'] = get_url_for_log(
                             master, build['builderid'], build['number'], s['number'], l['slug']
                         )
-                        if want_logs_content:
+                        if should_attach_log(want_logs_content, l):
                             l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
