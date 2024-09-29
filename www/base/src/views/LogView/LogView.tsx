@@ -32,7 +32,7 @@ import {LogViewer} from "../../components/LogViewer/LogViewer";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 
 const LogView = observer(() => {
-  const builderid = Number.parseInt(useParams<"builderid">().builderid ?? "");
+  const builderid = useParams<"builderid">().builderid;
   const buildnumber = Number.parseInt(useParams<"buildnumber">().buildnumber ?? "");
   const stepnumber = Number.parseInt(useParams<"stepnumber">().stepnumber ?? "");
   const logSlug = useParams<"logslug">().logslug ?? "";
@@ -40,13 +40,16 @@ const LogView = observer(() => {
 
   const accessor = useDataAccessor([builderid, buildnumber, stepnumber]);
 
-  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid.toString()}));
+  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: builderid}));
   const builder = buildersQuery.getNthOrNull(0);
+  const builderUrlId = builder?.builderid.toString() ?? builderid;
 
-  const buildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
-    builderid: builderid,
-    number__eq: buildnumber}
-  }));
+  const buildsQuery = useDataApiQuery(() =>
+    buildersQuery.getRelated((builder: Builder) => Build.getAll(accessor, {query: {
+      builderid: builder.builderid,
+      number__eq: buildnumber
+    }
+  })));
   const stepsQuery = useDataApiQuery(() => buildsQuery.getRelated(b => b.getSteps({query: {
     number__eq: stepnumber}
   })));
@@ -59,20 +62,20 @@ const LogView = observer(() => {
       : Project.getAll(accessor, {id: builder.projectid.toString()})
   }));
 
-  const build = buildsQuery.getNthOrNull(0);
+  const build = buildsQuery.getNthOfParentOrNull(builder?.id ?? "", 0);
   const step = stepsQuery.getNthOrNull(0);
   const log = logsQuery.getNthOrNull(0);
   const project = projectsQuery.getNthOrNull(0);
 
-  if (buildsQuery.resolved && build === null) {
-    navigate(`/builders/${builderid}/builds/${buildnumber}`);
+  if (buildersQuery.isResolved() && buildsQuery.isResolved() && build === null) {
+    navigate(`/builders/${builderUrlId}/builds/${buildnumber}`);
   }
 
   useTopbarItems(buildTopbarItemsForBuilder(builder, project, [
-    {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`},
+    {caption: buildnumber.toString(), route: `/builders/${builderUrlId}/builds/${buildnumber}`},
     {caption: step === null ? "" : step.name, route: null},
     {caption: log === null ? "" : log.name,
-     route: `/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${logSlug}`},
+      route: `/builders/${builderUrlId}/builds/${buildnumber}/steps/${stepnumber}/logs/${logSlug}`},
   ]));
 
   return (
