@@ -398,7 +398,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             docker_client.close()
             # The following was noticed in certain usage of Docker on Windows
             if 'The container operating system does not match the host operating system' in str(e):
-                msg = f'Image used for build is wrong: {str(e)}'
+                msg = f'Image used for build is wrong: {e!s}'
                 raise LatentWorkerCannotSubstantiate(msg) from e
             raise
 

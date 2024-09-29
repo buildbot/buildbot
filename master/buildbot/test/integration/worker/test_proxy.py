@@ -128,7 +128,7 @@ def run_proxy(queue):
         loop.close()
 
     except BaseException as e:
-        write_to_log(f"Exception Raised: {str(e)}\n", with_traceback=True)
+        write_to_log(f"Exception Raised: {e!s}\n", with_traceback=True)
 
     finally:
         queue.put(get_log_path())

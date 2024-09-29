@@ -168,7 +168,7 @@ class Build(properties.PropertiesMixin):
 
     def __repr__(self):
         return (
-            f"<Build {self.builder.name} number:{repr(self.number)} "
+            f"<Build {self.builder.name} number:{self.number!r} "
             f"results:{statusToString(self.results)}>"
         )
 
@@ -633,7 +633,7 @@ class Build(properties.PropertiesMixin):
         text = None
         if isinstance(results, tuple):
             results, text = results
-        assert isinstance(results, type(SUCCESS)), f"got {repr(results)}"
+        assert isinstance(results, type(SUCCESS)), f"got {results!r}"
         summary = yield step.getBuildResultSummary()
         if 'build' in summary:
             text = [summary['build']]

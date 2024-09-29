@@ -296,7 +296,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             except expectedException:
                 pass
             except Exception as e:
-                self.fail(f'{expectedException} exception should be raised, but got {repr(e)}')
+                self.fail(f'{expectedException} exception should be raised, but got {e!r}')
             else:
                 self.fail(f'{expectedException} exception should be raised')
         else:

@@ -132,7 +132,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         try:
             value_json = json.dumps(value)
         except (TypeError, ValueError) as e:
-            raise TypeError(f"Error encoding JSON for {repr(value)}") from e
+            raise TypeError(f"Error encoding JSON for {value!r}") from e
 
         name = self.ensureLength(object_state_tbl.c.name, name)
 
@@ -183,7 +183,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
                 try:
                     value_json = json.dumps(res)
                 except (TypeError, ValueError) as e:
-                    raise TypeError(f"Error encoding JSON for {repr(res)}") from e
+                    raise TypeError(f"Error encoding JSON for {res!r}") from e
                 self._test_timing_hook(conn)
                 try:
                     conn.execute(

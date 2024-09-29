@@ -33,7 +33,7 @@ class WorkerRegistration:
         self.msgpack_reg = None
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} for {repr(self.worker.workername)}>"
+        return f"<{self.__class__.__name__} for {self.worker.workername!r}>"
 
     @defer.inlineCallbacks
     def unregister(self):

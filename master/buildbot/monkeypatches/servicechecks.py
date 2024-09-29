@@ -27,11 +27,11 @@ def patch():
     old_stopService = Service.stopService
 
     def startService(self):
-        assert not self.running, f"{repr(self)} already running"
+        assert not self.running, f"{self!r} already running"
         return old_startService(self)
 
     def stopService(self):
-        assert self.running, f"{repr(self)} already stopped"
+        assert self.running, f"{self!r} already stopped"
         return old_stopService(self)
 
     Service.startService = startService

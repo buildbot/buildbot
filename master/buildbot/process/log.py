@@ -31,7 +31,7 @@ class Log:
         self.master = master
         self.name = name
 
-        self.subPoint = util.subscription.SubscriptionPoint(f"{repr(name)} log")
+        self.subPoint = util.subscription.SubscriptionPoint(f"{name!r} log")
         self.subscriptions = {}
         self._finishing = False
         self.finished = False
@@ -58,7 +58,7 @@ class Log:
         try:
             subcls = cls._byType[type]
         except KeyError as e:
-            raise RuntimeError(f"Invalid log type {repr(type)}") from e
+            raise RuntimeError(f"Invalid log type {type!r}") from e
         decoder = Log._decoderFromString(logEncoding)
         return subcls(master, name, type, logid, decoder)
 

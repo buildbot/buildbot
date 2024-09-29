@@ -96,8 +96,7 @@ class InterfaceTests:
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):
                     msg = (
-                        f"Expected: {repr(cls)}; to implement: {attr} as specified in "
-                        f"{repr(interface)}"
+                        f"Expected: {cls!r}; to implement: {attr} as specified in " f"{interface!r}"
                     )
                     self.fail(msg)
                 actual_argspec = getattr(cls, attr)

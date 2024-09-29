@@ -172,7 +172,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     for name in got_names - exp_names:
                         diff.append(
                             f"got unexpected index {name} on table {tbl.name}: "
-                            f"{repr(got_info[name])}"
+                            f"{got_info[name]!r}"
                         )
                     for name in exp_names - got_names:
                         diff.append(f"missing index {name} on table {tbl.name}")
@@ -210,7 +210,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             if "file is encrypted or is not a database" in str(e):
                 self.flushLoggedErrors(sqlite3.DatabaseError)
                 self.flushLoggedErrors(DatabaseError)
-                raise unittest.SkipTest(f"sqlite dump not readable on this machine {str(e)}")
+                raise unittest.SkipTest(f"sqlite dump not readable on this machine {e!s}")
 
     @defer.inlineCallbacks
     def do_test_upgrade(self, pre_callbacks=None):

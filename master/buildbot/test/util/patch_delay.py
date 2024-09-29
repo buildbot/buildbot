@@ -49,7 +49,7 @@ def _get_target(target):
     try:
         target, attribute = target.rsplit('.', 1)
     except (TypeError, ValueError) as e:
-        raise TypeError(f"Need a valid target to patch. You supplied: {repr(target)}") from e
+        raise TypeError(f"Need a valid target to patch. You supplied: {target!r}") from e
     return _importer(target), attribute
 
 

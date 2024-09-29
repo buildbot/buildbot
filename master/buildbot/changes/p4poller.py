@@ -299,7 +299,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(f"{ex}: cannot fully decode {repr(result)} in {self.encoding}")
+            log.msg(f"{ex}: cannot fully decode {result!r} in {self.encoding}")
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
@@ -310,7 +310,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 continue
             m = self.changes_line_re.match(line)
             if not m:
-                raise P4PollerError(f"Unexpected 'p4 changes' output: {repr(result)}")
+                raise P4PollerError(f"Unexpected 'p4 changes' output: {result!r}")
             num = int(m.group('num'))
             if last_change is None:
                 # first time through, the poller just gets a "baseline" for where to
@@ -349,7 +349,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             lines[0] = lines[0].rstrip()
             m = self.describe_header_re.match(lines[0])
             if not m:
-                raise P4PollerError(f"Unexpected 'p4 describe -s' result: {repr(result)}")
+                raise P4PollerError(f"Unexpected 'p4 describe -s' result: {result!r}")
             who = self.resolvewho_callable(m.group('who'))
             when = datetime.datetime.strptime(m.group('when'), self.datefmt)
             if self.server_tz:
@@ -375,7 +375,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                     continue
                 m = self.file_re.match(line)
                 if not m:
-                    raise P4PollerError(f"Invalid file line: {repr(line)}")
+                    raise P4PollerError(f"Invalid file line: {line!r}")
                 path = m.group('path')
                 if path.startswith(self.p4base):
                     branch, file = self.split_file(path[len(self.p4base) :])

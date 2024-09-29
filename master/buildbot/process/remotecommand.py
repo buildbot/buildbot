@@ -532,4 +532,4 @@ class RemoteShellCommand(RemoteCommand):
         return super()._start()
 
     def __repr__(self):
-        return f"<RemoteShellCommand '{repr(self.fake_command)}'>"
+        return f"<RemoteShellCommand '{self.fake_command!r}'>"

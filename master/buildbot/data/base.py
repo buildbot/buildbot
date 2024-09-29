@@ -411,8 +411,8 @@ class ListResult(UserList):
 
     def __repr__(self):
         return (
-            f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
-            f"total={repr(self.total)}, limit={repr(self.limit)})"
+            f"ListResult({self.data!r}, offset={self.offset!r}, "
+            f"total={self.total!r}, limit={self.limit!r})"
         )
 
     def __eq__(self, other):

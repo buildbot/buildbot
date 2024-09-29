@@ -75,9 +75,9 @@ def loadConfigDict(basedir, configFileName):
         with open(filename, encoding='utf-8'):
             pass
     except OSError as e:
-        raise ConfigErrors([f"unable to open configuration file {repr(filename)}: {e}"]) from e
+        raise ConfigErrors([f"unable to open configuration file {filename!r}: {e}"]) from e
 
-    log.msg(f"Loading configuration from {repr(filename)}")
+    log.msg(f"Loading configuration from {filename!r}")
 
     # execute the config file
     localDict = {
@@ -108,7 +108,7 @@ def loadConfigDict(basedir, configFileName):
 
     if 'BuildmasterConfig' not in localDict:
         error(
-            f"Configuration file {repr(filename)} does not define 'BuildmasterConfig'",
+            f"Configuration file {filename!r} does not define 'BuildmasterConfig'",
             always_raise=True,
         )
 
@@ -605,7 +605,7 @@ class MasterConfig(util.ComparableMixin):
         def mapper(p):
             if isinstance(p, Project):
                 return p
-            error(f"{repr(p)} is not a project config (in c['projects']")
+            error(f"{p!r} is not a project config (in c['projects']")
             return None
 
         self.projects = [mapper(p) for p in projects]
@@ -626,7 +626,7 @@ class MasterConfig(util.ComparableMixin):
             elif isinstance(b, dict):
                 return BuilderConfig(**b)
             else:
-                error(f"{repr(b)} is not a builder config (in c['builders']")
+                error(f"{b!r} is not a builder config (in c['builders']")
             return None
 
         builders = [mapper(b) for b in builders]
@@ -803,7 +803,7 @@ class MasterConfig(util.ComparableMixin):
                 continue
 
             if _service.name in self.services:
-                error(f'Duplicate service name {repr(_service.name)}')
+                error(f'Duplicate service name {_service.name!r}')
                 continue
 
             self.services[_service.name] = _service

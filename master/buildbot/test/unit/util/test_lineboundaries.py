@@ -105,7 +105,7 @@ class TestLineBoundaryFinder(unittest.TestCase):
             result = [e for e in result if e is not None]
             res = ''.join(result)
 
-            log.msg(f'feeding {repr(a)}, {repr(b)} gives {repr(res)}')
+            log.msg(f'feeding {a!r}, {b!r} gives {res!r}')
             self.assertEqual(res, 'a\nb\nc\nd\n\ne\n')
             result.clear()
 

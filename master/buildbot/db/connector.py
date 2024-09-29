@@ -141,7 +141,7 @@ class DBConnector(AbstractDBConnector):
         super().setup()
         db_url = self.configured_url
 
-        log.msg(f"Setting up database with URL {repr(util.stripUrlPassword(db_url))}")
+        log.msg(f"Setting up database with URL {util.stripUrlPassword(db_url)!r}")
 
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)

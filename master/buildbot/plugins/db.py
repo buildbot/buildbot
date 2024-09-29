@@ -226,14 +226,14 @@ class _Plugins:
         except Exception as e:
             # log full traceback of the bad entry to help support
             traceback.print_exc()
-            raise PluginDBError(f'Unable to load {self._group}:{entry.name}: {str(e)}') from e
+            raise PluginDBError(f'Unable to load {self._group}:{entry.name}: {e!s}') from e
         if self._interface:
             try:
                 verifyClass(self._interface, result)
             except Invalid as e:
                 raise PluginDBError(
                     f'Plugin {self._group}:{entry.name} does not implement '
-                    f'{self._interface.__name__}: {str(e)}'
+                    f'{self._interface.__name__}: {e!s}'
                 ) from e
         return result
 

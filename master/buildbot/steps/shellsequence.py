@@ -52,7 +52,7 @@ class ShellArg(results.ResultComputingConfigMixin):
             (p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val, bool)
         ]
         if not_bool:
-            config.error(f"{repr(not_bool)} must be booleans")
+            config.error(f"{not_bool!r} must be booleans")
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):

@@ -132,7 +132,7 @@ class MasterShellCommand(BuildStep):
             env = newenv
 
         if self.logEnviron:
-            yield self.stdio_log.addHeader(f" env: {repr(env)}\n")
+            yield self.stdio_log.addHeader(f" env: {env!r}\n")
 
         if self.stopped:
             return CANCELLED
@@ -216,7 +216,7 @@ class Assert(BuildStep):
     def __init__(self, check, **kwargs):
         super().__init__(**kwargs)
         self.check = check
-        self.descriptionDone = [f"checked {repr(self.check)}"]
+        self.descriptionDone = [f"checked {self.check!r}"]
 
     def run(self):
         if self.check:

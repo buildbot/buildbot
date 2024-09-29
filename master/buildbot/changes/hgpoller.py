@@ -230,7 +230,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             try:
                 stamp = float(date.split()[0])
             except Exception:
-                log.msg(f'hgpoller: caught exception converting output {repr(date)} to timestamp')
+                log.msg(f'hgpoller: caught exception converting output {date!r} to timestamp')
                 raise
         return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
 
@@ -399,7 +399,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
 
         log.msg(
             f'hgpoller: processing {len(revNodeList)} changes in branch '
-            f'{repr(branch)}: {repr(revNodeList)} in {repr(self._absWorkdir())}'
+            f'{branch!r}: {revNodeList!r} in {self._absWorkdir()!r}'
         )
         for _, node in revNodeList:
             timestamp, author, files, comments = yield self._getRevDetails(node)

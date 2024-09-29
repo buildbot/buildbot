@@ -634,7 +634,7 @@ class UserOptions(base.SubcommandOptions):
         if not op:
             raise usage.UsageError("you must specify an operation: add, remove, update, get")
         if op not in ['add', 'remove', 'update', 'get']:
-            raise usage.UsageError(f"bad op {repr(op)}, use 'add', 'remove', 'update', " "or 'get'")
+            raise usage.UsageError(f"bad op {op!r}, use 'add', 'remove', 'update', " "or 'get'")
 
         if not self.get('username') or not self.get('passwd'):
             raise usage.UsageError("A username and password must be given")

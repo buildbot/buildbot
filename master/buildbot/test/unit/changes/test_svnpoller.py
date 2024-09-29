@@ -251,7 +251,7 @@ def split_file(path):
         return {"branch": 'branch', "path": '/'.join(pieces[1:])}
     if pieces[0] == "trunk":
         return {"path": '/'.join(pieces[1:])}
-    raise RuntimeError(f"there shouldn't be any files like {repr(path)}")
+    raise RuntimeError(f"there shouldn't be any files like {path!r}")
 
 
 class TestSVNPoller(

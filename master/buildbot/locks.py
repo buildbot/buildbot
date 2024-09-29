@@ -63,7 +63,7 @@ class BaseLock:
         self._claimed_counting = 0
 
         # subscriptions to this lock being released
-        self.release_subs = subscription.SubscriptionPoint(f"{repr(self)} releases")
+        self.release_subs = subscription.SubscriptionPoint(f"{self!r} releases")
 
     def __repr__(self):
         return self.description
@@ -83,7 +83,7 @@ class BaseLock:
 
     def isAvailable(self, requester, access):
         """Return a boolean whether the lock is available for claiming"""
-        debuglog(f"{self} isAvailable({requester}, {access}): self.owners={repr(self.owners)}")
+        debuglog(f"{self} isAvailable({requester}, {access}): self.owners={self.owners!r}")
         num_excl = self._claimed_excl
         num_counting = self._claimed_counting
 
