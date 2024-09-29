@@ -366,7 +366,7 @@ class _PropertyMap:
             prop, repl = mo.group(1, 2)
             if self.temp_vals.get(prop):
                 return self.temp_vals[prop]
-            elif prop in properties and properties[prop]: # noqa: RUF019
+            elif prop in properties and properties[prop]:  # noqa: RUF019
                 return properties[prop]
             return repl
 

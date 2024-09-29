@@ -193,20 +193,12 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLog(self):
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=200,
-                    type='s',
-                ),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
+            ),
+        ])
         logdict = yield self.db.logs.getLog(201)
         self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(
@@ -229,86 +221,56 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogBySlug(self):
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=200,
-                    type='s',
-                ),
-                fakedb.Log(
-                    id=202,
-                    stepid=101,
-                    name='dbg.log',
-                    slug='dbg_log',
-                    complete=1,
-                    num_lines=200,
-                    type='s',
-                ),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
+            ),
+            fakedb.Log(
+                id=202,
+                stepid=101,
+                name="dbg.log",
+                slug="dbg_log",
+                complete=1,
+                num_lines=200,
+                type="s",
+            ),
+        ])
         logdict = yield self.db.logs.getLogBySlug(101, 'dbg_log')
         self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(logdict.id, 202)
 
     @defer.inlineCallbacks
     def test_getLogBySlug_missing(self):
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=200,
-                    type='s',
-                ),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
+            ),
+        ])
         logdict = yield self.db.logs.getLogBySlug(102, 'stdio')
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
     def test_getLogs(self):
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=200,
-                    type='s',
-                ),
-                fakedb.Log(
-                    id=202,
-                    stepid=101,
-                    name='dbg.log',
-                    slug='dbg_log',
-                    complete=1,
-                    num_lines=300,
-                    type='t',
-                ),
-                fakedb.Log(
-                    id=203,
-                    stepid=102,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=200,
-                    type='s',
-                ),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
+            ),
+            fakedb.Log(
+                id=202,
+                stepid=101,
+                name="dbg.log",
+                slug="dbg_log",
+                complete=1,
+                num_lines=300,
+                type="t",
+            ),
+            fakedb.Log(
+                id=203, stepid=102, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
+            ),
+        ])
         logdicts = yield self.db.logs.getLogs(101)
         for logdict in logdicts:
             self.assertIsInstance(logdict, logs.LogModel)
@@ -324,20 +286,12 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getLogLines_empty(self):
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=200,
-                    type='s',
-                ),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
+            ),
+        ])
         self.assertEqual((yield self.db.logs.getLogLines(201, 9, 99)), '')
         self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
 
@@ -582,21 +536,19 @@ class RealTests(Tests):
             )
             for i in range(NUM_CHUNKS)
         ]
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=NUM_CHUNKS * 3,
-                    type='s',
-                )
-            ]
-            + test_data
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201,
+                stepid=101,
+                name="stdio",
+                slug="stdio",
+                complete=0,
+                num_lines=NUM_CHUNKS * 3,
+                type="s",
+            ),
+            *test_data,
+        ])
         wholeLog = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
         for i in range(10):
             yield self.db.logs.compressLog(201)
@@ -633,20 +585,12 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_compressLog_empty_log(self):
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=201,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=1,
-                    num_lines=0,
-                    type='s',
-                ),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=201, stepid=101, name="stdio", slug="stdio", complete=1, num_lines=0, type="s"
+            ),
+        ])
         yield self.db.logs.compressLog(201)
         logdict = yield self.db.logs.getLog(201)
         self.assertEqual(
@@ -699,27 +643,15 @@ class RealTests(Tests):
     @async_to_deferred
     async def test_insert_logs_non_existing_compression_method(self):
         LOG_ID = 201
-        await self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=LOG_ID,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=1,
-                    type='s',
-                ),
-                fakedb.LogChunk(
-                    logid=LOG_ID,
-                    first_line=0,
-                    last_line=0,
-                    compressed=0,
-                    content=b'fake_log_chunk\n',
-                ),
-            ]
-        )
+        await self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=LOG_ID, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=1, type="s"
+            ),
+            fakedb.LogChunk(
+                logid=LOG_ID, first_line=0, last_line=0, compressed=0, content=b"fake_log_chunk\n"
+            ),
+        ])
 
         def _thd_get_log_chunks(conn):
             res = conn.execute(
@@ -774,34 +706,26 @@ class RealTests(Tests):
         self.db.logs.COMPRESSION_BYID[FAKE_COMPRESSOR_ID] = FakeUnavailableCompressor
         NON_EXISTING_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
 
-        await self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Log(
-                    id=LOG_ID,
-                    stepid=101,
-                    name='stdio',
-                    slug='stdio',
-                    complete=0,
-                    num_lines=1,
-                    type='s',
-                ),
-                fakedb.LogChunk(
-                    logid=LOG_ID,
-                    first_line=0,
-                    last_line=0,
-                    compressed=FAKE_COMPRESSOR_ID,
-                    content=b'fake_log_chunk\n',
-                ),
-                fakedb.LogChunk(
-                    logid=LOG_ID,
-                    first_line=1,
-                    last_line=1,
-                    compressed=NON_EXISTING_COMPRESSOR_ID,
-                    content=b'fake_log_chunk\n',
-                ),
-            ]
-        )
+        await self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=LOG_ID, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=1, type="s"
+            ),
+            fakedb.LogChunk(
+                logid=LOG_ID,
+                first_line=0,
+                last_line=0,
+                compressed=FAKE_COMPRESSOR_ID,
+                content=b"fake_log_chunk\n",
+            ),
+            fakedb.LogChunk(
+                logid=LOG_ID,
+                first_line=1,
+                last_line=1,
+                compressed=NON_EXISTING_COMPRESSOR_ID,
+                content=b"fake_log_chunk\n",
+            ),
+        ])
 
         with self.assertRaises(logs.LogCompressionFormatUnavailableError):
             await self.db.logs.getLogLines(logid=LOG_ID, first_line=0, last_line=0)

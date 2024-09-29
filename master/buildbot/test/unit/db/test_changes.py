@@ -262,14 +262,12 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeUids_found(self):
-        yield self.insert_test_data(
-            self.change14_rows
-            + [
-                fakedb.SourceStamp(id=92),
-                fakedb.User(uid=1),
-                fakedb.ChangeUser(changeid=14, uid=1),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.change14_rows,
+            fakedb.SourceStamp(id=92),
+            fakedb.User(uid=1),
+            fakedb.ChangeUser(changeid=14, uid=1),
+        ])
         res = yield self.db.changes.getChangeUids(14)
 
         self.assertEqual(res, [1])
@@ -298,18 +296,16 @@ class Tests(interfaces.InterfaceTests):
             pass
 
     def insert7Changes(self):
-        return self.insert_test_data(
-            [
-                fakedb.SourceStamp(id=922),
-                fakedb.Change(changeid=8, sourcestampid=922),
-                fakedb.Change(changeid=9, sourcestampid=922),
-                fakedb.Change(changeid=10, sourcestampid=922),
-                fakedb.Change(changeid=11, sourcestampid=922),
-                fakedb.Change(changeid=12, sourcestampid=922),
-            ]
-            + self.change13_rows
-            + self.change14_rows
-        )
+        return self.insert_test_data([
+            fakedb.SourceStamp(id=922),
+            fakedb.Change(changeid=8, sourcestampid=922),
+            fakedb.Change(changeid=9, sourcestampid=922),
+            fakedb.Change(changeid=10, sourcestampid=922),
+            fakedb.Change(changeid=11, sourcestampid=922),
+            fakedb.Change(changeid=12, sourcestampid=922),
+            *self.change13_rows,
+            *self.change14_rows,
+        ])
 
     @defer.inlineCallbacks
     def test_getChanges_subset(self):
@@ -618,25 +614,19 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges(self):
-        yield self.insert_test_data(
-            [
-                fakedb.Scheduler(id=29),
-                fakedb.SourceStamp(id=234, branch='aa'),
-                fakedb.SourceStamp(id=235, branch='bb'),
-                fakedb.Change(changeid=11),
-                fakedb.Change(changeid=12, sourcestampid=234),
-                fakedb.SchedulerChange(schedulerid=29, changeid=12),
-            ]
-            + self.change13_rows
-            + [
-                fakedb.SchedulerChange(schedulerid=29, changeid=13),
-            ]
-            + self.change14_rows
-            + [
-                fakedb.SchedulerChange(schedulerid=29, changeid=14),
-                fakedb.Change(changeid=15, sourcestampid=235),
-            ]
-        )
+        yield self.insert_test_data([
+            fakedb.Scheduler(id=29),
+            fakedb.SourceStamp(id=234, branch="aa"),
+            fakedb.SourceStamp(id=235, branch="bb"),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, sourcestampid=234),
+            fakedb.SchedulerChange(schedulerid=29, changeid=12),
+            *self.change13_rows,
+            fakedb.SchedulerChange(schedulerid=29, changeid=13),
+            *self.change14_rows,
+            fakedb.SchedulerChange(schedulerid=29, changeid=14),
+            fakedb.Change(changeid=15, sourcestampid=235),
+        ])
 
         # pruning with a horizon of 2 should delete changes 11, 12 and 13
         yield self.db.changes.pruneChanges(2)

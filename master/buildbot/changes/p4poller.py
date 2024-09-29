@@ -247,7 +247,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         env = {e: os.environ.get(e) for e in self.env_vars if os.environ.get(e)}
         res, out = yield runprocess.run_process(
             self.master.reactor,
-            [self.p4bin] + args,
+            [self.p4bin, *args],
             env=env,
             collect_stderr=False,
             stderr_is_error=True,

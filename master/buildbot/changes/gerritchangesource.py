@@ -386,9 +386,7 @@ class GerritSshStreamEventsConnector:
         if self.ssh_server_alive_count_max is not None:
             options += ["-o", f"ServerAliveCountMax={self.ssh_server_alive_count_max}"]
 
-        cmd = (
-            ["ssh"] + options + [f"{self.username}@{self.gerritserver}", "-p", str(self.gerritport)]
-        )
+        cmd = ["ssh", *options, f"{self.username}@{self.gerritserver}", "-p", str(self.gerritport)]
 
         if self.identity_file is not None:
             cmd.extend(["-i", self.identity_file])

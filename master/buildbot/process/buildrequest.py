@@ -361,7 +361,7 @@ class BuildRequest:
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""
         reasons = []
-        for req in [self] + others:
+        for req in [self, *others]:
             if req.reason and req.reason not in reasons:
                 reasons.append(req.reason)
         return ", ".join(reasons)

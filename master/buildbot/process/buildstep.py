@@ -176,7 +176,8 @@ class BuildStep(
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
 
-    renderables = results.ResultComputingConfigMixin.resultConfig + [
+    renderables = [
+        *results.ResultComputingConfigMixin.resultConfig,
         'alwaysRun',
         'description',
         'descriptionDone',

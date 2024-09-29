@@ -59,7 +59,7 @@ def escapeShellArgIfNeeded(arg):
 
 
 def getSshCommand(keyPath, knownHostsPath):
-    command = ['ssh'] + getSshArgsForKeys(keyPath, knownHostsPath)
+    command = ['ssh', *getSshArgsForKeys(keyPath, knownHostsPath)]
     command = [escapeShellArgIfNeeded(arg) for arg in command]
     return ' '.join(command)
 

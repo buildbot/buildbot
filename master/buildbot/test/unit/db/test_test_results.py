@@ -174,16 +174,14 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_names(self):
-        yield self.insert_test_data(
-            self.common_data
-            + [
-                fakedb.TestName(id=103, builderid=88, name='name103'),
-                fakedb.TestName(id=104, builderid=88, name='name104'),
-                fakedb.TestName(id=105, builderid=88, name='name105'),
-                fakedb.TestName(id=116, builderid=88, name='name116'),
-                fakedb.TestName(id=117, builderid=88, name='name117'),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.common_data,
+            fakedb.TestName(id=103, builderid=88, name='name103'),
+            fakedb.TestName(id=104, builderid=88, name='name104'),
+            fakedb.TestName(id=105, builderid=88, name='name105'),
+            fakedb.TestName(id=116, builderid=88, name='name116'),
+            fakedb.TestName(id=117, builderid=88, name='name117'),
+        ])
 
         name_dicts = yield self.db.test_results.getTestNames(builderid=88)
         self.assertEqual(name_dicts, ['name103', 'name104', 'name105', 'name116', 'name117'])
@@ -201,16 +199,14 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_code_paths(self):
-        yield self.insert_test_data(
-            self.common_data
-            + [
-                fakedb.TestCodePath(id=103, builderid=88, path='path103'),
-                fakedb.TestCodePath(id=104, builderid=88, path='path104'),
-                fakedb.TestCodePath(id=105, builderid=88, path='path105'),
-                fakedb.TestCodePath(id=116, builderid=88, path='path116'),
-                fakedb.TestCodePath(id=117, builderid=88, path='path117'),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.common_data,
+            fakedb.TestCodePath(id=103, builderid=88, path='path103'),
+            fakedb.TestCodePath(id=104, builderid=88, path='path104'),
+            fakedb.TestCodePath(id=105, builderid=88, path='path105'),
+            fakedb.TestCodePath(id=116, builderid=88, path='path116'),
+            fakedb.TestCodePath(id=117, builderid=88, path='path117'),
+        ])
 
         path_dicts = yield self.db.test_results.getTestCodePaths(builderid=88)
         self.assertEqual(path_dicts, ['path103', 'path104', 'path105', 'path116', 'path117'])

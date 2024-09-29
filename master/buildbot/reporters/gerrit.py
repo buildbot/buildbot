@@ -390,17 +390,17 @@ class GerritStatusPush(ReporterBase):
             options = ['-i', self.gerrit_identity_file]
         else:
             options = []
-        return (
-            ['ssh', '-o', 'BatchMode=yes']
-            + options
-            + [
-                '@'.join((self.gerrit_username, self.gerrit_server)),
-                '-p',
-                str(self.gerrit_port),
-                'gerrit',
-            ]
-            + list(args)
-        )
+        return [
+            'ssh',
+            '-o',
+            'BatchMode=yes',
+            *options,
+            '@'.join((self.gerrit_username, self.gerrit_server)),
+            '-p',
+            str(self.gerrit_port),
+            'gerrit',
+            *list(args),
+        ]
 
     class VersionPP(ProcessProtocol):
         def __init__(self, func):

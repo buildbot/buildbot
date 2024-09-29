@@ -36,7 +36,7 @@ class Eventually(unittest.TestCase):
     def cb(self, *args, **kwargs):
         r = args
         if kwargs:
-            r = r + (kwargs,)
+            r = (*r, kwargs)
         self.results.append(r)
 
     # flush the queue and assert results

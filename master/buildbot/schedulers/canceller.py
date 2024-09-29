@@ -211,7 +211,7 @@ class _OldBuildrequestTracker:
 
 
 class OldBuildCanceller(BuildbotService):
-    compare_attrs = BuildbotService.compare_attrs + ('filters',)
+    compare_attrs = (*BuildbotService.compare_attrs, 'filters')
 
     def checkConfig(self, name, filters, branch_key=None):
         OldBuildCanceller.check_filters(filters)

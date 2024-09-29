@@ -31,7 +31,7 @@ import psutil
 
 
 def invoke_script(function, *args):
-    cmd = [sys.executable, __file__, function] + list(args)
+    cmd = [sys.executable, __file__, function, *list(args)]
     if os.name == 'nt':
         DETACHED_PROCESS = 0x00000008
         subprocess.Popen(

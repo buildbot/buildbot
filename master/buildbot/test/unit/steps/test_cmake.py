@@ -33,7 +33,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.tear_down_test_build_step()
 
     def expect_and_run_command(self, *params):
-        command = [CMake.DEFAULT_CMAKE] + list(params)
+        command = [CMake.DEFAULT_CMAKE, *list(params)]
 
         self.expect_commands(ExpectShell(command=command, workdir='wkdir').exit(0))
         self.expect_outcome(result=SUCCESS)

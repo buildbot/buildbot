@@ -548,7 +548,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_files(self):
-        opts = self.parse(*self.master_and_who + ['a', 'b', 'c'])
+        opts = self.parse(*[*self.master_and_who, 'a', 'b', 'c'])
         self.assertEqual(opts['files'], ('a', 'b', 'c'))
 
     def test_properties(self):

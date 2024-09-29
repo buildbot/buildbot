@@ -229,7 +229,7 @@ class Repo(Source):
         self.manifestDownloads = manifest_related_downloads
 
     def _repoCmd(self, command, abandonOnFailure=True, **kwargs):
-        return self._Cmd(["repo"] + command, abandonOnFailure=abandonOnFailure, **kwargs)
+        return self._Cmd(["repo", *command], abandonOnFailure=abandonOnFailure, **kwargs)
 
     @defer.inlineCallbacks
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
@@ -388,7 +388,7 @@ class Repo(Source):
     def doRepoDownloads(self):
         self.repo_downloaded = ""
         for download in self.repoDownloads:
-            command = ['download'] + download.split(' ')
+            command = ["download", *download.split(" ")]
             yield self.stdio_log.addHeader(f"downloading changeset {download}\n")
 
             retry = self.mirror_sync_retry + 1
@@ -450,7 +450,7 @@ class Repo(Source):
     @defer.inlineCallbacks
     def maybeExtractTarball(self):
         if self.tarball:
-            tar = self.computeTarballOptions() + ['-xvf', self.tarball]
+            tar = [*self.computeTarballOptions(), "-xvf", self.tarball]
             res = yield self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase repo dir and tarball
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
@@ -472,7 +472,7 @@ class Repo(Source):
             now_mtime = int(self.lastCommand.stdout)
             age = now_mtime - tarball_mtime
         if res or age > self.updateTarballAge:
-            tar = self.computeTarballOptions() + ['-cvf', self.tarball, ".repo"]
+            tar = [*self.computeTarballOptions(), "-cvf", self.tarball, ".repo"]
             res = yield self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase tarball, but don't fail
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)

@@ -200,7 +200,8 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
             del self.broker
         if self.endpoint:
             del self.endpoint
-        deferreds = self._detach_deferreds + [
+        deferreds = [
+            *self._detach_deferreds,
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
             self.workers.stopService(),

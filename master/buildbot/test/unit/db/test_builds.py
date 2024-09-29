@@ -176,7 +176,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuild(self):
-        yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
+        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
@@ -203,7 +203,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildByNumber(self):
-        yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
+        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuildByNumber(builderid=77, number=5)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(bdict.id, 50)
@@ -347,12 +347,10 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addBuild_existing(self):
         self.reactor.advance(TIME1)
-        yield self.insert_test_data(
-            self.backgroundData
-            + [
-                fakedb.Build(number=10, buildrequestid=41, builderid=77, masterid=88, workerid=13),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Build(number=10, buildrequestid=41, builderid=77, masterid=88, workerid=13),
+        ])
         id, number = yield self.db.builds.addBuild(
             builderid=77, buildrequestid=41, workerid=13, masterid=88, state_string='test test2'
         )
@@ -378,7 +376,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setBuildStateString(self):
-        yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
+        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         yield self.db.builds.setBuildStateString(buildid=50, state_string='test test2')
         bdict = yield self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
@@ -401,7 +399,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_add_build_locks_duration(self):
-        yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
+        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         yield self.db.builds.add_build_locks_duration(buildid=50, duration_s=12)
         bdict = yield self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
@@ -425,7 +423,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_finishBuild(self):
         self.reactor.advance(TIME4)
-        yield self.insert_test_data(self.backgroundData + [self.threeBuilds[0]])
+        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         yield self.db.builds.finishBuild(buildid=50, results=7)
         bdict = yield self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)

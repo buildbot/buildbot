@@ -69,7 +69,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
         command = []
         if self.python:
             command.append(self.python)
-        command += ["bin/lore", "-p", "--output", "lint"] + self.hlintFiles
+        command += ["bin/lore", "-p", "--output", "lint", *self.hlintFiles]
 
         cmd = yield self.makeRemoteShellCommand(command=command)
         yield self.runCommand(cmd)

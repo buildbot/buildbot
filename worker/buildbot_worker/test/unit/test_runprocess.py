@@ -60,7 +60,7 @@ def sleepCommand(dur):
 
 def scriptCommand(function, *args):
     runprocess_scripts = util.sibpath(__file__, 'runprocess-scripts.py')
-    return [sys.executable, runprocess_scripts, function] + list(args)
+    return [sys.executable, runprocess_scripts, function, *list(args)]
 
 
 def printArgsCommand():

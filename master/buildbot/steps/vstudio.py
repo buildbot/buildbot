@@ -74,11 +74,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     description = "compiling"
     descriptionDone = "compile"
 
-    progressMetrics = buildstep.BuildStep.progressMetrics + (
-        'projects',
-        'files',
-        'warnings',
-    )
+    progressMetrics = (*buildstep.BuildStep.progressMetrics, "projects", "files", "warnings")
 
     logobserver = None
 

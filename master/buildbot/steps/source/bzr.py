@@ -221,7 +221,7 @@ class Bzr(Source):
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
-            ['bzr'] + command,
+            ['bzr', *command],
             env=self.env,
             logEnviron=self.logEnviron,
             timeout=self.timeout,

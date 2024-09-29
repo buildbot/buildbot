@@ -97,7 +97,7 @@ class _SshActionMixin:
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
-        return (yield runProcessLogFailures(manager.master.reactor, [self._sshBin] + args))
+        return (yield runProcessLogFailures(manager.master.reactor, [self._sshBin, *args]))
 
     @defer.inlineCallbacks
     def _prepareSshKeys(self, manager, temp_dir_path):

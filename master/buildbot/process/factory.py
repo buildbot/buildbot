@@ -144,7 +144,7 @@ class GNUAutoconf(BuildFactory):
             if isinstance(configure, str):
                 if configureFlags:
                     assert " " not in configure  # please use list instead
-                    command = [configure] + configureFlags
+                    command = [configure, *configureFlags]
                 else:
                     command = configure
             else:
@@ -220,7 +220,7 @@ class Trial(BuildFactory):
 
         from buildbot.steps.python_twisted import Trial
 
-        buildcommand = buildpython + ["./setup.py", "build"]
+        buildcommand = [*buildpython, "./setup.py", "build"]
         self.addStep(Compile(command=buildcommand, env=env))
         self.addStep(
             Trial(
