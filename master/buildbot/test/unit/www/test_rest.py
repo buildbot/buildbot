@@ -38,7 +38,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        [graphql]  # used for import side effect
+        _ = graphql  # used for import side effect
 
     @defer.inlineCallbacks
     def test_render(self):

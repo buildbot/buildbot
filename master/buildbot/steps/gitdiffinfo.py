@@ -33,7 +33,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
         try:
             from unidiff import PatchSet
 
-            [PatchSet]  # silence pylint
+            _ = PatchSet  # silence pylint
         except ImportError:
             config.error('unidiff package must be installed in order to use GitDiffInfo')
 

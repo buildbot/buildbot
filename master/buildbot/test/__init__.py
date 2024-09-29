@@ -27,7 +27,7 @@ from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-p
 )
 from buildbot.warnings import DeprecatedApiWarning  # noqa pylint: disable=wrong-import-position
 
-[mock]
+_ = mock
 
 # apply the same patches the buildmaster does when it starts
 monkeypatches.patch_all()
@@ -35,7 +35,7 @@ monkeypatches.patch_all()
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
 
-[setuptools]  # force use for pylint
+_ = setuptools  # force use for pylint
 
 # This is where we load deprecated module-level APIs to ignore warning produced by importing them.
 # After the deprecated API has been removed, leave at least one instance of the import in a

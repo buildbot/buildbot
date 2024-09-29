@@ -31,7 +31,7 @@ from buildbot.test.util import misc
 try:
     import lz4
 
-    [lz4]
+    _ = lz4
     hasLz4 = True
 except ImportError:
     hasLz4 = False
@@ -39,7 +39,7 @@ except ImportError:
 try:
     import zstandard
 
-    [zstandard]
+    _ = zstandard
     HAS_ZSTD = True
 except ImportError:
     HAS_ZSTD = False
@@ -47,7 +47,7 @@ except ImportError:
 try:
     import brotli
 
-    [brotli]
+    _ = brotli
     HAS_BROTLI = True
 except ImportError:
     HAS_BROTLI = False

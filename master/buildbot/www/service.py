@@ -330,7 +330,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # /api
         root.putChild(b'api', rest.RestRootResource(self.master))
-        [graphql]  # import is made for side effects
+        _ = graphql  # import is made for side effects
 
         # /config
         root.putChild(b'config', wwwconfig.ConfigResource(self.master))

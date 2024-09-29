@@ -53,7 +53,7 @@ charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
 
-    [ESMTPSenderFactory]  # for pyflakes
+    _ = ESMTPSenderFactory  # for pyflakes
 except ImportError:
     ESMTPSenderFactory = None
 

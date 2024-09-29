@@ -187,7 +187,7 @@ class HTTPClientService(service.SharedService):
 
         def readContent(txrequests_session, res):
             # this forces reading of the content inside the thread
-            res.content
+            _ = res.content
             if session.debug:
                 log.debug("==> {code}: {content}", code=res.status_code, content=res.content)
             return res

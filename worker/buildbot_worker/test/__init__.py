@@ -65,7 +65,7 @@ __all__ = []
 try:
     from unittest import mock
 
-    [mock]
+    _ = mock
 except ImportError:
     try:
         from unittest import mock

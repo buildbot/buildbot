@@ -80,7 +80,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         try:
             import hvac
 
-            [hvac]
+            _ = hvac
         except ImportError:  # pragma: no cover
             config.error(
                 f"{self.__class__.__name__} needs the hvac package installed "
