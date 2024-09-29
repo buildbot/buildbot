@@ -40,7 +40,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         schedulers=None,
         branches=None,
         subject=None,
-        add_logs=False,
+        add_logs=None,
         add_patch=False,
         message_formatter=None,
     ):
@@ -92,7 +92,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         for build in builds:
             patches.extend(self._get_patches_for_build(build))
 
-            build_logs = yield self._get_logs_for_build(master, build)
+            build_logs = yield self._get_logs_for_build(master, build, formatter)
             logs.extend(build_logs)
 
             blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])

@@ -42,7 +42,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         add_patch=False,
         formatter=None,
     ):
-        super().__init__('all', tags, builders, schedulers, branches, None, False, add_patch)
+        super().__init__('all', tags, builders, schedulers, branches, None, None, add_patch)
         self.formatter = formatter
         if self.formatter is None:
             self.formatter = MessageFormatterRenderable('Build pending.')

@@ -28,6 +28,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin):
@@ -43,7 +45,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         return build
 
     @defer.inlineCallbacks
-    def setup_generator(self, results=SUCCESS, message=None, db_args=None, **kwargs):
+    def setup_generator(
+        self, results=SUCCESS, message=None, db_args=None, want_logs_content=False, **kwargs
+    ):
         if message is None:
             message = {
                 "body": "body",
@@ -60,7 +64,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         g = BuildStatusGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
-        g.formatter.want_logs_content = False
+        g.formatter.want_logs_content = want_logs_content
         g.formatter.format_message_for_build.return_value = message
 
         return g, build, buildset
@@ -167,7 +171,19 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
 
     @defer.inlineCallbacks
     def test_build_message_addLogs(self):
-        g, build, _ = yield self.setup_generator(mode=("change",), add_logs=True)
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern=".*argument add_logs have been deprecated.*",
+        ):
+            g, build, _ = yield self.setup_generator(mode=("change",), add_logs=True)
+        report = yield self.build_message(g, build)
+
+        self.assertEqual(report['logs'][0]['logid'], 60)
+        self.assertIn("log with", report['logs'][0]['content']['content'])
+
+    @defer.inlineCallbacks
+    def test_build_message_want_logs_content(self):
+        g, build, _ = yield self.setup_generator(mode=("change",), want_logs_content=True)
         report = yield self.build_message(g, build)
 
         self.assertEqual(report['logs'][0]['logid'], 60)
@@ -289,7 +305,14 @@ class TestBuildStartEndGenerator(
         with self.assertRaisesConfigError('must be a list or None'):
             g.check()
 
-    def setup_generator(self, results=SUCCESS, start_message=None, end_message=None, **kwargs):
+    def setup_generator(
+        self,
+        results=SUCCESS,
+        start_message=None,
+        end_message=None,
+        want_logs_content=False,
+        **kwargs,
+    ):
         if start_message is None:
             start_message = {
                 "body": "start body",
@@ -309,10 +332,10 @@ class TestBuildStartEndGenerator(
         g = BuildStartEndStatusGenerator(**kwargs)
 
         g.start_formatter = Mock(spec=g.start_formatter)
-        g.start_formatter.want_logs_content = False
+        g.start_formatter.want_logs_content = want_logs_content
         g.start_formatter.format_message_for_build.return_value = start_message
         g.end_formatter = Mock(spec=g.end_formatter)
-        g.end_formatter.want_logs_content = False
+        g.end_formatter.want_logs_content = want_logs_content
         g.end_formatter.format_message_for_build.return_value = end_message
 
         return g
@@ -408,7 +431,20 @@ class TestBuildStartEndGenerator(
 
     @defer.inlineCallbacks
     def test_build_message_add_logs(self):
-        g = yield self.setup_generator(add_logs=True)
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern=".*argument add_logs have been deprecated.*",
+        ):
+            g = yield self.setup_generator(add_logs=True)
+        build = yield self.insert_build_finished_get_props(SUCCESS)
+        report = yield self.build_message(g, build)
+
+        self.assertEqual(report['logs'][0]['logid'], 60)
+        self.assertIn("log with", report['logs'][0]['content']['content'])
+
+    @defer.inlineCallbacks
+    def test_build_message_want_logs_content(self):
+        g = yield self.setup_generator(want_logs_content=True)
         build = yield self.insert_build_finished_get_props(SUCCESS)
         report = yield self.build_message(g, build)
 

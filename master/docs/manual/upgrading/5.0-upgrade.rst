@@ -38,3 +38,10 @@ The following methods of ``httpclientservice.HTTPClientService`` have been depre
  - ``updateHeaders``
 
 As a replacement, use ``httpclientservice.HTTPSession`` and call corresponding methods on it.
+
+Reporters
+=========
+
+The ``add_logs`` argument of ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and
+``BuildSetStatusGenerator`` has been removed. As a replacement, set ``want_logs_content`` of the
+passed message formatter.

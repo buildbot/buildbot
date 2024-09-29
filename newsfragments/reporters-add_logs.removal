@@ -1,0 +1,3 @@
+The ``add_logs`` argument of ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and
+``BuildSetStatusGenerator`` has been removed. As a replacement, set ``want_logs_content`` of the
+passed message formatter.
