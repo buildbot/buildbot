@@ -207,7 +207,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         # check the URLs
         stepUrls = self.master.data.updates.stepUrls
         if stepUrls:
-            got_added_urls = stepUrls[list(stepUrls)[0]]
+            got_added_urls = stepUrls[next(iter(stepUrls))]
         else:
             got_added_urls = []
         self.assertEqual(sorted(got_added_urls), sorted(self.exp_added_urls))

@@ -144,7 +144,7 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         if len(property_changes) > 1:
             self.descriptionDone = f'{len(property_changes)} properties set'
         elif len(property_changes) == 1:
-            self.descriptionDone = f'property \'{list(property_changes)[0]}\' set'
+            self.descriptionDone = f'property \'{next(iter(property_changes))}\' set'
         if cmd.didFail():
             return FAILURE
         return SUCCESS
