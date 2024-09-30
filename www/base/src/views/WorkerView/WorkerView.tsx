@@ -28,7 +28,7 @@ import {
 } from "buildbot-data-js";
 import {useParams} from "react-router-dom";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
-import {getBuildLinkDisplayProperties, useLoadMoreItemsState} from "buildbot-ui";
+import {getBuildLinkDisplayProperties, TopbarAction, useLoadMoreItemsState, useTopbarActions} from "buildbot-ui";
 import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
 import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
 import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
@@ -54,6 +54,19 @@ export const WorkerView = observer(() => {
     }));
 
   const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
+
+  const topBarActions: TopbarAction[] = [];
+  if (workersQuery.isResolved() && workersQuery.array.length >= 1) {
+    topBarActions.push(
+      {
+        caption: "Actions...",
+        variant: "primary",
+        action: () => {
+          setWorkerForActions(workersQuery.array[0]);
+        },
+      });
+  }
+  useTopbarActions(topBarActions);
 
   return (
     <div className="container">
