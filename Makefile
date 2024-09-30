@@ -5,7 +5,7 @@
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-.PHONY: docs ruff virtualenv
+.PHONY: docs ruff virtualenv check_for_yarn
 
 ifeq ($(OS),Windows_NT)
   VENV_BIN_DIR := Scripts
@@ -21,6 +21,9 @@ VENV_NAME := .venv$(VENV_PY_VERSION)
 PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
 VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
+
+check_for_yarn:
+	@if [ "$(YARN)" = "" ]; then echo "yarnpkg or yarn is not installed" ; exit 1; fi
 
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample
@@ -59,12 +62,12 @@ docs-release: docs-towncrier
 docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
-frontend_deps: $(VENV_NAME)
+frontend_deps: $(VENV_NAME) check_for_yarn
 	$(PIP) install build wheel -r requirements-ci.txt
 	for i in $(WWW_DEP_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile; $(YARN) run build); done
 
-frontend_tests: frontend_deps
+frontend_tests: frontend_deps check_for_yarn
 	for i in $(WWW_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
@@ -84,7 +87,7 @@ frontend_install_tests: frontend_deps
 	trial pkg/test_buildbot_pkg.py
 
 # upgrade FE dependencies
-frontend_yarn_upgrade:
+frontend_yarn_upgrade: check_for_yarn
 	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS); \
 		do (cd $$i; echo $$i; rm -rf yarn.lock; $(YARN) install || echo $$i failed); done
 
@@ -111,7 +114,7 @@ $(VENV_NAME):
 	$(PIP) install -r requirements-pip.txt
 
 # helper for virtualenv creation
-virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
+virtualenv: $(VENV_NAME) check_for_yarn   # usage: make virtualenv VENV_PY_VERSION=python3.4
 	$(PIP) install -r requirements-ci.txt \
 		-r requirements-ciworker.txt \
 		-r requirements-cidocs.txt \
