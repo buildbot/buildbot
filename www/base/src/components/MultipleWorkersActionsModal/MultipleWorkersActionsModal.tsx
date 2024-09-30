@@ -17,13 +17,23 @@
 
 import {observer} from "mobx-react";
 import {useState} from "react";
-import {Button, Form, Modal} from "react-bootstrap";
+import {Button, Modal} from "react-bootstrap";
 import {Worker} from "buildbot-data-js";
+import Select, { ActionMeta, MultiValue } from 'react-select';
 
 type MultipleWorkersActionsModalProps = {
   workers: Worker[];
   preselectedWorkers: Worker[];
   onClose: () => void;
+}
+
+interface SelectOption {
+  readonly value: Worker,
+  readonly label: string,
+}
+
+const workerToSelectOption = (worker: Worker): SelectOption => {
+  return { value: worker, label: worker.name }
 }
 
 export const MultipleWorkersActionsModal = observer(({workers, preselectedWorkers, onClose}: MultipleWorkersActionsModalProps) => {
@@ -33,9 +43,8 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
 
   const [errors, setErrors] = useState<string|null>(null);
   const [reasonText, setReasonText] = useState<string>("");
-  const [selectedWorkerNames, setSelectedWorkerNames] = useState<string[]>(preselectedWorkers.map(w => w.name));
+  const [selectedWorkers, setSelectedWorkers] = useState<Worker[]>(preselectedWorkers);
 
-  const selectedWorkers = workers.filter(w => selectedWorkerNames.includes(w.name))
   const stopDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.connected_to.length === 0)
   const pauseDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.paused)
   const unpauseDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => !w.paused)
@@ -69,14 +78,14 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
               : <div ng-show="error" className="alert alert-danger">{errors}</div>
           }
           {workers.length !== 1 ?
-            <Form.Control
-                as="select" multiple value={selectedWorkerNames}
-                onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                  const selectedOptions: HTMLOptionElement[] = [].slice.call(event.target.selectedOptions ?? []);
-                  setSelectedWorkerNames(selectedOptions.map(e => e.value));
-                }}>
-              {workers.map(worker => (<option key={worker.name}>{worker.name}</option>))}
-            </Form.Control>
+            <Select<SelectOption, true>
+              isMulti
+              defaultValue={selectedWorkers.map(workerToSelectOption)}
+              onChange={(newValue: MultiValue<SelectOption>, _actionMeta: ActionMeta<SelectOption>) => {
+                setSelectedWorkers(newValue.map(v => v.value));
+              }}
+              options={workers.map(workerToSelectOption)}
+            />
             : <></>
           }
           <label htmlFor="reason" className="control-label col-sm-2">Reason</label>
