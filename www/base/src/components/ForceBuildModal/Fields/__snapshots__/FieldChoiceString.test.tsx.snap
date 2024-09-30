@@ -38,22 +38,187 @@ exports[`ForceFieldChoiceString component > change multiple state on click 1`] =
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
-          multiple=""
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-9-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              1 result available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  B
+                </div>
+                <div
+                  aria-label="Remove B"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  C
+                </div>
+                <div
+                  aria-label="Remove C"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-9-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-9-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-9-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-9-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-9-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -98,21 +263,141 @@ exports[`ForceFieldChoiceString component > change state on click 1`] = `
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-8-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                B
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-8-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-8-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-8-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-8-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-8-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-8-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-8-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -157,21 +442,141 @@ exports[`ForceFieldChoiceString component > render default value 1`] = `
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-2-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                A
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-2-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-2-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-2-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-2-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-2-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-2-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-2-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -216,21 +621,141 @@ exports[`ForceFieldChoiceString component > render default value 2`] = `
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-3-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                B
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-3-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-3-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-3-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-3-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-3-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-3-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-3-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -275,22 +800,170 @@ exports[`ForceFieldChoiceString component > render multiple default value 1`] = 
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
-          multiple=""
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-4-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              2 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  A
+                </div>
+                <div
+                  aria-label="Remove A"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-4-option-1"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-4-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-4-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-4-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-4-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-4-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -335,22 +1008,187 @@ exports[`ForceFieldChoiceString component > render multiple default value 2`] = 
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
-          multiple=""
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-5-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              1 result available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  A
+                </div>
+                <div
+                  aria-label="Remove A"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  B
+                </div>
+                <div
+                  aria-label="Remove B"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-5-option-2"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-5-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-5-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-5-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-5-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -395,22 +1233,187 @@ exports[`ForceFieldChoiceString component > render multiple non-default value 1`
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
-          multiple=""
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-7-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              1 result available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  B
+                </div>
+                <div
+                  aria-label="Remove B"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  C
+                </div>
+                <div
+                  aria-label="Remove C"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-7-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-7-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-7-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-7-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-7-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -455,21 +1458,141 @@ exports[`ForceFieldChoiceString component > render non-default value 1`] = `
       </label>
       <div
         class="col-sm-10"
+        data-bb-test-id="force-field-fullDummy"
       >
-        <select
-          class="form-control"
-          data-bb-test-id="force-field-fullDummy"
+        <div
+          class="css-b62m3t-container"
         >
-          <option>
-            A
-          </option>
-          <option>
-            B
-          </option>
-          <option>
-            C
-          </option>
-        </select>
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-6-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                B
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-6-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-6-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-6-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-6-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-6-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-6-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-6-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

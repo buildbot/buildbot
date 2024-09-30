@@ -16,7 +16,7 @@
 */
 
 import {describe, expect, it} from "vitest";
-import {render} from '@testing-library/react';
+import {cleanup, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FieldChoiceString } from "./FieldChoiceString";
 import { ForceSchedulerFieldChoiceString } from 'buildbot-data-js';
@@ -56,34 +56,63 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
   const component = render(
     <FieldChoiceString field={field} fieldsState={state} />
   );
+
+  // open dropdown
+  const element = component.getByTestId(`force-field-${field.fullName}`).querySelector('input[role="combobox"]');
+  expect(element).not.toBeNull();
+  if (element !== null) {
+    await userEvent.click(element);
+  }
+
   expect(component.asFragment()).toMatchSnapshot();
 
   if (options.updateValueTo !== undefined) {
-    if (!field.multiple) {
-      expect(options.updateValueTo.length).toBe(1);
-    }
-
     const expectedState = options.updateValueTo;
 
-    const element = component.getByTestId(`force-field-${field.fullName}`);
+    const allOptions = [
+      ...component
+        .getByTestId(`force-field-${field.fullName}`)
+        .querySelectorAll('div[role="option"]'),
+    ];
+
     if (!field.multiple) {
       expect(expectedState.length).toBe(1);
-      await userEvent.selectOptions(element, expectedState[0]);
+      const optionToSelect = allOptions.find(n => expectedState[0] === n.textContent);
+      expect(optionToSelect).not.toBeUndefined();
+      if (optionToSelect !== undefined) {
+        await userEvent.click(optionToSelect);
+      }
     }
     else {
       const currentValue: string[] = state.getValue(field.fullName);
-      // click elements not in expected to unselect them
-      for (const value of currentValue.filter(e => !(expectedState.includes(e)))) {
-        await userEvent.selectOptions(element, value);
+      const valuesToDeselect = currentValue.filter(e => !expectedState.includes(e));
+
+      const optionsToDeselect = [
+        ...component
+          .getByTestId(`force-field-${field.fullName}`)
+          .querySelectorAll('div[role="button"]'),
+      ];
+
+      for (const value of valuesToDeselect) {
+        const label = `Remove ${value}`;
+        const option = optionsToDeselect.find(n => n.ariaLabel === label);
+        expect(option).not.toBeUndefined();
+        if (option !== undefined) {
+          await userEvent.click(option);
+        }
       }
-      // then click elements not currently selected
-      for (const value of expectedState.filter(e => !(currentValue.includes(e)))) {
-        await userEvent.selectOptions(element, value);
+
+      const valuesToSelect = expectedState.filter(e => !currentValue.includes(e));
+      for (const element of allOptions) {
+        const elementValue = element.textContent;
+        if (elementValue!== null && valuesToSelect.includes(elementValue)) {
+          await userEvent.click(element);
+        }
       }
     }
 
     if (field.multiple) {
-      const stateValue: string[] = state.getValue(field.fullName);
+      const stateValue: string[] = [...state.getValue(field.fullName)];
       stateValue.sort();
       expectedState.sort();
       expect(stateValue).toStrictEqual(expectedState);
@@ -97,11 +126,13 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
 describe('ForceFieldChoiceString component', function () {
   it('render default value', async () => {
     await assertRenderToSnapshot({ defaultValue: 'A' });
+    cleanup();
     await assertRenderToSnapshot({ defaultValue: 'B' });
   });
 
   it('render multiple default value', async () => {
     await assertRenderToSnapshot({ defaultValue: ['A'], multiple: true });
+    cleanup();
     await assertRenderToSnapshot({ defaultValue: ['A', 'B'], multiple: true });
   });
 

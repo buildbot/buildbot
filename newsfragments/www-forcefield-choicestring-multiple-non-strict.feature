@@ -1,0 +1,1 @@
+``ChoiceStringParameter`` can now have both ``multiple=True`` and ``strict=False`` allowing to create values in the web-UI
