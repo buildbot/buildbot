@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import cgi
 import datetime
 import fnmatch
 import json
@@ -57,12 +56,13 @@ class BadJsonRpc2(Exception):
 
 
 class ContentTypeParser:
-    def __init__(self, contenttype):
+    def __init__(self, contenttype: str | bytes | None) -> None:
         self.typeheader = contenttype
 
-    def gettype(self):
-        mimetype, _ = cgi.parse_header(bytes2unicode(self.typeheader))
-        return mimetype
+    def gettype(self) -> str | None:
+        if self.typeheader is None:
+            return None
+        return bytes2unicode(self.typeheader).split(';', 1)[0]
 
 
 URL_ENCODED = b"application/x-www-form-urlencoded"
@@ -191,7 +191,7 @@ class V2RootResource(resource.Resource):
 
     # JSONRPC2 support
 
-    def decodeJsonRPC2(self, request):
+    def decodeJsonRPC2(self, request: server.Request):
         # Verify the content-type.  Browsers are easily convinced to send
         # POST data to arbitrary URLs via 'form' elements, but they won't
         # use the application/json content-type.
