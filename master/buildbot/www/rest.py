@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import cgi
 import datetime
 import fnmatch
 import json
@@ -47,9 +46,9 @@ class ContentTypeParser:
         self.typeheader = contenttype
 
     def gettype(self):
-        mimetype, _ = cgi.parse_header(
-            bytes2unicode(self.typeheader))
-        return mimetype
+        if self.typeheader is None:
+            return None
+        return bytes2unicode(self.typeheader).split(';', 1)[0]
 
 
 URL_ENCODED = b"application/x-www-form-urlencoded"
