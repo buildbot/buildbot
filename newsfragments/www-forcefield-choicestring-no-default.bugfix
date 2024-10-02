@@ -1,0 +1,4 @@
+Fixes a regression where a ``ChoiceStringParameter`` requires a user selected
+value (no default value), but the force build form incorrectly displays the
+first choice as being selected and does not submit it to the backend which
+causes a validation error.
