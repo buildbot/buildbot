@@ -102,6 +102,7 @@ const buildTopbarActions = (builds: DataCollection<Build>,
 
 export const BuilderView = observer(() => {
   const builderid = useParams<"builderid">().builderid
+  const activeSchedulerName = useParams<"scheduler">().scheduler;
   const navigate = useNavigate();
 
   const accessor = useDataAccessor([builderid]);
@@ -183,16 +184,23 @@ export const BuilderView = observer(() => {
   const [shownForceScheduler, setShownForceScheduler] = useState<null|Forcescheduler>(null);
 
   const actions = buildTopbarActions(builds, buildrequests, forceschedulers, isCancelling,
-    cancelWholeQueue, (sch) => setShownForceScheduler(sch));
+    cancelWholeQueue, (sch) => navigate(`/builders/${builderid}/force/${sch.name}`));
 
   useTopbarActions(actions);
 
+  const activeScheduler = forceschedulers.array.find((sch) => sch.name === activeSchedulerName);
+  if (activeScheduler && shownForceScheduler?.name !== activeScheduler.name) {
+    setShownForceScheduler(activeScheduler);
+  } else if (activeSchedulerName == null && shownForceScheduler) {
+    setShownForceScheduler(null);
+  }
+
   const onForceBuildModalClose = (buildRequestNumber: string | null) => {
-    if (buildRequestNumber === null) {
-      setShownForceScheduler(null);
-    } else {
-      navigate(`/buildrequests/${buildRequestNumber}?redirect_to_build=true`);
-    }
+    navigate(
+      buildRequestNumber === null
+        ? `/builders/${builderid}`
+        : `/buildrequests/${buildRequestNumber}?redirect_to_build=true`
+    );
   };
 
   const renderDescription = (builder: Builder) => {
@@ -263,7 +271,13 @@ export const BuilderView = observer(() => {
 buildbotSetupPlugin((reg) => {
   reg.registerRoute({
     route: "builders/:builderid",
-      group: null,
-      element: () => <BuilderView/>,
+    group: null,
+    element: () => <BuilderView/>,
+  });
+
+  reg.registerRoute({
+    route: "builders/:builderid/force/:scheduler",
+    group: null,
+    element: () => <BuilderView/>,
   });
 });

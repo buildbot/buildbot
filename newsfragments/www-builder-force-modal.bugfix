@@ -1,0 +1,1 @@
+Fix missing builder force scheduler route ``/builders/:builderid/force/:scheduler``.
