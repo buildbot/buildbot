@@ -55,12 +55,16 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
       )
     );
   };
+  let options = field.choices.map(ValueToSelectOption);
+  if (!field.multiple && !field.default && !field.choices.includes(field.default)) {
+    options = [{value: field.default, label: 'Select an option'}, ...options];
+  }
 
   const props = {
     isMulti: field.multiple,
     defaultValue: field.multiple ? (state.value as string[]).map(ValueToSelectOption) : ValueToSelectOption(state.value as string),
-    onChange: onChange,
-    options: field.choices.map(ValueToSelectOption),
+    onChange,
+    options,
   };
 
   return (
