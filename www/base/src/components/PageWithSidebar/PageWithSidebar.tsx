@@ -17,7 +17,7 @@
 
 import './PageWithSidebar.scss';
 import {observer} from "mobx-react";
-import {FaAngleRight, FaBars, FaThumbtack} from "react-icons/fa";
+import {FaAngleDown, FaAngleRight, FaBars, FaThumbtack} from "react-icons/fa";
 import {
   getBestMatchingSettingsGroupRoute,
   GlobalMenuSettings
@@ -54,9 +54,10 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
 
   const groupElements = groups.map((group, groupIndex) => {
     if (group.subGroups.length > 0) {
+      const isActiveGroup = sidebarStore.activeGroup === group.name;
       const subGroups = group.subGroups.map(subGroup => {
           const subClassName = "sidebar-list subitem" +
-            (sidebarStore.activeGroup === group.name ? " active": "") +
+            (isActiveGroup ? " active": "") +
             (subGroup.route === matchingGroupRoute ? " current": "");
 
           return (
@@ -72,7 +73,7 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
       return [
         <li key={`group-${group.name}`} className="sidebar-list">
           <button onClick={() => {sidebarStore.toggleGroup(group.name); }}>
-            <FaAngleRight/>{group.caption}
+            {isActiveGroup ? <FaAngleDown/> : <FaAngleRight/>}{group.caption}
             <span className="menu-icon">{group.icon}</span>
           </button>
         </li>,
