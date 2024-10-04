@@ -63,8 +63,9 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
           return (
             <li key={`group-${subGroup.name}`} className={subClassName}>
               {subGroup.route === null
-                ? <span>{subGroup.caption}</span>
-                : <Link to={subGroup.route} onClick={() => sidebarStore.hide()}>{subGroup.caption}</Link>
+                ? <span className="bb-sidebar-item">{subGroup.caption}</span>
+                : <Link className="bb-sidebar-item bb-sidebar-button" to={subGroup.route}
+                        onClick={() => sidebarStore.hide()}>{subGroup.caption}</Link>
               }
             </li>
           )
@@ -72,7 +73,8 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
 
       return [
         <li key={`group-${group.name}`} className="sidebar-list">
-          <button onClick={() => {sidebarStore.toggleGroup(group.name); }}>
+          <button className="bb-sidebar-item bb-sidebar-button"
+                  onClick={() => {sidebarStore.toggleGroup(group.name); }}>
             {isActiveGroup ? <FaAngleDown/> : <FaAngleRight/>}{group.caption}
             <span className="menu-icon">{group.icon}</span>
           </button>
@@ -92,10 +94,12 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
     elements.push(
       <li key={`group-${group.name}`} className={groupClassName}>
         {group.route === null
-          ? <button onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+          ? <button className="bb-sidebar-item bb-sidebar-button"
+                    onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
             <span className="menu-icon">{group.icon}</span>
           </button>
-          : <Link to={group.route} onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
+          : <Link className="bb-sidebar-item bb-sidebar-button" to={group.route}
+                  onClick={() => sidebarStore.toggleGroup(group.name)}>{group.caption}
             <span className="menu-icon">{group.icon}</span>
           </Link>
         }
@@ -107,7 +111,7 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
   const footerElements = footerItems.map((footerItem, index) => {
     return (
       <div key={index} className="col-xs-4">
-        <Link to={footerItem.route}>{footerItem.caption}</Link>
+        <Link className="bb-sidebar-item bb-sidebar-button" to={footerItem.route}>{footerItem.caption}</Link>
       </div>
     );
   });
@@ -117,7 +121,9 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
       <div onMouseEnter={() => sidebarStore.enter()} onMouseLeave={() => sidebarStore.leave()}
            onClick={() => sidebarStore.show()} className="sidebar">
         <ul>
-          <li key="sidebar-main" className="sidebar-main"><Link to="/">{appTitle}{sidebarIcon}</Link></li>
+          <li key="sidebar-main" className="sidebar-main">
+            <Link className="bb-sidebar-item" to="/">{appTitle}{sidebarIcon}</Link>
+          </li>
           <li key="sidebar-title" className="sidebar-title"><span>NAVIGATION</span></li>
           {groupElements}
         </ul>
