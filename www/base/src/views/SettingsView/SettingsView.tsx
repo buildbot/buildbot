@@ -19,12 +19,12 @@ import './SettingsView.scss';
 import {observer} from "mobx-react";
 import {Card} from "react-bootstrap";
 import {FaSlidersH} from "react-icons/fa";
-import {buildbotSetupPlugin} from "buildbot-plugin-support";
+import {buildbotSetupPlugin, SettingValue} from "buildbot-plugin-support";
 import {
   GlobalSettings,
   globalSettings,
   SettingGroup,
-  SettingItem, SettingValue
+  SettingItem
 } from "../../plugins/GlobalSettings";
 import {FieldBoolean} from "./Fields/FieldBoolean";
 import {FieldChoiceCombo} from "./Fields/FieldChoiceCombo";

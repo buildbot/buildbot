@@ -17,24 +17,12 @@
 
 import {action, makeObservable, observable} from "mobx";
 import {Config} from "buildbot-ui";
-import {ISettings, registerBuildbotSettingsSingleton} from "buildbot-plugin-support";
-
-export type SettingValue = string | number | boolean;
-export type SettingType = "string" | "integer" | "float" | "boolean" | "choice_combo";
-
-export type SettingItemConfig = {
-  name: string;
-  type: SettingType;
-  caption: string;
-  defaultValue: SettingValue;
-  choices?: string[]; // only when type == "choice_combo"
-}
-
-export type SettingGroupConfig = {
-  name: string;
-  caption: string;
-  items: SettingItemConfig[];
-}
+import {
+  ISettings,
+  SettingGroupConfig,
+  SettingValue,
+  registerBuildbotSettingsSingleton
+} from "buildbot-plugin-support";
 
 export type SettingItem = {
   name: string;
