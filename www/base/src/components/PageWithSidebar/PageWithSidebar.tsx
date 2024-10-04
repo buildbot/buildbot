@@ -18,12 +18,16 @@
 import './PageWithSidebar.scss';
 import {observer} from "mobx-react";
 import {FaAngleDown, FaAngleRight, FaBars, FaThumbtack} from "react-icons/fa";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   getBestMatchingSettingsGroupRoute,
   GlobalMenuSettings
 } from "../../plugins/GlobalMenuSettings";
 import {SidebarStore} from "../../stores/SidebarStore";
 import {Link, useLocation} from "react-router-dom";
+
+const SIDEBAR_GROUPS_EXPAND_ON_CLICK = 'Expand on click';
+const SIDEBAR_GROUPS_EXPAND_ALWAYS = 'Always expand';
 
 type PageWithSidebarProps = {
   menuSettings: GlobalMenuSettings,
@@ -52,9 +56,12 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
 
   const matchingGroupRoute = getBestMatchingSettingsGroupRoute(useLocation().pathname, groups);
 
+  const groupExpandBehavior = buildbotGetSettings().getChoiceComboSetting("Home.sidebar_menu_groups_expand_behavior");
+
   const groupElements = groups.map((group, groupIndex) => {
     if (group.subGroups.length > 0) {
-      const isActiveGroup = sidebarStore.activeGroup === group.name;
+      const isActiveGroup = sidebarStore.activeGroup === group.name ||
+        groupExpandBehavior === SIDEBAR_GROUPS_EXPAND_ALWAYS;
       const subGroups = group.subGroups.map(subGroup => {
           const subClassName = "sidebar-list subitem" +
             (isActiveGroup ? " active": "") +
@@ -71,13 +78,23 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
           )
         });
 
-      return [
-        <li key={`group-${group.name}`} className="sidebar-list">
+      const groupEl = groupExpandBehavior === SIDEBAR_GROUPS_EXPAND_ALWAYS ?
+        (
+          <span className="bb-sidebar-item">
+            <FaAngleDown/>{group.caption}
+            <span className="menu-icon">{group.icon}</span>
+          </span>
+        ) : (
           <button className="bb-sidebar-item bb-sidebar-button"
                   onClick={() => {sidebarStore.toggleGroup(group.name); }}>
             {isActiveGroup ? <FaAngleDown/> : <FaAngleRight/>}{group.caption}
             <span className="menu-icon">{group.icon}</span>
           </button>
+        );
+
+      return [
+        <li key={`group-${group.name}`} className="sidebar-list">
+          {groupEl}
         </li>,
         ...subGroups
       ];
@@ -136,4 +153,17 @@ export const PageWithSidebar = observer(({menuSettings, sidebarStore, children}:
       </div>
     </div>
   );
+});
+
+buildbotSetupPlugin((reg) => {
+  reg.registerSettingGroup({
+    name: 'Home',
+    caption: null,
+    items: [{
+      type: 'choice_combo',
+      name: 'sidebar_menu_groups_expand_behavior',
+      caption: 'Sidebar menu groups expansion behavior',
+      choices: [SIDEBAR_GROUPS_EXPAND_ON_CLICK, SIDEBAR_GROUPS_EXPAND_ALWAYS],
+      defaultValue: SIDEBAR_GROUPS_EXPAND_ON_CLICK
+    }]});
 });
