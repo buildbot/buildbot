@@ -94,7 +94,7 @@ export const SettingsView = observer(() => {
     return (
       <Card key={group.name}>
         <Card.Header>
-          <Card.Title>{group.caption}</Card.Title>
+          <Card.Title>{group.caption ?? "(null - please report a bug)"}</Card.Title>
         </Card.Header>
         <Card.Body>
           <form data-bb-test-id={`settings-group-${group.name}`}

@@ -43,7 +43,7 @@ export type SettingItemConfig = {
 
 export type SettingGroupConfig = {
   name: string;
-  caption: string;
+  caption: string | null;
   items: SettingItemConfig[];
 }
 

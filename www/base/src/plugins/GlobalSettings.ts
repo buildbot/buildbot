@@ -36,7 +36,7 @@ export type SettingItem = {
 
 export type SettingGroup = {
   name: string;
-  caption: string;
+  caption: string | null;
   items: {[name: string]: SettingItem};
 }
 
@@ -247,7 +247,8 @@ export class GlobalSettings implements ISettings {
   /** Adds a new setting group and its setting items.
 
       Items of a single group may be added via multiple calls to this function. If group caption
-      is different between the calls, it is unspecified which value will be used.
+      is different between the calls, it is unspecified which value will be used. Group captions
+      having value null are ignored.
 
       This function may only be called during import time. New options should not be added once
       the app is running.
@@ -259,6 +260,9 @@ export class GlobalSettings implements ISettings {
 
     if (config.name in this.groups) {
       const group = this.groups[config.name];
+      if (group.caption === null) {
+        group.caption = config.caption;
+      }
       for (const item of config.items) {
         if (item.name in group.items) {
           console.error(`Duplicate group item ${config.name}.${item.name}`);
