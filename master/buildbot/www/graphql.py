@@ -15,7 +15,6 @@
 
 import json
 
-from twisted.internet import defer
 from twisted.python import log
 from twisted.web.error import Error
 
@@ -57,8 +56,7 @@ class V3RootResource(resource.Resource):
 
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
 
-    @defer.inlineCallbacks
-    def asyncRender(self, request):
+    async def asyncRender(self, request):
         if self.graphql is None:
             raise Error(501, "graphql not enabled")
 
@@ -85,7 +83,7 @@ class V3RootResource(resource.Resource):
         else:
             raise Error(400, b"invalid HTTP method")
 
-        res = yield self.master.graphql.query(query)
+        res = await self.master.graphql.query(query)
         errors = None
         if res.errors:
             errors = [e.formatted for e in res.errors]
