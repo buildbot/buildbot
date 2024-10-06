@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import buildsets
@@ -51,23 +50,20 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        buildset = yield self.callGet(('buildsets', 13))
+    async def test_get_existing(self):
+        buildset = await self.callGet(('buildsets', 13))
 
         self.validateData(buildset)
         self.assertEqual(buildset['reason'], 'because I said so')
 
-    @defer.inlineCallbacks
-    def test_get_existing_no_sourcestamps(self):
-        buildset = yield self.callGet(('buildsets', 14))
+    async def test_get_existing_no_sourcestamps(self):
+        buildset = await self.callGet(('buildsets', 14))
 
         self.validateData(buildset)
         self.assertEqual(buildset['sourcestamps'], [])
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        buildset = yield self.callGet(('buildsets', 99))
+    async def test_get_missing(self):
+        buildset = await self.callGet(('buildsets', 99))
 
         self.assertEqual(buildset, None)
 
@@ -89,19 +85,17 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        buildsets = yield self.callGet(('buildsets',))
+    async def test_get(self):
+        buildsets = await self.callGet(('buildsets',))
 
         self.validateData(buildsets[0])
         self.assertEqual(buildsets[0]['bsid'], 13)
         self.validateData(buildsets[1])
         self.assertEqual(buildsets[1]['bsid'], 14)
 
-    @defer.inlineCallbacks
-    def test_get_complete(self):
+    async def test_get_complete(self):
         f = resultspec.Filter('complete', 'eq', [True])
-        buildsets = yield self.callGet(
+        buildsets = await self.callGet(
             ('buildsets',), resultSpec=resultspec.ResultSpec(filters=[f])
         )
 
@@ -109,10 +103,9 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.validateData(buildsets[0])
         self.assertEqual(buildsets[0]['bsid'], 13)
 
-    @defer.inlineCallbacks
-    def test_get_incomplete(self):
+    async def test_get_incomplete(self):
         f = resultspec.Filter('complete', 'eq', [False])
-        buildsets = yield self.callGet(
+        buildsets = await self.callGet(
             ('buildsets',), resultSpec=resultspec.ResultSpec(filters=[f])
         )
 
@@ -172,8 +165,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         ):
             pass
 
-    @defer.inlineCallbacks
-    def do_test_addBuildset(self, kwargs, expectedReturn, expectedMessages, expectedBuildset):
+    async def do_test_addBuildset(self, kwargs, expectedReturn, expectedMessages, expectedBuildset):
         """Run a test of addBuildset.
 
         @param kwargs: kwargs to addBuildset
@@ -187,7 +179,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         """
         self.reactor.advance(A_TIMESTAMP)
 
-        (bsid, brids) = yield self.rtype.addBuildset(**kwargs)
+        (bsid, brids) = await self.rtype.addBuildset(**kwargs)
         self.assertEqual((bsid, brids), expectedReturn)
         # check the correct message was received
         self.master.mq.assertProductions(expectedMessages, orderMatters=False)
@@ -345,8 +337,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         def maybeBuildsetComplete(self, bsid):
             pass
 
-    @defer.inlineCallbacks
-    def do_test_maybeBuildsetComplete(
+    async def do_test_maybeBuildsetComplete(
         self,
         buildRequestCompletions=None,
         buildRequestResults=None,
@@ -392,7 +383,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
                 results=buildRequestResults.get(brid, SUCCESS),
             )
 
-        yield self.master.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Buildset(
                 id=72,
@@ -409,7 +400,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
         ])
 
-        yield self.rtype.maybeBuildsetComplete(72)
+        await self.rtype.maybeBuildsetComplete(72)
 
         self.master.db.buildsets.assertBuildsetCompletion(72, expectComplete)
         if expectMessage:
