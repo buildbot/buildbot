@@ -18,7 +18,6 @@ import os
 import platform
 import signal
 
-from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
@@ -29,8 +28,7 @@ from buildbot.util import rewrap
 
 
 class Reconfigurator:
-    @defer.inlineCallbacks
-    def run(self, basedir, quiet, timeout=None):
+    async def run(self, basedir, quiet, timeout=None):
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
             print("Reconfig (through SIGHUP) is not supported on Windows.")
@@ -53,7 +51,7 @@ class Reconfigurator:
         lw = LogWatcher(os.path.join(basedir, "twistd.log"), timeout=timeout)
 
         try:
-            yield lw.start()
+            await lw.start()
             print("Reconfiguration appears to have completed successfully")
             return 0
         except BuildmasterTimeoutError:
