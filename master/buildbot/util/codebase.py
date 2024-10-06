@@ -14,27 +14,22 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
-
 class AbsoluteSourceStampsMixin:
     # record changes and revisions per codebase
 
     _lastCodebases = None
 
-    @defer.inlineCallbacks
-    def getCodebaseDict(self, codebase):
+    async def getCodebaseDict(self, codebase):
         assert self.codebases
 
         if self._lastCodebases is None:
-            self._lastCodebases = yield self.getState('lastCodebases', {})
+            self._lastCodebases = await self.getState('lastCodebases', {})
 
         # may fail with KeyError
         return self._lastCodebases.get(codebase, self.codebases[codebase])
 
-    @defer.inlineCallbacks
-    def recordChange(self, change):
-        codebase = yield self.getCodebaseDict(change.codebase)
+    async def recordChange(self, change):
+        codebase = await self.getCodebaseDict(change.codebase)
         lastChange = codebase.get('lastChange', -1)
 
         if change.number > lastChange:
@@ -44,4 +39,4 @@ class AbsoluteSourceStampsMixin:
                 'revision': change.revision,
                 'lastChange': change.number,
             }
-            yield self.setState('lastCodebases', self._lastCodebases)
+            await self.setState('lastCodebases', self._lastCodebases)
