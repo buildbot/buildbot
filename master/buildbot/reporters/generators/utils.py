@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -202,15 +201,14 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return [ss['patch'] for ss in ss_list if 'patch' in ss and ss['patch'] is not None]
 
-    @defer.inlineCallbacks
-    def build_message(self, formatter, master, reporter, build):
+    async def build_message(self, formatter, master, reporter, build):
         patches = self._get_patches_for_build(build)
 
         logs = self._get_logs_for_build(build)
 
-        users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
+        users = await reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
-        buildmsg = yield formatter.format_message_for_build(
+        buildmsg = await formatter.format_message_for_build(
             master, build, is_buildset=False, mode=self.mode, users=users
         )
 
