@@ -29,11 +29,10 @@ if TYPE_CHECKING:
 
 
 class Db2DataMixin:
-    @defer.inlineCallbacks
-    def db2data(self, dbdict: SchedulerModel):
+    async def db2data(self, dbdict: SchedulerModel):
         master = None
         if dbdict.masterid is not None:
-            master = yield self.master.data.get(('masters', dbdict.masterid))
+            master = await self.master.data.get(('masters', dbdict.masterid))
         data = {
             'schedulerid': dbdict.id,
             'name': dbdict.name,
@@ -50,20 +49,18 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
         /masters/n:masterid/schedulers/n:schedulerid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        dbdict = yield self.master.db.schedulers.getScheduler(kwargs['schedulerid'])
+    async def get(self, resultSpec, kwargs):
+        dbdict = await self.master.db.schedulers.getScheduler(kwargs['schedulerid'])
         if 'masterid' in kwargs:
             if dbdict.masterid != kwargs['masterid']:
                 return None
         return (yield self.db2data(dbdict)) if dbdict else None
 
-    @defer.inlineCallbacks
-    def control(self, action, args, kwargs):
+    async def control(self, action, args, kwargs):
         if action == 'enable':
             schedulerid = kwargs['schedulerid']
             v = args['enabled']
-            yield self.master.data.updates.schedulerEnable(schedulerid, v)
+            await self.master.data.updates.schedulerEnable(schedulerid, v)
         return None
 
 
@@ -75,10 +72,9 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     """
     rootLinkName = 'schedulers'
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        schedulers = yield self.master.db.schedulers.getSchedulers(masterid=kwargs.get('masterid'))
-        schdicts = yield defer.DeferredList(
+    async def get(self, resultSpec, kwargs):
+        schedulers = await self.master.db.schedulers.getSchedulers(masterid=kwargs.get('masterid'))
+        schdicts = await defer.DeferredList(
             [self.db2data(schdict) for schdict in schedulers],
             consumeErrors=True,
             fireOnOneErrback=True,
@@ -103,16 +99,14 @@ class Scheduler(base.ResourceType):
 
     entityType = EntityType(name, 'Scheduler')
 
-    @defer.inlineCallbacks
-    def generateEvent(self, schedulerid, event):
-        scheduler = yield self.master.data.get(('schedulers', str(schedulerid)))
+    async def generateEvent(self, schedulerid, event):
+        scheduler = await self.master.data.get(('schedulers', str(schedulerid)))
         self.produceEvent(scheduler, event)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def schedulerEnable(self, schedulerid, v):
-        yield self.master.db.schedulers.enable(schedulerid, v)
-        yield self.generateEvent(schedulerid, 'updated')
+    async def schedulerEnable(self, schedulerid, v):
+        await self.master.db.schedulers.enable(schedulerid, v)
+        await self.generateEvent(schedulerid, 'updated')
         return None
 
     @base.updateMethod
@@ -137,8 +131,7 @@ class Scheduler(base.ResourceType):
 
         return d
 
-    @defer.inlineCallbacks
-    def _masterDeactivated(self, masterid):
-        schedulers = yield self.master.db.schedulers.getSchedulers(masterid=masterid)
+    async def _masterDeactivated(self, masterid):
+        schedulers = await self.master.db.schedulers.getSchedulers(masterid=masterid)
         for sch in schedulers:
-            yield self.master.db.schedulers.setSchedulerMaster(sch.id, None)
+            await self.master.db.schedulers.setSchedulerMaster(sch.id, None)
