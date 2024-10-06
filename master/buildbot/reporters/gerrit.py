@@ -20,7 +20,6 @@ import time
 import warnings
 
 from packaging.version import parse as parse_version
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
@@ -115,14 +114,13 @@ class DEFAULT_SUMMARY:
     pass
 
 
-@defer.inlineCallbacks
-def extract_project_revision(master, report):
+async def extract_project_revision(master, report):
     props = None
     if report["builds"]:
         props = report["builds"][0].get("properties", None)
 
     if props is None:
-        props = yield master.data.get(("buildsets", report["buildset"]["bsid"], "properties"))
+        props = await master.data.get(("buildsets", report["buildset"]["bsid"], "properties"))
 
     def get_property(props, name):
         if props is None:
@@ -183,11 +181,10 @@ class GerritStatusGeneratorBase:
     def is_build_reported(self, build):
         return self.builders is None or build["builder"]["name"] in self.builders
 
-    @defer.inlineCallbacks
-    def get_build_details(self, master, build):
-        br = yield master.data.get(("buildrequests", build["buildrequestid"]))
-        buildset = yield master.data.get(("buildsets", br["buildsetid"]))
-        yield utils.getDetailsForBuilds(
+    async def get_build_details(self, master, build):
+        br = await master.data.get(("buildrequests", build["buildrequestid"]))
+        buildset = await master.data.get(("buildsets", br["buildsetid"]))
+        await utils.getDetailsForBuilds(
             master, buildset, [build], want_properties=True, want_steps=self.want_steps
         )
 
@@ -201,10 +198,9 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
     def check(self):
         pass
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    async def generate(self, master, reporter, key, message):
         bsid = message["bsid"]
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             master,
             bsid,
             want_properties=True,
@@ -242,7 +238,7 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
             [get_build_info(build) for build in builds], key=lambda bi: bi["name"]
         )
 
-        result = yield self.callback(
+        result = await self.callback(
             build_info_list, Results[buildset["results"]], master, self.callback_arg
         )
 
@@ -265,14 +261,13 @@ class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
     def check(self):
         pass
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    async def generate(self, master, reporter, key, message):
         build = message
-        yield self.get_build_details(master, build)
+        await self.get_build_details(master, build)
         if not self.is_build_reported(build):
             return None
 
-        result = yield self.callback(build["builder"]["name"], build, self.callback_arg)
+        result = await self.callback(build["builder"]["name"], build, self.callback_arg)
 
         return {
             "body": result.get("message", None),
@@ -293,14 +288,13 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
     def check(self):
         pass
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    async def generate(self, master, reporter, key, message):
         build = message
-        yield self.get_build_details(master, build)
+        await self.get_build_details(master, build)
         if not self.is_build_reported(build):
             return None
 
-        result = yield self.callback(
+        result = await self.callback(
             build['builder']['name'], build, build['results'], master, self.callback_arg
         )
 
@@ -463,11 +457,10 @@ class GerritStatusPush(ReporterBase):
             else:
                 log.msg("gerrit status: OK")
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         report = reports[0]
 
-        project, revision = yield extract_project_revision(self.master, report)
+        project, revision = await extract_project_revision(self.master, report)
 
         if report["body"] is None or project is None or revision is None:
             return None
