@@ -129,79 +129,69 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        worker = yield self.callGet(('workers', 2))
+    async def test_get_existing(self):
+        worker = await self.callGet(('workers', 2))
 
         self.validateData(worker)
         worker['configured_on'] = sorted(worker['configured_on'], key=configuredOnKey)
         self.assertEqual(worker, w2())
 
-    @defer.inlineCallbacks
-    def test_get_existing_name(self):
-        worker = yield self.callGet(('workers', 'linux'))
+    async def test_get_existing_name(self):
+        worker = await self.callGet(('workers', 'linux'))
 
         self.validateData(worker)
         worker['configured_on'] = sorted(worker['configured_on'], key=configuredOnKey)
         self.assertEqual(worker, w1())
 
-    @defer.inlineCallbacks
-    def test_get_existing_masterid(self):
-        worker = yield self.callGet(('masters', 14, 'workers', 2))
+    async def test_get_existing_masterid(self):
+        worker = await self.callGet(('masters', 14, 'workers', 2))
 
         self.validateData(worker)
         worker['configured_on'] = sorted(worker['configured_on'], key=configuredOnKey)
         self.assertEqual(worker, w2(masterid=14))
 
-    @defer.inlineCallbacks
-    def test_get_existing_builderid(self):
-        worker = yield self.callGet(('builders', 40, 'workers', 2))
+    async def test_get_existing_builderid(self):
+        worker = await self.callGet(('builders', 40, 'workers', 2))
 
         self.validateData(worker)
         worker['configured_on'] = sorted(worker['configured_on'], key=configuredOnKey)
         self.assertEqual(worker, w2(builderid=40))
 
-    @defer.inlineCallbacks
-    def test_get_existing_masterid_builderid(self):
-        worker = yield self.callGet(('masters', 13, 'builders', 40, 'workers', 2))
+    async def test_get_existing_masterid_builderid(self):
+        worker = await self.callGet(('masters', 13, 'builders', 40, 'workers', 2))
 
         self.validateData(worker)
         worker['configured_on'] = sorted(worker['configured_on'], key=configuredOnKey)
         self.assertEqual(worker, w2(masterid=13, builderid=40))
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        worker = yield self.callGet(('workers', 99))
+    async def test_get_missing(self):
+        worker = await self.callGet(('workers', 99))
 
         self.assertEqual(worker, None)
 
-    @defer.inlineCallbacks
-    def test_set_worker_paused(self):
-        yield self.master.data.updates.set_worker_paused(2, True, "reason")
-        worker = yield self.callGet(('workers', 2))
+    async def test_set_worker_paused(self):
+        await self.master.data.updates.set_worker_paused(2, True, "reason")
+        worker = await self.callGet(('workers', 2))
         self.validateData(worker)
         self.assertEqual(worker['paused'], True)
         self.assertEqual(worker["pause_reason"], "reason")
 
-    @defer.inlineCallbacks
-    def test_set_worker_graceful(self):
-        yield self.master.data.updates.set_worker_graceful(2, True)
-        worker = yield self.callGet(('workers', 2))
+    async def test_set_worker_graceful(self):
+        await self.master.data.updates.set_worker_graceful(2, True)
+        worker = await self.callGet(('workers', 2))
         self.validateData(worker)
         self.assertEqual(worker['graceful'], True)
 
-    @defer.inlineCallbacks
-    def test_actions(self):
+    async def test_actions(self):
         for action in ("stop", "pause", "unpause", "kill"):
-            yield self.callControl(action, {}, ('masters', 13, 'builders', 40, 'workers', 2))
+            await self.callControl(action, {}, ('masters', 13, 'builders', 40, 'workers', 2))
             self.master.mq.assertProductions([
                 (('control', 'worker', '2', action), {'reason': 'no reason'})
             ])
 
-    @defer.inlineCallbacks
-    def test_bad_actions(self):
+    async def test_bad_actions(self):
         with self.assertRaises(exceptions.InvalidControlException):
-            yield self.callControl("bad_action", {}, ('masters', 13, 'builders', 40, 'workers', 2))
+            await self.callControl("bad_action", {}, ('masters', 13, 'builders', 40, 'workers', 2))
 
 
 class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -215,9 +205,8 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        workers = yield self.callGet(('workers',))
+    async def test_get(self):
+        workers = await self.callGet(('workers',))
 
         for b in workers:
             self.validateData(b)
@@ -226,9 +215,8 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             sorted(workers, key=configuredOnKey), sorted([w1(), w2()], key=configuredOnKey)
         )
 
-    @defer.inlineCallbacks
-    def test_get_masterid(self):
-        workers = yield self.callGet((
+    async def test_get_masterid(self):
+        workers = await self.callGet((
             'masters',
             '13',
             'workers',
@@ -242,9 +230,8 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             sorted([w1(masterid=13), w2(masterid=13)], key=configuredOnKey),
         )
 
-    @defer.inlineCallbacks
-    def test_get_builderid(self):
-        workers = yield self.callGet((
+    async def test_get_builderid(self):
+        workers = await self.callGet((
             'builders',
             '41',
             'workers',
@@ -257,9 +244,8 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             sorted(workers, key=configuredOnKey), sorted([w2(builderid=41)], key=configuredOnKey)
         )
 
-    @defer.inlineCallbacks
-    def test_get_masterid_builderid(self):
-        workers = yield self.callGet((
+    async def test_get_masterid_builderid(self):
+        workers = await self.callGet((
             'masters',
             '13',
             'builders',
@@ -275,14 +261,13 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             sorted([w2(masterid=13, builderid=41)], key=configuredOnKey),
         )
 
-    @defer.inlineCallbacks
-    def test_set_worker_paused_find_by_paused(self):
-        yield self.master.data.updates.set_worker_paused(2, True, None)
+    async def test_set_worker_paused_find_by_paused(self):
+        await self.master.data.updates.set_worker_paused(2, True, None)
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('paused', 'eq', [True])]
         )
 
-        workers = yield self.callGet(('workers',), resultSpec=resultSpec)
+        workers = await self.callGet(('workers',), resultSpec=resultSpec)
         self.assertEqual(len(workers), 1)
         worker = workers[0]
         self.validateData(worker)
