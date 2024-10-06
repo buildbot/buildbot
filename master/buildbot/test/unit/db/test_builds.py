@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import resultspec
@@ -174,10 +173,9 @@ class Tests(interfaces.InterfaceTests):
 
     # method tests
 
-    @defer.inlineCallbacks
-    def test_getBuild(self):
-        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
-        bdict = yield self.db.builds.getBuild(50)
+    async def test_getBuild(self):
+        await self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
+        bdict = await self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             bdict,
@@ -196,22 +194,19 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_getBuild_missing(self):
-        bdict = yield self.db.builds.getBuild(50)
+    async def test_getBuild_missing(self):
+        bdict = await self.db.builds.getBuild(50)
         self.assertEqual(bdict, None)
 
-    @defer.inlineCallbacks
-    def test_getBuildByNumber(self):
-        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
-        bdict = yield self.db.builds.getBuildByNumber(builderid=77, number=5)
+    async def test_getBuildByNumber(self):
+        await self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
+        bdict = await self.db.builds.getBuildByNumber(builderid=77, number=5)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(bdict.id, 50)
 
-    @defer.inlineCallbacks
-    def test_getBuilds(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds()
+    async def test_getBuilds(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds()
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
@@ -219,28 +214,25 @@ class Tests(interfaces.InterfaceTests):
             [self.threeBdicts[50], self.threeBdicts[51], self.threeBdicts[52]],
         )
 
-    @defer.inlineCallbacks
-    def test_getBuilds_builderid(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(builderid=88)
+    async def test_getBuilds_builderid(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(builderid=88)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[51]])
 
-    @defer.inlineCallbacks
-    def test_getBuilds_buildrequestid(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(buildrequestid=42)
+    async def test_getBuilds_buildrequestid(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(buildrequestid=42)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[50], self.threeBdicts[52]]
         )
 
-    @defer.inlineCallbacks
-    def test_getBuilds_workerid(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(workerid=13)
+    async def test_getBuilds_workerid(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(workerid=13)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
@@ -252,11 +244,10 @@ class Tests(interfaces.InterfaceTests):
         def getBuildsForChange(self, changeid):
             pass
 
-    @defer.inlineCallbacks
-    def do_test_getBuildsForChange(self, rows, changeid, expected):
-        yield self.insert_test_data(rows)
+    async def do_test_getBuildsForChange(self, rows, changeid, expected):
+        await self.insert_test_data(rows)
 
-        builds = yield self.db.builds.getBuildsForChange(changeid)
+        builds = await self.db.builds.getBuildsForChange(changeid)
 
         self.assertEqual(sorted(builds), sorted(expected))
 
@@ -310,22 +301,20 @@ class Tests(interfaces.InterfaceTests):
 
         return self.do_test_getBuildsForChange(rows, 14, expected)
 
-    @defer.inlineCallbacks
-    def test_getBuilds_complete(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(complete=True)
+    async def test_getBuilds_complete(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(complete=True)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[52]])
 
-    @defer.inlineCallbacks
-    def test_addBuild_first(self):
+    async def test_addBuild_first(self):
         self.reactor.advance(TIME1)
-        yield self.insert_test_data(self.backgroundData)
-        id, number = yield self.db.builds.addBuild(
+        await self.insert_test_data(self.backgroundData)
+        id, number = await self.db.builds.addBuild(
             builderid=77, buildrequestid=41, workerid=13, masterid=88, state_string='test test2'
         )
-        bdict = yield self.db.builds.getBuild(id)
+        bdict = await self.db.builds.getBuild(id)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             bdict,
@@ -344,17 +333,16 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_addBuild_existing(self):
+    async def test_addBuild_existing(self):
         self.reactor.advance(TIME1)
-        yield self.insert_test_data([
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Build(number=10, buildrequestid=41, builderid=77, masterid=88, workerid=13),
         ])
-        id, number = yield self.db.builds.addBuild(
+        id, number = await self.db.builds.addBuild(
             builderid=77, buildrequestid=41, workerid=13, masterid=88, state_string='test test2'
         )
-        bdict = yield self.db.builds.getBuild(id)
+        bdict = await self.db.builds.getBuild(id)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(number, 11)
         self.assertEqual(
@@ -374,11 +362,10 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_setBuildStateString(self):
-        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
-        yield self.db.builds.setBuildStateString(buildid=50, state_string='test test2')
-        bdict = yield self.db.builds.getBuild(50)
+    async def test_setBuildStateString(self):
+        await self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
+        await self.db.builds.setBuildStateString(buildid=50, state_string='test test2')
+        bdict = await self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             bdict,
@@ -397,11 +384,10 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_add_build_locks_duration(self):
-        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
-        yield self.db.builds.add_build_locks_duration(buildid=50, duration_s=12)
-        bdict = yield self.db.builds.getBuild(50)
+    async def test_add_build_locks_duration(self):
+        await self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
+        await self.db.builds.add_build_locks_duration(buildid=50, duration_s=12)
+        bdict = await self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             bdict,
@@ -420,12 +406,11 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_finishBuild(self):
+    async def test_finishBuild(self):
         self.reactor.advance(TIME4)
-        yield self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
-        yield self.db.builds.finishBuild(buildid=50, results=7)
-        bdict = yield self.db.builds.getBuild(50)
+        await self.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
+        await self.db.builds.finishBuild(buildid=50, results=7)
+        bdict = await self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             bdict,
@@ -444,27 +429,25 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def testgetBuildPropertiesEmpty(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
+    async def testgetBuildPropertiesEmpty(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
         for buildid in (50, 51, 52):
-            props = yield self.db.builds.getBuildProperties(buildid)
+            props = await self.db.builds.getBuildProperties(buildid)
             self.assertEqual(0, len(props))
 
-    @defer.inlineCallbacks
-    def test_testgetBuildProperties_resultSpecFilter(self):
+    async def test_testgetBuildProperties_resultSpecFilter(self):
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('name', 'eq', ["prop", "prop2"])])
         rs.fieldMapping = {'name': 'build_properties.name'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
-        yield self.db.builds.setBuildProperty(50, 'prop2', 43, 'test')
-        yield self.db.builds.setBuildProperty(50, 'prop3', 44, 'test')
-        props = yield self.db.builds.getBuildProperties(50, resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        await self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
+        await self.db.builds.setBuildProperty(50, 'prop2', 43, 'test')
+        await self.db.builds.setBuildProperty(50, 'prop3', 44, 'test')
+        props = await self.db.builds.getBuildProperties(50, resultSpec=rs)
         self.assertEqual(props, {'prop': (42, 'test'), 'prop2': (43, 'test')})
 
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('name', 'eq', ["prop"])])
         rs.fieldMapping = {'name': 'build_properties.name'}
-        props = yield self.db.builds.getBuildProperties(50, resultSpec=rs)
+        props = await self.db.builds.getBuildProperties(50, resultSpec=rs)
         self.assertEqual(
             props,
             {
@@ -472,40 +455,37 @@ class Tests(interfaces.InterfaceTests):
             },
         )
 
-    @defer.inlineCallbacks
-    def testsetandgetProperties(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
-        props = yield self.db.builds.getBuildProperties(50)
+    async def testsetandgetProperties(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        await self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
+        props = await self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {'prop': (42, 'test')})
 
-    @defer.inlineCallbacks
-    def testsetgetsetProperties(self):
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        props = yield self.db.builds.getBuildProperties(50)
+    async def testsetgetsetProperties(self):
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        props = await self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {})
-        yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
-        props = yield self.db.builds.getBuildProperties(50)
+        await self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
+        props = await self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {'prop': (42, 'test')})
         # set a new value
-        yield self.db.builds.setBuildProperty(50, 'prop', 45, 'test')
-        props = yield self.db.builds.getBuildProperties(50)
+        await self.db.builds.setBuildProperty(50, 'prop', 45, 'test')
+        props = await self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {'prop': (45, 'test')})
         # set a new source
-        yield self.db.builds.setBuildProperty(50, 'prop', 45, 'test_source')
-        props = yield self.db.builds.getBuildProperties(50)
+        await self.db.builds.setBuildProperty(50, 'prop', 45, 'test_source')
+        props = await self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {'prop': (45, 'test_source')})
         # set the same
-        yield self.db.builds.setBuildProperty(50, 'prop', 45, 'test_source')
-        props = yield self.db.builds.getBuildProperties(50)
+        await self.db.builds.setBuildProperty(50, 'prop', 45, 'test_source')
+        props = await self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {'prop': (45, 'test_source')})
 
 
 class RealTests(Tests):
-    @defer.inlineCallbacks
-    def test_addBuild_existing_race(self):
+    async def test_addBuild_existing_race(self):
         self.reactor.advance(TIME1)
-        yield self.insert_test_data(self.backgroundData)
+        await self.insert_test_data(self.backgroundData)
 
         # add new builds at *just* the wrong time, repeatedly
         numbers = list(range(1, 8))
@@ -528,7 +508,7 @@ class RealTests(Tests):
             )
             conn.commit()
 
-        id, number = yield self.db.builds.addBuild(
+        id, number = await self.db.builds.addBuild(
             builderid=77,
             buildrequestid=41,
             workerid=13,
@@ -536,7 +516,7 @@ class RealTests(Tests):
             state_string='test test2',
             _race_hook=raceHook,
         )
-        bdict = yield self.db.builds.getBuild(id)
+        bdict = await self.db.builds.getBuild(id)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(number, 8)
         self.assertEqual(
@@ -556,22 +536,20 @@ class RealTests(Tests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilter(self):
+    async def test_getBuilds_resultSpecFilter(self):
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('complete_at', 'ne', [None])])
         rs.fieldMapping = {'complete_at': 'builds.complete_at'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[52]])
 
-    @defer.inlineCallbacks
-    def test_getBuilds_resultSpecOrder(self):
+    async def test_getBuilds_resultSpecOrder(self):
         rs = resultspec.ResultSpec(order=['-started_at'])
         rs.fieldMapping = {'started_at': 'builds.started_at'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
 
         # applying the spec in the db layer should have emptied the order in
         # resultSpec
@@ -588,12 +566,11 @@ class RealTests(Tests):
         ordered_bdicts = rs.apply(bdicts)
         self.assertNotEqual(ordered_bdicts, bdicts)
 
-    @defer.inlineCallbacks
-    def test_getBuilds_limit(self):
+    async def test_getBuilds_limit(self):
         rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
         rs.fieldMapping = {'started_at': 'builds.started_at'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
         # applying the spec in the db layer should have emptied the limit and
         # offset in resultSpec
         self.assertEqual(rs.limit, None)
@@ -602,50 +579,46 @@ class RealTests(Tests):
         # assert applying the same filter at the data layer will give the same
         # results
         rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
-        bdicts2 = yield self.db.builds.getBuilds()
+        bdicts2 = await self.db.builds.getBuilds()
         ordered_bdicts = rs.apply(bdicts2)
         self.assertEqual(ordered_bdicts, bdicts)
 
-    @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterEqTwoValues(self):
+    async def test_getBuilds_resultSpecFilterEqTwoValues(self):
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('number', 'eq', [6, 7])])
         rs.fieldMapping = {'number': 'builds.number'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[51], self.threeBdicts[52]]
         )
 
-    @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterNeTwoValues(self):
+    async def test_getBuilds_resultSpecFilterNeTwoValues(self):
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('number', 'ne', [6, 7])])
         rs.fieldMapping = {'number': 'builds.number'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[50]])
 
-    @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterContainsOneValue(self):
+    async def test_getBuilds_resultSpecFilterContainsOneValue(self):
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('state_string', 'contains', ['7'])])
         rs.fieldMapping = {'state_string': 'builds.state_string'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[52]])
 
-    @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterContainsTwoValues(self):
+    async def test_getBuilds_resultSpecFilterContainsTwoValues(self):
         rs = resultspec.ResultSpec(
             filters=[resultspec.Filter('state_string', 'contains', ['build 5', 'build 6'])]
         )
         rs.fieldMapping = {'state_string': 'builds.state_string'}
-        yield self.insert_test_data(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        await self.insert_test_data(self.backgroundData + self.threeBuilds)
+        bdicts = await self.db.builds.getBuilds(resultSpec=rs)
         for bdict in bdicts:
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
@@ -654,15 +627,13 @@ class RealTests(Tests):
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'builds',
                 'builders',
