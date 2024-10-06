@@ -95,11 +95,10 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
             for bldr in self.builders.values():
                 bldr.workers.append(wfb)
 
-    @defer.inlineCallbacks
-    def createBuilder(self, name, builderid=None, builder_config=None):
+    async def createBuilder(self, name, builderid=None, builder_config=None):
         if builderid is None:
             b = fakedb.Builder(name=name)
-            yield self.master.db.insert_test_data([b])
+            await self.master.db.insert_test_data([b])
             builderid = b.id
 
         bldr = mock.Mock(name=name)
@@ -134,12 +133,11 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
 
         return bldr
 
-    @defer.inlineCallbacks
-    def addBuilders(self, names):
+    async def addBuilders(self, names):
         self.startedBuilds = []
 
         for name in names:
-            yield self.createBuilder(name)
+            await self.createBuilder(name)
 
     def assertMyClaims(self, brids):
         self.assertEqual(self.master.data.updates.claimedBuildRequests, set(brids))
@@ -173,18 +171,16 @@ class Test(TestBRDBase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuildsOn_simple(self):
+    async def test_maybeStartBuildsOn_simple(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1'])
-        yield self.brd.maybeStartBuildsOn(['bldr1'])
+        await self.brd.maybeStartBuildsOn(['bldr1'])
 
-        yield self.brd._waitForFinish()
+        await self.brd._waitForFinish()
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
         self.checkAllCleanedUp()
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuildsOn_parallel(self):
+    async def test_maybeStartBuildsOn_parallel(self):
         # test 15 "parallel" invocations of maybeStartBuildsOn, with a
         # _sortBuilders that takes a while.  This is a regression test for bug
         # 1979.
@@ -206,14 +202,13 @@ class Test(TestBRDBase):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(builders)
         for bldr in builders:
-            yield self.brd.maybeStartBuildsOn([bldr])
+            await self.brd.maybeStartBuildsOn([bldr])
 
-        yield self.brd._waitForFinish()
+        await self.brd._waitForFinish()
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, builders)
         self.checkAllCleanedUp()
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuildsOn_exception(self):
+    async def test_maybeStartBuildsOn_exception(self):
         self.addBuilders(['bldr1'])
 
         async def _maybeStartBuildsOnBuilder(n):
@@ -224,44 +219,41 @@ class Test(TestBRDBase):
 
         self.brd._maybeStartBuildsOnBuilder = _maybeStartBuildsOnBuilder
 
-        yield self.brd.maybeStartBuildsOn(['bldr1'])
+        await self.brd.maybeStartBuildsOn(['bldr1'])
 
-        yield self.brd._waitForFinish()
+        await self.brd._waitForFinish()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.checkAllCleanedUp()
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuildsOn_collapsing(self):
+    async def test_maybeStartBuildsOn_collapsing(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1', 'bldr2', 'bldr3'])
-        yield self.brd.maybeStartBuildsOn(['bldr3'])
-        yield self.brd.maybeStartBuildsOn(['bldr2', 'bldr1'])
-        yield self.brd.maybeStartBuildsOn(['bldr4'])  # should be ignored
-        yield self.brd.maybeStartBuildsOn(['bldr2'])  # already queued - ignored
-        yield self.brd.maybeStartBuildsOn(['bldr3', 'bldr2'])
+        await self.brd.maybeStartBuildsOn(['bldr3'])
+        await self.brd.maybeStartBuildsOn(['bldr2', 'bldr1'])
+        await self.brd.maybeStartBuildsOn(['bldr4'])  # should be ignored
+        await self.brd.maybeStartBuildsOn(['bldr2'])  # already queued - ignored
+        await self.brd.maybeStartBuildsOn(['bldr3', 'bldr2'])
 
-        yield self.brd._waitForFinish()
+        await self.brd._waitForFinish()
         # bldr3 gets invoked twice, since it's considered to have started
         # already when the first call to maybeStartBuildsOn returns
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr3', 'bldr1', 'bldr2', 'bldr3'])
         self.checkAllCleanedUp()
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuildsOn_builders_missing(self):
+    async def test_maybeStartBuildsOn_builders_missing(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1', 'bldr2', 'bldr3'])
-        yield self.brd.maybeStartBuildsOn(['bldr1', 'bldr2', 'bldr3'])
+        await self.brd.maybeStartBuildsOn(['bldr1', 'bldr2', 'bldr3'])
         # bldr1 is already run, so surreptitiously remove the other
         # two - nothing should crash, but the builders should not run
         self.removeBuilder('bldr2')
         self.removeBuilder('bldr3')
 
-        yield self.brd._waitForFinish()
+        await self.brd._waitForFinish()
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
         self.checkAllCleanedUp()
 
-    @defer.inlineCallbacks
-    def do_test_sortBuilders(
+    async def do_test_sortBuilders(
         self,
         prioritizeBuilders,
         oldestRequestTimes,
@@ -286,7 +278,7 @@ class Test(TestBRDBase):
         for n, t in highestPriorities.items():
             self.builders[n].get_highest_priority = mklambda(t)
 
-        result = yield self.brd._sortBuilders(list(oldestRequestTimes))
+        result = await self.brd._sortBuilders(list(oldestRequestTimes))
 
         self.assertEqual(result, expected)
         self.checkAllCleanedUp()
@@ -348,8 +340,7 @@ class Test(TestBRDBase):
             ['bldr1', 'bldr2', 'bldr3'],
         )
 
-    @defer.inlineCallbacks
-    def test_sortBuilders_custom_exception(self):
+    async def test_sortBuilders_custom_exception(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['x', 'y'])
 
@@ -360,15 +351,14 @@ class Test(TestBRDBase):
 
         # expect to get the builders back in the same order in the event of an
         # exception
-        result = yield self.brd._sortBuilders(['y', 'x'])
+        result = await self.brd._sortBuilders(['y', 'x'])
 
         self.assertEqual(result, ['y', 'x'])
 
         # and expect the exception to be logged
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def test_stopService(self):
+    async def test_stopService(self):
         # check that stopService waits for a builder run to complete, but does not
         # allow a subsequent run to start
         self.useMock_maybeStartBuildsOnBuilder()
@@ -389,21 +379,20 @@ class Test(TestBRDBase):
 
         # start both builds; A should start and complete *before* the service stops,
         # and B should not run.
-        yield self.brd.maybeStartBuildsOn(['A', 'B'])
+        await self.brd.maybeStartBuildsOn(['A', 'B'])
 
-        yield self.brd._waitForFinish()
+        await self.brd._waitForFinish()
 
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['A', 'finished', '(stopped)'])
 
 
 class TestMaybeStartBuilds(TestBRDBase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
+    async def setUp(self):
+        await super().setUp()
 
         self.startedBuilds = []
 
-        self.bldr = yield self.createBuilder('A', builderid=77)
+        self.bldr = await self.createBuilder('A', builderid=77)
         self.builders['A'] = self.bldr
 
     def assertBuildsStarted(self, exp):
@@ -427,33 +416,29 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.assertMyClaims(exp_claims)
         self.assertBuildsStarted(exp_builds)
 
-    @defer.inlineCallbacks
-    def test_no_buildrequests(self):
+    async def test_no_buildrequests(self):
         self.addWorkers({'test-worker11': 1})
-        yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[], exp_builds=[])
+        await self.do_test_maybeStartBuildsOnBuilder(exp_claims=[], exp_builds=[])
 
-    @defer.inlineCallbacks
-    def test_no_workerforbuilders(self):
+    async def test_no_workerforbuilders(self):
         rows = [
             fakedb.Builder(id=78, name='bldr'),
             fakedb.BuildRequest(id=11, buildsetid=10, builderid=78),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
+        await self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
-    @defer.inlineCallbacks
-    def test_limited_by_workers(self):
+    async def test_limited_by_workers(self):
         self.addWorkers({'test-worker1': 1})
         rows = [
             *self.base_rows,
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[10], exp_builds=[('test-worker1', [10])]
         )
 
-    @defer.inlineCallbacks
-    def test_sorted_by_submit_time(self):
+    async def test_sorted_by_submit_time(self):
         # same as "limited_by_workers" but with rows swapped
         self.addWorkers({'test-worker1': 1})
         rows = [
@@ -461,24 +446,22 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[10], exp_builds=[('test-worker1', [10])]
         )
 
-    @defer.inlineCallbacks
-    def test_limited_by_available_workers(self):
+    async def test_limited_by_available_workers(self):
         self.addWorkers({'test-worker1': 0, 'test-worker2': 1})
         rows = [
             *self.base_rows,
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[10], exp_builds=[('test-worker2', [10])]
         )
 
-    @defer.inlineCallbacks
-    def test_slow_db(self):
+    async def test_slow_db(self):
         # test what happens if the "getBuildRequests" fetch takes a "long time"
         self.addWorkers({'test-worker1': 1})
 
@@ -499,12 +482,11 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[10], exp_builds=[('test-worker1', [10])]
         )
 
-    @defer.inlineCallbacks
-    def test_limited_by_canStartBuild(self):
+    async def test_limited_by_canStartBuild(self):
         """Set the 'canStartBuild' value in the config to something
         that limits the possible options."""
 
@@ -530,7 +512,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
             fakedb.BuildRequest(id=12, buildsetid=11, builderid=77, submitted_at=140000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows,
             exp_claims=[10, 11],
             exp_builds=[('test-worker1', [10]), ('test-worker3', [11])],
@@ -550,8 +532,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_limited_by_canStartBuild_deferreds(self):
+    async def test_limited_by_canStartBuild_deferreds(self):
         # Another variant that returns Deferred types,
         self.bldr.config.nextWorker = nth_worker(-1)
 
@@ -575,7 +556,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
             fakedb.BuildRequest(id=12, buildsetid=11, builderid=77, submitted_at=140000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows,
             exp_claims=[10, 11],
             exp_builds=[('test-worker1', [10]), ('test-worker3', [11])],
@@ -594,8 +575,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_unlimited(self):
+    async def test_unlimited(self):
         self.bldr.config.nextWorker = nth_worker(-1)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [
@@ -603,14 +583,13 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows,
             exp_claims=[10, 11],
             exp_builds=[('test-worker2', [10]), ('test-worker1', [11])],
         )
 
-    @defer.inlineCallbacks
-    def test_bldr_maybeStartBuild_fails_always(self):
+    async def test_bldr_maybeStartBuild_fails_always(self):
         self.bldr.config.nextWorker = nth_worker(-1)
         # the builder fails to start the build; we'll see that the build
         # was requested, but the brids will get claimed again
@@ -627,7 +606,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77, submitted_at=130000),
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows,
             # claimed again so none taken!
             exp_claims=[],
@@ -671,45 +650,39 @@ class TestMaybeStartBuilds(TestBRDBase):
             ('test-worker2', [10]),
         ])
 
-    @defer.inlineCallbacks
-    def test_limited_by_requests(self):
+    async def test_limited_by_requests(self):
         self.bldr.config.nextWorker = nth_worker(1)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[11], exp_builds=[('test-worker2', [11])]
         )
 
-    @defer.inlineCallbacks
-    def test_nextWorker_None(self):
+    async def test_nextWorker_None(self):
         self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(None)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
+        await self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
-    @defer.inlineCallbacks
-    def test_nextWorker_bogus(self):
+    async def test_nextWorker_bogus(self):
         self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(mock.Mock())
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
+        await self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
-    @defer.inlineCallbacks
-    def test_nextBuild_None(self):
+    async def test_nextBuild_None(self):
         self.bldr.config.nextBuild = lambda _1, _2: defer.succeed(None)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
+        await self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
-    @defer.inlineCallbacks
-    def test_nextBuild_bogus(self):
+    async def test_nextBuild_bogus(self):
         self.bldr.config.nextBuild = lambda _1, _2: mock.Mock()
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
+        await self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
 
-    @defer.inlineCallbacks
-    def test_nextBuild_fails(self):
+    async def test_nextBuild_fails(self):
         def nextBuildRaises(*args):
             raise RuntimeError("xx")
 
@@ -718,11 +691,11 @@ class TestMaybeStartBuilds(TestBRDBase):
         rows = [*self.base_rows, fakedb.BuildRequest(id=11, buildsetid=11, builderid=77)]
         result = self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
-        yield result
+        await result
 
     # check concurrency edge cases
-    @defer.inlineCallbacks
-    def test_claim_race(self):
+
+    async def test_claim_race(self):
         self.bldr.config.nextWorker = nth_worker(0)
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.master.db.buildrequests.claimBuildRequests
@@ -748,13 +721,13 @@ class TestMaybeStartBuilds(TestBRDBase):
             ),  # will turn out to be claimed!
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77, submitted_at=135000),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=[11], exp_builds=[('test-worker1', [11])]
         )
 
     # nextWorker
-    @defer.inlineCallbacks
-    def do_test_nextWorker(self, nextWorker, global_select_next_worker, exp_choice=None):
+
+    async def do_test_nextWorker(self, nextWorker, global_select_next_worker, exp_choice=None):
         if global_select_next_worker:
             self.master.config.select_next_worker = nextWorker
             builder_config = config.BuilderConfig(
@@ -772,7 +745,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                 nextWorker=nextWorker,
             )
 
-        self.bldr = yield self.createBuilder('B', builderid=78, builder_config=builder_config)
+        self.bldr = await self.createBuilder('B', builderid=78, builder_config=builder_config)
         for i in range(4):
             self.addWorkers({f'test-worker{i}': 1})
 
@@ -791,7 +764,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             exp_claims = [12]
             exp_builds = [(f'test-worker{exp_choice}', [12])]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=exp_claims, exp_builds=exp_builds
         )
 
@@ -832,31 +805,28 @@ class TestMaybeStartBuilds(TestBRDBase):
         )
 
     @parameterized.expand([True, False])
-    @defer.inlineCallbacks
-    def test_nextWorker_exception(self, global_select_next_worker):
+    async def test_nextWorker_exception(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             raise RuntimeError("")
 
-        yield self.do_test_nextWorker(
+        await self.do_test_nextWorker(
             nextWorker, global_select_next_worker=global_select_next_worker
         )
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     @parameterized.expand([True, False])
-    @defer.inlineCallbacks
-    def test_nextWorker_failure(self, global_select_next_worker):
+    async def test_nextWorker_failure(self, global_select_next_worker):
         def nextWorker(bldr, lst, br=None):
             return defer.fail(failure.Failure(RuntimeError()))
 
-        yield self.do_test_nextWorker(
+        await self.do_test_nextWorker(
             nextWorker, global_select_next_worker=global_select_next_worker
         )
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     # _nextBuild
 
-    @defer.inlineCallbacks
-    def do_test_nextBuild(self, nextBuild, exp_choice=None):
+    async def do_test_nextBuild(self, nextBuild, exp_choice=None):
         self.bldr.config.nextWorker = nth_worker(-1)
         self.bldr.config.nextBuild = nextBuild
 
@@ -871,7 +841,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                 exp_builds.append((f'test-worker{worker}', [choice]))
                 worker = worker - 1
 
-        yield self.do_test_maybeStartBuildsOnBuilder(
+        await self.do_test_maybeStartBuildsOnBuilder(
             rows=rows, exp_claims=sorted(exp_claims), exp_builds=exp_builds
         )
 
