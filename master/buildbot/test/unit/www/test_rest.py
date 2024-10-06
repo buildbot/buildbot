@@ -40,12 +40,11 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.setup_test_reactor()
         _ = graphql  # used for import side effect
 
-    @defer.inlineCallbacks
-    def test_render(self):
+    async def test_render(self):
         master = self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
 
-        rv = yield self.render_resource(rsrc, b'/')
+        rv = await self.render_resource(rsrc, b'/')
 
         self.assertIn(b'api_versions', rv)
 
@@ -78,16 +77,14 @@ class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         content = json.dumps({'error': message})
         self.assertRequest(content=unicode2bytes(content), responseCode=responseCode)
 
-    @defer.inlineCallbacks
-    def test_failure(self):
+    async def test_failure(self):
         self.rsrc.renderRest = mock.Mock(return_value=defer.fail(RuntimeError('oh noes')))
-        yield self.render_resource(self.rsrc, b'/')
+        await self.render_resource(self.rsrc, b'/')
         self.assertSimpleError('internal error - see logs', 500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def test_invalid_http_method(self):
-        yield self.render_resource(self.rsrc, b'/', method=b'PATCH')
+    async def test_invalid_http_method(self):
+        await self.render_resource(self.rsrc, b'/', method=b'PATCH')
         self.assertSimpleError('invalid HTTP method', 400)
 
     def do_check_origin_regexp(self, goods, bads):
@@ -166,51 +163,44 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         content = unicode2bytes(content)
         self.assertRequest(content=content, responseCode=400)
 
-    @defer.inlineCallbacks
-    def test_cors_no_origin(self):
+    async def test_cors_no_origin(self):
         # if the browser doesn't send Origin, there's nothing we can do to
         # protect the user
-        yield self.render_resource(self.rsrc, b'/')
+        await self.render_resource(self.rsrc, b'/')
         self.assertOk(expectHeaders=False)
 
-    @defer.inlineCallbacks
-    def test_cors_origin_match(self):
-        yield self.render_resource(self.rsrc, b'/', origin=b'h://good')
+    async def test_cors_origin_match(self):
+        await self.render_resource(self.rsrc, b'/', origin=b'h://good')
         self.assertOk()
 
-    @defer.inlineCallbacks
-    def test_cors_origin_match_star(self):
+    async def test_cors_origin_match_star(self):
         self.master.config.www['allowed_origins'] = ['*']
         self.rsrc.reconfigResource(self.master.config)
-        yield self.render_resource(self.rsrc, b'/', origin=b'h://good')
+        await self.render_resource(self.rsrc, b'/', origin=b'h://good')
         self.assertOk()
 
-    @defer.inlineCallbacks
-    def test_cors_origin_patterns(self):
+    async def test_cors_origin_patterns(self):
         self.master.config.www['allowed_origins'] = ['h://*.good', 'hs://*.secure']
         self.rsrc.reconfigResource(self.master.config)
-        yield self.render_resource(self.rsrc, b'/', origin=b'h://foo.good')
+        await self.render_resource(self.rsrc, b'/', origin=b'h://foo.good')
         self.assertOk(origin=b'h://foo.good')
-        yield self.render_resource(self.rsrc, b'/', origin=b'hs://x.secure')
+        await self.render_resource(self.rsrc, b'/', origin=b'hs://x.secure')
         self.assertOk(origin=b'hs://x.secure')
-        yield self.render_resource(self.rsrc, b'/', origin=b'h://x.secure')
+        await self.render_resource(self.rsrc, b'/', origin=b'h://x.secure')
         self.assertNotOk('invalid origin')
 
-    @defer.inlineCallbacks
-    def test_cors_origin_mismatch(self):
-        yield self.render_resource(self.rsrc, b'/', origin=b'h://bad')
+    async def test_cors_origin_mismatch(self):
+        await self.render_resource(self.rsrc, b'/', origin=b'h://bad')
         self.assertNotOk('invalid origin')
 
-    @defer.inlineCallbacks
-    def test_cors_origin_mismatch_post(self):
-        yield self.render_resource(self.rsrc, b'/', method=b'POST', origin=b'h://bad')
+    async def test_cors_origin_mismatch_post(self):
+        await self.render_resource(self.rsrc, b'/', method=b'POST', origin=b'h://bad')
         content = json.dumps({'error': {'message': 'invalid origin'}})
         content = unicode2bytes(content)
         self.assertRequest(content=content, responseCode=400)
 
-    @defer.inlineCallbacks
-    def test_cors_origin_preflight_match_GET(self):
-        yield self.render_resource(
+    async def test_cors_origin_preflight_match_GET(self):
+        await self.render_resource(
             self.rsrc,
             b'/',
             method=b'OPTIONS',
@@ -219,9 +209,8 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
         self.assertOk(content=b'')
 
-    @defer.inlineCallbacks
-    def test_cors_origin_preflight_match_POST(self):
-        yield self.render_resource(
+    async def test_cors_origin_preflight_match_POST(self):
+        await self.render_resource(
             self.rsrc,
             b'/',
             method=b'OPTIONS',
@@ -230,9 +219,8 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
         self.assertOk(content=b'')
 
-    @defer.inlineCallbacks
-    def test_cors_origin_preflight_bad_method(self):
-        yield self.render_resource(
+    async def test_cors_origin_preflight_bad_method(self):
+        await self.render_resource(
             self.rsrc,
             b'/',
             method=b'OPTIONS',
@@ -241,9 +229,8 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
         self.assertNotOk(message='invalid method')
 
-    @defer.inlineCallbacks
-    def test_cors_origin_preflight_bad_origin(self):
-        yield self.render_resource(
+    async def test_cors_origin_preflight_bad_origin(self):
+        await self.render_resource(
             self.rsrc,
             b'/',
             method=b'OPTIONS',
@@ -323,27 +310,24 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.assertRegex(content['error'], message)
         self.assertEqual(responseCode, gotResponseCode)
 
-    @defer.inlineCallbacks
-    def test_not_found(self):
-        yield self.render_resource(self.rsrc, b'/not/found')
+    async def test_not_found(self):
+        await self.render_resource(self.rsrc, b'/not/found')
         self.assertRequest(
             contentJson={"error": 'Invalid path: not/found'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=404,
         )
 
-    @defer.inlineCallbacks
-    def test_invalid_query(self):
-        yield self.render_resource(self.rsrc, b'/test?huh=1')
+    async def test_invalid_query(self):
+        await self.render_resource(self.rsrc, b'/test?huh=1')
         self.assertRequest(
             contentJson={"error": "unrecognized query parameter 'huh'"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_raw(self):
-        yield self.render_resource(self.rsrc, b'/rawtest')
+    async def test_raw(self):
+        await self.render_resource(self.rsrc, b'/rawtest')
         self.assertRequest(
             content=b"value",
             contentType=b'text/test; charset=utf-8',
@@ -351,21 +335,18 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             headers={b"content-disposition": [b'attachment; filename=test.txt']},
         )
 
-    @defer.inlineCallbacks
-    def test_api_head(self):
-        get = yield self.render_resource(self.rsrc, b'/test', method=b'GET')
-        head = yield self.render_resource(self.rsrc, b'/test', method=b'HEAD')
+    async def test_api_head(self):
+        get = await self.render_resource(self.rsrc, b'/test', method=b'GET')
+        head = await self.render_resource(self.rsrc, b'/test', method=b'HEAD')
         self.assertEqual(head, b'')
         self.assertEqual(int(self.request.headers[b'content-length'][0]), len(get))
 
-    @defer.inlineCallbacks
-    def test_api_collection(self):
-        yield self.render_resource(self.rsrc, b'/test')
+    async def test_api_collection(self):
+        await self.render_resource(self.rsrc, b'/test')
         self.assertRestCollection(typeName='tests', items=list(endpoint.testData.values()), total=8)
 
-    @defer.inlineCallbacks
-    def do_test_api_collection_pagination(self, query, ids, links):
-        yield self.render_resource(self.rsrc, b'/test' + query)
+    async def do_test_api_collection_pagination(self, query, ids, links):
+        await self.render_resource(self.rsrc, b'/test' + query)
         self.assertRestCollection(
             typeName='tests', items=[v for k, v in endpoint.testData.items() if k in ids], total=8
         )
@@ -435,45 +416,40 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             },
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_invalid_limit(self):
-        yield self.render_resource(self.rsrc, b'/test?limit=foo!')
+    async def test_api_collection_invalid_limit(self):
+        await self.render_resource(self.rsrc, b'/test?limit=foo!')
         self.assertRequest(
             contentJson={"error": 'invalid limit'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_invalid_offset(self):
-        yield self.render_resource(self.rsrc, b'/test?offset=foo!')
+    async def test_api_collection_invalid_offset(self):
+        await self.render_resource(self.rsrc, b'/test?offset=foo!')
         self.assertRequest(
             contentJson={"error": 'invalid offset'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_invalid_simple_filter_value(self):
-        yield self.render_resource(self.rsrc, b'/test?success=sorta')
+    async def test_api_collection_invalid_simple_filter_value(self):
+        await self.render_resource(self.rsrc, b'/test?success=sorta')
         self.assertRequest(
             contentJson={"error": 'invalid filter value for success'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_invalid_filter_value(self):
-        yield self.render_resource(self.rsrc, b'/test?testid__lt=fifteen')
+    async def test_api_collection_invalid_filter_value(self):
+        await self.render_resource(self.rsrc, b'/test?testid__lt=fifteen')
         self.assertRequest(
             contentJson={"error": 'invalid filter value for testid__lt'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_fields(self):
-        yield self.render_resource(self.rsrc, b'/test?field=success&field=info')
+    async def test_api_collection_fields(self):
+        await self.render_resource(self.rsrc, b'/test?field=success&field=info')
         self.assertRestCollection(
             typeName='tests',
             items=[
@@ -482,43 +458,38 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             total=8,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_invalid_field(self):
-        yield self.render_resource(self.rsrc, b'/test?field=success&field=WTF')
+    async def test_api_collection_invalid_field(self):
+        await self.render_resource(self.rsrc, b'/test?field=success&field=WTF')
         self.assertRequest(
             contentJson={"error": "no such field 'WTF'"},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_simple_filter(self):
-        yield self.render_resource(self.rsrc, b'/test?success=yes')
+    async def test_api_collection_simple_filter(self):
+        await self.render_resource(self.rsrc, b'/test?success=yes')
         self.assertRestCollection(
             typeName='tests', items=[v for v in endpoint.testData.values() if v['success']], total=5
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_list_filter(self):
-        yield self.render_resource(self.rsrc, b'/test?tags__contains=a')
+    async def test_api_collection_list_filter(self):
+        await self.render_resource(self.rsrc, b'/test?tags__contains=a')
         self.assertRestCollection(
             typeName='tests',
             items=[v for v in endpoint.testData.values() if 'a' in v['tags']],
             total=2,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_operator_filter(self):
-        yield self.render_resource(self.rsrc, b'/test?info__lt=skipped')
+    async def test_api_collection_operator_filter(self):
+        await self.render_resource(self.rsrc, b'/test?info__lt=skipped')
         self.assertRestCollection(
             typeName='tests',
             items=[v for v in endpoint.testData.values() if v['info'] < 'skipped'],
             total=4,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_order(self):
-        yield self.render_resource(self.rsrc, b'/test?order=info')
+    async def test_api_collection_order(self):
+        await self.render_resource(self.rsrc, b'/test?order=info')
         self.assertRestCollection(
             typeName='tests',
             items=sorted(list(endpoint.testData.values()), key=lambda v: v['info']),
@@ -526,9 +497,8 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             orderSignificant=True,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_filter_and_order(self):
-        yield self.render_resource(self.rsrc, b'/test?field=info&order=info')
+    async def test_api_collection_filter_and_order(self):
+        await self.render_resource(self.rsrc, b'/test?field=info&order=info')
         self.assertRestCollection(
             typeName='tests',
             items=sorted(
@@ -538,9 +508,8 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             orderSignificant=True,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_order_desc(self):
-        yield self.render_resource(self.rsrc, b'/test?order=-info')
+    async def test_api_collection_order_desc(self):
+        await self.render_resource(self.rsrc, b'/test?order=-info')
         self.assertRestCollection(
             typeName='tests',
             items=sorted(list(endpoint.testData.values()), key=lambda v: v['info'], reverse=True),
@@ -548,9 +517,8 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             orderSignificant=True,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_filter_and_order_desc(self):
-        yield self.render_resource(self.rsrc, b'/test?field=info&order=-info')
+    async def test_api_collection_filter_and_order_desc(self):
+        await self.render_resource(self.rsrc, b'/test?field=info&order=-info')
         self.assertRestCollection(
             typeName='tests',
             items=sorted(
@@ -562,19 +530,16 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             orderSignificant=True,
         )
 
-    @defer.inlineCallbacks
-    def test_api_collection_order_on_unselected(self):
-        yield self.render_resource(self.rsrc, b'/test?field=testid&order=info')
+    async def test_api_collection_order_on_unselected(self):
+        await self.render_resource(self.rsrc, b'/test?field=testid&order=info')
         self.assertRestError(message="cannot order on un-selected fields", responseCode=400)
 
-    @defer.inlineCallbacks
-    def test_api_collection_filter_on_unselected(self):
-        yield self.render_resource(self.rsrc, b'/test?field=testid&info__gt=xx')
+    async def test_api_collection_filter_on_unselected(self):
+        await self.render_resource(self.rsrc, b'/test?field=testid&info__gt=xx')
         self.assertRestError(message="cannot filter on un-selected fields", responseCode=400)
 
-    @defer.inlineCallbacks
-    def test_api_collection_filter_pagination(self):
-        yield self.render_resource(self.rsrc, b'/test?success=false&limit=2')
+    async def test_api_collection_filter_pagination(self):
+        await self.render_resource(self.rsrc, b'/test?success=false&limit=2')
         # note that the limit/offset and total are *after* the filter
         self.assertRestCollection(
             typeName='tests',
@@ -585,15 +550,13 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             total=3,
         )
 
-    @defer.inlineCallbacks
-    def test_api_details(self):
-        yield self.render_resource(self.rsrc, b'/test/13')
+    async def test_api_details(self):
+        await self.render_resource(self.rsrc, b'/test/13')
         self.assertRestDetails(typeName='tests', item=endpoint.testData[13])
 
-    @defer.inlineCallbacks
-    def test_api_details_none(self):
+    async def test_api_details_none(self):
         self.maxDiff = None
-        yield self.render_resource(self.rsrc, b'/test/0')
+        await self.render_resource(self.rsrc, b'/test/0')
         self.assertRequest(
             contentJson={
                 'error': "not found while getting from endpoint for "
@@ -607,33 +570,29 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             responseCode=404,
         )
 
-    @defer.inlineCallbacks
-    def test_api_details_filter_fails(self):
-        yield self.render_resource(self.rsrc, b'/test/13?success=false')
+    async def test_api_details_filter_fails(self):
+        await self.render_resource(self.rsrc, b'/test/13?success=false')
         self.assertRequest(
             contentJson={"error": 'this is not a collection'},
             contentType=b'text/plain; charset=utf-8',
             responseCode=400,
         )
 
-    @defer.inlineCallbacks
-    def test_api_details_fields(self):
-        yield self.render_resource(self.rsrc, b'/test/13?field=info')
+    async def test_api_details_fields(self):
+        await self.render_resource(self.rsrc, b'/test/13?field=info')
         self.assertRestDetails(typeName='tests', item={'info': endpoint.testData[13]['info']})
 
-    @defer.inlineCallbacks
-    def test_api_with_accept(self):
+    async def test_api_with_accept(self):
         # when 'application/json' is accepted, the result has that type
-        yield self.render_resource(self.rsrc, b'/test/13', accept=b'application/json')
+        await self.render_resource(self.rsrc, b'/test/13', accept=b'application/json')
         self.assertRestDetails(
             typeName='tests',
             item=endpoint.testData[13],
             contentType=b'application/json; charset=utf-8',
         )
 
-    @defer.inlineCallbacks
-    def test_api_fails(self):
-        yield self.render_resource(self.rsrc, b'/test/fail')
+    async def test_api_fails(self):
+        await self.render_resource(self.rsrc, b'/test/fail')
         self.assertRestError(message=r"RuntimeError\('oh noes',?\)", responseCode=500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
@@ -709,8 +668,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
         self.assertEqual(spec.properties[0].values, expected_props)
 
-    @defer.inlineCallbacks
-    def test_authz_forbidden(self):
+    async def test_authz_forbidden(self):
         def deny(request, ep, action, options):
             if "test" in ep:
                 raise authz.Forbidden("no no")
@@ -718,7 +676,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
         self.master.www.assertUserAllowed = deny
 
-        yield self.render_resource(self.rsrc, b'/test')
+        await self.render_resource(self.rsrc, b'/test')
         self.assertRestAuthError(message=re.compile('no no'), responseCode=403)
 
     def assertRestAuthError(self, message, responseCode=400):
@@ -782,34 +740,30 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
 
         self.assertEqual(got, exp)
 
-    @defer.inlineCallbacks
-    def test_invalid_path(self):
-        yield self.render_control_resource(self.rsrc, b'/not/found')
+    async def test_invalid_path(self):
+        await self.render_control_resource(self.rsrc, b'/not/found')
         self.assertJsonRpcError(
             message='Invalid path: not/found',
             jsonrpccode=JSONRPC_CODES['invalid_request'],
             responseCode=404,
         )
 
-    @defer.inlineCallbacks
-    def test_invalid_action(self):
-        yield self.render_control_resource(self.rsrc, b'/test', action='nosuch')
+    async def test_invalid_action(self):
+        await self.render_control_resource(self.rsrc, b'/test', action='nosuch')
         self.assertJsonRpcError(
             message='action: nosuch is not supported',
             jsonrpccode=JSONRPC_CODES['method_not_found'],
             responseCode=501,
         )
 
-    @defer.inlineCallbacks
-    def test_invalid_json(self):
-        yield self.render_control_resource(self.rsrc, b'/test', requestJson="{abc")
+    async def test_invalid_json(self):
+        await self.render_control_resource(self.rsrc, b'/test', requestJson="{abc")
         self.assertJsonRpcError(
             message=re.compile('^JSON parse error'), jsonrpccode=JSONRPC_CODES['parse_error']
         )
 
-    @defer.inlineCallbacks
-    def test_invalid_content_type(self):
-        yield self.render_control_resource(
+    async def test_invalid_content_type(self):
+        await self.render_control_resource(
             self.rsrc,
             b'/test',
             requestJson='{"jsonrpc": "2.0", "method": "foo","id":"abcdef", "params": {}}',
@@ -819,25 +773,22 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             message=re.compile('Invalid content-type'), jsonrpccode=JSONRPC_CODES['invalid_request']
         )
 
-    @defer.inlineCallbacks
-    def test_list_request(self):
-        yield self.render_control_resource(self.rsrc, b'/test', requestJson="[1,2]")
+    async def test_list_request(self):
+        await self.render_control_resource(self.rsrc, b'/test', requestJson="[1,2]")
         self.assertJsonRpcError(
             message="JSONRPC batch requests are not supported",
             jsonrpccode=JSONRPC_CODES['invalid_request'],
         )
 
-    @defer.inlineCallbacks
-    def test_bad_req_type(self):
-        yield self.render_control_resource(self.rsrc, b'/test', requestJson='"a string?!"')
+    async def test_bad_req_type(self):
+        await self.render_control_resource(self.rsrc, b'/test', requestJson='"a string?!"')
         self.assertJsonRpcError(
             message="JSONRPC root object must be an object",
             jsonrpccode=JSONRPC_CODES['invalid_request'],
         )
 
-    @defer.inlineCallbacks
-    def do_test_invalid_req(self, requestJson, message):
-        yield self.render_control_resource(self.rsrc, b'/test', requestJson=requestJson)
+    async def do_test_invalid_req(self, requestJson, message):
+        await self.render_control_resource(self.rsrc, b'/test', requestJson=requestJson)
         self.assertJsonRpcError(message=message, jsonrpccode=JSONRPC_CODES['invalid_request'])
 
     def test_bad_req_jsonrpc_missing(self):
@@ -890,9 +841,8 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             "'params' must be an object",
         )
 
-    @defer.inlineCallbacks
-    def test_valid(self):
-        yield self.render_control_resource(
+    async def test_valid(self):
+        await self.render_control_resource(
             self.rsrc, b'/test/13', action="testy", params={'foo': 3, 'bar': 5}
         )
         self.assertRequest(
@@ -909,9 +859,8 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             responseCode=200,
         )
 
-    @defer.inlineCallbacks
-    def test_valid_int_id(self):
-        yield self.render_control_resource(
+    async def test_valid_int_id(self):
+        await self.render_control_resource(
             self.rsrc, b'/test/13', action="testy", params={'foo': 3, 'bar': 5}, id=1823
         )
         self.assertRequest(
@@ -932,9 +881,8 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             responseCode=200,
         )
 
-    @defer.inlineCallbacks
-    def test_valid_fails(self):
-        yield self.render_control_resource(self.rsrc, b'/test/13', action="fail")
+    async def test_valid_fails(self):
+        await self.render_control_resource(self.rsrc, b'/test/13', action="fail")
         self.assertJsonRpcError(
             message=re.compile('^RuntimeError'),
             jsonrpccode=JSONRPC_CODES['internal_error'],
@@ -943,29 +891,27 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         # the error gets logged, too:
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def test_authz_forbidden(self):
+    async def test_authz_forbidden(self):
         def deny(request, ep, action, options):
             if "13" in ep:
                 raise authz.Forbidden("no no")
             return None
 
         self.master.www.assertUserAllowed = deny
-        yield self.render_control_resource(self.rsrc, b'/test/13', action="fail")
+        await self.render_control_resource(self.rsrc, b'/test/13', action="fail")
         self.assertJsonRpcError(
             message=re.compile('no no'),
             jsonrpccode=JSONRPC_CODES['invalid_request'],
             responseCode=403,
         )
 
-    @defer.inlineCallbacks
-    def test_owner_without_email(self):
+    async def test_owner_without_email(self):
         self.master.session.user_info = {
             "username": "defunkt",
             "full_name": "Defunkt user",
         }
 
-        yield self.render_control_resource(self.rsrc, b'/test/13', action="testy")
+        await self.render_control_resource(self.rsrc, b'/test/13', action="testy")
         self.assertRequest(
             contentJson={
                 'id': self.UUID,
@@ -980,13 +926,12 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             responseCode=200,
         )
 
-    @defer.inlineCallbacks
-    def test_owner_with_only_full_name(self):
+    async def test_owner_with_only_full_name(self):
         self.master.session.user_info = {
             "full_name": "Defunkt user",
         }
 
-        yield self.render_control_resource(self.rsrc, b'/test/13', action="testy")
+        await self.render_control_resource(self.rsrc, b'/test/13', action="testy")
         self.assertRequest(
             contentJson={
                 'id': self.UUID,
@@ -1001,15 +946,14 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             responseCode=200,
         )
 
-    @defer.inlineCallbacks
-    def test_owner_with_email(self):
+    async def test_owner_with_email(self):
         self.master.session.user_info = {
             "email": "defunkt@example.org",
             "username": "defunkt",
             "full_name": "Defunkt user",
         }
 
-        yield self.render_control_resource(self.rsrc, b'/test/13', action="testy")
+        await self.render_control_resource(self.rsrc, b'/test/13', action="testy")
         self.assertRequest(
             contentJson={
                 'id': self.UUID,
