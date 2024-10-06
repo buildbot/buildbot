@@ -177,8 +177,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         p4port=None,
         p4user=None,
@@ -221,7 +220,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         self._ticket_login_counter = 0
 
-        yield super().reconfigService(
+        await super().reconfigService(
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
@@ -242,10 +241,9 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         d.addErrback(log.err, f'P4 poll failed on {self.p4port}, {self.p4base}')
         return d
 
-    @defer.inlineCallbacks
-    def _get_process_output(self, args):
+    async def _get_process_output(self, args):
         env = {e: os.environ.get(e) for e in self.env_vars if os.environ.get(e)}
-        res, out = yield runprocess.run_process(
+        res, out = await runprocess.run_process(
             self.master.reactor,
             [self.p4bin, *args],
             env=env,
@@ -269,8 +267,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
 
-    @defer.inlineCallbacks
-    def _poll(self):
+    async def _poll(self):
         if self.use_tickets:
             self._ticket_login_counter -= 1
             if self._ticket_login_counter <= 0:
@@ -278,7 +275,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 log.msg(f"P4Poller: (re)acquiring P4 ticket for {self.p4base}...")
                 protocol = TicketLoginProtocol(self.p4passwd + "\n", self.p4base)
                 self._acquireTicket(protocol)
-                yield protocol.deferred
+                await protocol.deferred
 
         args = []
         if self.p4port:
@@ -294,7 +291,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         else:
             args.extend(['-m', '1', f'{self.p4base}...'])
 
-        result = yield self._get_process_output(args)
+        result = await self._get_process_output(args)
         # decode the result from its designated encoding
         try:
             result = bytes2unicode(result, self.encoding)
@@ -332,7 +329,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 if self.p4passwd:
                     args.extend(['-P', self.p4passwd])
             args.extend(['describe', '-s', str(num)])
-            result = yield self._get_process_output(args)
+            result = await self._get_process_output(args)
 
             # decode the result from its designated encoding
             try:
@@ -387,7 +384,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                         branch_files[branch] = [file]
 
             for branch, files in branch_files.items():
-                yield self.master.data.updates.addChange(
+                await self.master.data.updates.addChange(
                     author=who,
                     committer=None,
                     files=files,
