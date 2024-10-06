@@ -29,11 +29,10 @@ if TYPE_CHECKING:
 
 
 class Db2DataMixin:
-    @defer.inlineCallbacks
-    def db2data(self, dbdict: ChangeSourceModel):
+    async def db2data(self, dbdict: ChangeSourceModel):
         master = None
         if dbdict.masterid is not None:
-            master = yield self.master.data.get(('masters', dbdict.masterid))
+            master = await self.master.data.get(('masters', dbdict.masterid))
         data = {
             'changesourceid': dbdict.id,
             'name': dbdict.name,
@@ -48,9 +47,8 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
         /masters/n:masterid/changesources/n:changesourceid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        dbdict = yield self.master.db.changesources.getChangeSource(kwargs['changesourceid'])
+    async def get(self, resultSpec, kwargs):
+        dbdict = await self.master.db.changesources.getChangeSource(kwargs['changesourceid'])
         if 'masterid' in kwargs:
             if dbdict.masterid != kwargs['masterid']:
                 return None
@@ -65,12 +63,11 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
     """
     rootLinkName = 'changesources'
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        changesources = yield self.master.db.changesources.getChangeSources(
+    async def get(self, resultSpec, kwargs):
+        changesources = await self.master.db.changesources.getChangeSources(
             masterid=kwargs.get('masterid')
         )
-        csdicts = yield defer.DeferredList(
+        csdicts = await defer.DeferredList(
             [self.db2data(cs) for cs in changesources], consumeErrors=True, fireOnOneErrback=True
         )
         return [r for (s, r) in csdicts]
@@ -113,8 +110,7 @@ class ChangeSource(base.ResourceType):
 
         return d
 
-    @defer.inlineCallbacks
-    def _masterDeactivated(self, masterid):
-        changesources = yield self.master.db.changesources.getChangeSources(masterid=masterid)
+    async def _masterDeactivated(self, masterid):
+        changesources = await self.master.db.changesources.getChangeSources(masterid=masterid)
         for cs in changesources:
-            yield self.master.db.changesources.setChangeSourceMaster(cs.id, None)
+            await self.master.db.changesources.setChangeSourceMaster(cs.id, None)
