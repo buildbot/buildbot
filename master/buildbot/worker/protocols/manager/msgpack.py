@@ -71,15 +71,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         # self.factory is set on the protocol instance when creating it in Twisted internals
         return self.factory.buildbot_dispatcher
 
-    @defer.inlineCallbacks
-    def onOpen(self):
+    async def onOpen(self):
         if self.debug:
             log.msg("WebSocket connection open.")
         self.seq_number = 0
         self.command_id_to_command_map = {}
         self.command_id_to_reader_map = {}
         self.command_id_to_writer_map = {}
-        yield self.initialize()
+        await self.initialize()
 
     def maybe_log_worker_to_master_msg(self, message):
         if self.debug:
@@ -94,16 +93,15 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if k not in msg:
                 raise KeyError(f'message did not contain obligatory "{k}" key')
 
-    @defer.inlineCallbacks
-    def initialize(self):
+    async def initialize(self):
         try:
             dispatcher = self.get_dispatcher()
-            yield dispatcher.master.initLock.acquire()
+            await dispatcher.master.initLock.acquire()
 
             if self.worker_name in dispatcher.users:
                 _, afactory = dispatcher.users[self.worker_name]
-                self.connection = yield afactory(self, self.worker_name)
-                yield self.connection.attached(self)
+                self.connection = await afactory(self, self.worker_name)
+                await self.connection.attached(self)
             else:
                 self.sendClose()
         except Exception as e:
@@ -112,8 +110,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         finally:
             eventually(dispatcher.master.initLock.release)
 
-    @defer.inlineCallbacks
-    def call_update(self, msg):
+    async def call_update(self, msg):
         result = None
         is_exception = False
         try:
@@ -123,15 +120,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_update_msgpack(msg['args'])
+            await command.remote_update_msgpack(msg['args'])
         except Exception as e:
             is_exception = True
             result = str(e)
 
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_complete(self, msg):
+    async def call_complete(self, msg):
         result = None
         is_exception = False
         try:
@@ -140,7 +136,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if msg['command_id'] not in self.command_id_to_command_map:
                 raise KeyError('unknown "command_id"')
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_complete(msg['args'])
+            await command.remote_complete(msg['args'])
 
             if msg['command_id'] in self.command_id_to_command_map:
                 del self.command_id_to_command_map[msg['command_id']]
@@ -153,8 +149,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_upload_file_write(self, msg):
+    async def call_update_upload_file_write(self, msg):
         result = None
         is_exception = False
         try:
@@ -164,14 +159,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_write(msg['args'])
+            await file_writer.remote_write(msg['args'])
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_upload_file_utime(self, msg):
+    async def call_update_upload_file_utime(self, msg):
         result = None
         is_exception = False
         try:
@@ -181,14 +175,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_utime('access_time', 'modified_time')
+            await file_writer.remote_utime('access_time', 'modified_time')
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_upload_file_close(self, msg):
+    async def call_update_upload_file_close(self, msg):
         result = None
         is_exception = False
         try:
@@ -198,14 +191,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_close()
+            await file_writer.remote_close()
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_read_file(self, msg):
+    async def call_update_read_file(self, msg):
         result = None
         is_exception = False
         try:
@@ -215,14 +207,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_reader = self.command_id_to_reader_map[msg['command_id']]
-            yield file_reader.remote_read(msg['length'])
+            await file_reader.remote_read(msg['length'])
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_read_file_close(self, msg):
+    async def call_update_read_file_close(self, msg):
         result = None
         is_exception = False
         try:
@@ -232,14 +223,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_reader = self.command_id_to_reader_map[msg['command_id']]
-            yield file_reader.remote_close()
+            await file_reader.remote_close()
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_upload_directory_unpack(self, msg):
+    async def call_update_upload_directory_unpack(self, msg):
         result = None
         is_exception = False
         try:
@@ -249,14 +239,13 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             directory_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield directory_writer.remote_unpack()
+            await directory_writer.remote_unpack()
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_update_upload_directory_write(self, msg):
+    async def call_update_upload_directory_write(self, msg):
         result = None
         is_exception = False
         try:
@@ -266,7 +255,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             directory_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield directory_writer.remote_write(msg['args'])
+            await directory_writer.remote_write(msg['args'])
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -328,8 +317,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         else:
             self.send_response_msg(msg, f"Command {msg['op']} does not exist.", is_exception=True)
 
-    @defer.inlineCallbacks
-    def get_message_result(self, msg):
+    async def get_message_result(self, msg):
         if msg['op'] != 'print' and msg['op'] != 'get_worker_info' and self.connection is None:
             raise ConnectioLostError("No worker connection")
 
@@ -343,11 +331,10 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
         self.seq_number = self.seq_number + 1
         self.sendMessage(object, isBinary=True)
-        res1 = yield d
+        res1 = await d
         return res1
 
-    @defer.inlineCallbacks
-    def onConnect(self, request):
+    async def onConnect(self, request):
         if self.debug:
             log.msg(f"Client connecting: {request.peer}")
 
@@ -362,7 +349,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
         try:
             dispatcher = self.get_dispatcher()
-            yield dispatcher.master.initLock.acquire()
+            await dispatcher.master.initLock.acquire()
 
             if username in dispatcher.users:
                 pwd, _ = dispatcher.users[username]
