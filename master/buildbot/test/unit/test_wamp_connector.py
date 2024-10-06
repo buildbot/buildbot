@@ -16,7 +16,6 @@
 from unittest import mock
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
@@ -56,22 +55,20 @@ class TestedWampConnector(connector.WampConnector):
 
 
 class WampConnector(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         master = fakemaster.make_master(self)
         self.connector = TestedWampConnector()
 
         config = FakeConfig({'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"})
 
-        yield self.connector.setServiceParent(master)
-        yield master.startService()
-        yield self.connector.reconfigServiceWithBuildbotConfig(config)
+        await self.connector.setServiceParent(master)
+        await master.startService()
+        await self.connector.reconfigServiceWithBuildbotConfig(config)
 
-    @defer.inlineCallbacks
-    def test_reconfig_same_config(self):
+    async def test_reconfig_same_config(self):
         config = FakeConfig({'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"})
-        yield self.connector.reconfigServiceWithBuildbotConfig(config)
+        await self.connector.reconfigServiceWithBuildbotConfig(config)
 
     @parameterized.expand([
         ('type', 'simple'),
@@ -79,42 +76,37 @@ class WampConnector(TestReactorMixin, unittest.TestCase):
         ('realm', 'bb-other'),
         ('wamp_debug_level', 'info'),
     ])
-    @defer.inlineCallbacks
-    def test_reconfig_does_not_allow_config_change(self, attr_name, attr_value):
+    async def test_reconfig_does_not_allow_config_change(self, attr_name, attr_value):
         mq_dict = {'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"}
         mq_dict[attr_name] = attr_value
         with self.assertRaises(
             ValueError, msg="Cannot use different wamp settings when reconfiguring"
         ):
-            yield self.connector.reconfigServiceWithBuildbotConfig(FakeConfig(mq_dict))
+            await self.connector.reconfigServiceWithBuildbotConfig(FakeConfig(mq_dict))
 
-    @defer.inlineCallbacks
-    def test_startup(self):
+    async def test_startup(self):
         d = self.connector.getService()
         self.connector.app.gotConnection()
-        yield d
+        await d
         # 824 is the hardcoded masterid of fakemaster
         self.connector.service.publish.assert_called_with("org.buildbot.824.connected")
 
-    @defer.inlineCallbacks
-    def test_subscribe(self):
+    async def test_subscribe(self):
         d = self.connector.subscribe('callback', 'topic', 'options')
         self.connector.app.gotConnection()
-        yield d
+        await d
         self.connector.service.subscribe.assert_called_with('callback', 'topic', 'options')
 
-    @defer.inlineCallbacks
-    def test_publish(self):
+    async def test_publish(self):
         d = self.connector.publish('topic', 'data', 'options')
         self.connector.app.gotConnection()
-        yield d
+        await d
         self.connector.service.publish.assert_called_with('topic', 'data', options='options')
 
-    @defer.inlineCallbacks
-    def test_OnLeave(self):
+    async def test_OnLeave(self):
         d = self.connector.getService()
         self.connector.app.gotConnection()
-        yield d
+        await d
         self.assertTrue(self.connector.master.running)
         self.connector.service.onLeave(None)
         self.assertFalse(self.connector.master.running)
