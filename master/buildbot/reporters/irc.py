@@ -114,11 +114,10 @@ class IRCContact(Contact):
             response = f"{verb} {self.user_id} too"
         self.act(response)
 
-    @defer.inlineCallbacks
-    def op_required(self, command):
+    async def op_required(self, command):
         if self.is_private_chat or self.user_id in self.bot.authz.get(command.upper(), ()):
             return False
-        ops = yield self.bot.getChannelOps(self.channel.id)
+        ops = await self.bot.getChannelOps(self.channel.id)
         return self.user_id not in ops
 
     # IRC only commands
@@ -141,42 +140,39 @@ class IRCContact(Contact):
 
     command_LEAVE.usage = "leave #channel - leave a channel #channel"
 
-    @defer.inlineCallbacks
-    def command_MUTE(self, args, **kwargs):
+    async def command_MUTE(self, args, **kwargs):
         if (yield self.op_required('mute')):
-            yield self.send(
+            await self.send(
                 "Only channel operators or explicitly allowed users "
                 f"can mute me here, {self.user_id}... Blah, blah, blah..."
             )
             return
         # The order of these is important! ;)
-        yield self.send("Shutting up for now.")
+        await self.send("Shutting up for now.")
         self.channel.muted = True
 
     command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
 
-    @defer.inlineCallbacks
-    def command_UNMUTE(self, args, **kwargs):
+    async def command_UNMUTE(self, args, **kwargs):
         if self.channel.muted:
             if (yield self.op_required('mute')):
                 return
             # The order of these is important! ;)
             self.channel.muted = False
-            yield self.send("I'm baaaaaaaaaaack!")
+            await self.send("I'm baaaaaaaaaaack!")
         else:
-            yield self.send(
+            await self.send(
                 "No one had told me to be quiet, but it's the thought that counts, right?"
             )
 
     command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
-    @defer.inlineCallbacks
     @Contact.overrideCommand
-    def command_NOTIFY(self, args, **kwargs):
+    async def command_NOTIFY(self, args, **kwargs):
         if not self.is_private_chat:
             argv = self.splitArgs(args)
             if argv and argv[0] in ('on', 'off') and (yield self.op_required('notify')):
-                yield self.send(
+                await self.send(
                     "Only channel operators can change notified events for this "
                     f"channel. And you, {self.user_id}, are neither!"
                 )
@@ -347,9 +343,8 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         for cb in callbacks:
             cb.callback(namelist)
 
-    @defer.inlineCallbacks
-    def getChannelOps(self, channel):
-        names = yield self.getNames(channel)
+    async def getChannelOps(self, channel):
+        names = await self.getNames(channel)
         return [n[1:] for n in names if n[0] in '@&~%']
 
     def joined(self, channel):
