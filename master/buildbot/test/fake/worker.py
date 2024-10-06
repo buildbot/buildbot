@@ -80,8 +80,7 @@ class FakeWorker:
         pass
 
 
-@defer.inlineCallbacks
-def disconnect_master_side_worker(worker):
+async def disconnect_master_side_worker(worker):
     # Force disconnection because the LocalWorker does not disconnect itself. Note that
     # the worker may have already been disconnected by something else (e.g. if it's not
     # responding). We need to call detached() explicitly because the order in which
@@ -89,9 +88,9 @@ def disconnect_master_side_worker(worker):
     if worker.conn is not None:
         worker._detached_sub.unsubscribe()
         conn = worker.conn
-        yield worker.detached()
+        await worker.detached()
         conn.loseConnection()
-    yield worker.waitForCompleteShutdown()
+    await worker.waitForCompleteShutdown()
 
 
 class SeverWorkerConnectionMixin:
@@ -176,8 +175,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         self.worker = worker_class(name, self, **kwargs)
         self.remote_worker = None
 
-    @defer.inlineCallbacks
-    def connect_worker(self):
+    async def connect_worker(self):
         if self.remote_worker is not None:
             return
         if RemoteWorker is None:
@@ -185,15 +183,14 @@ class WorkerController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        yield self.remote_worker.setServiceParent(self.worker)
+        await self.remote_worker.setServiceParent(self.worker)
 
-    @defer.inlineCallbacks
-    def disconnect_worker(self):
-        yield super().disconnect_worker()
+    async def disconnect_worker(self):
+        await super().disconnect_worker()
         if self.remote_worker is None:
             return
 
         worker = self.remote_worker
         self.remote_worker = None
         disconnect_master_side_worker(self.worker)
-        yield worker.disownServiceParent()
+        await worker.disownServiceParent()
