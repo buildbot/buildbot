@@ -31,15 +31,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
 
-    @defer.inlineCallbacks
-    def makeLog(self, type, logEncoding='utf-8'):
-        logid = yield self.master.data.updates.addLog(stepid=27, name='testlog', type=str(type))
+    async def makeLog(self, type, logEncoding='utf-8'):
+        logid = await self.master.data.updates.addLog(stepid=27, name='testlog', type=str(type))
         return log.Log.new(self.master, 'testlog', type, logid, logEncoding)
 
-    @defer.inlineCallbacks
-    def test_creation(self):
+    async def test_creation(self):
         for type in 'ths':
-            yield self.makeLog(type)
+            await self.makeLog(type)
 
     def test_logDecodeFunctionFromConfig(self):
         otilde = '\u00f5'
@@ -58,15 +56,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         f = log.Log._decoderFromString(lambda s: str(s[::-1]))
         self.assertEqual(f('abc'), 'cba')
 
-    @defer.inlineCallbacks
-    def test_updates_plain(self):
-        _log = yield self.makeLog('t')
+    async def test_updates_plain(self):
+        _log = await self.makeLog('t')
 
         _log.addContent('hello\n')
         _log.addContent('hello ')
         _log.addContent('cruel ')
         _log.addContent('world\nthis is a second line')  # unfinished
-        yield _log.finish()
+        await _log.finish()
 
         self.assertEqual(
             self.master.data.updates.logs[_log.logid],
@@ -78,96 +75,90 @@ class Tests(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_updates_different_encoding(self):
-        _log = yield self.makeLog('t', logEncoding='latin-1')
+    async def test_updates_different_encoding(self):
+        _log = await self.makeLog('t', logEncoding='latin-1')
         # 0xa2 is latin-1 encoding for CENT SIGN
         _log.addContent('$ and \xa2\n')
-        yield _log.finish()
+        await _log.finish()
 
         self.assertEqual(
             self.master.data.updates.logs[_log.logid]['content'], ['$ and \N{CENT SIGN}\n']
         )
 
-    @defer.inlineCallbacks
-    def test_updates_unicode_input(self):
-        _log = yield self.makeLog('t', logEncoding='something-invalid')
+    async def test_updates_unicode_input(self):
+        _log = await self.makeLog('t', logEncoding='something-invalid')
         _log.addContent('\N{SNOWMAN}\n')
-        yield _log.finish()
+        await _log.finish()
 
         self.assertEqual(self.master.data.updates.logs[_log.logid]['content'], ['\N{SNOWMAN}\n'])
 
-    @defer.inlineCallbacks
-    def test_subscription_plain(self):
-        _log = yield self.makeLog('t')
+    async def test_subscription_plain(self):
+        _log = await self.makeLog('t')
         calls = []
         _log.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
-        yield _log.addContent('hello\n')
+        await _log.addContent('hello\n')
         self.assertEqual(calls, [(None, 'hello\n')])
         calls = []
 
-        yield _log.addContent('hello ')
+        await _log.addContent('hello ')
         self.assertEqual(calls, [])
-        yield _log.addContent('cruel ')
+        await _log.addContent('cruel ')
         self.assertEqual(calls, [])
-        yield _log.addContent('world\nthis is a second line\n')
+        await _log.addContent('world\nthis is a second line\n')
         self.assertEqual(calls, [(None, 'hello cruel world\nthis is a second line\n')])
         calls = []
 
-        yield _log.finish()
+        await _log.finish()
         self.assertEqual(calls, [(None, None)])
 
-    @defer.inlineCallbacks
-    def test_subscription_unsubscribe(self):
-        _log = yield self.makeLog('t')
+    async def test_subscription_unsubscribe(self):
+        _log = await self.makeLog('t')
         sub_fn = mock.Mock()
         sub = _log.subscribe(sub_fn)
         sub.unsubscribe()
-        yield _log.finish()
+        await _log.finish()
         sub_fn.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_subscription_stream(self):
-        _log = yield self.makeLog('s')
+    async def test_subscription_stream(self):
+        _log = await self.makeLog('s')
         calls = []
         _log.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
-        yield _log.addStdout('hello\n')
+        await _log.addStdout('hello\n')
         self.assertEqual(calls, [('o', 'hello\n')])
         calls = []
 
-        yield _log.addStdout('hello ')
+        await _log.addStdout('hello ')
         self.assertEqual(calls, [])
-        yield _log.addStdout('cruel ')
+        await _log.addStdout('cruel ')
         self.assertEqual(calls, [])
-        yield _log.addStderr('!!\n')
+        await _log.addStderr('!!\n')
         self.assertEqual(calls, [('e', '!!\n')])
         calls = []
 
-        yield _log.addHeader('**\n')
+        await _log.addHeader('**\n')
         self.assertEqual(calls, [('h', '**\n')])
         calls = []
 
-        yield _log.addStdout('world\nthis is a second line')  # unfinished
+        await _log.addStdout('world\nthis is a second line')  # unfinished
         self.assertEqual(calls, [('o', 'hello cruel world\n')])
         calls = []
 
-        yield _log.finish()
+        await _log.finish()
         self.assertEqual(calls, [('o', 'this is a second line\n'), (None, None)])
 
-    @defer.inlineCallbacks
-    def test_updates_stream(self):
-        _log = yield self.makeLog('s')
+    async def test_updates_stream(self):
+        _log = await self.makeLog('s')
 
         _log.addStdout('hello\n')
         _log.addStdout('hello ')
         _log.addStderr('oh noes!\n')
         _log.addStdout('cruel world\n')
         _log.addStderr('bad things!')  # unfinished
-        yield _log.finish()
+        await _log.finish()
 
         self.assertEqual(
             self.master.data.updates.logs[_log.logid],
@@ -179,26 +170,23 @@ class Tests(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_unyielded_finish(self):
-        _log = yield self.makeLog('s')
+    async def test_unyielded_finish(self):
+        _log = await self.makeLog('s')
         _log.finish()
         with self.assertRaises(AssertionError):
-            yield _log.finish()
+            await _log.finish()
 
-    @defer.inlineCallbacks
-    def test_isFinished(self):
-        _log = yield self.makeLog('s')
+    async def test_isFinished(self):
+        _log = await self.makeLog('s')
         self.assertFalse(_log.isFinished())
-        yield _log.finish()
+        await _log.finish()
         self.assertTrue(_log.isFinished())
 
-    @defer.inlineCallbacks
-    def test_waitUntilFinished(self):
-        _log = yield self.makeLog('s')
+    async def test_waitUntilFinished(self):
+        _log = await self.makeLog('s')
         d = _log.waitUntilFinished()
         self.assertFalse(d.called)
-        yield _log.finish()
+        await _log.finish()
         self.assertTrue(d.called)
 
 
@@ -305,40 +293,37 @@ class TestErrorRaised(unittest.TestCase):
         self.patch(testedLog, 'addRawLines', addRawLines)
         return testedLog
 
-    @defer.inlineCallbacks
-    def testErrorOnStreamLog(self):
+    async def testErrorOnStreamLog(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
         )
 
         correct_error_raised = False
         try:
-            yield tested_log.addStdout('msg\n')
+            await tested_log.addStdout('msg\n')
         except Exception as e:
             correct_error_raised = 'DB has gone away' in str(e)
         self.assertTrue(correct_error_raised)
 
-    @defer.inlineCallbacks
-    def testErrorOnPlainLog(self):
+    async def testErrorOnPlainLog(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.PlainLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
         )
         correct_error_raised = False
         try:
-            yield tested_log.addContent('msg\n')
+            await tested_log.addContent('msg\n')
         except Exception as e:
             correct_error_raised = 'DB has gone away' in str(e)
         self.assertTrue(correct_error_raised)
 
-    @defer.inlineCallbacks
-    def testErrorOnPlainLogFlush(self):
+    async def testErrorOnPlainLogFlush(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.PlainLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
         )
         correct_error_raised = False
         try:
-            yield tested_log.addContent('msg')
-            yield tested_log.finish()
+            await tested_log.addContent('msg')
+            await tested_log.finish()
         except Exception as e:
             correct_error_raised = 'DB has gone away' in str(e)
         self.assertTrue(correct_error_raised)
