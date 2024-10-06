@@ -31,14 +31,13 @@ if TYPE_CHECKING:
     from buildbot.db.buildrequests import BuildRequestModel
 
 
-@defer.inlineCallbacks
-def getPreviousBuild(master, build):
+async def getPreviousBuild(master, build):
     # naive n-1 algorithm. Still need to define what we should skip
     # SKIP builds? forced builds? rebuilds?
     # don't hesitate to contribute improvements to that algorithm
     n = build['number'] - 1
     while n >= 0:
-        prev = yield master.data.get(("builders", build['builderid'], "builds", n))
+        prev = await master.data.get(("builders", build['builderid'], "builds", n))
 
         if prev and prev['results'] != RETRY:
             return prev
@@ -46,8 +45,7 @@ def getPreviousBuild(master, build):
     return None
 
 
-@defer.inlineCallbacks
-def getDetailsForBuildset(
+async def getDetailsForBuildset(
     master,
     bsid,
     want_properties=False,
@@ -69,14 +67,14 @@ def getDetailsForBuildset(
             ('buildrequests',), filters=[resultspec.Filter('buildsetid', 'eq', [bsid])]
         ),
     ]
-    (buildset, breqs) = yield defer.gatherResults(dl)
+    (buildset, breqs) = await defer.gatherResults(dl)
     # next, get the bdictlist for each build request
     dl = [master.data.get(("buildrequests", breq['buildrequestid'], 'builds')) for breq in breqs]
 
-    builds = yield defer.gatherResults(dl)
+    builds = await defer.gatherResults(dl)
     builds = flatten(builds, types=(list, UserList))
     if builds:
-        yield getDetailsForBuilds(
+        await getDetailsForBuilds(
             master,
             buildset,
             builds,
@@ -91,8 +89,7 @@ def getDetailsForBuildset(
     return {"buildset": buildset, "builds": builds}
 
 
-@defer.inlineCallbacks
-def getDetailsForBuild(
+async def getDetailsForBuild(
     master,
     build,
     want_properties=False,
@@ -102,20 +99,20 @@ def getDetailsForBuild(
     add_logs=None,
     want_logs_content=False,
 ):
-    buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
-    buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
+    buildrequest = await master.data.get(("buildrequests", build['buildrequestid']))
+    buildset = await master.data.get(("buildsets", buildrequest['buildsetid']))
     build['buildrequest'] = buildrequest
     build['buildset'] = buildset
 
     parentbuild = None
     parentbuilder = None
     if buildset['parent_buildid']:
-        parentbuild = yield master.data.get(("builds", buildset['parent_buildid']))
-        parentbuilder = yield master.data.get(("builders", parentbuild['builderid']))
+        parentbuild = await master.data.get(("builds", buildset['parent_buildid']))
+        parentbuilder = await master.data.get(("builders", parentbuild['builderid']))
     build['parentbuild'] = parentbuild
     build['parentbuilder'] = parentbuilder
 
-    ret = yield getDetailsForBuilds(
+    ret = await getDetailsForBuilds(
         master,
         buildset,
         [build],
@@ -129,10 +126,9 @@ def getDetailsForBuild(
     return ret
 
 
-@defer.inlineCallbacks
-def get_details_for_buildrequest(master, buildrequest: BuildRequestModel, build):
-    buildset = yield master.data.get(("buildsets", buildrequest.buildsetid))
-    builder = yield master.data.get(("builders", buildrequest.builderid))
+async def get_details_for_buildrequest(master, buildrequest: BuildRequestModel, build):
+    buildset = await master.data.get(("buildsets", buildrequest.buildsetid))
+    builder = await master.data.get(("builders", buildrequest.builderid))
 
     build['buildrequest'] = dataclasses.asdict(buildrequest)
     build['buildset'] = buildset
@@ -157,8 +153,7 @@ def should_attach_log(logs_config, log):
     return False
 
 
-@defer.inlineCallbacks
-def getDetailsForBuilds(
+async def getDetailsForBuilds(
     master,
     buildset,
     builds,
@@ -171,19 +166,19 @@ def getDetailsForBuilds(
 ):
     builderids = {build['builderid'] for build in builds}
 
-    builders = yield defer.gatherResults([master.data.get(("builders", _id)) for _id in builderids])
+    builders = await defer.gatherResults([master.data.get(("builders", _id)) for _id in builderids])
 
     buildersbyid = {builder['builderid']: builder for builder in builders}
 
     if want_properties:
-        buildproperties = yield defer.gatherResults([
+        buildproperties = await defer.gatherResults([
             master.data.get(("builds", build['buildid'], 'properties')) for build in builds
         ])
     else:  # we still need a list for the big zip
         buildproperties = list(range(len(builds)))
 
     if want_previous_build:
-        prev_builds = yield defer.gatherResults([
+        prev_builds = await defer.gatherResults([
             getPreviousBuild(master, build) for build in builds
         ])
     else:  # we still need a list for the big zip
@@ -202,13 +197,13 @@ def getDetailsForBuilds(
         want_steps = True
 
     if want_steps:  # pylint: disable=too-many-nested-blocks
-        buildsteps = yield defer.gatherResults([
+        buildsteps = await defer.gatherResults([
             master.data.get(("builds", build['buildid'], 'steps')) for build in builds
         ])
         if want_logs:
             for build, build_steps in zip(builds, buildsteps):
                 for s in build_steps:
-                    logs = yield master.data.get(("steps", s['stepid'], 'logs'))
+                    logs = await master.data.get(("steps", s['stepid'], 'logs'))
                     s['logs'] = list(logs)
                     for l in s['logs']:
                         l['stepname'] = s['name']
@@ -218,7 +213,7 @@ def getDetailsForBuilds(
                         l['url_raw'] = get_url_for_log_raw(master, l['logid'], 'raw')
                         l['url_raw_inline'] = get_url_for_log_raw(master, l['logid'], 'raw_inline')
                         if should_attach_log(logs_config, l):
-                            l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+                            l['content'] = await master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
         buildsteps = list(range(len(builds)))
@@ -240,11 +235,12 @@ def getDetailsForBuilds(
 
 
 # perhaps we need data api for users with sourcestamps/:id/users
-@defer.inlineCallbacks
-def getResponsibleUsersForSourceStamp(master, sourcestampid):
+
+
+async def getResponsibleUsersForSourceStamp(master, sourcestampid):
     changesd = master.data.get(("sourcestamps", sourcestampid, "changes"))
     sourcestampd = master.data.get(("sourcestamps", sourcestampid))
-    changes, sourcestamp = yield defer.gatherResults([changesd, sourcestampd])
+    changes, sourcestamp = await defer.gatherResults([changesd, sourcestampd])
     blamelist = set()
     # normally, we get only one, but just assume there might be several
     for c in changes:
@@ -258,13 +254,14 @@ def getResponsibleUsersForSourceStamp(master, sourcestampid):
 
 
 # perhaps we need data api for users with builds/:id/users
-@defer.inlineCallbacks
-def getResponsibleUsersForBuild(master, buildid):
+
+
+async def getResponsibleUsersForBuild(master, buildid):
     dl = [
         master.data.get(("builds", buildid, "changes")),
         master.data.get(("builds", buildid, 'properties')),
     ]
-    changes, properties = yield defer.gatherResults(dl)
+    changes, properties = await defer.gatherResults(dl)
     blamelist = set()
 
     # add users from changes
@@ -291,9 +288,10 @@ def getResponsibleUsersForBuild(master, buildid):
 
 
 # perhaps we need data api for users with buildsets/:id/users
-@defer.inlineCallbacks
-def get_responsible_users_for_buildset(master, buildsetid):
-    props = yield master.data.get(("buildsets", buildsetid, "properties"))
+
+
+async def get_responsible_users_for_buildset(master, buildsetid):
+    props = await master.data.get(("buildsets", buildsetid, "properties"))
 
     # TODO: This currently does not track what changes were in the buildset. getChangesForBuild()
     # would walk the change graph until it finds last successful build and uses the authors of
