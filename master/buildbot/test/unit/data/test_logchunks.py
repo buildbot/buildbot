@@ -15,7 +15,6 @@
 
 import textwrap
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import logchunks
@@ -95,17 +94,16 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def do_test_chunks(self, path, logid, expLines):
+    async def do_test_chunks(self, path, logid, expLines):
         # get the whole thing in one go
-        logchunk = yield self.callGet(path)
+        logchunk = await self.callGet(path)
         self.validateData(logchunk)
         expContent = '\n'.join(expLines) + '\n'
         self.assertEqual(logchunk, {'logid': logid, 'firstline': 0, 'content': expContent})
 
         # line-by-line
         for i, expLine in enumerate(expLines):
-            logchunk = yield self.callGet(path, resultSpec=resultspec.ResultSpec(offset=i, limit=1))
+            logchunk = await self.callGet(path, resultSpec=resultspec.ResultSpec(offset=i, limit=1))
             self.validateData(logchunk)
             self.assertEqual(logchunk, {'logid': logid, 'firstline': i, 'content': expLine + '\n'})
 
@@ -113,7 +111,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
         mid = int(len(expLines) / 2)
         for f, length in (0, mid), (mid, len(expLines) - 1):
             result_spec = resultspec.ResultSpec(offset=f, limit=length - f + 1)
-            logchunk = yield self.callGet(path, resultSpec=result_spec)
+            logchunk = await self.callGet(path, resultSpec=result_spec)
             self.validateData(logchunk)
             expContent = '\n'.join(expLines[f : length + 1]) + '\n'
             self.assertEqual(logchunk, {'logid': logid, 'firstline': f, 'content': expContent})
@@ -122,7 +120,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
         f = len(expLines) - 2
         length = len(expLines) + 10
         result_spec = resultspec.ResultSpec(offset=f, limit=length - f + 1)
-        logchunk = yield self.callGet(path, resultSpec=result_spec)
+        logchunk = await self.callGet(path, resultSpec=result_spec)
         self.validateData(logchunk)
         expContent = '\n'.join(expLines[-2:]) + '\n'
         self.assertEqual(logchunk, {'logid': logid, 'firstline': f, 'content': expContent})
@@ -143,26 +141,22 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        logchunk = yield self.callGet(('logs', 99, self.endpointname))
+    async def test_get_missing(self):
+        logchunk = await self.callGet(('logs', 99, self.endpointname))
         self.assertEqual(logchunk, None)
 
-    @defer.inlineCallbacks
-    def test_get_empty(self):
-        logchunk = yield self.callGet(('logs', 62, self.endpointname))
+    async def test_get_empty(self):
+        logchunk = await self.callGet(('logs', 62, self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['content'], '')
 
-    @defer.inlineCallbacks
-    def test_get_by_stepid(self):
-        logchunk = yield self.callGet(('steps', 50, 'logs', 'errors', self.endpointname))
+    async def test_get_by_stepid(self):
+        logchunk = await self.callGet(('steps', 50, 'logs', 'errors', self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
-    @defer.inlineCallbacks
-    def test_get_by_buildid(self):
-        logchunk = yield self.callGet((
+    async def test_get_by_buildid(self):
+        logchunk = await self.callGet((
             'builds',
             13,
             'steps',
@@ -174,9 +168,8 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 60)
 
-    @defer.inlineCallbacks
-    def test_get_by_builder(self):
-        logchunk = yield self.callGet((
+    async def test_get_by_builder(self):
+        logchunk = await self.callGet((
             'builders',
             77,
             'builds',
@@ -190,9 +183,8 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
-    @defer.inlineCallbacks
-    def test_get_by_builder_step_name(self):
-        logchunk = yield self.callGet((
+    async def test_get_by_builder_step_name(self):
+        logchunk = await self.callGet((
             'builders',
             77,
             'builds',
@@ -216,10 +208,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         self.assertIsInstance(data['mime-type'], str)
         self.assertIsInstance(data['filename'], str)
 
-    @defer.inlineCallbacks
-    def do_test_chunks(self, path, logid, expLines):
+    async def do_test_chunks(self, path, logid, expLines):
         # get the whole thing in one go
-        logchunk = yield self.callGet(path)
+        logchunk = await self.callGet(path)
         self.validateData(logchunk)
         if logid == 60:
             expContent = 'Builder: some:builder\nBuild number: 3\nWorker name: wrk\n'
