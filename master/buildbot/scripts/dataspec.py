@@ -18,19 +18,16 @@ import json
 import os
 import sys
 
-from twisted.internet import defer
-
 from buildbot.data import connector
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
 
 
 @in_reactor
-@defer.inlineCallbacks
-def dataspec(config):
-    master = yield fakemaster.make_master(None, wantRealReactor=True)
+async def dataspec(config):
+    master = await fakemaster.make_master(None, wantRealReactor=True)
     data = connector.DataConnector()
-    yield data.setServiceParent(master)
+    await data.setServiceParent(master)
     if config['out'] != '--':
         dirs = os.path.dirname(config['out'])
         if dirs and not os.path.exists(dirs):
