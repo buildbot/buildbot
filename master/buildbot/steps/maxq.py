@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -50,16 +48,15 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
         self.observer = MaxQObserver()
         self.addLogObserver('stdio', self.observer)
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         command = [self.binary]
         command.append(self.testdir)
 
-        cmd = yield self.makeRemoteShellCommand(command=command)
-        yield self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand(command=command)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         self.failures = self.observer.failures
 
