@@ -17,8 +17,6 @@
 import io
 from unittest import TestResult
 
-from twisted.internet import defer
-
 from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
@@ -106,23 +104,22 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         self.addLogObserver('stdio', self._observer)
         self.progressMetrics = (*self.progressMetrics, "tests", "tests failed")
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         problems = ""
         for test, err in self._observer.errors + self._observer.failures:
             problems += f"{test.id()}\n{err}"
         if problems:
-            yield self.addCompleteLog("problems", problems)
+            await self.addCompleteLog("problems", problems)
 
         warnings = self._observer.warningio.getvalue()
         if warnings:
-            yield self.addCompleteLog("warnings", warnings)
+            await self.addCompleteLog("warnings", warnings)
 
         failures = len(self._observer.failures)
         errors = len(self._observer.errors)
