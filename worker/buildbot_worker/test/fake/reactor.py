@@ -131,12 +131,11 @@ class TestReactor(NonReactor, CoreReactor, Clock):
 
         self._pendingCurrentCalls = False
 
-    @defer.inlineCallbacks
-    def _catchPrintExceptions(self, what, *a, **kw):
+    async def _catchPrintExceptions(self, what, *a, **kw):
         try:
             r = what(*a, **kw)
             if isinstance(r, defer.Deferred):
-                yield r
+                await r
         except Exception as e:
             log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise
