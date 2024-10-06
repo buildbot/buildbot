@@ -43,8 +43,7 @@ class TriggeringMaster(RunMasterBase):
         "project": "none",
     }
 
-    @defer.inlineCallbacks
-    def setup_trigger_config(self, triggeredFactory, nextBuild=None):
+    async def setup_trigger_config(self, triggeredFactory, nextBuild=None):
         c = {}
 
         c['schedulers'] = [
@@ -72,10 +71,9 @@ class TriggeringMaster(RunMasterBase):
         triggeredBuilder = BuilderConfig(**triggeredBuilderKwargs)
 
         c['builders'] = [mainBuilder, triggeredBuilder]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def setup_config_trigger_runs_forever(self):
+    async def setup_config_trigger_runs_forever(self):
         f2 = BuildFactory()
 
         # Infinite sleep command.
@@ -97,37 +95,34 @@ class TriggeringMaster(RunMasterBase):
 
         f2.addStep(steps.ShellCommand(command=cmd))
 
-        yield self.setup_trigger_config(f2)
+        await self.setup_trigger_config(f2)
 
-    @defer.inlineCallbacks
-    def setup_config_triggered_build_not_created(self):
+    async def setup_config_triggered_build_not_created(self):
         f2 = BuildFactory()
         f2.addStep(steps.ShellCommand(command="echo 'hello'"))
 
         def nextBuild(*args, **kwargs):
             return defer.succeed(None)
 
-        yield self.setup_trigger_config(f2, nextBuild=nextBuild)
+        await self.setup_trigger_config(f2, nextBuild=nextBuild)
 
     def assertBuildIsCancelled(self, b):
         self.assertTrue(b['complete'])
         self.assertEqual(b['results'], CANCELLED, repr(b))
 
-    @defer.inlineCallbacks
-    def runTest(self, newBuildCallback, flushErrors=False):
-        newConsumer = yield self.master.mq.startConsuming(newBuildCallback, ('builds', None, 'new'))
-        build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
+    async def runTest(self, newBuildCallback, flushErrors=False):
+        newConsumer = await self.master.mq.startConsuming(newBuildCallback, ('builds', None, 'new'))
+        build = await self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
         self.assertBuildIsCancelled(build)
         newConsumer.stopConsuming()
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         for b in builds:
             self.assertBuildIsCancelled(b)
         if flushErrors:
             self.flushLoggedErrors()
 
-    @defer.inlineCallbacks
-    def testTriggerRunsForever(self):
-        yield self.setup_config_trigger_runs_forever()
+    async def testTriggerRunsForever(self):
+        await self.setup_config_trigger_runs_forever()
         self.higherBuild = None
 
         def newCallback(_, data):
@@ -137,11 +132,10 @@ class TriggeringMaster(RunMasterBase):
                 self.master.data.control("stop", {}, ("builds", self.higherBuild))
                 self.higherBuild = None
 
-        yield self.runTest(newCallback, flushErrors=True)
+        await self.runTest(newCallback, flushErrors=True)
 
-    @defer.inlineCallbacks
-    def testTriggerRunsForeverAfterCmdStarted(self):
-        yield self.setup_config_trigger_runs_forever()
+    async def testTriggerRunsForeverAfterCmdStarted(self):
+        await self.setup_config_trigger_runs_forever()
         self.higherBuild = None
 
         def newCallback(_, data):
@@ -155,13 +149,12 @@ class TriggeringMaster(RunMasterBase):
 
                 reactor.callLater(5.0, f)
 
-        yield self.runTest(newCallback, flushErrors=True)
+        await self.runTest(newCallback, flushErrors=True)
 
-    @defer.inlineCallbacks
-    def testTriggeredBuildIsNotCreated(self):
-        yield self.setup_config_triggered_build_not_created()
+    async def testTriggeredBuildIsNotCreated(self):
+        await self.setup_config_triggered_build_not_created()
 
         def newCallback(_, data):
             self.master.data.control("stop", {}, ("builds", data['buildid']))
 
-        yield self.runTest(newCallback)
+        await self.runTest(newCallback)
