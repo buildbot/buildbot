@@ -101,13 +101,12 @@ class ChangeHookResource(resource.Resource):
 
         return server.NOT_DONE_YET
 
-    @defer.inlineCallbacks
-    def getAndSubmitChanges(self, request):
-        changes, src = yield self.getChanges(request)
+    async def getAndSubmitChanges(self, request):
+        changes, src = await self.getChanges(request)
         if not changes:
             request.write(b"no change found")
         else:
-            yield self.submitChanges(changes, request, src)
+            await self.submitChanges(changes, request, src)
             request.write(unicode2bytes(f"{len(changes)} change found"))
 
     def makeHandler(self, dialect):
@@ -138,8 +137,7 @@ class ChangeHookResource(resource.Resource):
 
         return self._dialect_handlers[dialect]
 
-    @defer.inlineCallbacks
-    def getChanges(self, request):
+    async def getChanges(self, request):
         """
         Take the logic from the change hook, and then delegate it
         to the proper handler
@@ -168,11 +166,10 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
 
         handler = self.makeHandler(dialect)
-        changes, src = yield handler.getChanges(request)
+        changes, src = await handler.getChanges(request)
         return (changes, src)
 
-    @defer.inlineCallbacks
-    def submitChanges(self, changes, request, src):
+    async def submitChanges(self, changes, request, src):
         for chdict in changes:
             when_timestamp = chdict.get('when_timestamp')
             if isinstance(when_timestamp, datetime):
@@ -198,5 +195,5 @@ class ChangeHookResource(resource.Resource):
                 chdict['properties'] = dict(
                     (bytes2unicode(k), v) for k, v in chdict['properties'].items()
                 )
-            chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
+            chid = await self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
             log.msg(f"injected change {chid}")
