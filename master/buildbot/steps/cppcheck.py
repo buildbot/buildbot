@@ -16,8 +16,6 @@
 
 import re
 
-from twisted.internet import defer
-
 from buildbot.process import logobserver
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import ShellMixin
@@ -68,8 +66,7 @@ class Cppcheck(ShellMixin, BuildStep):
                 self.summaries[msgsev].append(line)
                 self.counts[msgsev] += 1
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         command = [self.binary]
         command.extend(self.source)
         if self.enable:
@@ -78,12 +75,12 @@ class Cppcheck(ShellMixin, BuildStep):
             command.append('--inconclusive')
         command.extend(self.extra_args)
 
-        cmd = yield self.makeRemoteShellCommand(command=command)
+        cmd = await self.makeRemoteShellCommand(command=command)
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         self.descriptionDone = self.descriptionDone[:]
         for msg in self.MESSAGES:
@@ -91,10 +88,10 @@ class Cppcheck(ShellMixin, BuildStep):
             if not self.counts[msg]:
                 continue
             self.descriptionDone.append(f"{msg}={self.counts[msg]}")
-            yield self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
+            await self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
         self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
 
-        yield self.updateSummary()
+        await self.updateSummary()
 
         if cmd.results() != SUCCESS:
             return cmd.results()
