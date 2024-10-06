@@ -16,7 +16,6 @@
 import os
 import stat
 
-from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
 
@@ -40,9 +39,8 @@ class GenericLatentMachine(AbstractLatentMachine):
                 msg = f"{arg_name} of {self.name} does not implement required interface"
                 raise RuntimeError(msg)
 
-    @defer.inlineCallbacks
-    def reconfigService(self, name, start_action, stop_action, **kwargs):
-        yield super().reconfigService(name, **kwargs)
+    async def reconfigService(self, name, start_action, stop_action, **kwargs):
+        await super().reconfigService(name, **kwargs)
         self.start_action = start_action
         self.stop_action = stop_action
 
@@ -53,9 +51,8 @@ class GenericLatentMachine(AbstractLatentMachine):
         return self.stop_action.perform(self)
 
 
-@defer.inlineCallbacks
-def runProcessLogFailures(reactor, args, expectedCode=0):
-    code, stdout, stderr = yield runprocess.run_process(reactor, args)
+async def runProcessLogFailures(reactor, args, expectedCode=0):
+    code, stdout, stderr = await runprocess.run_process(reactor, args)
     if code != expectedCode:
         log.err(
             f'Got unexpected return code when running {args}: '
@@ -71,9 +68,8 @@ class _LocalMachineActionMixin:
             config.error('command parameter must be a list')
         self._command = command
 
-    @defer.inlineCallbacks
-    def perform(self, manager):
-        args = yield manager.renderSecrets(self._command)
+    async def perform(self, manager):
+        args = await manager.renderSecrets(self._command)
         return (yield runProcessLogFailures(manager.master.reactor, args))
 
 
@@ -92,25 +88,23 @@ class _SshActionMixin:
         self._sshKey = sshKey
         self._sshHostKey = sshHostKey
 
-    @defer.inlineCallbacks
-    def _performImpl(self, manager, key_path, known_hosts_path):
+    async def _performImpl(self, manager, key_path, known_hosts_path):
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
         return (yield runProcessLogFailures(manager.master.reactor, [self._sshBin, *args]))
 
-    @defer.inlineCallbacks
-    def _prepareSshKeys(self, manager, temp_dir_path):
+    async def _prepareSshKeys(self, manager, temp_dir_path):
         key_path = None
         if self._sshKey is not None:
-            ssh_key_data = yield manager.renderSecrets(self._sshKey)
+            ssh_key_data = await manager.renderSecrets(self._sshKey)
 
             key_path = os.path.join(temp_dir_path, 'ssh-key')
             misc.writeLocalFile(key_path, ssh_key_data, mode=stat.S_IRUSR)
 
         known_hosts_path = None
         if self._sshHostKey is not None:
-            ssh_host_key_data = yield manager.renderSecrets(self._sshHostKey)
+            ssh_host_key_data = await manager.renderSecrets(self._sshHostKey)
             ssh_host_key_data = getSshKnownHostsContents(ssh_host_key_data)
 
             known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
@@ -118,17 +112,16 @@ class _SshActionMixin:
 
         return (key_path, known_hosts_path)
 
-    @defer.inlineCallbacks
-    def perform(self, manager):
+    async def perform(self, manager):
         if self._sshKey is not None or self._sshHostKey is not None:
             with private_tempdir.PrivateTemporaryDirectory(
                 prefix='ssh-', dir=manager.master.basedir
             ) as temp_dir:
-                key_path, hosts_path = yield self._prepareSshKeys(manager, temp_dir)
+                key_path, hosts_path = await self._prepareSshKeys(manager, temp_dir)
 
-                ret = yield self._performImpl(manager, key_path, hosts_path)
+                ret = await self._performImpl(manager, key_path, hosts_path)
         else:
-            ret = yield self._performImpl(manager, None, None)
+            ret = await self._performImpl(manager, None, None)
         return ret
 
 
@@ -196,8 +189,7 @@ class HttpAction:
         self.allow_redirects = allow_redirects
         self.proxies = proxies
 
-    @defer.inlineCallbacks
-    def perform(self, manager):
+    async def perform(self, manager):
         (
             url,
             method,
@@ -211,7 +203,7 @@ class HttpAction:
             timeout,
             allow_redirects,
             proxies,
-        ) = yield manager.renderSecrets((
+        ) = await manager.renderSecrets((
             self.url,
             self.method,
             self.params,
@@ -238,7 +230,7 @@ class HttpAction:
         else:
             config.error(f'Invalid method {method}')
 
-        yield fn(
+        await fn(
             ep='',
             params=params,
             data=data,
