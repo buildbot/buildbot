@@ -57,8 +57,7 @@ class MasterShellCommand(BuildStep):
         self.masterWorkdir = self.workdir
         self._deferwaiter = deferwaiter.DeferWaiter()
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # render properties
         command = self.command
         # set up argv
@@ -83,15 +82,15 @@ class MasterShellCommand(BuildStep):
             else:
                 argv = command
 
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = await self.addLog("stdio")
 
         if isinstance(command, (str, bytes)):
-            yield self.stdio_log.addHeader(command.strip() + "\n\n")
+            await self.stdio_log.addHeader(command.strip() + "\n\n")
         else:
-            yield self.stdio_log.addHeader(" ".join(command) + "\n\n")
-        yield self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
-        yield self.stdio_log.addHeader(f" in dir {os.getcwd()}\n")
-        yield self.stdio_log.addHeader(f" argv: {argv}\n")
+            await self.stdio_log.addHeader(" ".join(command) + "\n\n")
+        await self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
+        await self.stdio_log.addHeader(f" in dir {os.getcwd()}\n")
+        await self.stdio_log.addHeader(f" argv: {argv}\n")
 
         os_env = os.environ
         if self.env is None:
@@ -132,7 +131,7 @@ class MasterShellCommand(BuildStep):
             env = newenv
 
         if self.logEnviron:
-            yield self.stdio_log.addHeader(f" env: {env!r}\n")
+            await self.stdio_log.addHeader(f" env: {env!r}\n")
 
         if self.stopped:
             return CANCELLED
@@ -151,23 +150,22 @@ class MasterShellCommand(BuildStep):
             collect_stderr=on_stderr,
         )
 
-        yield self.process.start()
-        yield self._deferwaiter.wait()
+        await self.process.start()
+        await self._deferwaiter.wait()
 
         if self.process.result_signal is not None:
-            yield self.stdio_log.addHeader(f"signal {self.process.result_signal}\n")
+            await self.stdio_log.addHeader(f"signal {self.process.result_signal}\n")
             self.descriptionDone = [f"killed ({self.process.result_signal})"]
             return FAILURE
         elif self.process.result_rc != 0:
-            yield self.stdio_log.addHeader(f"exit status {self.process.result_signal}\n")
+            await self.stdio_log.addHeader(f"exit status {self.process.result_signal}\n")
             self.descriptionDone = [f"failed ({self.process.result_rc})"]
             return FAILURE
         else:
             return SUCCESS
 
-    @defer.inlineCallbacks
-    def interrupt(self, reason):
-        yield super().interrupt(reason)
+    async def interrupt(self, reason):
+        await super().interrupt(reason)
         if self.process is not None:
             self.process.send_signal(self.interruptSignal)
 
@@ -234,8 +232,7 @@ class LogRenderable(BuildStep):
         super().__init__(**kwargs)
         self.content = content
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         content = pprint.pformat(self.content)
-        yield self.addCompleteLog(name='Output', text=content)
+        await self.addCompleteLog(name='Output', text=content)
         return SUCCESS
