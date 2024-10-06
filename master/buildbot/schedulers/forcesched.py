@@ -17,7 +17,6 @@ import re
 import traceback
 from typing import Optional
 
-from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import config
@@ -41,11 +40,10 @@ class ValidationErrorCollector:
     def __init__(self):
         self.errors = {}
 
-    @defer.inlineCallbacks
-    def collectValidationErrors(self, name, fn, *args, **kwargs):
+    async def collectValidationErrors(self, name, fn, *args, **kwargs):
         res = None
         try:
-            res = yield fn(*args, **kwargs)
+            res = await fn(*args, **kwargs)
         except CollectedValidationError as err:
             for error_name, e in err.errors.items():
                 self.errors[error_name] = e
@@ -376,14 +374,13 @@ class WorkerChoiceParameter(ChoiceStringParameter):
             return
         super().updateFromKwargs(kwargs=kwargs, **unused)
 
-    @defer.inlineCallbacks
-    def getChoices(self, master, scheduler, buildername):
+    async def getChoices(self, master, scheduler, buildername):
         if buildername is None:
             # this is the "Force All Builds" page
-            workers = yield self.master.data.get(('workers',))
+            workers = await self.master.data.get(('workers',))
         else:
-            builder = yield self.master.data.get(('builders', buildername))
-            workers = yield self.master.data.get(('builders', builder['builderid'], 'workers'))
+            builder = await self.master.data.get(('builders', buildername))
+            workers = await self.master.data.get(('builders', builder['builderid'], 'workers'))
 
         workernames = [worker['name'] for worker in workers]
         workernames.sort()
@@ -444,14 +441,13 @@ class NestedParameter(BaseParameter):
         for field in self.fields:  # pylint: disable=not-an-iterable
             field.setParent(self)
 
-    @defer.inlineCallbacks
-    def collectChildProperties(self, kwargs, properties, collector, **kw):
+    async def collectChildProperties(self, kwargs, properties, collector, **kw):
         """Collapse the child values into a dictionary. This is intended to be
         called by child classes to fix up the fullName->name conversions."""
 
         childProperties = {}
         for field in self.fields:  # pylint: disable=not-an-iterable
-            yield collector.collectValidationErrors(
+            await collector.collectValidationErrors(
                 field.fullName,
                 field.updateFromKwargs,
                 kwargs=kwargs,
@@ -461,11 +457,10 @@ class NestedParameter(BaseParameter):
             )
         kwargs[self.fullName] = childProperties
 
-    @defer.inlineCallbacks
-    def updateFromKwargs(self, kwargs, properties, collector, **kw):
+    async def updateFromKwargs(self, kwargs, properties, collector, **kw):
         """By default, the child values will be collapsed into a dictionary. If
         the parent is anonymous, this dictionary is the top-level properties."""
-        yield self.collectChildProperties(
+        await self.collectChildProperties(
             kwargs=kwargs, properties=properties, collector=collector, **kw
         )
         # default behavior is to set a property
@@ -504,9 +499,8 @@ class AnyPropertyParameter(NestedParameter):
     def getFromKwargs(self, kwargs):
         raise ValidationError("AnyPropertyParameter can only be used by properties")
 
-    @defer.inlineCallbacks
-    def updateFromKwargs(self, master, properties, kwargs, collector, **kw):
-        yield self.collectChildProperties(
+    async def updateFromKwargs(self, master, properties, kwargs, collector, **kw):
+        await self.collectChildProperties(
             master=master, properties=properties, kwargs=kwargs, collector=collector, **kw
         )
 
@@ -590,9 +584,8 @@ class CodebaseParameter(NestedParameter):
         # default, just return the things we put together
         return kwargs.get(self.fullName, {})
 
-    @defer.inlineCallbacks
-    def updateFromKwargs(self, sourcestamps, kwargs, properties, collector, **kw):
-        yield self.collectChildProperties(
+    async def updateFromKwargs(self, sourcestamps, kwargs, properties, collector, **kw):
+        await self.collectChildProperties(
             sourcestamps=sourcestamps,
             properties=properties,
             kwargs=kwargs,
@@ -807,14 +800,13 @@ class ForceScheduler(base.BaseScheduler):
 
         return isListOfType
 
-    @defer.inlineCallbacks
-    def gatherPropertiesAndChanges(self, collector, **kwargs):
+    async def gatherPropertiesAndChanges(self, collector, **kwargs):
         properties = {}
         changeids = []
         sourcestamps = {}
 
         for param in self.forcedProperties:
-            yield collector.collectValidationErrors(
+            await collector.collectValidationErrors(
                 param.fullName,
                 param.updateFromKwargs,
                 master=self.master,
@@ -832,11 +824,10 @@ class ForceScheduler(base.BaseScheduler):
 
         return (real_properties, changeids, sourcestamps)
 
-    @defer.inlineCallbacks
-    def computeBuilderNames(self, builderNames=None, builderid=None):
+    async def computeBuilderNames(self, builderNames=None, builderid=None):
         if builderNames is None:
             if builderid is not None:
-                builder = yield self.master.data.get(('builders', str(builderid)))
+                builder = await self.master.data.get(('builders', str(builderid)))
                 builderNames = [builder['name']]
             else:
                 builderNames = self.builderNames
@@ -844,12 +835,11 @@ class ForceScheduler(base.BaseScheduler):
             builderNames = sorted(set(builderNames).intersection(self.builderNames))
         return builderNames
 
-    @defer.inlineCallbacks
-    def force(self, owner, builderNames=None, builderid=None, **kwargs):
+    async def force(self, owner, builderNames=None, builderid=None, **kwargs):
         """
         We check the parameters, and launch the build, if everything is correct
         """
-        builderNames = yield self.computeBuilderNames(builderNames, builderid)
+        builderNames = await self.computeBuilderNames(builderNames, builderid)
         if not builderNames:
             raise KeyError("builderNames not specified or not supported")
 
@@ -860,19 +850,19 @@ class ForceScheduler(base.BaseScheduler):
         # probably need to clean that out later as the IProperty is already a
         # validation mechanism
         collector = ValidationErrorCollector()
-        reason = yield collector.collectValidationErrors(
+        reason = await collector.collectValidationErrors(
             self.reason.fullName, self.reason.getFromKwargs, kwargs
         )
         if owner is None or owner == "anonymous":
-            owner = yield collector.collectValidationErrors(
+            owner = await collector.collectValidationErrors(
                 self.username.fullName, self.username.getFromKwargs, kwargs
             )
 
-        priority = yield collector.collectValidationErrors(
+        priority = await collector.collectValidationErrors(
             self.priority.fullName, self.priority.getFromKwargs, kwargs
         )
 
-        properties, _, sourcestamps = yield self.gatherPropertiesAndChanges(collector, **kwargs)
+        properties, _, sourcestamps = await self.gatherPropertiesAndChanges(collector, **kwargs)
 
         collector.maybeRaiseCollectedErrors()
 
@@ -888,7 +878,7 @@ class ForceScheduler(base.BaseScheduler):
 
         # everything is validated, we can create our source stamp, and
         # buildrequest
-        res = yield self.addBuildsetForSourceStampsWithDefaults(
+        res = await self.addBuildsetForSourceStampsWithDefaults(
             reason=r,
             sourcestamps=sourcestamps,
             properties=properties,
