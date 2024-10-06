@@ -25,8 +25,7 @@ from buildbot.test.util.integration import RunMasterBase
 class TestLog(RunMasterBase):
     # master configuration
 
-    @defer.inlineCallbacks
-    def setup_config(self, step):
+    async def setup_config(self, step):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -37,10 +36,9 @@ class TestLog(RunMasterBase):
         f = BuildFactory()
         f.addStep(step)
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_shellcommand(self):
+    async def test_shellcommand(self):
         testcase = self
 
         class MyStep(steps.ShellCommand):
@@ -51,7 +49,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setup_config(step)
+        await self.setup_config(step)
 
         change = {
             "branch": "master",
@@ -62,13 +60,12 @@ class TestLog(RunMasterBase):
             "revision": "HEAD",
             "project": "none",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
         self.assertTrue(self.curr_log.finished)
 
-    @defer.inlineCallbacks
-    def test_mastershellcommand(self):
+    async def test_mastershellcommand(self):
         testcase = self
 
         class MyStep(steps.MasterShellCommand):
@@ -79,7 +76,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setup_config(step)
+        await self.setup_config(step)
 
         change = {
             "branch": "master",
@@ -90,13 +87,12 @@ class TestLog(RunMasterBase):
             "revision": "HEAD",
             "project": "none",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
         self.assertTrue(self.curr_log.finished)
 
-    @defer.inlineCallbacks
-    def test_mastershellcommand_issue(self):
+    async def test_mastershellcommand_issue(self):
         testcase = self
 
         class MyStep(steps.MasterShellCommand):
@@ -108,7 +104,7 @@ class TestLog(RunMasterBase):
 
         step = MyStep(command='echo hello')
 
-        yield self.setup_config(step)
+        await self.setup_config(step)
 
         change = {
             "branch": "master",
@@ -119,7 +115,7 @@ class TestLog(RunMasterBase):
             "revision": "HEAD",
             "project": "none",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertFalse(self.curr_log.finished)
         self.assertEqual(build['results'], EXCEPTION)
