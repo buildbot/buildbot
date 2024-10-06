@@ -16,7 +16,6 @@
 
 import os
 
-from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot.test.util.decorators import flaky
@@ -27,8 +26,7 @@ from buildbot.test.util.integration import RunMasterBase
 class TryClientE2E(RunMasterBase):
     timeout = 15
 
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -43,12 +41,11 @@ class TryClientE2E(RunMasterBase):
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='echo hello'))
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
     @flaky(bugNumber=7084)
-    @defer.inlineCallbacks
-    def test_shell(self):
-        yield self.setup_config()
+    async def test_shell(self):
+        await self.setup_config()
 
         def trigger_callback():
             port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port
@@ -61,7 +58,7 @@ class TryClientE2E(RunMasterBase):
 
             reactor.callInThread(thd)
 
-        build = yield self.doForceBuild(
+        build = await self.doForceBuild(
             wantSteps=True, triggerCallback=trigger_callback, wantLogs=True, wantProperties=True
         )
         self.assertEqual(build['buildid'], 1)
