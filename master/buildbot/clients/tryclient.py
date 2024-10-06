@@ -207,14 +207,13 @@ class MercurialExtractor(SourceStampExtractor):
 
         return stdout
 
-    @defer.inlineCallbacks
-    def getBaseRevision(self):
+    async def getBaseRevision(self):
         upstream = ""
         if self.repository:
             upstream = f"r'{self.repository}'"
         output = ''
         try:
-            output = yield self.dovc([
+            output = await self.dovc([
                 "log",
                 "--template",
                 "{node}\\n",
@@ -227,7 +226,7 @@ class MercurialExtractor(SourceStampExtractor):
             if upstream:
                 raise
             # fall back to current working directory parent
-            output = yield self.dovc(["log", "--template", "{node}\\n", "-r", "p1()"])
+            output = await self.dovc(["log", "--template", "{node}\\n", "-r", "p1()"])
         m = re.search(rb'^(\w+)', output)
         if not m:
             raise RuntimeError(f"Revision {output!r} is not in the right format")
@@ -696,8 +695,7 @@ class Try(pb.Referenceable):
         d = pp.d
         return d
 
-    @defer.inlineCallbacks
-    def deliver_job_pb(self):
+    async def deliver_job_pb(self):
         user = self.getopt("username")
         passwd = self.getopt("passwd")
         master = self.getopt("master")
@@ -706,12 +704,12 @@ class Try(pb.Referenceable):
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
         reactor.connectTCP(tryhost, tryport, f)
-        remote = yield d
+        remote = await d
 
         ss = self.sourcestamp
         output("Delivering job; comment=", self.comment)
 
-        self.buildsetStatus = yield remote.callRemote(
+        self.buildsetStatus = await remote.callRemote(
             "try",
             ss.branch,
             ss.revision,
@@ -752,10 +750,9 @@ class Try(pb.Referenceable):
             return self.running
         return None
 
-    @defer.inlineCallbacks
-    def _getStatus_1(self):
+    async def _getStatus_1(self):
         # gather the set of BuildRequests
-        brs = yield self.buildsetStatus.callRemote("getBuildRequests")
+        brs = await self.buildsetStatus.callRemote("getBuildRequests")
 
         self.builderNames = []
         self.buildRequests = {}
@@ -816,8 +813,7 @@ class Try(pb.Referenceable):
     def remote_buildETAUpdate(self, buildername, build, eta):
         self.ETA[buildername] = now() + eta
 
-    @defer.inlineCallbacks
-    def _build_finished(self, bs, builderName):
+    async def _build_finished(self, bs, builderName):
         # we need to collect status from the newly-finished build. We don't
         # remove the build from self.outstanding until we've collected
         # everything we want.
@@ -825,8 +821,8 @@ class Try(pb.Referenceable):
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
 
-        self.results[builderName][0] = yield bs.callRemote("getResults")
-        self.results[builderName][1] = yield bs.callRemote("getText")
+        self.results[builderName][0] = await bs.callRemote("getResults")
+        self.results[builderName][1] = await bs.callRemote("getText")
 
         self.outstanding.remove(builderName)
         if not self.outstanding:
@@ -876,8 +872,7 @@ class Try(pb.Referenceable):
             self.exitcode = 1
         self.running.callback(self.exitcode)
 
-    @defer.inlineCallbacks
-    def getAvailableBuilderNames(self):
+    async def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
         # get the names of the configured builders that can
         # be used for the --builder argument
@@ -890,14 +885,14 @@ class Try(pb.Referenceable):
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
             reactor.connectTCP(tryhost, tryport, f)
-            remote = yield d
-            buildernames = yield remote.callRemote("getAvailableBuilderNames")
+            remote = await d
+            buildernames = await remote.callRemote("getAvailableBuilderNames")
 
             output("The following builders are available for the try scheduler: ")
             for buildername in buildernames:
                 output(buildername)
 
-            yield remote.broker.transport.loseConnection()
+            await remote.broker.transport.loseConnection()
             return
         if self.connect == "ssh":
             output("Cannot get available builders over ssh.")
@@ -908,29 +903,28 @@ class Try(pb.Referenceable):
         if not self.quiet:
             output(message)
 
-    @defer.inlineCallbacks
-    def run_impl(self):
+    async def run_impl(self):
         output(f"using '{self.connect}' connect method")
         self.exitcode = 0
 
         # we can't do spawnProcess until we're inside reactor.run(), so force asynchronous execution
-        yield fireEventually(None)
+        await fireEventually(None)
 
         try:
             if bool(self.config.get("get-builder-names")):
-                yield self.getAvailableBuilderNames()
+                await self.getAvailableBuilderNames()
             else:
-                yield self.createJob()
-                yield self.announce("job created")
+                await self.createJob()
+                await self.announce("job created")
                 if bool(self.config.get("dryrun")):
-                    yield self.fakeDeliverJob()
+                    await self.fakeDeliverJob()
                 else:
-                    yield self.deliverJob()
-                yield self.announce("job has been delivered")
-                yield self.getStatus()
+                    await self.deliverJob()
+                await self.announce("job has been delivered")
+                await self.getStatus()
 
             if not bool(self.config.get("dryrun")):
-                yield self.cleanup()
+                await self.cleanup()
         except SystemExit as e:
             self.exitcode = e.code
         except Exception as e:
