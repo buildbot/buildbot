@@ -231,8 +231,7 @@ class Repo(Source):
     def _repoCmd(self, command, abandonOnFailure=True, **kwargs):
         return self._Cmd(["repo", *command], abandonOnFailure=abandonOnFailure, **kwargs)
 
-    @defer.inlineCallbacks
-    def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
+    async def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
             workdir = self.workdir
         cmd = remotecommand.RemoteShellCommand(
@@ -247,15 +246,15 @@ class Repo(Source):
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
-        yield self.stdio_log.addHeader(f'Starting command: {" ".join(command)}\n')
+        await self.stdio_log.addHeader(f'Starting command: {" ".join(command)}\n')
         self.description = ' '.join(command[:2])
         # FIXME: enable when new style step is switched on yield self.updateSummary()
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
             self.descriptionDone = f'repo failed at: {" ".join(command[:2])}'
             msg = f"Source step failed while running command {cmd}\n"
-            yield self.stdio_log.addStderr(msg)
+            await self.stdio_log.addStderr(msg)
             raise buildstep.BuildStepFailed()
         return cmd.rc
 
@@ -268,14 +267,13 @@ class Repo(Source):
     def run_vc(self, branch, revision, patch):
         return self.doStartVC()
 
-    @defer.inlineCallbacks
-    def doStartVC(self):
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+    async def doStartVC(self):
+        self.stdio_log = await self.addLogForRemoteCommands("stdio")
 
         self.filterManifestPatches()
 
         if self.repoDownloads:
-            yield self.stdio_log.addHeader(
+            await self.stdio_log.addHeader(
                 "will download:\nrepo download {}\n".format(
                     "\nrepo download ".join(self.repoDownloads)
                 )
@@ -284,35 +282,33 @@ class Repo(Source):
         self.willRetryInCaseOfFailure = True
 
         try:
-            yield self.doRepoSync()
+            await self.doRepoSync()
         except buildstep.BuildStepFailed as e:
             if not self.willRetryInCaseOfFailure:
                 raise
-            yield self.stdio_log.addStderr(
+            await self.stdio_log.addStderr(
                 "got issue at first try:\n" + str(e) + "\nRetry after clobber..."
             )
-            yield self.doRepoSync(forceClobber=True)
+            await self.doRepoSync(forceClobber=True)
 
-        yield self.maybeUpdateTarball()
+        await self.maybeUpdateTarball()
 
         # starting from here, clobbering will not help
-        yield self.doRepoDownloads()
+        await self.doRepoDownloads()
         return results.SUCCESS
 
-    @defer.inlineCallbacks
-    def doClobberStart(self):
-        yield self.runRmdir(self.workdir)
-        yield self.runMkdir(self.workdir)
-        yield self.maybeExtractTarball()
+    async def doClobberStart(self):
+        await self.runRmdir(self.workdir)
+        await self.runMkdir(self.workdir)
+        await self.maybeExtractTarball()
 
-    @defer.inlineCallbacks
-    def doRepoSync(self, forceClobber=False):
-        updatable = yield self.sourcedirIsUpdateable()
+    async def doRepoSync(self, forceClobber=False):
+        updatable = await self.sourcedirIsUpdateable()
         if not updatable or forceClobber:
             # no need to re-clobber in case of failure
             self.willRetryInCaseOfFailure = False
-            yield self.doClobberStart()
-        yield self.doCleanup()
+            await self.doClobberStart()
+        await self.doCleanup()
         command = [
             'init',
             '-u',
@@ -328,25 +324,25 @@ class Repo(Source):
         if self.submodules:
             command.append('--submodules')
 
-        yield self._repoCmd(command)
+        await self._repoCmd(command)
 
         if self.manifestOverrideUrl:
             msg = f"overriding manifest with {self.manifestOverrideUrl}\n"
-            yield self.stdio_log.addHeader(msg)
+            await self.stdio_log.addHeader(msg)
 
             local_path = self.build.path_module.join(self.workdir, self.manifestOverrideUrl)
-            local_file = yield self.pathExists(local_path)
+            local_file = await self.pathExists(local_path)
             if local_file:
-                yield self._Cmd(["cp", "-f", self.manifestOverrideUrl, "manifest_override.xml"])
+                await self._Cmd(["cp", "-f", self.manifestOverrideUrl, "manifest_override.xml"])
             else:
-                yield self._Cmd(["wget", self.manifestOverrideUrl, "-O", "manifest_override.xml"])
-            yield self._Cmd(
+                await self._Cmd(["wget", self.manifestOverrideUrl, "-O", "manifest_override.xml"])
+            await self._Cmd(
                 ["ln", "-sf", "../manifest_override.xml", "manifest.xml"],
                 workdir=self.build.path_module.join(self.workdir, ".repo"),
             )
 
         for command in self.manifestDownloads:
-            yield self._Cmd(
+            await self._Cmd(
                 command, workdir=self.build.path_module.join(self.workdir, ".repo", "manifests")
             )
 
@@ -359,14 +355,14 @@ class Repo(Source):
             command.append('-q')
         self.description = "repo sync"
         # FIXME: enable when new style step is used: yield self.updateSummary()
-        yield self.stdio_log.addHeader(
+        await self.stdio_log.addHeader(
             f"synching manifest {self.manifestFile} from branch "
             f"{self.manifestBranch} from {self.manifestURL}\n"
         )
-        yield self._repoCmd(command)
+        await self._repoCmd(command)
 
         command = ['manifest', '-r', '-o', 'manifest-original.xml']
-        yield self._repoCmd(command)
+        await self._repoCmd(command)
 
     # check whether msg matches one of the
     # compiled regexps in self.re_error_messages
@@ -384,24 +380,23 @@ class Repo(Source):
         reactor.callLater(delay, d.callback, 1)
         return d
 
-    @defer.inlineCallbacks
-    def doRepoDownloads(self):
+    async def doRepoDownloads(self):
         self.repo_downloaded = ""
         for download in self.repoDownloads:
             command = ["download", *download.split(" ")]
-            yield self.stdio_log.addHeader(f"downloading changeset {download}\n")
+            await self.stdio_log.addHeader(f"downloading changeset {download}\n")
 
             retry = self.mirror_sync_retry + 1
             while retry > 0:
-                yield self._repoCmd(
+                await self._repoCmd(
                     command, abandonOnFailure=False, collectStdout=True, collectStderr=True
                 )
                 if not self._findErrorMessages(self.ref_not_found_re):
                     break
                 retry -= 1
-                yield self.stdio_log.addStderr(f"failed downloading changeset {download}\n")
-                yield self.stdio_log.addHeader("wait one minute for mirror sync\n")
-                yield self._sleep(self.mirror_sync_sleep)
+                await self.stdio_log.addStderr(f"failed downloading changeset {download}\n")
+                await self.stdio_log.addHeader("wait one minute for mirror sync\n")
+                await self._sleep(self.mirror_sync_sleep)
 
             if retry == 0:
                 self.descriptionDone = f"repo: change {download} does not exist"
@@ -411,7 +406,7 @@ class Repo(Source):
                 # cherry pick error! We create a diff with status current workdir
                 # in stdout, which reveals the merge errors and exit
                 command = ['forall', '-c', 'git', 'diff', 'HEAD']
-                yield self._repoCmd(command, abandonOnFailure=False)
+                await self._repoCmd(command, abandonOnFailure=False)
                 self.descriptionDone = f"download failed: {download}"
                 raise buildstep.BuildStepFailed()
 
@@ -447,35 +442,33 @@ class Repo(Source):
             tar.append('--lzop')
         return tar
 
-    @defer.inlineCallbacks
-    def maybeExtractTarball(self):
+    async def maybeExtractTarball(self):
         if self.tarball:
             tar = [*self.computeTarballOptions(), "-xvf", self.tarball]
-            res = yield self._Cmd(tar, abandonOnFailure=False)
+            res = await self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase repo dir and tarball
-                yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
-                yield self.runRmdir(self.repoDir(), abandonOnFailure=False)
+                await self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
+                await self.runRmdir(self.repoDir(), abandonOnFailure=False)
 
-    @defer.inlineCallbacks
-    def maybeUpdateTarball(self):
+    async def maybeUpdateTarball(self):
         if not self.tarball or self.updateTarballAge is None:
             return
         # tarball path is absolute, so we cannot use worker's stat command
         # stat -c%Y gives mtime in second since epoch
-        res = yield self._Cmd(
+        res = await self._Cmd(
             ["stat", "-c%Y", self.tarball], collectStdout=True, abandonOnFailure=False
         )
         age = 0
         if not res:
             tarball_mtime = int(self.lastCommand.stdout)
-            yield self._Cmd(["stat", "-c%Y", "."], collectStdout=True)
+            await self._Cmd(["stat", "-c%Y", "."], collectStdout=True)
             now_mtime = int(self.lastCommand.stdout)
             age = now_mtime - tarball_mtime
         if res or age > self.updateTarballAge:
             tar = [*self.computeTarballOptions(), "-cvf", self.tarball, ".repo"]
-            res = yield self._Cmd(tar, abandonOnFailure=False)
+            res = await self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase tarball, but don't fail
-                yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
+                await self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
 
     # a simple shell script to gather all cleanup tweaks...
     # doing them one by one just complicate the stuff
