@@ -61,8 +61,7 @@ class TestActions(
     def tearDown(self):
         pass
 
-    @defer.inlineCallbacks
-    def test_local_wake_action(self):
+    async def test_local_wake_action(self):
         self.expect_commands(
             ExpectMasterShell(['cmd', 'arg1', 'arg2']).exit(1),
             ExpectMasterShell(['cmd', 'arg1', 'arg2']).exit(0),
@@ -78,8 +77,7 @@ class TestActions(
         with self.assertRaisesConfigError('command parameter must be a list'):
             LocalWakeAction('not-list')
 
-    @defer.inlineCallbacks
-    def test_local_wol_action(self):
+    async def test_local_wol_action(self):
         self.expect_commands(
             ExpectMasterShell(['wol', '00:11:22:33:44:55']).exit(1),
             ExpectMasterShell(['wakeonlan', '00:11:22:33:44:55']).exit(0),
@@ -98,8 +96,7 @@ class TestActions(
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_remote_ssh_wake_action_no_keys(self, write_local_file_mock, temp_dir_mock):
+    async def test_remote_ssh_wake_action_no_keys(self, write_local_file_mock, temp_dir_mock):
         self.expect_commands(
             ExpectMasterShell([
                 'ssh',
@@ -133,8 +130,7 @@ class TestActions(
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_remote_ssh_wake_action_with_keys(self, write_local_file_mock, temp_dir_mock):
+    async def test_remote_ssh_wake_action_with_keys(self, write_local_file_mock, temp_dir_mock):
         temp_dir_path = os.path.join('path-to-master', 'ssh-@@@')
         ssh_key_path = os.path.join(temp_dir_path, 'ssh-key')
         ssh_known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
@@ -189,8 +185,7 @@ class TestActions(
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_remote_ssh_wol_action_no_keys(self, write_local_file_mock, temp_dir_mock):
+    async def test_remote_ssh_wol_action_no_keys(self, write_local_file_mock, temp_dir_mock):
         self.expect_commands(
             ExpectMasterShell([
                 'ssh',
@@ -226,8 +221,7 @@ class TestActions(
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_remote_ssh_suspend_action_no_keys(self, write_local_file_mock, temp_dir_mock):
+    async def test_remote_ssh_suspend_action_no_keys(self, write_local_file_mock, temp_dir_mock):
         self.expect_commands(
             ExpectMasterShell([
                 'ssh',
@@ -260,21 +254,19 @@ class TestActions(
 
 
 class TestHttpAction(config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        self.master = yield fakemaster.make_master(self)
-        self.http = yield fakehttpclientservice.HTTPClientService.getService(
+        self.master = await fakemaster.make_master(self)
+        self.http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "http://localhost/request"
         )
 
-    @defer.inlineCallbacks
-    def test_http_wrong_method(self):
+    async def test_http_wrong_method(self):
         manager = FakeManager(self.master)
         action = HttpAction('http://localhost/request', method='non-existing-method')
 
         with self.assertRaisesConfigError('Invalid method non-existing-method'):
-            yield action.perform(manager)
+            await action.perform(manager)
 
     @parameterized.expand([
         'get',
@@ -282,11 +274,10 @@ class TestHttpAction(config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCa
         'delete',
         'put',
     ])
-    @defer.inlineCallbacks
-    def test_http(self, method):
+    async def test_http(self, method):
         self.http.expect(method, '')
 
         manager = FakeManager(self.master)
         action = HttpAction('http://localhost/request', method=method)
 
-        yield action.perform(manager)
+        await action.perform(manager)
