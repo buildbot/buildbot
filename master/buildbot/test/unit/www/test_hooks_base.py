@@ -1,6 +1,5 @@
 import json
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
@@ -39,10 +38,9 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
         self.setup_test_reactor()
         self.changeHook = _prepare_base_change_hook(self)
 
-    @defer.inlineCallbacks
-    def _check_base_with_change(self, payload):
+    async def _check_base_with_change(self, payload):
         self.request = _prepare_request(payload)
-        yield self.request.test_render(self.changeHook)
+        await self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
 
@@ -109,10 +107,9 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase, TestReactorMixin
 
         self.changeHook = _prepare_base_change_hook(self, custom_class=CustomBase)
 
-    @defer.inlineCallbacks
-    def _check_base_with_change(self, payload):
+    async def _check_base_with_change(self, payload):
         self.request = _prepare_request(payload)
-        yield self.request.test_render(self.changeHook)
+        await self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change['repository'], payload.get(b'_repository') or '')
