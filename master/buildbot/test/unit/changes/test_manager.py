@@ -16,7 +16,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import base
@@ -26,13 +25,12 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestChangeManager(unittest.TestCase, TestReactorMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
         self.cm = manager.ChangeManager()
         self.master.startService()
-        yield self.cm.setServiceParent(self.master)
+        await self.cm.setServiceParent(self.master)
         self.new_config = mock.Mock()
 
     def tearDown(self):
@@ -43,32 +41,29 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
             src = klass(name=f'ChangeSource {i}', **kwargs)
             yield src
 
-    @defer.inlineCallbacks
-    def test_reconfigService_add(self):
+    async def test_reconfigService_add(self):
         src1, src2 = self.make_sources(2)
-        yield src1.setServiceParent(self.cm)
+        await src1.setServiceParent(self.cm)
         self.new_config.change_sources = [src1, src2]
 
-        yield self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(src2.parent, self.cm)
         self.assertIdentical(src2.master, self.master)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_remove(self):
+    async def test_reconfigService_remove(self):
         (src1,) = self.make_sources(1)
-        yield src1.setServiceParent(self.cm)
+        await src1.setServiceParent(self.cm)
         self.new_config.change_sources = []
 
         self.assertTrue(src1.running)
-        yield self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertFalse(src1.running)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_change_reconfigurable(self):
+    async def test_reconfigService_change_reconfigurable(self):
         (src1,) = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=1)
-        yield src1.setServiceParent(self.cm)
+        await src1.setServiceParent(self.cm)
 
         (src2,) = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=2)
 
@@ -76,7 +71,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
 
         self.assertTrue(src1.running)
         self.assertEqual(src1.pollInterval, 1)
-        yield self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertTrue(src1.running)
         self.assertFalse(src2.running)
