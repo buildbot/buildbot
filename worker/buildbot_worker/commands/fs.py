@@ -19,7 +19,6 @@ import platform
 import shutil
 import sys
 
-from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import runtime
 
@@ -60,8 +59,7 @@ class RemoveDirectory(base.Command):
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
 
-    @defer.inlineCallbacks
-    def start(self):
+    async def start(self):
         args = self.args
         dirnames = args['paths']
 
@@ -71,7 +69,7 @@ class RemoveDirectory(base.Command):
 
         assert dirnames
         for path in dirnames:
-            res = yield self.removeSingleDir(path)
+            res = await self.removeSingleDir(path)
             # Even if single removal of single file/dir consider it as
             # failure of whole command, but continue removing other files
             # Send 'rc' to master to handle failure cases
@@ -97,8 +95,7 @@ class RemoveDirectory(base.Command):
 
         return d
 
-    @defer.inlineCallbacks
-    def _clobber(self, dummy, path, chmodDone=False):
+    async def _clobber(self, dummy, path, chmodDone=False):
         command = ["rm", "-rf", path]
 
         c = runprocess.RunProcess(
@@ -118,16 +115,15 @@ class RemoveDirectory(base.Command):
         # sendRC=0 means the rm command will send stdout/stderr to the
         # master, but not the rc=0 when it finishes. That job is left to
         # _sendRC
-        rc = yield c.start()
+        rc = await c.start()
         # The rm -rf may fail if there is a left-over subdir with chmod 000
         # permissions. So if we get a failure, we attempt to chmod suitable
         # permissions and re-try the rm -rf.
         if not chmodDone:
-            rc = yield self._tryChmod(rc, path)
+            rc = await self._tryChmod(rc, path)
         return rc
 
-    @defer.inlineCallbacks
-    def _tryChmod(self, rc, path):
+    async def _tryChmod(self, rc, path):
         assert isinstance(rc, int)
         if rc == 0:
             return 0
@@ -154,8 +150,8 @@ class RemoveDirectory(base.Command):
         )
 
         self.command = c
-        rc = yield c.start()
-        rc = yield self._clobber(rc, path, True)
+        rc = await c.start()
+        rc = await self._clobber(rc, path, True)
         return rc
 
 
