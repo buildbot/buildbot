@@ -75,11 +75,10 @@ class SVN(Source):
         if errors:
             raise ConfigErrors(errors)
 
-    @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    async def run_vc(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+        self.stdio_log = await self.addLogForRemoteCommands("stdio")
 
         # if the version is new enough, and the password is set, then obfuscate
         # it
@@ -89,77 +88,71 @@ class SVN(Source):
             else:
                 log.msg("Worker does not understand obfuscation; svn password will be logged")
 
-        installed = yield self.checkSvn()
+        installed = await self.checkSvn()
         if not installed:
             raise WorkerSetupError("SVN is not installed on worker")
 
-        patched = yield self.sourcedirIsPatched()
+        patched = await self.sourcedirIsPatched()
         if patched:
-            yield self.purge(False)
+            await self.purge(False)
 
-        yield self._getAttrGroupMember('mode', self.mode)()
+        await self._getAttrGroupMember('mode', self.mode)()
 
         if patch:
-            yield self.patch(patch)
-        res = yield self.parseGotRevision()
+            await self.patch(patch)
+        res = await self.parseGotRevision()
         return res
 
-    @defer.inlineCallbacks
-    def mode_full(self):
+    async def mode_full(self):
         if self.method == 'clobber':
-            yield self.clobber()
+            await self.clobber()
             return
         elif self.method in ['copy', 'export']:
-            yield self.copy()
+            await self.copy()
             return
 
-        updatable = yield self._sourcedirIsUpdatable()
+        updatable = await self._sourcedirIsUpdatable()
         if not updatable:
             # blow away the old (un-updatable) directory and checkout
-            yield self.clobber()
+            await self.clobber()
         elif self.method == 'clean':
-            yield self.clean()
+            await self.clean()
         elif self.method == 'fresh':
-            yield self.fresh()
+            await self.fresh()
 
-    @defer.inlineCallbacks
-    def mode_incremental(self):
-        updatable = yield self._sourcedirIsUpdatable()
+    async def mode_incremental(self):
+        updatable = await self._sourcedirIsUpdatable()
 
         if not updatable:
             # blow away the old (un-updatable) directory and checkout
-            yield self.clobber()
+            await self.clobber()
         else:
             # otherwise, do an update
             command = ['update']
             if self.revision:
                 command.extend(['--revision', str(self.revision)])
-            yield self._dovccmd(command)
+            await self._dovccmd(command)
 
-    @defer.inlineCallbacks
-    def clobber(self):
-        yield self.runRmdir(self.workdir, timeout=self.timeout)
-        yield self._checkout()
+    async def clobber(self):
+        await self.runRmdir(self.workdir, timeout=self.timeout)
+        await self._checkout()
 
-    @defer.inlineCallbacks
-    def fresh(self):
-        yield self.purge(True)
+    async def fresh(self):
+        await self.purge(True)
         cmd = ['update']
         if self.revision:
             cmd.extend(['--revision', str(self.revision)])
-        yield self._dovccmd(cmd)
+        await self._dovccmd(cmd)
 
-    @defer.inlineCallbacks
-    def clean(self):
-        yield self.purge(False)
+    async def clean(self):
+        await self.purge(False)
         cmd = ['update']
         if self.revision:
             cmd.extend(['--revision', str(self.revision)])
-        yield self._dovccmd(cmd)
+        await self._dovccmd(cmd)
 
-    @defer.inlineCallbacks
-    def copy(self):
-        yield self.runRmdir(self.workdir, timeout=self.timeout)
+    async def copy(self):
+        await self.runRmdir(self.workdir, timeout=self.timeout)
 
         checkout_dir = 'source'
         if self.codebase:
@@ -168,7 +161,7 @@ class SVN(Source):
         old_workdir = self.workdir
         try:
             self.workdir = checkout_dir
-            yield self.mode_incremental()
+            await self.mode_incremental()
         finally:
             self.workdir = old_workdir
         self.workdir = old_workdir
@@ -196,13 +189,14 @@ class SVN(Source):
             )
         cmd.useLog(self.stdio_log, False)
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
-    @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, collectStderr=False, abandonOnFailure=True):
+    async def _dovccmd(
+        self, command, collectStdout=False, collectStderr=False, abandonOnFailure=True
+    ):
         assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
@@ -224,7 +218,7 @@ class SVN(Source):
             collectStderr=collectStderr,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail() and abandonOnFailure:
             log.msg(f"Source step failed while running command {cmd}")
@@ -246,15 +240,14 @@ class SVN(Source):
             return 'fresh'
         return None
 
-    @defer.inlineCallbacks
-    def _sourcedirIsUpdatable(self):
+    async def _sourcedirIsUpdatable(self):
         # first, perform a stat to ensure that this is really an svn directory
-        res = yield self.pathExists(self.build.path_module.join(self.workdir, '.svn'))
+        res = await self.pathExists(self.build.path_module.join(self.workdir, '.svn'))
         if not res:
             return False
 
         # then run 'svn info --xml' to check that the URL matches our repourl
-        stdout, stderr = yield self._dovccmd(
+        stdout, stderr = await self._dovccmd(
             ['info', '--xml'], collectStdout=True, collectStderr=True, abandonOnFailure=False
         )
 
@@ -267,12 +260,11 @@ class SVN(Source):
             stdout_xml = xml.dom.minidom.parseString(stdout)
             extractedurl = stdout_xml.getElementsByTagName('url')[0].firstChild.nodeValue
         except xml.parsers.expat.ExpatError as e:
-            yield self.stdio_log.addHeader("Corrupted xml, aborting step")
+            await self.stdio_log.addHeader("Corrupted xml, aborting step")
             raise buildstep.BuildStepFailed() from e
         return extractedurl == self.svnUriCanonicalize(self.repourl)
 
-    @defer.inlineCallbacks
-    def parseGotRevision(self):
+    async def parseGotRevision(self):
         # if this was a full/export, then we need to check svnversion in the
         # *source* directory, not the build directory
         svnversion_dir = self.workdir
@@ -287,13 +279,13 @@ class SVN(Source):
             collectStdout=True,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         stdout = cmd.stdout
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
         except xml.parsers.expat.ExpatError as e:
-            yield self.stdio_log.addHeader("Corrupted xml, aborting step")
+            await self.stdio_log.addHeader("Corrupted xml, aborting step")
             raise buildstep.BuildStepFailed() from e
 
         revision = None
@@ -316,18 +308,17 @@ class SVN(Source):
                 log.msg(msg)
                 raise buildstep.BuildStepFailed() from e
 
-        yield self.stdio_log.addHeader(f"Got SVN revision {revision}")
+        await self.stdio_log.addHeader(f"Got SVN revision {revision}")
         self.updateSourceProperty('got_revision', revision)
 
         return cmd.rc
 
-    @defer.inlineCallbacks
-    def purge(self, ignore_ignores):
+    async def purge(self, ignore_ignores):
         """Delete everything that shown up on status."""
         command = ['status', '--xml']
         if ignore_ignores:
             command.append('--no-ignore')
-        stdout = yield self._dovccmd(command, collectStdout=True)
+        stdout = await self._dovccmd(command, collectStdout=True)
 
         files = []
         for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
@@ -335,9 +326,9 @@ class SVN(Source):
             files.append(filename)
         if files:
             if self.workerVersionIsOlderThan('rmdir', '2.14'):
-                rc = yield self.removeFiles(files)
+                rc = await self.removeFiles(files)
             else:
-                rc = yield self.runRmdir(files, abandonOnFailure=False, timeout=self.timeout)
+                rc = await self.runRmdir(files, abandonOnFailure=False, timeout=self.timeout)
             if rc != 0:
                 log.msg("Failed removing files")
                 raise buildstep.BuildStepFailed()
@@ -361,16 +352,14 @@ class SVN(Source):
                 continue
             yield filename
 
-    @defer.inlineCallbacks
-    def removeFiles(self, files):
+    async def removeFiles(self, files):
         for filename in files:
-            res = yield self.runRmdir(filename, abandonOnFailure=False, timeout=self.timeout)
+            res = await self.runRmdir(filename, abandonOnFailure=False, timeout=self.timeout)
             if res:
                 return res
         return 0
 
-    @defer.inlineCallbacks
-    def checkSvn(self):
+    async def checkSvn(self):
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
             ['svn', '--version'],
@@ -379,7 +368,7 @@ class SVN(Source):
             timeout=self.timeout,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
         return cmd.rc == 0
 
     def computeSourceRevision(self, changes):
@@ -433,8 +422,7 @@ class SVN(Source):
             return canonical_uri[:-1]
         return canonical_uri
 
-    @defer.inlineCallbacks
-    def _checkout(self):
+    async def _checkout(self):
         checkout_cmd = ['checkout', self.repourl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
@@ -442,7 +430,7 @@ class SVN(Source):
             abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
-        res = yield self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
+        res = await self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
 
         if self.retry:
             if self.stopped or res == 0:
@@ -455,4 +443,4 @@ class SVN(Source):
                 df.addCallback(lambda _: self.runRmdir(self.workdir, timeout=self.timeout))
                 df.addCallback(lambda _: self._checkout())
                 reactor.callLater(delay, df.callback, None)
-                yield df
+                await df
