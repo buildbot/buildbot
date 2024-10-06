@@ -154,14 +154,13 @@ class IndexResource(resource.Resource):
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderIndex)
 
-    @defer.inlineCallbacks
-    def renderIndex(self, request):
+    async def renderIndex(self, request):
         config = {}
         request.setHeader(b"content-type", b'text/html')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
 
         try:
-            yield self.config['auth'].maybeAutoLogin(request)
+            await self.config['auth'].maybeAutoLogin(request)
         except Error as e:
             config["on_load_warning"] = e.message
 
