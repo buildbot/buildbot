@@ -39,18 +39,16 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         self.leaving = False
         self.setServiceParent(config.extra['parent'])
 
-    @defer.inlineCallbacks
-    def onJoin(self, details):
+    async def onJoin(self, details):
         log.msg("Wamp connection succeed!")
         for handler in [self, *self.services]:
-            yield self.register(handler)
-            yield self.subscribe(handler)
-        yield self.publish(f"org.buildbot.{self.master.masterid}.connected")
+            await self.register(handler)
+            await self.subscribe(handler)
+        await self.publish(f"org.buildbot.{self.master.masterid}.connected")
         self.parent.service = self
         self.parent.serviceDeferred.callback(self)
 
-    @defer.inlineCallbacks
-    def onLeave(self, details):
+    async def onLeave(self, details):
         if self.leaving:
             return
 
@@ -63,7 +61,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         log.msg("Guru meditation! We have been disconnected from wamp server")
         log.msg("We don't know how to recover this without restarting the whole system")
         log.msg(str(details))
-        yield self.master.stopService()
+        await self.master.stopService()
 
     def onUserError(self, e, msg):
         log.err(e, msg)
@@ -110,24 +108,21 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
         super().stopService()
 
-    @defer.inlineCallbacks
-    def publish(self, topic, data, options=None):
-        service = yield self.getService()
+    async def publish(self, topic, data, options=None):
+        service = await self.getService()
         try:
-            ret = yield service.publish(topic, data, options=options)
+            ret = await service.publish(topic, data, options=options)
         except TransportLost:
             log.err(failure.Failure(), "while publishing event " + topic)
             return None
         return ret
 
-    @defer.inlineCallbacks
-    def subscribe(self, callback, topic=None, options=None):
-        service = yield self.getService()
-        ret = yield service.subscribe(callback, topic, options)
+    async def subscribe(self, callback, topic=None, options=None):
+        service = await self.getService()
+        ret = await service.subscribe(callback, topic, options)
         return ret
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         if new_config.mq.get('type', 'simple') != "wamp":
             if self.app is not None:
                 raise ValueError("Cannot use different wamp settings when reconfiguring")
@@ -166,5 +161,5 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             make=make,
         )
         txaio.set_global_log_level(wamp_debug_level)
-        yield self.app.setServiceParent(self)
-        yield super().reconfigServiceWithBuildbotConfig(new_config)
+        await self.app.setServiceParent(self)
+        await super().reconfigServiceWithBuildbotConfig(new_config)
