@@ -18,8 +18,6 @@ from __future__ import annotations
 import calendar
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import resultspec
 from buildbot.process import properties
 from buildbot.process.results import SKIPPED
@@ -47,33 +45,31 @@ class BuildRequestCollapser:
         self.master = master
         self.brids = brids
 
-    @defer.inlineCallbacks
-    def _getUnclaimedBrs(self, builderid):
+    async def _getUnclaimedBrs(self, builderid):
         # Retrieve the list of Brs for all unclaimed builds
-        unclaim_brs = yield self.master.data.get(
+        unclaim_brs = await self.master.data.get(
             ('builders', builderid, 'buildrequests'), [resultspec.Filter('claimed', 'eq', [False])]
         )
         # sort by submitted_at, so the first is the oldest
         unclaim_brs.sort(key=lambda brd: brd['submitted_at'])
         return unclaim_brs
 
-    @defer.inlineCallbacks
-    def collapse(self):
+    async def collapse(self):
         brids_to_collapse = set()
 
         for brid in self.brids:
             # Get the BuildRequest object
-            br = yield self.master.data.get(('buildrequests', brid))
+            br = await self.master.data.get(('buildrequests', brid))
             # Retrieve the buildername
             builderid = br['builderid']
-            bldrdict = yield self.master.data.get(('builders', builderid))
+            bldrdict = await self.master.data.get(('builders', builderid))
             # Get the builder object
             bldr = self.master.botmaster.builders.get(bldrdict['name'])
             if not bldr:
                 continue
             # Get the Collapse BuildRequest function (from the configuration)
             collapseRequestsFn = bldr.getCollapseRequestsFn()
-            unclaim_brs = yield self._getUnclaimedBrs(builderid)
+            unclaim_brs = await self._getUnclaimedBrs(builderid)
 
             # short circuit if there is no merging to do
             if not collapseRequestsFn or not unclaim_brs:
@@ -83,15 +79,15 @@ class BuildRequestCollapser:
                 if unclaim_br['buildrequestid'] == br['buildrequestid']:
                     continue
 
-                canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
+                canCollapse = await collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
                     brids_to_collapse.add(unclaim_br['buildrequestid'])
 
         collapsed_brids = []
         for brid in brids_to_collapse:
-            claimed = yield self.master.data.updates.claimBuildRequests([brid])
+            claimed = await self.master.data.updates.claimBuildRequests([brid])
             if claimed:
-                yield self.master.data.updates.completeBuildRequests([brid], SKIPPED)
+                await self.master.data.updates.completeBuildRequests([brid], SKIPPED)
                 collapsed_brids.append(brid)
 
         return collapsed_brids
@@ -219,8 +215,7 @@ class BuildRequest:
         return cache.get(brdict.buildrequestid, brdict=brdict, master=master)
 
     @classmethod
-    @defer.inlineCallbacks
-    def _make_br(cls, brid: int, brdict: BuildRequestModel, master):
+    async def _make_br(cls, brid: int, brdict: BuildRequestModel, master):
         buildrequest = cls()
         buildrequest.id = brid
         buildrequest.bsid = brdict.buildsetid
@@ -233,22 +228,22 @@ class BuildRequest:
         buildrequest.waitedFor = brdict.waited_for
 
         # fetch the buildset to get the reason
-        buildset = yield master.db.buildsets.getBuildset(brdict.buildsetid)
+        buildset = await master.db.buildsets.getBuildset(brdict.buildsetid)
         assert buildset  # schema should guarantee this
         buildrequest.reason = buildset.reason
 
         # fetch the buildset properties, and convert to Properties
-        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict.buildsetid)
+        buildset_properties = await master.db.buildsets.getBuildsetProperties(brdict.buildsetid)
 
         buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # make a fake sources dict (temporary)
-        bsdata = yield master.data.get(('buildsets', str(buildrequest.bsid)))
+        bsdata = await master.data.get(('buildsets', str(buildrequest.bsid)))
         assert bsdata['sourcestamps'], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
         for ssdata in bsdata['sourcestamps']:
             ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp(ssdata)
-            changes = yield master.data.get(("sourcestamps", ss.ssid, "changes"))
+            changes = await master.data.get(("sourcestamps", ss.ssid, "changes"))
             ss.changes = [TempChange(change) for change in changes]
 
         return buildrequest
@@ -262,8 +257,7 @@ class BuildRequest:
         }
 
     @staticmethod
-    @defer.inlineCallbacks
-    def canBeCollapsed(master, new_br, old_br):
+    async def canBeCollapsed(master, new_br, old_br):
         """
         Returns true if both buildrequest can be merged, via Deferred.
 
@@ -280,8 +274,8 @@ class BuildRequest:
             return False
 
         # get the buildsets for each buildrequest
-        selfBuildsets = yield master.data.get(('buildsets', str(new_br['buildsetid'])))
-        otherBuildsets = yield master.data.get(('buildsets', str(old_br['buildsetid'])))
+        selfBuildsets = await master.data.get(('buildsets', str(new_br['buildsetid'])))
+        otherBuildsets = await master.data.get(('buildsets', str(old_br['buildsetid'])))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss) for ss in selfBuildsets['sourcestamps'])
@@ -306,8 +300,8 @@ class BuildRequest:
             if selfSS['patch'] or otherSS['patch']:
                 return False
             # get changes & compare
-            selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
-            otherChanges = yield master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
+            selfChanges = await master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
+            otherChanges = await master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
             # if both have changes, proceed, else fail - if no changes check revision instead
             if selfChanges and otherChanges:
                 continue
@@ -323,8 +317,8 @@ class BuildRequest:
                 return False
 
         # don't collapse build requests if the properties injected by the scheduler differ
-        new_bs_props = yield master.data.get(('buildsets', str(new_br['buildsetid']), 'properties'))
-        old_bs_props = yield master.data.get(('buildsets', str(old_br['buildsetid']), 'properties'))
+        new_bs_props = await master.data.get(('buildsets', str(new_br['buildsetid']), 'properties'))
+        old_bs_props = await master.data.get(('buildsets', str(old_br['buildsetid']), 'properties'))
 
         new_bs_props = BuildRequest.filter_buildset_props_for_collapsing(new_bs_props)
         old_bs_props = BuildRequest.filter_buildset_props_for_collapsing(old_bs_props)
