@@ -75,14 +75,13 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
     # call methods, with extra checks
 
-    @defer.inlineCallbacks
-    def callGet(self, path, resultSpec=None):
+    async def callGet(self, path, resultSpec=None):
         self.assertIsInstance(path, tuple)
         if resultSpec is None:
             resultSpec = resultspec.ResultSpec()
         endpoint, kwargs = self.matcher[path]
         self.assertIdentical(endpoint, self.ep)
-        rv = yield endpoint.get(resultSpec, kwargs)
+        rv = await endpoint.get(resultSpec, kwargs)
 
         if self.ep.kind == base.EndpointKind.COLLECTION:
             self.assertIsInstance(rv, (list, base.ListResult))
