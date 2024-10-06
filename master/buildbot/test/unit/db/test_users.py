@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import users
@@ -23,9 +22,8 @@ from buildbot.test.util import connector_component
 
 
 class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'users',
                 'users_info',
@@ -87,9 +85,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_addUser_new(self):
-        uid = yield self.db.users.findUserByAttr(
+    async def test_addUser_new(self):
+        uid = await self.db.users.findUserByAttr(
             identifier='soap', attr_type='subspace_net_handle', attr_data='Durden0924'
         )
 
@@ -106,12 +103,11 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             self.assertEqual(infos[0].attr_type, 'subspace_net_handle')
             self.assertEqual(infos[0].attr_data, 'Durden0924')
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def test_addUser_existing(self):
-        yield self.insert_test_data(self.user1_rows)
-        uid = yield self.db.users.findUserByAttr(
+    async def test_addUser_existing(self):
+        await self.insert_test_data(self.user1_rows)
+        uid = await self.db.users.findUserByAttr(
             identifier='soapy', attr_type='IPv9', attr_data='0578cc6.8db024'
         )
 
@@ -130,12 +126,11 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             self.assertEqual(infos[0].attr_type, 'IPv9')
             self.assertEqual(infos[0].attr_data, '0578cc6.8db024')
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def test_findUser_existing(self):
-        yield self.insert_test_data(self.user1_rows + self.user2_rows + self.user3_rows)
-        uid = yield self.db.users.findUserByAttr(
+    async def test_findUser_existing(self):
+        await self.insert_test_data(self.user1_rows + self.user2_rows + self.user3_rows)
+        uid = await self.db.users.findUserByAttr(
             identifier='lye', attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'
         )
 
@@ -162,10 +157,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
                 ),
             )
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def test_addUser_race(self):
+    async def test_addUser_race(self):
         def race_thd(conn):
             # note that this assumes that both inserts can happen "at once".
             # This is the case for DB engines that support transactions, but
@@ -181,7 +175,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             )
             conn.commit()
 
-        uid = yield self.db.users.findUserByAttr(
+        uid = await self.db.users.findUserByAttr(
             identifier='soap',
             attr_type='subspace_net_handle',
             attr_data='Durden0924',
@@ -203,13 +197,12 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             self.assertEqual(infos[0].attr_type, 'subspace_net_handle')
             self.assertEqual(infos[0].attr_data, 'Durden0924')
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def test_addUser_existing_identifier(self):
+    async def test_addUser_existing_identifier(self):
         # see http://trac.buildbot.net/ticket/2587
-        yield self.insert_test_data(self.user1_rows)
-        uid = yield self.db.users.findUserByAttr(
+        await self.insert_test_data(self.user1_rows)
+        uid = await self.db.users.findUserByAttr(
             identifier='soap',  # same identifier
             attr_type='IPv9',
             attr_data='fffffff.ffffff',
@@ -232,132 +225,118 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             self.assertEqual(infos[0].attr_type, 'IPv9')
             self.assertEqual(infos[0].attr_data, 'fffffff.ffffff')
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def test_getUser(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_getUser(self):
+        await self.insert_test_data(self.user1_rows)
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict, self.user1_model)
 
-    @defer.inlineCallbacks
-    def test_getUser_bb(self):
-        yield self.insert_test_data(self.user3_rows)
+    async def test_getUser_bb(self):
+        await self.insert_test_data(self.user3_rows)
 
-        usdict = yield self.db.users.getUser(3)
+        usdict = await self.db.users.getUser(3)
 
         self.assertEqual(usdict, self.user3_model)
 
-    @defer.inlineCallbacks
-    def test_getUser_multi_attr(self):
-        yield self.insert_test_data(self.user2_rows)
+    async def test_getUser_multi_attr(self):
+        await self.insert_test_data(self.user2_rows)
 
-        usdict = yield self.db.users.getUser(2)
+        usdict = await self.db.users.getUser(2)
 
         self.assertEqual(usdict, self.user2_model)
 
-    @defer.inlineCallbacks
-    def test_getUser_no_match(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_getUser_no_match(self):
+        await self.insert_test_data(self.user1_rows)
 
-        none = yield self.db.users.getUser(3)
+        none = await self.db.users.getUser(3)
 
         self.assertEqual(none, None)
 
-    @defer.inlineCallbacks
-    def test_getUsers_none(self):
-        res = yield self.db.users.getUsers()
+    async def test_getUsers_none(self):
+        res = await self.db.users.getUsers()
 
         self.assertEqual(res, [])
 
-    @defer.inlineCallbacks
-    def test_getUsers(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_getUsers(self):
+        await self.insert_test_data(self.user1_rows)
 
-        res = yield self.db.users.getUsers()
+        res = await self.db.users.getUsers()
 
         self.assertEqual(res, [users.UserModel(uid=1, identifier='soap')])
 
-    @defer.inlineCallbacks
-    def test_getUsers_multiple(self):
-        yield self.insert_test_data(self.user1_rows + self.user2_rows)
+    async def test_getUsers_multiple(self):
+        await self.insert_test_data(self.user1_rows + self.user2_rows)
 
-        res = yield self.db.users.getUsers()
+        res = await self.db.users.getUsers()
 
         self.assertEqual(
             res,
             [users.UserModel(uid=1, identifier='soap'), users.UserModel(uid=2, identifier='lye')],
         )
 
-    @defer.inlineCallbacks
-    def test_getUserByUsername(self):
-        yield self.insert_test_data(self.user3_rows)
+    async def test_getUserByUsername(self):
+        await self.insert_test_data(self.user3_rows)
 
-        res = yield self.db.users.getUserByUsername("marla")
+        res = await self.db.users.getUserByUsername("marla")
 
         self.assertEqual(res, self.user3_model)
 
-    @defer.inlineCallbacks
-    def test_getUserByUsername_no_match(self):
-        yield self.insert_test_data(self.user3_rows)
+    async def test_getUserByUsername_no_match(self):
+        await self.insert_test_data(self.user3_rows)
 
-        none = yield self.db.users.getUserByUsername("tyler")
+        none = await self.db.users.getUserByUsername("tyler")
 
         self.assertEqual(none, None)
 
-    @defer.inlineCallbacks
-    def test_updateUser_existing_type(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_updateUser_existing_type(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(uid=1, attr_type='IPv9', attr_data='abcd.1234')
+        await self.db.users.updateUser(uid=1, attr_type='IPv9', attr_data='abcd.1234')
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict.attributes['IPv9'], 'abcd.1234')
         self.assertEqual(usdict.identifier, 'soap')  # no change
 
-    @defer.inlineCallbacks
-    def test_updateUser_new_type(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_updateUser_new_type(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(uid=1, attr_type='IPv4', attr_data='123.134.156.167')
+        await self.db.users.updateUser(uid=1, attr_type='IPv4', attr_data='123.134.156.167')
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict.attributes['IPv4'], '123.134.156.167')
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
         self.assertEqual(usdict.identifier, 'soap')  # no change
 
-    @defer.inlineCallbacks
-    def test_updateUser_identifier(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_updateUser_identifier(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(uid=1, identifier='lye')
+        await self.db.users.updateUser(uid=1, identifier='lye')
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict.identifier, 'lye')
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
-    @defer.inlineCallbacks
-    def test_updateUser_bb(self):
-        yield self.insert_test_data(self.user3_rows)
+    async def test_updateUser_bb(self):
+        await self.insert_test_data(self.user3_rows)
 
-        yield self.db.users.updateUser(uid=3, bb_username='boss', bb_password='fired')
+        await self.db.users.updateUser(uid=3, bb_username='boss', bb_password='fired')
 
-        usdict = yield self.db.users.getUser(3)
+        usdict = await self.db.users.getUser(3)
 
         self.assertEqual(usdict.bb_username, 'boss')
         self.assertEqual(usdict.bb_password, 'fired')
         self.assertEqual(usdict.identifier, 'marla')  # no change
 
-    @defer.inlineCallbacks
-    def test_updateUser_all(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_updateUser_all(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(
+        await self.db.users.updateUser(
             uid=1,
             identifier='lye',
             bb_username='marla',
@@ -366,7 +345,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             attr_data='123.134.156.167',
         )
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(
             usdict,
@@ -382,8 +361,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_updateUser_race(self):
+    async def test_updateUser_race(self):
         # called from the db thread, this opens a *new* connection (to avoid
         # the existing transaction) and executes a conflicting insert in that
         # connection.  This will cause the insert in the db method to fail, and
@@ -416,16 +394,16 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
                 race_condition_committed.append(False)
                 # scope variable, we modify a list so that modification is visible in parent scope
 
-        yield self.insert_test_data(self.user1_rows)
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(
+        await self.db.users.updateUser(
             uid=1, attr_type='IPv4', attr_data='123.134.156.167', _race_hook=race_thd
         )
 
         if not race_condition_committed:
             raise RuntimeError('programmer error: race condition was not called')
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict.identifier, 'soap')
         if race_condition_committed[0] == self.db.has_native_upsert:
@@ -434,65 +412,58 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
             self.assertEqual(usdict.attributes['IPv4'], '8.8.8.8')
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
-    @defer.inlineCallbacks
-    def test_update_NoMatch_identifier(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_update_NoMatch_identifier(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(uid=3, identifier='abcd')
+        await self.db.users.updateUser(uid=3, identifier='abcd')
 
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict.identifier, 'soap')  # no change
 
-    @defer.inlineCallbacks
-    def test_update_NoMatch_attribute(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_update_NoMatch_attribute(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.updateUser(uid=3, attr_type='abcd', attr_data='efgh')
+        await self.db.users.updateUser(uid=3, attr_type='abcd', attr_data='efgh')
 
-        usdict = yield self.db.users.getUser(1)
-
-        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
-
-    @defer.inlineCallbacks
-    def test_update_NoMatch_bb(self):
-        yield self.insert_test_data(self.user1_rows)
-
-        yield self.db.users.updateUser(uid=3, attr_type='marla', attr_data='cancer')
-
-        usdict = yield self.db.users.getUser(1)
+        usdict = await self.db.users.getUser(1)
 
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
-    @defer.inlineCallbacks
-    def test_removeUser_uid(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_update_NoMatch_bb(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.removeUser(1)
+        await self.db.users.updateUser(uid=3, attr_type='marla', attr_data='cancer')
+
+        usdict = await self.db.users.getUser(1)
+
+        self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
+
+    async def test_removeUser_uid(self):
+        await self.insert_test_data(self.user1_rows)
+
+        await self.db.users.removeUser(1)
 
         def thd(conn):
             r = conn.execute(self.db.model.users.select())
             r = r.fetchall()
             self.assertEqual(len(r), 0)
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def test_removeNoMatch(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_removeNoMatch(self):
+        await self.insert_test_data(self.user1_rows)
 
-        yield self.db.users.removeUser(uid=3)
+        await self.db.users.removeUser(uid=3)
 
-    @defer.inlineCallbacks
-    def test_identifierToUid_NoMatch(self):
-        res = yield self.db.users.identifierToUid(identifier="soap")
+    async def test_identifierToUid_NoMatch(self):
+        res = await self.db.users.identifierToUid(identifier="soap")
 
         self.assertEqual(res, None)
 
-    @defer.inlineCallbacks
-    def test_identifierToUid_match(self):
-        yield self.insert_test_data(self.user1_rows)
+    async def test_identifierToUid_match(self):
+        await self.insert_test_data(self.user1_rows)
 
-        res = yield self.db.users.identifierToUid(identifier="soap")
+        res = await self.db.users.identifierToUid(identifier="soap")
 
         self.assertEqual(res, 1)
