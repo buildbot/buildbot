@@ -35,8 +35,7 @@ from buildbot.util import unicode2bytes
 class ReconfigurableServiceMixin:
     reconfig_priority = 128
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         if not service.IServiceCollection.providedBy(self):
             return
 
@@ -49,7 +48,7 @@ class ReconfigurableServiceMixin:
         reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
-            yield svc.reconfigServiceWithBuildbotConfig(new_config)
+            await svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
 # twisted 16's Service is now an new style class, better put everybody new style
@@ -57,19 +56,19 @@ class ReconfigurableServiceMixin:
 class AsyncService(service.Service):
     # service.Service.setServiceParent does not wait for neither disownServiceParent nor addService
     # to complete
-    @defer.inlineCallbacks
-    def setServiceParent(self, parent):
+
+    async def setServiceParent(self, parent):
         if self.parent is not None:
-            yield self.disownServiceParent()
+            await self.disownServiceParent()
         parent = service.IServiceCollection(parent, parent)
         self.parent = parent
-        yield self.parent.addService(self)
+        await self.parent.addService(self)
 
     # service.Service.disownServiceParent does not wait for removeService to complete before
     # setting parent to None
-    @defer.inlineCallbacks
-    def disownServiceParent(self):
-        yield self.parent.removeService(self)
+
+    async def disownServiceParent(self):
+        await self.parent.removeService(self)
         self.parent = None
 
     # We recurse over the parent services until we find a MasterService
@@ -95,8 +94,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
             dl.append(defer.maybeDeferred(svc.startService))
         return defer.gatherResults(dl, consumeErrors=True)
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         # Do NOT use super() here.
         # The method resolution order would cause MultiService.stopService() to
         # be called which we explicitly want to override with this method.
@@ -109,10 +107,10 @@ class AsyncMultiService(AsyncService, service.MultiService):
                 dl.append(defer.maybeDeferred(svc.stopService))
         # unlike MultiService, consume errors in each individual deferred, and
         # pass the first error in a child service up to our caller
-        yield defer.gatherResults(dl, consumeErrors=True)
+        await defer.gatherResults(dl, consumeErrors=True)
         for svc in services:
             if isinstance(svc, SharedService):
-                yield svc.stopService()
+                await svc.stopService()
 
     def addService(self, service):
         if service.name is not None:
@@ -144,8 +142,7 @@ class SharedService(AsyncMultiService):
     """a service that is created only once per parameter set in a parent service"""
 
     @classmethod
-    @defer.inlineCallbacks
-    def getService(cls, parent, *args, **kwargs):
+    async def getService(cls, parent, *args, **kwargs):
         name = cls.getName(*args, **kwargs)
         if name in parent.namedServices:
             return parent.namedServices[name]
@@ -156,7 +153,7 @@ class SharedService(AsyncMultiService):
         # but we use the name to identify the instance in the parent service
         # so we force it with the name we used
         instance.name = name
-        yield instance.setServiceParent(parent)
+        await instance.setServiceParent(parent)
 
         # we put the service on top of the list, so that it is stopped the last
         # This make sense as the shared service is used as a dependency
@@ -209,8 +206,7 @@ class BuildbotService(
             'kwargs': self._config_kwargs,
         }
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithSibling(self, sibling):
+    async def reconfigServiceWithSibling(self, sibling):
         # only reconfigure if sibling is configured differently.
         # sibling == self is using ComparableMixin's implementation
         # only compare compare_attrs
@@ -228,12 +224,12 @@ class BuildbotService(
         for k, v in sibling._config_kwargs.items():
             if k in secrets:
                 # for non reconfigurable services, we force the attribute
-                v = yield p.render(v)
+                v = await p.render(v)
                 setattr(sibling, k, v)
                 setattr(self, k, v)
             kwargs[k] = v
 
-        d = yield self.reconfigService(*sibling._config_args, **kwargs)
+        d = await self.reconfigService(*sibling._config_args, **kwargs)
         return d
 
     def canReconfigWithSibling(self, sibling):
@@ -243,14 +239,13 @@ class BuildbotService(
         # reconfigServiceWithSibling with self, means first configuration
         return self.reconfigServiceWithSibling(self)
 
-    @defer.inlineCallbacks
-    def startService(self):
+    async def startService(self):
         if not self.configured:
             try:
-                yield self.configureService()
+                await self.configureService()
             except NotImplementedError:
                 pass
-        yield super().startService()
+        await super().startService()
 
     def checkConfig(self, *args, **kwargs):
         return defer.succeed(True)
@@ -329,18 +324,16 @@ class ClusteredBuildbotService(BuildbotService):
 
     # default implementation to delegate to the above methods
 
-    @defer.inlineCallbacks
-    def startService(self):
+    async def startService(self):
         # subclasses should override startService only to perform actions that should
         # run on all instances, even if they never get activated on this
         # master.
-        yield super().startService()
+        await super().startService()
         self._startServiceDeferred = defer.Deferred()
         self._startActivityPolling()
-        yield self._startServiceDeferred
+        await self._startServiceDeferred
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         # subclasses should override stopService only to perform actions that should
         # run on all instances, even if they never get activated on this
         # master.
@@ -349,19 +342,19 @@ class ClusteredBuildbotService(BuildbotService):
 
         # need to wait for prior activations to finish
         if self._activityPollDeferred:
-            yield self._activityPollDeferred
+            await self._activityPollDeferred
 
         if self.active:
             self.active = False
 
             try:
-                yield self.deactivate()
-                yield self._unclaimService()
+                await self.deactivate()
+                await self._unclaimService()
             except Exception as e:
                 msg = f"Caught exception while deactivating ClusteredService({self.name})"
                 log.err(e, _why=msg)
 
-        yield super().stopService()
+        await super().stopService()
 
     def _startActivityPolling(self):
         self._activityPollCall = task.LoopingCall(self._activityPoll)
@@ -385,18 +378,17 @@ class ClusteredBuildbotService(BuildbotService):
             self._startServiceDeferred.callback(None)
             self._startServiceDeferred = None
 
-    @defer.inlineCallbacks
-    def _activityPoll(self):
+    async def _activityPoll(self):
         try:
             # just in case..
             if self.active:
                 return
 
             if self.serviceid is None:
-                self.serviceid = yield self._getServiceId()
+                self.serviceid = await self._getServiceId()
 
             try:
-                claimed = yield self._claimService()
+                claimed = await self._claimService()
             except Exception:
                 msg = f'WARNING: ClusteredService({self.name}) got exception while trying to claim'
                 log.err(_why=msg)
@@ -415,7 +407,7 @@ class ClusteredBuildbotService(BuildbotService):
                 # this master is responsible for this service
                 # we activate it
                 self.active = True
-                yield self.activate()
+                await self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
                 msg = f'WARNING: ClusteredService({self.name}) is only partially active'
@@ -464,8 +456,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
 
         raise TypeError(f"config.{self.config_attr} should be a list or dictionary")
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         # arrange childs by name
         old_by_name = self.namedServices
         old_set = set(old_by_name)
@@ -499,19 +490,19 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
                 # as child might use self.master.data to stop itself, its better to stop it first
                 # (this is related to the fact that self.master is found by recursively looking at
                 # self.parent for a master)
-                yield child.stopService()
+                await child.stopService()
                 # it has already called, so do not call it again
                 child.stopService = lambda: None
-                yield child.disownServiceParent()
+                await child.disownServiceParent()
 
             for n in added_names:
                 child = new_by_name[n]
                 # setup service's objectid
                 if hasattr(child, 'objectid'):
                     class_name = f'{child.__class__.__module__}.{child.__class__.__name__}'
-                    objectid = yield self.master.db.state.getObjectId(child.name, class_name)
+                    objectid = await self.master.db.state.getObjectId(child.name, class_name)
                     child.objectid = objectid
-                yield child.setServiceParent(self)
+                await child.setServiceParent(self)
 
         # As the services that were just added got
         # reconfigServiceWithSibling called by
@@ -528,15 +519,15 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
                 raise ValueError(f"{self}: child {svc} should have a defined name attribute")
             config_sibling = new_by_name.get(svc.name)
             try:
-                yield svc.reconfigServiceWithSibling(config_sibling)
+                await svc.reconfigServiceWithSibling(config_sibling)
             except NotImplementedError:
                 # legacy support. Its too painful to transition old code to new Service life cycle
                 # so we implement switch of child when the service raises NotImplementedError
                 # Note this means that self will stop, and sibling will take ownership
                 # means that we have a small time where the service is unavailable.
-                yield svc.disownServiceParent()
+                await svc.disownServiceParent()
                 config_sibling.objectid = svc.objectid
-                yield config_sibling.setServiceParent(self)
+                await config_sibling.setServiceParent(self)
             except Exception as e:  # pragma: no cover
                 log.err(
                     e,
