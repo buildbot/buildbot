@@ -50,48 +50,42 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
+    async def test_get_existing(self):
         """get an existing changesource by id"""
-        changesource = yield self.callGet(('changesources', 14))
+        changesource = await self.callGet(('changesources', 14))
 
         self.validateData(changesource)
         self.assertEqual(changesource['name'], 'other:changesource')
 
-    @defer.inlineCallbacks
-    def test_get_no_master(self):
+    async def test_get_no_master(self):
         """get a changesource with no master"""
-        changesource = yield self.callGet(('changesources', 13))
+        changesource = await self.callGet(('changesources', 13))
 
         self.validateData(changesource)
         self.assertEqual(changesource['master'], None)
 
-    @defer.inlineCallbacks
-    def test_get_masterid_existing(self):
+    async def test_get_masterid_existing(self):
         """get an existing changesource by id on certain master"""
-        changesource = yield self.callGet(('masters', 22, 'changesources', 14))
+        changesource = await self.callGet(('masters', 22, 'changesources', 14))
 
         self.validateData(changesource)
         self.assertEqual(changesource['name'], 'other:changesource')
 
-    @defer.inlineCallbacks
-    def test_get_masterid_no_match(self):
+    async def test_get_masterid_no_match(self):
         """get an existing changesource by id on the wrong master"""
-        changesource = yield self.callGet(('masters', 33, 'changesources', 13))
+        changesource = await self.callGet(('masters', 33, 'changesources', 13))
 
         self.assertEqual(changesource, None)
 
-    @defer.inlineCallbacks
-    def test_get_masterid_missing(self):
+    async def test_get_masterid_missing(self):
         """get an existing changesource by id on an invalid master"""
-        changesource = yield self.callGet(('masters', 25, 'changesources', 13))
+        changesource = await self.callGet(('masters', 25, 'changesources', 13))
 
         self.assertEqual(changesource, None)
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
+    async def test_get_missing(self):
         """get an invalid changesource by id"""
-        changesource = yield self.callGet(('changesources', 99))
+        changesource = await self.callGet(('changesources', 99))
 
         self.assertEqual(changesource, None)
 
@@ -118,27 +112,24 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        changesources = yield self.callGet(('changesources',))
+    async def test_get(self):
+        changesources = await self.callGet(('changesources',))
 
         for cs in changesources:
             self.validateData(cs)
 
         self.assertEqual(sorted([m['changesourceid'] for m in changesources]), [13, 14, 15, 16])
 
-    @defer.inlineCallbacks
-    def test_get_masterid(self):
-        changesources = yield self.callGet(('masters', 33, 'changesources'))
+    async def test_get_masterid(self):
+        changesources = await self.callGet(('masters', 33, 'changesources'))
 
         for cs in changesources:
             self.validateData(cs)
 
         self.assertEqual(sorted([m['changesourceid'] for m in changesources]), [15, 16])
 
-    @defer.inlineCallbacks
-    def test_get_masterid_missing(self):
-        changesources = yield self.callGet(('masters', 23, 'changesources'))
+    async def test_get_masterid_missing(self):
+        changesources = await self.callGet(('masters', 23, 'changesources'))
 
         self.assertEqual(changesources, [])
 
@@ -157,8 +148,7 @@ class ChangeSource(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCas
         def findChangeSourceId(self, name):
             pass
 
-    @defer.inlineCallbacks
-    def test_findChangeSourceId(self):
+    async def test_findChangeSourceId(self):
         self.master.db.changesources.findChangeSourceId = mock.Mock(return_value=defer.succeed(10))
         self.assertEqual((yield self.rtype.findChangeSourceId('cs')), 10)
         self.master.db.changesources.findChangeSourceId.assert_called_with('cs')
@@ -171,45 +161,41 @@ class ChangeSource(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCas
         def trySetChangeSourceMaster(self, changesourceid, masterid):
             pass
 
-    @defer.inlineCallbacks
-    def test_trySetChangeSourceMaster_succeeds(self):
+    async def test_trySetChangeSourceMaster_succeeds(self):
         self.master.db.changesources.setChangeSourceMaster = mock.Mock(
             return_value=defer.succeed(None)
         )
-        yield self.rtype.trySetChangeSourceMaster(10, 20)
+        await self.rtype.trySetChangeSourceMaster(10, 20)
         self.master.db.changesources.setChangeSourceMaster.assert_called_with(10, 20)
 
-    @defer.inlineCallbacks
-    def test_trySetChangeSourceMaster_fails(self):
+    async def test_trySetChangeSourceMaster_fails(self):
         d = defer.fail(failure.Failure(ChangeSourceAlreadyClaimedError('oh noes')))
 
         self.master.db.changesources.setChangeSourceMaster = mock.Mock(return_value=d)
-        result = yield self.rtype.trySetChangeSourceMaster(10, 20)
+        result = await self.rtype.trySetChangeSourceMaster(10, 20)
 
         self.assertFalse(result)
 
-    @defer.inlineCallbacks
-    def test_trySetChangeSourceMaster_raisesOddException(self):
+    async def test_trySetChangeSourceMaster_raisesOddException(self):
         d = defer.fail(failure.Failure(RuntimeError('oh noes')))
 
         self.master.db.changesources.setChangeSourceMaster = mock.Mock(return_value=d)
 
         try:
-            yield self.rtype.trySetChangeSourceMaster(10, 20)
+            await self.rtype.trySetChangeSourceMaster(10, 20)
         except RuntimeError:
             pass
         else:
             self.fail("The RuntimeError did not propagate")
 
-    @defer.inlineCallbacks
-    def test__masterDeactivated(self):
-        yield self.master.db.insert_test_data([
+    async def test__masterDeactivated(self):
+        await self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.ChangeSource(id=13, name='some:changesource'),
             fakedb.ChangeSourceMaster(changesourceid=13, masterid=22),
             fakedb.ChangeSource(id=14, name='other:changesource'),
             fakedb.ChangeSourceMaster(changesourceid=14, masterid=22),
         ])
-        yield self.rtype._masterDeactivated(22)
+        await self.rtype._masterDeactivated(22)
         self.master.db.changesources.assertChangeSourceMaster(13, None)
         self.master.db.changesources.assertChangeSourceMaster(14, None)
