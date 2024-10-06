@@ -115,24 +115,24 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         raise NotImplementedError()
 
     # activity handling
-    @defer.inlineCallbacks
-    def activate(self):
+
+    async def activate(self):
         if not self.enabled:
             return None
 
         # even if we aren't called via _activityPoll(), at this point we
         # need to ensure the service id is set correctly
         if self.serviceid is None:
-            self.serviceid = yield self._getServiceId()
+            self.serviceid = await self._getServiceId()
             assert self.serviceid is not None
 
-        schedulerData = yield self._getScheduler(self.serviceid)
+        schedulerData = await self._getScheduler(self.serviceid)
 
         if schedulerData:
             self.enabled = schedulerData.enabled
 
         if not self._enable_consumer:
-            yield self.startConsumingEnableEvents()
+            await self.startConsumingEnableEvents()
         return None
 
     def _enabledCallback(self, key, msg):
@@ -148,11 +148,10 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             d.addCallback(fn)
         return d
 
-    @defer.inlineCallbacks
-    def deactivate(self):
+    async def deactivate(self):
         if not self.enabled:
             return None
-        yield self._stopConsumingChanges()
+        await self._stopConsumingChanges()
         return None
 
     # service handling
@@ -178,33 +177,32 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
     # change handling
 
-    @defer.inlineCallbacks
-    def startConsumingChanges(self, fileIsImportant=None, change_filter=None, onlyImportant=False):
+    async def startConsumingChanges(
+        self, fileIsImportant=None, change_filter=None, onlyImportant=False
+    ):
         assert fileIsImportant is None or callable(fileIsImportant)
 
         # register for changes with the data API
         assert not self._change_consumer
-        self._change_consumer = yield self.master.mq.startConsuming(
+        self._change_consumer = await self.master.mq.startConsuming(
             lambda k, m: self._changeCallback(k, m, fileIsImportant, change_filter, onlyImportant),
             ('changes', None, 'new'),
         )
 
-    @defer.inlineCallbacks
-    def startConsumingEnableEvents(self):
+    async def startConsumingEnableEvents(self):
         assert not self._enable_consumer
-        self._enable_consumer = yield self.master.mq.startConsuming(
+        self._enable_consumer = await self.master.mq.startConsuming(
             self._enabledCallback, ('schedulers', str(self.serviceid), 'updated')
         )
 
-    @defer.inlineCallbacks
-    def _changeCallback(self, key, msg, fileIsImportant, change_filter, onlyImportant):
+    async def _changeCallback(self, key, msg, fileIsImportant, change_filter, onlyImportant):
         # ignore changes delivered while we're not running
         if not self._change_consumer:
             return
 
         # get a change object, since the API requires it
-        chdict = yield self.master.db.changes.getChange(msg['changeid'])
-        change = yield changes.Change.fromChdict(self.master, chdict)
+        chdict = await self.master.db.changes.getChange(msg['changeid'])
+        change = await changes.Change.fromChdict(self.master, chdict)
 
         # filter it
         if change_filter and not change_filter.filter_change(change):
@@ -252,8 +250,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
     # starting builds
 
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStampsWithDefaults(
+    async def addBuildsetForSourceStampsWithDefaults(
         self,
         reason,
         sourcestamps=None,
@@ -278,7 +275,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # This results in a new sourcestamp for each codebase
         stampsWithDefaults = []
         for codebase in self.codebases:
-            cb = yield self.getCodebaseDict(codebase)
+            cb = await self.getCodebaseDict(codebase)
             ss = {
                 'codebase': codebase,
                 'repository': cb.get('repository', ''),
@@ -304,7 +301,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             }
             stampsWithDefaults.append(ss)
 
-        rv = yield self.addBuildsetForSourceStamps(
+        rv = await self.addBuildsetForSourceStamps(
             sourcestamps=stampsWithDefaults,
             reason=reason,
             waited_for=waited_for,
@@ -323,8 +320,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         except KeyError:
             return defer.fail()
 
-    @defer.inlineCallbacks
-    def addBuildsetForChanges(
+    async def addBuildsetForChanges(
         self,
         waited_for=False,
         reason='',
@@ -344,7 +340,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         # Changes are retrieved from database and grouped by their codebase
         for changeid in changeids:
-            chdict = yield self.master.db.changes.getChange(changeid)
+            chdict = await self.master.db.changes.getChange(changeid)
             changesByCodebase.setdefault(chdict.codebase, []).append(chdict)
 
         sourcestamps = []
@@ -352,7 +348,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
-                cb = yield self.getCodebaseDict(codebase)
+                cb = await self.getCodebaseDict(codebase)
 
                 ss = {
                     'codebase': codebase,
@@ -375,7 +371,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             priority = 0
 
         # add one buildset, using the calculated sourcestamps
-        bsid, brids = yield self.addBuildsetForSourceStamps(
+        bsid, brids = await self.addBuildsetForSourceStamps(
             waited_for,
             sourcestamps=sourcestamps,
             reason=reason,
@@ -388,8 +384,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         return (bsid, brids)
 
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStamps(
+    async def addBuildsetForSourceStamps(
         self,
         waited_for=False,
         sourcestamps=None,
@@ -434,7 +429,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             builderNames = self.builderNames
 
         # dynamically get the builder list to schedule
-        builderNames = yield properties.render(builderNames)
+        builderNames = await properties.render(builderNames)
 
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)
@@ -448,12 +443,12 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         # translate properties object into a dict as required by the
         # addBuildset method
-        properties_dict = yield properties.render(properties.asDict())
+        properties_dict = await properties.render(properties.asDict())
 
         if priority is None:
             priority = 0
 
-        bsid, brids = yield self.master.data.updates.addBuildset(
+        bsid, brids = await self.master.data.updates.addBuildset(
             scheduler=self.name,
             sourcestamps=sourcestamps,
             reason=reason,
