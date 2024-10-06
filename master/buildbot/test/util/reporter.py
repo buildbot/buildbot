@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
 from buildbot.test import fakedb
@@ -39,8 +38,7 @@ class ReporterTestMixin:
         }
         self.reporter_test_thing_url = 'http://thing.example.com'
 
-    @defer.inlineCallbacks
-    def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
+    async def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
         self.insert_test_data(
             [results],
             results,
@@ -48,29 +46,25 @@ class ReporterTestMixin:
             parentPlan=parent_plan,
             insert_patch=insert_patch,
         )
-        build = yield self.master.data.get(("builds", 20))
+        build = await self.master.data.get(("builds", 20))
         return build
 
-    @defer.inlineCallbacks
-    def insert_buildset_no_builds(
+    async def insert_buildset_no_builds(
         self, results, insert_ss=True, parent_plan=False, insert_patch=False
     ):
         self.insert_test_data(
             [], results, insertSS=insert_ss, parentPlan=parent_plan, insert_patch=insert_patch
         )
-        buildset = yield self.master.data.get(("buildsets", 98))
+        buildset = await self.master.data.get(("buildsets", 98))
         return buildset
 
-    @defer.inlineCallbacks
-    def insert_build_finished(self, results=SUCCESS, **kwargs):
+    async def insert_build_finished(self, results=SUCCESS, **kwargs):
         return (yield self.insert_build(results=results, **kwargs))
 
-    @defer.inlineCallbacks
-    def insert_build_new(self, **kwargs):
+    async def insert_build_new(self, **kwargs):
         return (yield self.insert_build(results=None, **kwargs))
 
-    @defer.inlineCallbacks
-    def insert_buildrequest_new(self, insert_patch=False, **kwargs):
+    async def insert_buildrequest_new(self, insert_patch=False, **kwargs):
         self.db = self.master.db
         self.db.insert_test_data([
             fakedb.Master(id=92),
@@ -103,7 +97,7 @@ class ReporterTestMixin:
                 patchlevel=3,
             ),
         ])
-        request = yield self.master.data.get(("buildrequests", 11))
+        request = await self.master.data.get(("buildrequests", 11))
         return request
 
     def insert_test_data(
@@ -218,13 +212,12 @@ class ReporterTestMixin:
         return self.master.data.get(("buildsets", 98))
 
     def setup_fake_get_changes_for_build(self, has_change=True):
-        @defer.inlineCallbacks
-        def getChangesForBuild(buildid):
+        async def getChangesForBuild(buildid):
             if not has_change:
                 return []
 
             assert buildid == 20
-            ch = yield self.master.db.changes.getChange(13)
+            ch = await self.master.db.changes.getChange(13)
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
