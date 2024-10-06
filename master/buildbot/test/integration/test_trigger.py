@@ -16,8 +16,6 @@
 
 from io import StringIO
 
-from twisted.internet import defer
-
 from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and worker environment,
@@ -50,8 +48,7 @@ class TriggeringMaster(RunMasterBase):
         "project": "none",
     }
 
-    @defer.inlineCallbacks
-    def setup_config(self, addFailure=False):
+    async def setup_config(self, addFailure=False):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -83,33 +80,31 @@ class TriggeringMaster(RunMasterBase):
             c['schedulers'][0] = schedulers.Triggerable(
                 name="trigsched", builderNames=["build", "build2", "build3"]
             )
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_trigger(self):
-        yield self.setup_config()
+    async def test_trigger(self):
+        await self.setup_config()
 
-        build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
         self.assertEqual(build['steps'][2]['state_string'], 'triggered trigsched, 1 success')
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         dump = StringIO()
         for b in builds:
-            yield self.printBuild(b, dump)
+            await self.printBuild(b, dump)
         # depending on the environment the number of lines is different between
         # test hosts
         loglines = builds[1]['steps'][1]['logs'][0]['num_lines']
         self.assertRegex(dump.getvalue(), expectedOutputRegex.format(loglines=loglines))
 
-    @defer.inlineCallbacks
-    def test_trigger_failure(self):
-        yield self.setup_config(addFailure=True)
+    async def test_trigger_failure(self):
+        await self.setup_config(addFailure=True)
 
-        build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
 
         self.assertEqual(
             build['steps'][2]['state_string'], 'triggered trigsched, 2 successes, 1 failure'
         )
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 4)
