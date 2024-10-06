@@ -172,8 +172,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do_with_transaction(thd)
 
-    @defer.inlineCallbacks
-    def getWorker(
+    async def getWorker(
         self,
         workerid: int | None = None,
         name: str | None = None,
@@ -182,7 +181,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     ):
         if workerid is None and name is None:
             return None
-        workers = yield self.getWorkers(
+        workers = await self.getWorkers(
             _workerid=workerid, _name=name, masterid=masterid, builderid=builderid
         )
         if workers:
