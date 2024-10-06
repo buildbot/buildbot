@@ -51,35 +51,30 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        master = yield self.callGet(('masters', 14))
+    async def test_get_existing(self):
+        master = await self.callGet(('masters', 14))
 
         self.validateData(master)
         self.assertEqual(master['name'], 'other:master')
 
-    @defer.inlineCallbacks
-    def test_get_builderid_existing(self):
-        master = yield self.callGet(('builders', 23, 'masters', 13))
+    async def test_get_builderid_existing(self):
+        master = await self.callGet(('builders', 23, 'masters', 13))
 
         self.validateData(master)
         self.assertEqual(master['name'], 'some:master')
 
-    @defer.inlineCallbacks
-    def test_get_builderid_no_match(self):
-        master = yield self.callGet(('builders', 24, 'masters', 13))
+    async def test_get_builderid_no_match(self):
+        master = await self.callGet(('builders', 24, 'masters', 13))
 
         self.assertEqual(master, None)
 
-    @defer.inlineCallbacks
-    def test_get_builderid_missing(self):
-        master = yield self.callGet(('builders', 25, 'masters', 13))
+    async def test_get_builderid_missing(self):
+        master = await self.callGet(('builders', 25, 'masters', 13))
 
         self.assertEqual(master, None)
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        master = yield self.callGet(('masters', 99))
+    async def test_get_missing(self):
+        master = await self.callGet(('masters', 99))
 
         self.assertEqual(master, None)
 
@@ -101,27 +96,24 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        masters = yield self.callGet(('masters',))
+    async def test_get(self):
+        masters = await self.callGet(('masters',))
 
         for m in masters:
             self.validateData(m)
 
         self.assertEqual(sorted([m['masterid'] for m in masters]), [13, 14])
 
-    @defer.inlineCallbacks
-    def test_get_builderid(self):
-        masters = yield self.callGet(('builders', 22, 'masters'))
+    async def test_get_builderid(self):
+        masters = await self.callGet(('builders', 22, 'masters'))
 
         for m in masters:
             self.validateData(m)
 
         self.assertEqual(sorted([m['masterid'] for m in masters]), [13])
 
-    @defer.inlineCallbacks
-    def test_get_builderid_missing(self):
-        masters = yield self.callGet(('builders', 23, 'masters'))
+    async def test_get_builderid_missing(self):
+        masters = await self.callGet(('builders', 23, 'masters'))
 
         self.assertEqual(masters, [])
 
@@ -140,8 +132,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def masterActive(self, name, masterid):
             pass
 
-    @defer.inlineCallbacks
-    def test_masterActive(self):
+    async def test_masterActive(self):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
@@ -151,8 +142,8 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         ])
 
         # initial checkin
-        yield self.rtype.masterActive(name='myname', masterid=13)
-        master = yield self.master.db.masters.getMaster(13)
+        await self.rtype.masterActive(name='myname', masterid=13)
+        master = await self.master.db.masters.getMaster(13)
         self.assertEqual(
             master, MasterModel(id=13, name='myname', active=True, last_active=epoch2datetime(60))
         )
@@ -166,9 +157,9 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
         # updated checkin time, re-activation
         self.reactor.advance(60)
-        yield self.master.db.masters.markMasterInactive(13)
-        yield self.rtype.masterActive('myname', masterid=13)
-        master = yield self.master.db.masters.getMaster(13)
+        await self.master.db.masters.markMasterInactive(13)
+        await self.rtype.masterActive('myname', masterid=13)
+        master = await self.master.db.masters.getMaster(13)
         self.assertEqual(
             master, MasterModel(id=13, name='myname', active=True, last_active=epoch2datetime(120))
         )
@@ -188,8 +179,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def masterStopped(self, name, masterid):
             pass
 
-    @defer.inlineCallbacks
-    def test_masterStopped(self):
+    async def test_masterStopped(self):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
@@ -197,11 +187,10 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
-        yield self.rtype.masterStopped(name='aname', masterid=13)
+        await self.rtype.masterStopped(name='aname', masterid=13)
         self.rtype._masterDeactivated.assert_called_with(13, 'aname')
 
-    @defer.inlineCallbacks
-    def test_masterStopped_already(self):
+    async def test_masterStopped_already(self):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
@@ -209,7 +198,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
-        yield self.rtype.masterStopped(name='aname', masterid=13)
+        await self.rtype.masterStopped(name='aname', masterid=13)
         self.rtype._masterDeactivated.assert_not_called()
 
     def test_signature_expireMasters(self):
@@ -220,8 +209,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def expireMasters(self, forceHouseKeeping=False):
             pass
 
-    @defer.inlineCallbacks
-    def test_expireMasters(self):
+    async def test_expireMasters(self):
         self.reactor.advance(60)
 
         self.master.db.insert_test_data([
@@ -234,16 +222,15 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # check after 10 minutes, and see #14 deactivated; #15 gets deactivated
         # by another master, so it's not included here
         self.reactor.advance(600)
-        yield self.master.db.masters.markMasterInactive(15)
-        yield self.rtype.expireMasters()
-        master = yield self.master.db.masters.getMaster(14)
+        await self.master.db.masters.markMasterInactive(15)
+        await self.rtype.expireMasters()
+        master = await self.master.db.masters.getMaster(14)
         self.assertEqual(
             master, MasterModel(id=14, name='other', active=False, last_active=epoch2datetime(0))
         )
         self.rtype._masterDeactivated.assert_called_with(14, 'other')
 
-    @defer.inlineCallbacks
-    def test_masterDeactivated(self):
+    async def test_masterDeactivated(self):
         self.master.db.insert_test_data([
             fakedb.Master(id=14, name='other', active=0, last_active=0),
             # set up a running build with some steps
@@ -279,7 +266,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             m.side_effect = lambda *args, **kwargs: defer.succeed(None)
             setattr(self.master.data.updates, meth, m)
 
-        yield self.rtype._masterDeactivated(14, 'other')
+        await self.rtype._masterDeactivated(14, 'other')
 
         self.master.data.rtypes.builder._masterDeactivated.assert_called_with(masterid=14)
         self.master.data.rtypes.scheduler._masterDeactivated.assert_called_with(masterid=14)
