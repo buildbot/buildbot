@@ -17,8 +17,6 @@
 import os
 from unittest.case import SkipTest
 
-from twisted.internet import defer
-
 from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
 from buildbot.plugins import steps
@@ -48,12 +46,11 @@ class UpcloudMaster(RunMasterBase):
                 " is set to valid upcloud credentials "
             )
 
-    @defer.inlineCallbacks
-    def test_trigger(self):
-        yield self.setup_master(masterConfig(num_concurrent=1), startWorker=False)
-        yield self.doForceBuild()
+    async def test_trigger(self):
+        await self.setup_master(masterConfig(num_concurrent=1), startWorker=False)
+        await self.doForceBuild()
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         # if there are some retry, there will be more builds
         self.assertEqual(len(builds), 1 + NUM_CONCURRENT)
         for b in builds:
