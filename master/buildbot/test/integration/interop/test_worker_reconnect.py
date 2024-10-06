@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
@@ -37,8 +35,7 @@ class WorkerReconnectPb(RunMasterBase):
 
     proto = "pb"
 
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -52,14 +49,13 @@ class WorkerReconnectPb(RunMasterBase):
         f = BuildFactory()
         f.addStep(DisconnectingStep())
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_eventually_reconnect(self):
+    async def test_eventually_reconnect(self):
         DisconnectingStep.disconnection_list = []
-        yield self.setup_config()
+        await self.setup_config()
 
-        build = yield self.doForceBuild()
+        build = await self.doForceBuild()
         self.assertEqual(build['buildid'], 2)
         self.assertEqual(len(DisconnectingStep.disconnection_list), 2)
 
