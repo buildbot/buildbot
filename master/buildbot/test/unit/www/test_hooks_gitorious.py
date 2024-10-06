@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
@@ -71,13 +70,13 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.
-    @defer.inlineCallbacks
-    def testGitWithChange(self):
+
+    async def testGitWithChange(self):
         changeDict = {b"payload": [gitJsonPayload]}
         self.request = FakeRequest(changeDict)
         self.request.uri = b"/change_hook/gitorious"
         self.request.method = b"POST"
-        yield self.request.test_render(self.changeHook)
+        await self.request.test_render(self.changeHook)
 
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
@@ -93,12 +92,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         revlink = "http://gitorious.org/q/mainline/commit/df5744f7bc8663b39717f87742dc94f52ccbf4dd"
         self.assertEqual(change["revlink"], revlink)
 
-    @defer.inlineCallbacks
-    def testGitWithNoJson(self):
+    async def testGitWithNoJson(self):
         self.request = FakeRequest()
         self.request.uri = b"/change_hook/gitorious"
         self.request.method = b"GET"
-        yield self.request.test_render(self.changeHook)
+        await self.request.test_render(self.changeHook)
 
         expected = b"Error processing changes."
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
