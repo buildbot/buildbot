@@ -158,8 +158,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.buildbot_bot.builder_protocol_command = {'test_builder': None}
         self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}
 
-    @defer.inlineCallbacks
-    def test_call_get_worker_info_success(self):
+    async def test_call_get_worker_info_success(self):
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo = mock.Mock()
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo.return_value = {
             'test': 'data_about_worker'
@@ -167,17 +166,16 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         msg = {'op': 'get_worker_info', 'seq_number': 0}
         self.protocol.onMessage(msgpack.packb(msg), True)
-        yield self.protocol._deferwaiter.wait()
+        await self.protocol._deferwaiter.wait()
 
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo.assert_called()
 
         msgs_expected = {'op': 'response', 'seq_number': 0, 'result': {'test': 'data_about_worker'}}
         self.assertEqual(self.list_send_message_args, [msgs_expected])
 
-    @defer.inlineCallbacks
-    def send_message(self, message):
+    async def send_message(self, message):
         self.protocol.onMessage(msgpack.packb(message), True)
-        yield self.protocol._deferwaiter.wait()
+        await self.protocol._deferwaiter.wait()
 
     @parameterized.expand([
         ('print_op', {'seq_number': 1, 'message': 'test'}),
@@ -195,11 +193,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ('response_op', {'seq_number': 1}),
         ('response_seq_number', {'op': 'response'}),
     ])
-    @defer.inlineCallbacks
-    def test_msg(self, name, msg):
+    async def test_msg(self, name, msg):
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         with mock.patch('twisted.python.log.msg') as mock_log:
-            yield self.send_message(msg)
+            await self.send_message(msg)
             mock_log.assert_any_call(f'Invalid message from master: {msg}')
 
         self.assert_sent_messages([])
@@ -247,12 +244,11 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             'command_id',
         ),
     ])
-    @defer.inlineCallbacks
-    def test_missing_parameter(self, command, msg, missing_parameter):
+    async def test_missing_parameter(self, command, msg, missing_parameter):
         self.protocol.onOpen()
         # we are not interested in list_send_message_args before onMessage was called by test
         self.list_send_message_args[:] = []
-        yield self.send_message(msg)
+        await self.send_message(msg)
         self.assert_sent_messages([
             {
                 'op': 'response',
@@ -262,13 +258,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             }
         ])
 
-    @defer.inlineCallbacks
-    def test_on_message_unrecognized_command(self):
+    async def test_on_message_unrecognized_command(self):
         self.protocol.onOpen()
         # we are not interested in list_send_message_args before onMessage was called by test
         self.list_send_message_args[:] = []
 
-        yield self.send_message({'op': 'test', 'seq_number': 0})
+        await self.send_message({'op': 'test', 'seq_number': 0})
 
         self.assert_sent_messages([
             {
@@ -287,30 +282,27 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {"Authorization": encode_http_authorization_header(b'test_username', b'test_password')},
         )
 
-    @defer.inlineCallbacks
-    def test_call_print_success(self):
+    async def test_call_print_success(self):
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         with mock.patch('twisted.python.log.msg') as mock_log:
-            yield self.send_message({'op': 'print', 'seq_number': 0, 'message': 'test_message'})
+            await self.send_message({'op': 'print', 'seq_number': 0, 'message': 'test_message'})
             mock_log.assert_any_call("message from master:", 'test_message')
 
         self.assert_sent_messages([{'op': 'response', 'seq_number': 0, 'result': None}])
 
-    @defer.inlineCallbacks
-    def test_call_keepalive(self):
+    async def test_call_keepalive(self):
         with mock.patch('twisted.python.log.msg') as mock_log:
-            yield self.send_message({'op': 'keepalive', 'seq_number': 0})
+            await self.send_message({'op': 'keepalive', 'seq_number': 0})
             mock_log.assert_any_call("Connection keepalive confirmed.")
 
         self.assert_sent_messages([{'op': 'response', 'seq_number': 0, 'result': None}])
 
-    @defer.inlineCallbacks
-    def test_call_start_command_success(self):
+    async def test_call_start_command_success(self):
         self.setup_with_worker_for_builder()
 
         # check if directory was created
         with mock.patch('os.makedirs') as mkdir:
-            yield self.send_message({
+            await self.send_message({
                 'op': 'start_command',
                 'seq_number': 0,
                 'command_id': '123',
@@ -319,8 +311,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             })
             mkdir.assert_called()
 
-    @defer.inlineCallbacks
-    def test_call_start_command_failed(self):
+    async def test_call_start_command_failed(self):
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -328,7 +319,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # check if directory was created
         with mock.patch('os.makedirs') as mkdir:
             mkdir.side_effect = OSError(1, 'test_error')
-            yield self.send_message({
+            await self.send_message({
                 'op': 'start_command',
                 'seq_number': 1,
                 'command_id': '123',
@@ -356,14 +347,13 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         def create_msg(seq_number):
             return {'op': 'response', 'seq_number': seq_number, 'result': None}
 
-        yield self.send_message(create_msg(0))
-        yield self.send_message(create_msg(1))
+        await self.send_message(create_msg(0))
+        await self.send_message(create_msg(1))
 
         # worker should not send any new messages in response to masters 'response'
         self.assertEqual(self.list_send_message_args, [])
 
-    @defer.inlineCallbacks
-    def test_call_start_command_shell_success(self):
+    async def test_call_start_command_shell_success(self):
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -377,7 +367,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             .exit(0)
         )
 
-        yield self.send_message({
+        await self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
@@ -401,8 +391,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {'op': 'response', 'seq_number': 1, 'result': None},
         ])
 
-    @defer.inlineCallbacks
-    def test_call_start_command_shell_success_logs(self):
+    async def test_call_start_command_shell_success_logs(self):
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -418,7 +407,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             .exit(0)
         )
 
-        yield self.send_message({
+        await self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
@@ -444,8 +433,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {'op': 'response', 'seq_number': 1, 'result': None},
         ])
 
-    @defer.inlineCallbacks
-    def test_start_command_shell_success_updates_single(self):
+    async def test_start_command_shell_success_updates_single(self):
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -457,7 +445,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             .exit(0)
         )
 
-        yield self.send_message({
+        await self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
@@ -481,22 +469,20 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {'op': 'response', 'seq_number': 1, 'result': None},
         ])
 
-    @defer.inlineCallbacks
-    def test_call_shutdown_success(self):
+    async def test_call_shutdown_success(self):
         # shutdown stops reactor, we can not test it so we just mock
         self.protocol.factory.buildbot_bot.remote_shutdown = mock.Mock()
 
-        yield self.send_message({'op': 'shutdown', 'seq_number': 0})
+        await self.send_message({'op': 'shutdown', 'seq_number': 0})
 
         self.protocol.factory.buildbot_bot.remote_shutdown.assert_called()
 
-    @defer.inlineCallbacks
-    def test_call_interrupt_command_no_command_to_interrupt(self):
+    async def test_call_interrupt_command_no_command_to_interrupt(self):
         self.setup_with_worker_for_builder()
         self.protocol.factory.command.doInterrupt = mock.Mock()
 
         with mock.patch('twisted.python.log.msg') as mock_log:
-            yield self.send_message({
+            await self.send_message({
                 'op': 'interrupt_command',
                 'seq_number': 1,
                 'command_id': '123',
@@ -507,8 +493,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
         self.protocol.factory.command.doInterrupt.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_call_interrupt_command_success(self):
+    async def test_call_interrupt_command_success(self):
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
         self.protocol.factory.command.doInterrupt = mock.Mock()
@@ -520,7 +505,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             Expect(['sleep', '10'], workdir).update('header', 'headers').update('wait', True)
         )
 
-        yield self.send_message({
+        await self.send_message({
             'op': 'start_command',
             'seq_number': 1,
             'command_id': '123',
@@ -531,11 +516,11 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         # wait a jiffy..
         d = defer.Deferred()
         reactor.callLater(0.01, d.callback, None)
-        yield d
+        await d
 
         self.assert_sent_messages([{'op': 'response', 'seq_number': 1, 'result': None}])
 
-        yield self.send_message({
+        await self.send_message({
             'op': 'interrupt_command',
             'seq_number': 1,
             'command_id': '123',
