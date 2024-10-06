@@ -18,8 +18,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -47,16 +45,15 @@ class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
         /test_result_sets/n:test_result_setid/results
         """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        set_dbdict = yield self.master.db.test_result_sets.getTestResultSet(
+    async def get(self, resultSpec, kwargs):
+        set_dbdict = await self.master.db.test_result_sets.getTestResultSet(
             kwargs['test_result_setid']
         )
 
         if set_dbdict is None:
             return []
 
-        result_dbdicts = yield self.master.db.test_results.getTestResults(
+        result_dbdicts = await self.master.db.test_results.getTestResults(
             set_dbdict.builderid, kwargs['test_result_setid'], result_spec=resultSpec
         )
 
@@ -85,12 +82,11 @@ class TestResult(base.ResourceType):
     entityType = EntityType(name, 'TestResult')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addTestResults(self, builderid, test_result_setid, result_values):
+    async def addTestResults(self, builderid, test_result_setid, result_values):
         # We're not adding support for emitting any messages, because in all cases all test results
         # will be part of a test result set. The users should wait for a 'complete' event on a
         # test result set and only then fetch the test results, which won't change from that time
         # onward.
-        yield self.master.db.test_results.addTestResults(
+        await self.master.db.test_results.addTestResults(
             builderid, test_result_setid, result_values
         )
