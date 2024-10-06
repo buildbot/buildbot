@@ -39,31 +39,27 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
-    @defer.inlineCallbacks
-    def test_update_registration_simple(self):
+    async def test_update_registration_simple(self):
         listener = msgpack.Listener(self.master)
-        reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
+        reg = await listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.msgmanager._registrations, [('tcp:1234', 'example', 'pass')])
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg))
 
-    @defer.inlineCallbacks
-    def test_update_registration_pass_changed(self):
+    async def test_update_registration_pass_changed(self):
         listener = msgpack.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
+        reg1 = await listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1))
         self.assertEqual(self.master.msgmanager._unregistrations, [('tcp:1234', 'example')])
 
-    @defer.inlineCallbacks
-    def test_update_registration_port_changed(self):
+    async def test_update_registration_port_changed(self):
         listener = msgpack.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
+        reg1 = await listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1))
         self.assertEqual(self.master.msgmanager._unregistrations, [('tcp:1234', 'example')])
 
-    @defer.inlineCallbacks
-    def test_create_connection(self):
+    async def test_create_connection(self):
         listener = msgpack.Listener(self.master)
         listener.before_connection_setup = mock.Mock()
         worker = mock.Mock()
@@ -72,7 +68,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.workers.register(worker)
-        conn = yield listener._create_connection(protocol, worker.workername)
+        conn = await listener._create_connection(protocol, worker.workername)
 
         listener.before_connection_setup.assert_called_once_with(protocol, worker.workername)
         self.assertIsInstance(conn, msgpack.Connection)
@@ -101,8 +97,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.conn.master, self.master)
         self.assertEqual(self.conn.worker, self.worker)
 
-    @defer.inlineCallbacks
-    def test_attached(self):
+    async def test_attached(self):
         self.conn.attached(self.protocol)
         self.worker.attached.assert_called_with(self.conn)
 
@@ -110,16 +105,15 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_called_once_with({'op': 'keepalive'})
 
         self.conn.detached(self.protocol)
-        yield self.conn.waitShutdown()
+        await self.conn.waitShutdown()
 
-    @defer.inlineCallbacks
-    def test_detached(self):
+    async def test_detached(self):
         self.conn.attached(self.protocol)
         self.conn.detached(self.protocol)
 
         self.assertEqual(self.conn.keepalive_timer, None)
         self.assertEqual(self.conn.protocol, None)
-        yield self.conn.waitShutdown()
+        await self.conn.waitShutdown()
 
     def test_lose_connection(self):
         self.conn.loseConnection()
@@ -131,8 +125,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.conn._do_keepalive()
         self.protocol.get_message_result.assert_called_once_with({'op': 'keepalive'})
 
-    @defer.inlineCallbacks
-    def test_start_stop_keepalive_timer(self):
+    async def test_start_stop_keepalive_timer(self):
         self.conn.startKeepaliveTimer()
 
         self.protocol.get_message_result.assert_not_called()
@@ -159,22 +152,19 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.assertEqual(self.protocol.get_message_result.call_args_list, expected_calls)
 
-        yield self.conn.waitShutdown()
+        await self.conn.waitShutdown()
 
-    @defer.inlineCallbacks
-    def test_remote_keepalive(self):
-        yield self.conn.remoteKeepalive()
+    async def test_remote_keepalive(self):
+        await self.conn.remoteKeepalive()
         self.protocol.get_message_result.assert_called_once_with({'op': 'keepalive'})
 
-    @defer.inlineCallbacks
-    def test_remote_print(self):
-        yield self.conn.remotePrint(message='test')
+    async def test_remote_print(self):
+        await self.conn.remotePrint(message='test')
         self.protocol.get_message_result.assert_called_once_with({'op': 'print', 'message': 'test'})
 
-    @defer.inlineCallbacks
-    def test_remote_get_worker_info(self):
+    async def test_remote_get_worker_info(self):
         self.protocol.get_message_result.return_value = defer.succeed({'system': 'posix'})
-        result = yield self.conn.remoteGetWorkerInfo()
+        result = await self.conn.remoteGetWorkerInfo()
 
         self.protocol.get_message_result.assert_called_once_with({'op': 'get_worker_info'})
         self.assertEqual(result, {'system': 'posix'})
@@ -223,8 +213,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.reset_mock()
         self.d_get_message_result.callback(None)
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_rmdir(self):
+    async def test_remote_set_builder_list_no_rmdir(self):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -248,12 +237,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
-        r = yield d
+        r = await d
         self.assertEqual(r, ['builder1', 'builder2'])
         self.protocol.get_message_result.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_do_rmdir(self):
+    async def test_remote_set_builder_list_do_rmdir(self):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -290,12 +278,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
-        r = yield d
+        r = await d
         self.assertEqual(r, ['builder1', 'builder2'])
         self.protocol.get_message_result.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_rmdir_leave_leftover_dirs(self):
+    async def test_remote_set_builder_list_no_rmdir_leave_leftover_dirs(self):
         d = self.set_up_set_builder_list(
             [('builder1', 'test_dir1'), ('builder2', 'test_dir2')], delete_leftover_dirs=False
         )
@@ -312,12 +299,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
-        r = yield d
+        r = await d
         self.assertEqual(r, ['builder1', 'builder2'])
         self.protocol.get_message_result.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_mkdir_from_files(self):
+    async def test_remote_set_builder_list_no_mkdir_from_files(self):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -331,12 +317,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         paths = [os.path.join('testdir', 'info'), os.path.join('testdir', 'test_dir1')]
         self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
-        r = yield d
+        r = await d
         self.assertEqual(r, ['builder1', 'builder2'])
         self.protocol.get_message_result.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_mkdir(self):
+    async def test_remote_set_builder_list_no_mkdir(self):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -346,12 +331,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             [('files', ['test_dir1', 'test_dir2', 'info']), ('rc', 0)],
         )
 
-        r = yield d
+        r = await d
         self.assertEqual(r, ['builder1', 'builder2'])
         self.protocol.get_message_result.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_key_is_missing(self):
+    async def test_remote_set_builder_list_key_is_missing(self):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -360,19 +344,18 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         )
 
         with self.assertRaisesRegex(Exception, "Key 'files' is missing."):
-            yield d
+            await d
 
         self.protocol.get_message_result.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_remote_set_builder_list_key_rc_not_zero(self):
+    async def test_remote_set_builder_list_key_rc_not_zero(self):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
         self.check_message_send_response('listdir', {'path': 'testdir'}, [('rc', 123)])
 
         with self.assertRaisesRegex(Exception, "Error number: 123"):
-            yield d
+            await d
 
         self.protocol.get_message_result.assert_not_called()
 
@@ -383,8 +366,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ('want_stderr', 1, True),
         (None, None, None),
     ])
-    @defer.inlineCallbacks
-    def test_remote_start_command_args_update(self, arg_name, arg_value, expected_value):
+    async def test_remote_start_command_args_update(self, arg_name, arg_value, expected_value):
         self.protocol.get_message_result.return_value = defer.succeed(None)
 
         rc_instance = base.RemoteCommandImpl()
@@ -395,7 +377,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         if arg_name is not None:
             args[arg_name] = arg_value
 
-        yield self.conn.remoteStartCommand(rc_instance, 'builder', 1, 'command', args)
+        await self.conn.remoteStartCommand(rc_instance, 'builder', 1, 'command', args)
         expected_args = args.copy()
         if arg_name is not None:
             expected_args[arg_name] = expected_value
@@ -409,17 +391,15 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             'args': expected_args,
         })
 
-    @defer.inlineCallbacks
-    def test_remote_shutdown(self):
+    async def test_remote_shutdown(self):
         self.protocol.get_message_result.return_value = defer.succeed(None)
-        yield self.conn.remoteShutdown()
+        await self.conn.remoteShutdown()
 
         self.protocol.get_message_result.assert_called_once_with({'op': 'shutdown'})
 
-    @defer.inlineCallbacks
-    def test_remote_interrupt_command(self):
+    async def test_remote_interrupt_command(self):
         self.protocol.get_message_result.return_value = defer.succeed(None)
-        yield self.conn.remoteInterruptCommand('builder', 1, 'test')
+        await self.conn.remoteInterruptCommand('builder', 1, 'test')
 
         self.protocol.get_message_result.assert_called_once_with({
             'op': 'interrupt_command',
