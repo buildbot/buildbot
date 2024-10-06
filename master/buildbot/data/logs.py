@@ -54,18 +54,17 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         /builders/s:buildername/builds/n:build_number/steps/n:step_number/logs/i:log_slug
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         if 'logid' in kwargs:
-            dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
+            dbdict = await self.master.db.logs.getLog(kwargs['logid'])
             return (yield self.db2data(dbdict)) if dbdict else None
 
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
-        step_dict = yield retriever.get_step_dict()
+        step_dict = await retriever.get_step_dict()
         if step_dict is None:
             return None
 
-        dbdict = yield self.master.db.logs.getLogBySlug(step_dict.id, kwargs.get('log_slug'))
+        dbdict = await self.master.db.logs.getLogBySlug(step_dict.id, kwargs.get('log_slug'))
         return (yield self.db2data(dbdict)) if dbdict else None
 
 
@@ -81,13 +80,12 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         /builders/s:buildername/builds/n:build_number/steps/n:step_number/logs
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
-        step_dict = yield retriever.get_step_dict()
+        step_dict = await retriever.get_step_dict()
         if step_dict is None:
             return []
-        logs = yield self.master.db.logs.getLogs(stepid=step_dict.id)
+        logs = await self.master.db.logs.getLogs(stepid=step_dict.id)
         results = []
         for dbdict in logs:
             results.append((yield self.db2data(dbdict)))
@@ -116,19 +114,17 @@ class Log(base.ResourceType):
 
     entityType = EntityType(name, 'Log')
 
-    @defer.inlineCallbacks
-    def generateEvent(self, _id, event):
+    async def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('logs', str(_id)))
+        build = await self.master.data.get(('logs', str(_id)))
         self.produceEvent(build, event)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addLog(self, stepid, name, type):
+    async def addLog(self, stepid, name, type):
         slug = identifiers.forceIdentifier(50, name)
         while True:
             try:
-                logid = yield self.master.db.logs.addLog(
+                logid = await self.master.db.logs.addLog(
                     stepid=stepid, name=name, slug=slug, type=type
                 )
             except LogSlugExistsError:
@@ -138,16 +134,14 @@ class Log(base.ResourceType):
             return logid
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def appendLog(self, logid, content):
-        res = yield self.master.db.logs.appendLog(logid=logid, content=content)
+    async def appendLog(self, logid, content):
+        res = await self.master.db.logs.appendLog(logid=logid, content=content)
         self.generateEvent(logid, "append")
         return res
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def finishLog(self, logid):
-        res = yield self.master.db.logs.finishLog(logid=logid)
+    async def finishLog(self, logid):
+        res = await self.master.db.logs.finishLog(logid=logid)
         self.generateEvent(logid, "finished")
         return res
 
