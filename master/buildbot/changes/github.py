@@ -72,8 +72,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
             config.error("repository_type must be one of {https, svn, git, ssh}")
         super().checkConfig(name=self.name, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         owner,
         repo,
@@ -90,7 +89,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         github_property_whitelist=None,
         **kwargs,
     ):
-        yield super().reconfigService(name=self.name, **kwargs)
+        await super().reconfigService(name=self.name, **kwargs)
 
         if baseURL is None:
             baseURL = HOSTED_BASE_URL
@@ -99,13 +98,13 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
 
         http_headers = {'User-Agent': 'Buildbot'}
         if token is not None:
-            token = yield self.renderSecrets(token)
+            token = await self.renderSecrets(token)
             http_headers.update({'Authorization': 'token ' + token})
 
         if github_property_whitelist is None:
             github_property_whitelist = []
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, baseURL, headers=http_headers
         )
 
@@ -130,22 +129,20 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
     def describe(self):
         return "GitHubPullrequestPoller watching the " f"GitHub repository {self.owner}/{self.repo}"
 
-    @defer.inlineCallbacks
-    def _getPullInformation(self, pull_number):
-        result = yield self._http.get(
+    async def _getPullInformation(self, pull_number):
+        result = await self._http.get(
             '/'.join(['/repos', self.owner, self.repo, 'pulls', str(pull_number)])
         )
-        my_json = yield result.json()
+        my_json = await result.json()
         return my_json
 
-    @defer.inlineCallbacks
-    def _getPulls(self):
+    async def _getPulls(self):
         log.debug(
             "GitHubPullrequestPoller: polling "
             f"GitHub repository {self.owner}/{self.repo}, branches: {self.branches}"
         )
-        result = yield self._http.get('/'.join(['/repos', self.owner, self.repo, 'pulls']))
-        my_json = yield result.json()
+        result = await self._http.get('/'.join(['/repos', self.owner, self.repo, 'pulls']))
+        my_json = await result.json()
         if result.code != 200:
             message = my_json.get('message', 'unknown')
             log.error(
@@ -155,60 +152,53 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
             return []
         return my_json
 
-    @defer.inlineCallbacks
-    def _getFiles(self, prnumber):
-        result = yield self._http.get(
+    async def _getFiles(self, prnumber):
+        result = await self._http.get(
             "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'files'])
         )
-        my_json = yield result.json()
+        my_json = await result.json()
 
         return [f["filename"] for f in my_json]
 
-    @defer.inlineCallbacks
-    def _getCommitters(self, prnumber):
-        result = yield self._http.get(
+    async def _getCommitters(self, prnumber):
+        result = await self._http.get(
             "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'])
         )
-        my_json = yield result.json()
+        my_json = await result.json()
 
         return [
             [c["commit"]["committer"]["name"], c["commit"]["committer"]["email"]] for c in my_json
         ]
 
-    @defer.inlineCallbacks
-    def _getAuthors(self, prnumber):
-        result = yield self._http.get(
+    async def _getAuthors(self, prnumber):
+        result = await self._http.get(
             "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'])
         )
-        my_json = yield result.json()
+        my_json = await result.json()
 
         return [[a["commit"]["author"]["name"], a["commit"]["author"]["email"]] for a in my_json]
 
-    @defer.inlineCallbacks
-    def _getCurrentRev(self, prnumber):
+    async def _getCurrentRev(self, prnumber):
         # Get currently assigned revision of PR number
 
-        result = yield self._getStateObjectId()
-        rev = yield self.master.db.state.getState(result, f'pull_request{prnumber}', None)
+        result = await self._getStateObjectId()
+        rev = await self.master.db.state.getState(result, f'pull_request{prnumber}', None)
         return rev
 
-    @defer.inlineCallbacks
-    def _setCurrentRev(self, prnumber, rev):
+    async def _setCurrentRev(self, prnumber, rev):
         # Set the updated revision for PR number.
 
-        result = yield self._getStateObjectId()
-        yield self.master.db.state.setState(result, f'pull_request{prnumber}', rev)
+        result = await self._getStateObjectId()
+        await self.master.db.state.setState(result, f'pull_request{prnumber}', rev)
 
-    @defer.inlineCallbacks
-    def _getStateObjectId(self):
+    async def _getStateObjectId(self):
         # Return a deferred for object id in state db.
-        result = yield self.master.db.state.getObjectId(
+        result = await self.master.db.state.getObjectId(
             f'{self.owner}/{self.repo}', self.db_class_name
         )
         return result
 
-    @defer.inlineCallbacks
-    def _processChanges(self, github_result):
+    async def _processChanges(self, github_result):
         for pr in github_result:
             # Track PRs for specified branches
             base_branch = pr['base']['ref']
@@ -220,10 +210,10 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                 continue
             if self.pullrequest_filter is not None and not self.pullrequest_filter(pr):
                 continue
-            current = yield self._getCurrentRev(prnumber)
+            current = await self._getCurrentRev(prnumber)
             if not current or current[0:12] != revision[0:12]:
                 # Access title, repo, html link, and comments
-                pr = yield self._getPullInformation(prnumber)
+                pr = await self._getPullInformation(prnumber)
                 title = pr['title']
                 if self.magic_link:
                     branch = f'refs/pull/{prnumber}/merge'
@@ -235,7 +225,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                 comments = pr['body']
                 updated = datetime.strptime(pr['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
                 # update database
-                yield self._setCurrentRev(prnumber, revision)
+                await self._setCurrentRev(prnumber, revision)
 
                 project = self.project
                 if project is None:
@@ -251,7 +241,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                     consumeErrors=True,
                 )
 
-                results = yield dl
+                results = await dl
                 failures = [r[1] for r in results if not r[0]]
                 if failures:
                     for failure in failures:
@@ -268,7 +258,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                 committer = committers[0][0] + " <" + committers[0][1] + ">"
 
                 # emit the change
-                yield self.master.data.updates.addChange(
+                await self.master.data.updates.addChange(
                     author=author,
                     committer=committer,
                     revision=bytes2unicode(revision),
@@ -288,7 +278,6 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                     src='git',
                 )
 
-    @defer.inlineCallbacks
-    def poll(self):
-        result = yield self._getPulls()
-        yield self._processChanges(result)
+    async def poll(self):
+        result = await self._getPulls()
+        await self._processChanges(result)
