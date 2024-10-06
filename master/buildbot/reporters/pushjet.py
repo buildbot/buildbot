@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.python import log as twlog
 
 from buildbot.process.results import CANCELLED
@@ -53,22 +52,21 @@ class PushjetNotifier(ReporterBase):
 
         super().checkConfig(generators=generators)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self, secret, levels=None, base_url='https://api.pushjet.io', generators=None
     ):
-        secret = yield self.renderSecrets(secret)
+        secret = await self.renderSecrets(secret)
 
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators)
+        await super().reconfigService(generators=generators)
         self.secret = secret
         if levels is None:
             self.levels = {}
         else:
             self.levels = levels
-        self._http = yield httpclientservice.HTTPSession(self.master.httpservice, base_url)
+        self._http = await httpclientservice.HTTPSession(self.master.httpservice, base_url)
 
     def _create_default_generators(self):
         formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
