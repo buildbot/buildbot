@@ -48,13 +48,12 @@ class Poller:
 
         self._reactor = reactor
 
-    @defer.inlineCallbacks
-    def _run(self):
+    async def _run(self):
         self._call = None
         self._currently_executing = True
 
         try:
-            yield self.fn(self.instance)
+            await self.fn(self.instance)
         except Exception as e:
             log.err(e, f'while executing {self.fn}')
         finally:
@@ -115,8 +114,7 @@ class Poller:
         self.running = True
         self._schedule(force_initial_now=now)
 
-    @defer.inlineCallbacks
-    def stop(self):
+    async def stop(self):
         self.running = False
         if self._call is not None:
             self._call.cancel()
@@ -124,7 +122,7 @@ class Poller:
         if self._currently_executing:
             d = defer.Deferred()
             self._run_complete_deferreds.append(d)
-            yield d
+            await d
 
 
 class _Descriptor:
