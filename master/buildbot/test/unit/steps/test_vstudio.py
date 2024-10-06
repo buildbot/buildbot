@@ -15,7 +15,6 @@
 
 from unittest.mock import Mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -250,13 +249,12 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SKIPPED, state_string="")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_installdir(self):
+    async def test_installdir(self):
         self.setup_step(VCx(installdir=r'C:\I'))
         self.get_nth_step(0).exp_installdir = r'C:\I'
         self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(self.get_nth_step(0).installdir, r'C:\I')
 
     def test_evaluate_result_failure(self):
@@ -333,15 +331,14 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_rendering(self):
+    async def test_rendering(self):
         self.setup_step(VCx(projectfile=Property('a'), config=Property('b'), project=Property('c')))
         self.build.setProperty('a', 'aa', 'Test')
         self.build.setProperty('b', 'bb', 'Test')
         self.build.setProperty('c', 'cc', 'Test')
         self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
-        yield self.run_step()
+        await self.run_step()
 
         step = self.get_nth_step(0)
         self.assertEqual([step.projectfile, step.config, step.project], ['aa', 'bb', 'cc'])
@@ -624,8 +621,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_rendering(self):
+    async def test_rendering(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', arch=Property('a')))
         self.build.setProperty('a', 'x64', 'Test')
         self.expect_commands(
@@ -636,7 +632,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
             ).exit(0)  # property has expected effect
         )
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
-        yield self.run_step()
+        await self.run_step()
 
         self.assertEqual(self.get_nth_step(0).arch, 'x64')
 
@@ -769,14 +765,13 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.tear_down_test_build_step()
 
-    @defer.inlineCallbacks
-    def test_no_platform(self):
+    async def test_no_platform(self):
         self.setup_step(
             vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
         )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
@@ -871,14 +866,13 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.tear_down_test_build_step()
 
-    @defer.inlineCallbacks
-    def test_no_platform(self):
+    async def test_no_platform(self):
         self.setup_step(
             vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
         )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
     def test_rebuild_project(self):
