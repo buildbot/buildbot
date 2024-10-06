@@ -15,7 +15,6 @@
 
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import EXCEPTION
@@ -148,8 +147,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         # bit 32 is meaningless
         + [(32, EXCEPTION)]
     )
-    @defer.inlineCallbacks
-    def test_codes(self, code, expected_result):
-        yield self._run_simple_test(
+    async def test_codes(self, code, expected_result):
+        await self._run_simple_test(
             r'D:\source', r'E:\dest', expected_code=code, expected_res=expected_result
         )
