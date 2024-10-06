@@ -193,22 +193,21 @@ class FakeBuildsComponent(FakeDBComponent):
         self.builds[bid]['properties'][name] = (value, source)
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def getBuildsForChange(self, changeid):
-        change = yield self.db.changes.getChange(changeid)
-        bsets = yield self.db.buildsets.getBuildsets()
+    async def getBuildsForChange(self, changeid):
+        change = await self.db.changes.getChange(changeid)
+        bsets = await self.db.buildsets.getBuildsets()
         change_ssid = change.sourcestampid
 
         change_buildsetids = set(
             bset.bsid for bset in bsets if any(change_ssid == ssid for ssid in bset.sourcestamps)
         )
 
-        breqs = yield self.db.buildrequests.getBuildRequests()
+        breqs = await self.db.buildrequests.getBuildRequests()
         change_breqids = [
             breq.buildrequestid for breq in breqs if breq.buildsetid in change_buildsetids
         ]
 
-        builds = yield self.db.builds.getBuilds()
+        builds = await self.db.builds.getBuilds()
         return [build for build in builds if build.buildrequestid in change_breqids]
 
     def add_build_locks_duration(self, buildid, duration_s):
