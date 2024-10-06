@@ -159,28 +159,27 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
                     from worker to master
     """
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
         # set the worker port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = PBManager()
-        yield self.pbmanager.setServiceParent(self.master)
+        await self.pbmanager.setServiceParent(self.master)
 
         # remove the fakeServiceParent from fake service hierarchy, and replace
         # by a real one
-        yield self.master.workers.disownServiceParent()
+        await self.master.workers.disownServiceParent()
         self.workers = self.master.workers = workermanager.WorkerManager(self.master)
-        yield self.workers.setServiceParent(self.master)
+        await self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()
-        yield self.botmaster.setServiceParent(self.master)
+        await self.botmaster.setServiceParent(self.master)
 
         self.master.botmaster = self.botmaster
         self.master.data.updates.workerConfigured = lambda *a, **k: None
-        yield self.master.startService()
+        await self.master.startService()
 
         self.buildworker = None
         self.port = None
@@ -213,8 +212,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
         return defer.gatherResults(deferreds)
 
-    @defer.inlineCallbacks
-    def addWorker(self, **kwargs):
+    async def addWorker(self, **kwargs):
         """
         Create a master-side worker instance and add it to the BotMaster
 
@@ -232,8 +230,8 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
             )
         ]
 
-        yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
-        yield self.workers.reconfigServiceWithBuildbotConfig(new_config)
+        await self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
+        await self.workers.reconfigServiceWithBuildbotConfig(new_config)
 
         # as part of the reconfig, the worker registered with the pbmanager, so
         # get the port it was assigned
@@ -283,22 +281,20 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         """Disconnect from the worker side"""
         worker.master_persp.broker.transport.loseConnection()
 
-    @defer.inlineCallbacks
-    def test_connect_disconnect(self):
+    async def test_connect_disconnect(self):
         """Test a single worker connecting and disconnecting."""
-        yield self.addWorker()
+        await self.addWorker()
 
         # connect
-        worker = yield self.connectWorker()
+        worker = await self.connectWorker()
 
         # disconnect
         self.workerSideDisconnect(worker)
 
         # wait for the resulting detach
-        yield worker.waitForDetach()
+        await worker.waitForDetach()
 
-    @defer.inlineCallbacks
-    def test_tls_connect_disconnect(self):
+    async def test_tls_connect_disconnect(self):
         """Test with TLS or SSL endpoint.
 
         According to the deprecation note for the SSL client endpoint,
@@ -321,21 +317,20 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         )
         self.client_connection_string_tpl = "ssl:host=127.0.0.1:port={port}"
 
-        yield self.addWorker()
+        await self.addWorker()
 
         # connect
-        worker = yield self.connectWorker()
+        worker = await self.connectWorker()
 
         # disconnect
         self.workerSideDisconnect(worker)
 
         # wait for the resulting detach
-        yield worker.waitForDetach()
+        await worker.waitForDetach()
 
-    @defer.inlineCallbacks
-    def test_worker_info(self):
-        yield self.addWorker()
-        worker = yield self.connectWorker()
+    async def test_worker_info(self):
+        await self.addWorker()
+        worker = await self.connectWorker()
         props = self.buildworker.info
         # check worker info passing
         self.assertEqual(props.getProperty("info"), "here")
@@ -354,18 +349,17 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         self.assertEqual(props.getProperty("numcpus"), 1)
 
         self.workerSideDisconnect(worker)
-        yield worker.waitForDetach()
+        await worker.waitForDetach()
 
-    @defer.inlineCallbacks
-    def _test_duplicate_worker(self):
-        yield self.addWorker()
+    async def _test_duplicate_worker(self):
+        await self.addWorker()
 
         # connect first worker
-        worker1 = yield self.connectWorker()
+        worker1 = await self.connectWorker()
 
         # connect second worker; this should fail
         try:
-            yield self.connectWorker(waitForBuilderList=False)
+            await self.connectWorker(waitForBuilderList=False)
             connect_failed = False
         except Exception:
             connect_failed = True
@@ -374,17 +368,16 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         # disconnect both and wait for that to percolate
         self.workerSideDisconnect(worker1)
 
-        yield worker1.waitForDetach()
+        await worker1.waitForDetach()
 
         # flush the exception logged for this on the master
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def _test_duplicate_worker_old_dead(self):
-        yield self.addWorker()
+    async def _test_duplicate_worker_old_dead(self):
+        await self.addWorker()
 
         # connect first worker
-        worker1 = yield self.connectWorker()
+        worker1 = await self.connectWorker()
 
         # monkeypatch that worker to fail with PBConnectionLost when its
         # remote_print method is called
@@ -396,12 +389,12 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
         # connect second worker; this should succeed, and the old worker
         # should be disconnected.
-        worker2 = yield self.connectWorker()
+        worker2 = await self.connectWorker()
 
         # disconnect both and wait for that to percolate
         self.workerSideDisconnect(worker2)
 
-        yield worker1.waitForDetach()
+        await worker1.waitForDetach()
 
         # flush the exception logged for this on the worker
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
