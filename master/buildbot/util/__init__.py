@@ -286,12 +286,12 @@ def toJson(obj):
 # is always false.
 
 
-class NotABranch:
+class _NotABranch:
     def __bool__(self):
         return False
 
 
-NotABranch = NotABranch()
+NotABranch = _NotABranch()
 
 # time-handling methods
 
