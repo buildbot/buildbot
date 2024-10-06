@@ -246,15 +246,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.data.forceschedulers"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.data.logs"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.data.masters"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.data.patches"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.data.projects"
     ignore_errors = true
     [[tool.mypy.overrides]]
