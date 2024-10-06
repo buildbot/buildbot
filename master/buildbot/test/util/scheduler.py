@@ -130,10 +130,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
         def patch(meth):
             oldMethod = getattr(scheduler, meth)
 
-            @defer.inlineCallbacks
-            def newMethod():
+            async def newMethod():
                 self._parentMethodCalled = False
-                rv = yield oldMethod()
+                rv = await oldMethod()
 
                 self.assertTrue(self._parentMethodCalled, f"'{meth}' did not call its parent")
                 return rv
@@ -156,9 +155,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.sched = scheduler
         return scheduler
 
-    @defer.inlineCallbacks
-    def setSchedulerToMaster(self, otherMaster):
-        sched_id = yield self.master.data.updates.findSchedulerId(self.sched.name)
+    async def setSchedulerToMaster(self, otherMaster):
+        sched_id = await self.master.data.updates.findSchedulerId(self.sched.name)
         if otherMaster:
             self.master.data.updates.schedulerMasters[sched_id] = otherMaster
         else:
@@ -190,12 +188,11 @@ class SchedulerMixin(interfaces.InterfaceTests):
         ch.properties.update(properties, "Change")
         return ch
 
-    @defer.inlineCallbacks
-    def _addBuildsetReturnValue(self, builderNames):
+    async def _addBuildsetReturnValue(self, builderNames):
         if builderNames is None:
             builderNames = self.sched.builderNames
         builderids = []
-        builders = yield self.db.builders.getBuilders()
+        builders = await self.db.builders.getBuilders()
         for builderName in builderNames:
             for bldrDict in builders:
                 if builderName == bldrDict.name:
