@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import patches
 from buildbot.data import types
@@ -58,9 +56,8 @@ class SourceStampEndpoint(base.Endpoint):
         /sourcestamps/n:ssid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        ssdict = yield self.master.db.sourcestamps.getSourceStamp(kwargs['ssid'])
+    async def get(self, resultSpec, kwargs):
+        ssdict = await self.master.db.sourcestamps.getSourceStamp(kwargs['ssid'])
         return _db2data(ssdict) if ssdict else None
 
 
@@ -72,15 +69,14 @@ class SourceStampsEndpoint(base.Endpoint):
     """
     rootLinkName = 'sourcestamps'
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         buildsetid = kwargs.get("buildsetid")
         if buildsetid is not None:
-            sourcestamps = yield self.master.db.sourcestamps.get_sourcestamps_for_buildset(
+            sourcestamps = await self.master.db.sourcestamps.get_sourcestamps_for_buildset(
                 buildsetid
             )
         else:
-            sourcestamps = yield self.master.db.sourcestamps.getSourceStamps()
+            sourcestamps = await self.master.db.sourcestamps.getSourceStamps()
 
         return [_db2data(ssdict) for ssdict in sourcestamps]
 
