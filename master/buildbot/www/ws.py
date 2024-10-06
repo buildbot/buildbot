@@ -19,7 +19,6 @@ import json
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
@@ -127,22 +126,21 @@ class WsProtocol(WebSocketServerProtocol):
             return False
         return True
 
-    @defer.inlineCallbacks
-    def cmd_startConsuming(self, path, _id):
+    async def cmd_startConsuming(self, path, _id):
         if not self.isPath(path):
-            yield self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
+            await self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
             return
 
         # if it's already subscribed, don't leak a subscription
         if self.qrefs is not None and path in self.qrefs:
-            yield self.ack(_id=_id)
+            await self.ack(_id=_id)
             return
 
         def callback(key, message):
             # protocol is deliberately concise in size
             return self.send_json_message(k="/".join(key), m=message)
 
-        qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
+        qref = await self.master.mq.startConsuming(callback, self.parsePath(path))
 
         # race conditions handling
         if self.qrefs is None or path in self.qrefs:
@@ -153,19 +151,18 @@ class WsProtocol(WebSocketServerProtocol):
             self.qrefs[path] = qref
             self.ack(_id=_id)
 
-    @defer.inlineCallbacks
-    def cmd_stopConsuming(self, path, _id):
+    async def cmd_stopConsuming(self, path, _id):
         if not self.isPath(path):
-            yield self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
+            await self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
             return
 
         # only succeed if path has been started
         if path in self.qrefs:
             qref = self.qrefs.pop(path)
-            yield qref.stopConsuming()
-            yield self.ack(_id=_id)
+            await qref.stopConsuming()
+            await self.ack(_id=_id)
             return
-        yield self.send_json_message(error=f"path was not consumed '{path!s}'", code=400, _id=_id)
+        await self.send_json_message(error=f"path was not consumed '{path!s}'", code=400, _id=_id)
 
     def cmd_ping(self, _id):
         self.send_json_message(msg="pong", code=200, _id=_id)
@@ -181,18 +178,16 @@ class WsProtocol(WebSocketServerProtocol):
         self.graphql_dispatch_events()
 
     @debounce.method(0.1)
-    @defer.inlineCallbacks
-    def graphql_dispatch_events(self):
+    async def graphql_dispatch_events(self):
         """We got a bunch of events, dispatch them to the subscriptions
         For now, we just re-run all queries and see if they changed.
         We use a debouncer to ensure we only do that once a second per connection
         """
         for sub in self.graphql_subs.values():
-            yield self.graphql_run_query(sub)
+            await self.graphql_run_query(sub)
 
-    @defer.inlineCallbacks
-    def graphql_run_query(self, sub):
-        res = yield self.master.graphql.query(sub.query)
+    async def graphql_run_query(self, sub):
+        res = await self.master.graphql.query(sub.query)
         if res.data is None:
             # bad query, better not re-run it!
             self.graphql_cmd_stop(sub.id)
@@ -209,17 +204,16 @@ class WsProtocol(WebSocketServerProtocol):
             sub.last_value_chksum = cksum
             self.sendMessage(data)
 
-    @defer.inlineCallbacks
-    def graphql_cmd_start(self, id, payload=None):
+    async def graphql_cmd_start(self, id, payload=None):
         sub = Subscription(payload.get("query"), id)
         if not self.graphql_subs:
             # consume all events!
-            self.graphql_consumer = yield self.master.mq.startConsuming(
+            self.graphql_consumer = await self.master.mq.startConsuming(
                 self.graphql_got_event, (None, None, None)
             )
 
         self.graphql_subs[id] = sub
-        yield self.graphql_run_query(sub)
+        await self.graphql_run_query(sub)
 
     def graphql_cmd_stop(self, id, payload=None):
         if id in self.graphql_subs:
