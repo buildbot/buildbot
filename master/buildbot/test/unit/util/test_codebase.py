@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
@@ -48,18 +47,15 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
         self.master.db.changes.fakeAddChangeInstance(ch)
         return ch
 
-    @defer.inlineCallbacks
-    def test_getCodebaseDict(self):
-        cbd = yield self.object.getCodebaseDict('a')
+    async def test_getCodebaseDict(self):
+        cbd = await self.object.getCodebaseDict('a')
         self.assertEqual(cbd, {'repository': '', 'branch': 'master'})
 
-    @defer.inlineCallbacks
-    def test_getCodebaseDict_not_found(self):
+    async def test_getCodebaseDict_not_found(self):
         d = self.object.getCodebaseDict('c')
-        yield self.assertFailure(d, KeyError)
+        await self.assertFailure(d, KeyError)
 
-    @defer.inlineCallbacks
-    def test_getCodebaseDict_existing(self):
+    async def test_getCodebaseDict_existing(self):
         self.db.state.set_fake_state(
             self.object,
             'lastCodebases',
@@ -72,16 +68,15 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                 }
             },
         )
-        cbd = yield self.object.getCodebaseDict('a')
+        cbd = await self.object.getCodebaseDict('a')
         self.assertEqual(
             cbd, {'repository': 'A', 'revision': '1234:abc', 'branch': 'master', 'lastChange': 10}
         )
-        cbd = yield self.object.getCodebaseDict('b')
+        cbd = await self.object.getCodebaseDict('b')
         self.assertEqual(cbd, {'repository': '', 'branch': 'master'})
 
-    @defer.inlineCallbacks
-    def test_recordChange(self):
-        yield self.object.recordChange(
+    async def test_recordChange(self):
+        await self.object.recordChange(
             self.mkch(codebase='a', repository='A', revision='1234:abc', branch='master', number=10)
         )
         self.db.state.assertStateByClass(
@@ -97,8 +92,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
             },
         )
 
-    @defer.inlineCallbacks
-    def test_recordChange_older(self):
+    async def test_recordChange_older(self):
         self.db.state.set_fake_state(
             self.object,
             'lastCodebases',
@@ -111,8 +105,8 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                 }
             },
         )
-        yield self.object.getCodebaseDict('a')
-        yield self.object.recordChange(
+        await self.object.getCodebaseDict('a')
+        await self.object.recordChange(
             self.mkch(codebase='a', repository='A', revision='1234:abc', branch='master', number=10)
         )
         self.db.state.assertStateByClass(
@@ -128,8 +122,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
             },
         )
 
-    @defer.inlineCallbacks
-    def test_recordChange_newer(self):
+    async def test_recordChange_newer(self):
         self.db.state.set_fake_state(
             self.object,
             'lastCodebases',
@@ -143,8 +136,8 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
             },
         )
 
-        yield self.object.getCodebaseDict('a')
-        yield self.object.recordChange(
+        await self.object.getCodebaseDict('a')
+        await self.object.recordChange(
             self.mkch(codebase='a', repository='A', revision='2345:bcd', branch='master', number=20)
         )
         self.db.state.assertStateByClass(
