@@ -59,15 +59,14 @@ class WaiterTests(unittest.TestCase):
         self.assertFalse(w.has_waited())
         self.assertTrue(d.called)
 
-    @defer.inlineCallbacks
-    def test_passes_result(self):
+    async def test_passes_result(self):
         w = DeferWaiter()
 
         d1 = defer.Deferred()
         w.add(d1)
 
         d1.callback(123)
-        res = yield d1
+        res = await d1
         self.assertEqual(res, 123)
 
         d = w.wait()
@@ -78,8 +77,7 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
 
-    @defer.inlineCallbacks
-    def test_does_not_add_action_on_start(self):
+    async def test_does_not_add_action_on_start(self):
         w = DeferWaiter()
         times = []
 
@@ -94,14 +92,13 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(times), 0)
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True),
         ('before_action', False),
     ])
-    @defer.inlineCallbacks
-    def test_runs_action(self, name, timer_after_action):
+    async def test_runs_action(self, name, timer_after_action):
         w = DeferWaiter()
         times = []
 
@@ -119,14 +116,13 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True),
         ('before_action', False),
     ])
-    @defer.inlineCallbacks
-    def test_runs_action_after_exception_with_timer(self, name, timer_after_action):
+    async def test_runs_action_after_exception_with_timer(self, name, timer_after_action):
         w = DeferWaiter()
         times = []
 
@@ -149,14 +145,13 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
         self.flushLoggedErrors(TestException)
 
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True),
         ('before_action', False),
     ])
-    @defer.inlineCallbacks
-    def test_runs_action_with_delay(self, name, timer_after_action):
+    async def test_runs_action_with_delay(self, name, timer_after_action):
         w = DeferWaiter()
         times = []
 
@@ -176,14 +171,13 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True),
         ('before_action', False),
     ])
-    @defer.inlineCallbacks
-    def test_runs_action_with_force(self, name, timer_after_action):
+    async def test_runs_action_with_force(self, name, timer_after_action):
         w = DeferWaiter()
         times = []
 
@@ -203,10 +197,9 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
-    @defer.inlineCallbacks
-    def test_ignores_duplicate_start_or_stop(self):
+    async def test_ignores_duplicate_start_or_stop(self):
         w = DeferWaiter()
         times = []
 
@@ -224,10 +217,9 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
-    @defer.inlineCallbacks
-    def test_can_update_interval(self):
+    async def test_can_update_interval(self):
         w = DeferWaiter()
         times = []
 
@@ -245,21 +237,19 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True, [1.1, 2.6, 4.1]),
         ('before_action', False, [1.1, 2.1, 3.1, 4.1]),
     ])
-    @defer.inlineCallbacks
-    def test_runs_long_action(self, name, timer_after_action, expected_times):
+    async def test_runs_long_action(self, name, timer_after_action, expected_times):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(round(self.reactor.seconds(), 1))
-            yield asyncSleep(0.5, reactor=self.reactor)
+            await asyncSleep(0.5, reactor=self.reactor)
 
         h = RepeatedActionHandler(
             self.reactor, w, 1, action, start_timer_after_action_completes=timer_after_action
@@ -272,21 +262,19 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True, [10, 25, 47, 62]),
         ('before_action', False, [10, 20, 30, 47, 57, 67]),
     ])
-    @defer.inlineCallbacks
-    def test_runs_long_action_with_delay(self, name, timer_after_action, expected_times):
+    async def test_runs_long_action_with_delay(self, name, timer_after_action, expected_times):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = RepeatedActionHandler(
             self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
@@ -301,23 +289,21 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True, [10, 25, 40]),
         ('before_action', False, [10, 22, 32, 42]),
     ])
-    @defer.inlineCallbacks
-    def test_runs_long_action_with_delay_when_running(
+    async def test_runs_long_action_with_delay_when_running(
         self, name, timer_after_action, expected_times
     ):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = RepeatedActionHandler(
             self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
@@ -332,21 +318,19 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True, [10, 25, 37, 52, 67]),
         ('before_action', False, [10, 20, 30, 37, 47, 57, 67]),
     ])
-    @defer.inlineCallbacks
-    def test_runs_long_action_with_force(self, name, timer_after_action, expected_times):
+    async def test_runs_long_action_with_force(self, name, timer_after_action, expected_times):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = RepeatedActionHandler(
             self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
@@ -361,23 +345,21 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True, [10, 25, 40]),
         ('before_action', False, [10, 20, 30, 40]),
     ])
-    @defer.inlineCallbacks
-    def test_runs_long_action_with_force_when_running(
+    async def test_runs_long_action_with_force_when_running(
         self, name, timer_after_action, expected_times
     ):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = RepeatedActionHandler(
             self.reactor, w, 10, action, start_timer_after_action_completes=timer_after_action
@@ -392,21 +374,19 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ('after_action', True),
         ('before_action', False),
     ])
-    @defer.inlineCallbacks
-    def test_waiter_waits_for_action_timer_starts(self, name, timer_after_action):
+    async def test_waiter_waits_for_action_timer_starts(self, name, timer_after_action):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(round(self.reactor.seconds(), 1))
-            yield asyncSleep(0.5, reactor=self.reactor)
+            await asyncSleep(0.5, reactor=self.reactor)
 
         h = RepeatedActionHandler(
             self.reactor, w, 1, action, start_timer_after_action_completes=timer_after_action
@@ -423,15 +403,14 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
         self.reactor.pump([0.1] * 5)  # action started on 1.1, will end at 1.6
         self.assertTrue(d.called)
-        yield d
+        await d
 
 
 class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor()
 
-    @defer.inlineCallbacks
-    def test_does_not_add_action_on_start(self):
+    async def test_does_not_add_action_on_start(self):
         w = DeferWaiter()
         times = []
 
@@ -446,10 +425,9 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         self.assertEqual(len(times), 0)
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
-    @defer.inlineCallbacks
-    def test_action(self):
+    async def test_action(self):
         w = DeferWaiter()
         times = []
 
@@ -466,14 +444,13 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True),
         ('dont_invoke_again_if_running', False),
     ])
-    @defer.inlineCallbacks
-    def test_actions_when_multiple_schedule(self, name, invoke_again_if_running):
+    async def test_actions_when_multiple_schedule(self, name, invoke_again_if_running):
         w = DeferWaiter()
         times = []
 
@@ -492,14 +469,13 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True),
         ('dont_invoke_again_if_running', False),
     ])
-    @defer.inlineCallbacks
-    def test_actions_when_schedule_and_force(self, name, invoke_again_if_running):
+    async def test_actions_when_schedule_and_force(self, name, invoke_again_if_running):
         w = DeferWaiter()
         times = []
 
@@ -518,21 +494,21 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True, [20, 32]),
         ('dont_invoke_again_if_running', False, [20]),
     ])
-    @defer.inlineCallbacks
-    def test_long_actions_when_2_schedule(self, name, invoke_again_if_running, expected_times):
+    async def test_long_actions_when_2_schedule(
+        self, name, invoke_again_if_running, expected_times
+    ):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = NonRepeatedActionHandler(self.reactor, w, action)
         self.reactor.pump([1] * 10)
@@ -546,21 +522,19 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True, [10, 15]),
         ('dont_invoke_again_if_running', False, [10]),
     ])
-    @defer.inlineCallbacks
-    def test_long_actions_when_2_force(self, name, invoke_again_if_running, expected_times):
+    async def test_long_actions_when_2_force(self, name, invoke_again_if_running, expected_times):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = NonRepeatedActionHandler(self.reactor, w, action)
         self.reactor.pump([1] * 10)
@@ -574,21 +548,19 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True, [10, 15]),
         ('dont_invoke_again_if_running', False, [10]),
     ])
-    @defer.inlineCallbacks
-    def test_long_actions_when_3_force(self, name, invoke_again_if_running, expected_times):
+    async def test_long_actions_when_3_force(self, name, invoke_again_if_running, expected_times):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = NonRepeatedActionHandler(self.reactor, w, action)
         self.reactor.pump([1] * 10)
@@ -604,23 +576,21 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True, [20, 25]),
         ('dont_invoke_again_if_running', False, [20]),
     ])
-    @defer.inlineCallbacks
-    def test_long_actions_when_schedule_and_force(
+    async def test_long_actions_when_schedule_and_force(
         self, name, invoke_again_if_running, expected_times
     ):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = NonRepeatedActionHandler(self.reactor, w, action)
         self.reactor.pump([1] * 10)
@@ -634,23 +604,21 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
 
     @parameterized.expand([
         ("invoke_again_if_running", True, [10, 22]),
         ('dont_invoke_again_if_running', False, [10]),
     ])
-    @defer.inlineCallbacks
-    def test_long_actions_when_force_and_schedule(
+    async def test_long_actions_when_force_and_schedule(
         self, name, invoke_again_if_running, expected_times
     ):
         w = DeferWaiter()
         times = []
 
-        @defer.inlineCallbacks
-        def action():
+        async def action():
             times.append(self.reactor.seconds())
-            yield asyncSleep(5, reactor=self.reactor)
+            await asyncSleep(5, reactor=self.reactor)
 
         h = NonRepeatedActionHandler(self.reactor, w, action)
         self.reactor.pump([1] * 10)
@@ -664,4 +632,4 @@ class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         h.stop()
         d = w.wait()
         self.assertTrue(d.called)
-        yield d
+        await d
