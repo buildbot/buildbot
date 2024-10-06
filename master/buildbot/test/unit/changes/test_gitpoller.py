@@ -62,19 +62,17 @@ class TestGitPollerBase(
         # this is overridden in TestGitPollerWithSshPrivateKey
         return gitpoller.GitPoller(self.REPOURL, branches=['master'])
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_master_run_process()
-        yield self.setUpChangeSource()
-        yield self.master.startService()
+        await self.setUpChangeSource()
+        await self.master.startService()
 
-        self.poller = yield self.attachChangeSource(self.createPoller())
+        self.poller = await self.attachChangeSource(self.createPoller())
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.master.stopService()
+        await self.tearDownChangeSource()
 
     @async_to_deferred
     async def set_last_rev(self, state: dict[str, str]) -> None:
@@ -91,8 +89,7 @@ class TestGitPollerBase(
 class TestGitPoller(TestGitPollerBase):
     dummyRevStr = '12345abcde'
 
-    @defer.inlineCallbacks
-    def _perform_git_output_test(
+    async def _perform_git_output_test(
         self, methodToTest, args, desiredGoodOutput, desiredGoodResult, emptyRaisesException=True
     ):
         self.expect_commands(
@@ -101,7 +98,7 @@ class TestGitPoller(TestGitPollerBase):
 
         # we should get an Exception with empty output from git
         try:
-            yield methodToTest(self.dummyRevStr)
+            await methodToTest(self.dummyRevStr)
             if emptyRaisesException:
                 self.fail("run_process should have failed on empty output")
         except Exception as e:
@@ -119,7 +116,7 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         try:
-            yield methodToTest(self.dummyRevStr)
+            await methodToTest(self.dummyRevStr)
             self.fail("run_process should have failed on stderr output")
         except Exception:
             pass
@@ -131,7 +128,7 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMasterShell(['git', *args]).workdir(self.POLLER_WORKDIR).stdout(desiredGoodOutput)
         )
 
-        r = yield methodToTest(self.dummyRevStr)
+        r = await methodToTest(self.dummyRevStr)
 
         self.assertEqual(r, desiredGoodResult)
         # check types
@@ -239,28 +236,25 @@ class TestGitPoller(TestGitPollerBase):
         other = gitpoller.GitPoller(self.REPOURL, name="MyName")
         self.assertEqual("MyName", other.name)
 
-    @defer.inlineCallbacks
-    def test_checkGitFeatures_git_not_installed(self):
+    async def test_checkGitFeatures_git_not_installed(self):
         self.setUpLogging()
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'Command not found'),
         )
 
-        yield self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
+        await self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_checkGitFeatures_git_bad_version(self):
+    async def test_checkGitFeatures_git_bad_version(self):
         self.setUpLogging()
         self.expect_commands(ExpectMasterShell(['git', '--version']).stdout(b'git '))
 
         with self.assertRaises(EnvironmentError):
-            yield self.poller._checkGitFeatures()
+            await self.poller._checkGitFeatures()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_initial(self):
+    async def test_poll_initial(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -289,13 +283,12 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+        await self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
-    @defer.inlineCallbacks
-    def test_poll_initial_poller_not_running(self):
+    async def test_poll_initial_poller_not_running(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -309,10 +302,10 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = False
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev(None)
+        await self.assert_last_rev(None)
 
     def test_poll_failInit(self):
         self.expect_commands(
@@ -326,8 +319,7 @@ class TestGitPoller(TestGitPollerBase):
         d.addCallback(lambda _: self.assert_all_commands_ran())
         return d
 
-    @defer.inlineCallbacks
-    def test_poll_branch_do_not_exist(self):
+    async def test_poll_branch_do_not_exist(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -335,12 +327,11 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_failRevParse(self):
+    async def test_poll_failRevParse(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -369,14 +360,13 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
         self.assertEqual(len(self.flushLoggedErrors()), 1)
-        yield self.assert_last_rev({})
+        await self.assert_last_rev({})
 
-    @defer.inlineCallbacks
-    def test_poll_failLog(self):
+    async def test_poll_failLog(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -417,29 +407,27 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         # do the poll
-        yield self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
+        await self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
         self.assertEqual(len(self.flushLoggedErrors()), 1)
-        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
-    @defer.inlineCallbacks
-    def test_poll_GitError(self):
+    async def test_poll_GitError(self):
         # Raised when git exits with status code 128. See issue 2468
         self.expect_commands(
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]).exit(128),
         )
 
         with self.assertRaises(gitpoller.GitError):
-            yield self.poller._dovccmd('init', ['--bare', self.POLLER_WORKDIR])
+            await self.poller._dovccmd('init', ['--bare', self.POLLER_WORKDIR])
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_GitError_log(self):
+    async def test_poll_GitError_log(self):
         self.setUpLogging()
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
@@ -447,13 +435,12 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
         self.assertLogged("command.*on repourl.*failed.*exit code 128.*")
 
-    @defer.inlineCallbacks
-    def test_poll_nothingNew(self):
+    async def test_poll_nothingNew(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
         self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
@@ -500,16 +487,15 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        yield self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
-    @defer.inlineCallbacks
-    def test_poll_multipleBranches_initial(self):
+    async def test_poll_multipleBranches_initial(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -555,16 +541,15 @@ class TestGitPoller(TestGitPollerBase):
         # do the poll
         self.poller.branches = ['master', 'release', 'not_on_remote']
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
         })
 
-    @defer.inlineCallbacks
-    def test_poll_multipleBranches(self):
+    async def test_poll_multipleBranches(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -666,15 +651,15 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['master', 'release']
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
         })
@@ -733,8 +718,7 @@ class TestGitPoller(TestGitPollerBase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_multipleBranches_buildPushesWithNoCommits_default(self):
+    async def test_poll_multipleBranches_buildPushesWithNoCommits_default(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -776,18 +760,17 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_poll_multipleBranches_buildPushesWithNoCommits_true(self):
+    async def test_poll_multipleBranches_buildPushesWithNoCommits_true(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -856,14 +839,14 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        yield self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
         self.poller.buildPushesWithNoCommits = True
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -886,8 +869,7 @@ class TestGitPoller(TestGitPollerBase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_multipleBranches_buildPushesWithNoCommits_true_fast_forward(self):
+    async def test_poll_multipleBranches_buildPushesWithNoCommits_true_fast_forward(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -957,17 +939,17 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'release': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
         })
 
         self.poller.buildPushesWithNoCommits = True
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -990,8 +972,7 @@ class TestGitPoller(TestGitPollerBase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_multipleBranches_buildPushesWithNoCommits_true_not_tip(self):
+    async def test_poll_multipleBranches_buildPushesWithNoCommits_true_not_tip(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1060,14 +1041,14 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['release']
-        yield self.set_last_rev({'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c'})
+        await self.set_last_rev({'master': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c'})
 
         self.poller.buildPushesWithNoCommits = True
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -1090,8 +1071,7 @@ class TestGitPoller(TestGitPollerBase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_allBranches_single(self):
+    async def test_poll_allBranches_single(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1161,14 +1141,14 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = True
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
         })
 
@@ -1190,8 +1170,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[1]['files'], ['/etc/64a'])
         self.assertEqual(added[1]['src'], 'git')
 
-    @defer.inlineCallbacks
-    def test_poll_noChanges(self):
+    async def test_poll_noChanges(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
         self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
@@ -1238,15 +1217,14 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        yield self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.set_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
 
-    @defer.inlineCallbacks
-    def test_poll_allBranches_multiple(self):
+    async def test_poll_allBranches_multiple(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1341,15 +1319,15 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = True
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             'refs/heads/release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
         })
@@ -1379,8 +1357,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[2]['files'], ['/etc/911'])
         self.assertEqual(added[2]['src'], 'git')
 
-    @defer.inlineCallbacks
-    def test_poll_callableFilteredBranches(self):
+    async def test_poll_callableFilteredBranches(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1458,18 +1435,18 @@ class TestGitPoller(TestGitPollerBase):
                 return branch == "refs/heads/master"
 
         self.poller.branches = TestCallable()
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
 
         # The release branch id should remain unchanged,
         # because it was ignored.
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
 
@@ -1491,8 +1468,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[1]['files'], ['/etc/64a'])
         self.assertEqual(added[1]['src'], 'git')
 
-    @defer.inlineCallbacks
-    def test_poll_branchFilter(self):
+    async def test_poll_branchFilter(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1568,15 +1544,15 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = pullFilter
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/pull/410/head': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'refs/pull/410/head': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
         })
 
@@ -1590,8 +1566,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[0]['files'], ['/etc/911'])
         self.assertEqual(added[0]['src'], 'git')
 
-    @defer.inlineCallbacks
-    def test_poll_old(self):
+    async def test_poll_old(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
         self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
@@ -1671,12 +1646,12 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
-        yield self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
+        await self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         # check the results
-        yield self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
+        await self.assert_last_rev({'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'})
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -1716,8 +1691,7 @@ class TestGitPoller(TestGitPollerBase):
         )
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_callableCategory(self):
+    async def test_poll_callableCategory(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1793,14 +1767,14 @@ class TestGitPoller(TestGitPollerBase):
 
         self.poller.category = callableCategory
 
-        yield self.set_last_rev({
+        await self.set_last_rev({
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         })
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({
+        await self.assert_last_rev({
             'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
         })
 
@@ -1829,15 +1803,14 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(self.poller.workdir, self.POLLER_WORKDIR)
         await self.assert_last_rev(None)
 
-    @defer.inlineCallbacks
-    def test_startService_loadLastRev(self):
-        yield self.poller.stopService()
+    async def test_startService_loadLastRev(self):
+        await self.poller.stopService()
 
         self.master.db.state.set_fake_state(
             self.poller, 'lastRev', {"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"}
         )
 
-        yield self.poller.startService()
+        await self.poller.startService()
 
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
@@ -1876,11 +1849,11 @@ class TestGitPoller(TestGitPollerBase):
             ]).workdir(self.POLLER_WORKDIR),
         )
 
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
 
-        yield self.assert_last_rev({"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"})
+        await self.assert_last_rev({"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"})
 
 
 class TestGitPollerDefaultBranch(TestGitPollerBase):
@@ -2058,13 +2031,12 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.git.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_check_git_features_ssh_1_7(self, write_local_file_mock, temp_dir_mock):
+    async def test_check_git_features_ssh_1_7(self, write_local_file_mock, temp_dir_mock):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
         )
 
-        yield self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
+        await self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
 
         self.assert_all_commands_ran()
 
@@ -2076,8 +2048,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.git.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
+    async def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
 
         self.expect_commands(
@@ -2112,10 +2083,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+        await self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
@@ -2126,8 +2097,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.git.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_poll_initial_2_3(self, write_local_file_mock, temp_dir_mock):
+    async def test_poll_initial_2_3(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
 
         self.expect_commands(
@@ -2160,10 +2130,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+        await self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
@@ -2174,8 +2144,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.git.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_poll_failFetch_git_2_10(self, write_local_file_mock, temp_dir_mock):
+    async def test_poll_failFetch_git_2_10(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
 
         # make sure we cleanup the private key when fetch fails
@@ -2206,7 +2175,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.assertFailure(self.poller.poll(), EnvironmentError)
+        await self.assertFailure(self.poller.poll(), EnvironmentError)
 
         self.assert_all_commands_ran()
 
@@ -2226,8 +2195,7 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.git.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
+    async def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
         known_hosts_path = os.path.join(
             'basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-known-hosts'
@@ -2267,10 +2235,10 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+        await self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
@@ -2297,8 +2265,7 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
         new_callable=MockPrivateTemporaryDirectory,
     )
     @mock.patch('buildbot.util.git.writeLocalFile')
-    @defer.inlineCallbacks
-    def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
+    async def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
         known_hosts_path = os.path.join(
             'basedir', 'gitpoller-work', '.buildbot-ssh@@@', 'ssh-known-hosts'
@@ -2338,10 +2305,10 @@ class TestGitPollerWithSshKnownHosts(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+        await self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
@@ -2369,8 +2336,7 @@ class TestGitPollerWithAuthCredentials(TestGitPollerBase):
         'buildbot.util.private_tempdir.PrivateTemporaryDirectory',
         new_callable=MockPrivateTemporaryDirectory,
     )
-    @defer.inlineCallbacks
-    def test_poll_initial_2_10(self, temp_dir_mock):
+    async def test_poll_initial_2_10(self, temp_dir_mock):
         temp_dir_path = os.path.join('basedir', 'gitpoller-work', '.buildbot-ssh@@@')
         credential_store_filepath = os.path.join(temp_dir_path, '.git-credentials')
         self.expect_commands(
@@ -2418,10 +2384,10 @@ class TestGitPollerWithAuthCredentials(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.poller.poll()
+        await self.poller.poll()
 
         self.assert_all_commands_ran()
-        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+        await self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
 
         self.assertEqual(temp_dir_mock.dirs, [(temp_dir_path, 0o700)])
 
@@ -2429,75 +2395,63 @@ class TestGitPollerWithAuthCredentials(TestGitPollerBase):
 class TestGitPollerConstructor(
     unittest.TestCase, TestReactorMixin, changesource.ChangeSourceMixin, config.ConfigErrorsMixin
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        yield self.setUpChangeSource()
-        yield self.master.startService()
+        await self.setUpChangeSource()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.master.stopService()
+        await self.tearDownChangeSource()
 
-    @defer.inlineCallbacks
-    def test_deprecatedFetchRefspec(self):
+    async def test_deprecatedFetchRefspec(self):
         with self.assertRaisesConfigError("fetch_refspec is no longer supported"):
-            yield self.attachChangeSource(
+            await self.attachChangeSource(
                 gitpoller.GitPoller("/tmp/git.git", fetch_refspec='not-supported')
             )
 
-    @defer.inlineCallbacks
-    def test_branches_default(self):
-        poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git"))
+    async def test_branches_default(self):
+        poller = await self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git"))
         self.assertEqual(poller.branches, None)
 
-    @defer.inlineCallbacks
-    def test_branches_oldBranch(self):
-        poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", branch='magic'))
+    async def test_branches_oldBranch(self):
+        poller = await self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", branch='magic'))
         self.assertEqual(poller.branches, ["magic"])
 
-    @defer.inlineCallbacks
-    def test_branches(self):
-        poller = yield self.attachChangeSource(
+    async def test_branches(self):
+        poller = await self.attachChangeSource(
             gitpoller.GitPoller("/tmp/git.git", branches=['magic', 'marker'])
         )
         self.assertEqual(poller.branches, ["magic", "marker"])
 
-    @defer.inlineCallbacks
-    def test_branches_True(self):
-        poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", branches=True))
+    async def test_branches_True(self):
+        poller = await self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", branches=True))
         self.assertEqual(poller.branches, True)
 
-    @defer.inlineCallbacks
-    def test_only_tags_True(self):
-        poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", only_tags=True))
+    async def test_only_tags_True(self):
+        poller = await self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git", only_tags=True))
         self.assertIsNotNone(poller.branches)
 
-    @defer.inlineCallbacks
-    def test_branches_andBranch(self):
+    async def test_branches_andBranch(self):
         with self.assertRaisesConfigError("can't specify both branch and branches"):
-            yield self.attachChangeSource(
+            await self.attachChangeSource(
                 gitpoller.GitPoller("/tmp/git.git", branch='bad', branches=['listy'])
             )
 
-    @defer.inlineCallbacks
-    def test_branches_and_only_tags(self):
+    async def test_branches_and_only_tags(self):
         with self.assertRaisesConfigError("can't specify only_tags and branch/branches"):
-            yield self.attachChangeSource(
+            await self.attachChangeSource(
                 gitpoller.GitPoller("/tmp/git.git", only_tags=True, branches=['listy'])
             )
 
-    @defer.inlineCallbacks
-    def test_branch_and_only_tags(self):
+    async def test_branch_and_only_tags(self):
         with self.assertRaisesConfigError("can't specify only_tags and branch/branches"):
-            yield self.attachChangeSource(
+            await self.attachChangeSource(
                 gitpoller.GitPoller("/tmp/git.git", only_tags=True, branch='bad')
             )
 
-    @defer.inlineCallbacks
-    def test_gitbin_default(self):
-        poller = yield self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git"))
+    async def test_gitbin_default(self):
+        poller = await self.attachChangeSource(gitpoller.GitPoller("/tmp/git.git"))
         self.assertEqual(poller.gitbin, "git")
 
 
@@ -2575,8 +2529,7 @@ class TestGitPollerBareRepository(
 
     MAIN_HEAD_SHA = MERGE_FEATURE_1_SHA
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         try:
             self.repo = TestGitRepository(
                 repository_path=tempfile.mkdtemp(
@@ -2587,10 +2540,10 @@ class TestGitPollerBareRepository(
         except FileNotFoundError as e:
             raise unittest.SkipTest("Can't find git binary") from e
 
-        yield self.prepare_repository()
+        await self.prepare_repository()
 
-        yield self.setUpChangeSource(want_real_reactor=True)
-        yield self.master.startService()
+        await self.setUpChangeSource(want_real_reactor=True)
+        await self.master.startService()
 
         self.poller_workdir = tempfile.mkdtemp(
             prefix="TestGitPollerBareRepository_",
@@ -2598,7 +2551,7 @@ class TestGitPollerBareRepository(
         )
 
         self.repo_url = str(self.repo.repository_path / '.git')
-        self.poller = yield self.attachChangeSource(
+        self.poller = await self.attachChangeSource(
             gitpoller.GitPoller(
                 self.repo_url,
                 branches=['main'],
@@ -2607,10 +2560,9 @@ class TestGitPollerBareRepository(
             )
         )
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.master.stopService()
+        await self.tearDownChangeSource()
 
         def _delete_repository(repo_path: Path):
             # on Win, git will mark objects as read-only
