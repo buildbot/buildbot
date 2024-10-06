@@ -88,8 +88,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                     formatted_results += "no match found\n"
         return formatted_results
 
-    @defer.inlineCallbacks
-    def perspective_commandline(self, op, bb_username, bb_password, ids, info):
+    async def perspective_commandline(self, op, bb_username, bb_password, ids, info):
         """
         This performs the requested operations from the `buildbot user`
         call by calling the proper buildbot.db.users methods based on
@@ -122,18 +121,18 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             for user in ids:
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
-                uid = yield self.master.db.users.identifierToUid(identifier=user)
+                uid = await self.master.db.users.identifierToUid(identifier=user)
 
                 result = None
                 if op == 'remove':
                     if uid:
-                        yield self.master.db.users.removeUser(uid)
+                        await self.master.db.users.removeUser(uid)
                         result = user
                     else:
                         log.msg(f"Unable to find uid for identifier {user}")
                 elif op == 'get':
                     if uid:
-                        result = yield self.master.db.users.getUser(uid)
+                        result = await self.master.db.users.getUser(uid)
                     else:
                         log.msg(f"Unable to find uid for identifier {user}")
 
@@ -143,13 +142,13 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
                 ident = user.pop('identifier')
-                uid = yield self.master.db.users.identifierToUid(identifier=ident)
+                uid = await self.master.db.users.identifierToUid(identifier=ident)
 
                 # if only an identifier was in user, we're updating only
                 # the bb_username and bb_password.
                 if not user:
                     if uid:
-                        result = yield self.master.db.users.updateUser(
+                        result = await self.master.db.users.updateUser(
                             uid=uid,
                             identifier=ident,
                             bb_username=bb_username,
@@ -165,7 +164,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                         result = None
                         if op == 'update' or once_through:
                             if uid:
-                                result = yield self.master.db.users.updateUser(
+                                result = await self.master.db.users.updateUser(
                                     uid=uid,
                                     identifier=ident,
                                     bb_username=bb_username,
@@ -176,7 +175,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                             else:
                                 log.msg(f"Unable to find uid for identifier {user}")
                         elif op == 'add':
-                            result = yield self.master.db.users.findUserByAttr(
+                            result = await self.master.db.users.findUserByAttr(
                                 identifier=ident, attr_type=attr, attr_data=user[attr]
                             )
                             once_through = True
@@ -208,16 +207,15 @@ class CommandlineUserManager(service.AsyncMultiService):
         self.port = port
         self.registration = None
 
-    @defer.inlineCallbacks
-    def startService(self):
+    async def startService(self):
         # set up factory and register with buildbot.pbmanager
         def factory(mind, username):
             return CommandlineUserManagerPerspective(self.master)
 
-        self.registration = yield self.master.pbmanager.register(
+        self.registration = await self.master.pbmanager.register(
             self.port, self.username, self.passwd, factory
         )
-        yield super().startService()
+        await super().startService()
 
     def stopService(self):
         d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)
