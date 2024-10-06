@@ -97,8 +97,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         repourl,
         branch=None,
@@ -138,7 +137,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         self.lastRev = {}
         self.revlink_callable = revlink
 
-        yield super().reconfigService(
+        await super().reconfigService(
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
@@ -162,9 +161,8 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             return [branch]
         return branches or []
 
-    @defer.inlineCallbacks
-    def activate(self):
-        self.lastRev = yield self.getState('lastRev', {})
+    async def activate(self):
+        self.lastRev = await self.getState('lastRev', {})
         super().activate()
 
     def describe(self):
@@ -177,10 +175,9 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         )
 
     @deferredLocked('initLock')
-    @defer.inlineCallbacks
-    def poll(self):
-        yield self._getChanges()
-        yield self._processChanges()
+    async def poll(self):
+        await self._getChanges()
+        await self._processChanges()
 
     def _absWorkdir(self):
         workdir = self.workdir
@@ -188,8 +185,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             return workdir
         return os.path.join(self.master.basedir, workdir)
 
-    @defer.inlineCallbacks
-    def _getRevDetails(self, rev):
+    async def _getRevDetails(self, rev):
         """Return a deferred for (date, author, files, comments) of given rev.
 
         Deferred will be in error if rev is unknown.
@@ -208,7 +204,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         ]
 
         # Mercurial fails with status 255 if rev is unknown
-        rc, output = yield runprocess.run_process(
+        rc, output = await runprocess.run_process(
             self.master.reactor,
             command,
             workdir=self._absWorkdir(),
@@ -238,8 +234,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         """Easy to patch in tests."""
         return os.path.exists(os.path.join(self._absWorkdir(), '.hg'))
 
-    @defer.inlineCallbacks
-    def _initRepository(self):
+    async def _initRepository(self):
         """Have mercurial init the workdir as a repository (hg init) if needed.
 
         hg init will also create all needed intermediate directories.
@@ -248,7 +243,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             return
         log.msg(f'hgpoller: initializing working dir from {self.repourl}')
 
-        rc = yield runprocess.run_process(
+        rc = await runprocess.run_process(
             self.master.reactor,
             [self.hgbin, 'init', self._absWorkdir()],
             env=os.environ,
@@ -262,11 +257,10 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
 
         log.msg(f"hgpoller: finished initializing working dir {self.workdir}")
 
-    @defer.inlineCallbacks
-    def _getChanges(self):
+    async def _getChanges(self):
         self.lastPoll = time.time()
 
-        yield self._initRepository()
+        await self._initRepository()
         log.msg(f"{self}: polling hg repo at {self.repourl}")
 
         command = [self.hgbin, 'pull']
@@ -276,7 +270,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             command += ['-B', name]
         command += [self.repourl]
 
-        yield runprocess.run_process(
+        await runprocess.run_process(
             self.master.reactor,
             command,
             workdir=self._absWorkdir(),
@@ -297,8 +291,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         self.lastRev[branch] = str(rev)
         return self.setState('lastRev', self.lastRev)
 
-    @defer.inlineCallbacks
-    def _getHead(self, branch):
+    async def _getHead(self, branch):
         """Return a deferred for branch head revision or None.
 
         We'll get an error if there is no head for this branch, which is
@@ -307,7 +300,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         yet, one shouldn't be surprised to get errors)
         """
 
-        rc, stdout = yield runprocess.run_process(
+        rc, stdout = await runprocess.run_process(
             self.master.reactor,
             [self.hgbin, 'heads', branch, '--template={rev}' + os.linesep],
             workdir=self._absWorkdir(),
@@ -337,8 +330,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         # same node -> rev assignations ?
         return stdout.strip().decode(self.encoding)
 
-    @defer.inlineCallbacks
-    def _processChanges(self):
+    async def _processChanges(self):
         """Send info about pulled changes to the master and record current.
 
         HgPoller does the recording by moving the working dir to the head
@@ -348,15 +340,14 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         Recall that hg rev numbers are local and incremental.
         """
         for branch in self.branches + self.bookmarks:
-            rev = yield self._getHead(branch)
+            rev = await self._getHead(branch)
             if rev is None:
                 # Nothing pulled?
                 continue
-            yield self._processBranchChanges(rev, branch)
+            await self._processBranchChanges(rev, branch)
 
-    @defer.inlineCallbacks
-    def _getRevNodeList(self, revset):
-        rc, stdout = yield runprocess.run_process(
+    async def _getRevNodeList(self, revset):
+        rc, stdout = await runprocess.run_process(
             self.master.reactor,
             [self.hgbin, 'log', '-r', revset, r'--template={rev}:{node}\n'],
             workdir=self._absWorkdir(),
@@ -374,26 +365,25 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
         return revNodeList
 
-    @defer.inlineCallbacks
-    def _processBranchChanges(self, new_rev, branch):
-        prev_rev = yield self._getCurrentRev(branch)
+    async def _processBranchChanges(self, new_rev, branch):
+        prev_rev = await self._getCurrentRev(branch)
         if new_rev == prev_rev:
             # Nothing new.
             return
         if prev_rev is None:
             # First time monitoring; start at the top.
-            yield self._setCurrentRev(new_rev, branch)
+            await self._setCurrentRev(new_rev, branch)
             return
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
-        revNodeList = yield self._getRevNodeList(f'{prev_rev}::{new_rev}')
+        revNodeList = await self._getRevNodeList(f'{prev_rev}::{new_rev}')
 
         # revsets are inclusive. Strip the already-known "current" changeset.
         if not revNodeList:
             # empty revNodeList probably means the branch has changed head (strip of force push?)
             # in that case, we should still produce a change for that new rev (but we can't know
             # how many parents were pushed)
-            revNodeList = yield self._getRevNodeList(new_rev)
+            revNodeList = await self._getRevNodeList(new_rev)
         else:
             del revNodeList[0]
 
@@ -402,8 +392,8 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             f'{branch!r}: {revNodeList!r} in {self._absWorkdir()!r}'
         )
         for _, node in revNodeList:
-            timestamp, author, files, comments = yield self._getRevDetails(node)
-            yield self.master.data.updates.addChange(
+            timestamp, author, files, comments = await self._getRevDetails(node)
+            await self.master.data.updates.addChange(
                 author=author,
                 committer=None,
                 revision=str(node),
@@ -419,7 +409,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
             )
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
-            yield self._setCurrentRev(new_rev, branch)
+            await self._setCurrentRev(new_rev, branch)
 
     def _stopOnFailure(self):
         "utility method to stop the service when a failure occurs"
