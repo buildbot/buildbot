@@ -17,29 +17,26 @@
 import os
 import sys
 
-from twisted.internet import defer
-
 from buildbot import config as config_module
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
 
 
-@defer.inlineCallbacks
-def doCleanupDatabase(config, master_cfg):
+async def doCleanupDatabase(config, master_cfg):
     if not config['quiet']:
         print(f"cleaning database ({master_cfg.db['db_url']})")
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
     db = master.db
-    yield db.setup(check_version=False, verbose=not config['quiet'])
-    res = yield db.logs.getLogs()
+    await db.setup(check_version=False, verbose=not config['quiet'])
+    res = await db.logs.getLogs()
     i = 0
     percent = 0
     saved = 0
     for log in res:
-        saved += yield db.logs.compressLog(log.id, force=config['force'])
+        saved += await db.logs.compressLog(log.id, force=config['force'])
         i += 1
         if not config['quiet'] and percent != i * 100 / len(res):
             percent = i * 100 / len(res)
@@ -66,7 +63,7 @@ def doCleanupDatabase(config, master_cfg):
             sqlite_conn.isolation_level = None
             sqlite_conn.execute("vacuum;").close()
 
-        yield db.pool.do(thd)
+        await db.pool.do(thd)
 
 
 @in_reactor
@@ -76,8 +73,7 @@ def cleanupDatabase(config):  # pragma: no cover
     return _cleanupDatabase(config)
 
 
-@defer.inlineCallbacks
-def _cleanupDatabase(config):
+async def _cleanupDatabase(config):
     if not base.checkBasedir(config):
         return 1
 
@@ -101,7 +97,7 @@ def _cleanupDatabase(config):
         if not master_cfg:
             return 1
 
-        yield doCleanupDatabase(config, master_cfg)
+        await doCleanupDatabase(config, master_cfg)
 
         if not config['quiet']:
             print("cleanup complete")
