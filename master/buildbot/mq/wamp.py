@@ -73,8 +73,7 @@ class QueueRef(base.QueueRef):
         self.unreg = None
         self.mq = mq
 
-    @defer.inlineCallbacks
-    def subscribe(self, connector_service, wamp_service, _filter):
+    async def subscribe(self, connector_service, wamp_service, _filter):
         self.filter = _filter
         self.emulated = False
         options = {"details_arg": 'details'}
@@ -82,9 +81,9 @@ class QueueRef(base.QueueRef):
             options["match"] = "wildcard"
         options = SubscribeOptions(**options)
         _filter = WampMQ.messageTopic(_filter)
-        self.unreg = yield connector_service.subscribe(self.wampInvoke, _filter, options=options)
+        self.unreg = await connector_service.subscribe(self.wampInvoke, _filter, options=options)
         if self.callback is None:
-            yield self.stopConsuming()
+            await self.stopConsuming()
 
     def wampInvoke(self, msg, details):
         if details.topic is not None:
@@ -95,14 +94,13 @@ class QueueRef(base.QueueRef):
             topic = self.filter
         self.mq.invokeQref(self, topic, msg)
 
-    @defer.inlineCallbacks
-    def stopConsuming(self):
+    async def stopConsuming(self):
         self.callback = None
         if self.unreg is not None:
             unreg = self.unreg
             self.unreg = None
             try:
-                yield unreg.unsubscribe()
+                await unreg.unsubscribe()
             except TransportLost:
                 pass
             except Exception as e:
