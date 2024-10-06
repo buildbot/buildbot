@@ -122,8 +122,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    @defer.inlineCallbacks
-    def addBuildset(
+    async def addBuildset(
         self,
         sourcestamps,
         reason,
@@ -178,7 +177,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         ssids = []
         for ss in sourcestamps:
             if not isinstance(ss, int):
-                ss = yield self.db.sourcestamps.findSourceStampId(**ss)
+                ss = await self.db.sourcestamps.findSourceStampId(**ss)
             ssids.append(ss)
         self.buildset_sourcestamps[bsid] = ssids
 
@@ -222,19 +221,18 @@ class FakeBuildsetsComponent(FakeDBComponent):
         rv = [self._model_from_row(bs) for bs in rv]
         return defer.succeed(rv)
 
-    @defer.inlineCallbacks
-    def getRecentBuildsets(self, count=None, branch=None, repository=None, complete=None):
+    async def getRecentBuildsets(self, count=None, branch=None, repository=None, complete=None):
         if not count:
             return []
         rv = []
-        for bs in (yield self.getBuildsets(complete=complete)):
+        for bs in await self.getBuildsets(complete=complete):
             if branch or repository:
                 ok = True
                 if not bs.sourcestamps:
                     # no sourcestamps -> no match
                     ok = False
                 for ssid in bs.sourcestamps:
-                    ss: SourceStampModel = yield self.db.sourcestamps.getSourceStamp(ssid)
+                    ss: SourceStampModel = await self.db.sourcestamps.getSourceStamp(ssid)
                     if branch and ss.branch != branch:
                         ok = False
                     if repository and ss.repository != repository:
