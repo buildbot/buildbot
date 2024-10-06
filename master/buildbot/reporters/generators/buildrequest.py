@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -47,25 +46,23 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         if self.formatter is None:
             self.formatter = MessageFormatterRenderable('Build pending.')
 
-    @defer.inlineCallbacks
-    def partial_build_dict(self, master, buildrequest):
-        brdict = yield master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
+    async def partial_build_dict(self, master, buildrequest):
+        brdict = await master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
         bdict = {}
 
         props = Properties()
-        buildrequest = yield BuildRequest.fromBrdict(master, brdict)
-        builder = yield master.botmaster.getBuilderById(brdict.builderid)
+        buildrequest = await BuildRequest.fromBrdict(master, brdict)
+        builder = await master.botmaster.getBuilderById(brdict.builderid)
 
-        yield Build.setup_properties_known_before_build_starts(props, [buildrequest], builder)
+        await Build.setup_properties_known_before_build_starts(props, [buildrequest], builder)
         Build.setupBuildProperties(props, [buildrequest])
 
         bdict['properties'] = props.asDict()
-        yield utils.get_details_for_buildrequest(master, brdict, bdict)
+        await utils.get_details_for_buildrequest(master, brdict, bdict)
         return bdict
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, buildrequest):
-        build = yield self.partial_build_dict(master, buildrequest)
+    async def generate(self, master, reporter, key, buildrequest):
+        build = await self.partial_build_dict(master, buildrequest)
         _, _, event = key
         if event == 'cancel':
             build['complete'] = True
@@ -74,14 +71,13 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         if not self.is_message_needed_by_props(build):
             return None
 
-        report = yield self.buildrequest_message(master, build)
+        report = await self.buildrequest_message(master, build)
         return report
 
-    @defer.inlineCallbacks
-    def buildrequest_message(self, master, build):
+    async def buildrequest_message(self, master, build):
         patches = self._get_patches_for_build(build)
         users = []
-        buildmsg = yield self.formatter.format_message_for_build(
+        buildmsg = await self.formatter.format_message_for_build(
             master, build, is_buildset=True, mode=self.mode, users=users
         )
 
