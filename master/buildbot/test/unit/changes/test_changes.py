@@ -17,7 +17,6 @@ import pprint
 import re
 import textwrap
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import changes
@@ -104,14 +103,13 @@ class Change(unittest.TestCase, TestReactorMixin):
         })
         self.change25.number = 25
 
-    @defer.inlineCallbacks
-    def test_fromChdict(self):
+    async def test_fromChdict(self):
         # get a real honest-to-goodness chdict from the fake db
-        yield self.master.db.insert_test_data(self.change23_rows)
-        chdict = yield self.master.db.changes.getChange(23)
+        await self.master.db.insert_test_data(self.change23_rows)
+        chdict = await self.master.db.changes.getChange(23)
 
         exp = self.change23
-        got = yield changes.Change.fromChdict(self.master, chdict)
+        got = await changes.Change.fromChdict(self.master, chdict)
 
         # compare
         ok = True
