@@ -16,8 +16,6 @@
 
 import json
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -65,16 +63,15 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
     def _convert_patchset(self, patchset):
         return [self._convert_file(file) for file in patchset]
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         command = ['git', 'merge-base', 'HEAD', self._compare_to_ref]
-        cmd = yield self.makeRemoteShellCommand(
+        cmd = await self.makeRemoteShellCommand(
             command=command, stdioLogName='stdio-merge-base', collectStdout=True
         )
 
-        yield self.runCommand(cmd)
-        log = yield self.getLog("stdio-merge-base")
-        yield log.finish()
+        await self.runCommand(cmd)
+        log = await self.getLog("stdio-merge-base")
+        await log.finish()
 
         if cmd.results() != results.SUCCESS:
             return cmd.results()
@@ -85,9 +82,9 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
         self.addLogObserver('stdio-diff', self._observer)
 
         command = ['git', 'diff', '--no-prefix', '-U0', commit, 'HEAD']
-        cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName='stdio-diff')
+        cmd = await self.makeRemoteShellCommand(command=command, stdioLogName='stdio-diff')
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.results() != results.SUCCESS:
             return cmd.results()
@@ -97,6 +94,6 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
         patchset = PatchSet(self._observer.getStdout(), metadata_only=True)
 
         data = json.dumps(self._convert_patchset(patchset)).encode('utf-8')
-        yield self.setBuildData(self._data_name, data, 'GitDiffInfo')
+        await self.setBuildData(self._data_name, data, 'GitDiffInfo')
 
         return cmd.results()
