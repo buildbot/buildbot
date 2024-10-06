@@ -42,8 +42,7 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
             worker.setServiceParent(self.workers)
         return worker
 
-    @defer.inlineCallbacks
-    def test_reconfigService_attrs(self):
+    async def test_reconfigService_attrs(self):
         old = self.createWorker(
             'bot',
             max_builds=2,
@@ -62,10 +61,10 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         )
 
         old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
-        yield old.startService()
+        await old.startService()
         self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
 
-        yield old.reconfigServiceWithSibling(new)
+        await old.reconfigServiceWithSibling(new)
 
         self.assertEqual(old.max_builds, 3)
         self.assertEqual(old.notify_on_missing, ['her@me.com'])
@@ -75,10 +74,9 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         self.assertTrue(old.updateWorker.called)
         # make sure that we can provide an absolute path
         self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('custom'))
-        yield old.stopService()
+        await old.stopService()
 
-    @defer.inlineCallbacks
-    def test_workerinfo(self):
+    async def test_workerinfo(self):
         wrk = self.createWorker(
             'bot',
             max_builds=2,
@@ -86,7 +84,7 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
             missing_timeout=120,
             properties={'a': 'b'},
         )
-        yield wrk.startService()
-        info = yield wrk.conn.remoteGetWorkerInfo()
+        await wrk.startService()
+        info = await wrk.conn.remoteGetWorkerInfo()
         self.assertIn("worker_commands", info)
-        yield wrk.stopService()
+        await wrk.stopService()
