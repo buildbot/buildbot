@@ -13,7 +13,6 @@
 #
 # Portions Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -27,9 +26,8 @@ class Machine(service.BuildbotService):
         self.name = name
         self.workers = []
 
-    @defer.inlineCallbacks
-    def reconfigService(self, name, **kwargs):
-        yield super().reconfigService(**kwargs)
+    async def reconfigService(self, name, **kwargs):
+        await super().reconfigService(**kwargs)
         assert self.name == name
 
     def registerWorker(self, worker):
