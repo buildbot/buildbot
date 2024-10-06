@@ -15,7 +15,6 @@
 
 import datetime
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
@@ -37,33 +36,30 @@ from buildbot.test.util.reporter import ReporterTestMixin
 class TestGerritVerifyStatusPush(
     TestReactorMixin, ReporterTestMixin, ConfigErrorsMixin, logging.LoggingMixin, unittest.TestCase
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.reporter_test_props = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-        yield self.master.startService()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def createGerritStatus(self, **kwargs):
+    async def createGerritStatus(self, **kwargs):
         auth = kwargs.pop('auth', ('log', Interpolate('pass')))
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "gerrit", auth=('log', 'pass'), debug=None, verify=None
         )
         self.sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)
-        yield self.sp.setServiceParent(self.master)
+        await self.sp.setServiceParent(self.master)
 
     def tearDown(self):
         return self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_basic(self):
-        yield self.createGerritStatus()
-        build = yield self.insert_build_new()
+    async def test_basic(self):
+        await self.createGerritStatus()
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -103,18 +99,17 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_custom_description(self):
+    async def test_custom_description(self):
         start_formatter = MessageFormatterRenderable(Interpolate("started %(prop:buildername)s"))
         end_formatter = MessageFormatterRenderable(Interpolate("finished %(prop:buildername)s"))
 
@@ -122,8 +117,8 @@ class TestGerritVerifyStatusPush(
             start_formatter=start_formatter, end_formatter=end_formatter
         )
 
-        yield self.createGerritStatus(generators=[generator])
-        build = yield self.insert_build_new()
+        await self.createGerritStatus(generators=[generator])
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -150,18 +145,17 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_custom_name(self):
-        yield self.createGerritStatus(verification_name=Interpolate("builder %(prop:buildername)s"))
-        build = yield self.insert_build_new()
+    async def test_custom_name(self):
+        await self.createGerritStatus(verification_name=Interpolate("builder %(prop:buildername)s"))
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -188,20 +182,19 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_custom_abstain(self):
-        yield self.createGerritStatus(
+    async def test_custom_abstain(self):
+        await self.createGerritStatus(
             abstain=renderer(lambda p: p.getProperty("buildername") == 'Builder0')
         )
-        build = yield self.insert_build_new()
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -228,18 +221,17 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_custom_category(self):
-        yield self.createGerritStatus(category=renderer(lambda p: p.getProperty("buildername")))
-        build = yield self.insert_build_new()
+    async def test_custom_category(self):
+        await self.createGerritStatus(category=renderer(lambda p: p.getProperty("buildername")))
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -268,18 +260,17 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_custom_reporter(self):
-        yield self.createGerritStatus(reporter=renderer(lambda p: p.getProperty("buildername")))
-        build = yield self.insert_build_new()
+    async def test_custom_reporter(self):
+        await self.createGerritStatus(reporter=renderer(lambda p: p.getProperty("buildername")))
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -306,18 +297,17 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_verbose(self):
-        yield self.createGerritStatus(verbose=True)
-        build = yield self.insert_build_new()
+    async def test_verbose(self):
+        await self.createGerritStatus(verbose=True)
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -332,13 +322,12 @@ class TestGerritVerifyStatusPush(
             },
         )
         self.setUpLogging()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Sending Gerrit status for")
 
-    @defer.inlineCallbacks
-    def test_not_verbose(self):
-        yield self.createGerritStatus(verbose=False)
-        build = yield self.insert_build_new()
+    async def test_not_verbose(self):
+        await self.createGerritStatus(verbose=False)
+        build = await self.insert_build_new()
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
@@ -354,12 +343,11 @@ class TestGerritVerifyStatusPush(
         )
         self.setUpLogging()
         self._http.quiet = True
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertWasQuiet()
 
-    @defer.inlineCallbacks
-    def test_format_duration(self):
-        yield self.createGerritStatus(verbose=False)
+    async def test_format_duration(self):
+        await self.createGerritStatus(verbose=False)
         self.assertEqual(self.sp.formatDuration(datetime.timedelta(seconds=1)), "0m 1s")
         self.assertEqual(self.sp.formatDuration(datetime.timedelta(hours=1, seconds=1)), "1h 0m 1s")
         self.assertEqual(
@@ -369,9 +357,8 @@ class TestGerritVerifyStatusPush(
             self.sp.formatDuration(datetime.timedelta(days=2, seconds=1)), "2 days 0h 0m 1s"
         )
 
-    @defer.inlineCallbacks
-    def test_gerrit_changes(self):
-        yield self.createGerritStatus()
+    async def test_gerrit_changes(self):
+        await self.createGerritStatus()
 
         # from chdict:
         change_props = {
