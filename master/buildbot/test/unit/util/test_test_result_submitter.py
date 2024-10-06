@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test import fakedb
@@ -23,11 +22,10 @@ from buildbot.util.test_result_submitter import TestResultSubmitter
 
 
 class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        yield self.master.startService()
+        await self.master.startService()
 
         self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -41,17 +39,15 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             fakedb.Step(id=131, number=132, name='step132', buildid=30),
         ])
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_complete_empty(self):
+    async def test_complete_empty(self):
         sub = TestResultSubmitter()
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
 
         setid = sub.get_test_result_set_id()
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -70,9 +66,9 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-        yield sub.finish()
+        await sub.finish()
 
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -91,16 +87,15 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_submit_result(self):
+    async def test_submit_result(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
         sub.add_test_result('1', 'name1')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
 
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -119,7 +114,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-        results = yield self.master.data.get(('test_result_sets', setid, 'results'))
+        results = await self.master.data.get(('test_result_sets', setid, 'results'))
         self.assertEqual(
             list(results),
             [
@@ -139,10 +134,9 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
     def filter_results_value_name(self, results):
         return [{'test_name': r['test_name'], 'value': r['value']} for r in results]
 
-    @defer.inlineCallbacks
-    def test_submit_result_wrong_argument_types(self):
+    async def test_submit_result_wrong_argument_types(self):
         sub = TestResultSubmitter()
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
 
         with self.assertRaises(TypeError):
             sub.add_test_result(1, 'name1')
@@ -155,21 +149,20 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         with self.assertRaises(TypeError):
             sub.add_test_result('1', 'name1', duration_ns='123')
 
-    @defer.inlineCallbacks
-    def test_batchs_last_batch_full(self):
+    async def test_batchs_last_batch_full(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
         sub.add_test_result('1', 'name1')
         sub.add_test_result('2', 'name2')
         sub.add_test_result('3', 'name3')
         sub.add_test_result('4', 'name4')
         sub.add_test_result('5', 'name5')
         sub.add_test_result('6', 'name6')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
 
-        results = yield self.master.data.get(('test_result_sets', setid, 'results'))
+        results = await self.master.data.get(('test_result_sets', setid, 'results'))
         results = self.filter_results_value_name(results)
         self.assertEqual(
             results,
@@ -183,20 +176,19 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_batchs_last_batch_not_full(self):
+    async def test_batchs_last_batch_not_full(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
         sub.add_test_result('1', 'name1')
         sub.add_test_result('2', 'name2')
         sub.add_test_result('3', 'name3')
         sub.add_test_result('4', 'name4')
         sub.add_test_result('5', 'name5')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
 
-        results = yield self.master.data.get(('test_result_sets', setid, 'results'))
+        results = await self.master.data.get(('test_result_sets', setid, 'results'))
         results = self.filter_results_value_name(results)
         self.assertEqual(
             results,
@@ -209,19 +201,18 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_counts_pass_fail(self):
+    async def test_counts_pass_fail(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_fail', 'boolean')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_fail', 'boolean')
         sub.add_test_result('0', 'name1')
         sub.add_test_result('0', 'name2')
         sub.add_test_result('1', 'name3')
         sub.add_test_result('1', 'name4')
         sub.add_test_result('0', 'name5')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -240,19 +231,18 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_counts_pass_fail_invalid_values(self):
+    async def test_counts_pass_fail_invalid_values(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_fail', 'boolean')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_fail', 'boolean')
         sub.add_test_result('0', 'name1')
         sub.add_test_result('0', 'name2')
         sub.add_test_result('1', 'name3')
         sub.add_test_result('1', 'name4')
         sub.add_test_result('invalid', 'name5')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -272,7 +262,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         )
 
         # also check whether we preserve the "invalid" values in the database.
-        results = yield self.master.data.get(('test_result_sets', setid, 'results'))
+        results = await self.master.data.get(('test_result_sets', setid, 'results'))
         results = self.filter_results_value_name(results)
         self.assertEqual(
             results,
@@ -287,19 +277,18 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
 
         self.flushLoggedErrors(ValueError)
 
-    @defer.inlineCallbacks
-    def test_counts_pass_only(self):
+    async def test_counts_pass_only(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_only', 'some_unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_only', 'some_unit')
         sub.add_test_result('string1', 'name1')
         sub.add_test_result('string2', 'name2')
         sub.add_test_result('string3', 'name3')
         sub.add_test_result('string4', 'name4')
         sub.add_test_result('string5', 'name5')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -318,7 +307,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-        results = yield self.master.data.get(('test_result_sets', setid, 'results'))
+        results = await self.master.data.get(('test_result_sets', setid, 'results'))
         results = self.filter_results_value_name(results)
         self.assertEqual(
             results,
@@ -333,19 +322,18 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
 
         self.flushLoggedErrors(ValueError)
 
-    @defer.inlineCallbacks
-    def test_counts_fail_only(self):
+    async def test_counts_fail_only(self):
         sub = TestResultSubmitter(batch_n=3)
-        yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'fail_only', 'some_unit')
+        await sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'fail_only', 'some_unit')
         sub.add_test_result('string1', 'name1')
         sub.add_test_result('string2', 'name2')
         sub.add_test_result('string3', 'name3')
         sub.add_test_result('string4', 'name4')
         sub.add_test_result('string5', 'name5')
-        yield sub.finish()
+        await sub.finish()
 
         setid = sub.get_test_result_set_id()
-        sets = yield self.master.data.get(('builds', 30, 'test_result_sets'))
+        sets = await self.master.data.get(('builds', 30, 'test_result_sets'))
         self.assertEqual(
             list(sets),
             [
@@ -364,7 +352,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-        results = yield self.master.data.get(('test_result_sets', setid, 'results'))
+        results = await self.master.data.get(('test_result_sets', setid, 'results'))
         results = self.filter_results_value_name(results)
         self.assertEqual(
             results,
