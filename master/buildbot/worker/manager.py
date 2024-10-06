@@ -35,29 +35,27 @@ class WorkerRegistration:
     def __repr__(self):
         return f"<{self.__class__.__name__} for {self.worker.workername!r}>"
 
-    @defer.inlineCallbacks
-    def unregister(self):
+    async def unregister(self):
         bs = self.worker
         # update with portStr=None to remove any registration in place
         if self.pbReg is not None:
-            yield self.master.workers.pb.updateRegistration(bs.workername, bs.password, None)
+            await self.master.workers.pb.updateRegistration(bs.workername, bs.password, None)
         if self.msgpack_reg is not None:
-            yield self.master.workers.msgpack.updateRegistration(bs.workername, bs.password, None)
-        yield self.master.workers._unregister(self)
+            await self.master.workers.msgpack.updateRegistration(bs.workername, bs.password, None)
+        await self.master.workers._unregister(self)
 
-    @defer.inlineCallbacks
-    def update(self, worker_config, global_config):
+    async def update(self, worker_config, global_config):
         # For most protocols, there's nothing to do, but for PB we must
         # update the registration in case the port or password has changed.
         if 'pb' in global_config.protocols:
-            self.pbReg = yield self.master.workers.pb.updateRegistration(
+            self.pbReg = await self.master.workers.pb.updateRegistration(
                 worker_config.workername,
                 worker_config.password,
                 global_config.protocols['pb']['port'],
             )
 
         if 'msgpack_experimental_v7' in global_config.protocols:
-            self.msgpack_reg = yield self.master.workers.msgpack.updateRegistration(
+            self.msgpack_reg = await self.master.workers.msgpack.updateRegistration(
                 worker_config.workername,
                 worker_config.password,
                 global_config.protocols['msgpack_experimental_v7']['port'],
@@ -114,15 +112,14 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     def _unregister(self, registration):
         del self.registrations[registration.worker.workername]
 
-    @defer.inlineCallbacks
-    def newConnection(self, conn, workerName):
+    async def newConnection(self, conn, workerName):
         if workerName in self.connections:
             log.msg(
                 f"Got duplication connection from '{workerName}'" " starting arbitration procedure"
             )
             old_conn = self.connections[workerName]
             try:
-                yield misc.cancelAfter(
+                await misc.cancelAfter(
                     self.PING_TIMEOUT,
                     old_conn.remotePrint("master got a duplicate connection"),
                     self.master.reactor,
@@ -144,8 +141,8 @@ class WorkerManager(MeasuredBuildbotServiceManager):
             log.msg(f"Old connection for '{workerName}' was lost, accepting new")
 
         try:
-            yield conn.remotePrint(message="attached")
-            info = yield conn.remoteGetWorkerInfo()
+            await conn.remotePrint(message="attached")
+            info = await conn.remoteGetWorkerInfo()
             log.msg(f"Got workerinfo from '{workerName}'")
         except Exception as e:
             log.msg(f"Failed to communicate with worker '{workerName}'\n{e}".format(workerName, e))
