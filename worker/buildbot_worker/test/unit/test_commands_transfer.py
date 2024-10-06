@@ -128,8 +128,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
 
-    @defer.inlineCallbacks
-    def test_simple(self):
+    async def test_simple(self):
         self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -144,7 +143,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -155,8 +154,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 0),
         ])
 
-    @defer.inlineCallbacks
-    def test_truncated(self):
+    async def test_truncated(self):
         self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -171,7 +169,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -182,8 +180,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             ('stderr', f"Maximum filesize reached, truncating file '{self.datafile}'"),
         ])
 
-    @defer.inlineCallbacks
-    def test_missing(self):
+    async def test_missing(self):
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data-nosuch'))
         self.make_command(
             transfer.WorkerFileUploadCommand,
@@ -196,7 +193,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         df = self.datafile + "-nosuch"
         self.assertUpdates([
@@ -206,8 +203,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             ('stderr', f"Cannot open file '{df}' for upload"),
         ])
 
-    @defer.inlineCallbacks
-    def test_out_of_space(self):
+    async def test_out_of_space(self):
         self.fakemaster.write_out_of_space_at = 70
         self.fakemaster.count_writes = True  # get actual byte counts
 
@@ -223,7 +219,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.assertFailure(self.run_command(), RuntimeError)
+        await self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -232,8 +228,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 1),
         ])
 
-    @defer.inlineCallbacks
-    def test_interrupted(self):
+    async def test_interrupted(self):
         self.fakemaster.delay_write = True  # write very slowly
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -260,7 +255,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         interrupt_d.addCallback(do_interrupt)
 
-        yield defer.DeferredList([d, interrupt_d])
+        await defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -269,8 +264,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             ('rc', 1),
         ])
 
-    @defer.inlineCallbacks
-    def test_timestamp(self):
+    async def test_timestamp(self):
         self.fakemaster.count_writes = True  # get actual byte counts
         timestamp = (os.path.getatime(self.datafile), os.path.getmtime(self.datafile))
 
@@ -286,7 +280,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -321,8 +315,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
 
-    @defer.inlineCallbacks
-    def test_simple(self, compress=None):
+    async def test_simple(self, compress=None):
         self.fakemaster.keep_data = True
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
         self.make_command(
@@ -337,7 +330,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates([
             ('header', f'sending {self.datadir}\n'),
@@ -365,8 +358,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
     # except bz2 can't operate in stream mode on py24
 
-    @defer.inlineCallbacks
-    def test_out_of_space_unpack(self):
+    async def test_out_of_space_unpack(self):
         self.fakemaster.keep_data = True
         self.fakemaster.unpack_fail = True
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -383,7 +375,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.assertFailure(self.run_command(), RuntimeError)
+        await self.assertFailure(self.run_command(), RuntimeError)
 
         self.assertUpdates([
             ('header', f'sending {self.datadir}\n'),
@@ -401,8 +393,7 @@ class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
-    @defer.inlineCallbacks
-    def test_directory_not_available(self):
+    async def test_directory_not_available(self):
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
 
         self.make_command(
@@ -417,7 +408,7 @@ class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         updates = self.get_updates()
         self.assertEqual(updates[0], ('rc', 1))
@@ -446,8 +437,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
-    @defer.inlineCallbacks
-    def test_simple(self):
+    async def test_simple(self):
         self.fakemaster.count_reads = True  # get actual byte counts
         self.fakemaster.data = test_data = b'1234' * 13
         assert len(self.fakemaster.data) == 52
@@ -464,7 +454,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates(['read 32', 'read 32', 'read 32', 'close', ('rc', 0)])
         datafile = os.path.join(self.basedir, 'data')
@@ -475,8 +465,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         if runtime.platformType != 'win32':
             self.assertEqual(os.stat(datafile).st_mode & 0o777, 0o777)
 
-    @defer.inlineCallbacks
-    def test_mkdir(self):
+    async def test_mkdir(self):
         self.fakemaster.data = test_data = b'hi'
 
         path = os.path.join(
@@ -493,7 +482,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates(['read(s)', 'close', ('rc', 0)])
         datafile = os.path.join(self.basedir, 'workdir', 'subdir', 'data')
@@ -502,8 +491,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             datafileContent = f.read()
         self.assertEqual(datafileContent, test_data)
 
-    @defer.inlineCallbacks
-    def test_failure(self):
+    async def test_failure(self):
         self.fakemaster.data = 'hi'
 
         os.makedirs(os.path.join(self.basedir, 'dir'))
@@ -519,7 +507,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates([
             'close',
@@ -530,8 +518,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ),
         ])
 
-    @defer.inlineCallbacks
-    def test_truncated(self):
+    async def test_truncated(self):
         self.fakemaster.data = test_data = b'tenchars--' * 10
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
@@ -545,7 +532,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
                 'mode': 0o777,
             },
         )
-        yield self.run_command()
+        await self.run_command()
 
         self.assertUpdates([
             'read(s)',
@@ -564,8 +551,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             data = f.read()
         self.assertEqual(data, test_data[:50])
 
-    @defer.inlineCallbacks
-    def test_interrupted(self):
+    async def test_interrupted(self):
         self.fakemaster.data = b'tenchars--' * 100  # 1k
         self.fakemaster.delay_read = True  # read very slowly
 
@@ -593,6 +579,6 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         interrupt_d.addCallback(do_interrupt)
 
-        yield defer.DeferredList([d, interrupt_d])
+        await defer.DeferredList([d, interrupt_d])
 
         self.assertUpdates(['read(s)', 'close', ('rc', 1)])
