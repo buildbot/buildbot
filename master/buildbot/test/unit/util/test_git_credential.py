@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Properties
@@ -27,15 +26,14 @@ class TestGitCredentialInputRenderer(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
 
-    @defer.inlineCallbacks
-    def test_render(self):
+    async def test_render(self):
         self.props.setProperty("password", "property_password", "test")
         renderer = GitCredentialInputRenderer(
             username="user",
             password=Property("password"),
             url="https://example.com/repo.git",
         )
-        rendered = yield self.build.render(renderer)
+        rendered = await self.build.render(renderer)
         self.assertEqual(
             rendered,
             "url=https://example.com/repo.git\nusername=user\npassword=property_password\n",
