@@ -16,7 +16,6 @@
 import textwrap
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -215,8 +214,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
                 fakedb.Log(id=253, stepid=153, name='stdio', slug='stdio', type='s', num_lines=7),
             ])
 
-    @defer.inlineCallbacks
-    def do_one_test(
+    async def do_one_test(
         self,
         formatter,
         lastresults,
@@ -232,7 +230,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             extra_build_properties=extra_build_properties,
         )
 
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             self.master,
             99,
             want_properties=formatter.want_properties,
@@ -243,13 +241,12 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
         )
 
         build = res['builds'][0]
-        res = yield formatter.format_message_for_build(
+        res = await formatter.format_message_for_build(
             self.master, build, mode=mode, users=["him@bar", "me@foo"]
         )
         return res
 
-    @defer.inlineCallbacks
-    def do_one_test_buildset(
+    async def do_one_test_buildset(
         self,
         formatter,
         lastresults,
@@ -265,7 +262,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             extra_build_properties=extra_build_properties,
         )
 
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             self.master,
             99,
             want_properties=formatter.want_properties,
@@ -275,7 +272,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             want_logs_content=formatter.want_logs_content,
         )
 
-        res = yield formatter.format_message_for_buildset(
+        res = await formatter.format_message_for_buildset(
             self.master, res["buildset"], res["builds"], mode=mode, users=["him@bar", "me@foo"]
         )
         return res
@@ -286,10 +283,9 @@ class TestMessageFormatter(MessageFormatterTestBase):
         with self.assertRaises(config.ConfigErrors):
             message.MessageFormatter(template_type='unknown')
 
-    @defer.inlineCallbacks
-    def test_message_success_plain_no_steps(self):
+    async def test_message_success_plain_no_steps(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
             res,
             {
@@ -315,10 +311,9 @@ class TestMessageFormatter(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_message_success_plain_with_steps(self):
+    async def test_message_success_plain_with_steps(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(
+        res = await self.do_one_test(
             formatter,
             SUCCESS,
             SUCCESS,
@@ -360,10 +355,9 @@ class TestMessageFormatter(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_message_success_html(self):
+    async def test_message_success_html(self):
         formatter = message.MessageFormatter(template_type='html')
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
             res,
             {
@@ -391,10 +385,9 @@ class TestMessageFormatter(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_message_success_html_with_steps(self):
+    async def test_message_success_html_with_steps(self):
         formatter = message.MessageFormatter(template_type='html')
-        res = yield self.do_one_test(
+        res = await self.do_one_test(
             formatter,
             SUCCESS,
             SUCCESS,
@@ -445,12 +438,11 @@ class TestMessageFormatter(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_inline_templates(self):
+    async def test_inline_templates(self):
         formatter = message.MessageFormatter(
             template="URL: {{ build_url }} -- {{ summary }}", subject="subject"
         )
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
             res,
             {
@@ -461,14 +453,13 @@ class TestMessageFormatter(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_inline_templates_extra_info(self):
+    async def test_inline_templates_extra_info(self):
         formatter = message.MessageFormatter(
             template="URL: {{ build_url }} -- {{ summary }}",
             subject="subject",
             extra_info_cb=lambda ctx: {"key1", ctx["build"]["state_string"]},
         )
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
             res,
             {
@@ -479,54 +470,48 @@ class TestMessageFormatter(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_message_failure(self):
+    async def test_message_failure(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(formatter, SUCCESS, FAILURE)
+        res = await self.do_one_test(formatter, SUCCESS, FAILURE)
         self.assertIn(
             "A failed build has been detected on builder Builder1 while building", res['body']
         )
 
-    @defer.inlineCallbacks
-    def test_message_failure_change(self):
+    async def test_message_failure_change(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(formatter, SUCCESS, FAILURE, "change")
+        res = await self.do_one_test(formatter, SUCCESS, FAILURE, "change")
         self.assertIn(
             "A new failure has been detected on builder Builder1 while building", res['body']
         )
 
-    @defer.inlineCallbacks
-    def test_message_success_change(self):
+    async def test_message_success_change(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(formatter, FAILURE, SUCCESS, "change")
+        res = await self.do_one_test(formatter, FAILURE, SUCCESS, "change")
         self.assertIn(
             "A restored build has been detected on builder Builder1 while building", res['body']
         )
 
-    @defer.inlineCallbacks
-    def test_message_success_nochange(self):
+    async def test_message_success_nochange(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS, "change")
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS, "change")
         self.assertIn(
             "A passing build has been detected on builder Builder1 while building", res['body']
         )
 
-    @defer.inlineCallbacks
-    def test_message_failure_nochange(self):
+    async def test_message_failure_nochange(self):
         formatter = message.MessageFormatter()
-        res = yield self.do_one_test(formatter, FAILURE, FAILURE, "change")
+        res = await self.do_one_test(formatter, FAILURE, FAILURE, "change")
         self.assertIn(
             "A failed build has been detected on builder Builder1 while building", res['body']
         )
 
 
 class TestMessageFormatterRenderable(MessageFormatterTestBase):
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         template = Interpolate('templ_%(prop:workername)s/%(prop:reason)s')
         subject = Interpolate('subj_%(prop:workername)s/%(prop:reason)s')
         formatter = message.MessageFormatterRenderable(template, subject)
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
             res,
             {
@@ -539,11 +524,10 @@ class TestMessageFormatterRenderable(MessageFormatterTestBase):
 
 
 class TestMessageFormatterFunction(MessageFormatterTestBase):
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         function = mock.Mock(side_effect=lambda x: {'key': 'value'})
         formatter = message.MessageFormatterFunction(function, 'json')
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
 
         function.assert_called_with({
             'build': BuildDictLookAlike(
@@ -563,8 +547,7 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
 
 
 class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         function = mock.Mock(
             side_effect=lambda master, ctx: {
                 "body": {"key": "value"},
@@ -574,7 +557,7 @@ class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
             }
         )
         formatter = message.MessageFormatterFunctionRaw(function)
-        res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test(formatter, SUCCESS, SUCCESS)
 
         self.assertEqual(
             res,
@@ -586,8 +569,7 @@ class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_basic_buildset(self):
+    async def test_basic_buildset(self):
         function = mock.Mock(
             side_effect=lambda master, ctx: {
                 "body": {"key": "value"},
@@ -597,7 +579,7 @@ class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
             }
         )
         formatter = message.MessageFormatterFunctionRaw(function)
-        res = yield self.do_one_test_buildset(formatter, SUCCESS, SUCCESS)
+        res = await self.do_one_test_buildset(formatter, SUCCESS, SUCCESS)
 
         self.assertEqual(
             res,
@@ -611,15 +593,14 @@ class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
 
 
 class TestMessageFormatterMissingWorker(MessageFormatterTestBase):
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         formatter = message.MessageFormatterMissingWorker()
         self.setup_db(SUCCESS, SUCCESS)
-        workers = yield self.master.data.get(('workers',))
+        workers = await self.master.data.get(('workers',))
         worker = workers[0]
         worker['notify'] = ['e@mail']
         worker['last_connection'] = ['yesterday']
-        res = yield formatter.formatMessageForMissingWorker(self.master, worker)
+        res = await formatter.formatMessageForMissingWorker(self.master, worker)
         text = res['body']
         self.assertIn("worker named wrkr went away", text)
 
