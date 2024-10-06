@@ -20,7 +20,6 @@ from urllib.parse import urljoin
 from urllib.parse import urlparse
 from urllib.parse import urlunparse
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -70,8 +69,7 @@ class AvatarGitHub(AvatarBase):
         self.master = None
         self.client = None
 
-    @defer.inlineCallbacks
-    def _get_http_client(self):
+    async def _get_http_client(self):
         if self.client is not None:
             return self.client
 
@@ -83,7 +81,7 @@ class AvatarGitHub(AvatarBase):
         elif self.client_creds:
             headers['Authorization'] = 'basic ' + self.client_creds
 
-        self.client = yield httpclientservice.HTTPSession(
+        self.client = await httpclientservice.HTTPSession(
             self.master.httpservice,
             self.github_api_endpoint,
             headers=headers,
@@ -93,37 +91,35 @@ class AvatarGitHub(AvatarBase):
 
         return self.client
 
-    @defer.inlineCallbacks
-    def _get_avatar_by_username(self, username):
+    async def _get_avatar_by_username(self, username):
         headers = {
             'Accept': 'application/vnd.github.v3+json',
         }
 
         url = f'/users/{username}'
-        http = yield self._get_http_client()
-        res = yield http.get(url, headers=headers)
+        http = await self._get_http_client()
+        res = await http.get(url, headers=headers)
         if res.code == 404:
             # Not found
             return None
         if 200 <= res.code < 300:
-            data = yield res.json()
+            data = await res.json()
             return data['avatar_url']
 
         log.msg(f'Failed looking up user: response code {res.code}')
         return None
 
-    @defer.inlineCallbacks
-    def _search_avatar_by_user_email(self, email):
+    async def _search_avatar_by_user_email(self, email):
         headers = {
             'Accept': 'application/vnd.github.v3+json',
         }
 
         query = f'{email} in:email'
         url = f"/search/users?{urlencode({'q': query})}"
-        http = yield self._get_http_client()
-        res = yield http.get(url, headers=headers)
+        http = await self._get_http_client()
+        res = await http.get(url, headers=headers)
         if 200 <= res.code < 300:
-            data = yield res.json()
+            data = await res.json()
             if data['total_count'] == 0:
                 # Not found
                 return None
@@ -132,8 +128,7 @@ class AvatarGitHub(AvatarBase):
         log.msg(f'Failed searching user by email: response code {res.code}')
         return None
 
-    @defer.inlineCallbacks
-    def _search_avatar_by_commit(self, email):
+    async def _search_avatar_by_commit(self, email):
         headers = {
             'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview',
         }
@@ -145,10 +140,10 @@ class AvatarGitHub(AvatarBase):
         }
         sorted_query = sorted(query.items(), key=lambda x: x[0])
         url = f'/search/commits?{urlencode(sorted_query)}'
-        http = yield self._get_http_client()
-        res = yield http.get(url, headers=headers)
+        http = await self._get_http_client()
+        res = await http.get(url, headers=headers)
         if 200 <= res.code < 300:
-            data = yield res.json()
+            data = await res.json()
             if data['total_count'] == 0:
                 # Not found
                 return None
@@ -176,8 +171,7 @@ class AvatarGitHub(AvatarBase):
             parts.fragment,
         ))
 
-    @defer.inlineCallbacks
-    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+    async def getUserAvatar(self, email, username, size, defaultAvatarUrl):
         avatar = None
         if username:
             username = username.decode('utf-8')
@@ -185,13 +179,13 @@ class AvatarGitHub(AvatarBase):
             email = email.decode('utf-8')
 
         if username:
-            avatar = yield self._get_avatar_by_username(username)
+            avatar = await self._get_avatar_by_username(username)
         if not avatar and email:
             # Try searching a user with said mail
-            avatar = yield self._search_avatar_by_user_email(email)
+            avatar = await self._search_avatar_by_user_email(email)
         if not avatar and email:
             # No luck, try to find a commit with this email
-            avatar = yield self._search_avatar_by_commit(email)
+            avatar = await self._search_avatar_by_commit(email)
 
         if not avatar:
             # No luck
@@ -244,8 +238,7 @@ class AvatarResource(resource.Resource):
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderAvatar)
 
-    @defer.inlineCallbacks
-    def renderAvatar(self, request):
+    async def renderAvatar(self, request):
         email = request.args.get(b"email", [b""])[0]
         size = request.args.get(b"size", [32])[0]
         try:
@@ -258,7 +251,7 @@ class AvatarResource(resource.Resource):
             raise self.cache[cache_key]
         for method in self.avatarMethods:
             try:
-                res = yield method.getUserAvatar(email, username, size, self.defaultAvatarFullUrl)
+                res = await method.getUserAvatar(email, username, size, self.defaultAvatarFullUrl)
             except resource.Redirect as r:
                 self.cache[cache_key] = r
                 raise
