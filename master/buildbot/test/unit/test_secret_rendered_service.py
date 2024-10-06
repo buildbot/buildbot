@@ -1,4 +1,3 @@
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Secret
@@ -23,32 +22,28 @@ class FakeServiceUsingSecrets(BuildbotService):
 
 
 class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage(secretdict={"foo": "bar", "other": "value"})
         self.secretsrv = SecretManager()
         self.secretsrv.services = [fakeStorageService]
-        yield self.secretsrv.setServiceParent(self.master)
+        await self.secretsrv.setServiceParent(self.master)
         self.srvtest = FakeServiceUsingSecrets()
-        yield self.srvtest.setServiceParent(self.master)
-        yield self.master.startService()
+        await self.srvtest.setServiceParent(self.master)
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_secret_rendered(self):
-        yield self.srvtest.configureService()
+    async def test_secret_rendered(self):
+        await self.srvtest.configureService()
         new = FakeServiceUsingSecrets(foo=Secret("foo"), other=Secret("other"))
-        yield self.srvtest.reconfigServiceWithSibling(new)
+        await self.srvtest.reconfigServiceWithSibling(new)
         self.assertEqual("bar", self.srvtest.returnRenderedSecrets("foo"))
 
-    @defer.inlineCallbacks
-    def test_secret_rendered_not_found(self):
+    async def test_secret_rendered_not_found(self):
         new = FakeServiceUsingSecrets(foo=Secret("foo"))
-        yield self.srvtest.reconfigServiceWithSibling(new)
+        await self.srvtest.reconfigServiceWithSibling(new)
         with self.assertRaises(AttributeError):
             self.srvtest.returnRenderedSecrets("more")
