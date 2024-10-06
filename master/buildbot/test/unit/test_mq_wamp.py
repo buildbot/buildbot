@@ -124,103 +124,93 @@ class WampMQ(TestReactorMixin, unittest.TestCase):
     A router which only accepts one subscriber on one topic
     """
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.master.wamp = FakeWampConnector()
         self.mq = wamp.WampMQ()
-        yield self.mq.setServiceParent(self.master)
-        yield self.mq.startService()
+        await self.mq.setServiceParent(self.master)
+        await self.mq.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.mq.running:
-            yield self.mq.stopService()
+            await self.mq.stopService()
 
-    @defer.inlineCallbacks
-    def test_startConsuming_basic(self):
+    async def test_startConsuming_basic(self):
         self.master.wamp.subscribe = mock.Mock()
-        yield self.mq.startConsuming(None, ('a', 'b'))
+        await self.mq.startConsuming(None, ('a', 'b'))
         options = ComparableSubscribeOptions(details_arg='details')
         self.master.wamp.subscribe.assert_called_with(
             mock.ANY, 'org.buildbot.mq.a.b', options=options
         )
 
-    @defer.inlineCallbacks
-    def test_startConsuming_wildcard(self):
+    async def test_startConsuming_wildcard(self):
         self.master.wamp.subscribe = mock.Mock()
-        yield self.mq.startConsuming(None, ('a', None))
+        await self.mq.startConsuming(None, ('a', None))
         options = ComparableSubscribeOptions(match="wildcard", details_arg='details')
         self.master.wamp.subscribe.assert_called_with(
             mock.ANY, 'org.buildbot.mq.a.', options=options
         )
 
-    @defer.inlineCallbacks
-    def test_forward_data(self):
+    async def test_forward_data(self):
         callback = mock.Mock()
-        yield self.mq.startConsuming(callback, ('a', 'b'))
+        await self.mq.startConsuming(callback, ('a', 'b'))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        await self.mq._produce(('a', 'b'), 'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
         self.assertEqual(self.master.wamp.last_data, 'foo')
 
-    @defer.inlineCallbacks
-    def test_unsubscribe_ignores_transport_lost(self):
+    async def test_unsubscribe_ignores_transport_lost(self):
         callback = mock.Mock()
-        consumer = yield self.mq.startConsuming(callback, ('a', 'b'))
+        consumer = await self.mq.startConsuming(callback, ('a', 'b'))
 
         self.assertEqual(len(self.master.wamp.subscriptions), 1)
         self.master.wamp.subscriptions[0].exception_on_unsubscribe = TransportLost
 
-        yield consumer.stopConsuming()
+        await consumer.stopConsuming()
 
-    @defer.inlineCallbacks
-    def test_unsubscribe_logs_exceptions(self):
+    async def test_unsubscribe_logs_exceptions(self):
         callback = mock.Mock()
-        consumer = yield self.mq.startConsuming(callback, ('a', 'b'))
+        consumer = await self.mq.startConsuming(callback, ('a', 'b'))
 
         self.assertEqual(len(self.master.wamp.subscriptions), 1)
         self.master.wamp.subscriptions[0].exception_on_unsubscribe = TestException
 
-        yield consumer.stopConsuming()
+        await consumer.stopConsuming()
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
 
-    @defer.inlineCallbacks
-    def test_forward_data_wildcard(self):
+    async def test_forward_data_wildcard(self):
         callback = mock.Mock()
-        yield self.mq.startConsuming(callback, ('a', None))
+        await self.mq.startConsuming(callback, ('a', None))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        await self.mq._produce(('a', 'b'), 'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
         self.assertEqual(self.master.wamp.last_data, 'foo')
 
-    @defer.inlineCallbacks
-    def test_waits_for_called_callback(self):
+    async def test_waits_for_called_callback(self):
         def callback(_, __):
             return defer.succeed(None)
 
-        yield self.mq.startConsuming(callback, ('a', None))
-        yield self.mq._produce(('a', 'b'), 'foo')
+        await self.mq.startConsuming(callback, ('a', None))
+        await self.mq._produce(('a', 'b'), 'foo')
         self.assertEqual(self.master.wamp.last_data, 'foo')
 
         d = self.mq.stopService()
         self.assertTrue(d.called)
 
-    @defer.inlineCallbacks
-    def test_waits_for_non_called_callback(self):
+    async def test_waits_for_non_called_callback(self):
         d1 = defer.Deferred()
 
         def callback(_, __):
             return d1
 
-        yield self.mq.startConsuming(callback, ('a', None))
-        yield self.mq._produce(('a', 'b'), 'foo')
+        await self.mq.startConsuming(callback, ('a', None))
+        await self.mq._produce(('a', 'b'), 'foo')
         self.assertEqual(self.master.wamp.last_data, 'foo')
 
         d = self.mq.stopService()
@@ -246,44 +236,41 @@ class WampMQReal(TestReactorMixin, unittest.TestCase):
         > export WAMP_ROUTER_URL=ws://localhost:8080/ws
         > trial buildbot.unit.test_mq_wamp""")
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         if "WAMP_ROUTER_URL" not in os.environ:
             raise unittest.SkipTest(self.HOW_TO_RUN)
         self.master = fakemaster.make_master(self)
         self.mq = wamp.WampMQ()
-        yield self.mq.setServiceParent(self.master)
+        await self.mq.setServiceParent(self.master)
         self.connector = self.master.wamp = connector.WampConnector()
-        yield self.connector.setServiceParent(self.master)
-        yield self.master.startService()
+        await self.connector.setServiceParent(self.master)
+        await self.master.startService()
         config = FakeConfig()
         config.mq['router_url'] = os.environ["WAMP_ROUTER_URL"]
-        yield self.connector.reconfigServiceWithBuildbotConfig(config)
+        await self.connector.reconfigServiceWithBuildbotConfig(config)
 
     def tearDown(self):
         return self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_forward_data(self):
+    async def test_forward_data(self):
         d = defer.Deferred()
         callback = mock.Mock(side_effect=lambda *a, **kw: d.callback(None))
-        yield self.mq.startConsuming(callback, ('a', 'b'))
+        await self.mq.startConsuming(callback, ('a', 'b'))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        await self.mq._produce(('a', 'b'), 'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
-        yield d
+        await d
         callback.assert_called_with(('a', 'b'), 'foo')
 
-    @defer.inlineCallbacks
-    def test_forward_data_wildcard(self):
+    async def test_forward_data_wildcard(self):
         d = defer.Deferred()
         callback = mock.Mock(side_effect=lambda *a, **kw: d.callback(None))
-        yield self.mq.startConsuming(callback, ('a', None))
+        await self.mq.startConsuming(callback, ('a', None))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        await self.mq._produce(('a', 'b'), 'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
-        yield d
+        await d
         callback.assert_called_with(('a', 'b'), 'foo')
