@@ -18,7 +18,6 @@ import os
 
 import sqlalchemy as sa
 from sqlalchemy.schema import MetaData
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.trial import unittest
@@ -202,8 +201,7 @@ class RealDatabaseMixin:
         model.Model.metadata.create_all(bind=conn, tables=tables, checkfirst=True)
         conn.commit()
 
-    @defer.inlineCallbacks
-    def setUpRealDatabase(
+    async def setUpRealDatabase(
         self, table_names=None, basedir='basedir', want_pool=True, sqlite_memory=True
     ):
         """
@@ -242,20 +240,18 @@ class RealDatabaseMixin:
         self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 
         log.msg(f"cleaning database {self.db_url}")
-        yield self.db_pool.do(self.__thd_clean_database)
-        yield self.db_pool.do(self.__thd_create_tables, table_names)
+        await self.db_pool.do(self.__thd_clean_database)
+        await self.db_pool.do(self.__thd_create_tables, table_names)
         return None
 
-    @defer.inlineCallbacks
-    def tearDownRealDatabase(self):
+    async def tearDownRealDatabase(self):
         if self.__want_pool:
-            yield self.db_pool.do(self.__thd_clean_database)
-            yield self.db_pool.shutdown()
+            await self.db_pool.do(self.__thd_clean_database)
+            await self.db_pool.shutdown()
         else:
             self.db_engine.engine.dispose()
 
-    @defer.inlineCallbacks
-    def insert_test_data(self, rows):
+    async def insert_test_data(self, rows):
         """Insert test data into the database for use during the test.
 
         @param rows: be a sequence of L{fakedb.Row} instances.  These will be
@@ -281,20 +277,19 @@ class RealDatabaseMixin:
                         log.msg(f"while inserting {row} - {row.values}")
                         raise
 
-        yield self.db_pool.do(thd)
+        await self.db_pool.do(thd)
 
 
 class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
     # Same as RealDatabaseMixin, except that a real DBConnector is also setup in a correct way.
 
-    @defer.inlineCallbacks
-    def setUpRealDatabaseWithConnector(
+    async def setUpRealDatabaseWithConnector(
         self, master, table_names=None, basedir='basedir', want_pool=True, sqlite_memory=True
     ):
-        yield self.setUpRealDatabase(table_names, basedir, want_pool, sqlite_memory)
+        await self.setUpRealDatabase(table_names, basedir, want_pool, sqlite_memory)
         master.config.db['db_url'] = self.db_url
         master.db = DBConnector(self.basedir)
-        yield master.db.setServiceParent(master)
+        await master.db.setServiceParent(master)
         master.db.pool = self.db_pool
 
     def tearDownRealDatabaseWithConnector(self):
@@ -302,11 +297,10 @@ class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
 
 
 class TestCase(unittest.TestCase):
-    @defer.inlineCallbacks
-    def assertFailure(self, d, excp):
+    async def assertFailure(self, d, excp):
         exception = None
         try:
-            yield d
+            await d
         except Exception as e:
             exception = e
         self.assertIsInstance(exception, excp)
