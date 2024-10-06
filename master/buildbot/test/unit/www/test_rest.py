@@ -728,7 +728,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         content = json.loads(bytes2unicode(self.request.written))
 
         if 'error' not in content:
-            self.fail(f"response does not have proper error form: {repr(content)}")
+            self.fail(f"response does not have proper error form: {content!r}")
         got['error'] = content['error']
 
         exp = {}
@@ -765,7 +765,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         got['responseCode'] = self.request.responseCode
         content = json.loads(bytes2unicode(self.request.written))
         if 'error' not in content or sorted(content['error'].keys()) != ['code', 'message']:
-            self.fail(f"response does not have proper error form: {repr(content)}")
+            self.fail(f"response does not have proper error form: {content!r}")
         got['error'] = content['error']
 
         exp = {}

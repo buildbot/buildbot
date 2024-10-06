@@ -216,7 +216,7 @@ class SVN(Source):
 
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
-            ['svn'] + command,
+            ['svn', *command],
             env=self.env,
             logEnviron=self.logEnviron,
             timeout=self.timeout,

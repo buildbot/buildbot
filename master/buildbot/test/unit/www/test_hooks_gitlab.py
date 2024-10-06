@@ -28,7 +28,7 @@ from buildbot.www import change_hook
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
-# Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html  # noqa pylint: disable=line-too-long
+# Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
 # Added "modified" and "removed", and change email
 gitJsonPayload = b"""
 {
@@ -227,7 +227,7 @@ gitJsonPayloadMR_open = b"""
       "username" : "mmusterman"
    }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 gitJsonPayloadMR_editdesc = b"""
 {
    "event_type" : "merge_request",
@@ -337,7 +337,7 @@ gitJsonPayloadMR_editdesc = b"""
       "username" : "mmusterman"
    }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 gitJsonPayloadMR_addcommit = b"""
 {
    "event_type" : "merge_request",
@@ -448,7 +448,7 @@ gitJsonPayloadMR_addcommit = b"""
       "username" : "mmusterman"
    }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 gitJsonPayloadMR_close = b"""
 {
    "event_type" : "merge_request",
@@ -558,7 +558,7 @@ gitJsonPayloadMR_close = b"""
       "username" : "mmusterman"
    }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 gitJsonPayloadMR_reopen = b"""
 {
    "event_type" : "merge_request",
@@ -668,7 +668,7 @@ gitJsonPayloadMR_reopen = b"""
       "username" : "mmusterman"
    }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 
 # == Merge requests from a fork of the project
 # (Captured more accurately than above test data)
@@ -794,7 +794,7 @@ gitJsonPayloadMR_open_forked = b"""
       "username" : "mmusterman"
    }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 
 # == Merge requests from a fork of the project
 # (Captured more accurately than above test data) captured from gitlab/v4 rest api
@@ -1004,7 +1004,7 @@ gitJsonPayloadMR_commented = b"""
     "state": "opened"
   }
 }
-"""  # noqa pylint: disable=line-too-long
+"""
 
 
 def FakeRequestMR(content):

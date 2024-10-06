@@ -20,8 +20,6 @@ import signal
 import socket
 import sys
 
-from twisted.internet import defer
-
 from buildbot.test.util.integration import RunMasterBase
 
 from .interop import test_commandmixin
@@ -128,7 +126,7 @@ def run_proxy(queue):
         loop.close()
 
     except BaseException as e:
-        write_to_log(f"Exception Raised: {str(e)}\n", with_traceback=True)
+        write_to_log(f"Exception Raised: {e!s}\n", with_traceback=True)
 
     finally:
         queue.put(get_log_path())
@@ -161,10 +159,9 @@ class RunMasterBehindProxy(RunMasterBase):
             print("---- ------ ----")
             os.unlink(get_log_path())
 
-    @defer.inlineCallbacks
-    def setup_master(self, config_dict, startWorker=True):
+    async def setup_master(self, config_dict, startWorker=True):
         proxy_connection_string = f"tcp:127.0.0.1:{self.target_port}"
-        yield super().setup_master(
+        await super().setup_master(
             config_dict, startWorker, proxy_connection_string=proxy_connection_string
         )
 

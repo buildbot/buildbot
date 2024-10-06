@@ -30,7 +30,8 @@ from buildbot.util.state import StateMixin
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
     DEFAULT_CODEBASES = {'': {}}
 
-    compare_attrs = ClusteredBuildbotService.compare_attrs + (
+    compare_attrs = (
+        *ClusteredBuildbotService.compare_attrs,
         'builderNames',
         'properties',
         'codebases',

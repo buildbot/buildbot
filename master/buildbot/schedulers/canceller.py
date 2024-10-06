@@ -211,7 +211,7 @@ class _OldBuildrequestTracker:
 
 
 class OldBuildCanceller(BuildbotService):
-    compare_attrs = BuildbotService.compare_attrs + ('filters',)
+    compare_attrs = (*BuildbotService.compare_attrs, 'filters')
 
     def checkConfig(self, name, filters, branch_key=None):
         OldBuildCanceller.check_filters(filters)
@@ -309,7 +309,7 @@ class OldBuildCanceller(BuildbotService):
             try:
                 extract_filter_values(builders, 'builders')
             except Exception as e:
-                config.error(f'{cls.__name__}: When processing filter builders: {str(e)}')
+                config.error(f'{cls.__name__}: When processing filter builders: {e!s}')
 
     @classmethod
     def filter_tuples_to_filter_set_object(cls, filters):

@@ -427,7 +427,7 @@ class P4(Source):
         except ValueError as error:
             log.msg(
                 "p4.get_sync_revision unable to parse output of %s: %s",
-                ['p4'] + changes_command_args,
+                ['p4', *changes_command_args],
                 stdout,
             )
             raise buildstep.BuildStepFailed() from error

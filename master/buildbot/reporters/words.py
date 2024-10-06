@@ -560,7 +560,7 @@ class Contact:
         message = message.lstrip()
         parts = message.split(' ', 1)
         if len(parts) == 1:
-            parts = parts + ['']
+            parts = [*parts, ""]
         cmd, args = parts
 
         cmd_suffix = self.bot.commandSuffix

@@ -1006,7 +1006,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 self.filename, {"services": [MyService(x='a'), MyService(x='b')]}
             )
 
-        self.assertConfigError(errors, f'Duplicate service name {repr(MyService.name)}')
+        self.assertConfigError(errors, f'Duplicate service name {MyService.name!r}')
 
     def test_load_configurators_norminal(self):
         class MyConfigurator(configurators.ConfiguratorBase):

@@ -261,7 +261,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @async_to_deferred
     async def test_brotli_compression(self):
         try:
-            import brotli  # noqa pylint: disable=unused-import,import-outside-toplevel
+            import brotli
         except ImportError as e:
             raise unittest.SkipTest("brotli not installed, skip the test") from e
         await self._test_compression(b'br', decompress_fn=brotli.decompress)
@@ -269,7 +269,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @async_to_deferred
     async def test_zstandard_compression(self):
         try:
-            import zstandard  # noqa pylint: disable=unused-import,import-outside-toplevel
+            import zstandard
         except ImportError as e:
             raise unittest.SkipTest("zstandard not installed, skip the test") from e
 

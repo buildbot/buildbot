@@ -104,7 +104,7 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
         self._observer = SubunitLogObserver()
         self.addLogObserver('stdio', self._observer)
-        self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
+        self.progressMetrics = (*self.progressMetrics, "tests", "tests failed")
 
     @defer.inlineCallbacks
     def run(self):

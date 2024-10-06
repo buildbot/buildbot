@@ -110,7 +110,7 @@ class TestCleanupDb(
                 textwrap.dedent(f"""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
-                c['db_url'] = {repr(db_url)}
+                c['db_url'] = {db_url!r}
                 c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}

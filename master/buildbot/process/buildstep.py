@@ -101,7 +101,7 @@ class _BuildStepFactory(util.ComparableMixin):
         try:
             step = object.__new__(self.step_class)
             step._factory = self
-            step.__init__(*self.args, **self.kwargs)  # noqa pylint: disable=unnecessary-dunder-call
+            step.__init__(*self.args, **self.kwargs)
             return step
         except Exception:
             log.msg(
@@ -176,7 +176,8 @@ class BuildStep(
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
 
-    renderables = results.ResultComputingConfigMixin.resultConfig + [
+    renderables = [
+        *results.ResultComputingConfigMixin.resultConfig,
         'alwaysRun',
         'description',
         'descriptionDone',
@@ -276,7 +277,7 @@ class BuildStep(
             config.error(
                 "BuildStep updateBuildSummaryPolicy must be "
                 "a list of result ids or boolean but it is "
-                f"{repr(self.updateBuildSummaryPolicy)}"
+                f"{self.updateBuildSummaryPolicy!r}"
             )
         self._acquiringLocks = []
         self.stopped = False
@@ -452,7 +453,7 @@ class BuildStep(
 
         stepResult = summary.get('step', 'finished')
         if not isinstance(stepResult, str):
-            raise TypeError(f"step result string must be unicode (got {repr(stepResult)})")
+            raise TypeError(f"step result string must be unicode (got {stepResult!r})")
         if self.stepid is not None:
             stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
             yield self.master.data.updates.setStepStateString(self.stepid, stepResult)

@@ -137,7 +137,7 @@ class AbstractWorker(service.BuildbotService):
         self.notify_on_missing = notify_on_missing
         for i in notify_on_missing:
             if not isinstance(i, str):
-                config.error(f'notify_on_missing arg {repr(i)} is not a string')
+                config.error(f'notify_on_missing arg {i!r} is not a string')
 
         self.missing_timeout = missing_timeout
         self.missing_timer = None
@@ -155,7 +155,7 @@ class AbstractWorker(service.BuildbotService):
         self._configured_builderid_list = None
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {repr(self.name)}>"
+        return f"<{self.__class__.__name__} {self.name!r}>"
 
     @property
     def workername(self):

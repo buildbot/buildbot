@@ -143,7 +143,7 @@ class MaildirService(service.BuildbotService):
             # Denied error on bear's win32-twisted1.3 worker.
             os.rename(os.path.join(self.newdir, filename), os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)
-            f = open(path, "r", encoding='utf-8')  # noqa pylint: disable=consider-using-with
+            f = open(path, encoding='utf-8')
 
         return f
 

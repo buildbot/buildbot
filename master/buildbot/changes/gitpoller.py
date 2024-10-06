@@ -176,7 +176,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             branches = [branch]
         elif not branches:
             if only_tags:
-                branches = lambda ref: ref.startswith('refs/tags/')  # noqa: E731
+                branches = lambda ref: ref.startswith('refs/tags/')
             else:
                 branches = None
 
@@ -395,7 +395,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             try:
                 yield self._dovccmd(
                     'fetch',
-                    ['--progress', self.repourl] + refspecs + ['--'],
+                    ["--progress", self.repourl, *refspecs, "--"],
                     path=self.workdir,
                     auth_files_path=tmp_path,
                 )
@@ -637,11 +637,11 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 self,
             )
 
-        full_args += [command] + args
+        full_args += [command, *args]
 
         res = await runprocess.run_process(
             self.master.reactor,
-            [self.gitbin] + full_args,
+            [self.gitbin, *full_args],
             path,
             env=full_env,
             initial_stdin=unicode2bytes(initial_stdin) if initial_stdin is not None else None,

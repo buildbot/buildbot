@@ -124,7 +124,7 @@ class FakeBuildersComponent(FakeDBComponent):
     def removeBuilderMaster(self, builderid=None, masterid=None):
         for id, tup in self.builder_masters.items():
             if tup == (builderid, masterid):
-                del self.builder_masters[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
+                del self.builder_masters[id]
                 break
         return defer.succeed(None)
 

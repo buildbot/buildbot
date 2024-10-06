@@ -176,7 +176,7 @@ class FakeWorkersComponent(FakeDBComponent):
             worker['info'] = workerinfo
         new_conn = {"masterid": masterid, "workerid": workerid}
         if new_conn not in self.connected.values():
-            conn_id = max([0] + list(self.connected)) + 1
+            conn_id = max([0, *list(self.connected)]) + 1
             self.connected[conn_id] = new_conn
         return defer.succeed(None)
 
@@ -221,7 +221,7 @@ class FakeWorkersComponent(FakeDBComponent):
         del_conn = {"masterid": masterid, "workerid": workerid}
         for id, conn in self.connected.items():
             if conn == del_conn:
-                del self.connected[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
+                del self.connected[id]
                 break
         return defer.succeed(None)
 

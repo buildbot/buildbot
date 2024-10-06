@@ -138,13 +138,13 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
             property_changes = new_props
 
-        props_set = [f"{k}: {repr(v)}" for k, v in sorted(property_changes.items())]
+        props_set = [f"{k}: {v!r}" for k, v in sorted(property_changes.items())]
         yield self.addCompleteLog('property changes', "\n".join(props_set))
 
         if len(property_changes) > 1:
             self.descriptionDone = f'{len(property_changes)} properties set'
         elif len(property_changes) == 1:
-            self.descriptionDone = f'property \'{list(property_changes)[0]}\' set'
+            self.descriptionDone = f'property \'{next(iter(property_changes))}\' set'
         if cmd.didFail():
             return FAILURE
         return SUCCESS
@@ -160,26 +160,27 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
             # check validity of arguments being passed to RemoteShellCommand
             valid_rsc_args = [
-                'command',
-                'env',
-                'want_stdout',
-                'want_stderr',
-                'timeout',
-                'maxTime',
-                'max_lines',
-                'sigtermTime',
-                'logfiles',
-                'lazylogfiles',
-                'usePTY',
-                'logEnviron',
-                'collectStdout',
-                'collectStderr',
-                'interruptSignal',
-                'initialStdin',
-                'decodeRC',
-                'stdioLogName',
-                'workdir',
-            ] + buildstep.BuildStep._params_names
+                "command",
+                "env",
+                "want_stdout",
+                "want_stderr",
+                "timeout",
+                "maxTime",
+                "max_lines",
+                "sigtermTime",
+                "logfiles",
+                "lazylogfiles",
+                "usePTY",
+                "logEnviron",
+                "collectStdout",
+                "collectStderr",
+                "interruptSignal",
+                "initialStdin",
+                "decodeRC",
+                "stdioLogName",
+                "workdir",
+                *buildstep.BuildStep._params_names,
+            ]
 
             invalid_args = []
             for arg in kwargs:
