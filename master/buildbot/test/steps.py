@@ -176,17 +176,16 @@ class Expect:
         self.connection_broken = True
         return self
 
-    @defer.inlineCallbacks
-    def runBehavior(self, behavior, args, command):
+    async def runBehavior(self, behavior, args, command):
         """
         Implement the given behavior.  Returns a Deferred.
         """
         if behavior == 'rc':
-            yield command.remoteUpdate('rc', args[0], False)
+            await command.remoteUpdate('rc', args[0], False)
         elif behavior == 'err':
             raise args[0]
         elif behavior == 'update':
-            yield command.remoteUpdate(args[0], args[1], False)
+            await command.remoteUpdate(args[0], args[1], False)
         elif behavior == 'log':
             name, streams = args
             for stream in streams:
@@ -203,23 +202,22 @@ class Expect:
             else:
                 if 'header' in streams or 'stderr' in streams:
                     raise RuntimeError('Non stdio streams only support stdout')
-                yield command.addToLog(name, streams['stdout'])
+                await command.addToLog(name, streams['stdout'])
                 if name not in command.logs:
                     raise RuntimeError(f"{command}.addToLog: no such log {name}")
 
         elif behavior == 'callable':
-            yield args[0](command)
+            await args[0](command)
         else:
             raise AssertionError(f'invalid behavior {behavior}')
         return None
 
-    @defer.inlineCallbacks
-    def runBehaviors(self, command):
+    async def runBehaviors(self, command):
         """
         Run all expected behaviors for this command
         """
         for behavior in self.behaviors:
-            yield self.runBehavior(behavior[0], behavior[1:], command)
+            await self.runBehavior(behavior[0], behavior[1:], command)
 
     def _cleanup_args(self, args):
         # we temporarily disable checking of sigtermTime and interruptSignal due to currently
@@ -913,8 +911,7 @@ class TestBuildStepMixin:
             if l.stderr:
                 log.msg(f"{l.name} stderr:\n{l.stderr}")
 
-    @defer.inlineCallbacks
-    def run_step(self):
+    async def run_step(self):
         """
         Run the step set up with L{setup_step}, and check the results.
 
@@ -925,7 +922,7 @@ class TestBuildStepMixin:
                 self, "WorkerForBuilder(connection)", step, self._interrupt_remote_command_numbers
             )
             step.setupProgress()
-            result = yield step.startStep(self.conn)
+            result = await step.startStep(self.conn)
 
             # finish up the debounced updateSummary before checking
             self.reactor.advance(1)
@@ -956,13 +953,13 @@ class TestBuildStepMixin:
                 )
 
             if self._exp_result_summaries and (exp_summary := self._exp_result_summaries.pop(0)):
-                step_result_summary = yield step.getResultSummary()
+                step_result_summary = await step.getResultSummary()
                 self.assertEqual(exp_summary, step_result_summary)
 
             if self._exp_build_result_summaries and (
                 exp_build_summary := self._exp_build_result_summaries.pop(0)
             ):
-                step_build_result_summary = yield step.getBuildResultSummary()
+                step_build_result_summary = await step.getBuildResultSummary()
                 self.assertEqual(exp_build_summary, step_build_result_summary)
 
             properties = self.build.getProperties()
@@ -1020,8 +1017,7 @@ class TestBuildStepMixin:
 
     # callbacks from the running step
 
-    @defer.inlineCallbacks
-    def _connection_remote_start_command(self, command, conn, builder_name):
+    async def _connection_remote_start_command(self, command, conn, builder_name):
         self.assertEqual(conn, self.conn)
 
         exp = None
@@ -1042,7 +1038,7 @@ class TestBuildStepMixin:
 
         try:
             exp._check(self, command)
-            yield exp.runBehaviors(command)
+            await exp.runBehaviors(command)
         except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
