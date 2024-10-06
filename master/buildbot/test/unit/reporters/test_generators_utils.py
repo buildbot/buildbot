@@ -17,7 +17,6 @@
 import copy
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import CANCELLED
@@ -39,10 +38,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-    @defer.inlineCallbacks
-    def insert_build_finished_get_props(self, results, **kwargs):
-        build = yield self.insert_build_finished(results, **kwargs)
-        yield utils.getDetailsForBuild(self.master, build, want_properties=True)
+    async def insert_build_finished_get_props(self, results, **kwargs):
+        build = await self.insert_build_finished(results, **kwargs)
+        await utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     def create_generator(
@@ -105,51 +103,44 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         with self.assertRaisesConfigError('Newlines are not allowed'):
             g.check()
 
-    @defer.inlineCallbacks
-    def test_is_message_needed_ignores_unspecified_tags(self):
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+    async def test_is_message_needed_ignores_unspecified_tags(self):
+        build = await self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
         build['builder']['tags'] = ['slow']
         g = self.create_generator(tags=["fast"])
         self.assertFalse(g.is_message_needed_by_props(build))
 
-    @defer.inlineCallbacks
-    def test_is_message_needed_tags(self):
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+    async def test_is_message_needed_tags(self):
+        build = await self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
         build['builder']['tags'] = ['fast']
         g = self.create_generator(tags=["fast"])
         self.assertTrue(g.is_message_needed_by_props(build))
 
-    @defer.inlineCallbacks
-    def test_is_message_needed_schedulers_sends_mail(self):
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+    async def test_is_message_needed_schedulers_sends_mail(self):
+        build = await self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(schedulers=['checkin'])
         self.assertTrue(g.is_message_needed_by_props(build))
 
-    @defer.inlineCallbacks
-    def test_is_message_needed_schedulers_doesnt_send_mail(self):
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+    async def test_is_message_needed_schedulers_doesnt_send_mail(self):
+        build = await self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(schedulers=['some-random-scheduler'])
         self.assertFalse(g.is_message_needed_by_props(build))
 
-    @defer.inlineCallbacks
-    def test_is_message_needed_branches_sends_mail(self):
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+    async def test_is_message_needed_branches_sends_mail(self):
+        build = await self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(branches=['refs/pull/34/merge'])
         self.assertTrue(g.is_message_needed_by_props(build))
 
-    @defer.inlineCallbacks
-    def test_is_message_needed_branches_doesnt_send_mail(self):
-        build = yield self.insert_build_finished_get_props(SUCCESS)
+    async def test_is_message_needed_branches_doesnt_send_mail(self):
+        build = await self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(branches=['some-random-branch'])
         self.assertFalse(g.is_message_needed_by_props(build))
 
-    @defer.inlineCallbacks
-    def run_simple_test_sends_message_for_mode(self, mode, result, should_send=True):
-        build = yield self.insert_build_finished_get_props(result)
+    async def run_simple_test_sends_message_for_mode(self, mode, result, should_send=True):
+        build = await self.insert_build_finished_get_props(result)
 
         g = self.create_generator(mode=mode)
 
@@ -221,9 +212,8 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
     def test_is_message_needed_mode_passing_for_exception(self):
         return self.run_simple_test_ignores_message_for_mode("passing", EXCEPTION)
 
-    @defer.inlineCallbacks
-    def run_sends_message_for_problems(self, mode, results1, results2, should_send=True):
-        build = yield self.insert_build_finished_get_props(results2)
+    async def run_sends_message_for_problems(self, mode, results1, results2, should_send=True):
+        build = await self.insert_build_finished_get_props(results2)
 
         g = self.create_generator(mode=mode)
 
