@@ -40,9 +40,9 @@ class Eventually(unittest.TestCase):
         self.results.append(r)
 
     # flush the queue and assert results
-    @defer.inlineCallbacks
-    def assertResults(self, exp):
-        yield eventual.flushEventualQueue()
+
+    async def assertResults(self, exp):
+        await eventual.flushEventualQueue()
 
         self.assertEqual(self.results, exp)
 
