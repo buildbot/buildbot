@@ -148,74 +148,64 @@ class Tests(interfaces.InterfaceTests):
 
     # method tests
 
-    @defer.inlineCallbacks
-    def test_getStep(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[0]])
-        stepdict = yield self.db.steps.getStep(70)
+    async def test_getStep(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[0]])
+        stepdict = await self.db.steps.getStep(70)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict, self.stepDicts[0])
 
-    @defer.inlineCallbacks
-    def test_getStep_missing(self):
-        stepdict = yield self.db.steps.getStep(50)
+    async def test_getStep_missing(self):
+        stepdict = await self.db.steps.getStep(50)
         self.assertEqual(stepdict, None)
 
-    @defer.inlineCallbacks
-    def test_getStep_number(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[1]])
-        stepdict = yield self.db.steps.getStep(buildid=30, number=1)
+    async def test_getStep_number(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[1]])
+        stepdict = await self.db.steps.getStep(buildid=30, number=1)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.id, 71)
 
-    @defer.inlineCallbacks
-    def test_getStep_number_missing(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[1]])
-        stepdict = yield self.db.steps.getStep(buildid=30, number=9)
+    async def test_getStep_number_missing(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[1]])
+        stepdict = await self.db.steps.getStep(buildid=30, number=9)
         self.assertEqual(stepdict, None)
 
-    @defer.inlineCallbacks
-    def test_getStep_name(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        stepdict = yield self.db.steps.getStep(buildid=30, name='three')
+    async def test_getStep_name(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        stepdict = await self.db.steps.getStep(buildid=30, name='three')
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.id, 72)
 
-    @defer.inlineCallbacks
-    def test_getStep_name_missing(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        stepdict = yield self.db.steps.getStep(buildid=30, name='five')
+    async def test_getStep_name_missing(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        stepdict = await self.db.steps.getStep(buildid=30, name='five')
         self.assertEqual(stepdict, None)
 
-    @defer.inlineCallbacks
-    def test_getStep_invalid(self):
+    async def test_getStep_invalid(self):
         d = self.db.steps.getStep(buildid=30)
-        yield self.assertFailure(d, RuntimeError)
+        await self.assertFailure(d, RuntimeError)
 
-    @defer.inlineCallbacks
-    def test_getSteps(self):
-        yield self.insert_test_data(self.backgroundData + self.stepRows)
-        stepdicts = yield self.db.steps.getSteps(buildid=30)
+    async def test_getSteps(self):
+        await self.insert_test_data(self.backgroundData + self.stepRows)
+        stepdicts = await self.db.steps.getSteps(buildid=30)
 
         for stepdict in stepdicts:
             self.assertIsInstance(stepdict, steps.StepModel)
 
         self.assertEqual(stepdicts, self.stepDicts[:3])
 
-    @defer.inlineCallbacks
-    def test_getSteps_none(self):
-        yield self.insert_test_data(self.backgroundData + self.stepRows)
-        stepdicts = yield self.db.steps.getSteps(buildid=33)
+    async def test_getSteps_none(self):
+        await self.insert_test_data(self.backgroundData + self.stepRows)
+        stepdicts = await self.db.steps.getSteps(buildid=33)
         self.assertEqual(stepdicts, [])
 
-    @defer.inlineCallbacks
-    def test_addStep_getStep(self):
-        yield self.insert_test_data(self.backgroundData)
-        stepid, number, name = yield self.db.steps.addStep(
+    async def test_addStep_getStep(self):
+        await self.insert_test_data(self.backgroundData)
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (0, 'new'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(
             stepdict,
@@ -234,15 +224,14 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_addStep_getStep_locks_acquired_already(self):
-        yield self.insert_test_data(self.backgroundData)
-        stepid, number, name = yield self.db.steps.addStep(
+    async def test_addStep_getStep_locks_acquired_already(self):
+        await self.insert_test_data(self.backgroundData)
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=True)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=True)
         self.assertEqual((number, name), (0, 'new'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(
             stepdict,
@@ -261,16 +250,15 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_addStep_getStep_locks_acquired_later(self):
-        yield self.insert_test_data(self.backgroundData)
-        stepid, number, name = yield self.db.steps.addStep(
+    async def test_addStep_getStep_locks_acquired_later(self):
+        await self.insert_test_data(self.backgroundData)
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
-        yield self.db.steps.set_step_locks_acquired_at(stepid=stepid, locks_acquired_at=TIME2)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
+        await self.db.steps.set_step_locks_acquired_at(stepid=stepid, locks_acquired_at=TIME2)
         self.assertEqual((number, name), (0, 'new'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(
             stepdict,
@@ -289,57 +277,52 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_addStep_getStep_existing_step(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[0]])
-        stepid, number, name = yield self.db.steps.addStep(
+    async def test_addStep_getStep_existing_step(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[0]])
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (1, 'new'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.number, number)
         self.assertEqual(stepdict.name, name)
 
-    @defer.inlineCallbacks
-    def test_addStep_getStep_name_collisions(self):
-        yield self.insert_test_data([
+    async def test_addStep_getStep_name_collisions(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Step(id=73, number=0, name='new', buildid=30),
             fakedb.Step(id=74, number=1, name='new_1', buildid=30),
             fakedb.Step(id=75, number=2, name='new_2', buildid=30),
             fakedb.Step(id=76, number=3, name='new_step', buildid=30),
         ])
-        stepid, number, name = yield self.db.steps.addStep(
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (4, 'new_3'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.number, number)
         self.assertEqual(stepdict.name, name)
 
-    @defer.inlineCallbacks
-    def test_setStepStateString(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield self.db.steps.setStepStateString(stepid=72, state_string='aaa')
-        stepdict = yield self.db.steps.getStep(stepid=72)
+    async def test_setStepStateString(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        await self.db.steps.setStepStateString(stepid=72, state_string='aaa')
+        stepdict = await self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict.state_string, 'aaa')
 
-    @defer.inlineCallbacks
-    def test_addURL(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield self.db.steps.addURL(stepid=72, name='foo', url='bar')
+    async def test_addURL(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        await self.db.steps.addURL(stepid=72, name='foo', url='bar')
 
-        stepdict = yield self.db.steps.getStep(stepid=72)
+        stepdict = await self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict.urls, [steps.UrlModel(name='foo', url='bar')])
 
-    @defer.inlineCallbacks
-    def test_addURL_race(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield defer.gatherResults([
+    async def test_addURL_race(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        await defer.gatherResults([
             # only a tiny sleep is required to see the problem.
             self.db.steps.addURL(
                 stepid=72, name='foo', url='bar', _racehook=lambda: time.sleep(0.01)
@@ -347,7 +330,7 @@ class Tests(interfaces.InterfaceTests):
             self.db.steps.addURL(stepid=72, name='foo2', url='bar2'),
         ])
 
-        stepdict = yield self.db.steps.getStep(stepid=72)
+        stepdict = await self.db.steps.getStep(stepid=72)
 
         def urlKey(url):
             return url.name
@@ -361,58 +344,54 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_addURL_no_duplicate(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield defer.gatherResults([
+    async def test_addURL_no_duplicate(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        await defer.gatherResults([
             self.db.steps.addURL(stepid=72, name='foo', url='bar'),
             self.db.steps.addURL(stepid=72, name='foo', url='bar'),
         ])
 
-        stepdict = yield self.db.steps.getStep(stepid=72)
+        stepdict = await self.db.steps.getStep(stepid=72)
 
         self.assertEqual(stepdict.urls, [steps.UrlModel(name='foo', url='bar')])
 
-    @defer.inlineCallbacks
-    def test_finishStep(self):
+    async def test_finishStep(self):
         self.reactor.advance(TIME2)
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield self.db.steps.finishStep(stepid=72, results=11, hidden=False)
-        stepdict = yield self.db.steps.getStep(stepid=72)
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        await self.db.steps.finishStep(stepid=72, results=11, hidden=False)
+        stepdict = await self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict.results, 11)
         self.assertEqual(stepdict.complete_at, epoch2datetime(TIME2))
         self.assertEqual(stepdict.hidden, False)
 
-    @defer.inlineCallbacks
-    def test_finishStep_hidden(self):
-        yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield self.db.steps.finishStep(stepid=72, results=11, hidden=True)
-        stepdict = yield self.db.steps.getStep(stepid=72)
+    async def test_finishStep_hidden(self):
+        await self.insert_test_data([*self.backgroundData, self.stepRows[2]])
+        await self.db.steps.finishStep(stepid=72, results=11, hidden=True)
+        stepdict = await self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict.hidden, True)
 
 
 class RealTests(Tests):
     # the fake connector doesn't deal with this edge case
-    @defer.inlineCallbacks
-    def test_addStep_getStep_name_collisions_too_long(self):
-        yield self.insert_test_data([
+
+    async def test_addStep_getStep_name_collisions_too_long(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Step(id=73, number=0, name='a' * 49, buildid=30),
             fakedb.Step(id=74, number=1, name='a' * 48 + '_1', buildid=30),
         ])
-        stepid, number, name = yield self.db.steps.addStep(
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='a' * 49, state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (2, 'a' * 48 + '_2'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.number, number)
         self.assertEqual(stepdict.name, name)
 
-    @defer.inlineCallbacks
-    def test_addStep_getStep_name_collisions_too_long_extra_digits(self):
-        yield self.insert_test_data(
+    async def test_addStep_getStep_name_collisions_too_long_extra_digits(self):
+        await self.insert_test_data(
             self.backgroundData
             + [
                 fakedb.Step(id=73, number=0, name='a' * 50, buildid=30),
@@ -426,27 +405,25 @@ class RealTests(Tests):
                 for i in range(10, 100)
             ]
         )
-        stepid, number, name = yield self.db.steps.addStep(
+        stepid, number, name = await self.db.steps.addStep(
             buildid=30, name='a' * 50, state_string='new'
         )
-        yield self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
+        await self.db.steps.startStep(stepid=stepid, started_at=TIME1, locks_acquired=False)
         self.assertEqual((number, name), (100, 'a' * 46 + '_100'))
-        stepdict = yield self.db.steps.getStep(stepid=stepid)
+        stepdict = await self.db.steps.getStep(stepid=stepid)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.number, number)
         self.assertEqual(stepdict.name, name)
 
 
 class TestFakeDB(Tests, unittest.TestCase, connector_component.FakeConnectorComponentMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'steps',
                 'builds',
