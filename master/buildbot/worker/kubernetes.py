@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.logger import Logger
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
@@ -50,10 +49,9 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     _kube = None
     _kube_config = None
 
-    @defer.inlineCallbacks
-    def getPodSpec(self, build):
-        image = yield build.render(self.image)
-        env = yield self.createEnvironment(build)
+    async def getPodSpec(self, build):
+        image = await build.render(self.image)
+        env = await self.createEnvironment(build)
 
         return {
             "apiVersion": "v1",
@@ -113,8 +111,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     ):
         super().checkConfig(name, None, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         name,
         image='buildbot/buildbot-worker',
@@ -132,60 +129,55 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, kube_config.get_master_url()
         )
 
         if self.running and self._kube is not None:
-            yield self._kube.unregister(self)
+            await self._kube.unregister(self)
 
-        self._kube = yield kubeclientservice.KubeClientService.getService(self.master)
+        self._kube = await kubeclientservice.KubeClientService.getService(self.master)
         self._kube_config = kube_config
 
         if self.running:
-            yield self._kube.register(self, kube_config)
+            await self._kube.register(self, kube_config)
 
         self._namespace = namespace or kube_config.getConfig()['namespace']
 
-        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
+        await super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
-        yield self._kube.register(self, self._kube_config)
+    async def startService(self):
+        await super().startService()
+        await self._kube.register(self, self._kube_config)
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._kube.unregister(self)
-        yield super().stopService()
+    async def stopService(self):
+        await self._kube.unregister(self)
+        await super().stopService()
 
-    @defer.inlineCallbacks
-    def start_instance(self, build):
+    async def start_instance(self, build):
         try:
-            yield self.stop_instance(reportFailure=False)
-            pod_spec = yield self.renderWorkerPropsOnStart(build)
-            yield self._create_pod(self._namespace, pod_spec)
+            await self.stop_instance(reportFailure=False)
+            pod_spec = await self.renderWorkerPropsOnStart(build)
+            await self._create_pod(self._namespace, pod_spec)
         except KubeError as e:
             raise LatentWorkerFailedToSubstantiate(str(e)) from e
         return True
 
-    @defer.inlineCallbacks
-    def stop_instance(self, fast=False, reportFailure=True):
+    async def stop_instance(self, fast=False, reportFailure=True):
         self.current_pod_spec = None
         self.resetWorkerPropsOnStop()
         try:
-            yield self._delete_pod(self._namespace, self.getContainerName())
+            await self._delete_pod(self._namespace, self.getContainerName())
         except KubeJsonError as e:
             if reportFailure and e.reason != 'NotFound':
                 raise
         if fast:
             return
-        yield self._wait_for_pod_deletion(
+        await self._wait_for_pod_deletion(
             self._namespace, self.getContainerName(), timeout=self.missing_timeout
         )
 
-    @defer.inlineCallbacks
-    def _get_request_kwargs(self):
+    async def _get_request_kwargs(self):
         config = self._kube_config.getConfig()
 
         kwargs = {}
@@ -193,7 +185,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         if config.get("headers"):
             kwargs.setdefault("headers", {}).update(config["headers"])
 
-        auth = yield self._kube_config.getAuthorization()
+        auth = await self._kube_config.getAuthorization()
         if auth is not None:
             kwargs.setdefault("headers", {})['Authorization'] = auth
 
@@ -204,59 +196,55 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
 
         return kwargs
 
-    @defer.inlineCallbacks
-    def _raise_decode_failure_error(self, res):
-        content = yield res.content()
+    async def _raise_decode_failure_error(self, res):
+        content = await res.content()
         msg = "Failed to decode: " + content.decode("utf-8", errors="ignore")[0:200]
         raise KubeTextError(res.code, msg)
 
-    @defer.inlineCallbacks
-    def _create_pod(self, namespace, spec):
+    async def _create_pod(self, namespace, spec):
         url = f'/api/v1/namespaces/{namespace}/pods'
-        res = yield self._http.post(url, json=spec, **(yield self._get_request_kwargs()))
+        res = await self._http.post(url, json=spec, **(yield self._get_request_kwargs()))
 
         try:
-            res_json = yield res.json()
+            res_json = await res.json()
         except Exception:
-            yield self._raise_decode_failure_error(res)
+            await self._raise_decode_failure_error(res)
 
         if res.code not in (200, 201, 202):
             raise KubeJsonError(res.code, res_json)
         return res_json
 
-    @defer.inlineCallbacks
-    def _delete_pod(self, namespace, name, graceperiod=0):
+    async def _delete_pod(self, namespace, name, graceperiod=0):
         url = f'/api/v1/namespaces/{namespace}/pods/{name}'
-        res = yield self._http.delete(
+        res = await self._http.delete(
             url, params={'graceperiod': graceperiod}, **(yield self._get_request_kwargs())
         )
 
         try:
-            res_json = yield res.json()
+            res_json = await res.json()
         except Exception:
-            yield self._raise_decode_failure_error(res)
+            await self._raise_decode_failure_error(res)
 
         if res.code != 200:
             raise KubeJsonError(res.code, res_json)
         return res_json
 
-    @defer.inlineCallbacks
-    def _wait_for_pod_deletion(self, namespace, name, timeout):
+    async def _wait_for_pod_deletion(self, namespace, name, timeout):
         t1 = self.master.reactor.seconds()
         url = f'/api/v1/namespaces/{namespace}/pods/{name}/status'
         while True:
             if self.master.reactor.seconds() - t1 > timeout:
                 raise TimeoutError(f"Did not see pod {name} terminate after {timeout}s")
-            res = yield self._http.get(url, **(yield self._get_request_kwargs()))
+            res = await self._http.get(url, **(yield self._get_request_kwargs()))
 
             try:
-                res_json = yield res.json()
+                res_json = await res.json()
             except Exception:
-                yield self._raise_decode_failure_error(res)
+                await self._raise_decode_failure_error(res)
 
             if res.code == 404:
                 break  # 404 means the pod has terminated
             if res.code != 200:
                 raise KubeJsonError(res.code, res_json)
-            yield asyncSleep(1, reactor=self.master.reactor)
+            await asyncSleep(1, reactor=self.master.reactor)
         return res_json
