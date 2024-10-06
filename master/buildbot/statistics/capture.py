@@ -46,10 +46,9 @@ class Capture:
     def consume(self, routingKey, msg):
         pass
 
-    @defer.inlineCallbacks
-    def _store(self, post_data, series_name, context):
+    async def _store(self, post_data, series_name, context):
         for svc in self.parent_svcs:
-            yield threads.deferToThread(svc.thd_postStatsValue, post_data, series_name, context)
+            await threads.deferToThread(svc.thd_postStatsValue, post_data, series_name, context)
 
 
 class CapturePropertyBase(Capture):
@@ -71,16 +70,15 @@ class CapturePropertyBase(Capture):
 
         super().__init__(routingKey, callback)
 
-    @defer.inlineCallbacks
-    def consume(self, routingKey, msg):
+    async def consume(self, routingKey, msg):
         """
         Consumer for this (CaptureProperty) class. Gets the properties from data api and
         send them to the storage backends.
         """
-        builder_info = yield self.master.data.get(("builders", msg['builderid']))
+        builder_info = await self.master.data.get(("builders", msg['builderid']))
 
         if self._builder_name_matches(builder_info):
-            properties = yield self.master.data.get(("builds", msg['buildid'], "properties"))
+            properties = await self.master.data.get(("builds", msg['buildid'], "properties"))
 
             if self._regex:
                 filtered_prop_names = [pn for pn in properties if re.match(self._property_name, pn)]
@@ -100,10 +98,10 @@ class CapturePropertyBase(Capture):
                 context = self._defaultContext(msg, builder_info['name'])
                 series_name = f"{builder_info['name']}-{pn}"
                 post_data = {"name": pn, "value": ret_val}
-                yield self._store(post_data, series_name, context)
+                await self._store(post_data, series_name, context)
 
         else:
-            yield defer.succeed(None)
+            await defer.succeed(None)
 
     @abc.abstractmethod
     def _builder_name_matches(self, builder_info):
@@ -146,12 +144,11 @@ class CaptureBuildTimes(Capture):
         self._time_type = time_type
         super().__init__(routingKey, callback)
 
-    @defer.inlineCallbacks
-    def consume(self, routingKey, msg):
+    async def consume(self, routingKey, msg):
         """
         Consumer for CaptureBuildStartTime. Gets the build start time.
         """
-        builder_info = yield self.master.data.get(("builders", msg['builderid']))
+        builder_info = await self.master.data.get(("builders", msg['builderid']))
         if self._builder_name_matches(builder_info):
             try:
                 ret_val = self._callback(*self._retValParams(msg))
@@ -167,10 +164,10 @@ class CaptureBuildTimes(Capture):
             context = self._defaultContext(msg, builder_info['name'])
             post_data = {self._time_type: ret_val}
             series_name = f"{builder_info['name']}-build-times"
-            yield self._store(post_data, series_name, context)
+            await self._store(post_data, series_name, context)
 
         else:
-            yield defer.succeed(None)
+            await defer.succeed(None)
 
     def _err_msg(self, build_data, builder_name):
         msg = (
@@ -323,14 +320,13 @@ class CaptureDataBase(Capture):
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         super().__init__(routingKey, callback)
 
-    @defer.inlineCallbacks
-    def consume(self, routingKey, msg):
+    async def consume(self, routingKey, msg):
         """
         Consumer for this (CaptureData) class. Gets the data sent from yieldMetricsValue and
         sends it to the storage backends.
         """
         build_data = msg['build_data']
-        builder_info = yield self.master.data.get(("builders", build_data['builderid']))
+        builder_info = await self.master.data.get(("builders", build_data['builderid']))
 
         if self._builder_name_matches(builder_info) and self._data_name == msg['data_name']:
             try:
@@ -345,7 +341,7 @@ class CaptureDataBase(Capture):
             post_data = ret_val
             series_name = f"{builder_info['name']}-{self._data_name}"
             context = self._defaultContext(build_data, builder_info['name'])
-            yield self._store(post_data, series_name, context)
+            await self._store(post_data, series_name, context)
 
     @abc.abstractmethod
     def _builder_name_matches(self, builder_info):
