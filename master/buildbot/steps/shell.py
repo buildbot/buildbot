@@ -15,8 +15,6 @@
 
 import re
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -49,14 +47,13 @@ class TreeSize(buildstep.ShellMixin, buildstep.BuildStep):
         self.observer = logobserver.BufferLogObserver(wantStdout=True, wantStderr=True)
         self.addLogObserver('stdio', self.observer)
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         out = self.observer.getStdout()
         m = re.search(r'^(\d+)', out)
@@ -110,14 +107,13 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         )
         self.addLogObserver('stdio', self.observer)
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         property_changes = {}
 
@@ -139,7 +135,7 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
             property_changes = new_props
 
         props_set = [f"{k}: {v!r}" for k, v in sorted(property_changes.items())]
-        yield self.addCompleteLog('property changes', "\n".join(props_set))
+        await self.addCompleteLog('property changes', "\n".join(props_set))
 
         if len(property_changes) > 1:
             self.descriptionDone = f'{len(property_changes)} properties set'
@@ -195,10 +191,9 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
         return cmd.results()
 
 
@@ -390,13 +385,12 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         warnings.append(line)
         self.warnCount += 1
 
-    @defer.inlineCallbacks
-    def setup_suppression(self):
+    async def setup_suppression(self):
         if self.suppressionList is not None:
             self.addSuppression(self.suppressionList)
 
         if self.suppressionFile is not None:
-            data = yield self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
+            data = await self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
             lines = data.split("\n")
 
             list = []
@@ -416,24 +410,21 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
 
             self.addSuppression(list)
 
-    @defer.inlineCallbacks
-    def run(self):
-        yield self.setup_suppression()
+    async def run(self):
+        await self.setup_suppression()
 
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        yield self.finish_logs()
-        yield self.createSummary()
+        await self.finish_logs()
+        await self.createSummary()
         return self.evaluateCommand(cmd)
 
-    @defer.inlineCallbacks
-    def finish_logs(self):
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+    async def finish_logs(self):
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
-    @defer.inlineCallbacks
-    def createSummary(self):
+    async def createSummary(self):
         """
         Match log lines against warningPattern.
 
@@ -443,7 +434,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
-            yield self.addCompleteLog(
+            await self.addCompleteLog(
                 f"warnings ({self.warnCount})", "\n".join(self.loggedWarnings) + "\n"
             )
 
