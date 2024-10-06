@@ -16,7 +16,6 @@
 import os
 import xml.dom.minidom
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import svnpoller
@@ -265,38 +264,33 @@ class TestSVNPoller(
     def tearDown(self):
         return self.tearDownChangeSource()
 
-    @defer.inlineCallbacks
-    def attachSVNPoller(self, *args, **kwargs):
+    async def attachSVNPoller(self, *args, **kwargs):
         s = svnpoller.SVNPoller(*args, **kwargs)
-        yield self.attachChangeSource(s)
+        await self.attachChangeSource(s)
         return s
 
-    @defer.inlineCallbacks
-    def test_describe(self):
-        s = yield self.attachSVNPoller('file://')
+    async def test_describe(self):
+        s = await self.attachSVNPoller('file://')
         self.assertSubstring("SVNPoller", s.describe())
 
-    @defer.inlineCallbacks
-    def test_name(self):
-        s = yield self.attachSVNPoller('file://')
+    async def test_name(self):
+        s = await self.attachSVNPoller('file://')
         self.assertEqual("file://", s.name)
 
-        s = yield self.attachSVNPoller('file://', name='MyName')
+        s = await self.attachSVNPoller('file://', name='MyName')
         self.assertEqual("MyName", s.name)
 
-    @defer.inlineCallbacks
-    def test_strip_repourl(self):
+    async def test_strip_repourl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
-        s = yield self.attachSVNPoller(base + "/")
+        s = await self.attachSVNPoller(base + "/")
         self.assertEqual(s.repourl, base)
 
-    @defer.inlineCallbacks
-    def do_test_get_prefix(self, base, output, expected):
-        s = yield self.attachSVNPoller(base)
+    async def do_test_get_prefix(self, base, output, expected):
+        s = await self.attachSVNPoller(base)
         self.expect_commands(
             ExpectMasterShell(['svn', 'info', '--xml', '--non-interactive', base]).stdout(output)
         )
-        prefix = yield s.get_prefix()
+        prefix = await s.get_prefix()
 
         self.assertEqual(prefix, expected)
         self.assert_all_commands_ran()
@@ -323,17 +317,15 @@ class TestSVNPoller(
         )
         return self.do_test_get_prefix(base, prefix_output_3, 'sample/trunk')
 
-    @defer.inlineCallbacks
-    def test_log_parsing(self):
-        s = yield self.attachSVNPoller('file:///foo')
+    async def test_log_parsing(self):
+        s = await self.attachSVNPoller('file:///foo')
         output = make_changes_output(4)
         entries = s.parse_logs(output)
         # no need for elaborate assertions here; this is minidom's logic
         self.assertEqual(len(entries), 4)
 
-    @defer.inlineCallbacks
-    def test_get_new_logentries(self):
-        s = yield self.attachSVNPoller('file:///foo')
+    async def test_get_new_logentries(self):
+        s = await self.attachSVNPoller('file:///foo')
         entries = make_logentry_elements(4)
 
         s.last_change = 4
@@ -357,8 +349,7 @@ class TestSVNPoller(
         self.assertEqual(s.last_change, 4)
         self.assertEqual(len(new), 0)
 
-    @defer.inlineCallbacks
-    def test_get_text(self):
+    async def test_get_text(self):
         doc = xml.dom.minidom.parseString(
             """
             <parent>
@@ -369,18 +360,17 @@ class TestSVNPoller(
                 </child>
             </parent>""".strip()
         )
-        s = yield self.attachSVNPoller('http://', split_file=split_file)
+        s = await self.attachSVNPoller('http://', split_file=split_file)
 
         self.assertEqual(s._get_text(doc, 'grandchild'), '1')
         self.assertEqual(s._get_text(doc, 'nonexistent'), 'unknown')
 
-    @defer.inlineCallbacks
-    def test_create_changes(self):
+    async def test_create_changes(self):
         base = (
             "file:///home/warner/stuff/Projects/Buildbot/trees/"
             + "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
         )
-        s = yield self.attachSVNPoller(base, split_file=split_file)
+        s = await self.attachSVNPoller(base, split_file=split_file)
         s._prefix = "sample"
 
         logentries = dict(zip(range(1, 7), reversed(make_logentry_elements(6))))
@@ -427,8 +417,7 @@ class TestSVNPoller(
         args.extend(['--limit=100', sample_base])
         return ExpectMasterShell(args)
 
-    @defer.inlineCallbacks
-    def test_create_changes_overridden_project(self):
+    async def test_create_changes_overridden_project(self):
         def custom_split_file(path):
             f = split_file(path)
             if f:
@@ -441,7 +430,7 @@ class TestSVNPoller(
             "file:///home/warner/stuff/Projects/Buildbot/trees/"
             + "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
         )
-        s = yield self.attachSVNPoller(base, split_file=custom_split_file)
+        s = await self.attachSVNPoller(base, split_file=custom_split_file)
         s._prefix = "sample"
 
         logentries = dict(zip(range(1, 7), reversed(make_logentry_elements(6))))
@@ -462,9 +451,8 @@ class TestSVNPoller(
         self.assertEqual(changes[1]['repository'], "overridden-repository")
         self.assertEqual(changes[1]['codebase'], "overridden-codebase")
 
-    @defer.inlineCallbacks
-    def test_poll(self):
-        s = yield self.attachSVNPoller(
+    async def test_poll(self):
+        s = await self.attachSVNPoller(
             sample_base, split_file=split_file, svnuser='dustin', svnpasswd='bbrocks'
         )
 
@@ -476,20 +464,20 @@ class TestSVNPoller(
             self.makeLogExpect().stdout(make_changes_output(4)),
         )
         # fire it the first time; it should do nothing
-        yield s.poll()
+        await s.poll()
 
         # no changes generated on the first iteration
         self.assertEqual(self.master.data.updates.changesAdded, [])
         self.assertEqual(s.last_change, 1)
 
         # now fire it again, nothing changing
-        yield s.poll()
+        await s.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [])
         self.assertEqual(s.last_change, 1)
 
         # and again, with r2 this time
-        yield s.poll()
+        await s.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -516,7 +504,7 @@ class TestSVNPoller(
 
         # and again with both r3 and r4 appearing together
         self.master.data.updates.changesAdded = []
-        yield s.poll()
+        await s.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -558,9 +546,8 @@ class TestSVNPoller(
         self.assertEqual(s.last_change, 4)
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_empty_password(self):
-        s = yield self.attachSVNPoller(
+    async def test_poll_empty_password(self):
+        s = await self.attachSVNPoller(
             sample_base, split_file=split_file, svnuser='dustin', svnpasswd=''
         )
 
@@ -571,11 +558,10 @@ class TestSVNPoller(
             self.makeLogExpect(password="").stdout(make_changes_output(2)),
             self.makeLogExpect(password="").stdout(make_changes_output(4)),
         )
-        yield s.poll()
+        await s.poll()
 
-    @defer.inlineCallbacks
-    def test_poll_no_password(self):
-        s = yield self.attachSVNPoller(sample_base, split_file=split_file, svnuser='dustin')
+    async def test_poll_no_password(self):
+        s = await self.attachSVNPoller(sample_base, split_file=split_file, svnuser='dustin')
 
         self.expect_commands(
             self.makeInfoExpect(password=None).stdout(sample_info_output),
@@ -584,11 +570,10 @@ class TestSVNPoller(
             self.makeLogExpect(password=None).stdout(make_changes_output(2)),
             self.makeLogExpect(password=None).stdout(make_changes_output(4)),
         )
-        yield s.poll()
+        await s.poll()
 
-    @defer.inlineCallbacks
-    def test_poll_interpolated_password(self):
-        s = yield self.attachSVNPoller(
+    async def test_poll_interpolated_password(self):
+        s = await self.attachSVNPoller(
             sample_base, split_file=split_file, svnuser='dustin', svnpasswd=Interpolate('pa$$')
         )
 
@@ -599,49 +584,45 @@ class TestSVNPoller(
             self.makeLogExpect(password='pa$$').stdout(make_changes_output(2)),
             self.makeLogExpect(password='pa$$').stdout(make_changes_output(4)),
         )
-        yield s.poll()
+        await s.poll()
 
-    @defer.inlineCallbacks
-    def test_poll_get_prefix_exception(self):
-        s = yield self.attachSVNPoller(
+    async def test_poll_get_prefix_exception(self):
+        s = await self.attachSVNPoller(
             sample_base, split_file=split_file, svnuser='dustin', svnpasswd='bbrocks'
         )
 
         self.expect_commands(self.makeInfoExpect().stderr(b"error"))
-        yield s.poll()
+        await s.poll()
 
         # should have logged the RuntimeError, but not errback'd from poll
         self.assertEqual(len(self.flushLoggedErrors(EnvironmentError)), 1)
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_get_logs_exception(self):
-        s = yield self.attachSVNPoller(
+    async def test_poll_get_logs_exception(self):
+        s = await self.attachSVNPoller(
             sample_base, split_file=split_file, svnuser='dustin', svnpasswd='bbrocks'
         )
         s._prefix = "abc"  # skip the get_prefix stuff
 
         self.expect_commands(self.makeLogExpect().stderr(b"some error"))
-        yield s.poll()
+        await s.poll()
 
         # should have logged the RuntimeError, but not errback'd from poll
         self.assertEqual(len(self.flushLoggedErrors(EnvironmentError)), 1)
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_cachepath_empty(self):
+    async def test_cachepath_empty(self):
         cachepath = os.path.abspath('revcache')
         if os.path.exists(cachepath):
             os.unlink(cachepath)
-        s = yield self.attachSVNPoller(sample_base, cachepath=cachepath)
+        s = await self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, None)
 
-    @defer.inlineCallbacks
-    def test_cachepath_full(self):
+    async def test_cachepath_full(self):
         cachepath = os.path.abspath('revcache')
         with open(cachepath, "w", encoding='utf-8') as f:
             f.write('33')
-        s = yield self.attachSVNPoller(sample_base, cachepath=cachepath)
+        s = await self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, 33)
 
         s.last_change = 44
@@ -649,12 +630,11 @@ class TestSVNPoller(
         with open(cachepath, encoding='utf-8') as f:
             self.assertEqual(f.read().strip(), '44')
 
-    @defer.inlineCallbacks
-    def test_cachepath_bogus(self):
+    async def test_cachepath_bogus(self):
         cachepath = os.path.abspath('revcache')
         with open(cachepath, "w", encoding='utf-8') as f:
             f.write('nine')
-        s = yield self.attachSVNPoller(sample_base, cachepath=cachepath)
+        s = await self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, None)
         self.assertEqual(s.cachepath, None)
         # it should have called log.err once with a ValueError
@@ -663,21 +643,19 @@ class TestSVNPoller(
     def test_constructor_pollInterval(self):
         return self.attachSVNPoller(sample_base, pollInterval=100)  # just don't fail!
 
-    @defer.inlineCallbacks
-    def test_extra_args(self):
+    async def test_extra_args(self):
         extra_args = [
             '--no-auth-cache',
         ]
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
 
-        s = yield self.attachSVNPoller(repourl=base, extra_args=extra_args)
+        s = await self.attachSVNPoller(repourl=base, extra_args=extra_args)
         self.assertEqual(s.extra_args, extra_args)
 
-    @defer.inlineCallbacks
-    def test_use_svnurl(self):
+    async def test_use_svnurl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
         with self.assertRaises(TypeError):
-            yield self.attachSVNPoller(svnurl=base)
+            await self.attachSVNPoller(svnurl=base)
 
 
 class TestSplitFile(unittest.TestCase):
