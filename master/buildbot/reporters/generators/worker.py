@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import config
@@ -42,12 +41,11 @@ class WorkerMissingGenerator(util.ComparableMixin):
         if not (self.workers == 'all' or isinstance(self.workers, (list, tuple, set))):
             config.error("workers must be 'all', or list of worker names")
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, worker):
+    async def generate(self, master, reporter, key, worker):
         if not self._is_message_needed(worker):
             return None
 
-        msg = yield self.formatter.formatMessageForMissingWorker(master, worker)
+        msg = await self.formatter.formatMessageForMissingWorker(master, worker)
         body = msg['body'].encode(ENCODING)
         subject = msg['subject']
         if subject is None:
