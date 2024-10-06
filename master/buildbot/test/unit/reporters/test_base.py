@@ -44,19 +44,17 @@ class TestReporterBase(
         self.setUpLogging()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-    @defer.inlineCallbacks
-    def setupNotifier(self, generators):
+    async def setupNotifier(self, generators):
         mn = ReporterBase(generators=generators)
         mn.sendMessage = mock.Mock(spec=mn.sendMessage)
         mn.sendMessage.return_value = "<message>"
-        yield mn.setServiceParent(self.master)
-        yield mn.startService()
+        await mn.setServiceParent(self.master)
+        await mn.startService()
         return mn
 
-    @defer.inlineCallbacks
-    def setup_build_message(self, **kwargs):
-        build = yield self.insert_build_finished(FAILURE)
-        buildset = yield self.get_inserted_buildset()
+    async def setup_build_message(self, **kwargs):
+        build = await self.insert_build_finished(FAILURE)
+        buildset = await self.get_inserted_buildset()
 
         formatter = mock.Mock(spec=MessageFormatter)
         formatter.format_message_for_build.return_value = {
@@ -71,9 +69,9 @@ class TestReporterBase(
         formatter.want_logs_content = False
         generator = BuildStatusGenerator(message_formatter=formatter, **kwargs)
 
-        mn = yield self.setupNotifier(generators=[generator])
+        mn = await self.setupNotifier(generators=[generator])
 
-        yield mn._got_event(('builds', 20, 'finished'), build)
+        await mn._got_event(('builds', 20, 'finished'), build)
         return (mn, build, buildset, formatter)
 
     def setup_mock_generator(self, events_filter):
@@ -86,9 +84,8 @@ class TestReporterBase(
         with self.assertRaisesConfigError('generators argument must be a list'):
             ReporterBase(generators='abc')
 
-    @defer.inlineCallbacks
-    def test_buildMessage_nominal(self):
-        mn, build, buildset, formatter = yield self.setup_build_message(mode=("failing",))
+    async def test_buildMessage_nominal(self):
+        mn, build, buildset, formatter = await self.setup_build_message(mode=("failing",))
 
         formatter.format_message_for_build.assert_called_with(
             self.master, build, is_buildset=False, mode=('failing',), users=['me@foo']
@@ -110,10 +107,9 @@ class TestReporterBase(
         self.assertEqual(mn.sendMessage.call_count, 1)
         mn.sendMessage.assert_called_with([report])
 
-    @defer.inlineCallbacks
-    def test_worker_missing_sends_message(self):
+    async def test_worker_missing_sends_message(self):
         generator = WorkerMissingGenerator(workers=['myworker'])
-        mn = yield self.setupNotifier(generators=[generator])
+        mn = await self.setupNotifier(generators=[generator])
 
         worker_dict = {
             'name': 'myworker',
@@ -121,80 +117,72 @@ class TestReporterBase(
             'workerinfo': {"admin": "myadmin"},
             'last_connection': "yesterday",
         }
-        yield mn._got_event(('workers', 98, 'missing'), worker_dict)
+        await mn._got_event(('workers', 98, 'missing'), worker_dict)
 
         self.assertEqual(mn.sendMessage.call_count, 1)
 
-    @defer.inlineCallbacks
-    def test_generators_subscribes_events(self):
+    async def test_generators_subscribes_events(self):
         gen1 = self.setup_mock_generator([('fake1', None, None)])
 
-        yield self.setupNotifier(generators=[gen1])
+        await self.setupNotifier(generators=[gen1])
         self.assertEqual(len(self.master.mq.qrefs), 1)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
 
-    @defer.inlineCallbacks
-    def test_generators_subscribes_equal_events_once(self):
+    async def test_generators_subscribes_equal_events_once(self):
         gen1 = self.setup_mock_generator([('fake1', None, None)])
         gen2 = self.setup_mock_generator([('fake1', None, None)])
 
-        yield self.setupNotifier(generators=[gen1, gen2])
+        await self.setupNotifier(generators=[gen1, gen2])
         self.assertEqual(len(self.master.mq.qrefs), 1)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
 
-    @defer.inlineCallbacks
-    def test_generators_subscribes_equal_different_events_once(self):
+    async def test_generators_subscribes_equal_different_events_once(self):
         gen1 = self.setup_mock_generator([('fake1', None, None)])
         gen2 = self.setup_mock_generator([('fake2', None, None)])
 
-        yield self.setupNotifier(generators=[gen1, gen2])
+        await self.setupNotifier(generators=[gen1, gen2])
         self.assertEqual(len(self.master.mq.qrefs), 2)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
         self.assertEqual(self.master.mq.qrefs[1].filter, ('fake2', None, None))
 
-    @defer.inlineCallbacks
-    def test_generators_unsubscribes_on_stop_service(self):
+    async def test_generators_unsubscribes_on_stop_service(self):
         gen1 = self.setup_mock_generator([('fake1', None, None)])
 
-        notifier = yield self.setupNotifier(generators=[gen1])
-        yield notifier.stopService()
+        notifier = await self.setupNotifier(generators=[gen1])
+        await notifier.stopService()
         self.assertEqual(len(self.master.mq.qrefs), 0)
 
-    @defer.inlineCallbacks
-    def test_generators_resubscribes_on_reconfig(self):
+    async def test_generators_resubscribes_on_reconfig(self):
         gen1 = self.setup_mock_generator([('fake1', None, None)])
         gen2 = self.setup_mock_generator([('fake2', None, None)])
 
-        notifier = yield self.setupNotifier(generators=[gen1])
+        notifier = await self.setupNotifier(generators=[gen1])
         self.assertEqual(len(self.master.mq.qrefs), 1)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake1', None, None))
 
-        yield notifier.reconfigService(generators=[gen2])
+        await notifier.reconfigService(generators=[gen2])
         self.assertEqual(len(self.master.mq.qrefs), 1)
         self.assertEqual(self.master.mq.qrefs[0].filter, ('fake2', None, None))
 
-    @defer.inlineCallbacks
-    def test_generator_throw_exception_on_generate(self):
+    async def test_generator_throw_exception_on_generate(self):
         gen = self.setup_mock_generator([('fake1', None, None)])
 
-        @defer.inlineCallbacks
-        def generate_throw(*args, **kwargs):
+        async def generate_throw(*args, **kwargs):
             raise TestException()
 
         gen.generate = generate_throw
 
-        notifier = yield self.setupNotifier(generators=[gen])
+        notifier = await self.setupNotifier(generators=[gen])
 
-        yield notifier._got_event(('fake1', None, None), None)
+        await notifier._got_event(('fake1', None, None), None)
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
         self.assertLogged('Got exception when handling reporter events')
 
-    @defer.inlineCallbacks
-    def test_reports_sent_in_order_despite_slow_generator(self):
+    async def test_reports_sent_in_order_despite_slow_generator(self):
         gen = self.setup_mock_generator([('builds', None, None)])
 
-        notifier = yield self.setupNotifier(generators=[gen])
+        notifier = await self.setupNotifier(generators=[gen])
 
         # Handle an event when generate is slow
         gen.generate = slow_generate = mock.Mock(return_value=defer.Deferred())
@@ -215,12 +203,11 @@ class TestReporterBase(
         # Now sendMessage should have been called two times
         self.assertEqual(notifier.sendMessage.call_args_list, [mock.call([1]), mock.call([2])])
 
-    @defer.inlineCallbacks
-    def test_reports_sent_in_order_despite_multiple_slow_generators(self):
+    async def test_reports_sent_in_order_despite_multiple_slow_generators(self):
         gen = self.setup_mock_generator([('buildrequests', None, None)])
         gen2 = self.setup_mock_generator([('builds', None, None)])
 
-        notifier = yield self.setupNotifier(generators=[gen, gen2])
+        notifier = await self.setupNotifier(generators=[gen, gen2])
 
         # This makes it possible to mock generate calls in arbitrary order
         mock_generate_calls = {
@@ -258,11 +245,10 @@ class TestReporterBase(
             notifier.sendMessage.call_args_list, [mock.call([1]), mock.call([2]), mock.call([3])]
         )
 
-    @defer.inlineCallbacks
-    def test_reports_sent_in_order_and_asap_for_multiple_builds(self):
+    async def test_reports_sent_in_order_and_asap_for_multiple_builds(self):
         gen = self.setup_mock_generator([('builds', None, None)])
 
-        notifier = yield self.setupNotifier(generators=[gen])
+        notifier = await self.setupNotifier(generators=[gen])
 
         # This makes it possible to mock generate calls in arbitrary order
         mock_generate_calls = {
