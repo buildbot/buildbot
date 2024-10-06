@@ -59,11 +59,12 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         return sched
 
-    @defer.inlineCallbacks
-    def assertTriggeredBuildset(self, idsDeferred, waited_for, properties=None, sourcestamps=None):
+    async def assertTriggeredBuildset(
+        self, idsDeferred, waited_for, properties=None, sourcestamps=None
+    ):
         if properties is None:
             properties = {}
-        bsid, brids = yield idsDeferred
+        bsid, brids = await idsDeferred
         properties.update({'scheduler': ('n', 'Scheduler')})
 
         self.assertEqual(
@@ -71,7 +72,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             properties,
         )
 
-        buildset = yield self.master.db.buildsets.getBuildset(bsid)
+        buildset = await self.master.db.buildsets.getBuildset(bsid)
 
         from datetime import datetime
 
@@ -90,7 +91,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ),
         )
 
-        actual_sourcestamps = yield defer.gatherResults([
+        actual_sourcestamps = await defer.gatherResults([
             self.master.db.sourcestamps.getSourceStamp(ssid) for ssid in buildset.sourcestamps
         ])
 
@@ -101,7 +102,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             self.assertEqual(expected_ss, {k: getattr(actual_ss, k) for k in expected_ss.keys()})
 
         for brid in brids.values():
-            buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
+            buildrequest = await self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,
                 BuildRequestModel(
@@ -334,8 +335,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         # subscription should be cancelled
         self.assertEqual(sched.master.mq.qrefs, [])
 
-    @defer.inlineCallbacks
-    def test_trigger_with_sourcestamp(self):
+    async def test_trigger_with_sourcestamp(self):
         # Test triggering a scheduler with a sourcestamp, and see that
         # sourcestamp handed to addBuildsetForSourceStampsWithDefaults.
         sched = self.makeScheduler(overrideBuildsetMethods=True)
@@ -349,7 +349,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             'project': 'p',
         }
         idsDeferred = sched.trigger(waited_for, sourcestamps=[ss])[0]
-        yield idsDeferred
+        await idsDeferred
 
         self.assertEqual(
             self.addBuildsetCalls,
@@ -376,14 +376,13 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_trigger_without_sourcestamps(self):
+    async def test_trigger_without_sourcestamps(self):
         # Test triggering *without* sourcestamps, and see that nothing is passed
         # to addBuildsetForSourceStampsWithDefaults
         waited_for = True
         sched = self.makeScheduler(overrideBuildsetMethods=True)
         idsDeferred = sched.trigger(waited_for, sourcestamps=[])[0]
-        yield idsDeferred
+        await idsDeferred
 
         self.assertEqual(
             self.addBuildsetCalls,
@@ -402,8 +401,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_trigger_with_reason(self):
+    async def test_trigger_with_reason(self):
         # Test triggering with a reason, and make sure the buildset's reason is updated accordingly
         # (and not the default)
         waited_for = True
@@ -411,7 +409,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         set_props = properties.Properties()
         set_props.setProperty('reason', 'test1', 'test')
         idsDeferred, _ = sched.trigger(waited_for, sourcestamps=[], set_props=set_props)
-        yield idsDeferred
+        await idsDeferred
 
         self.assertEqual(
             self.addBuildsetCalls,
@@ -433,8 +431,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_startService_stopService(self):
+    async def test_startService_stopService(self):
         sched = self.makeScheduler()
-        yield sched.startService()
-        yield sched.stopService()
+        await sched.startService()
+        await sched.stopService()

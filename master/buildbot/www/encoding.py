@@ -52,7 +52,7 @@ class _EncoderFactoryBase:
         if self.check_regex.search(acceptHeaders):
             encoding = request.responseHeaders.getRawHeaders(b"content-encoding")
             if encoding:
-                encoding = b",".join(encoding + [self.encoding_type])
+                encoding = b",".join([*encoding, self.encoding_type])
             else:
                 encoding = self.encoding_type
 

@@ -19,13 +19,9 @@ from unittest import mock
 import setuptools  # force import setuptools before any other distutils imports
 
 from buildbot import monkeypatches
-from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-position
-    assertProducesWarning,
-)
-from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-position
-    assertProducesWarnings,
-)
-from buildbot.warnings import DeprecatedApiWarning  # noqa pylint: disable=wrong-import-position
+from buildbot.test.util.warnings import assertProducesWarning  # noqa: F401
+from buildbot.test.util.warnings import assertProducesWarnings  # noqa: F401
+from buildbot.warnings import DeprecatedApiWarning  # noqa: F401
 
 _ = mock
 
@@ -45,7 +41,7 @@ _ = setuptools  # force use for pylint
 #                             messages_patterns=[
 #                                 r" buildbot\.status\.base has been deprecated",
 #                             ]):
-#     import buildbot.status.base as _  # noqa
+#     import buildbot.status.base as _
 
 # All deprecated modules should be loaded, consider future warnings in tests as errors.
 # In order to not pollute the test outputs,

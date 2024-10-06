@@ -105,7 +105,7 @@ class ResourceType:
             msg = self.sanitizeMessage(msg)
             for path in self.eventPaths:
                 path = path.format(**msg)
-                routingKey = tuple(path.split("/")) + (event,)
+                routingKey = (*tuple(path.split("/")), event)
                 self.master.mq.produce(routingKey, msg)
 
 
@@ -376,13 +376,11 @@ class BuildNestingMixin:
     A mixin for methods to decipher the many ways a various entities can be specified.
     """
 
-    @defer.inlineCallbacks
-    def getBuildid(self, kwargs):
+    async def getBuildid(self, kwargs):
         retriever = NestedBuildDataRetriever(self.master, kwargs)
         return (yield retriever.get_build_id())
 
-    @defer.inlineCallbacks
-    def getBuilderId(self, kwargs):
+    async def getBuilderId(self, kwargs):
         retriever = NestedBuildDataRetriever(self.master, kwargs)
         return (yield retriever.get_builder_id())
 
@@ -411,8 +409,8 @@ class ListResult(UserList):
 
     def __repr__(self):
         return (
-            f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
-            f"total={repr(self.total)}, limit={repr(self.limit)})"
+            f"ListResult({self.data!r}, offset={self.offset!r}, "
+            f"total={self.total!r}, limit={self.limit!r})"
         )
 
     def __eq__(self, other):

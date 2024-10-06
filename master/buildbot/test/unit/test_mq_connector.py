@@ -40,13 +40,12 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 
 class MQConnector(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
-        yield self.conn.setServiceParent(self.master)
+        await self.conn.setServiceParent(self.master)
 
     def patchFakeMQ(self, name='fake'):
         self.patch(
@@ -57,41 +56,37 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_setup_unknown_type(self):
+    async def test_setup_unknown_type(self):
         self.mqconfig['type'] = 'unknown'
         with self.assertRaises(AssertionError):
-            yield self.conn.setup()
+            await self.conn.setup()
 
-    @defer.inlineCallbacks
-    def test_setup_simple_type(self):
+    async def test_setup_simple_type(self):
         self.patchFakeMQ(name='simple')
         self.mqconfig['type'] = 'simple'
-        yield self.conn.setup()
+        await self.conn.setup()
         self.assertIsInstance(self.conn.impl, FakeMQ)
         self.assertEqual(self.conn.impl.produce, self.conn.produce)
         self.assertEqual(self.conn.impl.startConsuming, self.conn.startConsuming)
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceWithBuildbotConfig(self):
+    async def test_reconfigServiceWithBuildbotConfig(self):
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
         new_config = mock.Mock()
         new_config.mq = {"type": 'fake'}
-        yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
+        await self.conn.reconfigServiceWithBuildbotConfig(new_config)
 
         self.assertIdentical(self.conn.impl.new_config, new_config)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_change_type(self):
+    async def test_reconfigService_change_type(self):
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
-        yield self.conn.setup()
+        await self.conn.setup()
         new_config = mock.Mock()
         new_config.mq = {"type": 'other'}
         try:
-            yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
+            await self.conn.reconfigServiceWithBuildbotConfig(new_config)
         except AssertionError:
             pass  # expected
         else:

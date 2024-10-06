@@ -77,8 +77,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         if pollRandomDelayMax >= pollInterval:
             config.error(f"max random delay must be < {pollInterval}: {pollRandomDelayMax}")
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         name=None,
         pollInterval=60 * 10,
@@ -91,14 +90,14 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         self.pollAtLaunch = pollAtLaunch
         self.pollRandomDelayMin = pollRandomDelayMin
         self.pollRandomDelayMax = pollRandomDelayMax
-        yield super().reconfigService(name=name)
+        await super().reconfigService(name=name)
 
         # pollInterval change is the only value which makes sense to reconfigure check.
         if prevPollInterval != pollInterval and self.doPoll.running:
-            yield self.doPoll.stop()
+            await self.doPoll.stop()
             # As a implementation detail, poller will 'pollAtReconfigure' if poll interval changes
             # and pollAtLaunch=True
-            yield self.doPoll.start(
+            await self.doPoll.start(
                 interval=self.pollInterval,
                 now=self.pollAtLaunch,
                 random_delay_min=self.pollRandomDelayMin,

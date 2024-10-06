@@ -16,7 +16,6 @@
 import os
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial.unittest import SkipTest
 
 from buildbot.config import BuilderConfig
@@ -32,8 +31,7 @@ class DownloadSecretsBase(RunMasterBase):
         self.temp_dir = os.path.abspath(self.mktemp())
         os.mkdir(self.temp_dir)
 
-    @defer.inlineCallbacks
-    def setup_config(self, path, data, remove=False):
+    async def setup_config(self, path, data, remove=False):
         c = {}
 
         c['schedulers'] = [ForceScheduler(name="force", builderNames=["testy"])]
@@ -45,7 +43,7 @@ class DownloadSecretsBase(RunMasterBase):
 
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
     def get_homedir(self):
         path = os.path.expanduser('~')
@@ -59,8 +57,7 @@ class DownloadSecretsBase(RunMasterBase):
         ('simple_remove', False, True),
         ('relative_to_home_remove', True, True),
     ])
-    @defer.inlineCallbacks
-    def test_transfer_secrets(self, name, relative_to_home, remove):
+    async def test_transfer_secrets(self, name, relative_to_home, remove):
         bb_path = self.temp_dir
         if relative_to_home:
             homedir = self.get_homedir()
@@ -76,9 +73,9 @@ class DownloadSecretsBase(RunMasterBase):
         path = os.path.join(bb_path, 'secret_path')
         data = 'some data'
 
-        yield self.setup_config(path, data, remove=remove)
+        await self.setup_config(path, data, remove=remove)
 
-        yield self.doForceBuild()
+        await self.doForceBuild()
 
         if remove:
             self.assertFalse(os.path.exists(path))

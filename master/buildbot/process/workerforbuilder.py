@@ -86,8 +86,7 @@ class AbstractWorkerForBuilder:
         if self.worker:
             self.worker.buildFinished(self)
 
-    @defer.inlineCallbacks
-    def attached(self, worker, commands):
+    async def attached(self, worker, commands):
         """
         @type  worker: L{buildbot.worker.Worker}
         @param worker: the Worker that represents the worker as a whole
@@ -102,7 +101,7 @@ class AbstractWorkerForBuilder:
             assert self.worker == worker
         log.msg(f"Worker {worker.workername} attached to {self.builder_name}")
 
-        yield self.worker.conn.remotePrint(message="attached")
+        await self.worker.conn.remotePrint(message="attached")
 
     def substantiate_if_needed(self, build):
         return defer.succeed(True)
@@ -182,9 +181,8 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
         super().__init__(builder)
         self.state = States.DETACHED
 
-    @defer.inlineCallbacks
-    def attached(self, worker, commands):
-        yield super().attached(worker, commands)
+    async def attached(self, worker, commands):
+        await super().attached(worker, commands)
 
         # Only set available on non-latent workers, since latent workers
         # only attach while a build is in progress.

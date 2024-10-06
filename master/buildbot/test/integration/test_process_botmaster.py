@@ -44,8 +44,7 @@ if TYPE_CHECKING:
 
 
 class Tests(RunFakeMasterTestCase):
-    @defer.inlineCallbacks
-    def do_terminates_ping_on_shutdown(self, quick_mode):
+    async def do_terminates_ping_on_shutdown(self, quick_mode):
         """
         During shutdown we want to terminate any outstanding pings.
         """
@@ -59,17 +58,17 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
-        builder_id = yield self.master.data.updates.findBuilderId('testy')
+        await self.setup_master(config_dict)
+        builder_id = await self.master.data.updates.findBuilderId('testy')
 
-        yield controller.connect_worker()
+        await controller.connect_worker()
         controller.sever_connection()
-        yield self.create_build_request([builder_id])
+        await self.create_build_request([builder_id])
 
         # give time for any delayed actions to complete
         self.reactor.advance(1)
 
-        yield self.master.botmaster.cleanShutdown(quickMode=quick_mode, stopReactor=False)
+        await self.master.botmaster.cleanShutdown(quickMode=quick_mode, stopReactor=False)
         self.flushLoggedErrors(PingException)
 
     def test_terminates_ping_on_shutdown_quick_mode(self):

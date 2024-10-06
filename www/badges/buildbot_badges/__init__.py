@@ -19,7 +19,6 @@ import cairocffi as cairo
 import cairosvg
 import jinja2
 from klein import Klein
-from twisted.internet import defer
 
 from buildbot.process.results import Results
 from buildbot.util import bytes2unicode
@@ -75,21 +74,19 @@ class Api:
         return config
 
     @app.route("/<string:builder>.png", methods=['GET'])
-    @defer.inlineCallbacks
-    def getPng(self, request, builder):
-        svg = yield self.getSvg(request, builder)
+    async def getPng(self, request, builder):
+        svg = await self.getSvg(request, builder)
         request.setHeader('content-type', 'image/png')
         return cairosvg.svg2png(svg)
 
     @app.route("/<string:builder>.svg", methods=['GET'])
-    @defer.inlineCallbacks
-    def getSvg(self, request, builder):
+    async def getSvg(self, request, builder):
         config = self.makeConfiguration(request)
         request.setHeader('content-type', 'image/svg+xml')
         request.setHeader('cache-control', 'no-cache')
 
         # get the last build for that builder using the data api
-        last_build = yield self.ep.master.data.get(
+        last_build = await self.ep.master.data.get(
             ("builders", builder, "builds"), limit=1, order=['-number']
         )
 

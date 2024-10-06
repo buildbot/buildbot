@@ -16,7 +16,6 @@
 import hashlib
 from urllib.parse import urlparse
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -63,8 +62,7 @@ class BitbucketStatusPush(ReporterBase):
 
         super().checkConfig(generators=generators, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         oauth_key=None,
         oauth_secret=None,
@@ -78,8 +76,8 @@ class BitbucketStatusPush(ReporterBase):
         generators=None,
         **kwargs,
     ):
-        oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
-        self.auth = yield self.renderSecrets(auth)
+        oauth_key, oauth_secret = await self.renderSecrets(oauth_key, oauth_secret)
+        self.auth = await self.renderSecrets(auth)
         self.base_url = base_url
         self.debug = debug
         self.verify = verify
@@ -89,17 +87,17 @@ class BitbucketStatusPush(ReporterBase):
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators, **kwargs)
+        await super().reconfigService(generators=generators, **kwargs)
 
         base_url = base_url.rstrip('/')
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, base_url, debug=self.debug, verify=self.verify, auth=self.auth
         )
 
         self.oauthhttp = None
         if self.auth is None:
-            self.oauthhttp = yield httpclientservice.HTTPSession(
+            self.oauthhttp = await httpclientservice.HTTPSession(
                 self.master.httpservice,
                 oauth_url,
                 auth=(oauth_key, oauth_secret),
@@ -115,13 +113,12 @@ class BitbucketStatusPush(ReporterBase):
             )
         ]
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         # Only use OAuth if basic auth has not been specified
         if not self.auth:
-            request = yield self.oauthhttp.post("", data=_GET_TOKEN_DATA)
+            request = await self.oauthhttp.post("", data=_GET_TOKEN_DATA)
             if request.code != 200:
-                content = yield request.content()
+                content = await request.content()
                 log.msg(f"{request.code}: unable to authenticate to Bitbucket {content}")
                 return
             token = (yield request.json())['access_token']
@@ -141,7 +138,7 @@ class BitbucketStatusPush(ReporterBase):
             sha_obj.update(key.encode('utf-8'))
             return sha_obj.hexdigest()
 
-        status_key = yield props.render(self.status_key)
+        status_key = await props.render(self.status_key)
 
         body = {
             'state': status,
@@ -163,9 +160,9 @@ class BitbucketStatusPush(ReporterBase):
             if self.debug:
                 log.msg(f"Bitbucket status {bitbucket_uri} {body}")
 
-            response = yield self._http.post(bitbucket_uri, json=body)
+            response = await self._http.post(bitbucket_uri, json=body)
             if response.code not in (200, 201):
-                content = yield response.content()
+                content = await response.content()
                 log.msg(f"{response.code}: unable to upload Bitbucket status {content}")
 
     def get_owner_and_repo(self, repourl):

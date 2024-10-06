@@ -114,11 +114,10 @@ class Connection(base.Connection):
 
     # methods called by the BuildbotWebSocketServerProtocol
 
-    @defer.inlineCallbacks
-    def attached(self, protocol):
+    async def attached(self, protocol):
         self.startKeepaliveTimer()
         self.notifyOnDisconnect(self._stop_keepalive_timer)
-        yield self.worker.attached(self)
+        await self.worker.attached(self)
 
     def detached(self, protocol):
         self.stopKeepaliveTimer()
@@ -126,10 +125,10 @@ class Connection(base.Connection):
         self.notifyDisconnected()
 
     # disconnection handling
-    @defer.inlineCallbacks
-    def _stop_keepalive_timer(self):
+
+    async def _stop_keepalive_timer(self):
         self.stopKeepaliveTimer()
-        yield self._keepalive_waiter.wait()
+        await self._keepalive_waiter.wait()
 
     def loseConnection(self):
         self.stopKeepaliveTimer()
@@ -155,9 +154,8 @@ class Connection(base.Connection):
     def remotePrint(self, message):
         return self.protocol.get_message_result({'op': 'print', 'message': message})
 
-    @defer.inlineCallbacks
-    def remoteGetWorkerInfo(self):
-        info = yield self.protocol.get_message_result({'op': 'get_worker_info'})
+    async def remoteGetWorkerInfo(self):
+        info = await self.protocol.get_message_result({'op': 'get_worker_info'})
         self.info = decode(info)
 
         worker_system = self.info.get("system", None)
@@ -192,9 +190,8 @@ class Connection(base.Connection):
         self.protocol.command_id_to_command_map[command_id] = command
         return (command, command_id)
 
-    @defer.inlineCallbacks
-    def remoteSetBuilderList(self, builders):
-        yield self._set_worker_settings()
+    async def remoteSetBuilderList(self, builders):
+        await self._set_worker_settings()
 
         basedir = self.info['basedir']
         builder_names = [name for name, _ in builders]
@@ -211,7 +208,7 @@ class Connection(base.Connection):
             'Worker could not send a list of builder directories.',
         )
 
-        yield self.protocol.get_message_result({
+        await self.protocol.get_message_result({
             'op': 'start_command',
             'command_id': command_id,
             'command_name': 'listdir',
@@ -219,7 +216,7 @@ class Connection(base.Connection):
         })
 
         # wait until command is over to get the update request message with args['files']
-        yield command.wait_until_complete()
+        await command.wait_until_complete()
         files = command.update_results['files']
 
         paths_to_rmdir = []
@@ -239,13 +236,13 @@ class Connection(base.Connection):
                         ['stat'],
                         "Worker could not send status " + "information about its files.",
                     )
-                    yield self.protocol.get_message_result({
+                    await self.protocol.get_message_result({
                         'op': 'start_command',
                         'command_id': command_id,
                         'command_name': 'stat',
                         'args': {'path': path},
                     })
-                    yield command.wait_until_complete()
+                    await command.wait_until_complete()
                     mode = command.update_results['stat'][0]
                     if stat.S_ISDIR(mode):
                         paths_to_rmdir.append(path)
@@ -260,13 +257,13 @@ class Connection(base.Connection):
             command, command_id = self.create_remote_command(
                 self.worker.workername, [], "Worker could not remove directories."
             )
-            yield self.protocol.get_message_result({
+            await self.protocol.get_message_result({
                 'op': 'start_command',
                 'command_id': command_id,
                 'command_name': 'rmdir',
                 'args': {'paths': paths_to_rmdir},
             })
-            yield command.wait_until_complete()
+            await command.wait_until_complete()
 
         paths_to_mkdir = [
             self.path_module.join(basedir, dir) for dir in sorted(list(dirs_to_mkdir))
@@ -276,19 +273,18 @@ class Connection(base.Connection):
             command, command_id = self.create_remote_command(
                 self.worker.workername, [], "Worker could not make directories."
             )
-            yield self.protocol.get_message_result({
+            await self.protocol.get_message_result({
                 'op': 'start_command',
                 'command_id': command_id,
                 'command_name': 'mkdir',
                 'args': {'paths': paths_to_mkdir},
             })
-            yield command.wait_until_complete()
+            await command.wait_until_complete()
 
         self.builders = builder_names
         return builder_names
 
-    @defer.inlineCallbacks
-    def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
+    async def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         if commandName == "mkdir":
             if isinstance(args['dir'], list):
                 args['paths'] = [
@@ -389,7 +385,7 @@ class Connection(base.Connection):
         if 'writer' in args:
             self.protocol.command_id_to_writer_map[commandId] = args['writer']
             del args['writer']
-        yield self.protocol.get_message_result({
+        await self.protocol.get_message_result({
             'op': 'start_command',
             'builder_name': builderName,
             'command_id': commandId,
@@ -397,16 +393,14 @@ class Connection(base.Connection):
             'args': args,
         })
 
-    @defer.inlineCallbacks
-    def remoteShutdown(self):
-        yield self.protocol.get_message_result({'op': 'shutdown'})
+    async def remoteShutdown(self):
+        await self.protocol.get_message_result({'op': 'shutdown'})
 
     def remoteStartBuild(self, builderName):
         pass
 
-    @defer.inlineCallbacks
-    def remoteInterruptCommand(self, builderName, commandId, why):
-        yield self.protocol.get_message_result({
+    async def remoteInterruptCommand(self, builderName, commandId, why):
+        await self.protocol.get_message_result({
             'op': 'interrupt_command',
             'builder_name': builderName,
             'command_id': commandId,

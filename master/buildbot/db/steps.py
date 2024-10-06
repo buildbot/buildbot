@@ -88,8 +88,7 @@ class StepModel:
 class StepsConnectorComponent(base.DBConnectorComponent):
     url_lock: defer.DeferredLock | None = None
 
-    @defer.inlineCallbacks
-    def getStep(
+    async def getStep(
         self,
         stepid: int | None = None,
         buildid: int | None = None,

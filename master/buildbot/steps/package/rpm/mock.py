@@ -17,8 +17,6 @@
 
 import re
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -71,8 +69,7 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
         if self.resultdir:
             self.command += ['--resultdir', self.resultdir]
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # Try to remove the old mock logs first.
         if self.resultdir:
             for lname in self.mock_logfiles:
@@ -82,12 +79,12 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        yield self.runRmdir([
+        await self.runRmdir([
             self.build.path_module.join('build', self.logfiles[l]) for l in self.mock_logfiles
         ])
 
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
         return cmd.results()
 

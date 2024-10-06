@@ -17,8 +17,6 @@
 
 import os
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -76,8 +74,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
 
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         rpm_extras_dict = {}
         rpm_extras_dict['dist'] = self.dist
 
@@ -107,16 +104,16 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
 
         command = f'{self.rpmbuild} -ba {self.specfile}'
 
-        cmd = yield self.makeRemoteShellCommand(command=command)
+        cmd = await self.makeRemoteShellCommand(command=command)
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
-        yield self.addCompleteLog('RPM Command Log', "\n".join(self.rpmcmdlog))
+        await self.addCompleteLog('RPM Command Log', "\n".join(self.rpmcmdlog))
         if self.rpmerrors:
-            yield self.addCompleteLog('RPM Errors', "\n".join(self.rpmerrors))
+            await self.addCompleteLog('RPM Errors', "\n".join(self.rpmerrors))
 
         return cmd.results()
 

@@ -72,10 +72,9 @@ class TestUsersClient(unittest.TestCase):
             [host, port, called_with], [self.conn_host, self.conn_port, self.called_with]
         )
 
-    @defer.inlineCallbacks
-    def test_usersclient_info(self):
+    async def test_usersclient_info(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        yield uc.send(
+        await uc.send(
             'update', 'bb_user', 'hashed_bb_pass', None, [{'identifier': 'x', 'svn': 'x'}]
         )
 
@@ -91,10 +90,9 @@ class TestUsersClient(unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_usersclient_ids(self):
+    async def test_usersclient_ids(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        yield uc.send('remove', None, None, ['x'], None)
+        await uc.send('remove', None, None, ['x'], None)
 
         self.assertProcess(
             'localhost',

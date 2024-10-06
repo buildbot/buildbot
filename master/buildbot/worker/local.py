@@ -16,8 +16,6 @@
 
 import os
 
-from twisted.internet import defer
-
 from buildbot.config import error
 from buildbot.worker.base import Worker
 
@@ -39,10 +37,9 @@ class LocalWorker(Worker):
             )
         self.remote_worker = None
 
-    @defer.inlineCallbacks
-    def reconfigService(self, name, workdir=None, **kwargs):
+    async def reconfigService(self, name, workdir=None, **kwargs):
         kwargs['password'] = None
-        yield super().reconfigService(name, **kwargs)
+        await super().reconfigService(name, **kwargs)
         if workdir is None:
             workdir = name
         workdir = os.path.abspath(os.path.join(self.master.basedir, "workers", workdir))
@@ -54,7 +51,7 @@ class LocalWorker(Worker):
             # we only create at reconfig, to avoid polluting memory in case of
             # reconfig
             self.remote_worker = self.LocalWorkerFactory(name, workdir)
-            yield self.remote_worker.setServiceParent(self)
+            await self.remote_worker.setServiceParent(self)
         else:
             # The case of a reconfig, we forward the parameters
             self.remote_worker.bot.basedir = workdir

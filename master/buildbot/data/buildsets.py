@@ -36,8 +36,7 @@ if TYPE_CHECKING:
 
 
 class Db2DataMixin:
-    @defer.inlineCallbacks
-    def db2data(self, model: BuildSetModel | None):
+    async def db2data(self, model: BuildSetModel | None):
         if not model:
             return None
 
@@ -57,12 +56,11 @@ class Db2DataMixin:
         # gather the actual sourcestamps, in parallel
         sourcestamps = []
 
-        @defer.inlineCallbacks
-        def getSs(ssid):
-            ss = yield self.master.data.get(('sourcestamps', str(ssid)))
+        async def getSs(ssid):
+            ss = await self.master.data.get(('sourcestamps', str(ssid)))
             sourcestamps.append(ss)
 
-        yield defer.DeferredList(
+        await defer.DeferredList(
             [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
         )
 
@@ -89,10 +87,9 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
         /buildsets/n:bsid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
-        res = yield self.db2data(res)
+    async def get(self, resultSpec, kwargs):
+        res = await self.master.db.buildsets.getBuildset(kwargs['bsid'])
+        res = await self.db2data(res)
         return res
 
 
@@ -103,15 +100,14 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     """
     rootLinkName = 'buildsets'
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = self.fieldMapping
-        buildsets = yield self.master.db.buildsets.getBuildsets(
+        buildsets = await self.master.db.buildsets.getBuildsets(
             complete=complete, resultSpec=resultSpec
         )
 
-        buildsets = yield defer.gatherResults(
+        buildsets = await defer.gatherResults(
             [self.db2data(bs) for bs in buildsets], consumeErrors=True
         )
 
@@ -144,8 +140,7 @@ class Buildset(base.ResourceType):
     subresources = ["Property"]
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addBuildset(
+    async def addBuildset(
         self,
         waited_for,
         scheduler=None,
@@ -166,7 +161,7 @@ class Buildset(base.ResourceType):
         if builderids is None:
             builderids = []
         submitted_at = int(self.master.reactor.seconds())
-        bsid, brids = yield self.master.db.buildsets.addBuildset(
+        bsid, brids = await self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps,
             reason=reason,
             rebuilt_buildid=rebuilt_buildid,
@@ -180,10 +175,10 @@ class Buildset(base.ResourceType):
             priority=priority,
         )
 
-        yield BuildRequestCollapser(self.master, list(brids.values())).collapse()
+        await BuildRequestCollapser(self.master, list(brids.values())).collapse()
 
         # get each of the sourcestamps for this buildset (sequentially)
-        bsdict = yield self.master.db.buildsets.getBuildset(bsid)
+        bsdict = await self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = []
         for ssid in bsdict.sourcestamps:
             sourcestamps.append((yield self.master.data.get(('sourcestamps', str(ssid)))).copy())
@@ -214,20 +209,19 @@ class Buildset(base.ResourceType):
         # if there are no builders, then this is done already, so send the
         # appropriate messages for that
         if not builderids:
-            yield self.maybeBuildsetComplete(bsid)
+            await self.maybeBuildsetComplete(bsid)
 
         return (bsid, brids)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid):
-        brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid, complete=False)
+    async def maybeBuildsetComplete(self, bsid):
+        brdicts = await self.master.db.buildrequests.getBuildRequests(bsid=bsid, complete=False)
 
         # if there are incomplete buildrequests, bail out
         if brdicts:
             return
 
-        brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid)
+        brdicts = await self.master.db.buildrequests.getBuildRequests(bsid=bsid)
 
         # figure out the overall results of the buildset:
         cumulative_results = SUCCESS
@@ -235,7 +229,7 @@ class Buildset(base.ResourceType):
             cumulative_results = worst_status(cumulative_results, brdict.results)
 
         # get a copy of the buildset
-        bsdict = yield self.master.db.buildsets.getBuildset(bsid)
+        bsdict = await self.master.db.buildsets.getBuildset(bsid)
 
         # if it's already completed, we're late to the game, and there's
         # nothing to do.
@@ -249,14 +243,14 @@ class Buildset(base.ResourceType):
         # mark it as completed in the database
         complete_at = epoch2datetime(int(self.master.reactor.seconds()))
         try:
-            yield self.master.db.buildsets.completeBuildset(
+            await self.master.db.buildsets.completeBuildset(
                 bsid, cumulative_results, complete_at=complete_at
             )
         except AlreadyCompleteError:
             return
         # get the sourcestamps for the message
         # get each of the sourcestamps for this buildset (sequentially)
-        bsdict = yield self.master.db.buildsets.getBuildset(bsid)
+        bsdict = await self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = []
         for ssid in bsdict.sourcestamps:
             sourcestamps.append(

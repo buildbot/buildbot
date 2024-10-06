@@ -59,11 +59,10 @@ class BuildChooserBase:
         self.breqCache = {}
         self.unclaimedBrdicts = None
 
-    @defer.inlineCallbacks
-    def chooseNextBuild(self):
+    async def chooseNextBuild(self):
         # Return the next build, as a (worker, [breqs]) pair
 
-        worker, breq = yield self.popNextBuild()
+        worker, breq = await self.popNextBuild()
         if not worker or not breq:
             return (None, None)
 
@@ -76,16 +75,15 @@ class BuildChooserBase:
         raise NotImplementedError("Subclasses must implement this!")
 
     # - Helper functions that are generally useful to all subclasses -
-    @defer.inlineCallbacks
-    def _fetchUnclaimedBrdicts(self):
+    async def _fetchUnclaimedBrdicts(self):
         # Sets up a cache of all the unclaimed brdicts. The cache is
         # saved at self.unclaimedBrdicts cache. If the cache already
         # exists, this function does nothing. If a refetch is desired, set
         # the self.unclaimedBrdicts to None before calling."""
         if self.unclaimedBrdicts is None:
             # TODO: use order of the DATA API
-            brdicts = yield self.master.data.get(
-                ('builders', (yield self.bldr.getBuilderId()), 'buildrequests'),
+            brdicts = await self.master.data.get(
+                ('builders', (await self.bldr.getBuilderId()), 'buildrequests'),
                 [resultspec.Filter('claimed', 'eq', [False])],
             )
             # sort by buildrequestid, so the first is the oldest
@@ -93,14 +91,13 @@ class BuildChooserBase:
             self.unclaimedBrdicts = brdicts
         return self.unclaimedBrdicts
 
-    @defer.inlineCallbacks
-    def _getBuildRequestForBrdict(self, brdict: dict):
+    async def _getBuildRequestForBrdict(self, brdict: dict):
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
         breq = self.breqCache.get(brdict['buildrequestid'])
         if not breq:
-            builder = yield self.master.data.get(
+            builder = await self.master.data.get(
                 ('builders', brdict['builderid']), [resultspec.ResultSpec(fields=['name'])]
             )
             if not builder:
@@ -128,7 +125,7 @@ class BuildChooserBase:
             if 'claimed_by_masterid' in brdict:
                 model.claimed_by_masterid = brdict['claimed_by_masterid']
 
-            breq = yield BuildRequest.fromBrdict(self.master, model)
+            breq = await BuildRequest.fromBrdict(self.master, model)
             if breq:
                 self.breqCache[model.buildrequestid] = breq
         return breq
@@ -201,13 +198,12 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextBuild = self.bldr.config.nextBuild
 
-    @defer.inlineCallbacks
-    def popNextBuild(self):
+    async def popNextBuild(self):
         nextBuild = (None, None)
 
         while True:
             #  1. pick a build
-            breq = yield self._getNextUnclaimedBuildRequest()
+            breq = await self._getNextUnclaimedBuildRequest()
             if not breq:
                 break
 
@@ -215,7 +211,7 @@ class BasicBuildChooser(BuildChooserBase):
                 self.workerpool = self.bldr.getAvailableWorkers()
 
             #  2. pick a worker
-            worker = yield self._popNextWorker(breq)
+            worker = await self._popNextWorker(breq)
             if not worker:
                 break
 
@@ -225,12 +221,12 @@ class BasicBuildChooser(BuildChooserBase):
             #  3. make sure worker+ is usable for the breq
             recycledWorkers = []
             while worker:
-                canStart = yield self.canStartBuild(worker, breq)
+                canStart = await self.canStartBuild(worker, breq)
                 if canStart:
                     break
                 # try a different worker
                 recycledWorkers.append(worker)
-                worker = yield self._popNextWorker(breq)
+                worker = await self._popNextWorker(breq)
 
             # recycle the workers that we didn't use to the head of the queue
             # this helps ensure we run 'nextWorker' only once per worker choice
@@ -244,18 +240,17 @@ class BasicBuildChooser(BuildChooserBase):
 
         return nextBuild
 
-    @defer.inlineCallbacks
-    def _getNextUnclaimedBuildRequest(self):
+    async def _getNextUnclaimedBuildRequest(self):
         # ensure the cache is there
-        yield self._fetchUnclaimedBrdicts()
+        await self._fetchUnclaimedBrdicts()
         if not self.unclaimedBrdicts:
             return None
 
         if self.nextBuild:
             # nextBuild expects BuildRequest objects
-            breqs = yield self._getUnclaimedBuildRequests()
+            breqs = await self._getUnclaimedBuildRequests()
             try:
-                nextBreq = yield self.nextBuild(self.bldr, breqs)
+                nextBreq = await self.nextBuild(self.bldr, breqs)
                 if nextBreq not in breqs:
                     nextBreq = None
             except Exception:
@@ -266,12 +261,11 @@ class BasicBuildChooser(BuildChooserBase):
             brdict = sorted(self.unclaimedBrdicts.data, key=lambda b: b['priority'], reverse=True)[
                 0
             ]
-            nextBreq = yield self._getBuildRequestForBrdict(brdict)
+            nextBreq = await self._getBuildRequestForBrdict(brdict)
 
         return nextBreq
 
-    @defer.inlineCallbacks
-    def _popNextWorker(self, buildrequest):
+    async def _popNextWorker(self, buildrequest):
         # use 'preferred' workers first, if we have some ready
         if self.preferredWorkers:
             worker = self.preferredWorkers.pop(0)
@@ -279,7 +273,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         while self.workerpool:
             try:
-                worker = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
+                worker = await self.nextWorker(self.bldr, self.workerpool, buildrequest)
             except Exception:
                 log.err(Failure(), f"from nextWorker for builder '{self.bldr}'")
                 worker = None
@@ -340,19 +334,18 @@ class BuildRequestDistributor(service.AsyncMultiService):
     def can_distribute(self):
         return bool(self.running) or self.distribute_only_waited_childs
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         # Lots of stuff happens asynchronously here, so we need to let it all
         # quiesce.  First, let the parent stopService succeed between
         # activities; then the loop will stop calling itself, since
         # self.running is false.
-        yield self.activity_lock.run(service.AsyncService.stopService, self)
+        await self.activity_lock.run(service.AsyncService.stopService, self)
 
         # now let any outstanding calls to maybeStartBuildsOn to finish, so
         # they don't get interrupted in mid-stride.  This tends to be
         # particularly painful because it can occur when a generator is gc'd.
         # TEST-TODO: this behavior is not asserted in any way.
-        yield self._deferwaiter.wait()
+        await self._deferwaiter.wait()
 
     @async_to_deferred
     async def maybeStartBuildsOn(self, new_builders: list[str]) -> None:
@@ -400,20 +393,18 @@ class BuildRequestDistributor(service.AsyncMultiService):
         except Exception:  # pragma: no cover
             log.err(Failure(), f"while attempting to start builds on {self.name}")
 
-    @defer.inlineCallbacks
-    def _defaultSorter(self, master, builders):
+    async def _defaultSorter(self, master, builders):
         timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
         timer.start()
 
-        @defer.inlineCallbacks
-        def key(bldr):
+        async def key(bldr):
             # Sort primarily highest priority of build requests
-            priority = yield bldr.get_highest_priority()
+            priority = await bldr.get_highest_priority()
             if priority is None:
                 # for builders that do not have pending buildrequest, we just use large number
                 priority = -math.inf
             # Break ties using the time of oldest build request
-            time = yield bldr.getOldestRequestTime()
+            time = await bldr.getOldestRequestTime()
             if time is None:
                 # for builders that do not have pending buildrequest, we just use large number
                 time = math.inf
@@ -422,13 +413,12 @@ class BuildRequestDistributor(service.AsyncMultiService):
                     time = time.timestamp()
             return (-priority, time, bldr.name)
 
-        yield async_sort(builders, key)
+        await async_sort(builders, key)
 
         timer.stop()
         return builders
 
-    @defer.inlineCallbacks
-    def _sortBuilders(self, buildernames):
+    async def _sortBuilders(self, buildernames):
         timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
         timer.start()
         # note that this takes and returns a list of builder names
@@ -444,7 +434,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # run it
         try:
-            builders = yield sorter(self.master, builders)
+            builders = await sorter(self.master, builders)
         except Exception:
             log.err(Failure(), "prioritizing builders; order unspecified")
 

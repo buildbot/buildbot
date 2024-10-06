@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
@@ -36,16 +35,14 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantDb=True)
         self.object = FakeObject(self.master)
 
-    @defer.inlineCallbacks
-    def test_getState(self):
+    async def test_getState(self):
         self.master.db.state.set_fake_state(self.object, 'fav_color', ['red', 'purple'])
-        res = yield self.object.getState('fav_color')
+        res = await self.object.getState('fav_color')
 
         self.assertEqual(res, ['red', 'purple'])
 
-    @defer.inlineCallbacks
-    def test_getState_default(self):
-        res = yield self.object.getState('fav_color', 'black')
+    async def test_getState_default(self):
+        res = await self.object.getState('fav_color', 'black')
 
         self.assertEqual(res, 'black')
 
@@ -62,15 +59,13 @@ class TestStateMixin(TestReactorMixin, unittest.TestCase):
         d.addCallbacks(cb, check_exc)
         return d
 
-    @defer.inlineCallbacks
-    def test_setState(self):
-        yield self.object.setState('y', 14)
+    async def test_setState(self):
+        await self.object.setState('y', 14)
 
         self.master.db.state.assertStateByClass('fake-name', 'FakeObject', y=14)
 
-    @defer.inlineCallbacks
-    def test_setState_existing(self):
+    async def test_setState_existing(self):
         self.master.db.state.set_fake_state(self.object, 'x', 13)
-        yield self.object.setState('x', 14)
+        await self.object.setState('x', 14)
 
         self.master.db.state.assertStateByClass('fake-name', 'FakeObject', x=14)

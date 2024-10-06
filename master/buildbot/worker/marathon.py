@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.logger import Logger
 
 from buildbot import util
@@ -46,8 +45,7 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     ):
         super().checkConfig(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         name,
         marathon_url,
@@ -63,7 +61,7 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
 
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
-        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
+        await super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
         self._http = HTTPSession(self.master.httpservice, marathon_url, auth=marathon_auth)
         if marathon_extra_config is None:
@@ -77,11 +75,10 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     def renderWorkerProps(self, build):
         return build.render((self.image, self.marathon_extra_config))
 
-    @defer.inlineCallbacks
-    def start_instance(self, build):
-        yield self.stop_instance(reportFailure=False)
+    async def start_instance(self, build):
+        await self.stop_instance(reportFailure=False)
 
-        image, marathon_extra_config = yield self.renderWorkerPropsOnStart(build)
+        image, marathon_extra_config = await self.renderWorkerPropsOnStart(build)
 
         marathon_config = {
             "container": {
@@ -96,8 +93,8 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             "env": self.createEnvironment(),
         }
         util.dictionary_merge(marathon_config, marathon_extra_config)
-        res = yield self._http.post("/v2/apps", json=marathon_config)
-        res_json = yield res.json()
+        res = await self._http.post("/v2/apps", json=marathon_config)
+        res_json = await res.json()
         if res.code != 201:
             raise LatentWorkerFailedToSubstantiate(
                 f"Unable to create Marathon app: {self.getApplicationId()} "
@@ -106,14 +103,13 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         self.instance = res_json
         return True
 
-    @defer.inlineCallbacks
-    def stop_instance(self, fast=False, reportFailure=True):
-        res = yield self._http.delete(f"/v2/apps/{self.getApplicationId()}")
+    async def stop_instance(self, fast=False, reportFailure=True):
+        res = await self._http.delete(f"/v2/apps/{self.getApplicationId()}")
         self.instance = None
         self.resetWorkerPropsOnStop()
 
         if res.code != 200 and reportFailure:
-            res_json = yield res.json()
+            res_json = await res.json()
             # the error is not documented :-(
             log.warn(
                 "Unable to delete Marathon app: {id} {code}: {message} {details}",

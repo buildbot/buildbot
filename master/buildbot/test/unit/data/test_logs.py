@@ -50,9 +50,8 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        log = yield self.callGet(('logs', 60))
+    async def test_get_existing(self):
+        log = await self.callGet(('logs', 60))
         self.validateData(log)
         self.assertEqual(
             log,
@@ -67,38 +66,32 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        log = yield self.callGet(('logs', 62))
+    async def test_get_missing(self):
+        log = await self.callGet(('logs', 62))
         self.assertEqual(log, None)
 
-    @defer.inlineCallbacks
-    def test_get_by_stepid(self):
-        log = yield self.callGet(('steps', 50, 'logs', 'errors'))
+    async def test_get_by_stepid(self):
+        log = await self.callGet(('steps', 50, 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], 'errors')
 
-    @defer.inlineCallbacks
-    def test_get_by_buildid(self):
-        log = yield self.callGet(('builds', 13, 'steps', 5, 'logs', 'errors'))
+    async def test_get_by_buildid(self):
+        log = await self.callGet(('builds', 13, 'steps', 5, 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], 'errors')
 
-    @defer.inlineCallbacks
-    def test_get_by_builder(self):
-        log = yield self.callGet(('builders', '77', 'builds', 3, 'steps', 5, 'logs', 'errors'))
+    async def test_get_by_builder(self):
+        log = await self.callGet(('builders', '77', 'builds', 3, 'steps', 5, 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], 'errors')
 
-    @defer.inlineCallbacks
-    def test_get_by_builder_step_name(self):
-        log = yield self.callGet(('builders', '77', 'builds', 3, 'steps', 'make', 'logs', 'errors'))
+    async def test_get_by_builder_step_name(self):
+        log = await self.callGet(('builders', '77', 'builds', 3, 'steps', 'make', 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], 'errors')
 
-    @defer.inlineCallbacks
-    def test_get_by_buildername_step_name(self):
-        log = yield self.callGet((
+    async def test_get_by_buildername_step_name(self):
+        log = await self.callGet((
             'builders',
             'builder77',
             'builds',
@@ -139,55 +132,48 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_stepid(self):
-        logs = yield self.callGet(('steps', 50, 'logs'))
+    async def test_get_stepid(self):
+        logs = await self.callGet(('steps', 50, 'logs'))
 
         for log in logs:
             self.validateData(log)
 
         self.assertEqual(sorted([b['name'] for b in logs]), ['errors', 'stdio'])
 
-    @defer.inlineCallbacks
-    def test_get_stepid_empty(self):
-        logs = yield self.callGet(('steps', 52, 'logs'))
+    async def test_get_stepid_empty(self):
+        logs = await self.callGet(('steps', 52, 'logs'))
         self.assertEqual(logs, [])
 
-    @defer.inlineCallbacks
-    def test_get_stepid_missing(self):
-        logs = yield self.callGet(('steps', 99, 'logs'))
+    async def test_get_stepid_missing(self):
+        logs = await self.callGet(('steps', 99, 'logs'))
         self.assertEqual(logs, [])
 
-    @defer.inlineCallbacks
-    def test_get_buildid_step_name(self):
-        logs = yield self.callGet(('builds', 13, 'steps', 'make_install', 'logs'))
+    async def test_get_buildid_step_name(self):
+        logs = await self.callGet(('builds', 13, 'steps', 'make_install', 'logs'))
 
         for log in logs:
             self.validateData(log)
 
         self.assertEqual(sorted([b['name'] for b in logs]), ['results_html', 'stdio'])
 
-    @defer.inlineCallbacks
-    def test_get_buildid_step_number(self):
-        logs = yield self.callGet(('builds', 13, 'steps', 10, 'logs'))
+    async def test_get_buildid_step_number(self):
+        logs = await self.callGet(('builds', 13, 'steps', 10, 'logs'))
 
         for log in logs:
             self.validateData(log)
 
         self.assertEqual(sorted([b['name'] for b in logs]), ['results_html', 'stdio'])
 
-    @defer.inlineCallbacks
-    def test_get_builder_build_number_step_name(self):
-        logs = yield self.callGet(('builders', 77, 'builds', 3, 'steps', 'make', 'logs'))
+    async def test_get_builder_build_number_step_name(self):
+        logs = await self.callGet(('builders', 77, 'builds', 3, 'steps', 'make', 'logs'))
 
         for log in logs:
             self.validateData(log)
 
         self.assertEqual(sorted([b['name'] for b in logs]), ['errors', 'stdio'])
 
-    @defer.inlineCallbacks
-    def test_get_builder_build_number_step_number(self):
-        logs = yield self.callGet(('builders', 77, 'builds', 3, 'steps', 10, 'logs'))
+    async def test_get_builder_build_number_step_number(self):
+        logs = await self.callGet(('builders', 77, 'builds', 3, 'steps', 10, 'logs'))
 
         for log in logs:
             self.validateData(log)
@@ -201,14 +187,13 @@ class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = logs.Log(self.master)
 
-    @defer.inlineCallbacks
-    def do_test_callthrough(
+    async def do_test_callthrough(
         self, dbMethodName, method, exp_args=None, exp_kwargs=None, *args, **kwargs
     ):
         rv = (1, 2)
         m = mock.Mock(return_value=defer.succeed(rv))
         setattr(self.master.db.logs, dbMethodName, m)
-        res = yield method(*args, **kwargs)
+        res = await method(*args, **kwargs)
         self.assertIdentical(res, rv)
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
@@ -220,8 +205,7 @@ class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def addLog(self, stepid, name, type):
             pass
 
-    @defer.inlineCallbacks
-    def test_addLog_uniquify(self):
+    async def test_addLog_uniquify(self):
         tries = []
 
         @self.assertArgSpecMatches(self.master.db.logs.addLog)
@@ -232,7 +216,7 @@ class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             return defer.succeed(23)
 
         self.patch(self.master.db.logs, 'addLog', addLog)
-        logid = yield self.rtype.addLog(stepid=13, name='foo', type='s')
+        logid = await self.rtype.addLog(stepid=13, name='foo', type='s')
         self.assertEqual(logid, 23)
         self.assertEqual(
             tries,

@@ -202,8 +202,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def addTestResults(self, builderid, test_result_setid, result_values):
+    async def addTestResults(self, builderid, test_result_setid, result_values):
         # Adds multiple test results for a specific test result set.
         # result_values is a list of dictionaries each of which must contain 'value' key and at
         # least one of 'test_name', 'test_code_path'. 'line' key is optional.
@@ -229,8 +228,8 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             if 'test_code_path' in result_value:
                 insert_code_paths.add(result_value['test_code_path'])
 
-        code_path_to_id = yield self._add_code_paths(builderid, insert_code_paths)
-        name_to_id = yield self._add_names(builderid, insert_names)
+        code_path_to_id = await self._add_code_paths(builderid, insert_code_paths)
+        name_to_id = await self._add_names(builderid, insert_names)
 
         for result_value in result_values:
             insert_value = {
@@ -259,7 +258,7 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
             q = results_table.insert().values(insert_values)
             conn.execute(q)
 
-        yield self.db.pool.do_with_transaction(thd)
+        await self.db.pool.do_with_transaction(thd)
 
     def getTestResult(self, test_resultid: int) -> defer.Deferred[TestResultModel | None]:
         def thd(conn) -> TestResultModel | None:

@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.statistics.storage_backends.base import StatsStorageBase
@@ -38,8 +37,7 @@ class StatsService(service.BuildbotService):
                     f"is: {type(StatsStorageBase)!r}"
                 )
 
-    @defer.inlineCallbacks
-    def reconfigService(self, storage_backends):
+    async def reconfigService(self, storage_backends):
         log.msg(f"Reconfiguring StatsService with config: {storage_backends!r}")
 
         self.checkConfig(storage_backends)
@@ -48,33 +46,29 @@ class StatsService(service.BuildbotService):
         for svc in storage_backends:
             self.registeredStorageServices.append(svc)
 
-        yield self.removeConsumers()
-        yield self.registerConsumers()
+        await self.removeConsumers()
+        await self.registerConsumers()
 
-    @defer.inlineCallbacks
-    def registerConsumers(self):
+    async def registerConsumers(self):
         self.consumers = []
 
         for svc in self.registeredStorageServices:
             for cap in svc.captures:
                 cap.parent_svcs.append(svc)
                 cap.master = self.master
-                consumer = yield self.master.mq.startConsuming(cap.consume, cap.routingKey)
+                consumer = await self.master.mq.startConsuming(cap.consume, cap.routingKey)
                 self.consumers.append(consumer)
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield super().stopService()
-        yield self.removeConsumers()
+    async def stopService(self):
+        await super().stopService()
+        await self.removeConsumers()
 
-    @defer.inlineCallbacks
-    def removeConsumers(self):
+    async def removeConsumers(self):
         for consumer in self.consumers:
-            yield consumer.stopConsuming()
+            await consumer.stopConsuming()
         self.consumers = []
 
-    @defer.inlineCallbacks
-    def yieldMetricsValue(self, data_name, post_data, buildid):
+    async def yieldMetricsValue(self, data_name, post_data, buildid):
         """
         A method to allow posting data that is not generated and stored as build-data in
         the database. This method generates the `stats-yield-data` event to the mq layer
@@ -85,7 +79,7 @@ class StatsService(service.BuildbotService):
         post_data: (dict) A dictionary of key-value pairs that'll be sent for storage.
         buildid: The buildid of the current Build.
         """
-        build_data = yield self.master.data.get(('builds', buildid))
+        build_data = await self.master.data.get(('builds', buildid))
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
 
         msg = {'data_name': data_name, 'post_data': post_data, 'build_data': build_data}

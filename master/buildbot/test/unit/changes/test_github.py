@@ -15,7 +15,6 @@
 
 import json
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes.github import GitHubPullrequestPoller
@@ -178,44 +177,40 @@ _GH_PARSED_PROPS = {
 class TestGitHubPullrequestPoller(
     changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        yield self.setUpChangeSource()
+        await self.setUpChangeSource()
 
         fake_storage_service = FakeSecretStorage()
 
         secret_service = SecretManager()
         secret_service.services = [fake_storage_service]
-        yield secret_service.setServiceParent(self.master)
+        await secret_service.setServiceParent(self.master)
 
-        yield self.master.startService()
+        await self.master.startService()
 
         fake_storage_service.reconfigService(secretdict={"token": "1234"})
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.master.stopService()
+        await self.tearDownChangeSource()
 
-    @defer.inlineCallbacks
-    def newChangeSource(self, owner, repo, endpoint='https://api.github.com', **kwargs):
+    async def newChangeSource(self, owner, repo, endpoint='https://api.github.com', **kwargs):
         http_headers = {'User-Agent': 'Buildbot'}
         token = kwargs.get('token', None)
         if token:
             p = Properties()
             p.master = self.master
-            token = yield p.render(token)
+            token = await p.render(token)
             http_headers.update({'Authorization': 'token ' + token})
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, headers=http_headers
         )
         self.changesource = GitHubPullrequestPoller(owner, repo, **kwargs)
 
-    @defer.inlineCallbacks
-    def startChangeSource(self):
-        yield self.changesource.setServiceParent(self.master)
-        yield self.attachChangeSource(self.changesource)
+    async def startChangeSource(self):
+        await self.changesource.setServiceParent(self.master)
+        await self.attachChangeSource(self.changesource)
 
     def assertDictSubset(self, expected_dict, response_dict):
         expected = {}
@@ -224,54 +219,47 @@ class TestGitHubPullrequestPoller(
             expected[key] = response_dict[key]
         self.assertDictEqual(expected_dict, expected)
 
-    @defer.inlineCallbacks
-    def test_describe(self):
-        yield self.newChangeSource('defunkt', 'defunkt')
-        yield self.startChangeSource()
+    async def test_describe(self):
+        await self.newChangeSource('defunkt', 'defunkt')
+        await self.startChangeSource()
         self.assertEqual(
             f"GitHubPullrequestPoller watching the GitHub repository {'defunkt'}/{'defunkt'}",
             self.changesource.describe(),
         )
 
-    @defer.inlineCallbacks
-    def test_default_name(self):
-        yield self.newChangeSource('defunkt', 'defunkt')
-        yield self.startChangeSource()
+    async def test_default_name(self):
+        await self.newChangeSource('defunkt', 'defunkt')
+        await self.startChangeSource()
         self.assertEqual(f"GitHubPullrequestPoller:{'defunkt'}/{'defunkt'}", self.changesource.name)
 
-    @defer.inlineCallbacks
-    def test_custom_name(self):
-        yield self.newChangeSource('defunkt', 'defunkt', name="MyName")
-        yield self.startChangeSource()
+    async def test_custom_name(self):
+        await self.newChangeSource('defunkt', 'defunkt', name="MyName")
+        await self.startChangeSource()
         self.assertEqual("MyName", self.changesource.name)
 
-    @defer.inlineCallbacks
-    def test_SimplePR(self):
-        yield self.newChangeSource(
+    async def test_SimplePR(self):
+        await self.newChangeSource(
             'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"]
         )
-        yield self.simple_pr()
+        await self.simple_pr()
 
-    @defer.inlineCallbacks
-    def test_project(self):
-        yield self.newChangeSource(
+    async def test_project(self):
+        await self.newChangeSource(
             'defunkt',
             'defunkt',
             token='1234',
             project='tst_project',
             github_property_whitelist=["github.*"],
         )
-        yield self.simple_pr(project='tst_project')
+        await self.simple_pr(project='tst_project')
 
-    @defer.inlineCallbacks
-    def test_secret_token(self):
-        yield self.newChangeSource(
+    async def test_secret_token(self):
+        await self.newChangeSource(
             'defunkt', 'defunkt', token=Secret('token'), github_property_whitelist=["github.*"]
         )
-        yield self.simple_pr()
+        await self.simple_pr()
 
-    @defer.inlineCallbacks
-    def simple_pr(self, project=None):
+    async def simple_pr(self, project=None):
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
@@ -297,8 +285,8 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads(gitJsonPayloadFiles),
         )
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -319,35 +307,32 @@ class TestGitHubPullrequestPoller(
             "This is a pretty simple change that we need to pull into master.",
         )
 
-    @defer.inlineCallbacks
-    def test_wrongBranch(self):
-        yield self.newChangeSource('defunkt', 'defunkt', token='1234', branches=['wrongBranch'])
+    async def test_wrongBranch(self):
+        await self.newChangeSource('defunkt', 'defunkt', token='1234', branches=['wrongBranch'])
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
             content_json=json.loads(gitJsonPayloadPullRequests),
         )
 
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_http_error(self):
-        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+    async def test_http_error(self):
+        await self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
             content_json=json.loads(git_json_not_found),
             code=404,
         )
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_baseURL(self):
-        yield self.newChangeSource(
+    async def test_baseURL(self):
+        await self.newChangeSource(
             'defunkt',
             'defunkt',
             endpoint='https://my.other.endpoint',
@@ -380,8 +365,8 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads(gitJsonPayloadFiles),
         )
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -400,9 +385,8 @@ class TestGitHubPullrequestPoller(
             "This is a pretty simple change that we need to pull into master.",
         )
 
-    @defer.inlineCallbacks
-    def test_PRfilter(self):
-        yield self.newChangeSource(
+    async def test_PRfilter(self):
+        await self.newChangeSource(
             'defunkt', 'defunkt', token='1234', pullrequest_filter=lambda pr: pr['number'] == 1337
         )
         self._http.expect(
@@ -410,13 +394,12 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls',
             content_json=json.loads(gitJsonPayloadPullRequests),
         )
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_failCommitters(self):
-        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+    async def test_failCommitters(self):
+        await self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
@@ -437,12 +420,11 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads("[{}]"),
         )
-        yield self.startChangeSource()
-        yield self.assertFailure(self.changesource.poll(), KeyError)
+        await self.startChangeSource()
+        await self.assertFailure(self.changesource.poll(), KeyError)
 
-    @defer.inlineCallbacks
-    def test_failFiles(self):
-        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+    async def test_failFiles(self):
+        await self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
@@ -463,19 +445,17 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads("[{}]"),
         )
-        yield self.startChangeSource()
-        yield self.assertFailure(self.changesource.poll(), KeyError)
+        await self.startChangeSource()
+        await self.assertFailure(self.changesource.poll(), KeyError)
 
-    @defer.inlineCallbacks
-    def test_wrongRepoLink(self):
+    async def test_wrongRepoLink(self):
         with self.assertRaises(ConfigErrors):
-            yield self.newChangeSource(
+            await self.newChangeSource(
                 'defunkt', 'defunkt', token='1234', repository_type='defunkt'
             )
 
-    @defer.inlineCallbacks
-    def test_magicLink(self):
-        yield self.newChangeSource(
+    async def test_magicLink(self):
+        await self.newChangeSource(
             'defunkt',
             'defunkt',
             magic_link=True,
@@ -507,8 +487,8 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads(gitJsonPayloadFiles),
         )
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -527,9 +507,8 @@ class TestGitHubPullrequestPoller(
             "This is a pretty simple change that we need to pull into master.",
         )
 
-    @defer.inlineCallbacks
-    def test_AuthormissingEmail(self):
-        yield self.newChangeSource(
+    async def test_AuthormissingEmail(self):
+        await self.newChangeSource(
             'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"]
         )
         self._http.expect(
@@ -557,8 +536,8 @@ class TestGitHubPullrequestPoller(
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads(gitJsonPayloadFiles),
         )
-        yield self.startChangeSource()
-        yield self.changesource.poll()
+        await self.startChangeSource()
+        await self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]

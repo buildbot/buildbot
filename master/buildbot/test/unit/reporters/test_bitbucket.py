@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
@@ -36,8 +35,7 @@ from buildbot.util import httpclientservice
 class TestBitbucketStatusPush(
     TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -45,7 +43,7 @@ class TestBitbucketStatusPush(
 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(self.master, self, "")
+        self._http = await fakehttpclientservice.HTTPClientService.getService(self.master, self, "")
         self.httpsession = httpclientservice.HTTPSession(
             None, _BASE_URL, auth=None, debug=None, verify=None
         )
@@ -56,16 +54,14 @@ class TestBitbucketStatusPush(
         )
 
         self.bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
-        yield self.bsp.setServiceParent(self.master)
-        yield self.bsp.startService()
+        await self.bsp.setServiceParent(self.master)
+        await self.bsp.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.bsp.stopService()
+    async def tearDown(self):
+        await self.bsp.stopService()
 
-    @defer.inlineCallbacks
-    def test_basic(self):
-        build = yield self.insert_build_new()
+    async def test_basic(self):
+        build = await self.insert_build_new()
 
         self._http.expect(
             'post',
@@ -130,18 +126,17 @@ class TestBitbucketStatusPush(
             code=201,
         )
 
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        await self.bsp._got_event(('builds', 20, 'new'), build)
 
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        await self.bsp._got_event(('builds', 20, 'finished'), build)
 
         build['results'] = FAILURE
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        await self.bsp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_success_return_codes(self):
-        build = yield self.insert_build_finished(SUCCESS)
+    async def test_success_return_codes(self):
+        build = await self.insert_build_finished(SUCCESS)
 
         # make sure a 201 return code does not trigger an error
         self._http.expect(
@@ -166,7 +161,7 @@ class TestBitbucketStatusPush(
         )
 
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        await self.bsp._got_event(('builds', 20, 'finished'), build)
         self.assertNotLogged('201: unable to upload Bitbucket status')
 
         # make sure a 200 return code does not trigger an error
@@ -192,12 +187,11 @@ class TestBitbucketStatusPush(
         )
 
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        await self.bsp._got_event(('builds', 20, 'finished'), build)
         self.assertNotLogged('200: unable to upload Bitbucket status')
 
-    @defer.inlineCallbacks
-    def test_unable_to_authenticate(self):
-        build = yield self.insert_build_new()
+    async def test_unable_to_authenticate(self):
+        build = await self.insert_build_new()
 
         self._http.expect(
             'post',
@@ -211,12 +205,11 @@ class TestBitbucketStatusPush(
             code=400,
         )
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        await self.bsp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('400: unable to authenticate to Bitbucket')
 
-    @defer.inlineCallbacks
-    def test_unable_to_send_status(self):
-        build = yield self.insert_build_new()
+    async def test_unable_to_send_status(self):
+        build = await self.insert_build_new()
 
         self._http.expect(
             'post',
@@ -243,15 +236,14 @@ class TestBitbucketStatusPush(
             },
         )
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        await self.bsp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: unable to upload Bitbucket status')
         self.assertLogged('This commit is unknown to us')
         self.assertLogged('invalid_commit')
 
-    @defer.inlineCallbacks
-    def test_empty_repository(self):
+    async def test_empty_repository(self):
         self.reporter_test_repo = ''
-        build = yield self.insert_build_new()
+        build = await self.insert_build_new()
 
         self._http.expect(
             'post',
@@ -262,15 +254,14 @@ class TestBitbucketStatusPush(
         )
 
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        await self.bsp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('Empty repository URL for Bitbucket status')
 
 
 class TestBitbucketStatusPushProperties(
     TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -278,7 +269,7 @@ class TestBitbucketStatusPushProperties(
 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master,
             self,
             "",
@@ -304,16 +295,14 @@ class TestBitbucketStatusPushProperties(
                 )
             ],
         )
-        yield self.bsp.setServiceParent(self.master)
-        yield self.bsp.startService()
+        await self.bsp.setServiceParent(self.master)
+        await self.bsp.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.bsp.stopService()
+    async def tearDown(self):
+        await self.bsp.stopService()
 
-    @defer.inlineCallbacks
-    def test_properties(self):
-        build = yield self.insert_build_new()
+    async def test_properties(self):
+        build = await self.insert_build_new()
 
         self._http.expect(
             'post',
@@ -357,11 +346,11 @@ class TestBitbucketStatusPushProperties(
             code=201,
         )
 
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        await self.bsp._got_event(('builds', 20, 'new'), build)
 
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        await self.bsp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestBitbucketStatusPushConfig(ConfigErrorsMixin, unittest.TestCase):
@@ -373,18 +362,16 @@ class TestBitbucketStatusPushConfig(ConfigErrorsMixin, unittest.TestCase):
 
 
 class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         self.bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
-        yield self.bsp.setServiceParent(self.master)
-        yield self.bsp.startService()
+        await self.bsp.setServiceParent(self.master)
+        await self.bsp.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.bsp.stopService()
+    async def tearDown(self):
+        await self.bsp.stopService()
 
     def parse(self, repourl):
         return tuple(self.bsp.get_owner_and_repo(repourl))

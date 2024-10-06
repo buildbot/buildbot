@@ -74,8 +74,7 @@ def upgradeFiles(config):
     )
 
 
-@defer.inlineCallbacks
-def upgradeDatabase(config, master_cfg):
+async def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
         db_url_cfg = master_cfg.db['db_url']
         if IRenderable.providedBy(db_url_cfg):
@@ -110,11 +109,11 @@ def upgradeDatabase(config, master_cfg):
         master.config = master_cfg
         master.db.disownServiceParent()
         db = connector.DBConnector(basedir=config['basedir'])
-        yield db.setServiceParent(master)
-        yield master.secrets_manager.setup()
-        yield db.setup(check_version=False, verbose=not config['quiet'])
-        yield db.model.upgrade()
-        yield db.masters.setAllMastersActiveLongTimeAgo()
+        await db.setServiceParent(master)
+        await master.secrets_manager.setup()
+        await db.setup(check_version=False, verbose=not config['quiet'])
+        await db.model.upgrade()
+        await db.masters.setAllMastersActiveLongTimeAgo()
 
     finally:
         # restore previous signal handlers
@@ -142,11 +141,10 @@ def upgradeMaster(config):
     return _upgradeMaster(config, master_cfg)
 
 
-@defer.inlineCallbacks
-def _upgradeMaster(config, master_cfg):
+async def _upgradeMaster(config, master_cfg):
     try:
         upgradeFiles(config)
-        yield upgradeDatabase(config, master_cfg)
+        await upgradeDatabase(config, master_cfg)
     except Exception:
         e = traceback.format_exc()
         print("problem while upgrading!:\n" + e, file=sys.stderr)

@@ -20,7 +20,6 @@ from unittest import mock
 import jwt
 from twisted.cred import strcred
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
-from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 from twisted.web.server import Request
@@ -57,12 +56,11 @@ class NeedsReconfigResource(resource.Resource):
 
 
 class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
-        yield self.svc.setServiceParent(self.master)
+        await self.svc.setServiceParent(self.master)
 
     def makeConfig(self, **kwargs):
         w = {"port": None, "auth": auth.NoAuth(), "logfileName": 'l'}
@@ -73,64 +71,58 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.master.config = new_config
         return new_config
 
-    @defer.inlineCallbacks
-    def test_reconfigService_no_port(self):
+    async def test_reconfigService_no_port(self):
         new_config = self.makeConfig()
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         self.assertEqual(self.svc.site, None)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_reconfigResources(self):
+    async def test_reconfigService_reconfigResources(self):
         new_config = self.makeConfig(port=8080)
         self.patch(rest, 'RestRootResource', NeedsReconfigResource)
         NeedsReconfigResource.reconfigs = 0
 
         # first time, reconfigResource gets called along with setupSite
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(NeedsReconfigResource.reconfigs, 1)
 
         # and the next time, setupSite isn't called, but reconfigResource is
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(NeedsReconfigResource.reconfigs, 2)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_port(self):
+    async def test_reconfigService_port(self):
         new_config = self.makeConfig(port=20)
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         self.assertNotEqual(self.svc.site, None)
         self.assertNotEqual(self.svc.port_service, None)
         self.assertEqual(self.svc.port, 20)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_expiration_time(self):
+    async def test_reconfigService_expiration_time(self):
         new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         self.assertNotEqual(self.svc.site, None)
         self.assertNotEqual(self.svc.port_service, None)
         self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
 
-    @defer.inlineCallbacks
-    def test_reconfigService_port_changes(self):
+    async def test_reconfigService_port_changes(self):
         new_config = self.makeConfig(port=20)
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         newer_config = self.makeConfig(port=999)
-        yield self.svc.reconfigServiceWithBuildbotConfig(newer_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
         self.assertNotEqual(self.svc.site, None)
         self.assertNotEqual(self.svc.port_service, None)
         self.assertEqual(self.svc.port, 999)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_port_changes_to_none(self):
+    async def test_reconfigService_port_changes_to_none(self):
         new_config = self.makeConfig(port=20)
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         newer_config = self.makeConfig()
-        yield self.svc.reconfigServiceWithBuildbotConfig(newer_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
         # (note the site sticks around)
         self.assertEqual(self.svc.port_service, None)
@@ -161,8 +153,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         req = mock.Mock()
         self.assertIsInstance(root.getChildWithDefault(b'change_hook', req), HTTPAuthSessionWrapper)
 
-    @defer.inlineCallbacks
-    def test_setupSiteWithHook(self):
+    async def test_setupSiteWithHook(self):
         new_config = self.makeConfig(change_hook_dialects={'base': True})
         self.svc.setupSite(new_config)
         site = self.svc.site
@@ -177,7 +168,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         # not yet configured
         self.assertEqual(ep.dialects, {})
 
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         # now configured
         self.assertEqual(ep.dialects, {'base': True})
@@ -186,11 +177,10 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         path = b'/change_hook/base'
         request = test_hooks_base._prepare_request({})
         self.master.data.updates.addChange = mock.Mock()
-        yield self.render_resource(rsrc, path, request=request)
+        await self.render_resource(rsrc, path, request=request)
         self.master.data.updates.addChange.assert_called()
 
-    @defer.inlineCallbacks
-    def test_setupSiteWithHookAndAuth(self):
+    async def test_setupSiteWithHookAndAuth(self):
         fn = self.mktemp()
         with open(fn, 'w', encoding='utf-8') as f:
             f.write("user:pass")
@@ -202,14 +192,14 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         self.svc.setupSite(new_config)
 
-        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        await self.svc.reconfigServiceWithBuildbotConfig(new_config)
         rsrc = self.svc.site.resource.getChildWithDefault(b'', mock.Mock())
 
-        res = yield self.render_resource(rsrc, b'')
+        res = await self.render_resource(rsrc, b'')
         self.assertIn(b'{"type": "file"}', res)
 
         rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
-        res = yield self.render_resource(rsrc, b'/change_hook/base')
+        res = await self.render_resource(rsrc, b'/change_hook/base')
         # as UnauthorizedResource is in private namespace, we cannot use
         # assertIsInstance :-(
         self.assertIn('UnauthorizedResource', repr(res))

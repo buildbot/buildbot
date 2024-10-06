@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -51,14 +49,13 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
         /steps/n:stepid/test_result_sets
         """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
         if 'stepid' in kwargs:
-            step_dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            build_dbdict = yield self.master.db.builds.getBuild(step_dbdict.buildid)
+            step_dbdict = await self.master.db.steps.getStep(kwargs['stepid'])
+            build_dbdict = await self.master.db.builds.getBuild(step_dbdict.buildid)
 
-            sets = yield self.master.db.test_result_sets.getTestResultSets(
+            sets = await self.master.db.test_result_sets.getTestResultSets(
                 build_dbdict.builderid,
                 buildid=step_dbdict.buildid,
                 stepid=kwargs['stepid'],
@@ -66,9 +63,9 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
                 result_spec=resultSpec,
             )
         elif 'buildid' in kwargs:
-            build_dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
+            build_dbdict = await self.master.db.builds.getBuild(kwargs['buildid'])
 
-            sets = yield self.master.db.test_result_sets.getTestResultSets(
+            sets = await self.master.db.test_result_sets.getTestResultSets(
                 build_dbdict.builderid,
                 buildid=kwargs['buildid'],
                 complete=complete,
@@ -77,8 +74,8 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
 
         else:
             # The following is true: 'buildername' in kwargs or 'builderid' in kwargs:
-            builderid = yield self.getBuilderId(kwargs)
-            sets = yield self.master.db.test_result_sets.getTestResultSets(
+            builderid = await self.getBuilderId(kwargs)
+            sets = await self.master.db.test_result_sets.getTestResultSets(
                 builderid, complete=complete, result_spec=resultSpec
             )
 
@@ -91,9 +88,8 @@ class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint)
         /test_result_sets/n:test_result_setid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        model = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
+    async def get(self, resultSpec, kwargs):
+        model = await self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
         return self.db2data(model) if model else None
 
 
@@ -120,24 +116,21 @@ class TestResultSet(base.ResourceType):
 
     entityType = EntityType(name, 'TestResultSet')
 
-    @defer.inlineCallbacks
-    def generateEvent(self, test_result_setid, event):
-        test_result_set = yield self.master.data.get(('test_result_sets', test_result_setid))
+    async def generateEvent(self, test_result_setid, event):
+        test_result_set = await self.master.data.get(('test_result_sets', test_result_setid))
         self.produceEvent(test_result_set, event)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
-        test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
+    async def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+        test_result_setid = await self.master.db.test_result_sets.addTestResultSet(
             builderid, buildid, stepid, description, category, value_unit
         )
-        yield self.generateEvent(test_result_setid, 'new')
+        await self.generateEvent(test_result_setid, 'new')
         return test_result_setid
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
-        yield self.master.db.test_result_sets.completeTestResultSet(
+    async def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
+        await self.master.db.test_result_sets.completeTestResultSet(
             test_result_setid, tests_passed, tests_failed
         )
-        yield self.generateEvent(test_result_setid, 'completed')
+        await self.generateEvent(test_result_setid, 'completed')

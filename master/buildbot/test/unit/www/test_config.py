@@ -18,7 +18,6 @@ import os
 from unittest import mock
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -53,8 +52,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
-    @defer.inlineCallbacks
-    def test_render(self):
+    async def test_render(self):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
 
@@ -66,7 +64,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
 
-        res = yield self.render_resource(rsrc, b'/config')
+        res = await self.render_resource(rsrc, b'/config')
         res = json.loads(bytes2unicode(res))
         exp = {
             "authz": {},
@@ -123,8 +121,7 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             {"email": "me@me.org", "name": "me"},
         ),
     ])
-    @defer.inlineCallbacks
-    def test_render(self, name, user_info, expected_user):
+    async def test_render(self, name, user_info, expected_user):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
 
@@ -142,7 +139,7 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
 
-        res = yield self.render_resource(rsrc, b'/')
+        res = await self.render_resource(rsrc, b'/')
         config_json = self.extract_config_json(bytes2unicode(res))
 
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)

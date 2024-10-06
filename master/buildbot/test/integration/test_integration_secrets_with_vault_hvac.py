@@ -19,7 +19,6 @@ import time
 from unittest.case import SkipTest
 
 from parameterized import parameterized
-from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
 from buildbot.secrets.providers.vault_hvac import HashiCorpVaultKvSecretProvider
@@ -36,8 +35,7 @@ from buildbot.test.util.integration import RunMasterBase
 # to properly launch images.
 @skipUnlessPlatformIs('posix')
 class TestVaultHvac(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self, secret_specifier):
+    async def setup_config(self, secret_specifier):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -60,7 +58,7 @@ class TestVaultHvac(RunMasterBase):
 
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
     def start_container(self, image_tag):
         try:
@@ -141,11 +139,12 @@ class TestVaultHvac(RunMasterBase):
     def remove_container(self):
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'], stdout=subprocess.DEVNULL)
 
-    @defer.inlineCallbacks
-    def do_secret_test(self, image_tag, secret_specifier, expected_obfuscation, expected_value):
+    async def do_secret_test(
+        self, image_tag, secret_specifier, expected_obfuscation, expected_value
+    ):
         self.start_container(image_tag)
-        yield self.setup_config(secret_specifier=secret_specifier)
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        await self.setup_config(secret_specifier=secret_specifier)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 
         patterns = [
@@ -153,7 +152,7 @@ class TestVaultHvac(RunMasterBase):
             base64.b64encode((expected_value + "\n").encode('utf-8')).decode('utf-8'),
         ]
 
-        res = yield self.checkBuildStepLogExist(build, patterns)
+        res = await self.checkBuildStepLogExist(build, patterns)
         self.assertTrue(res)
 
     all_tags = [
@@ -163,18 +162,15 @@ class TestVaultHvac(RunMasterBase):
     ]
 
     @parameterized.expand(all_tags)
-    @defer.inlineCallbacks
-    def test_key(self, image_tag):
-        yield self.do_secret_test(image_tag, '%(secret:key|value)s', '<key|value>', 'word')
+    async def test_key(self, image_tag):
+        await self.do_secret_test(image_tag, '%(secret:key|value)s', '<key|value>', 'word')
 
     @parameterized.expand(all_tags)
-    @defer.inlineCallbacks
-    def test_key_any_value(self, image_tag):
-        yield self.do_secret_test(
+    async def test_key_any_value(self, image_tag):
+        await self.do_secret_test(
             image_tag, '%(secret:anykey|anyvalue)s', '<anykey|anyvalue>', 'anyword'
         )
 
     @parameterized.expand(all_tags)
-    @defer.inlineCallbacks
-    def test_nested_key(self, image_tag):
-        yield self.do_secret_test(image_tag, '%(secret:key1/key2|id)s', '<key1/key2|id>', 'val')
+    async def test_nested_key(self, image_tag):
+        await self.do_secret_test(image_tag, '%(secret:key1/key2|id)s', '<key1/key2|id>', 'val')

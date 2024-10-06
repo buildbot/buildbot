@@ -16,7 +16,6 @@
 
 import os
 
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
@@ -25,12 +24,11 @@ class FuzzTestCase(unittest.TestCase):
     # run each test case for 10s
     FUZZ_TIME = 10
 
-    @defer.inlineCallbacks
-    def test_fuzz(self):
+    async def test_fuzz(self):
         # note that this will loop if do_fuzz doesn't take long enough
         endTime = reactor.seconds() + self.FUZZ_TIME
         while reactor.seconds() < endTime:
-            yield self.do_fuzz(endTime)
+            await self.do_fuzz(endTime)
 
     # delete this test case entirely if fuzzing is not enabled
     if 'BUILDBOT_FUZZ' not in os.environ:

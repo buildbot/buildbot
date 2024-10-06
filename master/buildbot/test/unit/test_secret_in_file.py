@@ -16,7 +16,6 @@
 import os
 import stat
 
-from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
@@ -36,16 +35,14 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         writeLocalFile(file_path, text, chmodRights)
         return file_path
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.tmp_dir = self.createTempDir("temp")
         self.filepath = self.createFileTemp(self.tmp_dir, "tempfile.txt", text="key value\n")
         self.srvfile = SecretInAFile(self.tmp_dir)
-        yield self.srvfile.startService()
+        await self.srvfile.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.srvfile.stopService()
+    async def tearDown(self):
+        await self.srvfile.stopService()
 
     def testCheckConfigSecretInAFileService(self):
         self.assertEqual(self.srvfile.name, "SecretInAFile")
@@ -64,24 +61,22 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
             self.srvfile.checkConfig(self.tmp_dir)
         os.remove(filepath)
 
-    @defer.inlineCallbacks
-    def testCheckConfigfileExtension(self):
+    async def testCheckConfigfileExtension(self):
         filepath = self.createFileTemp(
             self.tmp_dir, "tempfile2.ini", text="test suffix", chmodRights=stat.S_IRWXU
         )
         filepath2 = self.createFileTemp(
             self.tmp_dir, "tempfile2.txt", text="some text", chmodRights=stat.S_IRWXU
         )
-        yield self.srvfile.reconfigService(self.tmp_dir, suffixes=[".ini"])
+        await self.srvfile.reconfigService(self.tmp_dir, suffixes=[".ini"])
         self.assertEqual(self.srvfile.get("tempfile2"), "test suffix")
         self.assertEqual(self.srvfile.get("tempfile3"), None)
         os.remove(filepath)
         os.remove(filepath2)
 
-    @defer.inlineCallbacks
-    def testReconfigSecretInAFileService(self):
+    async def testReconfigSecretInAFileService(self):
         otherdir = self.createTempDir("temp2")
-        yield self.srvfile.reconfigService(otherdir)
+        await self.srvfile.reconfigService(otherdir)
         self.assertEqual(self.srvfile.name, "SecretInAFile")
         self.assertEqual(self.srvfile._dirname, otherdir)
 
@@ -89,9 +84,8 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         value = self.srvfile.get("tempfile.txt")
         self.assertEqual(value, "key value")
 
-    @defer.inlineCallbacks
-    def testGetSecretInFileSuffixes(self):
-        yield self.srvfile.reconfigService(self.tmp_dir, suffixes=[".txt"])
+    async def testGetSecretInFileSuffixes(self):
+        await self.srvfile.reconfigService(self.tmp_dir, suffixes=[".txt"])
         value = self.srvfile.get("tempfile")
         self.assertEqual(value, "key value")
 
@@ -99,8 +93,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         value = self.srvfile.get("tempfile2.txt")
         self.assertEqual(value, None)
 
-    @defer.inlineCallbacks
-    def testGetSecretInFileNoStrip(self):
-        yield self.srvfile.reconfigService(self.tmp_dir, strip=False)
+    async def testGetSecretInFileNoStrip(self):
+        await self.srvfile.reconfigService(self.tmp_dir, strip=False)
         value = self.srvfile.get("tempfile.txt")
         self.assertEqual(value, "key value\n")

@@ -42,21 +42,19 @@ class ChangeSourceMixin:
         assert not hasattr(self.master, 'addChange')  # just checking..
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def tearDownChangeSource(self):
+    async def tearDownChangeSource(self):
         "Tear down the mixin - returns a deferred."
         if not self.started:
             return
         if self.changesource.running:
-            yield self.changesource.stopService()
-        yield self.changesource.disownServiceParent()
+            await self.changesource.stopService()
+        await self.changesource.disownServiceParent()
         return
 
-    @defer.inlineCallbacks
-    def attachChangeSource(self, cs):
+    async def attachChangeSource(self, cs):
         self.changesource = cs
-        yield self.changesource.setServiceParent(self.master)
-        yield self.changesource.configureService()
+        await self.changesource.setServiceParent(self.master)
+        await self.changesource.configureService()
         return cs
 
     def startChangeSource(self):
@@ -64,10 +62,9 @@ class ChangeSourceMixin:
         self.started = True
         return self.changesource.startService()
 
-    @defer.inlineCallbacks
-    def stopChangeSource(self):
+    async def stopChangeSource(self):
         "stop the change source again; returns a deferred"
-        yield self.changesource.stopService()
+        await self.changesource.stopService()
 
         self.started = False
 

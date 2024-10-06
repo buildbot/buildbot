@@ -16,7 +16,6 @@
 from unittest.mock import patch
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.secrets.providers.vault_hvac import HashiCorpVaultKvSecretProvider
@@ -217,33 +216,28 @@ class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.Tes
         value = self.provider.thd_hvac_get("some/path")
         self.assertEqual(value['data']['data']['key'], "value")
 
-    @defer.inlineCallbacks
-    def test_get_v1(self):
+    async def test_get_v1(self):
         self.provider.api_version = 1
         self.provider.client.token = "mockToken"
-        value = yield self.provider.get("some/path|key")
+        value = await self.provider.get("some/path|key")
         self.assertEqual(value, "value")
 
-    @defer.inlineCallbacks
-    def test_get_v2(self):
+    async def test_get_v2(self):
         self.provider.client.token = "mockToken"
-        value = yield self.provider.get("some/path|key")
+        value = await self.provider.get("some/path|key")
         self.assertEqual(value, "value")
 
-    @defer.inlineCallbacks
-    def test_get_fail_no_key(self):
+    async def test_get_fail_no_key(self):
         self.provider.client.token = "mockToken"
         with self.assertRaises(KeyError):
-            yield self.provider.get("some/path")
+            await self.provider.get("some/path")
 
-    @defer.inlineCallbacks
-    def test_get_fail_wrong_key(self):
+    async def test_get_fail_wrong_key(self):
         self.provider.client.token = "mockToken"
         with self.assertRaises(KeyError):
-            yield self.provider.get("some/path|wrong_key")
+            await self.provider.get("some/path|wrong_key")
 
-    @defer.inlineCallbacks
-    def test_get_fail_multiple_separators(self):
+    async def test_get_fail_multiple_separators(self):
         self.provider.client.token = "mockToken"
         with self.assertRaises(KeyError):
-            yield self.provider.get("some/path|unescaped|key")
+            await self.provider.get("some/path|unescaped|key")

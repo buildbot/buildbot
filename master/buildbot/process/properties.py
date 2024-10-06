@@ -321,13 +321,12 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
         self.comparator = comparator
         self.cstr = cstr
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, props):
-        v1, v2 = yield props.render((self.v1, self.v2))
+    async def getRenderingFor(self, props):
+        v1, v2 = await props.render((self.v1, self.v2))
         return self.comparator(v1, v2)
 
     def __repr__(self):
-        return f'{repr(self.v1)} {str(self.cstr)} {repr(self.v2)}'
+        return f'{self.v1!r} {self.cstr!s} {self.v2!r}'
 
 
 class _PropertyMap:
@@ -364,9 +363,9 @@ class _PropertyMap:
             # if prop exists and is true (nonempty), use it; otherwise, use
             # repl
             prop, repl = mo.group(1, 2)
-            if prop in self.temp_vals and self.temp_vals[prop]:
+            if self.temp_vals.get(prop):
                 return self.temp_vals[prop]
-            elif prop in properties and properties[prop]:
+            elif prop in properties and properties[prop]:  # noqa: RUF019
                 return properties[prop]
             return repl
 
@@ -473,38 +472,37 @@ class _Lookup(util.ComparableMixin):
     def __repr__(self):
         parts = [repr(self.index)]
         if self.default is not None:
-            parts.append(f', default={repr(self.default)}')
+            parts.append(f', default={self.default!r}')
         if not self.defaultWhenFalse:
             parts.append(', defaultWhenFalse=False')
         if self.hasKey != _notHasKey:
-            parts.append(f', hasKey={repr(self.hasKey)}')
+            parts.append(f', hasKey={self.hasKey!r}')
         if self.elideNoneAs is not None:
-            parts.append(f', elideNoneAs={repr(self.elideNoneAs)}')
+            parts.append(f', elideNoneAs={self.elideNoneAs!r}')
 
         parts_str = ''.join(parts)
 
-        return f'_Lookup({repr(self.value)}, {parts_str})'
+        return f'_Lookup({self.value!r}, {parts_str})'
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, build):
+    async def getRenderingFor(self, build):
         value = build.render(self.value)
         index = build.render(self.index)
-        value, index = yield defer.gatherResults([value, index])
+        value, index = await defer.gatherResults([value, index])
         if index not in value:
-            rv = yield build.render(self.default)
+            rv = await build.render(self.default)
         else:
             if self.defaultWhenFalse:
-                rv = yield build.render(value[index])
+                rv = await build.render(value[index])
                 if not rv:
-                    rv = yield build.render(self.default)
+                    rv = await build.render(self.default)
                 elif self.hasKey != _notHasKey:
-                    rv = yield build.render(self.hasKey)
+                    rv = await build.render(self.hasKey)
             elif self.hasKey != _notHasKey:
-                rv = yield build.render(self.hasKey)
+                rv = await build.render(self.hasKey)
             else:
-                rv = yield build.render(value[index])
+                rv = await build.render(value[index])
         if rv is None:
-            rv = yield build.render(self.elideNoneAs)
+            rv = await build.render(self.elideNoneAs)
         return rv
 
 
@@ -538,8 +536,7 @@ class _SecretRenderer:
     def __init__(self, secret_name):
         self.secret_name = secret_name
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, properties):
+    async def getRenderingFor(self, properties):
         secretsSrv = properties.master.namedServices.get("secrets")
         if not secretsSrv:
             error_message = (
@@ -549,7 +546,7 @@ class _SecretRenderer:
             )
             raise KeyError(error_message)
         credsservice = properties.master.namedServices['secrets']
-        secret_detail = yield credsservice.get(self.secret_name)
+        secret_detail = await credsservice.get(self.secret_name)
         if secret_detail is None:
             raise KeyError(f"secret key {self.secret_name} is not found in any provider")
         properties.useSecret(secret_detail.value, self.secret_name)
@@ -594,7 +591,7 @@ class _Lazy(util.ComparableMixin):
         return self.value
 
     def __repr__(self):
-        return f'_Lazy({repr(self.value)})'
+        return f'_Lazy({self.value!r})'
 
 
 @implementer(IRenderable)
@@ -620,10 +617,10 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
 
     def __repr__(self):
         if self.args:
-            return f'Interpolate({repr(self.fmtstring)}, *{repr(self.args)})'
+            return f'Interpolate({self.fmtstring!r}, *{self.args!r})'
         elif self.kwargs:
-            return f'Interpolate({repr(self.fmtstring)}, **{repr(self.kwargs)})'
-        return f'Interpolate({repr(self.fmtstring)})'
+            return f'Interpolate({self.fmtstring!r}, **{self.kwargs!r})'
+        return f'Interpolate({self.fmtstring!r})'
 
     def _parse_substitution_prop(self, arg):
         try:
@@ -886,20 +883,19 @@ class _Renderer(util.ComparableMixin):
         new_renderer.kwargs.update(kwargs)
         return new_renderer
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, props):
-        args = yield props.render(self.args)
-        kwargs = yield props.render(self.kwargs)
+    async def getRenderingFor(self, props):
+        args = await props.render(self.args)
+        kwargs = await props.render(self.kwargs)
 
         # We allow the renderer fn to return a renderable for convenience
-        result = yield self.fn(props, *args, **kwargs)
-        result = yield props.render(result)
+        result = await self.fn(props, *args, **kwargs)
+        result = await props.render(result)
         return result
 
     def __repr__(self):
         if self.args or self.kwargs:
-            return f'renderer({repr(self.fn)}, args={repr(self.args)}, kwargs={repr(self.kwargs)})'
-        return f'renderer({repr(self.fn)})'
+            return f'renderer({self.fn!r}, args={self.args!r}, kwargs={self.kwargs!r})'
+        return f'renderer({self.fn!r})'
 
 
 def renderer(fn):
@@ -992,9 +988,8 @@ class Transform:
         self._args = args
         self._kwargs = kwargs
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, iprops):
-        rfunction = yield iprops.render(self._function)
-        rargs = yield iprops.render(self._args)
-        rkwargs = yield iprops.render(self._kwargs)
+    async def getRenderingFor(self, iprops):
+        rfunction = await iprops.render(self._function)
+        rargs = await iprops.render(self._args)
+        rkwargs = await iprops.render(self._kwargs)
         return rfunction(*rargs, **rkwargs)

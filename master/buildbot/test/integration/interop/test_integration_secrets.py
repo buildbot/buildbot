@@ -16,7 +16,6 @@
 import os
 
 from parameterized import parameterized
-from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
 from buildbot.reporters.http import HttpStatusPush
@@ -31,8 +30,7 @@ class FakeSecretReporter(HttpStatusPush):
 
 
 class SecretsConfig(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self, use_interpolation):
+    async def setup_config(self, use_interpolation):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -68,7 +66,7 @@ class SecretsConfig(RunMasterBase):
         f.addStep(steps.ShellCommand(command=command))
 
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
         return fake_reporter
 
@@ -78,21 +76,20 @@ class SecretsConfig(RunMasterBase):
         ('with_interpolation', True),
         ('plain_command', False),
     ])
-    @defer.inlineCallbacks
-    def test_secret(self, name, use_interpolation):
-        fake_reporter = yield self.setup_config(use_interpolation)
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+    async def test_secret(self, name, use_interpolation):
+        fake_reporter = await self.setup_config(use_interpolation)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
 
         # check the command line
-        res = yield self.checkBuildStepLogExist(build, "echo <foo>")
+        res = await self.checkBuildStepLogExist(build, "echo <foo>")
 
         # also check the secrets are replaced in argv
-        yield self.checkBuildStepLogExist(build, "argv:.*echo.*<foo>", regex=True)
+        await self.checkBuildStepLogExist(build, "argv:.*echo.*<foo>", regex=True)
 
         # also check that the correct value goes to the command
         if os.name == "posix" and use_interpolation:
-            res &= yield self.checkBuildStepLogExist(build, "The password was there")
+            res &= await self.checkBuildStepLogExist(build, "The password was there")
 
         self.assertTrue(res)
         # at this point, build contains all the log and steps info that is in the db
@@ -104,17 +101,16 @@ class SecretsConfig(RunMasterBase):
         ('with_interpolation', True),
         ('plain_command', False),
     ])
-    @defer.inlineCallbacks
-    def test_secretReconfig(self, name, use_interpolation):
-        yield self.setup_config(use_interpolation)
+    async def test_secretReconfig(self, name, use_interpolation):
+        await self.setup_config(use_interpolation)
         self.master_config_dict['secretsProviders'] = [
             FakeSecretStorage(secretdict={"foo": "different_value", "something": "more"})
         ]
 
-        yield self.master.reconfig()
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        await self.master.reconfig()
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo <foo>")
+        res = await self.checkBuildStepLogExist(build, "echo <foo>")
         self.assertTrue(res)
         # at this point, build contains all the log and steps info that is in the db
         # we check that our secret is not in there!

@@ -1,3 +1,6 @@
+import functools
+import operator
+
 from twisted.internet import defer
 
 from buildbot.schedulers.forcesched import ChoiceStringParameter
@@ -29,15 +32,16 @@ class NestedExample(NestedParameter):
             choices=[],
         )
         self.params = {self.PIZZA: pizzaInput, self.INGREDIENTS: ingredientsInput}
-        self.allIngredients = set(sum([ingr for ingr in Api.pizzaIngredients.values()], []))
+        self.allIngredients = set(
+            functools.reduce(operator.iadd, [ingr for ingr in Api.pizzaIngredients.values()], [])
+        )
         fields = self.params.values()
         super().__init__(self.type, label='', fields=fields, **kw)
 
     def createNestedPropertyName(self, propertyName):
         return f"{self.type}_{propertyName}"
 
-    @defer.inlineCallbacks
-    def validateProperties(self, collector, properties):
+    async def validateProperties(self, collector, properties):
         # we implement the check between the input and
         # the ingredients
         if properties[self.INGREDIENTS] not in self.allIngredients or not properties[self.PIZZA]:
@@ -46,11 +50,10 @@ class NestedExample(NestedParameter):
                 return defer.fail(ValidationError('Invalid pizza'))
 
             nestedProp = self.createNestedPropertyName(self.PIZZA)
-            yield collector.collectValidationErrors(nestedProp, f)
+            await collector.collectValidationErrors(nestedProp, f)
 
-    @defer.inlineCallbacks
-    def updateFromKwargs(self, kwargs, properties, collector, **kw):
-        yield super().updateFromKwargs(kwargs, properties, collector, **kw)
+    async def updateFromKwargs(self, kwargs, properties, collector, **kw):
+        await super().updateFromKwargs(kwargs, properties, collector, **kw)
         # the properties we have are in the form
         # {nestedexample: {input: <url>,
         #                 ingredients: <ingredients>}}
@@ -60,7 +63,7 @@ class NestedExample(NestedParameter):
         # in properties
         for prop, val in properties.pop(self.type).items():
             properties[prop] = val
-        yield self.validateProperties(collector, properties)
+        await self.validateProperties(collector, properties)
 
 
 # create the interface for the setuptools entry point

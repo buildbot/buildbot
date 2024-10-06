@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING
 import alembic
 import alembic.config
 import sqlalchemy as sa
-from twisted.internet import defer
 from twisted.python import log
 from twisted.python import util
 
@@ -1148,8 +1147,7 @@ class Model(base.DBConnectorComponent):
         context.stamp(alembic_scripts, revision)
         conn.commit()
 
-    @defer.inlineCallbacks
-    def is_current(self):
+    async def is_current(self):
         def thd(conn):
             if not self.table_exists(conn, 'alembic_version'):
                 return False
@@ -1162,7 +1160,7 @@ class Model(base.DBConnectorComponent):
 
             return current_rev == current_script_rev_head
 
-        ret = yield self.db.pool.do(thd)
+        ret = await self.db.pool.do(thd)
         return ret
 
     # returns a Deferred that returns None
@@ -1173,8 +1171,7 @@ class Model(base.DBConnectorComponent):
 
         return self.db.pool.do_with_engine(thd)
 
-    @defer.inlineCallbacks
-    def upgrade(self):
+    async def upgrade(self):
         # the upgrade process must run in a db thread
         def thd(conn):
             alembic_scripts = self.alembic_get_scripts()
@@ -1229,4 +1226,4 @@ class Model(base.DBConnectorComponent):
 
             log.msg('Upgrading database: done')
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)

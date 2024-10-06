@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.reporters.zulip import ZulipStatusPush
@@ -33,24 +32,21 @@ class TestZulipStatusPush(
         self.setup_reporter_test()
         self.master = fakemaster.make_master(testcase=self, wantData=True, wantDb=True, wantMq=True)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.master.running:
-            yield self.master.stopService()
+            await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def setupZulipStatusPush(self, endpoint="http://example.com", token="123", stream=None):
+    async def setupZulipStatusPush(self, endpoint="http://example.com", token="123", stream=None):
         self.sp = ZulipStatusPush(endpoint=endpoint, token=token, stream=stream)
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, debug=None, verify=None
         )
-        yield self.sp.setServiceParent(self.master)
-        yield self.master.startService()
+        await self.sp.setServiceParent(self.master)
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def test_build_started(self):
-        yield self.setupZulipStatusPush(stream="xyz")
-        build = yield self.insert_build_new()
+    async def test_build_started(self):
+        await self.setupZulipStatusPush(stream="xyz")
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -63,12 +59,11 @@ class TestZulipStatusPush(
                 "timestamp": 10000001,
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
 
-    @defer.inlineCallbacks
-    def test_build_finished(self):
-        yield self.setupZulipStatusPush(stream="xyz")
-        build = yield self.insert_build_finished()
+    async def test_build_finished(self):
+        await self.setupZulipStatusPush(stream="xyz")
+        build = await self.insert_build_finished()
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -82,12 +77,11 @@ class TestZulipStatusPush(
                 "results": 0,
             },
         )
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_stream_none(self):
-        yield self.setupZulipStatusPush(stream=None)
-        build = yield self.insert_build_finished()
+    async def test_stream_none(self):
+        await self.setupZulipStatusPush(stream=None)
+        build = await self.insert_build_finished()
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123',
@@ -101,7 +95,7 @@ class TestZulipStatusPush(
                 "results": 0,
             },
         )
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
     def test_endpoint_string(self):
         with self.assertRaisesConfigError("Endpoint must be a string"):
@@ -111,10 +105,9 @@ class TestZulipStatusPush(
         with self.assertRaisesConfigError("Token must be a string"):
             ZulipStatusPush(endpoint="http://example.com", token=1234)
 
-    @defer.inlineCallbacks
-    def test_invalid_json_data(self):
-        yield self.setupZulipStatusPush(stream="xyz")
-        build = yield self.insert_build_new()
+    async def test_invalid_json_data(self):
+        await self.setupZulipStatusPush(stream="xyz")
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -129,13 +122,12 @@ class TestZulipStatusPush(
             code=500,
         )
         self.setUpLogging()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('500: Error pushing build status to Zulip')
 
-    @defer.inlineCallbacks
-    def test_invalid_url(self):
-        yield self.setupZulipStatusPush(stream="xyz")
-        build = yield self.insert_build_new()
+    async def test_invalid_url(self):
+        await self.setupZulipStatusPush(stream="xyz")
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -150,13 +142,12 @@ class TestZulipStatusPush(
             code=404,
         )
         self.setUpLogging()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: Error pushing build status to Zulip')
 
-    @defer.inlineCallbacks
-    def test_invalid_token(self):
-        yield self.setupZulipStatusPush(stream="xyz")
-        build = yield self.insert_build_new()
+    async def test_invalid_token(self):
+        await self.setupZulipStatusPush(stream="xyz")
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/api/v1/external/buildbot?api_key=123&stream=xyz',
@@ -172,5 +163,5 @@ class TestZulipStatusPush(
             content_json={"result": "error", "msg": "Invalid API key", "code": "INVALID_API_KEY"},
         )
         self.setUpLogging()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('401: Error pushing build status to Zulip')

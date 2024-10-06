@@ -129,33 +129,30 @@ class PBChangeSource(base.ChangeSource):
             port = cfg.protocols.get('pb', {}).get('port')
         return port
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         port = self._calculatePort(new_config)
         if not port:
             config.error("No port specified for PBChangeSource, and no worker port configured")
 
         # and, if it's changed, re-register
         if port != self.registered_port and self.isActive():
-            yield self._unregister()
-            yield self._register(port)
+            await self._unregister()
+            await self._register(port)
 
-        yield super().reconfigServiceWithBuildbotConfig(new_config)
+        await super().reconfigServiceWithBuildbotConfig(new_config)
 
-    @defer.inlineCallbacks
-    def activate(self):
+    async def activate(self):
         port = self._calculatePort(self.master.config)
-        yield self._register(port)
+        await self._register(port)
 
     def deactivate(self):
         return self._unregister()
 
-    @defer.inlineCallbacks
-    def _register(self, port):
+    async def _register(self, port):
         if not port:
             return
         self.registered_port = port
-        self.registration = yield self.master.pbmanager.register(
+        self.registration = await self.master.pbmanager.register(
             port, self.user, self.passwd, self.getPerspective
         )
 

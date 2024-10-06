@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import steps
@@ -75,9 +74,8 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        step = yield self.callGet(('steps', 72))
+    async def test_get_existing(self):
+        step = await self.callGet(('steps', 72))
         self.validateData(step)
         self.assertEqual(
             step,
@@ -97,44 +95,37 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_existing_buildid_name(self):
-        step = yield self.callGet(('builds', 30, 'steps', 'two'))
+    async def test_get_existing_buildid_name(self):
+        step = await self.callGet(('builds', 30, 'steps', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
-    @defer.inlineCallbacks
-    def test_get_existing_buildid_number(self):
-        step = yield self.callGet(('builds', 30, 'steps', 1))
+    async def test_get_existing_buildid_number(self):
+        step = await self.callGet(('builds', 30, 'steps', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
-    @defer.inlineCallbacks
-    def test_get_existing_builder_name(self):
-        step = yield self.callGet(('builders', 77, 'builds', 7, 'steps', 'two'))
+    async def test_get_existing_builder_name(self):
+        step = await self.callGet(('builders', 77, 'builds', 7, 'steps', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
-    @defer.inlineCallbacks
-    def test_get_existing_buildername_name(self):
-        step = yield self.callGet(('builders', 'builder77', 'builds', 7, 'steps', 'two'))
+    async def test_get_existing_buildername_name(self):
+        step = await self.callGet(('builders', 'builder77', 'builds', 7, 'steps', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
-    @defer.inlineCallbacks
-    def test_get_existing_builder_number(self):
-        step = yield self.callGet(('builders', 77, 'builds', 7, 'steps', 1))
+    async def test_get_existing_builder_number(self):
+        step = await self.callGet(('builders', 77, 'builds', 7, 'steps', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
-    @defer.inlineCallbacks
-    def test_get_missing_buildername_builder_number(self):
-        step = yield self.callGet(('builders', 'builder77_nope', 'builds', 7, 'steps', 1))
+    async def test_get_missing_buildername_builder_number(self):
+        step = await self.callGet(('builders', 'builder77_nope', 'builds', 7, 'steps', 1))
         self.assertEqual(step, None)
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        step = yield self.callGet(('steps', 9999))
+    async def test_get_missing(self):
+        step = await self.callGet(('steps', 9999))
         self.assertEqual(step, None)
 
 
@@ -184,27 +175,24 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_buildid(self):
-        steps = yield self.callGet(('builds', 30, 'steps'))
+    async def test_get_buildid(self):
+        steps = await self.callGet(('builds', 30, 'steps'))
 
         for step in steps:
             self.validateData(step)
 
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
-    @defer.inlineCallbacks
-    def test_get_builder(self):
-        steps = yield self.callGet(('builders', 77, 'builds', 7, 'steps'))
+    async def test_get_builder(self):
+        steps = await self.callGet(('builders', 77, 'builds', 7, 'steps'))
 
         for step in steps:
             self.validateData(step)
 
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
-    @defer.inlineCallbacks
-    def test_get_buildername(self):
-        steps = yield self.callGet(('builders', 'builder77', 'builds', 7, 'steps'))
+    async def test_get_buildername(self):
+        steps = await self.callGet(('builders', 'builder77', 'builds', 7, 'steps'))
 
         for step in steps:
             self.validateData(step)
@@ -226,9 +214,8 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def addStep(self, buildid, name):
             pass
 
-    @defer.inlineCallbacks
-    def test_addStep(self):
-        stepid, number, name = yield self.rtype.addStep(buildid=10, name='name')
+    async def test_addStep(self):
+        stepid, number, name = await self.rtype.addStep(buildid=10, name='name')
         msgBody = {
             'buildid': 10,
             'complete': False,
@@ -247,7 +234,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('builds', '10', 'steps', str(stepid), 'new'), msgBody),
             (('steps', str(stepid), 'new'), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(stepid)
+        step = await self.master.db.steps.getStep(stepid)
         self.assertEqual(
             step,
             StepModel(
@@ -265,8 +252,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_fake_addStep(self):
+    async def test_fake_addStep(self):
         self.assertEqual(len((yield self.master.data.updates.addStep(buildid=10, name='ten'))), 3)
 
     def test_signature_startStep(self):
@@ -274,11 +260,10 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def addStep(self, stepid, started_at=None, locks_acquired=False):
             pass
 
-    @defer.inlineCallbacks
-    def test_startStep(self):
+    async def test_startStep(self):
         self.reactor.advance(TIME1)
-        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
-        yield self.rtype.startStep(stepid=100)
+        await self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
+        await self.rtype.startStep(stepid=100)
 
         msgBody = {
             'buildid': 10,
@@ -298,7 +283,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('builds', '10', 'steps', str(100), 'started'), msgBody),
             (('steps', str(100), 'started'), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(100)
+        step = await self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
             StepModel(
@@ -316,11 +301,10 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_startStep_no_locks(self):
+    async def test_startStep_no_locks(self):
         self.reactor.advance(TIME1)
-        yield self.master.db.steps.addStep(buildid=10, name="ten", state_string="pending")
-        yield self.rtype.startStep(stepid=100, locks_acquired=True)
+        await self.master.db.steps.addStep(buildid=10, name="ten", state_string="pending")
+        await self.rtype.startStep(stepid=100, locks_acquired=True)
 
         msgBody = {
             "buildid": 10,
@@ -340,7 +324,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (("builds", "10", "steps", str(100), "started"), msgBody),
             (("steps", str(100), "started"), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(100)
+        step = await self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
             StepModel(
@@ -358,14 +342,13 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_startStep_acquire_locks(self):
+    async def test_startStep_acquire_locks(self):
         self.reactor.advance(TIME1)
-        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
-        yield self.rtype.startStep(stepid=100)
+        await self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
+        await self.rtype.startStep(stepid=100)
         self.reactor.advance(TIME2 - TIME1)
         self.master.mq.clearProductions()
-        yield self.rtype.set_step_locks_acquired_at(stepid=100)
+        await self.rtype.set_step_locks_acquired_at(stepid=100)
 
         msgBody = {
             'buildid': 10,
@@ -385,7 +368,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('builds', '10', 'steps', str(100), 'updated'), msgBody),
             (('steps', str(100), 'updated'), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(100)
+        step = await self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
             StepModel(
@@ -411,10 +394,9 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def setStepStateString(self, stepid, state_string):
             pass
 
-    @defer.inlineCallbacks
-    def test_setStepStateString(self):
-        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
-        yield self.rtype.setStepStateString(stepid=100, state_string='hi')
+    async def test_setStepStateString(self):
+        await self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
+        await self.rtype.setStepStateString(stepid=100, state_string='hi')
 
         msgBody = {
             'buildid': 10,
@@ -434,7 +416,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('builds', '10', 'steps', str(100), 'updated'), msgBody),
             (('steps', str(100), 'updated'), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(100)
+        step = await self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
             StepModel(
@@ -460,15 +442,14 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def finishStep(self, stepid, results, hidden):
             pass
 
-    @defer.inlineCallbacks
-    def test_finishStep(self):
-        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
+    async def test_finishStep(self):
+        await self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
         self.reactor.advance(TIME1)
-        yield self.rtype.startStep(stepid=100)
-        yield self.rtype.set_step_locks_acquired_at(stepid=100)
+        await self.rtype.startStep(stepid=100)
+        await self.rtype.set_step_locks_acquired_at(stepid=100)
         self.reactor.advance(TIME2 - TIME1)
         self.master.mq.clearProductions()
-        yield self.rtype.finishStep(stepid=100, results=9, hidden=False)
+        await self.rtype.finishStep(stepid=100, results=9, hidden=False)
 
         msgBody = {
             'buildid': 10,
@@ -488,7 +469,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('builds', '10', 'steps', str(100), 'finished'), msgBody),
             (('steps', str(100), 'finished'), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(100)
+        step = await self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
             StepModel(
@@ -514,10 +495,9 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         def addStepURL(self, stepid, name, url):
             pass
 
-    @defer.inlineCallbacks
-    def test_addStepURL(self):
-        yield self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
-        yield self.rtype.addStepURL(stepid=100, name="foo", url="bar")
+    async def test_addStepURL(self):
+        await self.master.db.steps.addStep(buildid=10, name='ten', state_string='pending')
+        await self.rtype.addStepURL(stepid=100, name="foo", url="bar")
 
         msgBody = {
             'buildid': 10,
@@ -537,7 +517,7 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (('builds', '10', 'steps', str(100), 'updated'), msgBody),
             (('steps', str(100), 'updated'), msgBody),
         ])
-        step = yield self.master.db.steps.getStep(100)
+        step = await self.master.db.steps.getStep(100)
         self.assertEqual(
             step,
             StepModel(

@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.process import results
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import CommandMixin
@@ -25,8 +23,7 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # and makes sure the command mixin is working.
 class CommandMixinMaster(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -37,11 +34,10 @@ class CommandMixinMaster(RunMasterBase):
         f = BuildFactory()
         f.addStep(TestCommandMixinStep())
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_commandmixin(self):
-        yield self.setup_config()
+    async def test_commandmixin(self):
+        await self.setup_config()
 
         change = {
             "branch": "master",
@@ -52,7 +48,7 @@ class CommandMixinMaster(RunMasterBase):
             "revision": "HEAD",
             "project": "none",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], results.SUCCESS)
 
@@ -66,29 +62,28 @@ class CommandMixinMasterMsgPack(CommandMixinMaster):
 
 
 class TestCommandMixinStep(BuildStep, CommandMixin):
-    @defer.inlineCallbacks
-    def run(self):
-        contents = yield self.runGlob('*')
+    async def run(self):
+        contents = await self.runGlob('*')
         if contents != []:
             return results.FAILURE
 
-        hasPath = yield self.pathExists('composite_mixin_test')
+        hasPath = await self.pathExists('composite_mixin_test')
         if hasPath:
             return results.FAILURE
 
-        yield self.runMkdir('composite_mixin_test')
+        await self.runMkdir('composite_mixin_test')
 
-        hasPath = yield self.pathExists('composite_mixin_test')
+        hasPath = await self.pathExists('composite_mixin_test')
         if not hasPath:
             return results.FAILURE
 
-        contents = yield self.runGlob('*')
+        contents = await self.runGlob('*')
         if not contents[0].endswith('composite_mixin_test'):
             return results.FAILURE
 
-        yield self.runRmdir('composite_mixin_test')
+        await self.runRmdir('composite_mixin_test')
 
-        hasPath = yield self.pathExists('composite_mixin_test')
+        hasPath = await self.pathExists('composite_mixin_test')
         if hasPath:
             return results.FAILURE
 

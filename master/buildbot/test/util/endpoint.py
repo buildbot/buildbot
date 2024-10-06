@@ -56,7 +56,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
             if pp == '/':
                 continue
             if not pp.startswith('/') or pp.endswith('/'):
-                raise AssertionError(f"invalid pattern {repr(pp)}")
+                raise AssertionError(f"invalid pattern {pp!r}")
         pathPatterns = [tuple(pp.split('/')[1:]) for pp in pathPatterns]
         for pp in pathPatterns:
             self.matcher[pp] = self.ep
@@ -75,14 +75,13 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
     # call methods, with extra checks
 
-    @defer.inlineCallbacks
-    def callGet(self, path, resultSpec=None):
+    async def callGet(self, path, resultSpec=None):
         self.assertIsInstance(path, tuple)
         if resultSpec is None:
             resultSpec = resultspec.ResultSpec()
         endpoint, kwargs = self.matcher[path]
         self.assertIdentical(endpoint, self.ep)
-        rv = yield endpoint.get(resultSpec, kwargs)
+        rv = await endpoint.get(resultSpec, kwargs)
 
         if self.ep.kind == base.EndpointKind.COLLECTION:
             self.assertIsInstance(rv, (list, base.ListResult))

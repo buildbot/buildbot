@@ -52,16 +52,14 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        change = yield self.callGet(('changes', '13'))
+    async def test_get_existing(self):
+        change = await self.callGet(('changes', '13'))
 
         self.validateData(change)
         self.assertEqual(change['project'], 'world-domination')
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        change = yield self.callGet(('changes', '99'))
+    async def test_get_missing(self):
+        change = await self.callGet(('changes', '99'))
 
         self.assertEqual(change, None)
 
@@ -100,61 +98,55 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        changes = yield self.callGet(('changes',))
+    async def test_get(self):
+        changes = await self.callGet(('changes',))
 
         self.validateData(changes[0])
         self.assertEqual(changes[0]['changeid'], 13)
         self.validateData(changes[1])
         self.assertEqual(changes[1]['changeid'], 14)
 
-    @defer.inlineCallbacks
-    def test_getChanges_from_build(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+    async def test_getChanges_from_build(self):
+        fake_change = await self.db.changes.getChangeFromSSid(ssid=144)
 
         mockGetChangeById = mock.Mock(
             spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
         )
         self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
 
-        changes = yield self.callGet(('builds', '1', 'changes'))
+        changes = await self.callGet(('builds', '1', 'changes'))
 
         self.validateData(changes[0])
         self.assertEqual(changes[0]['changeid'], 14)
 
-    @defer.inlineCallbacks
-    def test_getChanges_from_builder(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+    async def test_getChanges_from_builder(self):
+        fake_change = await self.db.changes.getChangeFromSSid(ssid=144)
         mockGetChangeById = mock.Mock(
             spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
         )
         self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
 
-        changes = yield self.callGet(('builders', '1', 'builds', '1', 'changes'))
+        changes = await self.callGet(('builders', '1', 'builds', '1', 'changes'))
         self.validateData(changes[0])
         self.assertEqual(changes[0]['changeid'], 14)
 
-    @defer.inlineCallbacks
-    def test_getChanges_recent(self):
+    async def test_getChanges_recent(self):
         resultSpec = resultspec.ResultSpec(limit=1, order=('-changeid',))
-        changes = yield self.callGet(('changes',), resultSpec=resultSpec)
+        changes = await self.callGet(('changes',), resultSpec=resultSpec)
 
         self.validateData(changes[0])
         self.assertEqual(changes[0]['changeid'], 14)
         self.assertEqual(len(changes), 1)
 
-    @defer.inlineCallbacks
-    def test_getChangesOtherOrder(self):
+    async def test_getChangesOtherOrder(self):
         resultSpec = resultspec.ResultSpec(limit=1, order=('-when_time_stamp',))
-        changes = yield self.callGet(('changes',), resultSpec=resultSpec)
+        changes = await self.callGet(('changes',), resultSpec=resultSpec)
 
         self.assertEqual(len(changes), 1)
 
-    @defer.inlineCallbacks
-    def test_getChangesOtherOffset(self):
+    async def test_getChangesOtherOffset(self):
         resultSpec = resultspec.ResultSpec(limit=1, offset=1, order=('-changeid',))
-        changes = yield self.callGet(('changes',), resultSpec=resultSpec)
+        changes = await self.callGet(('changes',), resultSpec=resultSpec)
 
         self.assertEqual(len(changes), 1)
 
@@ -218,14 +210,13 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         ):
             pass
 
-    @defer.inlineCallbacks
-    def do_test_addChange(
+    async def do_test_addChange(
         self, kwargs, expectedRoutingKey, expectedMessage, expectedRow, expectedChangeUsers=None
     ):
         if expectedChangeUsers is None:
             expectedChangeUsers = []
         self.reactor.advance(10000000)
-        changeid = yield self.rtype.addChange(**kwargs)
+        changeid = await self.rtype.addChange(**kwargs)
 
         self.assertEqual(changeid, 500)
         # check the correct message was received
@@ -271,8 +262,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         )
         return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
-    @defer.inlineCallbacks
-    def test_addChange_src_codebase(self):
+    async def test_addChange_src_codebase(self):
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
@@ -336,7 +326,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             project='Buildbot',
             sourcestampid=100,
         )
-        yield self.do_test_addChange(
+        await self.do_test_addChange(
             kwargs, expectedRoutingKey, expectedMessage, expectedRow, expectedChangeUsers=[123]
         )
 

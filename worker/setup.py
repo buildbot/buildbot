@@ -124,7 +124,7 @@ setup_args = {
         'console_scripts': [
             'buildbot-worker=buildbot_worker.scripts.runner:run',
             # this will also be shipped on non windows :-(
-            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',  # noqa pylint: disable=line-too-long
+            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
         ]
     },
 }

@@ -18,7 +18,6 @@ import re
 from unittest.case import SkipTest
 from unittest.mock import Mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -196,11 +195,10 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.proto.onMessage(json.dumps({"type": 'connection_init'}), False)
         self.assert_called_with_json(self.proto.sendMessage, {"type": "connection_ack"})
 
-    @defer.inlineCallbacks
-    def test_start_stop_graphql(self):
+    async def test_start_stop_graphql(self):
         if self.skip_graphql:
             raise SkipTest("graphql-core not installed")
-        yield self.proto.onMessage(
+        await self.proto.onMessage(
             json.dumps({"type": "start", "payload": {"query": "{builders{name}}"}, "id": 1}),
             False,
         )
@@ -217,18 +215,18 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             },
         )
         self.proto.sendMessage.reset_mock()
-        yield self.proto.graphql_dispatch_events.function()
+        await self.proto.graphql_dispatch_events.function()
         self.proto.sendMessage.assert_not_called()
 
         # auto create a builder in the db
-        yield self.master.db.builders.findBuilderId("builder1")
+        await self.master.db.builders.findBuilderId("builder1")
         self.master.mq.callConsumer(
             ("builders", "1", "started"),
             {"name": "builder1", "masterid": 1, "builderid": 1},
         )
         self.assertNotEqual(self.proto.graphql_dispatch_events.phase, 0)
         # then force the call anyway to speed up the test
-        yield self.proto.graphql_dispatch_events.function()
+        await self.proto.graphql_dispatch_events.function()
         self.assert_called_with_json(
             self.proto.sendMessage,
             {
@@ -241,15 +239,14 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.proto.onMessage(json.dumps({"type": 'stop', "id": 1}), False)
+        await self.proto.onMessage(json.dumps({"type": 'stop', "id": 1}), False)
 
         self.assertEqual(len(self.proto.graphql_subs), 0)
 
-    @defer.inlineCallbacks
-    def test_start_graphql_bad_query(self):
+    async def test_start_graphql_bad_query(self):
         if self.skip_graphql:
             raise SkipTest("graphql-core not installed")
-        yield self.proto.onMessage(
+        await self.proto.onMessage(
             json.dumps({
                 "type": "start",
                 "payload": {"query": "{builders{not_existing}}"},

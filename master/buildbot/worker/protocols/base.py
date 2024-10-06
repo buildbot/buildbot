@@ -30,8 +30,7 @@ class UpdateRegistrationListener(Listener):
         # username : (password, portstr, manager registration)
         self._registrations = {}
 
-    @defer.inlineCallbacks
-    def updateRegistration(self, username, password, portStr):
+    async def updateRegistration(self, username, password, portStr):
         # NOTE: this method is only present on the PB and MsgPack protocols; others do not
         # use registrations
         if username in self._registrations:
@@ -45,25 +44,24 @@ class UpdateRegistrationListener(Listener):
         if iseq:
             return currentReg
         if currentReg:
-            yield currentReg.unregister()
+            await currentReg.unregister()
             del self._registrations[username]
 
         if portStr is not None and password:
-            reg = yield self.get_manager().register(
+            reg = await self.get_manager().register(
                 portStr, username, password, self._create_connection
             )
             self._registrations[username] = (password, portStr, reg)
             return reg
         return currentReg
 
-    @defer.inlineCallbacks
-    def _create_connection(self, mind, workerName):
+    async def _create_connection(self, mind, workerName):
         self.before_connection_setup(mind, workerName)
         worker = self.master.workers.getWorkerByName(workerName)
         conn = self.ConnectionClass(self.master, worker, mind)
 
         # inform the manager, logging any problems in the deferred
-        accepted = yield self.master.workers.newConnection(conn, workerName)
+        accepted = await self.master.workers.newConnection(conn, workerName)
 
         # return the Connection as the perspective
         if accepted:

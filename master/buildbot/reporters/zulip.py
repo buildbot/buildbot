@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.logger import Logger
 
 from buildbot import config
@@ -36,19 +35,17 @@ class ZulipStatusPush(ReporterBase):
 
         super().checkConfig(generators=[BuildStartEndStatusGenerator()])
 
-    @defer.inlineCallbacks
-    def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None):
+    async def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None):
         self.debug = debug
         self.verify = verify
-        yield super().reconfigService(generators=[BuildStartEndStatusGenerator()])
-        self._http = yield httpclientservice.HTTPSession(
+        await super().reconfigService(generators=[BuildStartEndStatusGenerator()])
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, endpoint, debug=self.debug, verify=self.verify
         )
         self.token = token
         self.stream = stream
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         build = reports[0]['builds'][0]
         event = ("new", "finished")[0 if build["complete"] is False else 1]
         jsondata = {
@@ -67,9 +64,9 @@ class ZulipStatusPush(ReporterBase):
             url = f"/api/v1/external/buildbot?api_key={self.token}&stream={self.stream}"
         else:
             url = f"/api/v1/external/buildbot?api_key={self.token}"
-        response = yield self._http.post(url, json=jsondata)
+        response = await self._http.post(url, json=jsondata)
         if response.code != 200:
-            content = yield response.content()
+            content = await response.content()
             log.error(
                 "{code}: Error pushing build status to Zulip: {content}",
                 code=response.code,

@@ -19,7 +19,6 @@ import copy
 import json
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.data import base
@@ -35,8 +34,7 @@ if TYPE_CHECKING:
 
 
 class FixerMixin:
-    @defer.inlineCallbacks
-    def _fixChange(self, model: ChangeModel, is_graphql: bool):
+    async def _fixChange(self, model: ChangeModel, is_graphql: bool):
         # TODO: make these mods in the DB API
         data = {
             'changeid': model.changeid,
@@ -58,7 +56,7 @@ class FixerMixin:
             data['sourcestampid'] = model.sourcestampid
         else:
             sskey = ('sourcestamps', str(model.sourcestampid))
-            data['sourcestamp'] = yield self.master.data.get(sskey)
+            data['sourcestamp'] = await self.master.data.get(sskey)
 
         if is_graphql:
             data['properties'] = [
@@ -93,9 +91,8 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
         /changes/n:changeid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        change = yield self.master.db.changes.getChange(kwargs['changeid'])
+    async def get(self, resultSpec, kwargs):
+        change = await self.master.db.changes.getChange(kwargs['changeid'])
         if change is None:
             return None
         return (yield self._fixChange(change, is_graphql='graphql' in kwargs))
@@ -111,17 +108,16 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
     """
     rootLinkName = 'changes'
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         buildid = kwargs.get('buildid')
         if 'build_number' in kwargs:
-            buildid = yield self.getBuildid(kwargs)
+            buildid = await self.getBuildid(kwargs)
         ssid = kwargs.get('ssid')
         changes = []
         if buildid is not None:
-            changes = yield self.master.db.changes.getChangesForBuild(buildid)
+            changes = await self.master.db.changes.getChangesForBuild(buildid)
         elif ssid is not None:
-            change = yield self.master.db.changes.getChangeFromSSid(ssid)
+            change = await self.master.db.changes.getChangeFromSSid(ssid)
             if change is not None:
                 changes = [change]
             else:
@@ -129,7 +125,7 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
         else:
             if resultSpec is not None:
                 resultSpec.fieldMapping = self.fieldMapping
-                changes = yield self.master.db.changes.getChanges(resultSpec=resultSpec)
+                changes = await self.master.db.changes.getChanges(resultSpec=resultSpec)
         results = []
         for ch in changes:
             results.append((yield self._fixChange(ch, is_graphql='graphql' in kwargs)))
@@ -167,8 +163,7 @@ class Change(base.ResourceType):
     entityType = EntityType(name, 'Change')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addChange(
+    async def addChange(
         self,
         files=None,
         comments=None,
@@ -196,7 +191,7 @@ class Change(base.ResourceType):
         # get a user id
         if src:
             # create user object, returning a corresponding uid
-            uid = yield users.createUserObject(self.master, author, src)
+            uid = await users.createUserObject(self.master, author, src)
         else:
             uid = None
 
@@ -242,7 +237,7 @@ class Change(base.ResourceType):
             codebase = codebase or ''
 
         # add the Change to the database
-        changeid = yield self.master.db.changes.addChange(
+        changeid = await self.master.db.changes.addChange(
             author=author,
             committer=committer,
             files=files,
@@ -260,7 +255,7 @@ class Change(base.ResourceType):
         )
 
         # get the change and munge the result for the notification
-        change = yield self.master.data.get(('changes', str(changeid)))
+        change = await self.master.data.get(('changes', str(changeid)))
         change = copy.deepcopy(change)
         self.produceEvent(change, 'new')
 

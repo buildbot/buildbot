@@ -51,26 +51,23 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         self.poll()
         self.assertEqual(self.calls, 0)
 
-    @defer.inlineCallbacks
-    def test_call_when_started_forces_run(self):
+    async def test_call_when_started_forces_run(self):
         self.poll.start(interval=100, now=False)
         self.poll()
         self.reactor.advance(0)
         self.assertEqual(self.calls, 1)
-        yield self.poll.stop()
+        await self.poll.stop()
 
-    @defer.inlineCallbacks
-    def test_start_with_now_forces_run_immediately(self):
+    async def test_start_with_now_forces_run_immediately(self):
         self.poll.start(interval=10, now=True)
         self.reactor.advance(0)
         self.assertEqual(self.calls, 1)
-        yield self.poll.stop()
+        await self.poll.stop()
 
-    @defer.inlineCallbacks
-    def test_start_with_now_false_does_not_run(self):
+    async def test_start_with_now_false_does_not_run(self):
         self.poll.start(interval=10, now=False)
         self.assertEqual(self.calls, 0)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     def test_stop_on_stopped_does_nothing(self):
         self.poll.start(interval=1)
@@ -79,12 +76,11 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         d = self.poll.stop()
         self.assertTrue(d.called)
 
-    @defer.inlineCallbacks
-    def test_start_twice_error(self):
+    async def test_start_twice_error(self):
         self.poll.start(interval=1)
         with self.assertRaises(AssertionError):
             self.poll.start(interval=2)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     def test_repeats_and_stops(self):
         """Polling repeats until stopped, and stop returns a Deferred"""
@@ -101,8 +97,7 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(10)
         self.assertEqual(self.calls, 21)
 
-    @defer.inlineCallbacks
-    def test_fail_reschedules_and_logs_exceptions(self):
+    async def test_fail_reschedules_and_logs_exceptions(self):
         self.fail_after_running = True
         self.poll.start(interval=1, now=True)
         self.reactor.advance(0)
@@ -110,7 +105,7 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(1)
         self.assertEqual(self.calls, 2)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     @parameterized.expand([
         ('shorter_than_interval_now_True', 5, True),
@@ -118,8 +113,7 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         ('shorter_than_interval_now_False', 5, False),
         ('longer_than_interval_now_False', 15, False),
     ])
-    @defer.inlineCallbacks
-    def test_run_with_random_delay(self, name, random_delay_max, now):
+    async def test_run_with_random_delay(self, name, random_delay_max, now):
         interval = 10
 
         with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
@@ -139,14 +133,13 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
                 self.reactor.advance(1)
                 i += 1
             self.assertEqual(self.calls, 1)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     @parameterized.expand([
         ('now_True', True),
         ('now_False', False),
     ])
-    @defer.inlineCallbacks
-    def test_run_with_random_delay_zero_interval_still_delays(self, name, now):
+    async def test_run_with_random_delay_zero_interval_still_delays(self, name, now):
         random_delay_max = 5
         with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
             self.poll.start(interval=0, now=now, random_delay_max=random_delay_max)
@@ -160,28 +153,26 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
                 i += 1
             self.assertEqual(self.calls, 1)
 
-        yield self.poll.stop()
+        await self.poll.stop()
 
-    @defer.inlineCallbacks
-    def test_run_with_random_delay_stops_immediately_during_delay_phase(self):
+    async def test_run_with_random_delay_stops_immediately_during_delay_phase(self):
         random_delay_max = 5
         with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
             self.poll.start(interval=10, now=True, random_delay_max=random_delay_max)
             self.reactor.advance(1)
             self.assertEqual(self.calls, 0)
-        yield self.poll.stop()
+        await self.poll.stop()
 
 
 class TestPollerAsync(TestReactorMixin, unittest.TestCase):
     @poll.method
-    @defer.inlineCallbacks
-    def poll(self):
+    async def poll(self):
         assert not self.running, "overlapping call"
         self.running = True
 
         d = defer.Deferred()
         self.reactor.callLater(self.duration, d.callback, None)
-        yield d
+        await d
 
         self.calls += 1
         self.running = False
@@ -203,8 +194,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         poll.reset_poll_methods()
 
-    @defer.inlineCallbacks
-    def test_call_when_started_forces_run(self):
+    async def test_call_when_started_forces_run(self):
         self.poll.start(interval=10, now=True)
         self.reactor.advance(0)
         self.assertEqual(self.calls, 0)
@@ -212,7 +202,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(self.duration)
         self.assertEqual(self.calls, 1)
         self.assertFalse(self.running)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     def test_repeats_and_stops(self):
         """Polling repeats until stopped, and stop returns a Deferred.  The
@@ -237,8 +227,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         ('now_True', True),
         ('now_False', False),
     ])
-    @defer.inlineCallbacks
-    def test_zero_interval_starts_immediately(self, name, now):
+    async def test_zero_interval_starts_immediately(self, name, now):
         self.poll.start(interval=0, now=now)
         self.reactor.advance(0)
 
@@ -254,10 +243,9 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.assertTrue(self.running)
         self.reactor.advance(1)
         self.assertFalse(self.running)
-        yield d
+        await d
 
-    @defer.inlineCallbacks
-    def test_fail_reschedules_and_logs_exceptions(self):
+    async def test_fail_reschedules_and_logs_exceptions(self):
         self.fail_after_running = True
         self.poll.start(interval=10, now=True)
         self.reactor.advance(0)
@@ -269,7 +257,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(1)
         self.assertEqual(self.calls, 2)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     def test_stop_while_running_waits_for_completion(self):
         self.duration = 2
@@ -348,8 +336,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.assertTrue(d1.called)
         self.assertTrue(d2.called)
 
-    @defer.inlineCallbacks
-    def test_stop_and_restart(self):
+    async def test_stop_and_restart(self):
         """If the method is immediately restarted from a callback on a stop Deferred,
         the polling continues with the new start time."""
         self.duration = 6
@@ -363,14 +350,14 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(6)
         self.assertFalse(self.running)
         self.assertTrue(d.called)
-        yield d
+        await d
         self.poll.start(interval=10)
         self.reactor.advance(10)
         self.assertEqual(self.reactor.seconds(), 26)
         self.assertTrue(self.running)
 
         self.reactor.advance(6)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     def test_method_longer_than_interval_invoked_at_interval_multiples(self):
         self.duration = 4
@@ -401,8 +388,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         ('shorter_than_interval_now_False', 5, False),
         ('longer_than_interval_now_False', 15, False),
     ])
-    @defer.inlineCallbacks
-    def test_run_with_random_delay(self, name, random_delay_max, now):
+    async def test_run_with_random_delay(self, name, random_delay_max, now):
         interval = 10
 
         with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
@@ -429,14 +415,13 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
             self.reactor.advance(self.duration)
             self.assertEqual(self.calls, 1)
             self.assertFalse(self.running)
-        yield self.poll.stop()
+        await self.poll.stop()
 
     @parameterized.expand([
         ('now_True', True),
         ('now_False', False),
     ])
-    @defer.inlineCallbacks
-    def test_run_with_random_delay_zero_interval_still_delays(self, name, now):
+    async def test_run_with_random_delay_zero_interval_still_delays(self, name, now):
         random_delay_max = 5
         with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
             self.poll.start(interval=0, now=now, random_delay_max=random_delay_max)
@@ -456,14 +441,13 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
             self.assertEqual(self.calls, 1)
             self.assertFalse(self.running)
 
-        yield self.poll.stop()
+        await self.poll.stop()
 
-    @defer.inlineCallbacks
-    def test_run_with_random_delay_stops_immediately_during_delay_phase(self):
+    async def test_run_with_random_delay_stops_immediately_during_delay_phase(self):
         random_delay_max = 5
         with mock.patch("buildbot.util.poll.randint", return_value=random_delay_max):
             self.poll.start(interval=10, now=True, random_delay_max=random_delay_max)
             self.reactor.advance(1)
             self.assertFalse(self.running)
             self.assertEqual(self.calls, 0)
-        yield self.poll.stop()
+        await self.poll.stop()

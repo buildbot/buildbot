@@ -17,7 +17,6 @@
 import os
 import socket
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -95,10 +94,9 @@ class ServerThreadPool:
             return self.threads[uri].connecting
         return False
 
-    @defer.inlineCallbacks
-    def get_or_create_connection(self, uri):
+    async def get_or_create_connection(self, uri):
         if uri not in self.threads:
-            yield self.do(uri, lambda: None)
+            await self.do(uri, lambda: None)
         return self.threads[uri].conn
 
     def reset_connection(self, uri):
@@ -153,10 +151,9 @@ class LibVirtWorker(AbstractLatentWorker):
     def _pool_do(self, func):
         return self.pool.do(self.uri, func)
 
-    @defer.inlineCallbacks
-    def _get_domain(self):
+    async def _get_domain(self):
         try:
-            domain = yield self._pool_do(lambda conn: conn.lookupByName(self.workername))
+            domain = await self._pool_do(lambda conn: conn.lookupByName(self.workername))
             return domain
         except libvirt.libvirtError as e:
             log.err(f'LibVirtWorker: got error when accessing domain: {e}')
@@ -166,16 +163,14 @@ class LibVirtWorker(AbstractLatentWorker):
                 log.err(f'LibVirtWorker: got error when resetting connection: {e1}')
             raise e
 
-    @defer.inlineCallbacks
-    def _get_domain_id(self):
-        domain = yield self._get_domain()
+    async def _get_domain_id(self):
+        domain = await self._get_domain()
         if domain is None:
             return -1
-        domain_id = yield self._pool_do(lambda conn: domain.ID())
+        domain_id = await self._pool_do(lambda conn: domain.ID())
         return domain_id
 
-    @defer.inlineCallbacks
-    def _prepare_base_image(self):
+    async def _prepare_base_image(self):
         """
         I am a private method for creating (possibly cheap) copies of a
         base_image for start_instance to boot.
@@ -201,7 +196,7 @@ class LibVirtWorker(AbstractLatentWorker):
         log.msg(f"Cloning base image: {clone_cmd}'")
 
         try:
-            rc = yield runprocess.run_process(
+            rc = await runprocess.run_process(
                 self.master.reactor, clone_cmd, collect_stdout=False, collect_stderr=False
             )
             if rc != 0:
@@ -210,8 +205,7 @@ class LibVirtWorker(AbstractLatentWorker):
             log.err(f"Cloning failed: {e}")
             raise
 
-    @defer.inlineCallbacks
-    def start_instance(self, build):
+    async def start_instance(self, build):
         """
         I start a new instance of a VM.
 
@@ -223,7 +217,7 @@ class LibVirtWorker(AbstractLatentWorker):
         """
 
         try:
-            domain_id = yield self._get_domain_id()
+            domain_id = await self._get_domain_id()
             if domain_id != -1:
                 raise LatentWorkerFailedToSubstantiate(
                     f"{self}: Cannot start_instance as it's already active"
@@ -233,14 +227,14 @@ class LibVirtWorker(AbstractLatentWorker):
                 f'{self}: Got error while retrieving domain ID: {e}'
             ) from e
 
-        yield self._prepare_base_image()
+        await self._prepare_base_image()
 
         try:
             if self.xml:
-                yield self._pool_do(lambda conn: conn.createXML(self.xml, 0))
+                await self._pool_do(lambda conn: conn.createXML(self.xml, 0))
             else:
-                domain = yield self._get_domain()
-                yield self._pool_do(
+                domain = await self._get_domain()
+                await self._pool_do(
                     lambda conn: domain.setMetadata(
                         libvirt.VIR_DOMAIN_METADATA_ELEMENT,
                         self.metadata.format(self.workername, self.password, self.masterFQDN),
@@ -250,7 +244,7 @@ class LibVirtWorker(AbstractLatentWorker):
                     )
                 )
 
-                yield self._pool_do(lambda conn: domain.create())
+                await self._pool_do(lambda conn: domain.create())
 
         except Exception as e:
             raise LatentWorkerFailedToSubstantiate(
@@ -259,8 +253,7 @@ class LibVirtWorker(AbstractLatentWorker):
 
         return True
 
-    @defer.inlineCallbacks
-    def stop_instance(self, fast=False):
+    async def stop_instance(self, fast=False):
         """
         I attempt to stop a running VM.
         I make sure any connection to the worker is removed.
@@ -268,24 +261,24 @@ class LibVirtWorker(AbstractLatentWorker):
         When everything is tidied up, I ask that bbot looks for work to do
         """
 
-        domain_id = yield self._get_domain_id()
+        domain_id = await self._get_domain_id()
         if domain_id == -1:
             log.msg(f"{self}: Domain is unexpectedly not running")
             return
 
-        domain = yield self._get_domain()
+        domain = await self._get_domain()
 
         if self.graceful_shutdown and not fast:
             log.msg(f"Graceful shutdown chosen for {self.workername}")
             try:
-                yield self._pool_do(lambda conn: domain.shutdown())
+                await self._pool_do(lambda conn: domain.shutdown())
             except Exception as e:
                 log.msg(f'{self}: Graceful shutdown failed ({e}). Force destroying domain')
                 # Don't re-throw to stop propagating shutdown error if destroy was successful.
-                yield self._pool_do(lambda conn: domain.destroy())
+                await self._pool_do(lambda conn: domain.destroy())
 
         else:
-            yield self._pool_do(lambda conn: domain.destroy())
+            await self._pool_do(lambda conn: domain.destroy())
 
         if self.base_image:
             log.msg(f'{self}: Removing image {self.image}')

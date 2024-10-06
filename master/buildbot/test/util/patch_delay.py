@@ -49,7 +49,7 @@ def _get_target(target):
     try:
         target, attribute = target.rsplit('.', 1)
     except (TypeError, ValueError) as e:
-        raise TypeError(f"Need a valid target to patch. You supplied: {repr(target)}") from e
+        raise TypeError(f"Need a valid target to patch. You supplied: {target!r}") from e
     return _importer(target), attribute
 
 
@@ -90,9 +90,8 @@ def patchForDelay(target_name):
     delay = DelayWrapper()
 
     @functools.wraps(original)
-    @defer.inlineCallbacks
-    def wrapper(*args, **kwargs):
-        yield delay.add_new()
+    async def wrapper(*args, **kwargs):
+        await delay.add_new()
         return (yield original(*args, **kwargs))
 
     with mock.patch(target_name, new=wrapper):

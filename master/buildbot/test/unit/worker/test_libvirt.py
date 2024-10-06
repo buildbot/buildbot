@@ -99,25 +99,22 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         with self.assertRaises(config.ConfigErrors):
             self.create_worker('bot', 'pass', None, 'path', 'path')
 
-    @defer.inlineCallbacks
-    def test_get_domain_id(self):
+    async def test_get_domain_id(self):
         conn = self.add_fake_conn('fake:///conn')
         conn.fake_add('bot', 14)
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o', uri='fake:///conn')
 
-        id = yield bs._get_domain_id()
+        id = await bs._get_domain_id()
         self.assertEqual(id, 14)
 
-    @defer.inlineCallbacks
-    def test_prepare_base_image_none(self):
+    async def test_prepare_base_image_none(self):
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image=None)
-        yield bs._prepare_base_image()
+        await bs._prepare_base_image()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_prepare_base_image_cheap(self):
+    async def test_prepare_base_image_cheap(self):
         self.expect_commands(
             ExpectMasterShell([
                 "qemu-img",
@@ -133,33 +130,30 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         )
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
-        yield bs._prepare_base_image()
+        await bs._prepare_base_image()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_prepare_base_image_full(self):
+    async def test_prepare_base_image_full(self):
         self.expect_commands(ExpectMasterShell(["cp", "o", "p"]))
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
         bs.cheap_copy = False
-        yield bs._prepare_base_image()
+        await bs._prepare_base_image()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_prepare_base_image_fail(self):
+    async def test_prepare_base_image_fail(self):
         self.expect_commands(ExpectMasterShell(["cp", "o", "p"]).exit(1))
 
         bs = self.create_worker('bot', 'pass', hd_image='p', base_image='o')
         bs.cheap_copy = False
         with self.assertRaises(LatentWorkerFailedToSubstantiate):
-            yield bs._prepare_base_image()
+            await bs._prepare_base_image()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def _test_stop_instance(
+    async def _test_stop_instance(
         self, graceful, fast, expected_destroy, expected_shutdown, shutdown_side_effect=None
     ):
         domain = mock.Mock()
@@ -174,7 +168,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         )
         bs.graceful_shutdown = graceful
         with mock.patch('os.remove') as remove_mock:
-            yield bs.stop_instance(fast=fast)
+            await bs.stop_instance(fast=fast)
 
         self.assertEqual(int(expected_destroy), domain.destroy.call_count)
         self.assertEqual(int(expected_shutdown), domain.shutdown.call_count)
@@ -182,21 +176,18 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_stop_instance_destroy(self):
-        yield self._test_stop_instance(
+    async def test_stop_instance_destroy(self):
+        await self._test_stop_instance(
             graceful=False, fast=False, expected_destroy=True, expected_shutdown=False
         )
 
-    @defer.inlineCallbacks
-    def test_stop_instance_shutdown(self):
-        yield self._test_stop_instance(
+    async def test_stop_instance_shutdown(self):
+        await self._test_stop_instance(
             graceful=True, fast=False, expected_destroy=False, expected_shutdown=True
         )
 
-    @defer.inlineCallbacks
-    def test_stop_instance_shutdown_fails(self):
-        yield self._test_stop_instance(
+    async def test_stop_instance_shutdown_fails(self):
+        await self._test_stop_instance(
             graceful=True,
             fast=False,
             expected_destroy=True,
@@ -204,8 +195,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
             shutdown_side_effect=TestException,
         )
 
-    @defer.inlineCallbacks
-    def test_start_instance_connection_fails(self):
+    async def test_start_instance_connection_fails(self):
         bs = self.create_worker('b', 'p', hd_image='p', base_image='o', uri='unknown')
 
         prep = mock.Mock()
@@ -213,12 +203,11 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.patch(bs, "_prepare_base_image", prep)
 
         with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'Did not receive connection'):
-            yield bs.start_instance(mock.Mock())
+            await bs.start_instance(mock.Mock())
 
         self.assertFalse(prep.called)
 
-    @defer.inlineCallbacks
-    def test_start_instance_already_active(self):
+    async def test_start_instance_already_active(self):
         conn = self.add_fake_conn('fake:///conn')
         conn.fake_add('bot', 14)
 
@@ -230,12 +219,11 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.patch(bs, "_prepare_base_image", prep)
 
         with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'it\'s already active'):
-            yield bs.start_instance(mock.Mock())
+            await bs.start_instance(mock.Mock())
 
         self.assertFalse(prep.called)
 
-    @defer.inlineCallbacks
-    def test_start_instance_domain_id_error(self):
+    async def test_start_instance_domain_id_error(self):
         conn = self.add_fake_conn('fake:///conn')
         domain = conn.fake_add('bot', 14)
         domain.ID = self.raise_libvirt_error
@@ -248,12 +236,11 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.patch(bs, "_prepare_base_image", prep)
 
         with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'while retrieving domain ID'):
-            yield bs.start_instance(mock.Mock())
+            await bs.start_instance(mock.Mock())
 
         self.assertFalse(prep.called)
 
-    @defer.inlineCallbacks
-    def test_start_instance_connection_create_fails(self):
+    async def test_start_instance_connection_create_fails(self):
         bs = self.create_worker(
             'bot', 'p', hd_image='p', base_image='o', xml='<xml/>', uri='fake:///conn'
         )
@@ -266,12 +253,11 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.patch(bs, "_prepare_base_image", prep)
 
         with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'error while starting VM'):
-            yield bs.start_instance(mock.Mock())
+            await bs.start_instance(mock.Mock())
 
         self.assertTrue(prep.called)
 
-    @defer.inlineCallbacks
-    def test_start_instance_domain_create_fails(self):
+    async def test_start_instance_domain_create_fails(self):
         bs = self.create_worker('bot', 'p', hd_image='p', base_image='o', uri='fake:///conn')
 
         conn = self.add_fake_conn('fake:///conn')
@@ -283,12 +269,11 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         self.patch(bs, "_prepare_base_image", prep)
 
         with self.assertRaisesRegex(LatentWorkerFailedToSubstantiate, 'error while starting VM'):
-            yield bs.start_instance(mock.Mock())
+            await bs.start_instance(mock.Mock())
 
         self.assertTrue(prep.called)
 
-    @defer.inlineCallbacks
-    def test_start_instance_xml(self):
+    async def test_start_instance_xml(self):
         self.add_fake_conn('fake:///conn')
 
         bs = self.create_worker(
@@ -299,7 +284,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        started = yield bs.start_instance(mock.Mock())
+        started = await bs.start_instance(mock.Mock())
 
         self.assertEqual(started, True)
 
@@ -307,8 +292,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         ('set_fqdn', {'masterFQDN': 'somefqdn'}, 'somefqdn'),
         ('auto_fqdn', {}, socket.getfqdn()),
     ])
-    @defer.inlineCallbacks
-    def test_start_instance_existing_domain(self, name, kwargs, expect_fqdn):
+    async def test_start_instance_existing_domain(self, name, kwargs, expect_fqdn):
         conn = self.add_fake_conn('fake:///conn')
         domain = conn.fake_add('bot', -1)
 
@@ -320,7 +304,7 @@ class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCa
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
-        started = yield bs.start_instance(mock.Mock())
+        started = await bs.start_instance(mock.Mock())
 
         self.assertEqual(started, True)
         self.assertEqual(

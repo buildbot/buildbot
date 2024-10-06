@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
 from buildbot.test.fake.secrets import FakeSecretStorage
@@ -21,8 +20,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class SecretsConfig(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self, use_with=False):
+    async def setup_config(self, use_with=False):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -43,20 +41,18 @@ class SecretsConfig(RunMasterBase):
                 withSecrets=[("pathA", Interpolate('%(secret:something)s'))],
             )
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_secret(self):
-        yield self.setup_config()
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+    async def test_secret(self):
+        await self.setup_config()
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "<foo>")
+        res = await self.checkBuildStepLogExist(build, "<foo>")
         self.assertTrue(res)
 
-    @defer.inlineCallbacks
-    def test_withsecrets(self):
-        yield self.setup_config(use_with=True)
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+    async def test_withsecrets(self):
+        await self.setup_config(use_with=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "<foo>")
+        res = await self.checkBuildStepLogExist(build, "<foo>")
         self.assertTrue(res)

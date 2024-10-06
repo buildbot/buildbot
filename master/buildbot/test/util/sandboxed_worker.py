@@ -85,13 +85,12 @@ class SandboxedWorker(AsyncService):
         self.worker = self.master.workers.getWorkerByName(self.workername)
         return super().startService()
 
-    @defer.inlineCallbacks
-    def shutdownWorker(self):
+    async def shutdownWorker(self):
         if self.worker is None:
             return
         # on windows, we killing a process does not work well.
         # we use the graceful shutdown feature of buildbot-worker instead to kill the worker
         # but we must do that before the master is stopping.
-        yield self.worker.shutdown()
+        await self.worker.shutdown()
         # wait for process to disappear
-        yield self.processprotocol.waitForFinish()
+        await self.processprotocol.waitForFinish()

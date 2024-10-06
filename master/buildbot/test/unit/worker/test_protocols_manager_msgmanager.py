@@ -19,7 +19,6 @@ from unittest import mock
 import msgpack
 from autobahn.websocket.types import ConnectionDeny
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.worker.protocols.manager.msgpack import BuildbotWebSocketServerProtocol
@@ -80,8 +79,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.protocol.sendMessage = mock.Mock()
         self.seq_number = 1
 
-    @defer.inlineCallbacks
-    def send_msg_check_response(self, protocol, msg, expected):
+    async def send_msg_check_response(self, protocol, msg, expected):
         msg = msg.copy()
         msg['seq_number'] = self.seq_number
 
@@ -90,7 +88,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.seq_number += 1
 
         protocol.onMessage(msgpack.packb(msg), True)
-        yield protocol._deferwaiter.wait()
+        await protocol._deferwaiter.wait()
         args_tuple, _ = protocol.sendMessage.call_args
         result = msgpack.unpackb(args_tuple[0], raw=False)
         self.assertEqual(result, expected)
@@ -105,8 +103,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         args_tuple, _ = self.protocol.sendMessage.call_args
         return msgpack.unpackb(args_tuple[0], raw=False)['result']
 
-    @defer.inlineCallbacks
-    def connect_authenticated_worker(self):
+    async def connect_authenticated_worker(self):
         # worker has to be authenticated before opening the connection
         pfactory = mock.Mock()
         pfactory.connection = mock.Mock()
@@ -117,8 +114,8 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         request.headers = {"authorization": 'Basic bmFtZTpwYXNz'}
         request.peer = ''
 
-        yield self.protocol.onConnect(request)
-        yield self.protocol.onOpen()
+        await self.protocol.onConnect(request)
+        await self.protocol.onOpen()
 
     def setup_mock_users(self, users):
         self.protocol.factory = mock.Mock()
@@ -167,26 +164,24 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_unpack', {'op': 'update_upload_directory_unpack'}),
         ('upload_directory_write', {'op': 'update_upload_directory_write', 'args': 'args'}),
     ])
-    @defer.inlineCallbacks
-    def test_missing_command_id(self, command, msg):
-        yield self.connect_authenticated_worker()
+    async def test_missing_command_id(self, command, msg):
+        await self.connect_authenticated_worker()
         expected = {
             'op': 'response',
             'result': '\'message did not contain obligatory "command_id" key\'',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
         ('update', {'op': 'update', 'args': 'args', 'command_id': 2}, {1: 'remoteCommand'}),
         ('complete', {'op': 'complete', 'args': 'args', 'command_id': 2}, {1: 'remoteCommand'}),
     ])
-    @defer.inlineCallbacks
-    def test_unknown_command_id(self, command, msg, command_id_to_command_map):
-        yield self.connect_authenticated_worker()
+    async def test_unknown_command_id(self, command, msg, command_id_to_command_map):
+        await self.connect_authenticated_worker()
         self.protocol.command_id_to_command_map = command_id_to_command_map
         expected = {'op': 'response', 'result': '\'unknown "command_id"\'', 'is_exception': True}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
         (
@@ -212,12 +207,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
             {'op': 'update_upload_directory_write', 'command_id': 2, 'args': 'args'},
         ),
     ])
-    @defer.inlineCallbacks
-    def test_unknown_command_id_writers(self, command, msg):
-        yield self.connect_authenticated_worker()
+    async def test_unknown_command_id_writers(self, command, msg):
+        await self.connect_authenticated_worker()
         self.protocol.command_id_to_writer_map = {1: 'writer'}
         expected = {'op': 'response', 'result': '\'unknown "command_id"\'', 'is_exception': True}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
         ('update', {'op': 'update', 'command_id': 2}),
@@ -225,38 +219,34 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_file_write', {'op': 'update_upload_file_write', 'command_id': 2}),
         ('update_upload_directory_write', {'op': 'update_upload_directory_write', 'command_id': 1}),
     ])
-    @defer.inlineCallbacks
-    def test_missing_args(self, command, msg):
-        yield self.connect_authenticated_worker()
+    async def test_missing_args(self, command, msg):
+        await self.connect_authenticated_worker()
         expected = {
             'op': 'response',
             'result': '\'message did not contain obligatory "args" key\'',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
         ('update_read_file', {'op': 'update_read_file', 'length': 1, 'command_id': 2}),
         ('update_read_file_close', {'op': 'update_read_file_close', 'command_id': 2}),
     ])
-    @defer.inlineCallbacks
-    def test_unknown_command_id_readers(self, command, msg):
-        yield self.connect_authenticated_worker()
+    async def test_unknown_command_id_readers(self, command, msg):
+        await self.connect_authenticated_worker()
         self.protocol.command_id_to_reader_map = {1: 'reader'}
         expected = {'op': 'response', 'result': '\'unknown "command_id"\'', 'is_exception': True}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
-    @defer.inlineCallbacks
-    def test_missing_authorization_header(self):
+    async def test_missing_authorization_header(self):
         request = mock.Mock()
         request.headers = {"authorization": ''}
         request.peer = ''
 
         with self.assertRaises(ConnectionDeny):
-            yield self.protocol.onConnect(request)
+            await self.protocol.onConnect(request)
 
-    @defer.inlineCallbacks
-    def test_auth_password_does_not_match(self):
+    async def test_auth_password_does_not_match(self):
         pfactory = mock.Mock()
         pfactory.connection = mock.Mock()
 
@@ -269,10 +259,9 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         request.peer = ''
 
         with self.assertRaises(ConnectionDeny):
-            yield self.protocol.onConnect(request)
+            await self.protocol.onConnect(request)
 
-    @defer.inlineCallbacks
-    def test_auth_username_unknown(self):
+    async def test_auth_username_unknown(self):
         pfactory = mock.Mock()
         pfactory.connection = mock.Mock()
 
@@ -286,11 +275,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         request.peer = ''
 
         with self.assertRaises(ConnectionDeny):
-            yield self.protocol.onConnect(request)
+            await self.protocol.onConnect(request)
 
-    @defer.inlineCallbacks
-    def test_update_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -298,12 +286,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update', 'args': 'args', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_update_msgpack.assert_called_once_with(msg['args'])
 
-    @defer.inlineCallbacks
-    def test_complete_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_complete_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -313,12 +300,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'complete', 'args': 'args', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_complete.assert_called_once()
 
-    @defer.inlineCallbacks
-    def test_complete_check_dict_removal(self):
-        yield self.connect_authenticated_worker()
+    async def test_complete_check_dict_removal(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -328,15 +314,14 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'complete', 'args': 'args', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_complete.assert_called_once()
         self.assertEqual(self.protocol.command_id_to_command_map, {2: 'test_command'})
         self.assertEqual(self.protocol.command_id_to_reader_map, {2: 'test_reader2'})
         self.assertEqual(self.protocol.command_id_to_writer_map, {2: 'test_writer2'})
 
-    @defer.inlineCallbacks
-    def test_update_upload_file_write_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_file_write_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -344,34 +329,31 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update_upload_file_write', 'args': 'args', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_write.assert_called_once()
 
-    @defer.inlineCallbacks
-    def test_update_upload_file_utime_missing_access_time(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_file_utime_missing_access_time(self):
+        await self.connect_authenticated_worker()
         msg = {'op': 'update_upload_file_utime', 'modified_time': 2, 'command_id': 2}
         expected = {
             'op': 'response',
             'result': '\'message did not contain obligatory "access_time" key\'',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
-    @defer.inlineCallbacks
-    def test_update_upload_file_utime_missing_modified_time(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_file_utime_missing_modified_time(self):
+        await self.connect_authenticated_worker()
         msg = {'op': 'update_upload_file_utime', 'access_time': 1, 'command_id': 2}
         expected = {
             'op': 'response',
             'result': '\'message did not contain obligatory "modified_time" key\'',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
-    @defer.inlineCallbacks
-    def test_update_upload_file_utime_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_file_utime_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -384,12 +366,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
             'command_id': command_id,
         }
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_utime.assert_called_once_with('access_time', 'modified_time')
 
-    @defer.inlineCallbacks
-    def test_update_upload_file_close_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_file_close_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -397,23 +378,21 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update_upload_file_close', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_close.assert_called_once()
 
-    @defer.inlineCallbacks
-    def test_update_read_file_missing_length(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_read_file_missing_length(self):
+        await self.connect_authenticated_worker()
         msg = {'op': 'update_read_file', 'command_id': 1}
         expected = {
             'op': 'response',
             'result': '\'message did not contain obligatory "length" key\'',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
-    @defer.inlineCallbacks
-    def test_update_read_file_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_read_file_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -421,12 +400,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update_read_file', 'length': 1, 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_read.assert_called_once_with(msg['length'])
 
-    @defer.inlineCallbacks
-    def test_update_read_file_close_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_read_file_close_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -434,12 +412,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update_read_file_close', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_close.assert_called_once()
 
-    @defer.inlineCallbacks
-    def test_update_upload_directory_unpack_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_directory_unpack_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -447,12 +424,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update_upload_directory_unpack', 'command_id': command_id}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_unpack.assert_called_once()
 
-    @defer.inlineCallbacks
-    def test_update_upload_directory_write_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_update_upload_directory_write_success(self):
+        await self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
@@ -460,7 +436,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         msg = {'op': 'update_upload_directory_write', 'command_id': command_id, 'args': 'args'}
         expected = {'op': 'response', 'result': None}
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_write.assert_called_once_with(msg['args'])
 
     def test_onMessage_not_isBinary(self):
@@ -470,30 +446,27 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.seq_number += 1
         self.protocol.sendMessage.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_onMessage_worker_not_authenticated(self):
+    async def test_onMessage_worker_not_authenticated(self):
         msg = {'op': 'update', 'command_id': 1, 'args': 'test'}
         expected = {
             'op': 'response',
             'result': 'Worker not authenticated.',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
-    @defer.inlineCallbacks
-    def test_onMessage_command_does_not_exist(self):
-        yield self.connect_authenticated_worker()
+    async def test_onMessage_command_does_not_exist(self):
+        await self.connect_authenticated_worker()
         msg = {'op': 'test'}
         expected = {
             'op': 'response',
             'result': 'Command test does not exist.',
             'is_exception': True,
         }
-        yield self.send_msg_check_response(self.protocol, msg, expected)
+        await self.send_msg_check_response(self.protocol, msg, expected)
 
-    @defer.inlineCallbacks
-    def test_get_message_result_success(self):
-        yield self.connect_authenticated_worker()
+    async def test_get_message_result_success(self):
+        await self.connect_authenticated_worker()
         msg = {'op': 'getWorkerInfo'}
         d = self.protocol.get_message_result(msg)
         seq_num = msg['seq_number']
@@ -505,12 +478,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         msg = {'seq_number': seq_num, 'op': 'response', 'result': 'test_result'}
         self.protocol.onMessage(msgpack.packb(msg), isBinary=True)
         self.assertEqual(d.called, True)
-        res = yield d
+        res = await d
         self.assertEqual(res, 'test_result')
 
-    @defer.inlineCallbacks
-    def test_get_message_result_failed(self):
-        yield self.connect_authenticated_worker()
+    async def test_get_message_result_failed(self):
+        await self.connect_authenticated_worker()
         msg = {'op': 'getWorkerInfo'}
         d = self.protocol.get_message_result(msg)
         seq_num = msg['seq_number']
@@ -527,17 +499,15 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.protocol.onMessage(msgpack.packb(msg_response), isBinary=True)
         self.assertEqual(d.called, True)
         with self.assertRaises(RemoteWorkerError):
-            yield d
+            await d
 
-    @defer.inlineCallbacks
-    def test_get_message_result_no_worker_connection(self):
+    async def test_get_message_result_no_worker_connection(self):
         # master can not send any messages if connection is not established
         with self.assertRaises(ConnectioLostError):
-            yield self.protocol.get_message_result({'op': 'getWorkerInfo'})
+            await self.protocol.get_message_result({'op': 'getWorkerInfo'})
 
-    @defer.inlineCallbacks
-    def test_onClose_connection_lost_error(self):
-        yield self.connect_authenticated_worker()
+    async def test_onClose_connection_lost_error(self):
+        await self.connect_authenticated_worker()
         # master sends messages for worker and waits for their response
         msg = {'op': 'getWorkerInfo'}
         d1 = self.protocol.get_message_result(msg)
@@ -552,11 +522,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.protocol.onClose(True, None, 'worker is gone')
         self.assertEqual(d1.called, True)
         with self.assertRaises(ConnectioLostError):
-            yield d1
+            await d1
 
         self.assertEqual(d2.called, True)
         with self.assertRaises(ConnectioLostError):
-            yield d2
+            await d2
 
         self.protocol.connection.detached.assert_called()
         # contents of dict_def are deleted to stop waiting for the responses of all commands

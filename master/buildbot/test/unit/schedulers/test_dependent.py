@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -72,8 +71,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         with self.assertRaises(config.ConfigErrors):
             self.makeScheduler(upstream='foo')
 
-    @defer.inlineCallbacks
-    def test_activate(self):
+    async def test_activate(self):
         sched = self.makeScheduler()
         sched.activate()
 
@@ -94,7 +92,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
 
-        yield sched.deactivate()
+        await sched.deactivate()
 
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs], [('schedulers', '133', 'updated')]
@@ -199,8 +197,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     def test_unrelated_buildset(self):
         return self.do_test('unrelated', False, SUCCESS, False)
 
-    @defer.inlineCallbacks
-    def test_getUpstreamBuildsets_missing(self):
+    async def test_getUpstreamBuildsets_missing(self):
         sched = self.makeScheduler()
 
         # insert some state, with more bsids than exist
@@ -221,28 +218,25 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # and check that it wrote the correct value back to the state
         self.db.state.assertState(OBJECTID, upstream_bsids=[11, 13])
 
-    @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    async def test_enabled_callback(self):
         sched = self.makeScheduler()
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
-    @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    async def test_disabled_activate(self):
         sched = self.makeScheduler()
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.activate()
+        r = await sched.activate()
         self.assertEqual(r, None)
 
-    @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    async def test_disabled_deactivate(self):
         sched = self.makeScheduler()
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.deactivate()
+        r = await sched.deactivate()
         self.assertEqual(r, None)

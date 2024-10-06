@@ -51,8 +51,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def do_test_createMaster(self, config):
+    async def do_test_createMaster(self, config):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
         functions = ['makeBasedir', 'makeTAC', 'makeSampleConfig', 'createDB']
@@ -63,22 +62,20 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
             repl.side_effect = lambda config, fn=fn: calls.append(fn)
             self.patch(create_master, fn, repl)
         repls['createDB'].side_effect = lambda config: calls.append(fn) or defer.succeed(None)
-        rc = yield create_master.createMaster(config)
+        rc = await create_master.createMaster(config)
 
         self.assertEqual(rc, 0)
         self.assertEqual(calls, functions)
         for repl in repls.values():
             repl.assert_called_with(config)
 
-    @defer.inlineCallbacks
-    def test_createMaster_quiet(self):
-        yield self.do_test_createMaster(mkconfig(quiet=True))
+    async def test_createMaster_quiet(self):
+        await self.do_test_createMaster(mkconfig(quiet=True))
 
         self.assertWasQuiet()
 
-    @defer.inlineCallbacks
-    def test_createMaster_loud(self):
-        yield self.do_test_createMaster(mkconfig(quiet=False))
+    async def test_createMaster_loud(self):
+        await self.do_test_createMaster(mkconfig(quiet=False))
 
         self.assertInStdout('buildmaster configured in')
 
@@ -218,13 +215,12 @@ class TestCreateMasterFunctions(
             self.assertIn("XXYYZZ", f.read())
         self.assertWasQuiet()
 
-    @defer.inlineCallbacks
-    def test_createDB(self):
+    async def test_createDB(self):
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
-        yield create_master.createDB(mkconfig(basedir='test', quiet=True))
+        await create_master.createDB(mkconfig(basedir='test', quiet=True))
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()

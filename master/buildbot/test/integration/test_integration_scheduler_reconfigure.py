@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.plugins import schedulers
 from buildbot.test.util.integration import RunMasterBase
 
@@ -42,10 +40,9 @@ class ShellMaster(RunMasterBase):
         ]
         return c
 
-    @defer.inlineCallbacks
-    def test_shell(self):
+    async def test_shell(self):
         cfg = self.create_config()
-        yield self.setup_master(cfg)
+        await self.setup_master(cfg)
 
         change = {
             "branch": "master",
@@ -61,8 +58,8 @@ class ShellMaster(RunMasterBase):
             schedulers.AnyBranchScheduler(name="sched1", builderNames=["testy2"]),
             schedulers.ForceScheduler(name="sched2", builderNames=["testy1"]),
         ]
-        yield self.master.reconfig()
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        await self.master.reconfig()
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        builder = yield self.master.data.get(('builders', build['builderid']))
+        builder = await self.master.data.get(('builders', build['builderid']))
         self.assertEqual(builder['name'], 'testy2')

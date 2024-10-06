@@ -17,7 +17,6 @@
 import json
 import os
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import connector as dataconnector
@@ -64,24 +63,23 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             raise ImportError("please install ruamel.yaml for test regeneration")
         self.yaml.dump(data, f)
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor(use_asyncio=True)
 
         master = fakemaster.make_master(self)
         master.db = fakedb.FakeDBConnector(self)
-        yield master.db.setServiceParent(master)
+        await master.db.setServiceParent(master)
 
         master.config.mq = {'type': "simple"}
         master.mq = mqconnector.MQConnector()
-        yield master.mq.setServiceParent(master)
-        yield master.mq.setup()
+        await master.mq.setServiceParent(master)
+        await master.mq.setup()
 
         master.data = dataconnector.DataConnector()
-        yield master.data.setServiceParent(master)
+        await master.data.setServiceParent(master)
 
         master.graphql = GraphQLConnector()
-        yield master.graphql.setServiceParent(master)
+        await master.graphql.setServiceParent(master)
 
         master.config.www = {'graphql': {"debug": True}}
         master.graphql.reconfigServiceWithBuildbotConfig(master.config)
@@ -94,13 +92,12 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         ]
         self.master.allSchedulers = lambda: scheds
 
-        yield self.master.startService()
+        await self.master.startService()
 
-        yield self.insert_initial_data()
+        await self.insert_initial_data()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
     def insert_initial_data(self):
         self.master.db.insert_test_data([
@@ -357,8 +354,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             ),
         ])
 
-    @defer.inlineCallbacks
-    def test_examples_from_yaml(self):
+    async def test_examples_from_yaml(self):
         """This test takes input from yaml file containing queries to execute and
         expected results. In order to ease writing of tests, if the expected key is not found,
         it is automatically generated, so developer only has to review results
@@ -374,7 +370,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             focussed_data = data
         for test in focussed_data:
             query = test['query']
-            result = yield self.master.graphql.query(query)
+            result = await self.master.graphql.query(query)
             self.assertIsNone(result.errors)
             if 'expected' not in test or regen:
                 need_save = True
@@ -389,9 +385,8 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
             with open(fn, 'w', encoding='utf-8') as f:
                 self.save_yaml(data, f)
 
-    @defer.inlineCallbacks
-    def test_buildrequests_builds(self):
-        data = yield self.master.graphql.query(
+    async def test_buildrequests_builds(self):
+        data = await self.master.graphql.query(
             "{buildrequests{buildrequestid, builds{number, buildrequestid}}}"
         )
 

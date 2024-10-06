@@ -17,15 +17,12 @@
 import sys
 import traceback
 
-from twisted.internet import defer
-
 from buildbot.clients import sendchange as sendchange_client
 from buildbot.util import in_reactor
 
 
 @in_reactor
-@defer.inlineCallbacks
-def sendchange(config):
+async def sendchange(config):
     encoding = config.get('encoding', 'utf8')
     who = config.get('who')
     auth = config.get('auth')
@@ -45,7 +42,7 @@ def sendchange(config):
 
     s = sendchange_client.Sender(master, auth, encoding=encoding)
     try:
-        yield s.send(
+        await s.send(
             branch,
             revision,
             comments,

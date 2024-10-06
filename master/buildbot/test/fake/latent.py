@@ -103,43 +103,37 @@ class LatentController(SeverWorkerConnectionMixin):
         if self.auto_start_flag and self.state == States.STARTING:
             self.start_instance(True)
 
-    @defer.inlineCallbacks
-    def start_instance(self, result):
-        yield self.do_start_instance(result)
+    async def start_instance(self, result):
+        await self.do_start_instance(result)
         d = self._start_deferred
         self._start_deferred = None
         d.callback(result)
 
-    @defer.inlineCallbacks
-    def do_start_instance(self, result):
+    async def do_start_instance(self, result):
         assert self.state == States.STARTING
         self.state = States.STARTED
         if self.auto_connect_worker and result is True:
-            yield self.connect_worker()
+            await self.connect_worker()
 
-    @defer.inlineCallbacks
-    def auto_stop(self, result):
+    async def auto_stop(self, result):
         self.auto_stop_flag = result
         if self.auto_stop_flag and self.state == States.STOPPING:
-            yield self.stop_instance(True)
+            await self.stop_instance(True)
 
-    @defer.inlineCallbacks
-    def stop_instance(self, result):
-        yield self.do_stop_instance()
+    async def stop_instance(self, result):
+        await self.do_stop_instance()
         d = self._stop_deferred
         self._stop_deferred = None
         d.callback(result)
 
-    @defer.inlineCallbacks
-    def do_stop_instance(self):
+    async def do_stop_instance(self):
         assert self.state == States.STOPPING
         self.state = States.STOPPED
         self._started_kind = None
         if self.auto_disconnect_worker:
-            yield self.disconnect_worker()
+            await self.disconnect_worker()
 
-    @defer.inlineCallbacks
-    def connect_worker(self):
+    async def connect_worker(self):
         if self.remote_worker is not None:
             return
         if RemoteWorker is None:
@@ -147,11 +141,10 @@ class LatentController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        yield self.remote_worker.setServiceParent(self.worker)
+        await self.remote_worker.setServiceParent(self.worker)
 
-    @defer.inlineCallbacks
-    def disconnect_worker(self):
-        yield super().disconnect_worker()
+    async def disconnect_worker(self):
+        await super().disconnect_worker()
         if self.remote_worker is None:
             return
 
@@ -159,7 +152,7 @@ class LatentController(SeverWorkerConnectionMixin):
 
         disconnect_master_side_worker(self.worker)
 
-        yield worker.disownServiceParent()
+        await worker.disownServiceParent()
 
     def setup_kind(self, build):
         if build:
@@ -167,10 +160,9 @@ class LatentController(SeverWorkerConnectionMixin):
         else:
             self._started_kind_deferred = self.kind
 
-    @defer.inlineCallbacks
-    def get_started_kind(self):
+    async def get_started_kind(self):
         if self._started_kind_deferred:
-            self._started_kind = yield self._started_kind_deferred
+            self._started_kind = await self._started_kind_deferred
             self._started_kind_deferred = None
         return self._started_kind
 
@@ -207,13 +199,12 @@ class ControllableLatentWorker(AbstractLatentWorker):
         self._random_password_id += 1
         return f'password_{self._random_password_id}'
 
-    @defer.inlineCallbacks
-    def isCompatibleWithBuild(self, build_props):
+    async def isCompatibleWithBuild(self, build_props):
         if self._controller.state == States.STOPPED:
             return True
 
-        requested_kind = yield build_props.render(self._controller.kind)
-        curr_kind = yield self._controller.get_started_kind()
+        requested_kind = await build_props.render(self._controller.kind)
+        curr_kind = await self._controller.get_started_kind()
         return requested_kind == curr_kind
 
     def start_instance(self, build):
@@ -229,13 +220,12 @@ class ControllableLatentWorker(AbstractLatentWorker):
         self._controller._start_deferred = defer.Deferred()
         return self._controller._start_deferred
 
-    @defer.inlineCallbacks
-    def stop_instance(self, fast):
+    async def stop_instance(self, fast):
         assert self._controller.state == States.STARTED
         self._controller.state = States.STOPPING
 
         if self._controller.auto_stop_flag:
-            yield self._controller.do_stop_instance()
+            await self._controller.do_stop_instance()
             return True
         self._controller._stop_deferred = defer.Deferred()
         return (yield self._controller._stop_deferred)

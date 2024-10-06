@@ -17,7 +17,6 @@
 from unittest.mock import Mock
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.builder import Builder
@@ -76,13 +75,12 @@ class TestBuildRequestGenerator(
 
         return g
 
-    @defer.inlineCallbacks
-    def test_build_message_start_no_result(self):
-        g = yield self.setup_generator()
-        buildrequest = yield self.insert_buildrequest_new()
-        buildset = yield self.get_inserted_buildset()
-        build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.buildrequest_message(self.master, build)
+    async def test_build_message_start_no_result(self):
+        g = await self.setup_generator()
+        buildrequest = await self.insert_buildrequest_new()
+        buildset = await self.get_inserted_buildset()
+        build = await g.partial_build_dict(self.master, buildrequest)
+        report = await g.buildrequest_message(self.master, build)
 
         g.formatter.format_message_for_build.assert_called_with(
             self.master, build, is_buildset=True, mode=self.all_messages, users=[]
@@ -104,12 +102,11 @@ class TestBuildRequestGenerator(
             },
         )
 
-    @defer.inlineCallbacks
-    def test_build_message_add_patch(self):
-        g = yield self.setup_generator(add_patch=True)
-        buildrequest = yield self.insert_buildrequest_new(insert_patch=True)
-        build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.buildrequest_message(self.master, build)
+    async def test_build_message_add_patch(self):
+        g = await self.setup_generator(add_patch=True)
+        buildrequest = await self.insert_buildrequest_new(insert_patch=True)
+        build = await g.partial_build_dict(self.master, buildrequest)
+        report = await g.buildrequest_message(self.master, build)
 
         patch_dict = {
             'author': 'him@foo',
@@ -121,21 +118,19 @@ class TestBuildRequestGenerator(
         }
         self.assertEqual(report['patches'], [patch_dict])
 
-    @defer.inlineCallbacks
-    def test_build_message_add_patch_no_patch(self):
-        g = yield self.setup_generator(add_patch=True)
-        buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
-        build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.buildrequest_message(self.master, build)
+    async def test_build_message_add_patch_no_patch(self):
+        g = await self.setup_generator(add_patch=True)
+        buildrequest = await self.insert_buildrequest_new(insert_patch=False)
+        build = await g.partial_build_dict(self.master, buildrequest)
+        report = await g.buildrequest_message(self.master, build)
         self.assertEqual(report['patches'], [])
 
-    @defer.inlineCallbacks
-    def test_generate_new(self):
-        g = yield self.setup_generator(add_patch=True)
-        buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
-        buildset = yield self.get_inserted_buildset()
-        build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
+    async def test_generate_new(self):
+        g = await self.setup_generator(add_patch=True)
+        buildrequest = await self.insert_buildrequest_new(insert_patch=False)
+        buildset = await self.get_inserted_buildset()
+        build = await g.partial_build_dict(self.master, buildrequest)
+        report = await g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
 
         self.assertEqual(
             report,
@@ -153,14 +148,13 @@ class TestBuildRequestGenerator(
             },
         )
 
-    @defer.inlineCallbacks
-    def test_generate_cancel(self):
+    async def test_generate_cancel(self):
         self.maxDiff = None
-        g = yield self.setup_generator(add_patch=True)
-        buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
-        buildset = yield self.get_inserted_buildset()
-        build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'cancel'), buildrequest)
+        g = await self.setup_generator(add_patch=True)
+        buildrequest = await self.insert_buildrequest_new(insert_patch=False)
+        buildset = await self.get_inserted_buildset()
+        build = await g.partial_build_dict(self.master, buildrequest)
+        report = await g.generate(self.master, None, ('buildrequests', 11, 'cancel'), buildrequest)
 
         build['complete'] = True
         build['results'] = CANCELLED
@@ -181,10 +175,9 @@ class TestBuildRequestGenerator(
             },
         )
 
-    @defer.inlineCallbacks
-    def test_generate_none(self):
+    async def test_generate_none(self):
         g = BuildRequestGenerator(builders=['not_existing_builder'])
-        buildrequest = yield self.insert_buildrequest_new()
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
+        buildrequest = await self.insert_buildrequest_new()
+        report = await g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
 
         self.assertIsNone(report, None)

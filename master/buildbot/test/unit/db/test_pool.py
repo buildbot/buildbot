@@ -36,25 +36,22 @@ class Basic(unittest.TestCase):
         self.engine.optimal_thread_pool_size = 1
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.pool.shutdown()
+    async def tearDown(self):
+        await self.pool.shutdown()
 
-    @defer.inlineCallbacks
-    def test_do(self):
+    async def test_do(self):
         def add(conn, addend1, addend2):
             rp = conn.execute(sa.text(f"SELECT {addend1} + {addend2}"))
             return rp.scalar()
 
-        res = yield self.pool.do(add, 10, 11)
+        res = await self.pool.do(add, 10, 11)
 
         self.assertEqual(res, 21)
 
-    @defer.inlineCallbacks
-    def expect_failure(self, d, expected_exception, expect_logged_error=False):
+    async def expect_failure(self, d, expected_exception, expect_logged_error=False):
         exception = None
         try:
-            yield d
+            await d
         except Exception as e:
             exception = e
         errors = self.flushLoggedErrors(expected_exception)
@@ -79,14 +76,13 @@ class Basic(unittest.TestCase):
             self.pool.do(raise_something), RuntimeError, expect_logged_error=True
         )
 
-    @defer.inlineCallbacks
-    def test_do_with_engine(self):
+    async def test_do_with_engine(self):
         def add(engine, addend1, addend2):
             with engine.connect() as conn:
                 rp = conn.execute(sa.text(f"SELECT {addend1} + {addend2}"))
             return rp.scalar()
 
-        res = yield self.pool.do_with_engine(add, 10, 11)
+        res = await self.pool.do_with_engine(add, 10, 11)
 
         self.assertEqual(res, 21)
 
@@ -98,8 +94,7 @@ class Basic(unittest.TestCase):
 
         return self.expect_failure(self.pool.do_with_engine(fail), sa.exc.OperationalError)
 
-    @defer.inlineCallbacks
-    def test_persistence_across_invocations(self):
+    async def test_persistence_across_invocations(self):
         # NOTE: this assumes that both methods are called with the same
         # connection; if they run in parallel threads then it is not valid to
         # assume that the database engine will have finalized the first
@@ -111,14 +106,14 @@ class Basic(unittest.TestCase):
                 conn.execute(sa.text("CREATE TABLE tmp ( a integer )"))
                 conn.commit()
 
-        yield self.pool.do_with_engine(create_table)
+        await self.pool.do_with_engine(create_table)
 
         def insert_into_table(engine):
             with engine.connect() as conn:
                 conn.execute(sa.text("INSERT INTO tmp values ( 1 )"))
                 conn.commit()
 
-        yield self.pool.do_with_engine(insert_into_table)
+        await self.pool.do_with_engine(insert_into_table)
 
 
 class Stress(unittest.TestCase):
@@ -131,13 +126,11 @@ class Stress(unittest.TestCase):
         self.engine.optimal_thread_pool_size = 2
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.pool.shutdown()
+    async def tearDown(self):
+        await self.pool.shutdown()
         os.unlink("test.sqlite")
 
-    @defer.inlineCallbacks
-    def test_inserts(self):
+    async def test_inserts(self):
         def write(conn):
             trans = conn.begin()
             conn.execute("INSERT INTO test VALUES (1, 1)")
@@ -155,7 +148,7 @@ class Stress(unittest.TestCase):
         d2.addCallback(lambda _: self.pool.do(write2))
         reactor.callLater(0.1, d2.callback, None)
 
-        yield defer.DeferredList([d1, d2])
+        await defer.DeferredList([d1, d2])
 
     # don't run this test, since it takes 30s
     del test_inserts
@@ -176,14 +169,12 @@ class BasicWithDebug(Basic):
 class Native(unittest.TestCase, db.RealDatabaseMixin):
     # similar tests, but using the BUILDBOT_TEST_DB_URL
 
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpRealDatabase(want_pool=False)
+    async def setUp(self):
+        await self.setUpRealDatabase(want_pool=False)
 
         self.pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         # try to delete the 'native_tests' table
         meta = sa.MetaData()
         native_tests = sautils.Table("native_tests", meta)
@@ -191,16 +182,15 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         def thd(conn):
             native_tests.drop(bind=self.db_engine, checkfirst=True)
 
-        yield self.pool.do(thd)
+        await self.pool.do(thd)
 
         # tearDownRealDatabase() won't shutdown the pool as want_pool was false in
         # setUpRealDatabase call
-        yield self.pool.shutdown()
+        await self.pool.shutdown()
 
-        yield self.tearDownRealDatabase()
+        await self.tearDownRealDatabase()
 
-    @defer.inlineCallbacks
-    def test_ddl_and_queries(self):
+    async def test_ddl_and_queries(self):
         meta = sa.MetaData()
         native_tests = sautils.Table("native_tests", meta, sa.Column('name', sa.String(length=200)))
 
@@ -212,9 +202,9 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
             native_tests.create(bind=conn)
             t.commit()
 
-        yield self.pool.do(ddl)
+        await self.pool.do(ddl)
 
         def access(conn):
             conn.execute(native_tests.insert().values({'name': 'foo'}))
 
-        yield self.pool.do_with_transaction(access)
+        await self.pool.do_with_transaction(access)

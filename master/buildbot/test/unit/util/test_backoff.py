@@ -15,7 +15,6 @@
 
 import time
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -38,8 +37,7 @@ class ExponentialBackoffEngineAsyncTests(unittest.TestCase, TestReactorMixin):
         with self.assertRaises(ValueError):
             backoff.ExponentialBackoffEngine(1, 1, -1)
 
-    @defer.inlineCallbacks
-    def assert_called_after_time(self, d, time):
+    async def assert_called_after_time(self, d, time):
         self.assertFalse(d.called)
 
         self.reactor.advance(time * 0.99)
@@ -47,55 +45,52 @@ class ExponentialBackoffEngineAsyncTests(unittest.TestCase, TestReactorMixin):
         self.reactor.advance(time * 0.010001)  # avoid rounding errors by overshooting a little
         self.assertTrue(d.called)
 
-        yield d  # throw exceptions stored in d, if any
+        await d  # throw exceptions stored in d, if any
 
-    @defer.inlineCallbacks
-    def assert_called_immediately(self, d):
+    async def assert_called_immediately(self, d):
         self.assertTrue(d.called)
-        yield d
+        await d
 
-    @defer.inlineCallbacks
-    def test_wait_times(self):
+    async def test_wait_times(self):
         engine = backoff.ExponentialBackoffEngineAsync(
             self.reactor, start_seconds=10, multiplier=2, max_wait_seconds=1000
         )
-        yield self.assert_called_after_time(engine.wait_on_failure(), 10)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 20)
+        await self.assert_called_after_time(engine.wait_on_failure(), 10)
+        await self.assert_called_after_time(engine.wait_on_failure(), 20)
 
         engine.on_success()
 
-        yield self.assert_called_after_time(engine.wait_on_failure(), 10)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 20)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 40)
+        await self.assert_called_after_time(engine.wait_on_failure(), 10)
+        await self.assert_called_after_time(engine.wait_on_failure(), 20)
+        await self.assert_called_after_time(engine.wait_on_failure(), 40)
 
         engine.on_success()
         engine.on_success()
 
-        yield self.assert_called_after_time(engine.wait_on_failure(), 10)
+        await self.assert_called_after_time(engine.wait_on_failure(), 10)
 
-    @defer.inlineCallbacks
-    def test_max_wait_seconds(self):
+    async def test_max_wait_seconds(self):
         engine = backoff.ExponentialBackoffEngineAsync(
             self.reactor, start_seconds=10, multiplier=2, max_wait_seconds=100
         )
 
-        yield self.assert_called_after_time(engine.wait_on_failure(), 10)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 20)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 40)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 30)
+        await self.assert_called_after_time(engine.wait_on_failure(), 10)
+        await self.assert_called_after_time(engine.wait_on_failure(), 20)
+        await self.assert_called_after_time(engine.wait_on_failure(), 40)
+        await self.assert_called_after_time(engine.wait_on_failure(), 30)
         with self.assertRaises(backoff.BackoffTimeoutExceededError):
-            yield self.assert_called_immediately(engine.wait_on_failure())
+            await self.assert_called_immediately(engine.wait_on_failure())
         with self.assertRaises(backoff.BackoffTimeoutExceededError):
-            yield self.assert_called_immediately(engine.wait_on_failure())
+            await self.assert_called_immediately(engine.wait_on_failure())
 
         engine.on_success()
 
-        yield self.assert_called_after_time(engine.wait_on_failure(), 10)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 20)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 40)
-        yield self.assert_called_after_time(engine.wait_on_failure(), 30)
+        await self.assert_called_after_time(engine.wait_on_failure(), 10)
+        await self.assert_called_after_time(engine.wait_on_failure(), 20)
+        await self.assert_called_after_time(engine.wait_on_failure(), 40)
+        await self.assert_called_after_time(engine.wait_on_failure(), 30)
         with self.assertRaises(backoff.BackoffTimeoutExceededError):
-            yield self.assert_called_immediately(engine.wait_on_failure())
+            await self.assert_called_immediately(engine.wait_on_failure())
 
 
 class ExponentialBackoffEngineSyncTests(unittest.TestCase):

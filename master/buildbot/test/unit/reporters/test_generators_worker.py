@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.reporters.generators.worker import WorkerMissingGenerator
@@ -40,22 +39,20 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
         (['myworker'],),
         ('all',),
     ])
-    @defer.inlineCallbacks
-    def test_report_matched_worker(self, worker_filter):
+    async def test_report_matched_worker(self, worker_filter):
         g = WorkerMissingGenerator(workers=worker_filter)
 
-        report = yield g.generate(
+        report = await g.generate(
             self.master, None, 'worker.98.complete', self._get_worker_dict('myworker')
         )
 
         self.assertEqual(report['users'], ['workeradmin@example.org'])
         self.assertIn(b"worker named myworker went away", report['body'])
 
-    @defer.inlineCallbacks
-    def test_report_not_matched_worker(self):
+    async def test_report_not_matched_worker(self):
         g = WorkerMissingGenerator(workers=['other'])
 
-        report = yield g.generate(
+        report = await g.generate(
             self.master, None, 'worker.98.complete', self._get_worker_dict('myworker')
         )
 

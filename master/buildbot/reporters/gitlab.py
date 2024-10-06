@@ -15,7 +15,6 @@
 
 from urllib.parse import quote_plus as urlquote_plus
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.process.properties import Interpolate
@@ -56,8 +55,7 @@ class GitLabStatusPush(ReporterBase):
 
         super().checkConfig(generators=generators, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         token,
         context=None,
@@ -68,7 +66,7 @@ class GitLabStatusPush(ReporterBase):
         generators=None,
         **kwargs,
     ):
-        token = yield self.renderSecrets(token)
+        token = await self.renderSecrets(token)
         self.debug = debug
         self.verify = verify
         self.verbose = verbose
@@ -77,14 +75,14 @@ class GitLabStatusPush(ReporterBase):
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators, **kwargs)
+        await super().reconfigService(generators=generators, **kwargs)
 
         if baseURL is None:
             baseURL = HOSTED_BASE_URL
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
         self.baseURL = baseURL
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice,
             baseURL,
             headers={'PRIVATE-TOKEN': token},
@@ -133,8 +131,7 @@ class GitLabStatusPush(ReporterBase):
 
         return self._http.post(f'/api/v4/projects/{project_id}/statuses/{sha}', json=payload)
 
-    @defer.inlineCallbacks
-    def getProjectId(self, sourcestamp):
+    async def getProjectId(self, sourcestamp):
         # retrieve project id via cache
         url = giturlparse(sourcestamp['repository'])
         if url is None:
@@ -144,8 +141,8 @@ class GitLabStatusPush(ReporterBase):
         project_full_name = urlquote_plus(project_full_name)
 
         if project_full_name not in self.project_ids:
-            response = yield self._http.get(f'/api/v4/projects/{project_full_name}')
-            proj = yield response.json()
+            response = await self._http.get(f'/api/v4/projects/{project_full_name}')
+            proj = await response.json()
             if response.code not in (200,):
                 log.msg(
                     'Unknown (or hidden) gitlab project'
@@ -156,8 +153,7 @@ class GitLabStatusPush(ReporterBase):
 
         return self.project_ids[project_full_name]
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         report = reports[0]
         build = reports[0]['builds'][0]
 
@@ -181,7 +177,7 @@ class GitLabStatusPush(ReporterBase):
         else:
             state = 'pending'
 
-        context = yield props.render(self.context)
+        context = await props.render(self.context)
 
         sourcestamps = build['buildset']['sourcestamps']
 
@@ -191,7 +187,7 @@ class GitLabStatusPush(ReporterBase):
             if 'source_project_id' in props:
                 proj_id = props['source_project_id']
             else:
-                proj_id = yield self.getProjectId(sourcestamp)
+                proj_id = await self.getProjectId(sourcestamp)
             if proj_id is None:
                 continue
             try:
@@ -200,7 +196,7 @@ class GitLabStatusPush(ReporterBase):
                 else:
                     branch = sourcestamp['branch']
                 target_url = build['url']
-                res = yield self.createStatus(
+                res = await self.createStatus(
                     project_id=proj_id,
                     branch=branch,
                     sha=sha,
@@ -210,7 +206,7 @@ class GitLabStatusPush(ReporterBase):
                     description=description,
                 )
                 if res.code not in (200, 201, 204):
-                    message = yield res.json()
+                    message = await res.json()
                     message = message.get('message', 'unspecified error')
                     log.msg(
                         f'Could not send status "{state}" for '

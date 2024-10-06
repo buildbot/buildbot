@@ -28,12 +28,11 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True)
         self.botmaster = BotMaster()
-        yield self.botmaster.setServiceParent(self.master)
+        await self.botmaster.setServiceParent(self.master)
         self.botmaster.startService()
 
     def assertReactorStopped(self, _=None):
@@ -150,22 +149,20 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 
 
 class TestBotMaster(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.master.botmaster.disownServiceParent()
         self.botmaster = BotMaster()
-        yield self.botmaster.setServiceParent(self.master)
+        await self.botmaster.setServiceParent(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()
 
     def tearDown(self):
         return self.botmaster.stopService()
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceWithBuildbotConfig(self):
+    async def test_reconfigServiceWithBuildbotConfig(self):
         # check that reconfigServiceBuilders is called.
         self.patch(
             self.botmaster, 'reconfigProjects', mock.Mock(side_effect=lambda c: defer.succeed(None))
@@ -178,18 +175,17 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
         self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders', mock.Mock())
 
         new_config = mock.Mock()
-        yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
+        await self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
 
         self.botmaster.reconfigServiceBuilders.assert_called_with(new_config)
         self.botmaster.reconfigProjects.assert_called_with(new_config)
         self.assertTrue(self.botmaster.maybeStartBuildsForAllBuilders.called)
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceBuilders_add_remove(self):
+    async def test_reconfigServiceBuilders_add_remove(self):
         bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(), workername='f')
         self.new_config.builders = [bc]
 
-        yield self.botmaster.reconfigServiceBuilders(self.new_config)
+        await self.botmaster.reconfigServiceBuilders(self.new_config)
 
         bldr = self.botmaster.builders['bldr']
         self.assertIdentical(bldr.parent, self.botmaster)
@@ -198,7 +194,7 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
 
         self.new_config.builders = []
 
-        yield self.botmaster.reconfigServiceBuilders(self.new_config)
+        await self.botmaster.reconfigServiceBuilders(self.new_config)
 
         self.assertIdentical(bldr.parent, None)
         self.assertIdentical(bldr.master, None)

@@ -79,7 +79,7 @@ def timed_do_fn(f):
         for name in locals:
             if name in ('self', 'thd'):
                 continue
-            log.msg(f"{descr} - {name} = {repr(locals[name])}")
+            log.msg(f"{descr} - {name} = {locals[name]!r}")
 
         # wrap the callable to log the begin and end of the actual thread
         # function
@@ -187,22 +187,20 @@ class DBThreadPool:
         self._pool.stop()
         self.running = False
 
-    @defer.inlineCallbacks
-    def _stop(self):
+    async def _stop(self):
         self._stop_evt = None
-        yield threads.deferToThreadPool(self.reactor, self._pool, self.engine.dispose)
+        await threads.deferToThreadPool(self.reactor, self._pool, self.engine.dispose)
         self._pool.stop()
         self.running = False
 
-    @defer.inlineCallbacks
-    def shutdown(self):
+    async def shutdown(self):
         """Manually stop the pool.  This is only necessary from tests, as the
         pool will stop itself when the reactor stops under normal
         circumstances."""
         if not self._stop_evt:
             return  # pool is already stopped
         self.reactor.removeSystemEventTrigger(self._stop_evt)
-        yield self._stop()
+        await self._stop()
 
     # Try about 170 times over the space of a day, with the last few tries
     # being about an hour apart.  This is designed to span a reasonable amount

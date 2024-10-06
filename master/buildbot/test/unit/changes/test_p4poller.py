@@ -16,7 +16,6 @@
 import datetime
 
 import dateutil.tz
-from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
@@ -107,11 +106,10 @@ class TestP4Poller(
     TestReactorMixin,
     unittest.TestCase,
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_master_run_process()
-        yield self.setUpChangeSource()
+        await self.setUpChangeSource()
 
     def tearDown(self):
         return self.tearDownChangeSource()
@@ -126,9 +124,8 @@ class TestP4Poller(
         when = datetime.datetime.strptime(timestring, datefmt)
         return when
 
-    @defer.inlineCallbacks
-    def test_describe(self):
-        yield self.attachChangeSource(
+    async def test_describe(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -158,10 +155,9 @@ class TestP4Poller(
         )
         self.assertEqual("MyName", cs2.name)
 
-    @defer.inlineCallbacks
-    def do_test_poll_successful(self, **kwargs):
+    async def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
-        yield self.attachChangeSource(
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -185,13 +181,13 @@ class TestP4Poller(
 
         # The first time, it just learns the change to start at.
         self.assertTrue(self.changesource.last_change is None)
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [])
         self.assertEqual(self.changesource.last_change, 1)
 
         # Subsequent times, it returns Change objects for new changes.
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         # when_timestamp is converted from a local time spec, so just
         # replicate that here
@@ -266,9 +262,8 @@ class TestP4Poller(
     def test_poll_successful_macroman_encoding(self):
         return self.do_test_poll_successful(encoding='macroman')
 
-    @defer.inlineCallbacks
-    def test_poll_failed_changes(self):
-        yield self.attachChangeSource(
+    async def test_poll_failed_changes(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -284,13 +279,12 @@ class TestP4Poller(
 
         # call _poll, so we can catch the failure
         with self.assertRaises(P4PollerError):
-            yield self.changesource._poll()
+            await self.changesource._poll()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_failed_describe(self):
-        yield self.attachChangeSource(
+    async def test_poll_failed_describe(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -311,15 +305,14 @@ class TestP4Poller(
 
         # call _poll, so we can catch the failure
         with self.assertRaises(P4PollerError):
-            yield self.changesource._poll()
+            await self.changesource._poll()
 
         # check that 2 was processed OK
         self.assertEqual(self.changesource.last_change, 2)
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_unicode_error(self):
-        yield self.attachChangeSource(
+    async def test_poll_unicode_error(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -341,13 +334,12 @@ class TestP4Poller(
 
         # call _poll, so we can catch the failure
         with self.assertRaises(UnicodeError):
-            yield self.changesource._poll()
+            await self.changesource._poll()
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_poll_unicode_error2(self):
-        yield self.attachChangeSource(
+    async def test_poll_unicode_error2(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -363,12 +355,11 @@ class TestP4Poller(
             ),
         )
 
-        yield self.changesource._poll()
+        await self.changesource._poll()
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_acquire_ticket_auth(self):
-        yield self.attachChangeSource(
+    async def test_acquire_ticket_auth(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user='buildbot_user',
@@ -397,12 +388,11 @@ class TestP4Poller(
 
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_acquire_ticket_auth_fail(self):
-        yield self.attachChangeSource(
+    async def test_acquire_ticket_auth_fail(self):
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -432,12 +422,11 @@ class TestP4Poller(
 
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
-    @defer.inlineCallbacks
-    def test_poll_split_file(self):
+    async def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
-        yield self.attachChangeSource(
+        await self.attachChangeSource(
             P4Source(
                 p4port=None, p4user=None, p4base='//depot/myproject/', split_file=get_simple_split
             )
@@ -450,7 +439,7 @@ class TestP4Poller(
         self.add_p4_describe_result(5, p4change[5])
 
         self.changesource.last_change = 50
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         # when_timestamp is converted from a local time spec, so just
         # replicate that here
@@ -508,10 +497,9 @@ class TestP4Poller(
         self.assertEqual(self.changesource.last_change, 5)
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_server_tz(self):
+    async def test_server_tz(self):
         """Verify that the server_tz parameter is handled correctly"""
-        yield self.attachChangeSource(
+        await self.attachChangeSource(
             P4Source(
                 p4port=None,
                 p4user=None,
@@ -528,7 +516,7 @@ class TestP4Poller(
         self.add_p4_describe_result(5, p4change[5])
 
         self.changesource.last_change = 50
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         # when_timestamp is converted from 21:55:39 Berlin time to UTC
         when_berlin = self.makeTime("2006/04/13 21:55:39")

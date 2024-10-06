@@ -40,7 +40,7 @@ class OptionsMixin:
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(f" {k}: expected {repr(exp[k])}, got {repr(opts[k])}")
+                    msg.append(f" {k}: expected {exp[k]!r}, got {opts[k]!r}")
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
@@ -548,7 +548,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_files(self):
-        opts = self.parse(*self.master_and_who + ['a', 'b', 'c'])
+        opts = self.parse(*[*self.master_and_who, 'a', 'b', 'c'])
         self.assertEqual(opts['files'], ('a', 'b', 'c'))
 
     def test_properties(self):

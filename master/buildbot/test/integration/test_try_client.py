@@ -28,15 +28,15 @@ from buildbot.schedulers import trysched
 from buildbot.test.util import www
 from buildbot.test.util.integration import RunMasterBase
 
-
 # wait for some asynchronous result
-@defer.inlineCallbacks
-def waitFor(fn):
+
+
+async def waitFor(fn):
     while True:
-        res = yield fn()
+        res = await fn()
         if res:
             return res
-        yield util.asyncSleep(0.01)
+        await util.asyncSleep(0.01)
 
 
 class Schedulers(RunMasterBase, www.RequiresWwwMixin):
@@ -92,8 +92,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             jobdir.child(sub).createDirectory()
         return self.jobdir
 
-    @defer.inlineCallbacks
-    def setup_config(self, extra_config):
+    async def setup_config(self, extra_config):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.process import results
@@ -119,19 +118,18 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         # test wants to influence the config, but we still return a new config
         # each time
         c.update(extra_config)
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def startMaster(self, sch):
+    async def startMaster(self, sch):
         extra_config = {
             'schedulers': [sch],
         }
         self.sch = sch
 
-        yield self.setup_config(extra_config)
+        await self.setup_config(extra_config)
 
         # wait until the scheduler is active
-        yield waitFor(lambda: self.sch.active)
+        await waitFor(lambda: self.sch.active)
 
         # and, for Try_Userpass, until it's registered its port
         if isinstance(self.sch, trysched.Try_Userpass):
@@ -143,16 +141,15 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 log.msg(f"Scheduler registered at port {self.serverPort}")
                 return True
 
-            yield waitFor(getSchedulerPort)
+            await waitFor(getSchedulerPort)
 
     def runClient(self, config):
         self.clt = tryclient.Try(config)
         return self.clt.run_impl()
 
-    @defer.inlineCallbacks
-    def test_userpass_no_wait(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
-        yield self.runClient({
+    async def test_userpass_no_wait(self):
+        await self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        await self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
@@ -168,13 +165,12 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'not waiting for builds to finish',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-    @defer.inlineCallbacks
-    def test_userpass_wait(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
-        yield self.runClient({
+    async def test_userpass_wait(self):
+        await self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        await self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
@@ -192,15 +188,14 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'a: success (build successful)',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-    @defer.inlineCallbacks
-    def test_userpass_wait_bytes(self):
+    async def test_userpass_wait_bytes(self):
         self.sourcestamp = tryclient.SourceStamp(branch=b'br', revision=b'rr', patch=(0, b'++--'))
 
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
-        yield self.runClient({
+        await self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        await self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
@@ -218,13 +213,12 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'a: success (build successful)',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-    @defer.inlineCallbacks
-    def test_userpass_wait_dryrun(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
-        yield self.runClient({
+    async def test_userpass_wait_dryrun(self):
+        await self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        await self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
             'username': 'u',
@@ -248,13 +242,12 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'All Builds Complete',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 0)
 
-    @defer.inlineCallbacks
-    def test_userpass_list_builders(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
-        yield self.runClient({
+    async def test_userpass_list_builders(self):
+        await self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        await self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
             'master': f'127.0.0.1:{self.serverPort}',
@@ -269,14 +262,13 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'a',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 0)
 
-    @defer.inlineCallbacks
-    def test_jobdir_no_wait(self):
+    async def test_jobdir_no_wait(self):
         jobdir = self.setupJobdir()
-        yield self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
-        yield self.runClient({
+        await self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
+        await self.runClient({
             'connect': 'ssh',
             'master': '127.0.0.1',
             'username': 'u',
@@ -292,14 +284,13 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'not waiting for builds to finish',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-    @defer.inlineCallbacks
-    def test_jobdir_wait(self):
+    async def test_jobdir_wait(self):
         jobdir = self.setupJobdir()
-        yield self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
-        yield self.runClient({
+        await self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
+        await self.runClient({
             'connect': 'ssh',
             'wait': True,
             'host': '127.0.0.1',
@@ -316,5 +307,5 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
                 'waiting for builds with ssh is not supported',
             ],
         )
-        buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = await self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)

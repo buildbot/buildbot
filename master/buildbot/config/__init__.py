@@ -14,6 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from .builder import BuilderConfig  # noqa pylint: disable=unused-import
-from .errors import ConfigErrors  # noqa pylint: disable=unused-import
-from .errors import error  # noqa pylint: disable=unused-import
+from .builder import BuilderConfig  # noqa: F401
+from .errors import ConfigErrors  # noqa: F401
+from .errors import error  # noqa: F401

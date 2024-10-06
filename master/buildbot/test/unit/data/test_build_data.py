@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import build_data
@@ -47,9 +46,8 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing_build_data_by_build_id(self):
-        result = yield self.callGet(('builds', 30, 'data', 'name1'))
+    async def test_get_existing_build_data_by_build_id(self):
+        result = await self.callGet(('builds', 30, 'data', 'name1'))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -62,9 +60,8 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_name_build_number(self):
-        result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1'))
+    async def test_get_existing_build_data_by_builder_name_build_number(self):
+        result = await self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1'))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -77,9 +74,8 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_id_build_number(self):
-        result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1'))
+    async def test_get_existing_build_data_by_builder_id_build_number(self):
+        result = await self.callGet(('builders', 88, 'builds', 7, 'data', 'name1'))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -92,44 +88,36 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_build(self):
-        result = yield self.callGet(('builds', 31, 'data', 'name1'))
+    async def test_get_missing_by_build_id_missing_build(self):
+        result = await self.callGet(('builds', 31, 'data', 'name1'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_name(self):
-        result = yield self.callGet(('builds', 30, 'data', 'name_missing'))
+    async def test_get_missing_by_build_id_missing_name(self):
+        result = await self.callGet(('builds', 30, 'data', 'name_missing'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_builder(self):
-        result = yield self.callGet(('builders', 'b_missing', 'builds', 7, 'data', 'name1'))
+    async def test_get_missing_by_builder_name_build_number_missing_builder(self):
+        result = await self.callGet(('builders', 'b_missing', 'builds', 7, 'data', 'name1'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_build(self):
-        result = yield self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1'))
+    async def test_get_missing_by_builder_name_build_number_missing_build(self):
+        result = await self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_name(self):
-        result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name_missing'))
+    async def test_get_missing_by_builder_name_build_number_missing_name(self):
+        result = await self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name_missing'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_builder(self):
-        result = yield self.callGet(('builders', 188, 'builds', 7, 'data', 'name1'))
+    async def test_get_missing_by_builder_id_build_number_missing_builder(self):
+        result = await self.callGet(('builders', 188, 'builds', 7, 'data', 'name1'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_build(self):
-        result = yield self.callGet(('builders', 88, 'builds', 17, 'data', 'name1'))
+    async def test_get_missing_by_builder_id_build_number_missing_build(self):
+        result = await self.callGet(('builders', 88, 'builds', 17, 'data', 'name1'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_name(self):
-        result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing'))
+    async def test_get_missing_by_builder_id_build_number_missing_name(self):
+        result = await self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing'))
         self.assertIsNone(result)
 
 
@@ -159,9 +147,8 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertIsInstance(data['mime-type'], str)
         self.assertIsInstance(data['filename'], str)
 
-    @defer.inlineCallbacks
-    def test_get_existing_build_data_by_build_id(self):
-        result = yield self.callGet(('builds', 30, 'data', 'name1', 'value'))
+    async def test_get_existing_build_data_by_build_id(self):
+        result = await self.callGet(('builds', 30, 'data', 'name1', 'value'))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -172,9 +159,8 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_name_build_number(self):
-        result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1', 'value'))
+    async def test_get_existing_build_data_by_builder_name_build_number(self):
+        result = await self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1', 'value'))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -185,9 +171,8 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_id_build_number(self):
-        result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1', 'value'))
+    async def test_get_existing_build_data_by_builder_id_build_number(self):
+        result = await self.callGet(('builders', 88, 'builds', 7, 'data', 'name1', 'value'))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -198,19 +183,16 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_build(self):
-        result = yield self.callGet(('builds', 31, 'data', 'name1', 'value'))
+    async def test_get_missing_by_build_id_missing_build(self):
+        result = await self.callGet(('builds', 31, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_name(self):
-        result = yield self.callGet(('builds', 30, 'data', 'name_missing', 'value'))
+    async def test_get_missing_by_build_id_missing_name(self):
+        result = await self.callGet(('builds', 30, 'data', 'name_missing', 'value'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_builder(self):
-        result = yield self.callGet((
+    async def test_get_missing_by_builder_name_build_number_missing_builder(self):
+        result = await self.callGet((
             'builders',
             'b_missing',
             'builds',
@@ -221,14 +203,12 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_build(self):
-        result = yield self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1', 'value'))
+    async def test_get_missing_by_builder_name_build_number_missing_build(self):
+        result = await self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_name(self):
-        result = yield self.callGet((
+    async def test_get_missing_by_builder_name_build_number_missing_name(self):
+        result = await self.callGet((
             'builders',
             'b1',
             'builds',
@@ -239,19 +219,16 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_builder(self):
-        result = yield self.callGet(('builders', 188, 'builds', 7, 'data', 'name1', 'value'))
+    async def test_get_missing_by_builder_id_build_number_missing_builder(self):
+        result = await self.callGet(('builders', 188, 'builds', 7, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_build(self):
-        result = yield self.callGet(('builders', 88, 'builds', 17, 'data', 'name1', 'value'))
+    async def test_get_missing_by_builder_id_build_number_missing_build(self):
+        result = await self.callGet(('builders', 88, 'builds', 17, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
-    @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_name(self):
-        result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing', 'value'))
+    async def test_get_missing_by_builder_id_build_number_missing_name(self):
+        result = await self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing', 'value'))
         self.assertIsNone(result)
 
 
@@ -292,9 +269,8 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('no_values', 9, []),
         ('not_existing', 10, []),
     ])
-    @defer.inlineCallbacks
-    def test_get_builders_builder_name(self, name, build_number, exp_names):
-        results = yield self.callGet(('builders', 'b1', 'builds', build_number, 'data'))
+    async def test_get_builders_builder_name(self, name, build_number, exp_names):
+        results = await self.callGet(('builders', 'b1', 'builds', build_number, 'data'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['name'] for r in results], exp_names)
@@ -305,9 +281,8 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('no_values', 9, []),
         ('not_existing', 10, []),
     ])
-    @defer.inlineCallbacks
-    def test_get_builders_builder_id(self, name, build_number, exp_names):
-        results = yield self.callGet(('builders', 88, 'builds', build_number, 'data'))
+    async def test_get_builders_builder_id(self, name, build_number, exp_names):
+        results = await self.callGet(('builders', 88, 'builds', build_number, 'data'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['name'] for r in results], exp_names)
@@ -318,9 +293,8 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('no_values', 32, []),
         ('not_existing', 33, []),
     ])
-    @defer.inlineCallbacks
-    def test_get_builds_id(self, name, buildid, exp_names):
-        results = yield self.callGet(('builds', buildid, 'data'))
+    async def test_get_builds_id(self, name, buildid, exp_names):
+        results = await self.callGet(('builds', buildid, 'data'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['name'] for r in results], exp_names)
@@ -337,11 +311,10 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         def setBuildData(self, buildid, name, value, source):
             pass
 
-    @defer.inlineCallbacks
-    def test_set_build_data(self):
-        yield self.rtype.setBuildData(buildid=2, name='name1', value=b'value1', source='source1')
+    async def test_set_build_data(self):
+        await self.rtype.setBuildData(buildid=2, name='name1', value=b'value1', source='source1')
 
-        result = yield self.master.db.build_data.getBuildData(2, 'name1')
+        result = await self.master.db.build_data.getBuildData(2, 'name1')
         self.assertEqual(
             result,
             BuildDataModel(

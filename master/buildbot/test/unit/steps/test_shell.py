@@ -16,7 +16,6 @@
 import re
 import textwrap
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -314,8 +313,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=FAILURE, state_string="'cmd' (failure)")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_run_extract_fn_exception(self):
+    async def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
 
@@ -323,7 +321,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_commands(ExpectShell(workdir='wkdir', command="cmd").exit(0))
         # note that extract_fn *is* called anyway, but returns no properties
         self.expect_outcome(result=EXCEPTION, state_string="'cmd' (exception)")
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_error_both_set(self):
@@ -702,8 +700,7 @@ class WarningCountingShellCommand(
             """)
         return self.do_test_suppressions(step, supps_file, stdout, 2, exp_warning_log)
 
-    @defer.inlineCallbacks
-    def test_suppressions_warningExtractor_exc(self):
+    async def test_suppressions_warningExtractor_exc(self):
         def warningExtractor(step, line, match):
             raise RuntimeError("oh noes")
 
@@ -713,7 +710,7 @@ class WarningCountingShellCommand(
         # need at least one supp to trigger warningExtractor
         supps_file = 'x:y'
         stdout = "abc.c:99: warning: seen 1"
-        yield self.do_test_suppressions(step, supps_file, stdout, exp_exception=True)
+        await self.do_test_suppressions(step, supps_file, stdout, exp_exception=True)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_suppressions_addSuppression(self):

@@ -30,19 +30,20 @@ class FakeConnection:
         self._next_command_number = 0
         self._blocked_deferreds = []
 
-    @defer.inlineCallbacks
-    def remoteStartCommand(self, remote_command, builder_name, command_id, command_name, args):
+    async def remoteStartCommand(
+        self, remote_command, builder_name, command_id, command_name, args
+    ):
         self._waiting_for_interrupt = False
         if self._next_command_number in self._commands_numbers_to_interrupt:
             self._waiting_for_interrupt = True
 
-            yield self.step.interrupt('interrupt reason')
+            await self.step.interrupt('interrupt reason')
 
             if self._waiting_for_interrupt:
                 raise RuntimeError("Interrupted step, but command was not interrupted")
 
         self._next_command_number += 1
-        yield self.testcase._connection_remote_start_command(remote_command, self, builder_name)
+        await self.testcase._connection_remote_start_command(remote_command, self, builder_name)
 
         # running behaviors may still attempt interrupt the command
         if self._waiting_for_interrupt:

@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -56,13 +55,12 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
                 ('builds', None, 'new'),
             ]
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, build):
+    async def generate(self, master, reporter, key, build):
         _, _, event = key
         is_new = event == 'new'
         want_previous_build = False if is_new else self._want_previous_build()
 
-        yield utils.getDetailsForBuild(
+        await utils.getDetailsForBuild(
             master,
             build,
             want_properties=self.formatter.want_properties,
@@ -78,7 +76,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         if not is_new and not self.is_message_needed_by_results(build):
             return None
 
-        report = yield self.build_message(self.formatter, master, reporter, build)
+        report = await self.build_message(self.formatter, master, reporter, build)
         return report
 
     def _want_previous_build(self):
@@ -113,14 +111,13 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         if self.end_formatter is None:
             self.end_formatter = MessageFormatterRenderable('Build done.')
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, build):
+    async def generate(self, master, reporter, key, build):
         _, _, event = key
         is_new = event == 'new'
 
         formatter = self.start_formatter if is_new else self.end_formatter
 
-        yield utils.getDetailsForBuild(
+        await utils.getDetailsForBuild(
             master,
             build,
             want_properties=formatter.want_properties,
@@ -133,5 +130,5 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         if not self.is_message_needed_by_props(build):
             return None
 
-        report = yield self.build_message(formatter, master, reporter, build)
+        report = await self.build_message(formatter, master, reporter, build)
         return report

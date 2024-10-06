@@ -119,8 +119,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getPrevSuccessfulBuild(
+    async def getPrevSuccessfulBuild(
         self, builderid: int, number: int, ssBuild: Sequence[SourceStampModel]
     ):
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
@@ -131,7 +130,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         matchssBuild = {(ss.repository, ss.branch, ss.codebase) for ss in ssBuild}
         while rv is None:
             # Get some recent successful builds on the same builder
-            prevBuilds = yield self._getRecentBuilds(
+            prevBuilds = await self._getRecentBuilds(
                 whereclause=(
                     (tbl.c.builderid == builderid) & (tbl.c.number < number) & (tbl.c.results == 0)
                 ),
@@ -298,8 +297,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def setBuildProperty(self, bid, name, value, source):
+    async def setBuildProperty(self, bid, name, value, source):
         """A kind of create_or_update, that's between one or two queries per
         call"""
 
@@ -321,10 +319,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     bp_tbl.update().where(whereclause), {"value": value_js, "source": source}
                 )
 
-        yield self.db.pool.do_with_transaction(thd)
+        await self.db.pool.do_with_transaction(thd)
 
-    @defer.inlineCallbacks
-    def add_build_locks_duration(self, buildid, duration_s):
+    async def add_build_locks_duration(self, buildid, duration_s):
         def thd(conn):
             builds_tbl = self.db.model.builds
             conn.execute(
@@ -333,7 +330,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
             )
 
-        yield self.db.pool.do_with_transaction(thd)
+        await self.db.pool.do_with_transaction(thd)
 
     def _model_from_row(self, row):
         return BuildModel(

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import changes
@@ -28,9 +27,8 @@ class TestBadRows(connector_component.ConnectorComponentMixin, unittest.TestCase
     # rows in the change_properties database do not contain a proper [value,
     # source] tuple.
 
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=['patches', 'sourcestamps', 'changes', 'change_properties', 'change_files']
         )
 
@@ -39,26 +37,24 @@ class TestBadRows(connector_component.ConnectorComponentMixin, unittest.TestCase
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
-    @defer.inlineCallbacks
-    def test_bogus_row_no_source(self):
-        yield self.insert_test_data([
+    async def test_bogus_row_no_source(self):
+        await self.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel', property_value='"no source"'),
             fakedb.Change(changeid=13, sourcestampid=10),
         ])
 
-        c = yield self.db.changes.getChange(13)
+        c = await self.db.changes.getChange(13)
 
         self.assertEqual(c.properties, {"devel": ('no source', 'Change')})
 
-    @defer.inlineCallbacks
-    def test_bogus_row_jsoned_list(self):
-        yield self.insert_test_data([
+    async def test_bogus_row_jsoned_list(self):
+        await self.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel', property_value='[1, 2]'),
             fakedb.Change(changeid=13, sourcestampid=10),
         ])
 
-        c = yield self.db.changes.getChange(13)
+        c = await self.db.changes.getChange(13)
 
         self.assertEqual(c.properties, {"devel": ([1, 2], 'Change')})

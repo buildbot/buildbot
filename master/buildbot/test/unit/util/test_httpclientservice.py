@@ -44,8 +44,7 @@ components.registerAdapter(lambda m: m, mock.Mock, interfaces.IHttpResponse)
 
 
 class HTTPClientServiceTestBase(unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         if httpclientservice.txrequests is None or httpclientservice.treq is None:
             raise unittest.SkipTest('this test requires txrequests and treq')
         self.patch(httpclientservice, 'txrequests', mock.Mock())
@@ -53,37 +52,33 @@ class HTTPClientServiceTestBase(unittest.TestCase):
         self.parent = service.MasterService()
         self.parent.reactor = reactor
         self.base_headers = {}
-        yield self.parent.startService()
+        await self.parent.startService()
 
 
 class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
-        self._http = yield httpclientservice.HTTPClientService.getService(
+    async def setUp(self):
+        await super().setUp()
+        self._http = await httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', headers=self.base_headers
         )
 
-    @defer.inlineCallbacks
-    def test_get(self):
+    async def test_get(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.get('/bar')
+            await self._http.get('/bar')
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'get', 'http://foo/bar', headers={}, background_callback=mock.ANY
         )
 
-    @defer.inlineCallbacks
-    def test_get_full_url(self):
+    async def test_get_full_url(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.get('http://other/bar')
+            await self._http.get('http://other/bar')
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'get', 'http://other/bar', headers={}, background_callback=mock.ANY
         )
 
-    @defer.inlineCallbacks
-    def test_put(self):
+    async def test_put(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.put('/bar', json={'foo': 'bar'})
+            await self._http.put('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
@@ -91,10 +86,9 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
             'put', 'http://foo/bar', background_callback=mock.ANY, data=jsonBytes, headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_post(self):
+    async def test_post(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         headers = {'Content-Type': 'application/json'}
@@ -102,19 +96,17 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
             'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonBytes, headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_delete(self):
+    async def test_delete(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.delete('/bar')
+            await self._http.delete('/bar')
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'delete', 'http://foo/bar', background_callback=mock.ANY, headers={}
         )
 
-    @defer.inlineCallbacks
-    def test_post_headers(self):
+    async def test_post_headers(self):
         self.base_headers.update({'X-TOKEN': 'XXXYYY'})
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -125,13 +117,12 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
             headers={'X-TOKEN': 'XXXYYY', 'Content-Type': 'application/json'},
         )
 
-    @defer.inlineCallbacks
-    def test_post_auth(self):
-        self._http = yield httpclientservice.HTTPClientService.getService(
+    async def test_post_auth(self):
+        self._http = await httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', auth=('user', 'pa$$')
         )
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         jsonBytes = unicode2bytes(jsonStr)
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -145,29 +136,26 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
 
 class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
+    async def setUp(self):
+        await super().setUp()
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(
                 self.parent, 'http://foo', headers=self.base_headers, skipEncoding=True
             )
         )
 
-    @defer.inlineCallbacks
-    def test_post_raw(self):
+    async def test_post_raw(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': 'application/json'}
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'post', 'http://foo/bar', background_callback=mock.ANY, data=jsonStr, headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_post_rawlist(self):
+    async def test_post_rawlist(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json=[{'foo': 'bar'}])
+            await self._http.post('/bar', json=[{'foo': 'bar'}])
         jsonStr = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': 'application/json'}
         self._http._txrequests_sessions[0].request.assert_called_once_with(
@@ -176,65 +164,58 @@ class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
 
 
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
+    async def setUp(self):
+        await super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
-        self._http = yield httpclientservice.HTTPClientService.getService(
+        self._http = await httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', headers=self.base_headers
         )
 
-    @defer.inlineCallbacks
-    def test_get(self):
+    async def test_get(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.get('/bar')
+            await self._http.get('/bar')
         httpclientservice.treq.get.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, headers={}
         )
 
-    @defer.inlineCallbacks
-    def test_put(self):
+    async def test_put(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.put('/bar', json={'foo': 'bar'})
+            await self._http.put('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.put.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_post(self):
+    async def test_post(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.post.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_delete(self):
+    async def test_delete(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.delete('/bar')
+            await self._http.delete('/bar')
         httpclientservice.treq.delete.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, headers={}
         )
 
-    @defer.inlineCallbacks
-    def test_post_headers(self):
+    async def test_post_headers(self):
         self.base_headers.update({'X-TOKEN': 'XXXYYY'})
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         headers = {'Content-Type': ['application/json'], 'X-TOKEN': ['XXXYYY']}
         httpclientservice.treq.post.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=b'{"foo": "bar"}', headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_post_auth(self):
-        self._http = yield httpclientservice.HTTPClientService.getService(
+    async def test_post_auth(self):
+        self._http = await httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', auth=('user', 'pa$$')
         )
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         headers = {
             'Content-Type': ['application/json'],
         }
@@ -246,14 +227,13 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
             headers=headers,
         )
 
-    @defer.inlineCallbacks
-    def test_post_auth_digest(self):
+    async def test_post_auth_digest(self):
         auth = HTTPDigestAuth('user', 'pa$$')
-        self._http = yield httpclientservice.HTTPClientService.getService(
+        self._http = await httpclientservice.HTTPClientService.getService(
             self.parent, 'http://foo', auth=auth
         )
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', data={'foo': 'bar'})
+            await self._http.post('/bar', data={'foo': 'bar'})
         # if digest auth, we don't use treq! we use txrequests
         self._http._txrequests_sessions[0].request.assert_called_once_with(
             'post',
@@ -266,9 +246,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
 
 class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
+    async def setUp(self):
+        await super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(
@@ -276,20 +255,18 @@ class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
             )
         )
 
-    @defer.inlineCallbacks
-    def test_post_raw(self):
+    async def test_post_raw(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json={'foo': 'bar'})
+            await self._http.post('/bar', json={'foo': 'bar'})
         json_str = json.dumps({"foo": 'bar'})
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.post.assert_called_once_with(
             'http://foo/bar', agent=mock.ANY, data=json_str, headers=headers
         )
 
-    @defer.inlineCallbacks
-    def test_post_rawlist(self):
+    async def test_post_rawlist(self):
         with assertProducesWarning(DeprecationWarning):
-            yield self._http.post('/bar', json=[{'foo': 'bar'}])
+            await self._http.post('/bar', json=[{'foo': 'bar'}])
         json_str = json.dumps([{"foo": 'bar'}])
         headers = {'Content-Type': ['application/json']}
         httpclientservice.treq.post.assert_called_once_with(
@@ -346,8 +323,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     def expect(self, *arg, **kwargs):
         pass
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         # On slower machines with high CPU oversubscription this test may take longer to run than
         # the default timeout.
         self.timeout = 10
@@ -359,77 +335,69 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         self.port = self.listenport.getHost().port
         self.parent = parent = service.MasterService()
         self.parent.reactor = reactor
-        yield parent.startService()
-        self._http = yield self.httpFactory(parent)
+        await parent.startService()
+        self._http = await self.httpFactory(parent)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.listenport.stopListening()
-        yield self.site.stopFactory()
-        yield self.site.close_connections()
-        yield self.parent.stopService()
+    async def tearDown(self):
+        await self.listenport.stopListening()
+        await self.site.stopFactory()
+        await self.site.close_connections()
+        await self.parent.stopService()
 
-    @defer.inlineCallbacks
-    def test_content(self):
+    async def test_content(self):
         self.expect('get', '/', content_json={})
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.get('/')
-        content = yield res.content()
+            res = await self._http.get('/')
+        content = await res.content()
         self.assertEqual(content, b'{}')
 
-    @defer.inlineCallbacks
-    def test_content_with_params(self):
+    async def test_content_with_params(self):
         self.expect('get', '/', params={"a": 'b'}, content_json={"a": ['b']})
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.get('/', params={"a": 'b'})
-        content = yield res.content()
+            res = await self._http.get('/', params={"a": 'b'})
+        content = await res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
 
-    @defer.inlineCallbacks
-    def test_post_content_with_params(self):
+    async def test_post_content_with_params(self):
         self.expect('post', '/', params={"a": 'b'}, content_json={"a": ['b']})
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.post('/', params={"a": 'b'})
-        content = yield res.content()
+            res = await self._http.post('/', params={"a": 'b'})
+        content = await res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
 
-    @defer.inlineCallbacks
-    def test_put_content_with_data(self):
+    async def test_put_content_with_data(self):
         self.expect('post', '/', data={"a": 'b'}, content_json={"a": ['b']})
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.post('/', data={"a": 'b'})
-        content = yield res.content()
+            res = await self._http.post('/', data={"a": 'b'})
+        content = await res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
 
-    @defer.inlineCallbacks
-    def test_put_content_with_json(self):
+    async def test_put_content_with_json(self):
         exp_content_json = {"json_received": {"a": 'b'}}
         self.expect('post', '/', json={"a": 'b'}, content_json=exp_content_json)
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.post('/', json={"a": 'b'})
-        content = yield res.content()
+            res = await self._http.post('/', json={"a": 'b'})
+        content = await res.content()
         content = bytes2unicode(content)
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
-    @defer.inlineCallbacks
-    def test_put_content_with_json_datetime(self):
+    async def test_put_content_with_json_datetime(self):
         exp_content_json = {"json_received": {"a": 'b', "ts": 12}}
         dt = datetime.datetime.fromtimestamp(12, datetime.timezone.utc)
         self.expect('post', '/', json={"a": 'b', "ts": dt}, content_json=exp_content_json)
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.post('/', json={"a": 'b', "ts": dt})
-        content = yield res.content()
+            res = await self._http.post('/', json={"a": 'b', "ts": dt})
+        content = await res.content()
         content = bytes2unicode(content)
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
-    @defer.inlineCallbacks
-    def test_json(self):
+    async def test_json(self):
         self.expect('get', '/', content_json={})
         with assertProducesWarning(DeprecationWarning):
-            res = yield self._http.get('/')
-        content = yield res.json()
+            res = await self._http.get('/')
+        content = await res.json()
         self.assertEqual(content, {})
         self.assertEqual(res.code, 200)
 
@@ -437,20 +405,18 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     # we can change this test via environment variable
     NUM_PARALLEL = os.environ.get("BBTEST_NUM_PARALLEL", 5)
 
-    @defer.inlineCallbacks
-    def test_lots(self):
+    async def test_lots(self):
         for _ in range(self.NUM_PARALLEL):
             self.expect('get', '/', params={"a": 'b'}, content_json={"a": ['b']})
         # use for benchmarking (txrequests: 3ms per request treq: 1ms per
         # request)
         for _ in range(self.NUM_PARALLEL):
             with assertProducesWarning(DeprecationWarning):
-                res = yield self._http.get('/', params={"a": 'b'})
-            content = yield res.content()
+                res = await self._http.get('/', params={"a": 'b'})
+            content = await res.content()
             self.assertEqual(content, b'{"a": ["b"]}')
 
-    @defer.inlineCallbacks
-    def test_lots_parallel(self):
+    async def test_lots_parallel(self):
         for _ in range(self.NUM_PARALLEL):
             self.expect('get', '/', params={"a": 'b'}, content_json={"a": ['b']})
 
@@ -467,20 +433,18 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
             return d
 
         dl = [oneReq() for i in range(self.NUM_PARALLEL)]
-        yield defer.gatherResults(dl)
+        await defer.gatherResults(dl)
 
 
 class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
-        yield super().setUp()
+        await super().setUp()
 
 
 class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):
-    @defer.inlineCallbacks
-    def httpFactory(self, parent):
-        service = yield fakehttpclientservice.HTTPClientService.getService(
+    async def httpFactory(self, parent):
+        service = await fakehttpclientservice.HTTPClientService.getService(
             parent, self, f'http://127.0.0.1:{self.port}'
         )
         return service

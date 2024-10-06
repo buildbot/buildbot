@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -50,10 +49,9 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         if self.formatter is None:
             self.formatter = MessageFormatter()
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    async def generate(self, master, reporter, key, message):
         bsid = message['bsid']
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             master,
             bsid,
             want_properties=self.formatter.want_properties,
@@ -75,11 +73,10 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         if not builds:
             return None
 
-        report = yield self.buildset_message(self.formatter, master, reporter, builds, buildset)
+        report = await self.buildset_message(self.formatter, master, reporter, builds, buildset)
         return report
 
-    @defer.inlineCallbacks
-    def buildset_message(self, formatter, master, reporter, builds, buildset):
+    async def buildset_message(self, formatter, master, reporter, builds, buildset):
         # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
@@ -92,13 +89,13 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         for build in builds:
             patches.extend(self._get_patches_for_build(build))
 
-            build_logs = yield self._get_logs_for_build(build)
+            build_logs = await self._get_logs_for_build(build)
             logs.extend(build_logs)
 
-            blamelist = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
+            blamelist = await reporter.getResponsibleUsersForBuild(master, build['buildid'])
             users.update(set(blamelist))
 
-            buildmsg = yield formatter.format_message_for_build(
+            buildmsg = await formatter.format_message_for_build(
                 master, build, is_buildset=True, mode=self.mode, users=blamelist
             )
 
@@ -152,11 +149,10 @@ class BuildSetCombinedStatusGenerator:
     def __init__(self, message_formatter):
         self.formatter = message_formatter
 
-    @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    async def generate(self, master, reporter, key, message):
         bsid = message["bsid"]
 
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             master,
             bsid,
             want_properties=self.formatter.want_properties,
@@ -168,16 +164,15 @@ class BuildSetCombinedStatusGenerator:
         builds = res['builds']
         buildset = res['buildset']
 
-        report = yield self.buildset_message(self.formatter, master, reporter, buildset, builds)
+        report = await self.buildset_message(self.formatter, master, reporter, buildset, builds)
 
         return report
 
     def check(self):
         pass
 
-    @defer.inlineCallbacks
-    def buildset_message(self, formatter, master, reporter, buildset, builds):
-        buildmsg = yield formatter.format_message_for_buildset(
+    async def buildset_message(self, formatter, master, reporter, buildset, builds):
+        buildmsg = await formatter.format_message_for_buildset(
             master, buildset, builds, is_buildset=True, mode=("passing",), users=[]
         )
 

@@ -140,13 +140,12 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         d = sched.deactivate()
         return d
 
-    @defer.inlineCallbacks
-    def test_start_build_error(self):
+    async def test_start_build_error(self):
         sched = self.makeScheduler(
             name='test', builderNames=['test'], periodicBuildTimer=10, firstBuildError=True
         )  # error during first build start
 
-        yield sched.activate()
+        await sched.activate()
         self.reactor.advance(0)  # let it trigger the first (error) build
         while self.reactor.seconds() < 40:
             self.reactor.advance(1)
@@ -154,7 +153,7 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.state.get('last_build'), 40)
         self.assertEqual(1, len(self.flushLoggedErrors(TestException)))
 
-        yield sched.deactivate()
+        await sched.deactivate()
 
     def test_iterations_stop_while_starting_build(self):
         sched = self.makeScheduler(
@@ -194,50 +193,44 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         d = sched.deactivate()
         return d
 
-    @defer.inlineCallbacks
-    def test_getNextBuildTime_None(self):
+    async def test_getNextBuildTime_None(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)
         # given None, build right away
-        t = yield sched.getNextBuildTime(None)
+        t = await sched.getNextBuildTime(None)
         self.assertEqual(t, 0)
 
-    @defer.inlineCallbacks
-    def test_getNextBuildTime_given(self):
+    async def test_getNextBuildTime_given(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)
         # given a time, add the periodicBuildTimer to it
-        t = yield sched.getNextBuildTime(20)
+        t = await sched.getNextBuildTime(20)
         self.assertEqual(t, 33)
 
-    @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    async def test_enabled_callback(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
-    @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    async def test_disabled_activate(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.activate()
+        r = await sched.activate()
         self.assertEqual(r, None)
 
-    @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    async def test_disabled_deactivate(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.deactivate()
+        r = await sched.deactivate()
         self.assertEqual(r, None)
 
-    @defer.inlineCallbacks
-    def test_disabled_start_build(self):
+    async def test_disabled_start_build(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.startBuild()
+        r = await sched.startBuild()
         self.assertEqual(r, None)

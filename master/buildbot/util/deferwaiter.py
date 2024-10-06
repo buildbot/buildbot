@@ -48,11 +48,10 @@ class DeferWaiter:
     def has_waited(self):
         return self._waited_count > 0
 
-    @defer.inlineCallbacks
-    def wait(self):
+    async def wait(self):
         if self._waited_count == 0:
             return
-        yield self._finish_notifier.wait()
+        await self._finish_notifier.wait()
 
 
 class RepeatedActionHandler:
@@ -105,11 +104,10 @@ class RepeatedActionHandler:
     def _start_timer(self):
         self._timer = self._reactor.callLater(self._interval, self._handle_timeout)
 
-    @defer.inlineCallbacks
-    def _do_action(self):
+    async def _do_action(self):
         try:
             self._running = True
-            yield self._action()
+            await self._action()
         except Exception as e:
             log.err(e, 'Got exception in RepeatedActionHandler')
         finally:
@@ -118,17 +116,16 @@ class RepeatedActionHandler:
     def _handle_timeout(self):
         self._waiter.add(self._handle_action())
 
-    @defer.inlineCallbacks
-    def _handle_action(self):
+    async def _handle_action(self):
         self._timer = None
         if self._start_timer_after_action_completes:
-            yield self._do_action()
+            await self._do_action()
 
         if self._enabled:
             self._start_timer()
 
         if not self._start_timer_after_action_completes:
-            yield self._do_action()
+            await self._do_action()
 
 
 class NonRepeatedActionHandler:
@@ -176,11 +173,10 @@ class NonRepeatedActionHandler:
             self._timer.cancel()
             self._timer = None
 
-    @defer.inlineCallbacks
-    def _do_action(self):
+    async def _do_action(self):
         try:
             self._running = True
-            yield self._action()
+            await self._action()
         except Exception as e:
             log.err(e, 'Got exception in NonRepeatedActionHandler')
         finally:

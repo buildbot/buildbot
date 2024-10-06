@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
@@ -28,16 +27,14 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 
 class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin, ConfigErrorsMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
-        yield self.master.startService()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def createReporter(self, auth=("username", "passwd"), headers=None, **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+    async def createReporter(self, auth=("username", "passwd"), headers=None, **kwargs):
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "serv", auth=auth, headers=headers, debug=None, verify=None
         )
 
@@ -48,56 +45,48 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
             interpolated_auth = (username, passwd)
 
         self.sp = HttpStatusPush("serv", auth=interpolated_auth, headers=headers, **kwargs)
-        yield self.sp.setServiceParent(self.master)
+        await self.sp.setServiceParent(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_basic(self):
-        yield self.createReporter()
+    async def test_basic(self):
+        await self.createReporter()
         self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
         self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
-        build = yield self.insert_build_new()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        build = await self.insert_build_new()
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_basic_noauth(self):
-        yield self.createReporter(auth=None)
+    async def test_basic_noauth(self):
+        await self.createReporter(auth=None)
         self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
         self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
-        build = yield self.insert_build_new()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        build = await self.insert_build_new()
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_header(self):
-        yield self.createReporter(headers={'Custom header': 'On'})
+    async def test_header(self):
+        await self.createReporter(headers={'Custom header': 'On'})
         self._http.expect("post", "", json=BuildDictLookAlike())
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build = await self.insert_build_finished(SUCCESS)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def http2XX(self, code, content):
-        yield self.createReporter()
+    async def http2XX(self, code, content):
+        await self.createReporter()
         self._http.expect('post', '', code=code, content=content, json=BuildDictLookAlike())
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        build = await self.insert_build_finished(SUCCESS)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_http200(self):
-        yield self.http2XX(code=200, content="OK")
+    async def test_http200(self):
+        await self.http2XX(code=200, content="OK")
 
-    @defer.inlineCallbacks
-    def test_http201(self):  # e.g. GitHub returns 201
-        yield self.http2XX(code=201, content="Created")
+    async def test_http201(self):  # e.g. GitHub returns 201
+        await self.http2XX(code=201, content="Created")
 
-    @defer.inlineCallbacks
-    def test_http202(self):
-        yield self.http2XX(code=202, content="Accepted")
+    async def test_http202(self):
+        await self.http2XX(code=202, content="Accepted")

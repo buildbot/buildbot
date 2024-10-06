@@ -111,8 +111,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def addChange(
+    async def addChange(
         self,
         author: str | None = None,
         committer: str | None = None,
@@ -157,7 +156,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         self.checkLength(ch_tbl.c.project, project)
 
         # calculate the sourcestamp first, before adding it
-        ssid = yield self.db.sourcestamps.findSourceStampId(
+        ssid = await self.db.sourcestamps.findSourceStampId(
             revision=revision,
             branch=branch,
             repository=repository,
@@ -165,7 +164,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             project=project,
         )
 
-        parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
+        parent_changeids = await self.getParentChangeIds(branch, repository, project, codebase)
         # Someday, changes will have multiple parents.
         # But for the moment, a Change can only have 1 parent
         parent_changeid = parent_changeids[0] if parent_changeids else None
@@ -240,26 +239,25 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getChangesForBuild(self, buildid: int):
+    async def getChangesForBuild(self, buildid: int):
         assert buildid > 0
 
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
         changes: list[ChangeModel] = []
-        currentBuild = yield self.master.db.builds.getBuild(buildid)
+        currentBuild = await self.master.db.builds.getBuild(buildid)
         fromChanges: dict[str, ChangeModel | None] = {}
         toChanges: dict[str, ChangeModel] = {}
-        ssBuild = yield gssfb(buildid)
+        ssBuild = await gssfb(buildid)
         for ss in ssBuild:
-            fromChanges[ss.codebase] = yield self.getChangeFromSSid(ss.ssid)
+            fromChanges[ss.codebase] = await self.getChangeFromSSid(ss.ssid)
 
         # Get the last successful build on the same builder
-        previousBuild = yield self.master.db.builds.getPrevSuccessfulBuild(
+        previousBuild = await self.master.db.builds.getPrevSuccessfulBuild(
             currentBuild.builderid, currentBuild.number, ssBuild
         )
         if previousBuild:
             for ss in (yield gssfb(previousBuild.id)):
-                ss_change = yield self.getChangeFromSSid(ss.ssid)
+                ss_change = await self.getChangeFromSSid(ss.ssid)
                 if ss_change:
                     toChanges[ss.codebase] = ss_change
 
@@ -276,7 +274,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             changes.append(change)
             while change.parent_changeids and to_cb_changeid not in change.parent_changeids:
                 # For the moment, a Change only have 1 parent.
-                change = yield self.master.db.changes.getChange(change.parent_changeids[0])
+                change = await self.master.db.changes.getChange(change.parent_changeids[0])
                 # http://trac.buildbot.net/ticket/3461 sometimes,
                 # parent_changeids could be corrupted
                 if change is None:
@@ -375,8 +373,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     # utility methods
 
-    @defer.inlineCallbacks
-    def pruneChanges(self, changeHorizon: int):
+    async def pruneChanges(self, changeHorizon: int):
         """
         Called periodically by DBConnector, this method deletes changes older
         than C{changeHorizon}.
@@ -420,7 +417,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     table = self.db.model.metadata.tables[table_name]
                     conn.execute(table.delete().where(table.c.changeid.in_(batch)))
 
-        yield self.db.pool.do_with_transaction(thd)
+        await self.db.pool.do_with_transaction(thd)
 
     def _thd_model_from_row(self, conn, ch_row) -> ChangeModel:
         # This method must be run in a db.pool thread

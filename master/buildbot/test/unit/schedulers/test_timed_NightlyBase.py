@@ -15,7 +15,6 @@
 
 import time
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.schedulers import timed
@@ -36,14 +35,13 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         return self.attachScheduler(timed.NightlyBase(**kwargs), self.OBJECTID, self.SCHEDULERID)
 
-    @defer.inlineCallbacks
-    def do_getNextBuildTime_test(self, sched, *expectations):
+    async def do_getNextBuildTime_test(self, sched, *expectations):
         for lastActuated, expected in expectations:
             # convert from tuples to epoch time (in local timezone)
             lastActuated_ep, expected_ep = [
                 time.mktime(t + (0,) * (8 - len(t)) + (-1,)) for t in (lastActuated, expected)
             ]
-            got_ep = yield sched.getNextBuildTime(lastActuated_ep)
+            got_ep = await sched.getNextBuildTime(lastActuated_ep)
             self.assertEqual(
                 got_ep, expected_ep, f"{lastActuated} -> {time.localtime(got_ep)} != {expected}"
             )

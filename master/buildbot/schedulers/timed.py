@@ -130,9 +130,8 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         self._reactor = reactor  # patched by tests
         self.is_first_build = None
 
-    @defer.inlineCallbacks
-    def activate(self):
-        yield super().activate()
+    async def activate(self):
+        await super().activate()
 
         if not self.enabled:
             return None
@@ -142,28 +141,27 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         self.actuateOk = True
 
         # get the scheduler's last_build time (note: only done at startup)
-        self.lastActuated = yield self.getState('last_build', None)
+        self.lastActuated = await self.getState('last_build', None)
         if self.lastActuated is None:
             self.is_first_build = True
         else:
             self.is_first_build = False
 
         # schedule the next build
-        yield self.scheduleNextBuild()
+        await self.scheduleNextBuild()
 
         if self.onlyIfChanged or self.createAbsoluteSourceStamps:
-            yield self.startConsumingChanges(
+            await self.startConsumingChanges(
                 fileIsImportant=self.fileIsImportant,
                 change_filter=self.change_filter,
                 onlyImportant=self.onlyImportant,
             )
         else:
-            yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
+            await self.master.db.schedulers.flushChangeClassifications(self.serviceid)
         return None
 
-    @defer.inlineCallbacks
-    def deactivate(self):
-        yield super().deactivate()
+    async def deactivate(self):
+        await super().deactivate()
 
         if not self.enabled:
             return None
@@ -178,7 +176,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                 self.actuateAtTimer.cancel()
             self.actuateAtTimer = None
 
-        yield self.actuationLock.run(stop_actuating)
+        await self.actuationLock.run(stop_actuating)
         return None
 
     # Scheduler methods
@@ -198,8 +196,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
         return d
 
-    @defer.inlineCallbacks
-    def startBuild(self):
+    async def startBuild(self):
         if not self.enabled:
             log.msg(
                 format='ignoring build from %(name)s because scheduler '
@@ -210,7 +207,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
         # use the collected changes to start a build
         scheds = self.master.db.schedulers
-        classifications = yield scheds.getChangeClassifications(self.serviceid)
+        classifications = await scheds.getChangeClassifications(self.serviceid)
 
         # if onlyIfChanged is True, then we will skip this build if no important changes have
         # occurred since the last invocation. Note that when the scheduler has just been started
@@ -221,7 +218,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         # at the point when startBuild finishes (it is not obvious, that all code paths lead
         # to this outcome)
 
-        last_only_if_changed = yield self.getState('last_only_if_changed', True)
+        last_only_if_changed = await self.getState('last_only_if_changed', True)
 
         if (
             last_only_if_changed
@@ -239,21 +236,21 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             return
 
         if last_only_if_changed != self.onlyIfChanged:
-            yield self.setState('last_only_if_changed', self.onlyIfChanged)
+            await self.setState('last_only_if_changed', self.onlyIfChanged)
 
         changeids = sorted(classifications.keys())
 
         if changeids:
             max_changeid = changeids[-1]  # (changeids are sorted)
-            yield self.addBuildsetForChanges(
+            await self.addBuildsetForChanges(
                 reason=self.reason, changeids=changeids, priority=self.priority
             )
-            yield scheds.flushChangeClassifications(self.serviceid, less_than=max_changeid + 1)
+            await scheds.flushChangeClassifications(self.serviceid, less_than=max_changeid + 1)
         else:
             # There are no changes, but onlyIfChanged is False, so start
             # a build of the latest revision, whatever that is
             sourcestamps = [{"codebase": cb} for cb in self.codebases]
-            yield self.addBuildsetForSourceStampsWithDefaults(
+            await self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason, sourcestamps=sourcestamps, priority=self.priority
             )
         self.is_first_build = False
@@ -307,15 +304,14 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
             - datetime.datetime.fromtimestamp(tm, datetime.timezone.utc)
         ).total_seconds()
 
-    @defer.inlineCallbacks
-    def _scheduleNextBuild_locked(self):
+    async def _scheduleNextBuild_locked(self):
         # clear out the existing timer
         if self.actuateAtTimer:
             self.actuateAtTimer.cancel()
         self.actuateAtTimer = None
 
         # calculate the new time
-        actuateAt = yield self.getNextBuildTime(self.lastActuated)
+        actuateAt = await self.getNextBuildTime(self.lastActuated)
 
         if actuateAt is None:
             self.actuateAt = None
@@ -331,32 +327,30 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                 )
             self.actuateAtTimer = self._reactor.callLater(untilNext, self._actuate)
 
-    @defer.inlineCallbacks
-    def _actuate(self):
+    async def _actuate(self):
         # called from the timer when it's time to start a build
         self.actuateAtTimer = None
         self.lastActuated = self.actuateAt
 
-        @defer.inlineCallbacks
-        def set_state_and_start():
+        async def set_state_and_start():
             # bail out if we shouldn't be actuating anymore
             if not self.actuateOk:
                 return
 
             # mark the last build time
             self.actuateAt = None
-            yield self.setState('last_build', self.lastActuated)
+            await self.setState('last_build', self.lastActuated)
 
             try:
                 # start the build
-                yield self.startBuild()
+                await self.startBuild()
             except Exception as e:
                 log.err(e, 'while actuating')
             finally:
                 # schedule the next build (noting the lock is already held)
-                yield self._scheduleNextBuild_locked()
+                await self._scheduleNextBuild_locked()
 
-        yield self.actuationLock.run(set_state_and_start)
+        await self.actuationLock.run(set_state_and_start)
 
 
 class Periodic(Timed):
@@ -588,14 +582,13 @@ class NightlyTriggerable(NightlyBase):
 
         self._lastTrigger = None
 
-    @defer.inlineCallbacks
-    def activate(self):
-        yield super().activate()
+    async def activate(self):
+        await super().activate()
 
         if not self.enabled:
             return
 
-        lastTrigger = yield self.getState('lastTrigger', None)
+        lastTrigger = await self.getState('lastTrigger', None)
         self._lastTrigger = None
         if lastTrigger:
             try:
@@ -654,8 +647,7 @@ class NightlyTriggerable(NightlyBase):
         # don't wait for the nightly to run.
         return (defer.succeed((None, {})), d.addCallback(lambda _: buildstep.SUCCESS))
 
-    @defer.inlineCallbacks
-    def startBuild(self):
+    async def startBuild(self):
         if not self.enabled:
             log.msg(
                 format='ignoring build from %(name)s because scheduler '
@@ -669,7 +661,7 @@ class NightlyTriggerable(NightlyBase):
 
         (sourcestamps, set_props, parent_buildid, parent_relationship) = self._lastTrigger
         self._lastTrigger = None
-        yield self.setState('lastTrigger', None)
+        await self.setState('lastTrigger', None)
 
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
@@ -678,7 +670,7 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampsWithDefaults(
+        await self.addBuildsetForSourceStampsWithDefaults(
             reason=self.reason,
             sourcestamps=sourcestamps,
             properties=props,

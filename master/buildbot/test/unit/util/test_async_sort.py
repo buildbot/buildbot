@@ -26,27 +26,24 @@ class AsyncSort(unittest.TestCase, LoggingMixin):
         self.setUpLogging()
         return super().setUp()
 
-    @defer.inlineCallbacks
-    def test_sync_call(self):
+    async def test_sync_call(self):
         l = ["b", "c", "a"]
-        yield async_sort(l, lambda x: x)
+        await async_sort(l, lambda x: x)
         return self.assertEqual(l, ["a", "b", "c"])
 
-    @defer.inlineCallbacks
-    def test_async_call(self):
+    async def test_async_call(self):
         l = ["b", "c", "a"]
-        yield async_sort(l, defer.succeed)
+        await async_sort(l, defer.succeed)
         self.assertEqual(l, ["a", "b", "c"])
 
-    @defer.inlineCallbacks
-    def test_async_fail(self):
+    async def test_async_fail(self):
         l = ["b", "c", "a"]
 
         class SortFail(Exception):
             pass
 
         with self.assertRaises(SortFail):
-            yield async_sort(
+            await async_sort(
                 l, lambda x: defer.succeed(x) if x != "a" else defer.fail(SortFail("ono"))
             )
 

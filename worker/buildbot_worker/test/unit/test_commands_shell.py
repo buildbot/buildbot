@@ -15,7 +15,6 @@
 
 import os
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot_worker.commands import shell
@@ -30,8 +29,7 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
-    @defer.inlineCallbacks
-    def test_simple(self):
+    async def test_simple(self):
         workdir = os.path.join(self.basedir, 'workdir')
         self.make_command(
             shell.WorkerShellCommand, {'command': ['echo', 'hello'], 'workdir': workdir}
@@ -45,7 +43,7 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
             .exit(0)
         )
 
-        yield self.run_command()
+        await self.run_command()
 
         # note that WorkerShellCommand does not add any extra updates of it own
         self.assertUpdates(

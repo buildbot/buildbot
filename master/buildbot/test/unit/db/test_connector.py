@@ -32,10 +32,9 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase)
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        yield self.setUpRealDatabase(
+        await self.setUpRealDatabase(
             table_names=[
                 'changes',
                 'change_properties',
@@ -57,26 +56,24 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase)
         self.master = fakemaster.make_master(self)
         self.master.config = MasterConfig()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
-        yield self.db.setServiceParent(self.master)
+        await self.db.setServiceParent(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.db.running:
-            yield self.db.stopService()
+            await self.db.stopService()
 
-        yield self.tearDownRealDatabase()
+        await self.tearDownRealDatabase()
 
-    @defer.inlineCallbacks
-    def startService(self, check_version=False):
+    async def startService(self, check_version=False):
         self.master.config.db['db_url'] = self.db_url
-        yield self.db.setup(check_version=check_version)
+        await self.db.setup(check_version=check_version)
         self.db.startService()
-        yield self.db.reconfigServiceWithBuildbotConfig(self.master.config)
+        await self.db.reconfigServiceWithBuildbotConfig(self.master.config)
 
     # tests
-    @defer.inlineCallbacks
-    def test_doCleanup_service(self):
-        yield self.startService()
+
+    async def test_doCleanup_service(self):
+        await self.startService()
 
         self.assertTrue(self.db.cleanup_timer.running)
 
@@ -85,10 +82,9 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase)
         self.db._doCleanup()
         self.assertFalse(self.db.changes.pruneChanges.called)
 
-    @defer.inlineCallbacks
-    def test_doCleanup_configured(self):
+    async def test_doCleanup_configured(self):
         self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))
-        yield self.startService()
+        await self.startService()
 
         self.db._doCleanup()
         self.assertTrue(self.db.changes.pruneChanges.called)

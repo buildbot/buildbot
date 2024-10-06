@@ -14,16 +14,13 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.clients import usersclient
 from buildbot.process.users import users
 from buildbot.util import in_reactor
 
 
 @in_reactor
-@defer.inlineCallbacks
-def user(config):
+async def user(config):
     master = config.get('master')
     op = config.get('op')
     username = config.get('username')
@@ -43,7 +40,7 @@ def user(config):
             user['identifier'] = sorted(user.values())[0]
 
     uc = usersclient.UsersClient(master, username, passwd, port)
-    output = yield uc.send(op, bb_username, bb_password, ids, info)
+    output = await uc.send(op, bb_username, bb_password, ids, info)
     if output:
         print(output)
 

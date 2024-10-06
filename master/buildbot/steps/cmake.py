@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 
 from buildbot import config
 from buildbot.interfaces import IRenderable
@@ -62,8 +61,7 @@ class CMake(ShellMixin, BuildStep):
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         """
         run CMake
         """
@@ -82,8 +80,8 @@ class CMake(ShellMixin, BuildStep):
         if self.path:
             command.append(self.path)
 
-        cmd = yield self.makeRemoteShellCommand(command=command)
+        cmd = await self.makeRemoteShellCommand(command=command)
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         return cmd.results()

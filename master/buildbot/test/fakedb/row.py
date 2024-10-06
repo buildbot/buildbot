@@ -15,8 +15,6 @@
 
 import hashlib
 
-from twisted.internet import defer
-
 from buildbot.util import unicode2bytes
 
 
@@ -119,7 +117,7 @@ class Row:
         return self.values >= other.values
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(**{repr(self.values)})'
+        return f'{self.__class__.__name__}(**{self.values!r})'
 
     @staticmethod
     def nextId():
@@ -138,8 +136,7 @@ class Row:
 
         return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
-    @defer.inlineCallbacks
-    def checkForeignKeys(self, db, t):
+    async def checkForeignKeys(self, db, t):
         accessors = {
             "buildsetid": db.buildsets.getBuildset,
             "workerid": db.workers.getWorker,
@@ -159,9 +156,9 @@ class Row:
             if foreign_key in accessors:
                 key = getattr(self, foreign_key)
                 if key is not None:
-                    val = yield accessors[foreign_key](key)
+                    val = await accessors[foreign_key](key)
                     t.assertTrue(
-                        val is not None, f"foreign key {foreign_key}:{repr(key)} does not exit"
+                        val is not None, f"foreign key {foreign_key}:{key!r} does not exit"
                     )
             else:
                 raise ValueError("warning, unsupported foreign key", foreign_key, self.table)

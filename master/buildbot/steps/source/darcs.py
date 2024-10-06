@@ -61,29 +61,27 @@ class Darcs(Source):
         if errors:
             raise ConfigErrors(errors)
 
-    @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    async def run_vc(self, branch, revision, patch):
         self.revision = revision
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+        self.stdio_log = await self.addLogForRemoteCommands("stdio")
 
-        installed = yield self.checkDarcs()
+        installed = await self.checkDarcs()
         if not installed:
             raise WorkerSetupError("Darcs is not installed on worker")
 
-        patched = yield self.sourcedirIsPatched()
+        patched = await self.sourcedirIsPatched()
 
         if patched:
-            yield self.copy()
+            await self.copy()
 
-        yield self._getAttrGroupMember('mode', self.mode)()
+        await self._getAttrGroupMember('mode', self.mode)()
 
         if patch:
-            yield self.patch(patch)
-        yield self.parseGotRevision()
+            await self.patch(patch)
+        await self.parseGotRevision()
         return results.SUCCESS
 
-    @defer.inlineCallbacks
-    def checkDarcs(self):
+    async def checkDarcs(self):
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
             ['darcs', '--version'],
@@ -92,29 +90,26 @@ class Darcs(Source):
             timeout=self.timeout,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
         return cmd.rc == 0
 
-    @defer.inlineCallbacks
-    def mode_full(self):
+    async def mode_full(self):
         if self.method == 'clobber':
-            yield self.clobber()
+            await self.clobber()
             return
         elif self.method == 'copy':
-            yield self.copy()
+            await self.copy()
             return
 
-    @defer.inlineCallbacks
-    def mode_incremental(self):
-        updatable = yield self._sourcedirIsUpdatable()
+    async def mode_incremental(self):
+        updatable = await self._sourcedirIsUpdatable()
         if not updatable:
-            yield self._checkout()
+            await self._checkout()
         else:
             command = ['darcs', 'pull', '--all', '--verbose']
-            yield self._dovccmd(command)
+            await self._dovccmd(command)
 
-    @defer.inlineCallbacks
-    def copy(self):
+    async def copy(self):
         cmd = remotecommand.RemoteCommand(
             'rmdir',
             {
@@ -124,10 +119,10 @@ class Darcs(Source):
             },
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         self.workdir = 'source'
-        yield self.mode_incremental()
+        await self.mode_incremental()
 
         cmd = remotecommand.RemoteCommand(
             'cpdir',
@@ -139,35 +134,32 @@ class Darcs(Source):
             },
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         self.workdir = 'build'
 
-    @defer.inlineCallbacks
-    def clobber(self):
-        yield self.runRmdir(self.workdir)
-        yield self._checkout()
+    async def clobber(self):
+        await self.runRmdir(self.workdir)
+        await self._checkout()
 
-    @defer.inlineCallbacks
-    def _clone(self, abandonOnFailure=False):
+    async def _clone(self, abandonOnFailure=False):
         command = ['darcs', 'get', '--verbose', '--lazy', '--repo-name', self.workdir]
 
         if self.revision:
-            yield self.downloadFileContentToWorker('.darcs-context', self.revision)
+            await self.downloadFileContentToWorker('.darcs-context', self.revision)
             command.append('--context')
             command.append('.darcs-context')
 
         command.append(self.repourl)
-        yield self._dovccmd(command, abandonOnFailure=abandonOnFailure, wkdir='.')
+        await self._dovccmd(command, abandonOnFailure=abandonOnFailure, wkdir='.')
 
-    @defer.inlineCallbacks
-    def _checkout(self):
+    async def _checkout(self):
         if self.retry:
             abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
 
-        res = yield self._clone(abandonOnFailure)
+        res = await self._clone(abandonOnFailure)
 
         if self.retry:
             if self.stopped or res == 0:
@@ -180,16 +172,14 @@ class Darcs(Source):
                 df.addCallback(lambda _: self.runRmdir(self.workdir))
                 df.addCallback(lambda _: self._checkout())
                 reactor.callLater(delay, df.callback, None)
-                res = yield df
+                res = await df
         return res
 
-    @defer.inlineCallbacks
-    def parseGotRevision(self):
-        revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
+    async def parseGotRevision(self):
+        revision = await self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
         self.updateSourceProperty('got_revision', revision)
 
-    @defer.inlineCallbacks
-    def _dovccmd(
+    async def _dovccmd(
         self,
         command,
         collectStdout=False,
@@ -215,7 +205,7 @@ class Darcs(Source):
             decodeRC=decodeRC,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
             log.msg(f"Source step failed while running command {cmd}")

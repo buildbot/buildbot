@@ -41,31 +41,27 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
-    @defer.inlineCallbacks
-    def test_updateRegistration_simple(self):
+    async def test_updateRegistration_simple(self):
         listener = pb.Listener(self.master)
-        reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
+        reg = await listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations, [('tcp:1234', 'example', 'pass')])
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg))
 
-    @defer.inlineCallbacks
-    def test_updateRegistration_pass_changed(self):
+    async def test_updateRegistration_pass_changed(self):
         listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
+        reg1 = await listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1))
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
-    @defer.inlineCallbacks
-    def test_updateRegistration_port_changed(self):
+    async def test_updateRegistration_port_changed(self):
         listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
+        reg1 = await listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1))
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
-    @defer.inlineCallbacks
-    def test_create_connection(self):
+    async def test_create_connection(self):
         listener = pb.Listener(self.master)
         worker = mock.Mock()
         worker.workername = 'test'
@@ -73,7 +69,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.workers.register(worker)
-        conn = yield listener._create_connection(mind, worker.workername)
+        conn = await listener._create_connection(mind, worker.workername)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
         self.assertIsInstance(conn, pb.Connection)
@@ -102,10 +98,9 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertEqual(conn.master, self.master)
         self.assertEqual(conn.worker, self.worker)
 
-    @defer.inlineCallbacks
-    def test_attached(self):
+    async def test_attached(self):
         conn = pb.Connection(self.master, self.worker, self.mind)
-        att = yield conn.attached(self.mind)
+        att = await conn.attached(self.mind)
 
         self.worker.attached.assert_called_with(conn)
         self.assertEqual(att, conn)
@@ -117,17 +112,16 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.mind.callRemote.call_args_list, expected_call)
 
         conn.detached(self.mind)
-        yield conn.waitShutdown()
+        await conn.waitShutdown()
 
-    @defer.inlineCallbacks
-    def test_detached(self):
+    async def test_detached(self):
         conn = pb.Connection(self.master, self.worker, self.mind)
         conn.attached(self.mind)
         conn.detached(self.mind)
 
         self.assertEqual(conn.keepalive_timer, None)
         self.assertEqual(conn.mind, None)
-        yield conn.waitShutdown()
+        await conn.waitShutdown()
 
     def test_loseConnection(self):
         conn = pb.Connection(self.master, self.worker, self.mind)
@@ -141,8 +135,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         conn.remotePrint(message='test')
         conn.mind.callRemote.assert_called_with('print', message='test')
 
-    @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo_slave(self):
+    async def test_remoteGetWorkerInfo_slave(self):
         def side_effect(*args, **kwargs):
             if args[0] == 'getWorkerInfo':
                 return defer.fail(
@@ -158,7 +151,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
-        info = yield conn.remoteGetWorkerInfo()
+        info = await conn.remoteGetWorkerInfo()
 
         r = {'info': 'test', 'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
@@ -175,8 +168,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
-    @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo_slave_2_16(self):
+    async def test_remoteGetWorkerInfo_slave_2_16(self):
         """In buildslave 2.16 all information about worker is retrieved in
         a single getSlaveInfo() call."""
 
@@ -197,7 +189,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
-        info = yield conn.remoteGetWorkerInfo()
+        info = await conn.remoteGetWorkerInfo()
 
         r = {'info': 'test', 'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
@@ -212,8 +204,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
-    @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo_worker(self):
+    async def test_remoteGetWorkerInfo_worker(self):
         def side_effect(*args, **kwargs):
             if args[0] == 'getWorkerInfo':
                 return defer.succeed({
@@ -225,15 +216,14 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
-        info = yield conn.remoteGetWorkerInfo()
+        info = await conn.remoteGetWorkerInfo()
 
         r = {'info': 'test', 'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
         expected_calls = [mock.call('getWorkerInfo')]
         self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
-    @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo_getWorkerInfo_fails(self):
+    async def test_remoteGetWorkerInfo_getWorkerInfo_fails(self):
         def side_effect(*args, **kwargs):
             if args[0] == 'getWorkerInfo':
                 return defer.fail(
@@ -253,7 +243,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
-        info = yield conn.remoteGetWorkerInfo()
+        info = await conn.remoteGetWorkerInfo()
 
         r = {'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
@@ -270,8 +260,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
-    @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo_no_info(self):
+    async def test_remoteGetWorkerInfo_no_info(self):
         # All remote commands tried in remoteGetWorkerInfo are unavailable.
         # This should be real old worker...
         def side_effect(*args, **kwargs):
@@ -283,7 +272,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.worker, self.mind)
-        info = yield conn.remoteGetWorkerInfo()
+        info = await conn.remoteGetWorkerInfo()
 
         r = {}
         self.assertEqual(info, r)
@@ -300,12 +289,11 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         ]
         self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
-    @defer.inlineCallbacks
-    def test_remoteSetBuilderList(self):
+    async def test_remoteSetBuilderList(self):
         builders = ['builder1', 'builder2']
         self.mind.callRemote.return_value = defer.succeed(builders)
         conn = pb.Connection(self.master, self.worker, self.mind)
-        r = yield conn.remoteSetBuilderList(builders)
+        r = await conn.remoteSetBuilderList(builders)
 
         self.assertEqual(r, builders)
         self.assertEqual(conn.builders, builders)
@@ -332,10 +320,9 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertIsInstance(callargs[1], pb.RemoteCommand)
         self.assertEqual(callargs[1].impl, RCInstance)
 
-    @defer.inlineCallbacks
-    def test_do_keepalive(self):
+    async def test_do_keepalive(self):
         conn = pb.Connection(self.master, self.worker, self.mind)
-        yield conn._do_keepalive()
+        await conn._do_keepalive()
 
         self.mind.callRemote.assert_called_with('print', message="keepalive")
 
@@ -358,8 +345,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         builders['builder'].callRemote.assert_called_with('startBuild')
 
-    @defer.inlineCallbacks
-    def test_startStopKeepaliveTimer(self):
+    async def test_startStopKeepaliveTimer(self):
         conn = pb.Connection(self.master, self.worker, self.mind)
         conn.startKeepaliveTimer()
 
@@ -378,7 +364,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.mind.callRemote.call_args_list, expected_calls)
 
         conn.stopKeepaliveTimer()
-        yield conn.waitShutdown()
+        await conn.waitShutdown()
 
     def test_perspective_shutdown(self):
         conn = pb.Connection(self.master, self.worker, self.mind)

@@ -318,8 +318,9 @@ class BaseLockTests(unittest.TestCase):
         ('counting', 3, 3),
         ('exclusive', 1, 1),
     ])
-    @defer.inlineCallbacks
-    def test_stop_waiting_does_not_fire_deferred_if_already_woken(self, mode, count, maxCount):
+    async def test_stop_waiting_does_not_fire_deferred_if_already_woken(
+        self, mode, count, maxCount
+    ):
         req = Requester()
         req_waiter = Requester()
 
@@ -331,7 +332,7 @@ class BaseLockTests(unittest.TestCase):
         lock.claim(req, access)
         d = lock.waitUntilMaybeAvailable(req_waiter, access)
         lock.release(req, access)
-        yield flushEventualQueue()
+        await flushEventualQueue()
         self.assertTrue(d.called)
 
         # note that if the function calls the deferred again, an exception would be thrown from
@@ -408,8 +409,9 @@ class BaseLockTests(unittest.TestCase):
         ('counting', 3, 3),
         ('exclusive', 1, 1),
     ])
-    @defer.inlineCallbacks
-    def test_stop_waiting_wakes_up_next_deferred_if_already_woken(self, mode, count, maxCount):
+    async def test_stop_waiting_wakes_up_next_deferred_if_already_woken(
+        self, mode, count, maxCount
+    ):
         req = Requester()
         req_waiter1 = Requester()
         req_waiter2 = Requester()
@@ -423,14 +425,14 @@ class BaseLockTests(unittest.TestCase):
         d1 = lock.waitUntilMaybeAvailable(req_waiter1, access)
         d2 = lock.waitUntilMaybeAvailable(req_waiter2, access)
         lock.release(req, access)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
         self.assertTrue(d1.called)
         self.assertFalse(d2.called)
 
         lock.stopWaitingUntilAvailable(req_waiter1, access, d1)
 
-        yield flushEventualQueue()
+        await flushEventualQueue()
         self.assertTrue(d2.called)
 
     @parameterized.expand([
@@ -462,8 +464,9 @@ class BaseLockTests(unittest.TestCase):
         ('exclusive', 'counting', 1, 1, 1),
         ('exclusive', 'exclusive', 1, 1, 1),
     ])
-    @defer.inlineCallbacks
-    def test_release_calls_waiters_in_fifo_order(self, mode1, mode2, count1, count2, maxCount):
+    async def test_release_calls_waiters_in_fifo_order(
+        self, mode1, mode2, count1, count2, maxCount
+    ):
         req = Requester()
 
         req_waiters = [Requester() for _ in range(5)]
@@ -487,7 +490,7 @@ class BaseLockTests(unittest.TestCase):
         self.assertEqual([d.called for d in deferreds], expected_called)
 
         lock.release(req, access1)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
         expected_called[0] = True
         self.assertEqual([d.called for d in deferreds], expected_called)
@@ -499,7 +502,7 @@ class BaseLockTests(unittest.TestCase):
             self.assertEqual([d.called for d in deferreds], expected_called)
 
             lock.release(req_waiters[i], accesses[i])
-            yield flushEventualQueue()
+            await flushEventualQueue()
 
             expected_called[i + 1] = True
             self.assertEqual([d.called for d in deferreds], expected_called)
@@ -510,8 +513,7 @@ class BaseLockTests(unittest.TestCase):
     @parameterized.expand([
         (1,),
     ])
-    @defer.inlineCallbacks
-    def test_release_calls_multiple_waiters_on_release(self, count):
+    async def test_release_calls_multiple_waiters_on_release(self, count):
         req = Requester()
 
         req_waiters = [Requester() for _ in range(5)]
@@ -531,15 +533,14 @@ class BaseLockTests(unittest.TestCase):
         self.assertEqual([d.called for d in deferreds], [False] * 5)
 
         lock.release(req, access_excl)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
         self.assertEqual([d.called for d in deferreds], [True] * 5)
 
     @parameterized.expand([
         (1, 1),
     ])
-    @defer.inlineCallbacks
-    def test_release_calls_multiple_waiters_on_setMaxCount(self, count, maxCount):
+    async def test_release_calls_multiple_waiters_on_setMaxCount(self, count, maxCount):
         req = Requester()
 
         req_waiters = [Requester() for _ in range(5)]
@@ -556,12 +557,12 @@ class BaseLockTests(unittest.TestCase):
         self.assertEqual([d.called for d in deferreds], [False] * 5)
 
         lock.release(req, access_counting)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
         self.assertEqual([d.called for d in deferreds], [True] + [False] * 4)
 
         lock.setMaxCount(5)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
         self.assertEqual([d.called for d in deferreds], [True] * 5)
 

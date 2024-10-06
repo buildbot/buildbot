@@ -86,7 +86,7 @@ class NonThreadPool:
         self.calls += 1
         try:
             result = func(*args, **kw)
-        except:  # noqa pylint: disable=bare-except
+        except:  # noqa: E722
             # We catch *everything* here, since normally this code would be
             # running in a thread, where there is nothing that will catch
             # error.
@@ -258,12 +258,11 @@ class TestReactor(ProcessReactor, NonReactor, CoreReactor, Clock):
 
         self._pendingCurrentCalls = False
 
-    @defer.inlineCallbacks
-    def _catchPrintExceptions(self, what, *a, **kw):
+    async def _catchPrintExceptions(self, what, *a, **kw):
         try:
             r = what(*a, **kw)
             if isinstance(r, defer.Deferred):
-                yield r
+                await r
         except Exception as e:
             log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise

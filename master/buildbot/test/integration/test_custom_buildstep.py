@@ -34,23 +34,21 @@ class TestLogObserver(logobserver.LogObserver):
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
-    @defer.inlineCallbacks
-    def run(self):
-        _log = yield self.addLog('xx')
+    async def run(self):
+        _log = await self.addLog('xx')
         output_str = '\N{CENT SIGN}'
-        yield _log.addStdout(output_str)
-        yield _log.finish()
+        await _log.addStdout(output_str)
+        await _log.finish()
         return results.SUCCESS
 
 
 class BuildStepWithFailingLogObserver(buildstep.BuildStep):
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.addLogObserver('xx', logobserver.LineConsumerLogObserver(self.log_consumer))
 
-        _log = yield self.addLog('xx')
-        yield _log.addStdout('line1\nline2\n')
-        yield _log.finish()
+        _log = await self.addLog('xx')
+        await _log.addStdout('line1\nline2\n')
+        await _log.finish()
 
         return results.SUCCESS
 
@@ -73,15 +71,13 @@ class FailingCustomStep(buildstep.BuildStep):
         super().__init__(*args, **kwargs)
         self.exception = exception
 
-    @defer.inlineCallbacks
-    def run(self):
-        yield defer.succeed(None)
+    async def run(self):
+        await defer.succeed(None)
         raise self.exception()
 
 
 class RunSteps(RunFakeMasterTestCase):
-    @defer.inlineCallbacks
-    def create_config_for_step(self, step):
+    async def create_config_for_step(self, step):
         config_dict = {
             'builders': [
                 BuilderConfig(
@@ -94,12 +90,11 @@ class RunSteps(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.setup_master(config_dict)
-        builder_id = yield self.master.data.updates.findBuilderId('builder')
+        await self.setup_master(config_dict)
+        builder_id = await self.master.data.updates.findBuilderId('builder')
         return builder_id
 
-    @defer.inlineCallbacks
-    def create_config_for_step_project(self, step):
+    async def create_config_for_step_project(self, step):
         config_dict = {
             'builders': [
                 BuilderConfig(
@@ -116,55 +111,50 @@ class RunSteps(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.setup_master(config_dict)
-        builder_id = yield self.master.data.updates.findBuilderId('builder')
+        await self.setup_master(config_dict)
+        builder_id = await self.master.data.updates.findBuilderId('builder')
         return builder_id
 
-    @defer.inlineCallbacks
-    def test_step_raising_buildstepfailed_in_start(self):
-        builder_id = yield self.create_config_for_step(FailingCustomStep())
+    async def test_step_raising_buildstepfailed_in_start(self):
+        builder_id = await self.create_config_for_step(FailingCustomStep())
 
-        yield self.do_test_build(builder_id)
-        yield self.assertBuildResults(1, results.FAILURE)
+        await self.do_test_build(builder_id)
+        await self.assertBuildResults(1, results.FAILURE)
 
-    @defer.inlineCallbacks
-    def test_step_raising_exception_in_start(self):
-        builder_id = yield self.create_config_for_step(FailingCustomStep(exception=ValueError))
+    async def test_step_raising_exception_in_start(self):
+        builder_id = await self.create_config_for_step(FailingCustomStep(exception=ValueError))
 
-        yield self.do_test_build(builder_id)
-        yield self.assertBuildResults(1, results.EXCEPTION)
+        await self.do_test_build(builder_id)
+        await self.assertBuildResults(1, results.EXCEPTION)
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
 
-    @defer.inlineCallbacks
-    def test_step_raising_connectionlost_in_start(self):
+    async def test_step_raising_connectionlost_in_start(self):
         """Check whether we can recover from raising ConnectionLost from a step if the worker
         did not actually disconnect
         """
         step = FailingCustomStep(exception=error.ConnectionLost)
-        builder_id = yield self.create_config_for_step(step)
+        builder_id = await self.create_config_for_step(step)
 
-        yield self.do_test_build(builder_id)
-        yield self.assertBuildResults(1, results.EXCEPTION)
+        await self.do_test_build(builder_id)
+        await self.assertBuildResults(1, results.EXCEPTION)
 
     test_step_raising_connectionlost_in_start.skip = "Results in infinite loop"
 
-    @defer.inlineCallbacks
-    def test_step_raising_in_log_observer(self):
+    async def test_step_raising_in_log_observer(self):
         step = BuildStepWithFailingLogObserver()
-        builder_id = yield self.create_config_for_step(step)
+        builder_id = await self.create_config_for_step(step)
 
-        yield self.do_test_build(builder_id)
-        yield self.assertBuildResults(1, results.EXCEPTION)
-        yield self.assertStepStateString(2, "finished (exception)")
+        await self.do_test_build(builder_id)
+        await self.assertBuildResults(1, results.EXCEPTION)
+        await self.assertStepStateString(2, "finished (exception)")
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def test_Latin1ProducingCustomBuildStep(self):
+    async def test_Latin1ProducingCustomBuildStep(self):
         step = Latin1ProducingCustomBuildStep(logEncoding='latin-1')
-        builder_id = yield self.create_config_for_step(step)
+        builder_id = await self.create_config_for_step(step)
 
-        yield self.do_test_build(builder_id)
-        yield self.assertLogs(
+        await self.do_test_build(builder_id)
+        await self.assertLogs(
             1,
             {
                 'xx': 'o\N{CENT SIGN}\n',
@@ -176,13 +166,12 @@ class RunSteps(RunFakeMasterTestCase):
             self.assertIn(property, properties)
             properties.pop(property)
 
-    @defer.inlineCallbacks
-    def test_all_properties(self):
-        builder_id = yield self.create_config_for_step(SucceedingCustomStep())
+    async def test_all_properties(self):
+        builder_id = await self.create_config_for_step(SucceedingCustomStep())
 
-        yield self.do_test_build(builder_id)
+        await self.do_test_build(builder_id)
 
-        properties = yield self.master.data.get(("builds", 1, "properties"))
+        properties = await self.master.data.get(("builds", 1, "properties"))
         self._check_and_pop_dynamic_properties(properties)
 
         self.assertEqual(
@@ -200,13 +189,12 @@ class RunSteps(RunFakeMasterTestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_all_properties_project(self):
-        builder_id = yield self.create_config_for_step_project(SucceedingCustomStep())
+    async def test_all_properties_project(self):
+        builder_id = await self.create_config_for_step_project(SucceedingCustomStep())
 
-        yield self.do_test_build(builder_id)
+        await self.do_test_build(builder_id)
 
-        properties = yield self.master.data.get(('builds', 1, 'properties'))
+        properties = await self.master.data.get(('builds', 1, 'properties'))
         self._check_and_pop_dynamic_properties(properties)
 
         self.assertEqual(

@@ -117,25 +117,23 @@ class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
 
 
 class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True)
         self.data = connector.DataConnector()
-        yield self.data.setServiceParent(self.master)
+        await self.data.setServiceParent(self.master)
 
 
 class DataConnector(TestReactorMixin, unittest.TestCase):
     maxDiff = None
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
         self.data = connector.DataConnector()
-        yield self.data.setServiceParent(self.master)
+        await self.data.setServiceParent(self.master)
 
     def patchFooPattern(self):
         cls = type('FooEndpoint', (base.Endpoint,), {})
@@ -196,38 +194,34 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         with self.assertRaises(exceptions.InvalidPathError):
             self.data.getEndpoint(('xyz',))
 
-    @defer.inlineCallbacks
-    def test_get(self):
+    async def test_get(self):
         ep = self.patchFooPattern()
-        gotten = yield self.data.get(('foo', '10', 'bar'))
+        gotten = await self.data.get(('foo', '10', 'bar'))
 
         self.assertEqual(gotten, {'val': 9999})
         ep.get.assert_called_once_with(mock.ANY, {'fooid': 10})
 
-    @defer.inlineCallbacks
-    def test_get_filters(self):
+    async def test_get_filters(self):
         ep = self.patchFooListPattern()
-        gotten = yield self.data.get(('foo',), filters=[resultspec.Filter('val', 'lt', [902])])
+        gotten = await self.data.get(('foo',), filters=[resultspec.Filter('val', 'lt', [902])])
 
         self.assertEqual(gotten, base.ListResult([{'val': 900}, {'val': 901}], total=2))
         ep.get.assert_called_once_with(mock.ANY, {})
 
-    @defer.inlineCallbacks
-    def test_get_resultSpec_args(self):
+    async def test_get_resultSpec_args(self):
         ep = self.patchFooListPattern()
         f = resultspec.Filter('val', 'gt', [909])
-        gotten = yield self.data.get(('foo',), filters=[f], fields=['val'], order=['-val'], limit=2)
+        gotten = await self.data.get(('foo',), filters=[f], fields=['val'], order=['-val'], limit=2)
 
         self.assertEqual(gotten, base.ListResult([{'val': 919}, {'val': 918}], total=10, limit=2))
         ep.get.assert_called_once_with(mock.ANY, {})
 
-    @defer.inlineCallbacks
-    def test_control(self):
+    async def test_control(self):
         ep = self.patchFooPattern()
         ep.control = mock.Mock(name='MyEndpoint.control')
         ep.control.return_value = defer.succeed('controlled')
 
-        gotten = yield self.data.control('foo!', {'arg': 2}, ('foo', '10', 'bar'))
+        gotten = await self.data.control('foo!', {'arg': 2}, ('foo', '10', 'bar'))
 
         self.assertEqual(gotten, 'controlled')
         ep.control.assert_called_once_with('foo!', {'arg': 2}, {'fooid': 10})

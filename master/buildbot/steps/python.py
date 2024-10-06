@@ -15,8 +15,6 @@
 
 import re
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -63,13 +61,12 @@ class BuildEPYDoc(buildstep.ShellMixin, buildstep.BuildStep):
             summary += f' ({statusToString(self.results)})'
         return {'step': summary}
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         if cmd.didFail():
             return FAILURE
@@ -160,21 +157,20 @@ class PyFlakes(buildstep.ShellMixin, buildstep.BuildStep):
 
         return {'step': summary}
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         # we log 'misc' as syntax-error
         if self._hasSyntaxError:
-            yield self.addCompleteLog("syntax-error", "\n".join(self.summaries['misc']))
+            await self.addCompleteLog("syntax-error", "\n".join(self.summaries['misc']))
         else:
             for m in self._MESSAGES:
                 if self.counts[m]:
-                    yield self.addCompleteLog(m, "\n".join(self.summaries[m]))
+                    await self.addCompleteLog(m, "\n".join(self.summaries[m]))
                 self.setProperty(f"pyflakes-{m}", self.counts[m], "pyflakes")
             self.setProperty("pyflakes-total", sum(self.counts.values()), "pyflakes")
 
@@ -305,17 +301,16 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
 
         return {'step': summary}
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         for msg, fullmsg in sorted(self._MESSAGES.items()):
             if self.counts[msg]:
-                yield self.addCompleteLog(fullmsg, "\n".join(self.summaries[msg]))
+                await self.addCompleteLog(fullmsg, "\n".join(self.summaries[msg]))
             self.setProperty(f"pylint-{fullmsg}", self.counts[msg], 'Pylint')
         self.setProperty("pylint-total", sum(self.counts.values()), 'Pylint')
 
@@ -329,11 +324,10 @@ class PyLint(buildstep.ShellMixin, buildstep.BuildStep):
             return WARNINGS
         return SUCCESS
 
-    @defer.inlineCallbacks
-    def addTestResultSets(self):
+    async def addTestResultSets(self):
         if not self._store_results:
             return
-        self._result_setid = yield self.addTestResultSet('Pylint warnings', 'code_issue', 'message')
+        self._result_setid = await self.addTestResultSet('Pylint warnings', 'code_issue', 'message')
 
 
 class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
@@ -432,16 +426,15 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
 
         return {'step': summary}
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         if self.warnings:
-            yield self.addCompleteLog('warnings', "\n".join(self.warnings))
+            await self.addCompleteLog('warnings', "\n".join(self.warnings))
 
         self.setStatistic('warnings', len(self.warnings))
 

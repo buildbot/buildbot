@@ -57,13 +57,12 @@ class MasterRealm:
         self.perspective = perspective
         self.on_attachment = on_attachment
 
-    @defer.inlineCallbacks
-    def requestAvatar(self, avatarId, mind, *interfaces):
+    async def requestAvatar(self, avatarId, mind, *interfaces):
         assert pb.IPerspective in interfaces
         self.mind = mind
         self.perspective.mind = mind
         if self.on_attachment:
-            yield self.on_attachment(mind)
+            await self.on_attachment(mind)
 
         return pb.IPerspective, self.perspective, lambda: None
 
@@ -82,14 +81,13 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.realm:
-            yield self.realm.shutdown()
+            await self.realm.shutdown()
         if self.worker and self.worker.running:
-            yield self.worker.stopService()
+            await self.worker.stopService()
         if self.listeningport:
-            yield self.listeningport.stopListening()
+            await self.listeningport.stopListening()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 

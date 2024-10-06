@@ -15,7 +15,6 @@
 
 import os
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import mail
@@ -27,13 +26,12 @@ from buildbot.test.util import dirs
 class TestMaildirSource(
     changesource.ChangeSourceMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.maildir = os.path.abspath("maildir")
 
-        yield self.setUpChangeSource()
-        yield self.setUpDirs(self.maildir)
+        await self.setUpChangeSource()
+        await self.setUpDirs(self.maildir)
 
     def populateMaildir(self):
         "create a fake maildir with a fake new message ('newmsg') in it"
@@ -52,10 +50,9 @@ class TestMaildirSource(
         self.assertFalse(os.path.exists(os.path.join(self.maildir, "new", "newmsg")))
         self.assertTrue(os.path.exists(os.path.join(self.maildir, "cur", "newmsg")))
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownDirs()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.tearDownDirs()
+        await self.tearDownChangeSource()
 
     # tests
 
@@ -63,11 +60,10 @@ class TestMaildirSource(
         mds = mail.MaildirSource(self.maildir)
         self.assertSubstring(self.maildir, mds.describe())
 
-    @defer.inlineCallbacks
-    def test_messageReceived_svn(self):
+    async def test_messageReceived_svn(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
-        yield self.attachChangeSource(mds)
+        await self.attachChangeSource(mds)
 
         # monkey-patch in a parse method
         def parse(message, prefix):
@@ -76,7 +72,7 @@ class TestMaildirSource(
 
         mds.parse = parse
 
-        yield mds.messageReceived('newmsg')
+        await mds.messageReceived('newmsg')
 
         self.assertMailProcessed()
         self.assertEqual(
@@ -101,11 +97,10 @@ class TestMaildirSource(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_messageReceived_bzr(self):
+    async def test_messageReceived_bzr(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
-        yield self.attachChangeSource(mds)
+        await self.attachChangeSource(mds)
 
         # monkey-patch in a parse method
         def parse(message, prefix):
@@ -114,7 +109,7 @@ class TestMaildirSource(
 
         mds.parse = parse
 
-        yield mds.messageReceived('newmsg')
+        await mds.messageReceived('newmsg')
 
         self.assertMailProcessed()
         self.assertEqual(

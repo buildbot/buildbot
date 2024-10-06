@@ -22,7 +22,6 @@ from urllib.parse import urlencode
 
 import jinja2
 import requests
-from twisted.internet import defer
 from twisted.internet import threads
 from twisted.logger import Logger
 from twisted.web.error import Error
@@ -48,18 +47,17 @@ class OAuth2LoginResource(auth.LoginResource):
     def render_POST(self, request):
         return self.asyncRenderHelper(request, self.renderLogin)
 
-    @defer.inlineCallbacks
-    def renderLogin(self, request):
+    async def renderLogin(self, request):
         code = request.args.get(b"code", [b""])[0]
         if not code:
             url = request.args.get(b"redirect", [None])[0]
-            url = yield self.auth.getLoginURL(url)
+            url = await self.auth.getLoginURL(url)
             raise resource.Redirect(url)
 
-        details = yield self.auth.verifyCode(code)
+        details = await self.auth.verifyCode(code)
 
         if self.auth.userInfoProvider is not None:
-            infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
+            infos = await self.auth.userInfoProvider.getUserInfo(details['username'])
             details.update(infos)
         session = request.getSession()
         session.user_info = details
@@ -105,14 +103,13 @@ class OAuth2Auth(auth.AuthBase):
     def getLoginResource(self):
         return OAuth2LoginResource(self.master, self)
 
-    @defer.inlineCallbacks
-    def getLoginURL(self, redirect_url):
+    async def getLoginURL(self, redirect_url):
         """
         Returns the url to redirect the user to for user consent
         """
         p = Properties()
         p.master = self.master
-        clientId = yield p.render(self.clientId)
+        clientId = await p.render(self.clientId)
         oauth_params = {
             'redirect_uri': self.loginUri,
             'client_id': clientId,
@@ -142,8 +139,8 @@ class OAuth2Auth(auth.AuthBase):
     # based on https://github.com/maraujop/requests-oauth
     # from Miguel Araujo, augmented to support header based clientSecret
     # passing
-    @defer.inlineCallbacks
-    def verifyCode(self, code):
+
+    async def verifyCode(self, code):
         # everything in deferToThread is not counted with trial  --coverage :-(
         def thd(client_id, client_secret):
             url = self.tokenUri
@@ -171,9 +168,9 @@ class OAuth2Auth(auth.AuthBase):
 
         p = Properties()
         p.master = self.master
-        client_id = yield p.render(self.clientId)
-        client_secret = yield p.render(self.clientSecret)
-        result = yield threads.deferToThread(thd, client_id, client_secret)
+        client_id = await p.render(self.clientId)
+        client_secret = await p.render(self.clientSecret)
+        result = await threads.deferToThread(thd, client_id, client_secret)
         return result
 
     def getUserInfoFromOAuthClient(self, c):

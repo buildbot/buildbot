@@ -116,8 +116,7 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
     def protocol_notify_on_disconnect(self):
         pass
 
-    @defer.inlineCallbacks
-    def protocol_complete(self, failure):
+    async def protocol_complete(self, failure):
         d_update = self.flush_command_output()
         if failure is not None:
             failure = str(failure)
@@ -126,8 +125,8 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
             'args': failure,
             'command_id': self.command_id,
         })
-        yield d_update
-        yield d_complete
+        await d_update
+        await d_complete
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
@@ -257,11 +256,10 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_get_worker_info(self, msg):
+    async def call_get_worker_info(self, msg):
         is_exception = False
         try:
-            result = yield self.factory.buildbot_bot.remote_getWorkerInfo()
+            result = await self.factory.buildbot_bot.remote_getWorkerInfo()
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -286,13 +284,12 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_start_command(self, msg):
+    async def call_start_command(self, msg):
         is_exception = False
         try:
             self.contains_msg_key(msg, ('command_id', 'command_name', 'args'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.start_command(
+            await self.factory.buildbot_bot.start_command(
                 self, msg['command_id'], msg['command_name'], msg['args']
             )
             result = None
@@ -302,11 +299,10 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_shutdown(self, msg):
+    async def call_shutdown(self, msg):
         is_exception = False
         try:
-            yield self.factory.buildbot_bot.remote_shutdown()
+            await self.factory.buildbot_bot.remote_shutdown()
             result = None
         except Exception as e:
             is_exception = True
@@ -314,13 +310,12 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
         self.send_response_msg(msg, result, is_exception)
 
-    @defer.inlineCallbacks
-    def call_interrupt_command(self, msg):
+    async def call_interrupt_command(self, msg):
         is_exception = False
         try:
             self.contains_msg_key(msg, ('command_id', 'why'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
+            await self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
             result = None
         except Exception as e:
             is_exception = True
@@ -374,8 +369,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
                 msg, "Command {} does not exist.".format(msg['op']), is_exception=True
             )
 
-    @defer.inlineCallbacks
-    def get_message_result(self, msg):
+    async def get_message_result(self, msg):
         msg['seq_number'] = self.seq_number
         self.maybe_log_worker_to_master_msg(msg)
         msg = msgpack.packb(msg)
@@ -383,7 +377,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         self.seq_num_to_waiters_map[self.seq_number] = d
         self.seq_number = self.seq_number + 1
         self.sendMessage(msg, isBinary=True)
-        res1 = yield d
+        res1 = await d
         return res1
 
     def onClose(self, wasClean, code, reason):

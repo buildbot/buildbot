@@ -78,8 +78,7 @@ class BuildSetModel:
 
 
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
-    @defer.inlineCallbacks
-    def addBuildset(
+    async def addBuildset(
         self,
         sourcestamps,
         reason,
@@ -105,7 +104,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             ssConnector = self.master.db.sourcestamps
             return ssConnector.findSourceStampId(**sourcestamp)
 
-        sourcestamps = yield defer.DeferredList(
+        sourcestamps = await defer.DeferredList(
             [toSsid(ss) for ss in sourcestamps], fireOnOneErrback=True, consumeErrors=True
         )
         sourcestampids = [r[1] for r in sourcestamps]
@@ -185,15 +184,14 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
             return (bsid, brids)
 
-        bsid, brids = yield self.db.pool.do(thd)
+        bsid, brids = await self.db.pool.do(thd)
 
         # Seed the buildset property cache.
         self.getBuildsetProperties.cache.put(bsid, BsProps(properties))
 
         return (bsid, brids)
 
-    @defer.inlineCallbacks
-    def completeBuildset(self, bsid, results, complete_at=None):
+    async def completeBuildset(self, bsid, results, complete_at=None):
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
@@ -212,7 +210,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 # happens when two buildrequests finish at the same time
                 raise AlreadyCompleteError()
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
     def getBuildset(self, bsid) -> defer.Deferred[BuildSetModel | None]:
         def thd(conn) -> BuildSetModel | None:
@@ -226,8 +224,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getBuildsets(self, complete=None, resultSpec=None):
+    async def getBuildsets(self, complete=None, resultSpec=None):
         def thd(conn) -> list[BuildSetModel]:
             bs_tbl = self.db.model.buildsets
             q = bs_tbl.select()
@@ -241,7 +238,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._thd_model_from_row(conn, row) for row in res.fetchall()]
 
-        res = yield self.db.pool.do(thd)
+        res = await self.db.pool.do(thd)
         return res
 
     def getRecentBuildsets(

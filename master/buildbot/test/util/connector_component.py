@@ -41,15 +41,16 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
     @ivar db.model: DB model
     """
 
-    @defer.inlineCallbacks
-    def setUpConnectorComponent(self, table_names=None, basedir='basedir', dialect_name='sqlite'):
+    async def setUpConnectorComponent(
+        self, table_names=None, basedir='basedir', dialect_name='sqlite'
+    ):
         """Set up C{self.db}, using the given db_url and basedir."""
         self.setup_test_reactor()
 
         if table_names is None:
             table_names = []
 
-        yield self.setUpRealDatabase(table_names=table_names, basedir=basedir)
+        await self.setUpRealDatabase(table_names=table_names, basedir=basedir)
 
         self.db = FakeDBConnector()
         self.db.pool = self.db_pool
@@ -59,9 +60,8 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
         self.db.model = model.Model(self.db)
         self.db._engine = types.SimpleNamespace(dialect=types.SimpleNamespace(name=dialect_name))
 
-    @defer.inlineCallbacks
-    def tearDownConnectorComponent(self):
-        yield self.tearDownRealDatabase()
+    async def tearDownConnectorComponent(self):
+        await self.tearDownRealDatabase()
         # break some reference loops, just for fun
         del self.db.pool
         del self.db.model

@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.mq import simple
@@ -43,9 +42,8 @@ class Tests(interfaces.InterfaceTests):
         def startConsuming(self, callback, filter, persistent_name=None):
             pass
 
-    @defer.inlineCallbacks
-    def test_signature_stopConsuming(self):
-        cons = yield self.mq.startConsuming(lambda: None, ('a',))
+    async def test_signature_stopConsuming(self):
+        cons = await self.mq.startConsuming(lambda: None, ('a',))
 
         @self.assertArgSpecMatches(cons.stopConsuming)
         def stopConsuming(self):
@@ -62,71 +60,65 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
 
     # called by the TupleMatchingMixin methods
 
-    @defer.inlineCallbacks
-    def do_test_match(self, routingKey, shouldMatch, filter):
+    async def do_test_match(self, routingKey, shouldMatch, filter):
         cb = mock.Mock()
-        yield self.mq.startConsuming(cb, filter)
+        await self.mq.startConsuming(cb, filter)
         self.mq.produce(routingKey, 'x')
         self.assertEqual(shouldMatch, cb.call_count == 1)
         if shouldMatch:
             cb.assert_called_once_with(routingKey, 'x')
 
-    @defer.inlineCallbacks
-    def test_stopConsuming(self):
+    async def test_stopConsuming(self):
         cb = mock.Mock()
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = await self.mq.startConsuming(cb, ('abc',))
         self.mq.produce(('abc',), {"x": 1})
         qref.stopConsuming()
         self.mq.produce(('abc',), {"x": 1})
         cb.assert_called_once_with(('abc',), {"x": 1})
 
-    @defer.inlineCallbacks
-    def test_stopConsuming_twice(self):
+    async def test_stopConsuming_twice(self):
         cb = mock.Mock()
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = await self.mq.startConsuming(cb, ('abc',))
         qref.stopConsuming()
         qref.stopConsuming()
         # ..nothing bad happens
 
-    @defer.inlineCallbacks
-    def test_non_persistent(self):
+    async def test_non_persistent(self):
         cb = mock.Mock()
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = await self.mq.startConsuming(cb, ('abc',))
 
         cb2 = mock.Mock()
-        qref2 = yield self.mq.startConsuming(cb2, ('abc',))
+        qref2 = await self.mq.startConsuming(cb2, ('abc',))
 
         qref.stopConsuming()
         self.mq.produce(('abc',), '{}')
 
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = await self.mq.startConsuming(cb, ('abc',))
         qref.stopConsuming()
         qref2.stopConsuming()
 
         self.assertTrue(cb2.called)
         self.assertFalse(cb.called)
 
-    @defer.inlineCallbacks
-    def test_persistent(self):
+    async def test_persistent(self):
         cb = mock.Mock()
 
-        qref = yield self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
+        qref = await self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
         qref.stopConsuming()
 
         self.mq.produce(('abc',), '{}')
 
-        qref = yield self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
+        qref = await self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
         qref.stopConsuming()
 
         self.assertTrue(cb.called)
 
-    @defer.inlineCallbacks
-    def test_waitUntilEvent_check_false(self):
+    async def test_waitUntilEvent_check_false(self):
         d = self.mq.waitUntilEvent(('abc',), lambda: False)
         self.assertEqual(d.called, False)
         self.mq.produce(('abc',), {"x": 1})
         self.assertEqual(d.called, True)
-        res = yield d
+        res = await d
         self.assertEqual(res, (('abc',), {"x": 1}))
 
 
@@ -139,9 +131,8 @@ class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
 
 
 class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
         self.mq = simple.SimpleMQ()
-        yield self.mq.setServiceParent(self.master)
+        await self.mq.setServiceParent(self.master)

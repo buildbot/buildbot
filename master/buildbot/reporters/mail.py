@@ -136,8 +136,7 @@ class MailNotifier(ReporterBase):
         if useSmtps:
             ssl.ensureHasSSL(self.__class__.__name__)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         fromaddr,
         relayhost="localhost",
@@ -156,7 +155,7 @@ class MailNotifier(ReporterBase):
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators)
+        await super().reconfigService(generators=generators)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -195,8 +194,7 @@ class MailNotifier(ReporterBase):
         a.add_header('Content-Disposition', "attachment", filename="source patch " + str(index))
         return a
 
-    @defer.inlineCallbacks
-    def createEmail(self, msgdict, title, results, builds=None, patches=None, logs=None):
+    async def createEmail(self, msgdict, title, results, builds=None, patches=None, logs=None):
         text = msgdict['body']
         type = msgdict['type']
         subject = msgdict['subject']
@@ -248,7 +246,7 @@ class MailNotifier(ReporterBase):
             if builds is not None and len(builds) == 1:
                 props = Properties.fromDict(builds[0]['properties'])
                 props.master = self.master
-                extraHeaders = yield props.render(extraHeaders)
+                extraHeaders = await props.render(extraHeaders)
 
             for k, v in extraHeaders.items():
                 if k in m:
@@ -260,8 +258,7 @@ class MailNotifier(ReporterBase):
                 m[k] = v
         return m
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         type = merge_reports_prop_take_first(reports, 'type')
@@ -279,27 +276,26 @@ class MailNotifier(ReporterBase):
         if not body.endswith(b"\n\n"):
             msgdict['body'] = body + b'\n\n'
 
-        m = yield self.createEmail(
+        m = await self.createEmail(
             msgdict, self.master.config.title, results, builds, patches, logs
         )
 
         # now, who is this message going to?
         if worker is None:
-            recipients = yield self.findInterrestedUsersEmails(list(users))
+            recipients = await self.findInterrestedUsersEmails(list(users))
             all_recipients = self.processRecipients(recipients, m)
         else:
             all_recipients = list(users)
-        yield self.sendMail(m, all_recipients)
+        await self.sendMail(m, all_recipients)
 
-    @defer.inlineCallbacks
-    def findInterrestedUsersEmails(self, users):
+    async def findInterrestedUsersEmails(self, users):
         recipients = set()
         if self.sendToInterestedUsers:
             if self.lookup:
                 dl = []
                 for u in users:
                     dl.append(defer.maybeDeferred(self.lookup.getAddress, u))
-                users = yield defer.gatherResults(dl)
+                users = await defer.gatherResults(dl)
 
             for r in users:
                 if r is None:  # getAddress didn't like this address

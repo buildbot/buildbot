@@ -19,7 +19,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from twisted.internet import defer
 from twisted.python.failure import Failure
 from twisted.trial import unittest
 
@@ -49,8 +48,7 @@ class Tests(unittest.TestCase):
         n.notify(object())
         # Does not raise.
 
-    @defer.inlineCallbacks
-    def test_notify_multiple_waiters(self):
+    async def test_notify_multiple_waiters(self):
         """
         If there all multiple waiters, `Notifier.notify` fires all
         the deferreds with the same value.
@@ -63,8 +61,7 @@ class Tests(unittest.TestCase):
         self.assertEqual((yield ds[0]), value)
         self.assertEqual((yield ds[1]), value)
 
-    @defer.inlineCallbacks
-    def test_new_waiters_not_notified(self):
+    async def test_new_waiters_not_notified(self):
         """
         If a new waiter is added while notifying, it won't be
         notified until the next notification.
@@ -85,8 +82,7 @@ class Tests(unittest.TestCase):
             value,
         )
 
-    @defer.inlineCallbacks
-    def test_notify_failure(self):
+    async def test_notify_failure(self):
         """
         If a failure is passed to `Notifier.notify` then the waiters
         are errback'd.
@@ -95,7 +91,7 @@ class Tests(unittest.TestCase):
         d = n.wait()
         n.notify(Failure(TestException()))
         with self.assertRaises(TestException):
-            yield d
+            await d
 
     def test_nonzero_waiters(self):
         """

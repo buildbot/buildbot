@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.reporters.base import ReporterBase
@@ -34,8 +33,7 @@ class HttpStatusPush(ReporterBase):
 
         super().checkConfig(generators=generators, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self, serverUrl, auth=None, headers=None, debug=None, verify=None, generators=None, **kwargs
     ):
         self.debug = debug
@@ -44,9 +42,9 @@ class HttpStatusPush(ReporterBase):
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators, **kwargs)
+        await super().reconfigService(generators=generators, **kwargs)
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice,
             serverUrl,
             auth=auth,
@@ -62,8 +60,7 @@ class HttpStatusPush(ReporterBase):
     def is_status_2xx(self, code):
         return code // 100 == 2
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
-        response = yield self._http.post("", json=reports[0]['body'])
+    async def sendMessage(self, reports):
+        response = await self._http.post("", json=reports[0]['body'])
         if not self.is_status_2xx(response.code):
             log.msg(f"{response.code}: unable to upload status: {response.content}")

@@ -50,8 +50,7 @@ class ReporterBase(service.BuildbotService):
             for g in generators:
                 self.name += "_" + g.generate_name()
 
-    @defer.inlineCallbacks
-    def reconfigService(self, generators):
+    async def reconfigService(self, generators):
         self.generators = generators
 
         wanted_event_keys = set()
@@ -61,26 +60,26 @@ class ReporterBase(service.BuildbotService):
         # Remove consumers for keys that are no longer wanted
         for key in list(self._event_consumers.keys()):
             if key not in wanted_event_keys:
-                yield self._event_consumers[key].stopConsuming()
+                await self._event_consumers[key].stopConsuming()
                 del self._event_consumers[key]
 
         # Add consumers for new keys
         for key in sorted(list(wanted_event_keys)):
             if key not in self._event_consumers:
-                self._event_consumers[key] = yield self.master.mq.startConsuming(
+                self._event_consumers[key] = await self.master.mq.startConsuming(
                     self._got_event, key
                 )
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         for consumer in self._event_consumers.values():
-            yield consumer.stopConsuming()
+            await consumer.stopConsuming()
         self._event_consumers = {}
 
-        yield from list(self._pending_got_event_calls.values())
+        for c in self._pending_got_event_calls.values():
+            await c
         self._pending_got_event_calls = {}
 
-        yield super().stopService()
+        await super().stopService()
 
     def _does_generator_want_key(self, generator, key):
         for filter in generator.wanted_event_keys:
@@ -93,8 +92,7 @@ class ReporterBase(service.BuildbotService):
             return ("buildrequestid", msg["buildrequestid"])
         return None
 
-    @defer.inlineCallbacks
-    def _got_event(self, key, msg):
+    async def _got_event(self, key, msg):
         chain_key = self._get_chain_key_for_event(key, msg)
         if chain_key is not None:
             d = defer.Deferred()
@@ -103,14 +101,14 @@ class ReporterBase(service.BuildbotService):
             # Wait for previously pending call, if any, to ensure
             # reports are sent out in the order events were queued.
             if pending_call is not None:
-                yield pending_call
+                await pending_call
 
         try:
             reports = []
             for g in self.generators:
                 if self._does_generator_want_key(g, key):
                     try:
-                        report = yield g.generate(self.master, self, key, msg)
+                        report = await g.generate(self.master, self, key, msg)
                         if report is not None:
                             reports.append(report)
                     except Exception as e:
@@ -121,7 +119,7 @@ class ReporterBase(service.BuildbotService):
                         )
 
             if reports:
-                yield self.sendMessage(reports)
+                await self.sendMessage(reports)
         except Exception as e:
             log.err(e, 'Got exception when handling reporter events')
 

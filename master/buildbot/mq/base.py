@@ -29,24 +29,22 @@ class MQBase(service.AsyncService):
         super().__init__()
         self._deferwaiter = deferwaiter.DeferWaiter()
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._deferwaiter.wait()
-        yield super().stopService()
+    async def stopService(self):
+        await self._deferwaiter.wait()
+        await super().stopService()
 
-    @defer.inlineCallbacks
-    def waitUntilEvent(self, filter, check_callback):
+    async def waitUntilEvent(self, filter, check_callback):
         d = defer.Deferred()
-        buildCompleteConsumer = yield self.startConsuming(
+        buildCompleteConsumer = await self.startConsuming(
             lambda key, value: d.callback((key, value)), filter
         )
-        check = yield check_callback()
+        check = await check_callback()
         # we only wait if the check callback return true
         if not check:
-            res = yield d
+            res = await d
         else:
             res = None
-        yield buildCompleteConsumer.stopConsuming()
+        await buildCompleteConsumer.stopConsuming()
         return res
 
     def invokeQref(self, qref, routingKey, data):
@@ -67,10 +65,10 @@ class QueueRef:
         try:
             x = self.callback(routing_key, data)
         except Exception:
-            log.err(failure.Failure(), f'while invoking {repr(self.callback)}')
+            log.err(failure.Failure(), f'while invoking {self.callback!r}')
             return None
         if isinstance(x, defer.Deferred):
-            x.addErrback(log.err, f'while invoking {repr(self.callback)}')
+            x.addErrback(log.err, f'while invoking {self.callback!r}')
         return x
 
     def stopConsuming(self):

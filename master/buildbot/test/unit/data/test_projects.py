@@ -33,10 +33,9 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = projects.ProjectEndpoint
     resourceTypeClass = projects.Project
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        await self.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
             fakedb.Project(id=2, name='project2'),
         ])
@@ -44,29 +43,25 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing_id(self):
-        project = yield self.callGet(('projects', 2))
+    async def test_get_existing_id(self):
+        project = await self.callGet(('projects', 2))
 
         self.validateData(project)
         self.assertEqual(project['name'], 'project2')
 
-    @defer.inlineCallbacks
-    def test_get_existing_name(self):
-        project = yield self.callGet(('projects', 'project2'))
+    async def test_get_existing_name(self):
+        project = await self.callGet(('projects', 'project2'))
 
         self.validateData(project)
         self.assertEqual(project['name'], 'project2')
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        project = yield self.callGet(('projects', 99))
+    async def test_get_missing(self):
+        project = await self.callGet(('projects', 99))
 
         self.assertIsNone(project)
 
-    @defer.inlineCallbacks
-    def test_get_missing_with_name(self):
-        project = yield self.callGet(('projects', 'project99'))
+    async def test_get_missing_with_name(self):
+        project = await self.callGet(('projects', 'project99'))
 
         self.assertIsNone(project)
 
@@ -75,10 +70,9 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = projects.ProjectsEndpoint
     resourceTypeClass = projects.Project
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        await self.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
             fakedb.Project(id=2, name='project2'),
             fakedb.Project(id=3, name='project3'),
@@ -96,15 +90,14 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('active', True, [2]),
         ('inactive', False, [1, 3]),
     ])
-    @defer.inlineCallbacks
-    def test_get(self, name, active_filter, expected_projectids):
+    async def test_get(self, name, active_filter, expected_projectids):
         result_spec = None
         if active_filter is not None:
             result_spec = resultspec.OptimisedResultSpec(
                 filters=[resultspec.Filter('active', 'eq', [active_filter])]
             )
 
-        projects = yield self.callGet(('projects',), resultSpec=result_spec)
+        projects = await self.callGet(('projects',), resultSpec=result_spec)
 
         for b in projects:
             self.validateData(b)
@@ -113,12 +106,11 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = projects.Project(self.master)
-        yield self.master.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=13, name="fake_project"),
         ])
 
@@ -143,16 +135,15 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         ):
             pass
 
-    @defer.inlineCallbacks
-    def test_update_project_info(self):
-        yield self.master.data.updates.update_project_info(
+    async def test_update_project_info(self):
+        await self.master.data.updates.update_project_info(
             13,
             "slug13",
             "project13 desc",
             "format",
             "html desc",
         )
-        projects = yield self.master.db.projects.get_projects()
+        projects = await self.master.db.projects.get_projects()
         self.assertEqual(
             projects,
             [

@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -44,11 +42,10 @@ class BuildDatasNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
         /builds/n:buildid/data
         """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        buildid = yield self.getBuildid(kwargs)
+    async def get(self, resultSpec, kwargs):
+        buildid = await self.getBuildid(kwargs)
 
-        build_datadicts = yield self.master.db.build_data.getAllBuildDataNoValues(buildid)
+        build_datadicts = await self.master.db.build_data.getAllBuildDataNoValues(buildid)
 
         results = []
         for dbdict in build_datadicts:
@@ -64,12 +61,11 @@ class BuildDataNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
         /builds/n:buildid/data/i:name
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        buildid = yield self.getBuildid(kwargs)
+    async def get(self, resultSpec, kwargs):
+        buildid = await self.getBuildid(kwargs)
         name = kwargs['name']
 
-        build_datadict = yield self.master.db.build_data.getBuildDataNoValue(buildid, name)
+        build_datadict = await self.master.db.build_data.getBuildDataNoValue(buildid, name)
 
         return _db2data(build_datadict) if build_datadict else None
 
@@ -82,12 +78,11 @@ class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
         /builds/n:buildid/data/i:name/value
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        buildid = yield self.getBuildid(kwargs)
+    async def get(self, resultSpec, kwargs):
+        buildid = await self.getBuildid(kwargs)
         name = kwargs['name']
 
-        dbdict = yield self.master.db.build_data.getBuildData(buildid, name)
+        dbdict = await self.master.db.build_data.getBuildData(buildid, name)
         if not dbdict:
             return None
 

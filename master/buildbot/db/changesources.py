@@ -18,7 +18,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import sqlalchemy as sa
-from twisted.internet import defer
 
 from buildbot.db import NULL
 from buildbot.db import base
@@ -88,9 +87,8 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getChangeSource(self, changesourceid):
-        cs = yield self.getChangeSources(_changesourceid=changesourceid)
+    async def getChangeSource(self, changesourceid):
+        cs = await self.getChangeSources(_changesourceid=changesourceid)
         if cs:
             return cs[0]
         return None

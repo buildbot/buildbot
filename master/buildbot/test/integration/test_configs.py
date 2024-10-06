@@ -97,4 +97,4 @@ c['www'] = dict(port=8010,
 c['db'] = {
     'db_url' : "sqlite:///state.sqlite",
 }
-"""  # noqa pylint: disable=line-too-long
+"""

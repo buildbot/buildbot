@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from alembic.operations import Operations
 from alembic.runtime.migration import MigrationContext
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.db import connector
@@ -44,25 +43,23 @@ if TYPE_CHECKING:
 
 
 class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
-    @defer.inlineCallbacks
-    def setUpMigrateTest(self):
+    async def setUpMigrateTest(self):
         self.setup_test_reactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 
-        yield self.setUpRealDatabase()
+        await self.setUpRealDatabase()
 
         master = fakemaster.make_master(self)
         self.db = connector.DBConnector(self.basedir)
-        yield self.db.setServiceParent(master)
+        await self.db.setServiceParent(master)
         self.db.pool = self.db_pool
 
     def tearDownMigrateTest(self):
         self.tearDownDirs()
         return self.tearDownRealDatabase()
 
-    @defer.inlineCallbacks
-    def do_test_migration(self, base_revision, target_revision, setup_thd_cb, verify_thd_cb):
+    async def do_test_migration(self, base_revision, target_revision, setup_thd_cb, verify_thd_cb):
         def setup_thd(conn):
             metadata = sa.MetaData()
             table = sautils.Table(
@@ -75,7 +72,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
             conn.commit()
             setup_thd_cb(conn)
 
-        yield self.db.pool.do(setup_thd)
+        await self.db.pool.do(setup_thd)
 
         alembic_scripts = self.db.model.alembic_get_scripts()
 
@@ -96,7 +93,7 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
 
                         conn.commit()
 
-        yield self.db.pool.do_with_engine(upgrade_thd)
+        await self.db.pool.do_with_engine(upgrade_thd)
 
         def check_table_charsets_thd(conn: Connection):
             # charsets are only a problem for MySQL
@@ -113,10 +110,10 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
                     f"table {tbl} does not have the utf8 charset",
                 )
 
-        yield self.db.pool.do(check_table_charsets_thd)
+        await self.db.pool.do(check_table_charsets_thd)
 
         def verify_thd(conn):
             with sautils.withoutSqliteForeignKeys(conn):
                 verify_thd_cb(conn)
 
-        yield self.db.pool.do(verify_thd)
+        await self.db.pool.do(verify_thd)

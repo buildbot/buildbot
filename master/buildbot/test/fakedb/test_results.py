@@ -140,8 +140,7 @@ class FakeTestResultsComponent(FakeDBComponent):
                 return id
         return None
 
-    @defer.inlineCallbacks
-    def addTestResults(self, builderid, test_result_setid, result_values):
+    async def addTestResults(self, builderid, test_result_setid, result_values):
         insert_code_paths = set()
         insert_names = set()
         for result_value in result_values:
@@ -159,8 +158,8 @@ class FakeTestResultsComponent(FakeDBComponent):
             if 'test_code_path' in result_value:
                 insert_code_paths.add(result_value['test_code_path'])
 
-        code_path_to_id = yield self._add_code_paths(builderid, insert_code_paths)
-        name_to_id = yield self._add_names(builderid, insert_names)
+        code_path_to_id = await self._add_code_paths(builderid, insert_code_paths)
+        name_to_id = await self._add_names(builderid, insert_names)
 
         for result_value in result_values:
             insert_value = {

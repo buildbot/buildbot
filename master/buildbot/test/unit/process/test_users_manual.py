@@ -53,13 +53,12 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         persp = manual.CommandlineUserManagerPerspective(self.master)
         return persp.perspective_commandline(*args)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_add(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_add(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'git': 'x'}]
         )
 
-        usdict = yield self.master.db.users.getUser(1)
+        usdict = await self.master.db.users.getUser(1)
 
         self.assertEqual(
             usdict,
@@ -68,16 +67,15 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_update(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_update(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
-        yield self.call_perspective_commandline(
+        await self.call_perspective_commandline(
             'update', None, None, None, [{'identifier': 'x', 'svn': 'y'}]
         )
 
-        usdict = yield self.master.db.users.getUser(1)
+        usdict = await self.master.db.users.getUser(1)
 
         self.assertEqual(
             usdict,
@@ -86,16 +84,15 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_update_bb(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_update_bb(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
-        yield self.call_perspective_commandline(
+        await self.call_perspective_commandline(
             'update', 'bb_user', 'hashed_bb_pass', None, [{'identifier': 'x'}]
         )
 
-        usdict = yield self.master.db.users.getUser(1)
+        usdict = await self.master.db.users.getUser(1)
 
         self.assertEqual(
             usdict,
@@ -108,16 +105,15 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_update_both(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_update_both(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
-        yield self.call_perspective_commandline(
+        await self.call_perspective_commandline(
             'update', 'bb_user', 'hashed_bb_pass', None, [{'identifier': 'x', 'svn': 'y'}]
         )
 
-        usdict = yield self.master.db.users.getUser(1)
+        usdict = await self.master.db.users.getUser(1)
         self.assertEqual(
             usdict,
             UserModel(
@@ -129,24 +125,22 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_remove(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_remove(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'h@c', 'git': 'hi <h@c>'}]
         )
-        yield self.call_perspective_commandline('remove', None, None, ['x'], None)
-        res = yield self.master.db.users.getUser('x')
+        await self.call_perspective_commandline('remove', None, None, ['x'], None)
+        res = await self.master.db.users.getUser('x')
         self.assertEqual(res, None)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_get(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_get(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
 
-        yield self.call_perspective_commandline('get', None, None, ['x'], None)
+        await self.call_perspective_commandline('get', None, None, ['x'], None)
 
-        res = yield self.master.db.users.getUser(1)
+        res = await self.master.db.users.getUser(1)
         self.assertEqual(
             res,
             UserModel(
@@ -158,14 +152,13 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_get_multiple_attrs(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_get_multiple_attrs(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x', 'git': 'x@c'}]
         )
-        yield self.call_perspective_commandline('get', None, None, ['x'], None)
+        await self.call_perspective_commandline('get', None, None, ['x'], None)
 
-        res = yield self.master.db.users.getUser(1)
+        res = await self.master.db.users.getUser(1)
         self.assertEqual(
             res,
             UserModel(
@@ -177,44 +170,40 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_add_format(self):
-        result = yield self.call_perspective_commandline(
+    async def test_perspective_commandline_add_format(self):
+        result = await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
 
         exp_format = "user(s) added:\nidentifier: x\nuid: 1\n\n"
         self.assertEqual(result, exp_format)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_update_format(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_update_format(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
-        result = yield self.call_perspective_commandline(
+        result = await self.call_perspective_commandline(
             'update', None, None, None, [{'identifier': 'x', 'svn': 'y'}]
         )
 
         exp_format = 'user(s) updated:\nidentifier: x\n'
         self.assertEqual(result, exp_format)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_remove_format(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_remove_format(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'h@c', 'git': 'hi <h@c>'}]
         )
-        result = yield self.call_perspective_commandline('remove', None, None, ['h@c'], None)
+        result = await self.call_perspective_commandline('remove', None, None, ['h@c'], None)
 
         exp_format = "user(s) removed:\nidentifier: h@c\n"
         self.assertEqual(result, exp_format)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_get_format(self):
-        yield self.call_perspective_commandline(
+    async def test_perspective_commandline_get_format(self):
+        await self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x@y', 'git': 'x <x@y>'}]
         )
 
-        result = yield self.call_perspective_commandline('get', None, None, ['x@y'], None)
+        result = await self.call_perspective_commandline('get', None, None, ['x@y'], None)
 
         exp_format = (
             'user(s) found:\n'
@@ -227,30 +216,27 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
         self.assertEqual(result, exp_format)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_remove_no_match_format(self):
-        result = yield self.call_perspective_commandline('remove', None, None, ['x'], None)
+    async def test_perspective_commandline_remove_no_match_format(self):
+        result = await self.call_perspective_commandline('remove', None, None, ['x'], None)
 
         exp_format = "user(s) removed:\n"
         self.assertEqual(result, exp_format)
 
-    @defer.inlineCallbacks
-    def test_perspective_commandline_get_no_match_format(self):
-        result = yield self.call_perspective_commandline('get', None, None, ['x'], None)
+    async def test_perspective_commandline_get_no_match_format(self):
+        result = await self.call_perspective_commandline('get', None, None, ['x'], None)
 
         exp_format = "user(s) found:\nno match found\n"
         self.assertEqual(result, exp_format)
 
 
 class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUsersMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setUpManualUsers()
         self.manual_component = manual.CommandlineUserManager(
             username="user", passwd="userpw", port="9990"
         )
-        yield self.manual_component.setServiceParent(self.master)
+        await self.manual_component.setServiceParent(self.master)
 
     def test_no_userpass(self):
         d = defer.maybeDeferred(manual.CommandlineUserManager)
@@ -260,8 +246,7 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUser
         d = defer.maybeDeferred(manual.CommandlineUserManager, username="x", passwd="y")
         return self.assertFailure(d, AssertionError)
 
-    @defer.inlineCallbacks
-    def test_service(self):
+    async def test_service(self):
         # patch out the pbmanager's 'register' command both to be sure
         # the registration is correct and to get a copy of the factory
         registration = mock.Mock()
@@ -275,9 +260,9 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUser
 
         self.master.pbmanager.register = register
 
-        yield self.manual_component.startService()
+        await self.manual_component.startService()
 
         persp = self.got_factory(mock.Mock(), 'user')
         self.assertTrue(isinstance(persp, manual.CommandlineUserManagerPerspective))
 
-        yield self.manual_component.stopService()
+        await self.manual_component.stopService()

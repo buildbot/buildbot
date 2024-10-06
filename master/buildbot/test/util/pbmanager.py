@@ -48,9 +48,7 @@ class PBManagerMixin:
         for ps, un, pw in self.registrations:
             if ps == portstr and username == un and pw == password:
                 return
-        self.fail(
-            f"not registered: {repr((portstr, username, password))} not in {self.registrations}"
-        )
+        self.fail(f"not registered: {(portstr, username, password)!r} not in {self.registrations}")
 
     def assertUnregistered(self, portstr, username, password):
         for ps, un, pw in self.unregistrations:

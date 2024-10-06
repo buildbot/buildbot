@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
@@ -29,43 +28,39 @@ class myTestedService(service.BuildbotService):
     def reconfigService(self, baseurl):
         self._http = httpclientservice.HTTPSession(self.master.httpservice, baseurl)
 
-    @defer.inlineCallbacks
-    def doGetRoot(self):
-        res = yield self._http.get("/")
+    async def doGetRoot(self):
+        res = await self._http.get("/")
         # note that at this point, only the http response headers are received
         if res.code != 200:
             raise RuntimeError(f"{res.code}: server did not succeed")
-        res_json = yield res.json()
+        res_json = await res.json()
         # res.json() returns a deferred to represent the time needed to fetch the entire body
         return res_json
 
 
 class Test(unittest.TestCase, TestReactorMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setup_test_reactor()
+    async def setUp(self):
+        await self.setup_test_reactor()
 
         baseurl = 'http://127.0.0.1:8080'
         master = fakemaster.make_master(self)
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(master, self, baseurl)
+        self._http = await fakehttpclientservice.HTTPClientService.getService(master, self, baseurl)
         self.tested = myTestedService(baseurl)
 
-        yield self.tested.setServiceParent(master)
-        yield master.startService()
+        await self.tested.setServiceParent(master)
+        await master.startService()
 
-    @defer.inlineCallbacks
-    def test_root(self):
+    async def test_root(self):
         self._http.expect("get", "/", content_json={'foo': 'bar'})
 
-        response = yield self.tested.doGetRoot()
+        response = await self.tested.doGetRoot()
         self.assertEqual(response, {'foo': 'bar'})
 
-    @defer.inlineCallbacks
-    def test_root_error(self):
+    async def test_root_error(self):
         self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
 
         try:
-            yield self.tested.doGetRoot()
+            await self.tested.doGetRoot()
         except Exception as e:
             self.assertEqual(str(e), '404: server did not succeed')

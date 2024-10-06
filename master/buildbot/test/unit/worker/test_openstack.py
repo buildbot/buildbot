@@ -17,7 +17,6 @@
 import hashlib
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 import buildbot.test.fake.openstack as novaclient
@@ -55,31 +54,27 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         )
         self.masterhash = hashlib.sha1(b'fake:/master').hexdigest()[:6]
 
-    @defer.inlineCallbacks
-    def setupWorker(self, *args, **kwargs):
+    async def setupWorker(self, *args, **kwargs):
         worker = openstack.OpenStackLatentWorker(*args, **kwargs)
         master = fakemaster.make_master(self, wantData=True)
         fakemaster.master = master
         worker.setServiceParent(master)
-        yield master.startService()
+        await master.startService()
         self.addCleanup(master.stopService)
         return worker
 
-    @defer.inlineCallbacks
-    def test_constructor_nonova(self):
+    async def test_constructor_nonova(self):
         self.patch(openstack, "client", None)
         with self.assertRaises(config.ConfigErrors):
-            yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+            await self.setupWorker('bot', 'pass', **self.bs_image_args)
 
-    @defer.inlineCallbacks
-    def test_constructor_nokeystoneauth(self):
+    async def test_constructor_nokeystoneauth(self):
         self.patch(openstack, "loading", None)
         with self.assertRaises(config.ConfigErrors):
-            yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+            await self.setupWorker('bot', 'pass', **self.bs_image_args)
 
-    @defer.inlineCallbacks
-    def test_constructor_minimal(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_constructor_minimal(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
@@ -87,15 +82,13 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bs.block_devices, None)
         self.assertIsInstance(bs.novaclient, novaclient.Client)
 
-    @defer.inlineCallbacks
-    def test_builds_may_be_incompatible(self):
+    async def test_builds_may_be_incompatible(self):
         # Minimal set of parameters
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         self.assertEqual(bs.builds_may_be_incompatible, True)
 
-    @defer.inlineCallbacks
-    def test_constructor_minimal_keystone_v3(self):
-        bs = yield self.setupWorker(
+    async def test_constructor_minimal_keystone_v3(self):
+        bs = await self.setupWorker(
             'bot',
             'pass',
             os_user_domain='test_oud',
@@ -111,9 +104,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'test_oud')
         self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'test_opd')
 
-    @defer.inlineCallbacks
-    def test_constructor_token_keystone_v3(self):
-        bs = yield self.setupWorker(
+    async def test_constructor_token_keystone_v3(self):
+        bs = await self.setupWorker(
             'bot', 'pass', os_auth_args=self.os_auth_custom, **self.bs_image_args
         )
         self.assertEqual(bs.workername, 'bot')
@@ -125,15 +117,13 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'token')
         self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'token')
 
-    @defer.inlineCallbacks
-    def test_constructor_region(self):
-        bs = yield self.setupWorker('bot', 'pass', region="test-region", **self.bs_image_args)
+    async def test_constructor_region(self):
+        bs = await self.setupWorker('bot', 'pass', region="test-region", **self.bs_image_args)
         self.assertEqual(bs.novaclient.client.region_name, "test-region")
 
-    @defer.inlineCallbacks
-    def test_constructor_block_devices_default(self):
+    async def test_constructor_block_devices_default(self):
         block_devices = [{'uuid': 'uuid', 'volume_size': 10}]
-        bs = yield self.setupWorker(
+        bs = await self.setupWorker(
             'bot', 'pass', flavor=1, block_devices=block_devices, **self.os_auth
         )
         self.assertEqual(bs.image, None)
@@ -153,8 +143,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_constructor_block_devices_get_sizes(self):
+    async def test_constructor_block_devices_get_sizes(self):
         block_devices = [
             {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image']},
             {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image'], 'volume_size': 4},
@@ -172,7 +161,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
             self.assertEqual(block_devices[2]['volume_size'], 4)
             self.assertEqual(block_devices[3]['volume_size'], 2)
 
-        lw = yield self.setupWorker(
+        lw = await self.setupWorker(
             'bot', 'pass', flavor=1, block_devices=block_devices, **self.os_auth
         )
         self.assertEqual(lw.image, None)
@@ -218,177 +207,157 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
             ],
         )
         self.patch(lw, "_start_instance", check_volume_sizes)
-        yield lw.start_instance(self.build)
+        await lw.start_instance(self.build)
 
-    @defer.inlineCallbacks
-    def test_constructor_block_devices_missing(self):
+    async def test_constructor_block_devices_missing(self):
         block_devices = [
             {'source_type': 'image', 'uuid': 'image-uuid'},
         ]
 
-        lw = yield self.setupWorker(
+        lw = await self.setupWorker(
             'bot', 'pass', flavor=1, block_devices=block_devices, **self.os_auth
         )
-        yield self.assertFailure(lw.start_instance(self.build), novaclient.NotFound)
+        await self.assertFailure(lw.start_instance(self.build), novaclient.NotFound)
 
-    @defer.inlineCallbacks
-    def test_constructor_no_image(self):
+    async def test_constructor_no_image(self):
         """
         Must have one of image or block_devices specified.
         """
         with self.assertRaises(ValueError):
-            yield self.setupWorker('bot', 'pass', flavor=1, **self.os_auth)
+            await self.setupWorker('bot', 'pass', flavor=1, **self.os_auth)
 
-    @defer.inlineCallbacks
-    def test_getImage_string(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
-        image_uuid = yield bs._getImage(self.build)
+    async def test_getImage_string(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
+        image_uuid = await bs._getImage(self.build)
         self.assertEqual('28a65eb4-f354-4420-97dc-253b826547f7', image_uuid)
 
-    @defer.inlineCallbacks
-    def test_getImage_renderable(self):
-        bs = yield self.setupWorker(
+    async def test_getImage_renderable(self):
+        bs = await self.setupWorker(
             'bot', 'pass', flavor=1, image=Interpolate('%(prop:image)s'), **self.os_auth
         )
-        image_uuid = yield bs._getImage(self.build)
+        image_uuid = await bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
-    @defer.inlineCallbacks
-    def test_getImage_name(self):
-        bs = yield self.setupWorker('bot', 'pass', flavor=1, image='CirrOS 0.3.4', **self.os_auth)
-        image_uuid = yield bs._getImage(self.build)
+    async def test_getImage_name(self):
+        bs = await self.setupWorker('bot', 'pass', flavor=1, image='CirrOS 0.3.4', **self.os_auth)
+        image_uuid = await bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
-    @defer.inlineCallbacks
-    def test_getFlavor_string(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
-        flavor_uuid = yield bs._getFlavor(self.build)
+    async def test_getFlavor_string(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
+        flavor_uuid = await bs._getFlavor(self.build)
         self.assertEqual(1, flavor_uuid)
 
-    @defer.inlineCallbacks
-    def test_getFlavor_renderable(self):
-        bs = yield self.setupWorker(
+    async def test_getFlavor_renderable(self):
+        bs = await self.setupWorker(
             'bot', 'pass', image="1", flavor=Interpolate('%(prop:flavor)s'), **self.os_auth
         )
-        flavor_uuid = yield bs._getFlavor(self.build)
+        flavor_uuid = await bs._getFlavor(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['flavor'], flavor_uuid)
 
-    @defer.inlineCallbacks
-    def test_getFlavor_name(self):
-        bs = yield self.setupWorker('bot', 'pass', image="1", flavor='m1.small', **self.os_auth)
-        flavor_uuid = yield bs._getFlavor(self.build)
+    async def test_getFlavor_name(self):
+        bs = await self.setupWorker('bot', 'pass', image="1", flavor='m1.small', **self.os_auth)
+        flavor_uuid = await bs._getFlavor(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['flavor'], flavor_uuid)
 
-    @defer.inlineCallbacks
-    def test_start_instance_already_exists(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_start_instance_already_exists(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        yield self.assertFailure(bs.start_instance(self.build), ValueError)
+        await self.assertFailure(bs.start_instance(self.build), ValueError)
 
-    @defer.inlineCallbacks
-    def test_start_instance_first_fetch_fail(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_start_instance_first_fetch_fail(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
         self.patch(novaclient.Servers, 'gets_until_disappears', 0)
-        yield self.assertFailure(
+        await self.assertFailure(
             bs.start_instance(self.build), interfaces.LatentWorkerFailedToSubstantiate
         )
 
-    @defer.inlineCallbacks
-    def test_start_instance_fail_to_find(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_start_instance_fail_to_find(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
-        yield self.assertFailure(
+        await self.assertFailure(
             bs.start_instance(self.build), interfaces.LatentWorkerFailedToSubstantiate
         )
 
-    @defer.inlineCallbacks
-    def test_start_instance_fail_to_start(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_start_instance_fail_to_start(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
-        yield self.assertFailure(
+        await self.assertFailure(
             bs.start_instance(self.build), interfaces.LatentWorkerFailedToSubstantiate
         )
 
-    @defer.inlineCallbacks
-    def test_start_instance_success(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_start_instance_success(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        uuid, image_uuid, time_waiting = await bs.start_instance(self.build)
         self.assertTrue(uuid)
         self.assertEqual(image_uuid, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertTrue(time_waiting)
 
-    @defer.inlineCallbacks
-    def test_start_instance_check_meta(self):
+    async def test_start_instance_check_meta(self):
         meta_arg = {'some_key': 'some-value', 'BUILDBOT:instance': self.masterhash}
-        bs = yield self.setupWorker('bot', 'pass', meta=meta_arg, **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', meta=meta_arg, **self.bs_image_args)
         bs._poll_resolution = 0
-        yield bs.start_instance(self.build)
+        await bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEqual(bs.instance.metadata, meta_arg)
 
-    @defer.inlineCallbacks
-    def test_start_instance_check_meta_renderable(self):
+    async def test_start_instance_check_meta_renderable(self):
         meta_arg = {'some_key': Interpolate('%(prop:meta_value)s')}
-        bs = yield self.setupWorker('bot', 'pass', meta=meta_arg, **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', meta=meta_arg, **self.bs_image_args)
         bs._poll_resolution = 0
-        yield bs.start_instance(self.build)
+        await bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEqual(
             bs.instance.metadata, {'some_key': 'value', 'BUILDBOT:instance': self.masterhash}
         )
 
-    @defer.inlineCallbacks
-    def test_start_instance_check_nova_args(self):
+    async def test_start_instance_check_nova_args(self):
         nova_args = {'some-key': 'some-value'}
 
-        bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args, **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', nova_args=nova_args, **self.bs_image_args)
         bs._poll_resolution = 0
-        yield bs.start_instance(self.build)
+        await bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEqual(bs.instance.boot_kwargs['some-key'], 'some-value')
 
-    @defer.inlineCallbacks
-    def test_start_instance_check_nova_args_renderable(self):
+    async def test_start_instance_check_nova_args_renderable(self):
         nova_args = {'some-key': Interpolate('%(prop:meta_value)s')}
 
-        bs = yield self.setupWorker('bot', 'pass', nova_args=nova_args, **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', nova_args=nova_args, **self.bs_image_args)
         bs._poll_resolution = 0
-        yield bs.start_instance(self.build)
+        await bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertEqual(bs.instance.boot_kwargs['some-key'], 'value')
 
-    @defer.inlineCallbacks
-    def test_interpolate_renderables_for_new_build(self):
+    async def test_interpolate_renderables_for_new_build(self):
         build1 = Properties(image=novaclient.TEST_UUIDS['image'], block_device="some-device")
         build2 = Properties(image="build2-image")
         block_devices = [{'uuid': Interpolate('%(prop:block_device)s'), 'volume_size': 10}]
-        bs = yield self.setupWorker(
+        bs = await self.setupWorker(
             'bot', 'pass', block_devices=block_devices, **self.bs_image_args
         )
         bs._poll_resolution = 0
-        yield bs.start_instance(build1)
-        yield bs.stop_instance(build1)
+        await bs.start_instance(build1)
+        await bs.stop_instance(build1)
         self.assertTrue((yield bs.isCompatibleWithBuild(build2)))
 
-    @defer.inlineCallbacks
-    def test_reject_incompatible_build_while_running(self):
+    async def test_reject_incompatible_build_while_running(self):
         build1 = Properties(image=novaclient.TEST_UUIDS['image'], block_device="some-device")
         build2 = Properties(image="build2-image")
         block_devices = [{'uuid': Interpolate('%(prop:block_device)s'), 'volume_size': 10}]
-        bs = yield self.setupWorker(
+        bs = await self.setupWorker(
             'bot', 'pass', block_devices=block_devices, **self.bs_image_args
         )
         bs._poll_resolution = 0
-        yield bs.start_instance(build1)
+        await bs.start_instance(build1)
         self.assertFalse((yield bs.isCompatibleWithBuild(build2)))
 
-    @defer.inlineCallbacks
-    def test_stop_instance_cleanup(self):
+    async def test_stop_instance_cleanup(self):
         """
         Test cleaning up leftover instances before starting new.
         """
@@ -398,35 +367,32 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
             ['bot', novaclient.TEST_UUIDS['image'], novaclient.TEST_UUIDS['flavor']],
             meta={'BUILDBOT:instance': self.masterhash},
         )
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
+        uuid, image_uuid, time_waiting = await bs.start_instance(self.build)
         self.assertTrue(uuid)
         self.assertEqual(image_uuid, '28a65eb4-f354-4420-97dc-253b826547f7')
         self.assertTrue(time_waiting)
 
-    @defer.inlineCallbacks
-    def test_stop_instance_not_set(self):
+    async def test_stop_instance_not_set(self):
         """
         Test stopping the instance but with no instance to stop.
         """
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs.instance = None
-        stopped = yield bs.stop_instance()
+        stopped = await bs.stop_instance()
         self.assertEqual(stopped, None)
 
-    @defer.inlineCallbacks
-    def test_stop_instance_missing(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_stop_instance_missing(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         instance = mock.Mock()
         instance.id = 'uuid'
         bs.instance = instance
         # TODO: Check log for instance not found.
         bs.stop_instance()
 
-    @defer.inlineCallbacks
-    def test_stop_instance_fast(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_stop_instance_fast(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
         s = novaclient.Servers()
@@ -435,9 +401,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs.stop_instance(fast=True)
         self.assertNotIn(inst.id, s.instances)
 
-    @defer.inlineCallbacks
-    def test_stop_instance_notfast(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_stop_instance_notfast(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
         s = novaclient.Servers()
@@ -446,9 +411,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs.stop_instance(fast=False)
         self.assertNotIn(inst.id, s.instances)
 
-    @defer.inlineCallbacks
-    def test_stop_instance_unknown(self):
-        bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
+    async def test_stop_instance_unknown(self):
+        bs = await self.setupWorker('bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
         s = novaclient.Servers()

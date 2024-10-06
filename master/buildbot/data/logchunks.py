@@ -65,19 +65,18 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
 
             yield lines
 
-    @defer.inlineCallbacks
-    def get_log_lines_raw_data(self, kwargs):
+    async def get_log_lines_raw_data(self, kwargs):
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
-        log_dict = yield retriever.get_log_dict()
+        log_dict = await retriever.get_log_dict()
         if log_dict is None:
             return None, None, None
 
         # The following should be run sequentially instead of in gatherResults(), so that
         # they don't all start a query on step dict each.
-        step_dict = yield retriever.get_step_dict()
-        build_dict = yield retriever.get_build_dict()
-        builder_dict = yield retriever.get_builder_dict()
-        worker_dict = yield retriever.get_worker_dict()
+        step_dict = await retriever.get_step_dict()
+        build_dict = await retriever.get_build_dict()
+        builder_dict = await retriever.get_builder_dict()
+        worker_dict = await retriever.get_worker_dict()
 
         log_prefix = ''
         if log_dict.type == 's':
@@ -117,10 +116,9 @@ class LogChunkEndpoint(LogChunkEndpointBase):
     """
     rootLinkName = "logchunks"
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
-        logid = yield retriever.get_log_id()
+        logid = await retriever.get_log_id()
         if logid is None:
             return None
 
@@ -130,7 +128,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
 
         # get the number of lines, if necessary
         if lastline is None:
-            log_dict = yield retriever.get_log_dict()
+            log_dict = await retriever.get_log_dict()
             if not log_dict:
                 return None
             lastline = int(max(0, log_dict.num_lines - 1))
@@ -139,7 +137,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         if firstline < 0 or lastline < 0 or firstline > lastline:
             return None
 
-        logLines = yield self.master.db.logs.getLogLines(logid, firstline, lastline)
+        logLines = await self.master.db.logs.getLogLines(logid, firstline, lastline)
         return {'logid': logid, 'firstline': firstline, 'content': logLines}
 
     def get_kwargs_from_graphql(self, parent, resolve_info, args):
@@ -161,13 +159,12 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        data = yield defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
+    async def get(self, resultSpec, kwargs):
+        data = await defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
         if data is None:
             return None
 
-        data["raw"] = yield defer.Deferred.fromCoroutine(
+        data["raw"] = await defer.Deferred.fromCoroutine(
             self.get_raw_log_lines(log_lines_generator=data["raw"])
         )
         return data
@@ -198,14 +195,13 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
         /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw_inline
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        data = yield defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
+    async def get(self, resultSpec, kwargs):
+        data = await defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
 
         if data is None:
             return None
 
-        data["raw"] = yield defer.Deferred.fromCoroutine(
+        data["raw"] = await defer.Deferred.fromCoroutine(
             self.get_raw_log_lines(log_lines_generator=data["raw"])
         )
 

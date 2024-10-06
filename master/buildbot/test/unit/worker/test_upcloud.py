@@ -15,7 +15,6 @@
 
 import hashlib
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import util
@@ -83,13 +82,12 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
-    @defer.inlineCallbacks
-    def setupWorker(self, *args, **kwargs):
+    async def setupWorker(self, *args, **kwargs):
         worker = upcloud.UpcloudLatentWorker(
             *args, api_username='test-api-user', api_password='test-api-password', **kwargs
         )
         master = fakemaster.make_master(self, wantData=True)
-        self._http = worker.client = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = worker.client = await fakehttpclientservice.HTTPClientService.getService(
             master,
             self,
             upcloud.DEFAULT_BASE_URL,
@@ -97,7 +95,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
             debug=False,
         )
         worker.setServiceParent(master)
-        yield master.startService()
+        await master.startService()
         self.masterhash = hashlib.sha1(util.unicode2bytes(master.name)).hexdigest()[:6]
         self.addCleanup(master.stopService)
         self.worker = worker
@@ -124,18 +122,16 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
             )
         self.assertTrue(worker is None)
 
-    @defer.inlineCallbacks
-    def test_missing_image(self):
-        worker = yield self.setupWorker('worker', image='no-such-image')
+    async def test_missing_image(self):
+        worker = await self.setupWorker('worker', image='no-such-image')
         self._http.expect(
             method='get', ep='/storage/template', content_json=upcloudStorageTemplatePayload
         )
         with self.assertRaises(LatentWorkerFailedToSubstantiate):
-            yield worker.substantiate(None, FakeBuild())
+            await worker.substantiate(None, FakeBuild())
 
-    @defer.inlineCallbacks
-    def test_start_worker(self):
-        worker = yield self.setupWorker('worker', image='test-image')
+    async def test_start_worker(self):
+        worker = await self.setupWorker('worker', image='test-image')
         # resolve image to storage uuid
         self._http.expect(
             method='get', ep='/storage/template', content_json=upcloudStorageTemplatePayload
@@ -201,5 +197,5 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
             method='delete', ep='/server/438b5b08-4147-4193-bf64-a5318f51d3bd?storages=1', code=204
         )
         d = worker.substantiate(None, FakeBuild())
-        yield worker.attached(FakeBot())
-        yield d
+        await worker.attached(FakeBot())
+        await d

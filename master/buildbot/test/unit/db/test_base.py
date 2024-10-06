@@ -88,15 +88,13 @@ class TestBase(unittest.TestCase):
 
 
 class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.ConnectorComponentMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         # this co-opts the masters table to test findSomethingId
-        yield self.setUpConnectorComponent(table_names=['masters'])
+        await self.setUpConnectorComponent(table_names=['masters'])
 
         self.db.base = base.DBConnectorComponent(self.db)
 
-    @defer.inlineCallbacks
-    def test_findSomethingId_race(self):
+    async def test_findSomethingId_race(self):
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
@@ -108,7 +106,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
             )
             conn.commit()
 
-        id = yield self.db.base.findSomethingId(
+        id = await self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={
@@ -121,38 +119,35 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
         )
         self.assertEqual(id, 5)
 
-    @defer.inlineCallbacks
-    def test_findSomethingId_new(self):
+    async def test_findSomethingId_new(self):
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
-        id = yield self.db.base.findSomethingId(
+        id = await self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},
         )
         self.assertEqual(id, 1)
 
-    @defer.inlineCallbacks
-    def test_findSomethingId_existing(self):
+    async def test_findSomethingId_existing(self):
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
-        yield self.insert_test_data([
+        await self.insert_test_data([
             fakedb.Master(id=7, name='somemaster', name_hash=hash),
         ])
 
-        id = yield self.db.base.findSomethingId(
+        id = await self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},
         )
         self.assertEqual(id, 7)
 
-    @defer.inlineCallbacks
-    def test_findSomethingId_new_noCreate(self):
+    async def test_findSomethingId_new_noCreate(self):
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
-        id = yield self.db.base.findSomethingId(
+        id = await self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},
@@ -192,8 +187,7 @@ class TestCachedDecorator(unittest.TestCase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_cached(self):
+    async def test_cached(self):
         # attach it to the connector
         connector = mock.Mock(name="connector")
         connector.master.caches.get_cache = self.get_cache
@@ -202,14 +196,13 @@ class TestCachedDecorator(unittest.TestCase):
         comp = self.TestConnectorComponent(connector)
 
         # test it twice (to test an implementation detail)
-        res1 = yield comp.getThing("foo")
+        res1 = await comp.getThing("foo")
 
-        res2 = yield comp.getThing("bar")
+        res2 = await comp.getThing("bar")
 
         self.assertEqual((res1, res2, comp.invocations), ('foofoo', 'barbar', ['foo', 'bar']))
 
-    @defer.inlineCallbacks
-    def test_cached_no_cache(self):
+    async def test_cached_no_cache(self):
         # attach it to the connector
         connector = mock.Mock(name="connector")
         connector.master.caches.get_cache = self.get_cache
@@ -218,4 +211,4 @@ class TestCachedDecorator(unittest.TestCase):
         # build an instance
         comp = self.TestConnectorComponent(connector)
 
-        yield comp.getThing("foo", no_cache=1)
+        await comp.getThing("foo", no_cache=1)

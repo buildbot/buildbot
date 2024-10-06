@@ -15,8 +15,6 @@
 
 import json
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -38,11 +36,10 @@ class BuildPropertiesEndpoint(base.Endpoint):
         /builds/n:buildid/properties
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
-        buildid = yield retriever.get_build_id()
-        build_properties = yield self.master.db.builds.getBuildProperties(buildid)
+        buildid = await retriever.get_build_id()
+        build_properties = await self.master.db.builds.getBuildProperties(buildid)
         return build_properties
 
 
@@ -69,23 +66,22 @@ class PropertiesListEndpoint(base.Endpoint):
         "value": "change_properties.value",
     }
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         buildid = kwargs.get("buildid", None)
         bsid = kwargs.get("bsid", None)
         changeid = kwargs.get("changeid", None)
         if buildid is not None:
             if resultSpec is not None:
                 resultSpec.fieldMapping = self.buildFieldMapping
-            props = yield self.master.db.builds.getBuildProperties(buildid, resultSpec)
+            props = await self.master.db.builds.getBuildProperties(buildid, resultSpec)
         elif bsid is not None:
             if resultSpec is not None:
                 resultSpec.fieldMapping = self.buildsetFieldMapping
-            props = yield self.master.db.buildsets.getBuildsetProperties(bsid)
+            props = await self.master.db.buildsets.getBuildsetProperties(bsid)
         elif changeid is not None:
             if resultSpec is not None:
                 resultSpec.fieldMapping = self.buildsetFieldMapping
-            props = yield self.master.db.changes.getChangeProperties(changeid)
+            props = await self.master.db.changes.getChangeProperties(changeid)
         return [{'name': k, 'source': v[1], 'value': json.dumps(v[0])} for k, v in props.items()]
 
 
@@ -117,12 +113,11 @@ class Properties(base.ResourceType):
         return self.master.mq.produce(routingKey, newprops)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def setBuildProperties(self, buildid, properties):
+    async def setBuildProperties(self, buildid, properties):
         to_update = {}
-        oldproperties = yield self.master.data.get(('builds', str(buildid), "properties"))
+        oldproperties = await self.master.data.get(('builds', str(buildid), "properties"))
         properties = properties.getProperties()
-        properties = yield properties.render(properties.asDict())
+        properties = await properties.render(properties.asDict())
         for k, v in properties.items():
             if k in oldproperties and oldproperties[k] == v:
                 continue
@@ -130,12 +125,11 @@ class Properties(base.ResourceType):
 
         if to_update:
             for k, v in to_update.items():
-                yield self.master.db.builds.setBuildProperty(buildid, k, v[0], v[1])
-            yield self.generateUpdateEvent(buildid, to_update)
+                await self.master.db.builds.setBuildProperty(buildid, k, v[0], v[1])
+            await self.generateUpdateEvent(buildid, to_update)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def setBuildProperty(self, buildid, name, value, source):
-        res = yield self.master.db.builds.setBuildProperty(buildid, name, value, source)
-        yield self.generateUpdateEvent(buildid, {"name": (value, source)})
+    async def setBuildProperty(self, buildid, name, value, source):
+        res = await self.master.db.builds.setBuildProperty(buildid, name, value, source)
+        await self.generateUpdateEvent(buildid, {"name": (value, source)})
         return res

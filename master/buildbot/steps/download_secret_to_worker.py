@@ -15,8 +15,6 @@
 
 import stat
 
-from twisted.internet import defer
-
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
@@ -31,22 +29,20 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
         super().__init__(**kwargs)
         self.secret_to_be_populated = populated_secret_list
 
-    @defer.inlineCallbacks
-    def runPopulateSecrets(self):
+    async def runPopulateSecrets(self):
         result = SUCCESS
         for path, secretvalue in self.secret_to_be_populated:
             if not isinstance(path, str):
                 raise ValueError(f"Secret path {path} is not a string")
             self.secret_to_be_interpolated = secretvalue
-            res = yield self.downloadFileContentToWorker(
+            res = await self.downloadFileContentToWorker(
                 path, self.secret_to_be_interpolated, mode=stat.S_IRUSR | stat.S_IWUSR
             )
             result = worst_status(result, res)
         return result
 
-    @defer.inlineCallbacks
-    def run(self):
-        res = yield self.runPopulateSecrets()
+    async def run(self):
+        res = await self.runPopulateSecrets()
         return res
 
 
@@ -58,11 +54,10 @@ class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
         self.logEnviron = logEnviron
         self.secret_to_be_populated = populated_secret_list
 
-    @defer.inlineCallbacks
-    def runRemoveWorkerFileSecret(self):
+    async def runRemoveWorkerFileSecret(self):
         all_results = []
         for path, _ in self.secret_to_be_populated:
-            res = yield self.runRmFile(path, abandonOnFailure=False)
+            res = await self.runRmFile(path, abandonOnFailure=False)
             all_results.append(res)
         if FAILURE in all_results:
             result = FAILURE
@@ -70,7 +65,6 @@ class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
             result = SUCCESS
         return result
 
-    @defer.inlineCallbacks
-    def run(self):
-        res = yield self.runRemoveWorkerFileSecret()
+    async def run(self):
+        res = await self.runRemoveWorkerFileSecret()
         return res

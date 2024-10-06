@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
@@ -170,8 +169,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_revision_noninteger(self):
+    async def test_revision_noninteger(self):
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setup_step(svnTestStep)
         self.expect_commands(
@@ -193,7 +191,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(result=SUCCESS)
         self.expect_property('got_revision', 'a10', 'SVN')
-        yield self.run_step()
+        await self.run_step()
 
         revision = self.get_nth_step(0).getProperty('got_revision')
         with self.assertRaises(ValueError):

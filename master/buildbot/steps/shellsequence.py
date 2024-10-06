@@ -15,7 +15,6 @@
 
 import copy
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -24,7 +23,7 @@ from buildbot.process import results
 
 
 class ShellArg(results.ResultComputingConfigMixin):
-    publicAttributes = results.ResultComputingConfigMixin.resultConfig + ["command", "logname"]
+    publicAttributes = [*results.ResultComputingConfigMixin.resultConfig, "command", "logname"]
 
     def __init__(self, command=None, logname=None, **kwargs):
         name = self.__class__.__name__
@@ -52,13 +51,12 @@ class ShellArg(results.ResultComputingConfigMixin):
             (p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val, bool)
         ]
         if not_bool:
-            config.error(f"{repr(not_bool)} must be booleans")
+            config.error(f"{not_bool!r} must be booleans")
 
-    @defer.inlineCallbacks
-    def getRenderingFor(self, build):
+    async def getRenderingFor(self, build):
         rv = copy.copy(self)
         for p_attr in self.publicAttributes:
-            res = yield build.render(getattr(self, p_attr))
+            res = await build.render(getattr(self, p_attr))
             setattr(rv, p_attr, res)
         return rv
 
@@ -78,8 +76,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     def getFinalState(self):
         return self.describe(True)
 
-    @defer.inlineCallbacks
-    def runShellSequence(self, commands):
+    async def runShellSequence(self, commands):
         terminate = False
         if commands is None:
             log.msg("After rendering, ShellSequence `commands` is None")
@@ -106,8 +103,8 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             # keep the command around so we can describe it
             self.last_command = command
 
-            cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName=arg.logname)
-            yield self.runCommand(cmd)
+            cmd = await self.makeRemoteShellCommand(command=command, stdioLogName=arg.logname)
+            await self.runCommand(cmd)
             overall_result, terminate = results.computeResultAndTermination(
                 arg, cmd.results(), overall_result
             )

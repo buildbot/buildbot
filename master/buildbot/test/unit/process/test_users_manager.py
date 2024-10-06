@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config.master import MasterConfig
@@ -38,19 +37,18 @@ class TestUserManager(unittest.TestCase):
     def tearDown(self):
         self.umm.stopService()
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceWithBuildbotConfig(self):
+    async def test_reconfigServiceWithBuildbotConfig(self):
         # add a user manager
         um1 = FakeUserManager()
         self.config.user_managers = [um1]
 
-        yield self.umm.reconfigServiceWithBuildbotConfig(self.config)
+        await self.umm.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertTrue(um1.running)
         self.assertIdentical(um1.master, self.master)
 
         # and back to nothing
         self.config.user_managers = []
-        yield self.umm.reconfigServiceWithBuildbotConfig(self.config)
+        await self.umm.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertIdentical(um1.master, None)

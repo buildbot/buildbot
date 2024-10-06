@@ -17,7 +17,6 @@
 import hashlib
 import socket
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -58,8 +57,7 @@ class UpcloudLatentWorker(AbstractLatentWorker):
 
         AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         name,
         password=None,
@@ -81,7 +79,7 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         if hostconfig is None:
             hostconfig = {}
         self.hostconfig = hostconfig
-        self.client = yield HTTPSession(
+        self.client = await HTTPSession(
             self.master.httpservice,
             base_url,
             auth=(api_username, api_password),
@@ -89,15 +87,14 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         )
         masterName = util.unicode2bytes(self.master.name)
         self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
-        yield AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+        await AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
 
-    @defer.inlineCallbacks
-    def _resolve_image(self, image):
+    async def _resolve_image(self, image):
         # get templates
-        result = yield self.client.get("/storage/template")
+        result = await self.client.get("/storage/template")
         uuid = None
         if result.code == 200:
-            templates = yield result.json()
+            templates = await result.json()
             for template in templates["storages"]["storage"]:
                 if image == template["title"]:
                     uuid = template["uuid"]
@@ -107,14 +104,13 @@ class UpcloudLatentWorker(AbstractLatentWorker):
     def getContainerName(self):
         return (f'buildbot-{self.workername}-{self.masterhash}').replace("_", "-")
 
-    @defer.inlineCallbacks
-    def start_instance(self, build):
+    async def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
 
         # convert image to UUID
-        image, hostconfig = yield build.render([self.image, self.hostconfig])
-        image_uuid = yield self._resolve_image(image)
+        image, hostconfig = await build.render([self.image, self.hostconfig])
+        image_uuid = await self._resolve_image(image)
 
         if image_uuid is None:
             log.msg(
@@ -157,26 +153,26 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             req["server"]["memory_amount"] = hostconfig.get("memory_amount", DEFAULT_MEMORY_AMOUNT)
 
         # request instance
-        result = yield self.client.post("/server", json=req)
+        result = await self.client.post("/server", json=req)
 
         if result.code // 100 != 2:
-            reason = yield result.content()
+            reason = await result.content()
             log.msg(
                 f"{self.__class__.__name__} {self.workername}: Instance creation failed: "
                 f"{result.code} {reason}"
             )
             self.failed_to_start(req['server']['hostname'], 'starting')
 
-        instance = yield result.json()
+        instance = await result.json()
         self.instance = instance["server"]
         self.instance["Id"] = self.instance["uuid"].split("-")[-1]
 
         # wait until server is actually up
         while (yield self._state()) not in ["started"]:
-            yield util.asyncSleep(1, reactor=self.master.reactor)
+            await util.asyncSleep(1, reactor=self.master.reactor)
 
-        result = yield self.client.get(f'/server/{self.instance["uuid"]}')
-        instance = yield result.json()
+        result = await self.client.get(f'/server/{self.instance["uuid"]}')
+        instance = await result.json()
         log.msg(
             f'{self.__class__.__name__} {self.workername}: Instance {self.instance["Id"]} '
             f'created (root password {self.instance["password"]})'
@@ -185,17 +181,15 @@ class UpcloudLatentWorker(AbstractLatentWorker):
         self.properties.setProperty("root_password", self.instance['password'], "Worker")
         return [self.instance["Id"], image]
 
-    @defer.inlineCallbacks
-    def _state(self):
-        result = yield self.client.get(f'/server/{self.instance["uuid"]}')
+    async def _state(self):
+        result = await self.client.get(f'/server/{self.instance["uuid"]}')
         if result.code == 404:
             return "absent"
         else:
-            server = yield result.json()
+            server = await result.json()
             return server["server"]["state"]
 
-    @defer.inlineCallbacks
-    def stop_instance(self, fast=False):
+    async def stop_instance(self, fast=False):
         if self.instance is None:
             # be gentle. Something may just be trying to alert us that an
             # instance never attached, and it's because, somehow, we never
@@ -205,12 +199,12 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             f'{self.__class__.__name__} {self.workername}: Stopping instance '
             f'{self.instance["Id"]}...'
         )
-        result = yield self.client.post(
+        result = await self.client.post(
             f'/server/{self.instance["uuid"]}/stop',
             json={"stop_server": {"stop_type": "hard", "timeout": "1"}},
         )
         if result.code // 100 != 2:
-            reason = yield result.content()
+            reason = await result.content()
             reason = (
                 f'{self.__class__.__name__} {self.workername} failed to stop instance '
                 f'{self.instance["Id"]} ({self._state()}): {reason.decode()}'
@@ -218,12 +212,12 @@ class UpcloudLatentWorker(AbstractLatentWorker):
             self.instance = None
             raise RuntimeError(reason)
         while (yield self._state()) not in ["stopped", "absent"]:
-            yield util.asyncSleep(1, reactor=self.master.reactor)
+            await util.asyncSleep(1, reactor=self.master.reactor)
 
         # destroy it
-        result = yield self.client.delete(f'/server/{self.instance["uuid"]}?storages=1')
+        result = await self.client.delete(f'/server/{self.instance["uuid"]}?storages=1')
         if result.code // 100 != 2:
-            reason = yield result.content()
+            reason = await result.content()
             reason = (
                 f'{self.__class__.__name__} {self.workername} failed to delete instance '
                 f'{self.instance["Id"]} ({self._state()}): {reason.decode()}'

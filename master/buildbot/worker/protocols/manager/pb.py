@@ -18,7 +18,6 @@ from twisted.cred import checkers
 from twisted.cred import credentials
 from twisted.cred import error
 from twisted.cred import portal
-from twisted.internet import defer
 from twisted.python import log
 from twisted.spread import pb
 from zope.interface import implementer
@@ -45,35 +44,33 @@ class Dispatcher(BaseDispatcher):
 
     # IRealm
 
-    @defer.inlineCallbacks
-    def requestAvatar(self, username, mind, interface):
+    async def requestAvatar(self, username, mind, interface):
         assert interface == pb.IPerspective
         username = bytes2unicode(username)
 
         persp = None
         if username in self.users:
             _, afactory = self.users.get(username)
-            persp = yield afactory(mind, username)
+            persp = await afactory(mind, username)
 
         if not persp:
             raise ValueError(f"no perspective for '{username}'")
 
-        yield persp.attached(mind)
+        await persp.attached(mind)
 
         return (pb.IPerspective, persp, lambda: persp.detached(mind))
 
     # ICredentialsChecker
 
-    @defer.inlineCallbacks
-    def requestAvatarId(self, creds):
+    async def requestAvatarId(self, creds):
         p = Properties()
         p.master = self.master
         username = bytes2unicode(creds.username)
         try:
-            yield self.master.initLock.acquire()
+            await self.master.initLock.acquire()
             if username in self.users:
                 password, _ = self.users[username]
-                password = yield p.render(password)
+                password = await p.render(password)
                 matched = creds.checkPassword(unicode2bytes(password))
                 if not matched:
                     log.msg(f"invalid login from user '{username}'")

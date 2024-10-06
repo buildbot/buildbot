@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.test.util.integration import RunMasterBase
 
 
@@ -23,8 +21,7 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builder and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -40,11 +37,10 @@ class ShellMaster(RunMasterBase):
         f.addStep(steps.ShellCommand(command='echo hello'))
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         c['www'] = {'graphql': True}
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_shell(self):
-        yield self.setup_config()
+    async def test_shell(self):
+        await self.setup_config()
         # if you don't need change, you can just remove this change, and useChange parameter
         change = {
             "branch": "master",
@@ -55,7 +51,7 @@ class ShellMaster(RunMasterBase):
             "revision": "HEAD",
             "project": "none",
         }
-        build = yield self.doForceBuild(
+        build = await self.doForceBuild(
             wantSteps=True, useChange=change, wantLogs=True, wantProperties=True
         )
         self.assertEqual(build['buildid'], 1)

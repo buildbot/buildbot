@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -304,8 +303,7 @@ class TestGit(
         )
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_mode_full_clean_ssh_key_1_7(self):
+    async def test_mode_full_clean_ssh_key_1_7(self):
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git',
@@ -369,7 +367,7 @@ class TestGit(
         self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
         )
-        yield self.run_step()
+        await self.run_step()
 
         expected = f'#!/bin/sh\nssh -o "BatchMode=yes" -i "{ssh_key_path}" "$@"\n'
         self.assertEqual(b''.join(read), unicode2bytes(expected))
@@ -513,8 +511,7 @@ class TestGit(
         )
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_mode_full_clean_ssh_host_key_1_7(self):
+    async def test_mode_full_clean_ssh_host_key_1_7(self):
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git',
@@ -590,7 +587,7 @@ class TestGit(
         self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
         )
-        yield self.run_step()
+        await self.run_step()
 
         expected = (
             '#!/bin/sh\n'
@@ -3601,19 +3598,25 @@ class TestGit(
         )
         prefix = ['git', '-c', f'{name}={value}']
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command=prefix + ['--version'])
+            ExpectShell(workdir='wkdir', command=[*prefix, '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
             ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
             ExpectListdir(dir='wkdir').files(['.git']).exit(0),
-            ExpectShell(workdir='wkdir', command=prefix + ['clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(workdir='wkdir', command=[*prefix, 'clean', '-f', '-f', '-d']).exit(0),
             ExpectShell(
                 workdir='wkdir',
-                command=prefix
-                + ['fetch', '-f', '--progress', f'{value}/buildbot/buildbot.git', 'HEAD'],
+                command=[
+                    *prefix,
+                    'fetch',
+                    '-f',
+                    '--progress',
+                    f'{value}/buildbot/buildbot.git',
+                    'HEAD',
+                ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=prefix + ['checkout', '-f', 'FETCH_HEAD']).exit(0),
-            ExpectShell(workdir='wkdir', command=prefix + ['rev-parse', 'HEAD'])
+            ExpectShell(workdir='wkdir', command=[*prefix, 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=[*prefix, 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
         )
@@ -3634,20 +3637,15 @@ class TestGit(
         self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def _test_WorkerSetupError(self, _dovccmd, step, msg):
+    async def _test_WorkerSetupError(self, _dovccmd, step, msg):
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
         gitStep = self.setup_step(step)
 
         with self.assertRaisesRegex(WorkerSetupError, msg):
-            yield gitStep.run_vc("branch", "revision", "patch")
+            await gitStep.run_vc("branch", "revision", "patch")
 
     def test_noGitCommandInstalled(self):
-        @defer.inlineCallbacks
-        def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
-            """
-            Simulate the case where there is no git command.
-            """
+        async def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
             yield
             return "command not found:"
 
@@ -3658,13 +3656,7 @@ class TestGit(
         return self._test_WorkerSetupError(_dovccmd, step, msg)
 
     def test_gitCommandOutputShowsNoVersion(self):
-        @defer.inlineCallbacks
-        def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
-            """
-            Instead of outputting something like "git version 2.11",
-            simulate truncated output which has no version string,
-            to exercise error handling.
-            """
+        async def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
             yield
             return "git "
 
@@ -3961,9 +3953,7 @@ class TestGit(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'credential',
                     'approve',
                 ],
@@ -3983,9 +3973,7 @@ class TestGit(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'fetch',
                     '-f',
                     '--progress',
@@ -4509,9 +4497,7 @@ class TestGitPush(
         return self.run_step()
 
     def test_raise_no_git(self):
-        @defer.inlineCallbacks
-        def _checkFeatureSupport(self):
-            yield
+        async def _checkFeatureSupport(self):
             return False
 
         url = 'ssh://github.com/test/test.git'
@@ -4570,9 +4556,7 @@ class TestGitPush(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'credential',
                     'approve',
                 ],
@@ -4590,9 +4574,7 @@ class TestGitPush(
                     'credential.helper=',
                     '-c',
                     f'credential.helper=store "--file={git_credential_path}"',
-                ]
-                + use_http_path_arg
-                + [
+                    *use_http_path_arg,
                     'push',
                     url,
                     'testbranch',
@@ -4747,9 +4729,7 @@ class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin, TestReactorMixin,
             )
 
     def test_raise_no_git(self):
-        @defer.inlineCallbacks
-        def _checkFeatureSupport(self):
-            yield
+        async def _checkFeatureSupport(self):
             return False
 
         step = self.stepClass(workdir='wdir', tagName='myTag')
@@ -4986,9 +4966,7 @@ class TestGitCommit(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages="my message")
 
     def test_raise_no_git(self):
-        @defer.inlineCallbacks
-        def _checkFeatureSupport(self):
-            yield
+        async def _checkFeatureSupport(self):
             return False
 
         step = self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list)

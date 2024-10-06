@@ -25,8 +25,7 @@ class deferredLocked(unittest.TestCase):
     def test_name(self):
         self.assertEqual(util.deferredLocked, misc.deferredLocked)
 
-    @defer.inlineCallbacks
-    def test_fn(self):
+    async def test_fn(self):
         lock = defer.DeferredLock()
 
         @util.deferredLocked(lock)
@@ -34,12 +33,11 @@ class deferredLocked(unittest.TestCase):
             self.assertEqual([lock.locked, arg1, arg2], [True, 1, 2])
             return defer.succeed(None)
 
-        yield check_locked(1, 2)
+        await check_locked(1, 2)
 
         self.assertFalse(lock.locked)
 
-    @defer.inlineCallbacks
-    def test_fn_fails(self):
+    async def test_fn_fails(self):
         lock = defer.DeferredLock()
 
         @util.deferredLocked(lock)
@@ -47,13 +45,12 @@ class deferredLocked(unittest.TestCase):
             return defer.fail(RuntimeError("oh noes"))
 
         try:
-            yield do_fail()
+            await do_fail()
             self.fail("didn't errback")
         except Exception:
             self.assertFalse(lock.locked)
 
-    @defer.inlineCallbacks
-    def test_fn_exception(self):
+    async def test_fn_exception(self):
         lock = defer.DeferredLock()
 
         @util.deferredLocked(lock)
@@ -62,13 +59,12 @@ class deferredLocked(unittest.TestCase):
 
         # using decorators confuses pylint and gives a false positive below
         try:
-            yield do_fail()  # pylint: disable=assignment-from-no-return
+            await do_fail()  # pylint: disable=assignment-from-no-return
             self.fail("didn't errback")
         except Exception:
             self.assertFalse(lock.locked)
 
-    @defer.inlineCallbacks
-    def test_method(self):
+    async def test_method(self):
         testcase = self
 
         class C:
@@ -79,7 +75,7 @@ class deferredLocked(unittest.TestCase):
 
         obj = C()
         obj.aLock = defer.DeferredLock()
-        yield obj.check_locked(1, 2)
+        await obj.check_locked(1, 2)
 
         self.assertFalse(obj.aLock.locked)
 
@@ -101,31 +97,28 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
         self.d.callback("result")
         self.assertTrue(d.called)
 
-    @defer.inlineCallbacks
-    def test_fails(self):
+    async def test_fails(self):
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.d.errback(RuntimeError("oh noes"))
         self.assertTrue(d.called)
-        yield self.assertFailure(d, RuntimeError)
+        await self.assertFailure(d, RuntimeError)
 
-    @defer.inlineCallbacks
-    def test_timeout_succeeds(self):
+    async def test_timeout_succeeds(self):
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.reactor.advance(11)
         d.callback("result")  # ignored
         self.assertTrue(d.called)
-        yield self.assertFailure(d, defer.CancelledError)
+        await self.assertFailure(d, defer.CancelledError)
 
-    @defer.inlineCallbacks
-    def test_timeout_fails(self):
+    async def test_timeout_fails(self):
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.reactor.advance(11)
         self.d.errback(RuntimeError("oh noes"))  # ignored
         self.assertTrue(d.called)
-        yield self.assertFailure(d, defer.CancelledError)
+        await self.assertFailure(d, defer.CancelledError)
 
 
 class TestChunkifyList(unittest.TestCase):

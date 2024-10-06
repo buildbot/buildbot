@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web.resource import Resource
@@ -80,15 +79,14 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.port = self.listener.getHost().port
         return self.setup_test_build_step()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         http.closeSession()
         try:
-            yield self.listener.stopListening()
-            yield self.site.stopFactory()
-            yield self.site.close_connections()
+            await self.listener.stopListening()
+            await self.site.stopFactory()
+            await self.site.close_connections()
         finally:
-            yield self.tear_down_test_build_step()
+            await self.tear_down_test_build_step()
 
     def get_connection_string(self):
         return f"http://127.0.0.1:{self.port}"
@@ -196,8 +194,7 @@ OK:key1=value1""",
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_hidden_header(self):
+    async def test_hidden_header(self):
         url = self.getURL("header")
         self.setup_step(
             http.GET(
@@ -209,7 +206,7 @@ OK:key1=value1""",
         )
         self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
-        yield self.run_step()
+        await self.run_step()
         self.assertIn("X-Test: <HIDDEN>", self.get_nth_step(0).logs['log'].header)
         self.assertIn("Content-Length: <HIDDEN>", self.get_nth_step(0).logs['log'].header)
 

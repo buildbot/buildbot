@@ -99,8 +99,7 @@ class AutoLoginPBFactory(PBClientFactory):
         is now available. This method will be called each time the connection
         is established and the object reference is retrieved."""
 
-    @defer.inlineCallbacks
-    def failedToGetPerspective(self, why, broker):
+    async def failedToGetPerspective(self, why, broker):
         """The login process failed, most likely because of an authorization
         failure (bad password), but it is also possible that we lost the new
         connection before we managed to send our credentials.
@@ -124,7 +123,7 @@ class AutoLoginPBFactory(PBClientFactory):
 
         # Delay the retry according to the backoff policy
         try:
-            yield task.deferLater(reactor, delay, lambda: None)
+            await task.deferLater(reactor, delay, lambda: None)
         except defer.CancelledError:
             pass
 

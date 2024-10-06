@@ -126,8 +126,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getBuildRequests(
+    async def getBuildRequests(
         self,
         builderid=None,
         complete=None,
@@ -175,11 +174,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             return deduplicateBrdict([self._modelFromRow(row) for row in res.fetchall()])
 
-        res = yield self.db.pool.do(thd)
+        res = await self.db.pool.do(thd)
         return res
 
-    @defer.inlineCallbacks
-    def claimBuildRequests(self, brids, claimed_at=None):
+    async def claimBuildRequests(self, brids, claimed_at=None):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
@@ -204,7 +202,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
     def unclaimBuildRequests(self, brids) -> defer.Deferred[None]:
         def thd(conn):
@@ -234,8 +232,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None):
+    async def completeBuildRequests(self, brids, results, complete_at=None):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
@@ -270,7 +267,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     raise NotClaimedError
             transaction.commit()
 
-        yield self.db.pool.do(thd)
+        await self.db.pool.do(thd)
 
     def set_build_requests_priority(self, brids, priority):
         def thd(conn):

@@ -40,17 +40,15 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_start_stop_repeatedly(self):
+    async def test_start_stop_repeatedly(self):
         self.svc = maildir.MaildirService(self.maildir)
         self.svc.startService()
-        yield self.svc.stopService()
+        await self.svc.stopService()
         self.svc.startService()
-        yield self.svc.stopService()
+        await self.svc.stopService()
         self.assertEqual(len(list(self.svc)), 0)
 
-    @defer.inlineCallbacks
-    def test_messageReceived(self):
+    async def test_messageReceived(self):
         self.svc = maildir.MaildirService(self.maildir)
 
         # add a fake messageReceived method
@@ -61,7 +59,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
             return defer.succeed(None)
 
         self.svc.messageReceived = messageReceived
-        yield self.svc.startService()
+        await self.svc.startService()
 
         self.assertEqual(messagesReceived, [])
 
@@ -72,7 +70,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         os.rename(tmpfile, newfile)
 
         # TODO: can we wait for a dnotify somehow, if enabled?
-        yield self.svc.poll()
+        await self.svc.poll()
 
         self.assertEqual(messagesReceived, ['newmsg'])
 

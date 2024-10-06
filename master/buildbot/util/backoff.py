@@ -15,8 +15,6 @@
 
 import time
 
-from twisted.internet import defer
-
 from buildbot.util import asyncSleep
 
 
@@ -71,7 +69,6 @@ class ExponentialBackoffEngineAsync(ExponentialBackoffEngine):
         super().__init__(*args, **kwargs)
         self.reactor = reactor
 
-    @defer.inlineCallbacks
-    def wait_on_failure(self):
+    async def wait_on_failure(self):
         seconds = self.calculate_wait_on_failure_seconds()
-        yield asyncSleep(seconds, reactor=self.reactor)
+        await asyncSleep(seconds, reactor=self.reactor)

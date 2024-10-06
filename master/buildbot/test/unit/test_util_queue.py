@@ -15,7 +15,6 @@
 
 import threading
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.util.backoff import BackoffTimeoutExceededError
@@ -82,31 +81,28 @@ class TestConnectableThreadQueue(unittest.TestCase):
     def test_no_work(self):
         self.join_queue(0)
 
-    @defer.inlineCallbacks
-    def test_single_item_called(self):
+    async def test_single_item_called(self):
         def work(conn, *args, **kwargs):
             self.assertIs(conn, self.queue.conn)
             self.assertEqual(args, ('arg',))
             self.assertEqual(kwargs, {'kwarg': 'kwvalue'})
             return 'work_result'
 
-        result = yield self.queue.execute_in_thread(work, 'arg', kwarg='kwvalue')
+        result = await self.queue.execute_in_thread(work, 'arg', kwarg='kwvalue')
         self.assertEqual(result, 'work_result')
 
         self.join_queue(1)
 
-    @defer.inlineCallbacks
-    def test_single_item_called_exception(self):
+    async def test_single_item_called_exception(self):
         def work(conn):
             raise TestException()
 
         with self.assertRaises(TestException):
-            yield self.queue.execute_in_thread(work)
+            await self.queue.execute_in_thread(work)
 
         self.join_queue(1)
 
-    @defer.inlineCallbacks
-    def test_exception_does_not_break_further_work(self):
+    async def test_exception_does_not_break_further_work(self):
         def work_exception(conn):
             raise TestException()
 
@@ -114,28 +110,26 @@ class TestConnectableThreadQueue(unittest.TestCase):
             return 'work_result'
 
         with self.assertRaises(TestException):
-            yield self.queue.execute_in_thread(work_exception)
+            await self.queue.execute_in_thread(work_exception)
 
-        result = yield self.queue.execute_in_thread(work_success)
+        result = await self.queue.execute_in_thread(work_success)
         self.assertEqual(result, 'work_result')
 
         self.join_queue(1)
 
-    @defer.inlineCallbacks
-    def test_single_item_called_disconnect(self):
+    async def test_single_item_called_disconnect(self):
         def work(conn):
             pass
 
-        yield self.queue.execute_in_thread(work)
+        await self.queue.execute_in_thread(work)
 
         self.queue.close_connection()
 
-        yield self.queue.execute_in_thread(work)
+        await self.queue.execute_in_thread(work)
 
         self.join_queue(2)
 
-    @defer.inlineCallbacks
-    def test_many_items_called_in_order(self):
+    async def test_many_items_called_in_order(self):
         self.expected_work_index = 0
 
         def work(conn, work_index):
@@ -203,8 +197,7 @@ class ConnectionErrorTests:
         if self.queue.is_alive():
             raise AssertionError('Thread is still alive')
 
-    @defer.inlineCallbacks
-    def test_resets_after_reject(self):
+    async def test_resets_after_reject(self):
         def work(conn):
             raise AssertionError('work should not be executed')
 
@@ -212,7 +205,7 @@ class ConnectionErrorTests:
             d = self.queue.execute_in_thread(work)
 
         with self.assertRaises(BackoffTimeoutExceededError):
-            yield d
+            await d
 
         self.assertEqual(self.queue.create_connection_called_count, 5)
 
@@ -220,13 +213,12 @@ class ConnectionErrorTests:
             d = self.queue.execute_in_thread(work)
 
         with self.assertRaises(BackoffTimeoutExceededError):
-            yield d
+            await d
 
         self.assertEqual(self.queue.create_connection_called_count, 10)
         self.flushLoggedErrors(TestException)
 
-    @defer.inlineCallbacks
-    def test_multiple_work_rejected(self):
+    async def test_multiple_work_rejected(self):
         def work(conn):
             raise AssertionError('work should not be executed')
 
@@ -236,11 +228,11 @@ class ConnectionErrorTests:
             d3 = self.queue.execute_in_thread(work)
 
         with self.assertRaises(BackoffTimeoutExceededError):
-            yield d1
+            await d1
         with self.assertRaises(BackoffTimeoutExceededError):
-            yield d2
+            await d2
         with self.assertRaises(BackoffTimeoutExceededError):
-            yield d3
+            await d3
 
         self.assertEqual(self.queue.create_connection_called_count, 5)
         self.flushLoggedErrors(TestException)

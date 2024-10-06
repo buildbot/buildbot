@@ -177,8 +177,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         p4port=None,
         p4user=None,
@@ -221,7 +220,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         self._ticket_login_counter = 0
 
-        yield super().reconfigService(
+        await super().reconfigService(
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
@@ -242,12 +241,11 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         d.addErrback(log.err, f'P4 poll failed on {self.p4port}, {self.p4base}')
         return d
 
-    @defer.inlineCallbacks
-    def _get_process_output(self, args):
+    async def _get_process_output(self, args):
         env = {e: os.environ.get(e) for e in self.env_vars if os.environ.get(e)}
-        res, out = yield runprocess.run_process(
+        res, out = await runprocess.run_process(
             self.master.reactor,
-            [self.p4bin] + args,
+            [self.p4bin, *args],
             env=env,
             collect_stderr=False,
             stderr_is_error=True,
@@ -269,8 +267,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
 
-    @defer.inlineCallbacks
-    def _poll(self):
+    async def _poll(self):
         if self.use_tickets:
             self._ticket_login_counter -= 1
             if self._ticket_login_counter <= 0:
@@ -278,7 +275,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 log.msg(f"P4Poller: (re)acquiring P4 ticket for {self.p4base}...")
                 protocol = TicketLoginProtocol(self.p4passwd + "\n", self.p4base)
                 self._acquireTicket(protocol)
-                yield protocol.deferred
+                await protocol.deferred
 
         args = []
         if self.p4port:
@@ -294,12 +291,12 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         else:
             args.extend(['-m', '1', f'{self.p4base}...'])
 
-        result = yield self._get_process_output(args)
+        result = await self._get_process_output(args)
         # decode the result from its designated encoding
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(f"{ex}: cannot fully decode {repr(result)} in {self.encoding}")
+            log.msg(f"{ex}: cannot fully decode {result!r} in {self.encoding}")
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
@@ -310,7 +307,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 continue
             m = self.changes_line_re.match(line)
             if not m:
-                raise P4PollerError(f"Unexpected 'p4 changes' output: {repr(result)}")
+                raise P4PollerError(f"Unexpected 'p4 changes' output: {result!r}")
             num = int(m.group('num'))
             if last_change is None:
                 # first time through, the poller just gets a "baseline" for where to
@@ -332,7 +329,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 if self.p4passwd:
                     args.extend(['-P', self.p4passwd])
             args.extend(['describe', '-s', str(num)])
-            result = yield self._get_process_output(args)
+            result = await self._get_process_output(args)
 
             # decode the result from its designated encoding
             try:
@@ -349,7 +346,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             lines[0] = lines[0].rstrip()
             m = self.describe_header_re.match(lines[0])
             if not m:
-                raise P4PollerError(f"Unexpected 'p4 describe -s' result: {repr(result)}")
+                raise P4PollerError(f"Unexpected 'p4 describe -s' result: {result!r}")
             who = self.resolvewho_callable(m.group('who'))
             when = datetime.datetime.strptime(m.group('when'), self.datefmt)
             if self.server_tz:
@@ -375,7 +372,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                     continue
                 m = self.file_re.match(line)
                 if not m:
-                    raise P4PollerError(f"Invalid file line: {repr(line)}")
+                    raise P4PollerError(f"Invalid file line: {line!r}")
                 path = m.group('path')
                 if path.startswith(self.p4base):
                     branch, file = self.split_file(path[len(self.p4base) :])
@@ -387,7 +384,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                         branch_files[branch] = [file]
 
             for branch, files in branch_files.items():
-                yield self.master.data.updates.addChange(
+                await self.master.data.updates.addChange(
                     author=who,
                     committer=None,
                     files=files,

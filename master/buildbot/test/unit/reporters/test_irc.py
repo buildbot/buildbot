@@ -19,7 +19,6 @@ import sys
 from unittest import mock
 
 from twisted.application import internet
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config import ConfigErrors
@@ -45,85 +44,72 @@ class TestIrcContact(ContactMixin, unittest.TestCase):
 
         self.contact.act = act
 
-    @defer.inlineCallbacks
-    def test_op_required_authz(self):
+    async def test_op_required_authz(self):
         self.bot.authz = self.bot.expand_authz({('mute', 'unmute'): [self.USER]})
         self.bot.getChannelOps = lambda channel: ['channelop']
         self.assertFalse((yield self.contact.op_required('mute')))
 
-    @defer.inlineCallbacks
-    def test_op_required_operator(self):
+    async def test_op_required_operator(self):
         self.bot.getChannelOps = lambda channel: [self.USER]
         self.assertFalse((yield self.contact.op_required('command')))
 
-    @defer.inlineCallbacks
-    def test_op_required_unauthorized(self):
+    async def test_op_required_unauthorized(self):
         self.bot.getChannelOps = lambda channel: ['channelop']
         self.assertTrue((yield self.contact.op_required('command')))
 
-    @defer.inlineCallbacks
-    def test_command_mute(self):
+    async def test_command_mute(self):
         self.bot.getChannelOps = lambda channel: [self.USER]
-        yield self.do_test_command('mute')
+        await self.do_test_command('mute')
         self.assertTrue(self.contact.channel.muted)
 
-    @defer.inlineCallbacks
-    def test_command_mute_unauthorized(self):
+    async def test_command_mute_unauthorized(self):
         self.bot.getChannelOps = lambda channel: []
-        yield self.do_test_command('mute')
+        await self.do_test_command('mute')
         self.assertFalse(self.contact.channel.muted)
         self.assertIn("blah, blah", self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_unmute(self):
+    async def test_command_unmute(self):
         self.bot.getChannelOps = lambda channel: [self.USER]
         self.contact.channel.muted = True
-        yield self.do_test_command('unmute')
+        await self.do_test_command('unmute')
         self.assertFalse(self.contact.channel.muted)
 
-    @defer.inlineCallbacks
-    def test_command_unmute_unauthorized(self):
+    async def test_command_unmute_unauthorized(self):
         self.bot.getChannelOps = lambda channel: []
         self.contact.channel.muted = True
-        yield self.do_test_command('unmute')
+        await self.do_test_command('unmute')
         self.assertTrue(self.contact.channel.muted)
 
-    @defer.inlineCallbacks
-    def test_command_unmute_not_muted(self):
+    async def test_command_unmute_not_muted(self):
         self.bot.getChannelOps = lambda channel: [self.USER]
-        yield self.do_test_command('unmute')
+        await self.do_test_command('unmute')
         self.assertFalse(self.contact.channel.muted)
         self.assertIn("No one had told me to be quiet", self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_notify(self):
+    async def test_command_notify(self):
         self.bot.getChannelOps = lambda channel: [self.USER]
         self.assertNotIn('success', self.contact.channel.notify_events)
-        yield self.do_test_command('notify', 'on success')
+        await self.do_test_command('notify', 'on success')
         self.assertIn('success', self.contact.channel.notify_events)
 
-    @defer.inlineCallbacks
-    def test_command_notify_unauthorized(self):
+    async def test_command_notify_unauthorized(self):
         self.bot.getChannelOps = lambda channel: []
         self.assertNotIn('success', self.contact.channel.notify_events)
-        yield self.do_test_command('notify', 'on success')
+        await self.do_test_command('notify', 'on success')
         self.assertNotIn('success', self.contact.channel.notify_events)
 
-    @defer.inlineCallbacks
-    def test_command_destroy(self):
+    async def test_command_destroy(self):
         self.patch_act()
-        yield self.do_test_command('destroy', exp_usage=False)
+        await self.do_test_command('destroy', exp_usage=False)
         self.assertEqual(self.actions, ['readies phasers'])
 
-    @defer.inlineCallbacks
-    def test_command_dance(self):
-        yield self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
+    async def test_command_dance(self):
+        await self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
         self.assertTrue(self.sent)  # doesn't matter what it sent
 
-    @defer.inlineCallbacks
-    def test_command_hustle(self):
+    async def test_command_hustle(self):
         self.patch_act()
-        yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
+        await self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
         self.assertEqual(self.actions, ['does the hustle'])
 
     def test_send(self):
@@ -538,18 +524,16 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         self.patch(internet, 'TCPClient', TCPClient)
         return irc.IRC(**kwargs)
 
-    @defer.inlineCallbacks
-    def test_constr(self):
+    async def test_constr(self):
         ircStatus = self.makeIRC(host='foo', port=123)
-        yield ircStatus.startService()
+        await ircStatus.startService()
 
         self.client.setServiceParent.assert_called_with(ircStatus)
         self.assertEqual(self.client.host, 'foo')
         self.assertEqual(self.client.port, 123)
         self.assertIsInstance(self.client.factory, irc.IrcStatusFactory)
 
-    @defer.inlineCallbacks
-    def test_constr_args(self):
+    async def test_constr_args(self):
         # test that the args to IRC(..) make it all the way down to
         # the IrcStatusBot class
         s = self.makeIRC(
@@ -572,7 +556,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             failedDelay=20,
             useColors=False,
         )
-        yield s.startService()
+        await s.startService()
 
         # patch it up
         factory = self.factory
@@ -604,12 +588,12 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         return irc.stopService()
 
     # deprecated
-    @defer.inlineCallbacks
-    def test_allowForce_allowShutdown(self):
+
+    async def test_allowForce_allowShutdown(self):
         s = self.makeIRC(
             host='host', nick='nick', channels=['channels'], allowForce=True, allowShutdown=False
         )
-        yield s.startService()
+        await s.startService()
         self.assertEqual(
             words.StatusBot.expand_authz(s.authz), {'FORCE': True, 'STOP': True, 'SHUTDOWN': False}
         )

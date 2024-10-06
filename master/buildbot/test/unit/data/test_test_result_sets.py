@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import test_result_sets
@@ -57,9 +56,8 @@ class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing_result_set(self):
-        result = yield self.callGet(('test_result_sets', 13))
+    async def test_get_existing_result_set(self):
+        result = await self.callGet(('test_result_sets', 13))
         self.validateData(result)
         self.assertEqual(
             result,
@@ -77,9 +75,8 @@ class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_get_missing_result_set(self):
-        results = yield self.callGet(('test_result_sets', 14))
+    async def test_get_missing_result_set(self):
+        results = await self.callGet(('test_result_sets', 14))
         self.assertIsNone(results)
 
 
@@ -124,30 +121,26 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_result_sets_builders_builderid(self):
-        results = yield self.callGet(('builders', 88, 'test_result_sets'))
+    async def test_get_result_sets_builders_builderid(self):
+        results = await self.callGet(('builders', 88, 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
-    @defer.inlineCallbacks
-    def test_get_result_sets_builders_buildername(self):
-        results = yield self.callGet(('builders', 'b1', 'test_result_sets'))
+    async def test_get_result_sets_builders_buildername(self):
+        results = await self.callGet(('builders', 'b1', 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
-    @defer.inlineCallbacks
-    def test_get_result_sets_builds_buildid(self):
-        results = yield self.callGet(('builds', 30, 'test_result_sets'))
+    async def test_get_result_sets_builds_buildid(self):
+        results = await self.callGet(('builds', 30, 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
-    @defer.inlineCallbacks
-    def test_get_result_sets_steps_stepid(self):
-        results = yield self.callGet(('steps', 131, 'test_result_sets'))
+    async def test_get_result_sets_steps_stepid(self):
+        results = await self.callGet(('steps', 131, 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
@@ -173,9 +166,8 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
             pass
 
-    @defer.inlineCallbacks
-    def test_add_test_result_set(self):
-        test_result_setid = yield self.rtype.addTestResultSet(
+    async def test_add_test_result_set(self):
+        test_result_setid = await self.rtype.addTestResultSet(
             builderid=1, buildid=2, stepid=3, description='desc', category='cat4', value_unit='ms'
         )
 
@@ -196,7 +188,7 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             (('test_result_sets', str(test_result_setid), 'new'), msg_body),
         ])
 
-        result = yield self.master.db.test_result_sets.getTestResultSet(test_result_setid)
+        result = await self.master.db.test_result_sets.getTestResultSet(test_result_setid)
         self.assertEqual(
             result,
             TestResultSetModel(
@@ -213,13 +205,12 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_complete_test_result_set_no_results(self):
-        test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
+    async def test_complete_test_result_set_no_results(self):
+        test_result_setid = await self.master.db.test_result_sets.addTestResultSet(
             builderid=1, buildid=2, stepid=3, description='desc', category='cat4', value_unit='ms'
         )
 
-        yield self.rtype.completeTestResultSet(test_result_setid)
+        await self.rtype.completeTestResultSet(test_result_setid)
 
         msg_body = {
             'test_result_setid': test_result_setid,
@@ -238,7 +229,7 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             (('test_result_sets', str(test_result_setid), 'completed'), msg_body),
         ])
 
-        result = yield self.master.db.test_result_sets.getTestResultSet(test_result_setid)
+        result = await self.master.db.test_result_sets.getTestResultSet(test_result_setid)
         self.assertEqual(
             result,
             TestResultSetModel(
@@ -255,13 +246,12 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_complete_test_result_set_with_results(self):
-        test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
+    async def test_complete_test_result_set_with_results(self):
+        test_result_setid = await self.master.db.test_result_sets.addTestResultSet(
             builderid=1, buildid=2, stepid=3, description='desc', category='cat4', value_unit='ms'
         )
 
-        yield self.rtype.completeTestResultSet(test_result_setid, tests_passed=12, tests_failed=34)
+        await self.rtype.completeTestResultSet(test_result_setid, tests_passed=12, tests_failed=34)
 
         msg_body = {
             'test_result_setid': test_result_setid,
@@ -280,7 +270,7 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             (('test_result_sets', str(test_result_setid), 'completed'), msg_body),
         ])
 
-        result = yield self.master.db.test_result_sets.getTestResultSet(test_result_setid)
+        result = await self.master.db.test_result_sets.getTestResultSet(test_result_setid)
         self.assertEqual(
             result,
             TestResultSetModel(

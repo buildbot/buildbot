@@ -19,7 +19,6 @@ HVAC based providers
 import importlib.metadata
 
 from packaging.version import parse as parse_version
-from twisted.internet import defer
 from twisted.internet import threads
 
 from buildbot import config
@@ -185,8 +184,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
         return response
 
-    @defer.inlineCallbacks
-    def get(self, entry):
+    async def get(self, entry):
         """
         get the value from vault secret backend
         """
@@ -207,7 +205,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         name = parts[0]
         key = parts[1]
 
-        response = yield threads.deferToThread(self.thd_hvac_get, path=name)
+        response = await threads.deferToThread(self.thd_hvac_get, path=name)
 
         # in KVv2 we have extra "data" dictionary, as vault provides metadata as well
         if self.api_version == 2:

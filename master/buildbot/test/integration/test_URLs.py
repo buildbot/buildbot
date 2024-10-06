@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.python import runtime
 
 from buildbot.process.results import SUCCESS
@@ -27,8 +26,7 @@ from buildbot.test.util.integration import RunMasterBase
 class UrlForBuildMaster(RunMasterBase):
     proto = "null"
 
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -42,13 +40,12 @@ class UrlForBuildMaster(RunMasterBase):
         # do a bunch of transfer to exercise the protocol
         f.addStep(steps.ShellCommand(command=["echo", util.URLForBuild]))
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_url(self):
-        yield self.setup_config()
+    async def test_url(self):
+        await self.setup_config()
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
         if runtime.platformType == 'win32':
             command = "echo http://localhost:8080/#/builders/1/builds/1"

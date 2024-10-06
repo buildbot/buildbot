@@ -114,30 +114,27 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
         self.bot.send_sticker = send_sticker
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         ContactMixin.setUp(self)
         self.contact1 = self.contactClass(
             user=self.USER, channel=self.channelClass(self.bot, self.PRIVATE)
         )
-        yield self.contact1.channel.setServiceParent(self.master)
+        await self.contact1.channel.setServiceParent(self.master)
 
-    @defer.inlineCallbacks
-    def test_list_notified_events(self):
+    async def test_list_notified_events(self):
         self.patch_send()
         channel = telegram.TelegramChannel(self.bot, self.CHANNEL)
         channel.notify_events = {'success'}
-        yield channel.list_notified_events()
+        await channel.list_notified_events()
         self.assertEqual(
             self.sent[0][1], "The following events are being notified:\n🔔 **success**"
         )
 
-    @defer.inlineCallbacks
-    def test_list_notified_events_empty(self):
+    async def test_list_notified_events_empty(self):
         self.patch_send()
         channel = telegram.TelegramChannel(self.bot, self.CHANNEL)
         channel.notify_events = set()
-        yield channel.list_notified_events()
+        await channel.list_notified_events()
         self.assertEqual(self.sent[0][1], "🔕 No events are being notified.")
 
     def testDescribeUser(self):
@@ -146,18 +143,16 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     def testDescribeUserInGroup(self):
         self.assertEqual(self.contact.describeUser(), "Harry Potter (@harrypotter) on 'Hogwards'")
 
-    @defer.inlineCallbacks
-    def test_access_denied(self):
+    async def test_access_denied(self):
         self.patch_send()
         self.contact1.ACCESS_DENIED_MESSAGES = ["ACCESS DENIED"]
-        yield self.contact1.access_denied(tmessage={'message_id': 123})
+        await self.contact1.access_denied(tmessage={'message_id': 123})
         self.assertEqual("ACCESS DENIED", self.sent[0][1])
 
-    @defer.inlineCallbacks
-    def test_access_denied_group(self):
+    async def test_access_denied_group(self):
         self.patch_send()
         self.contact.ACCESS_DENIED_MESSAGES = ["ACCESS DENIED"]
-        yield self.contact.access_denied(tmessage={'message_id': 123})
+        await self.contact.access_denied(tmessage={'message_id': 123})
         self.assertEqual("ACCESS DENIED", self.sent[0][1])
 
     def test_query_button_short(self):
@@ -194,18 +189,15 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.assertEqual(result, {'text': "Hello", 'callback_data': key + 1})
         self.assertEqual(self.bot.query_cache[key + 1], payload)
 
-    @defer.inlineCallbacks
-    def test_command_start(self):
-        yield self.do_test_command('start', exp_usage=False)
+    async def test_command_start(self):
+        await self.do_test_command('start', exp_usage=False)
         self.assertEqual(self.sent[0][0], self.CHANNEL['id'])
 
-    @defer.inlineCallbacks
-    def test_command_nay(self):
-        yield self.do_test_command('nay', contact=self.contact1, tmessage={})
+    async def test_command_nay(self):
+        await self.do_test_command('nay', contact=self.contact1, tmessage={})
 
-    @defer.inlineCallbacks
-    def test_command_nay_reply_markup(self):
-        yield self.do_test_command(
+    async def test_command_nay_reply_markup(self):
+        await self.do_test_command(
             'nay',
             tmessage={
                 'reply_to_message': {
@@ -215,26 +207,22 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_commmand_commands(self):
-        yield self.do_test_command('commands')
+    async def test_commmand_commands(self):
+        await self.do_test_command('commands')
         self.assertEqual(self.sent[0][0], self.CHANNEL['id'])
 
-    @defer.inlineCallbacks
-    def test_commmand_commands_botfather(self):
-        yield self.do_test_command('commands', 'botfather')
+    async def test_commmand_commands_botfather(self):
+        await self.do_test_command('commands', 'botfather')
         self.assertEqual(self.sent[0][0], self.CHANNEL['id'])
         self.assertRegex(self.sent[0][1], r"^\w+ - \S+")
 
-    @defer.inlineCallbacks
-    def test_command_getid_private(self):
-        yield self.do_test_command('getid', contact=self.contact1)
+    async def test_command_getid_private(self):
+        await self.do_test_command('getid', contact=self.contact1)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(str(self.USER['id']), self.sent[0][1])
 
-    @defer.inlineCallbacks
-    def test_command_getid_group(self):
-        yield self.do_test_command('getid')
+    async def test_command_getid_group(self):
+        await self.do_test_command('getid')
         self.assertIn(str(self.USER['id']), self.sent[0][1])
         self.assertIn(str(self.CHANNEL['id']), self.sent[1][1])
 
@@ -247,73 +235,63 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             dataset = [b['callback_data'] for row in keyboard for b in row]
             self.assertIn(data, dataset)
 
-    @defer.inlineCallbacks
-    def test_command_list(self):
-        yield self.do_test_command('list')
+    async def test_command_list(self):
+        await self.do_test_command('list')
         self.assertButton('/list builders')
         self.assertButton('/list workers')
         self.assertButton('/list changes')
 
-    @defer.inlineCallbacks
-    def test_command_list_builders(self):
-        yield self.do_test_command('list', 'all builders')
+    async def test_command_list_builders(self):
+        await self.do_test_command('list', 'all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
             self.assertIn(f'`{builder}` ❌', self.sent[0][1])
 
-    @defer.inlineCallbacks
-    def test_command_list_workers(self):
+    async def test_command_list_workers(self):
         workers = ['worker1', 'worker2']
         for worker in workers:
             self.master.db.workers.db.insert_test_data([fakedb.Worker(name=worker)])
-        yield self.do_test_command('list', args='all workers')
+        await self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
             self.assertIn(f'`{worker}` ❌', self.sent[0][1])
 
-    @defer.inlineCallbacks
-    def test_command_list_workers_online(self):
+    async def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
         self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)])
-        yield self.do_test_command('list', args='all workers')
+        await self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         self.assertNotIn('`linux1` ⚠️', self.sent[0][1])
         self.assertIn('`linux2` ⚠️', self.sent[0][1])
 
-    @defer.inlineCallbacks
-    def test_command_list_changes(self):
+    async def test_command_list_changes(self):
         self.master.db.workers.db.insert_test_data([fakedb.Change()])
-        yield self.do_test_command('list', args='2 changes')
+        await self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 2)
 
-    @defer.inlineCallbacks
-    def test_command_list_changes_long(self):
+    async def test_command_list_changes_long(self):
         self.master.db.workers.db.insert_test_data([fakedb.Change() for i in range(200)])
-        yield self.do_test_command('list', args='all changes')
+        await self.do_test_command('list', args='all changes')
         self.assertIn('reply_markup', self.sent[1][2])
 
-    @defer.inlineCallbacks
-    def test_command_watch(self):
+    async def test_command_watch(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('watch')
+        await self.do_test_command('watch')
         self.assertButton('/watch builder1')
 
-    @defer.inlineCallbacks
-    def test_command_watch_no_builds(self):
-        yield self.do_test_command('watch')
+    async def test_command_watch_no_builds(self):
+        await self.do_test_command('watch')
 
-    @defer.inlineCallbacks
-    def test_command_stop_no_args(self):
+    async def test_command_stop_no_args(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('stop')
+        await self.do_test_command('stop')
         self.assertButton('/stop build builder1')
 
-    @defer.inlineCallbacks
-    def test_command_stop_ask_reason(self):
+    async def test_command_stop_ask_reason(self):
         self.patch_send()
         self.setupSomeBuilds()
-        yield self.do_test_command('stop', 'build builder1')
+        await self.do_test_command('stop', 'build builder1')
         self.assertIn("give me the reason", self.sent[0][1])
         self.assertEqual(self.contact.template, "/stop build builder1 {}")
 
@@ -341,17 +319,15 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.contact1.ask_for_reply("test", None)
         self.assertEqual(self.sent[0][1], "Test...")
 
-    @defer.inlineCallbacks
-    def test_command_notify_no_args(self):
+    async def test_command_notify_no_args(self):
         self.patch_send()
         self.contact.channel.notify_events = {'success', 'failure'}
-        yield self.do_test_command('notify')
+        await self.do_test_command('notify')
         self.assertButton('/notify on-quiet finished')
         self.assertButton('/notify off-quiet success')
         self.assertButton('/notify list')
 
-    @defer.inlineCallbacks
-    def test_command_notify_list_with_query(self):
+    async def test_command_notify_list_with_query(self):
         self.patch_send()
 
         def delete_message(chat, msg):
@@ -360,11 +336,10 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         delete_message.msg = None
         self.bot.delete_message = delete_message
 
-        yield self.do_test_command('notify', 'list', tquery={'message': {'message_id': 2345}})
+        await self.do_test_command('notify', 'list', tquery={'message': {'message_id': 2345}})
         self.assertEqual(delete_message.msg, 2345)
 
-    @defer.inlineCallbacks
-    def test_command_notify_toggle(self):
+    async def test_command_notify_toggle(self):
         self.patch_send()
 
         def edit_keyboard(chat, msg, keyboard):
@@ -373,21 +348,19 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.bot.edit_keyboard = edit_keyboard
 
         self.contact.channel.notify_events = {'success', 'failure'}
-        yield self.do_test_command(
+        await self.do_test_command(
             'notify', 'on-quiet finished', tquery={'message': {'message_id': 2345}}
         )
         self.assertIn('finished', self.contact.channel.notify_events)
         self.assertButton('/notify off-quiet finished')
 
-    @defer.inlineCallbacks
-    def test_command_shutdown(self):
-        yield self.do_test_command('shutdown')
+    async def test_command_shutdown(self):
+        await self.do_test_command('shutdown')
         self.assertButton('/shutdown start')
         self.assertButton('/shutdown now')
 
-    @defer.inlineCallbacks
-    def test_command_shutdown_shutting_down(self):
-        yield self.do_test_command('shutdown', shuttingDown=True)
+    async def test_command_shutdown_shutting_down(self):
+        await self.do_test_command('shutdown', shuttingDown=True)
         self.assertButton('/shutdown stop')
         self.assertButton('/shutdown now')
 
@@ -422,55 +395,46 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             self.schedulers.append(scheduler2)
         self.bot.master.allSchedulers = self.allSchedulers
 
-    @defer.inlineCallbacks
-    def test_command_force_no_schedulers(self):
-        yield self.do_test_command('force', exp_UsageError=True)
+    async def test_command_force_no_schedulers(self):
+        await self.do_test_command('force', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_noargs_multiple_schedulers(self):
+    async def test_command_force_noargs_multiple_schedulers(self):
         self.make_forcescheduler(two=True)
-        yield self.do_test_command('force')
+        await self.do_test_command('force')
         self.assertButton('/force force1')
         self.assertButton('/force force2')
 
-    @defer.inlineCallbacks
-    def test_command_force_noargs(self):
+    async def test_command_force_noargs(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force')
+        await self.do_test_command('force')
         self.assertButton('/force force1 config builder1')
         self.assertButton('/force force1 config builder2')
 
-    @defer.inlineCallbacks
-    def test_command_force_only_scheduler(self):
+    async def test_command_force_only_scheduler(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1')
+        await self.do_test_command('force', 'force1')
         self.assertButton('/force force1 config builder1')
         self.assertButton('/force force1 config builder2')
 
-    @defer.inlineCallbacks
-    def test_command_force_bad_scheduler(self):
+    async def test_command_force_bad_scheduler(self):
         self.make_forcescheduler(two=True)
-        yield self.do_test_command('force', 'force3', exp_UsageError=True)
+        await self.do_test_command('force', 'force3', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_bad_builder(self):
+    async def test_command_force_bad_builder(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 config builder0', exp_UsageError=True)
+        await self.do_test_command('force', 'force1 config builder0', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_bad_command(self):
+    async def test_command_force_bad_command(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 bad builder1', exp_UsageError=True)
+        await self.do_test_command('force', 'force1 bad builder1', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_only_bad_command(self):
+    async def test_command_force_only_bad_command(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'bad builder1', exp_UsageError=True)
+        await self.do_test_command('force', 'bad builder1', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_config(self):
+    async def test_command_force_config(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 config builder1')
+        await self.do_test_command('force', 'force1 config builder1')
         self.assertButton('/force force1 ask reason builder1 ')
         self.assertButton('/force force1 ask branch builder1 ')
         self.assertButton('/force force1 ask project builder1 ')
@@ -479,34 +443,29 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         self.assertButton('/force force1 ask second_project builder1 ')
         self.assertButton('/force force1 ask second_revision builder1 ')
 
-    @defer.inlineCallbacks
-    def test_command_force_config_more(self):
+    async def test_command_force_config_more(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 config builder1 branch=master')
+        await self.do_test_command('force', 'force1 config builder1 branch=master')
         self.assertButton('/force force1 ask reason builder1 branch=master')
 
-    @defer.inlineCallbacks
-    def test_command_force_config_nothing_missing(self):
+    async def test_command_force_config_nothing_missing(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 config builder1 reason=Ok')
+        await self.do_test_command('force', 'force1 config builder1 reason=Ok')
         self.assertButton('/force force1 build builder1 reason=Ok')
 
-    @defer.inlineCallbacks
-    def test_command_force_ask(self):
+    async def test_command_force_ask(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 ask reason builder1 branch=master')
+        await self.do_test_command('force', 'force1 ask reason builder1 branch=master')
         self.assertEqual(
             self.contact.template, '/force force1 config builder1 branch=master reason={}'
         )
 
-    @defer.inlineCallbacks
-    def test_command_force_build_missing(self):
+    async def test_command_force_build_missing(self):
         self.make_forcescheduler()
-        yield self.do_test_command('force', 'force1 build builder1')
+        await self.do_test_command('force', 'force1 build builder1')
         self.assertButton('/force force1 ask reason builder1 ')
 
-    @defer.inlineCallbacks
-    def test_command_force_build(self):
+    async def test_command_force_build(self):
         self.make_forcescheduler()
 
         force_args = {}
@@ -516,7 +475,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
         self.schedulers[0].force = force
 
-        yield self.do_test_command('force', 'force1 build builder1 reason=Good')
+        await self.do_test_command('force', 'force1 build builder1 reason=Good')
         self.assertEqual(self.sent[0][1], "Force build successfully requested.")
 
         expected = {
@@ -554,21 +513,19 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         self.http = None
 
-    @defer.inlineCallbacks
-    def setup_http_service(self):
-        self.http = yield fakehttpclientservice.HTTPClientService.getService(
+    async def setup_http_service(self):
+        self.http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, self.URL
         )
 
     def setup_http_session(self):
         return httpclientservice.HTTPSession(self.master.httpservice, self.URL)
 
-    @defer.inlineCallbacks
-    def makeBot(self, chat_ids=None, authz=None, *args, **kwargs):
+    async def makeBot(self, chat_ids=None, authz=None, *args, **kwargs):
         if chat_ids is None:
             chat_ids = []
         if self.http is None:
-            yield self.setup_http_service()
+            await self.setup_http_service()
         www = get_plugins('www', None, load_now=True)
         if 'base' not in www:
             raise SkipTest('telegram tests need buildbot-www installed')
@@ -576,9 +533,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             '12345:secret', self.setup_http_session(), chat_ids, authz, *args, **kwargs
         )
 
-    @defer.inlineCallbacks
-    def test_getContact(self):
-        bot = yield self.makeBot()
+    async def test_getContact(self):
+        bot = await self.makeBot()
         c1 = bot.getContact(self.USER, self.PRIVATE)
         c2 = bot.getContact(self.USER, self.CHANNEL)
         c1b = bot.getContact(self.USER, self.PRIVATE)
@@ -587,10 +543,9 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.assertIn((-12345678, 123456789), bot.contacts)
         self.assertEqual({123456789, -12345678}, set(bot.channels.keys()))
 
-    @defer.inlineCallbacks
-    def test_getContact_update(self):
+    async def test_getContact_update(self):
         try:
-            bot = yield self.makeBot()
+            bot = await self.makeBot()
             contact = bot.getContact(self.USER, self.CHANNEL)
             updated_user = self.USER.copy()
             updated_user['username'] = "dirtyharry"
@@ -600,9 +555,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         finally:
             self.USER['username'] = "harrypotter"
 
-    @defer.inlineCallbacks
-    def test_getContact_invalid(self):
-        bot = yield self.makeBot()
+    async def test_getContact_invalid(self):
+        bot = await self.makeBot()
         bot.authz = {'': None}
 
         u = bot.getContact(user=self.USER, channel=self.CHANNEL)
@@ -616,23 +570,20 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             del u
             self.assertEqual(sys.getrefcount(c), 2)  # local, sys
 
-    @defer.inlineCallbacks
-    def test_getContact_valid(self):
-        bot = yield self.makeBot()
+    async def test_getContact_valid(self):
+        bot = await self.makeBot()
         bot.authz = {'': None, 'command': 123456789}
 
         bot.getContact(user=self.USER, channel=self.CHANNEL)
         self.assertIn((-12345678, 123456789), bot.contacts)
 
-    @defer.inlineCallbacks
-    def test_set_webhook(self):
-        bot = yield self.makeBot()
+    async def test_set_webhook(self):
+        bot = await self.makeBot()
         self.http.expect("post", "/setWebhook", json={'url': 'our.webhook'}, content_json={'ok': 1})
-        yield bot.set_webhook('our.webhook')
+        await bot.set_webhook('our.webhook')
 
-    @defer.inlineCallbacks
-    def test_set_webhook_cert(self):
-        bot = yield self.makeBot()
+    async def test_set_webhook_cert(self):
+        bot = await self.makeBot()
         self.http.expect(
             "post",
             "/setWebhook",
@@ -640,23 +591,21 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             files={'certificate': b"this is certificate"},
             content_json={'ok': 1},
         )
-        yield bot.set_webhook('our.webhook', "this is certificate")
+        await bot.set_webhook('our.webhook', "this is certificate")
 
-    @defer.inlineCallbacks
-    def test_send_message(self):
-        bot = yield self.makeBot()
+    async def test_send_message(self):
+        bot = await self.makeBot()
         self.http.expect(
             "post",
             "/sendMessage",
             json={'chat_id': 1234, 'text': 'Hello', 'parse_mode': 'Markdown'},
             content_json={'ok': 1, 'result': {'message_id': 9876}},
         )
-        m = yield bot.send_message(1234, 'Hello')
+        m = await bot.send_message(1234, 'Hello')
         self.assertEqual(m['message_id'], 9876)
 
-    @defer.inlineCallbacks
-    def test_send_message_long(self):
-        bot = yield self.makeBot()
+    async def test_send_message_long(self):
+        bot = await self.makeBot()
 
         text1 = '\n'.join(f"{i + 1:039}" for i in range(102))
         text2 = '\n'.join(f"{i + 1:039}" for i in range(102, 204))
@@ -692,54 +641,50 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         )
 
         text = '\n'.join(f"{i + 1:039}" for i in range(250))
-        m = yield bot.send_message(
+        m = await bot.send_message(
             1234, text, reply_markup={'inline_keyboard': 'keyboard'}, reply_to_message_id=1000
         )
         self.assertEqual(m['message_id'], 1003)
 
-    @defer.inlineCallbacks
-    def test_edit_message(self):
-        bot = yield self.makeBot()
+    async def test_edit_message(self):
+        bot = await self.makeBot()
         self.http.expect(
             "post",
             "/editMessageText",
             json={'chat_id': 1234, 'message_id': 9876, 'text': 'Hello', 'parse_mode': 'Markdown'},
             content_json={'ok': 1, 'result': {'message_id': 9876}},
         )
-        m = yield bot.edit_message(1234, 9876, 'Hello')
+        m = await bot.edit_message(1234, 9876, 'Hello')
         self.assertEqual(m['message_id'], 9876)
 
-    @defer.inlineCallbacks
-    def test_delete_message(self):
-        bot = yield self.makeBot()
+    async def test_delete_message(self):
+        bot = await self.makeBot()
         self.http.expect(
             "post",
             "/deleteMessage",
             json={'chat_id': 1234, 'message_id': 9876},
             content_json={'ok': 1},
         )
-        yield bot.delete_message(1234, 9876)
+        await bot.delete_message(1234, 9876)
 
-    @defer.inlineCallbacks
-    def test_send_sticker(self):
-        bot = yield self.makeBot()
+    async def test_send_sticker(self):
+        bot = await self.makeBot()
         self.http.expect(
             "post",
             "/sendSticker",
             json={'chat_id': 1234, 'sticker': 'xxxxx'},
             content_json={'ok': 1, 'result': {'message_id': 9876}},
         )
-        m = yield bot.send_sticker(1234, 'xxxxx')
+        m = await bot.send_sticker(1234, 'xxxxx')
         self.assertEqual(m['message_id'], 9876)
 
-    @defer.inlineCallbacks
-    def test_set_nickname(self):
-        bot = yield self.makeBot()
+    async def test_set_nickname(self):
+        bot = await self.makeBot()
         self.assertIsNone(bot.nickname)
         self.http.expect(
             "post", "/getMe", content_json={'ok': 1, 'result': {'username': 'testbot'}}
         )
-        yield bot.set_nickname()
+        await bot.set_nickname()
         self.assertEqual(bot.nickname, 'testbot')
 
     def prepare_request(self, **kwargs):
@@ -778,35 +723,31 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             }
         )
 
-    @defer.inlineCallbacks
-    def test_get_update(self):
-        bot = yield self.makeBot()
+    async def test_get_update(self):
+        bot = await self.makeBot()
         request = self.request_message("test")
         update = bot.get_update(request)
         self.assertEqual(update['message']['from'], self.USER)
         self.assertEqual(update['message']['chat'], self.CHANNEL)
 
-    @defer.inlineCallbacks
-    def test_get_update_bad_content_type(self):
-        bot = yield self.makeBot()
+    async def test_get_update_bad_content_type(self):
+        bot = await self.makeBot()
         request = self.request_message("test")
         request.received_headers[b'Content-Type'] = b"application/data"
         with self.assertRaises(ValueError):
             bot.get_update(request)
 
-    @defer.inlineCallbacks
-    def test_render_POST(self):
+    async def test_render_POST(self):
         # This actually also tests process_incoming
-        bot = yield self.makeBot()
+        bot = await self.makeBot()
         bot.contactClass = FakeContact
         request = self.request_message("test")
         bot.webhook.render_POST(request)
         contact = bot.getContact(self.USER, self.CHANNEL)
         self.assertEqual(contact.messages, ["test"])
 
-    @defer.inlineCallbacks
-    def test_parse_query_cached(self):
-        bot = yield self.makeBot()
+    async def test_parse_query_cached(self):
+        bot = await self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache.update({100: "good"})
         self.http.expect(
@@ -819,9 +760,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.process_webhook(request)
         self.assertEqual(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
-    @defer.inlineCallbacks
-    def test_parse_query_cached_dict(self):
-        bot = yield self.makeBot()
+    async def test_parse_query_cached_dict(self):
+        bot = await self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache = {100: {'command': "good", 'notify': "hello"}}
         self.http.expect(
@@ -834,9 +774,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.process_webhook(request)
         self.assertEqual(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
-    @defer.inlineCallbacks
-    def test_parse_query_explicit(self):
-        bot = yield self.makeBot()
+    async def test_parse_query_explicit(self):
+        bot = await self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache = {100: "bad"}
         self.http.expect(
@@ -849,9 +788,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         bot.process_webhook(request)
         self.assertEqual(bot.getContact(self.USER, self.CHANNEL).messages, ["good"])
 
-    @defer.inlineCallbacks
-    def test_parse_query_bad(self):
-        bot = yield self.makeBot()
+    async def test_parse_query_bad(self):
+        bot = await self.makeBot()
         bot.contactClass = FakeContact
         bot.query_cache.update({100: "bad"})
         self.http.expect(
@@ -877,9 +815,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             updates, '12345:secret', self.setup_http_session(), chat_ids, authz, *args, **kwargs
         )
 
-    @defer.inlineCallbacks
-    def test_polling(self):
-        yield self.setup_http_service()
+    async def test_polling(self):
+        await self.setup_http_service()
         bot = self.makePollingBot(2)
         bot._polling_continue = True
         self.http.expect("post", "/deleteWebhook", content_json={"ok": 1})
@@ -929,17 +866,15 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             json={'chat_id': -12345678, 'text': 'Never mind, Harry...', 'parse_mode': 'Markdown'},
             content_json={'ok': 1, 'result': {'message_id': 125}},
         )
-        yield bot.do_polling()
+        await bot.do_polling()
 
-    @defer.inlineCallbacks
-    def test_format_build_status(self):
-        bot = yield self.makeBot()
+    async def test_format_build_status(self):
+        bot = await self.makeBot()
         build = {'results': SUCCESS}
         self.assertEqual(bot.format_build_status(build), "completed successfully ✅")
 
-    @defer.inlineCallbacks
-    def test_format_build_status_short(self):
-        bot = yield self.makeBot()
+    async def test_format_build_status_short(self):
+        bot = await self.makeBot()
         build = {'results': WARNINGS}
         self.assertEqual(bot.format_build_status(build, short=True), " ⚠️")
 
@@ -962,14 +897,13 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
             return super()._do_request(session, method, ep, **kwargs)
 
     # returns a Deferred
-    @defer.inlineCallbacks
-    def setup_http_service_with_errors(self, skip, errs):
-        url = 'https://api.telegram.org/bot12345:secret'
-        self.http = yield self.HttpServiceWithErrors.getService(self.master, self, skip, errs, url)
 
-    @defer.inlineCallbacks
-    def test_post_not_ok(self):
-        bot = yield self.makeBot()
+    async def setup_http_service_with_errors(self, skip, errs):
+        url = 'https://api.telegram.org/bot12345:secret'
+        self.http = await self.HttpServiceWithErrors.getService(self.master, self, skip, errs, url)
+
+    async def test_post_not_ok(self):
+        bot = await self.makeBot()
         self.http.expect("post", "/post", content_json={'ok': 0})
 
         def log(msg):
@@ -978,13 +912,12 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         logs = []
         bot.log = log
 
-        yield bot.post("/post")
+        await bot.post("/post")
         self.assertIn("ERROR", logs[0])
 
-    @defer.inlineCallbacks
-    def test_post_need_repeat(self):
-        yield self.setup_http_service_with_errors(0, 2)
-        bot = yield self.makeBot()
+    async def test_post_need_repeat(self):
+        await self.setup_http_service_with_errors(0, 2)
+        bot = await self.makeBot()
         self.http.expect("post", "/post", content_json={'ok': 1})
 
         def log(msg):
@@ -1000,9 +933,8 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
         self.assertTrue(self.http.succeeded)
 
-    @defer.inlineCallbacks
-    def test_polling_need_repeat(self):
-        yield self.setup_http_service_with_errors(1, 2)
+    async def test_polling_need_repeat(self):
+        await self.setup_http_service_with_errors(1, 2)
         bot = self.makePollingBot(1)
         bot.reactor = self.reactor
         bot._polling_continue = True

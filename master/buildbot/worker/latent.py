@@ -276,8 +276,7 @@ class AbstractLatentWorker(AbstractWorker):
             self.substantiation_build = build
         return d
 
-    @defer.inlineCallbacks
-    def _substantiate(self, build):
+    async def _substantiate(self, build):
         assert self.state == States.SUBSTANTIATING
         try:
             # if build_wait_timeout is negative we don't ever disconnect the
@@ -287,15 +286,15 @@ class AbstractLatentWorker(AbstractWorker):
 
             start_success = True
             if ILatentMachine.providedBy(self.machine):
-                start_success = yield self.machine.substantiate(self)
+                start_success = await self.machine.substantiate(self)
 
             try:
                 self._log_start_stop_locked('substantiating')
-                yield self._start_stop_lock.acquire()
+                await self._start_stop_lock.acquire()
 
                 if start_success:
                     self.state = States.SUBSTANTIATING_STARTING
-                    start_success = yield self.start_instance(build)
+                    start_success = await self.start_instance(build)
             finally:
                 self._start_stop_lock.release()
 
@@ -331,8 +330,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         self._substantiation_notifier.notify(result)
 
-    @defer.inlineCallbacks
-    def attached(self, conn):
+    async def attached(self, conn):
         self._stop_check_instance_timer()
 
         if self.state != States.SUBSTANTIATING_STARTING and self.build_wait_timeout >= 0:
@@ -345,7 +343,7 @@ class AbstractLatentWorker(AbstractWorker):
             raise RuntimeError(msg)
 
         try:
-            yield super().attached(conn)
+            await super().attached(conn)
         except Exception:
             self._substantiation_failed(failure.Failure())
             return
@@ -450,8 +448,7 @@ class AbstractLatentWorker(AbstractWorker):
     def _check_instance_timer_fired(self):
         self._deferwaiter.add(self._check_instance_timer_fired_impl())
 
-    @defer.inlineCallbacks
-    def _check_instance_timer_fired_impl(self):
+    async def _check_instance_timer_fired_impl(self):
         self._check_instance_timer = None
         if self.state != States.SUBSTANTIATING_STARTING:
             # The only case when we want to recheck whether the instance has not failed is
@@ -465,17 +462,17 @@ class AbstractLatentWorker(AbstractWorker):
             return
 
         try:
-            yield self._start_stop_lock.acquire()
+            await self._start_stop_lock.acquire()
             message = "latent worker crashed before connecting"
             try:
-                is_good, message_append = yield self.check_instance()
+                is_good, message_append = await self.check_instance()
                 message += ": " + message_append
             except Exception as e:
                 message += ": " + str(e)
                 is_good = False
 
             if not is_good:
-                yield self._substantiation_failed(
+                await self._substantiation_failed(
                     LatentWorkerFailedToSubstantiate(self.name, message)
                 )
                 return
@@ -485,8 +482,7 @@ class AbstractLatentWorker(AbstractWorker):
         # if check passes, schedule another one until worker connects
         self._start_check_instance_timer()
 
-    @defer.inlineCallbacks
-    def insubstantiate(self, fast=False, force_substantiation_build=None):
+    async def insubstantiate(self, fast=False, force_substantiation_build=None):
         # If force_substantiation_build is not None, we'll try to substantiate the given build
         # after insubstantiation concludes. This parameter allows to go directly to the
         # SUBSTANTIATING state without going through NOT_SUBSTANTIATED state.
@@ -504,7 +500,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         try:
             self._log_start_stop_locked('insubstantiating')
-            yield self._start_stop_lock.acquire()
+            await self._start_stop_lock.acquire()
 
             assert self.state not in [
                 States.INSUBSTANTIATING,
@@ -532,7 +528,7 @@ class AbstractLatentWorker(AbstractWorker):
 
             if prev_state in [States.SUBSTANTIATING_STARTING, States.SUBSTANTIATED]:
                 try:
-                    yield self.stop_instance(fast)
+                    await self.stop_instance(fast)
                 except Exception as e:
                     # The case of failure for insubstantiation is bad as we have a
                     # left-over costing resource There is not much thing to do here
@@ -555,19 +551,18 @@ class AbstractLatentWorker(AbstractWorker):
 
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
-    @defer.inlineCallbacks
-    def _soft_disconnect(self, fast=False, stopping_service=False):
+    async def _soft_disconnect(self, fast=False, stopping_service=False):
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if not stopping_service and self.build_wait_timeout < 0:
-            yield super().disconnect()
+            await super().disconnect()
             return
 
         self.stopMissingTimer()
 
         # we add the Deferreds to DeferWaiter because we don't wait for a Deferred if
         # the other Deferred errbacks
-        yield defer.DeferredList(
+        await defer.DeferredList(
             [
                 self._deferwaiter.add(super().disconnect()),
                 self._deferwaiter.add(self.insubstantiate(fast)),
@@ -582,8 +577,7 @@ class AbstractLatentWorker(AbstractWorker):
         # without a restart (or maybe a sighup)
         self.botmaster.workerLost(self)
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         # stops the service. Waits for any pending substantiations, insubstantiations or builds
         # that are running or about to start to complete.
         while self.state not in [States.NOT_SUBSTANTIATED, States.SHUT_DOWN]:
@@ -594,16 +588,16 @@ class AbstractLatentWorker(AbstractWorker):
                 States.SUBSTANTIATING_STARTING,
             ]:
                 self._log_start_stop_locked('stopService')
-                yield self._start_stop_lock.acquire()
+                await self._start_stop_lock.acquire()
                 self._start_stop_lock.release()
 
             if self.conn is not None or self.state in [
                 States.SUBSTANTIATED,
                 States.SUBSTANTIATING_STARTING,
             ]:
-                yield self._soft_disconnect(stopping_service=True)
+                await self._soft_disconnect(stopping_service=True)
 
-            yield self._deferwaiter.wait()
+            await self._deferwaiter.wait()
 
         # prevent any race conditions with any future builds that are in the process of
         # being started.
@@ -612,7 +606,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         self._clearBuildWaitTimer()
         self._stop_check_instance_timer()
-        res = yield super().stopService()
+        res = await super().stopService()
         return res
 
     def updateWorker(self):

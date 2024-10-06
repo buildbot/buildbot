@@ -382,8 +382,7 @@ class TestOldBuildCancellerUtils(ConfigErrorsMixin, unittest.TestCase):
 
 
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
@@ -391,7 +390,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.insert_test_data()
         self._cancelled_build_ids = []
 
-        yield self.master.startService()
+        await self.master.startService()
 
     def tearDown(self):
         return self.master.stopService()
@@ -478,8 +477,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
             ),
         ])
 
-    @defer.inlineCallbacks
-    def setup_canceller_with_filters(self):
+    async def setup_canceller_with_filters(self):
         self.canceller = OldBuildCanceller(
             'canceller',
             [
@@ -488,12 +486,11 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 (['builder3'], SourceStampFilter()),
             ],
         )
-        yield self.canceller.setServiceParent(self.master)
+        await self.canceller.setServiceParent(self.master)
 
-    @defer.inlineCallbacks
-    def setup_canceller_with_no_filters(self):
+    async def setup_canceller_with_no_filters(self):
         self.canceller = OldBuildCanceller('canceller', [])
-        yield self.canceller.setServiceParent(self.master)
+        await self.canceller.setServiceParent(self.master)
 
     def assert_cancelled(self, cancellations):
         expected_productions = []
@@ -505,9 +502,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.mq.assertProductions(expected_productions)
 
-    @defer.inlineCallbacks
-    def test_buildrequest_no_branch(self):
-        yield self.setup_canceller_with_filters()
+    async def test_buildrequest_no_branch(self):
+        await self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
 
@@ -534,9 +530,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequest_after_new_commit_with_buildrequest(self):
-        yield self.setup_canceller_with_filters()
+    async def test_cancel_buildrequest_after_new_commit_with_buildrequest(self):
+        await self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
 
@@ -586,9 +581,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         self.assert_cancelled([14])
 
-    @defer.inlineCallbacks
-    def test_no_cancel_buildrequest_after_only_new_commit(self):
-        yield self.setup_canceller_with_filters()
+    async def test_no_cancel_buildrequest_after_only_new_commit(self):
+        await self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
 
@@ -597,9 +591,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequest_after_new_commit_gerrit_branch_filter(self):
-        yield self.setup_canceller_with_filters()
+    async def test_cancel_buildrequest_after_new_commit_gerrit_branch_filter(self):
+        await self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
 
@@ -649,9 +642,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         self.assert_cancelled([14])
 
-    @defer.inlineCallbacks
-    def test_build_finished_then_new_commit_no_cancel(self):
-        yield self.setup_canceller_with_filters()
+    async def test_build_finished_then_new_commit_no_cancel(self):
+        await self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
 
@@ -661,15 +653,14 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_reconfig_no_longer_matched_tracked_build_cancelled(self):
-        yield self.setup_canceller_with_filters()
+    async def test_reconfig_no_longer_matched_tracked_build_cancelled(self):
+        await self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
 
         ss_dict = self.create_ss_dict('project1', 'codebase1', 'repository1', 'branch1')
 
-        yield self.canceller.reconfigService('canceller', [])
+        await self.canceller.reconfigService('canceller', [])
 
         self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
@@ -714,24 +705,22 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         )
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_reconfig_defers_finished_builds_to_after_registration(self):
+    async def test_reconfig_defers_finished_builds_to_after_registration(self):
         # We need to make sure that during reconfiguration any finished build messages are not
         # acted before the build is tracked
 
-        yield self.setup_canceller_with_no_filters()
+        await self.setup_canceller_with_no_filters()
 
         # Setup controllable blocking wait on canceller._on_buildrequest_new
         on_buildrequest_new_d = defer.Deferred()
         on_buildrequest_new_original = self.canceller._on_buildrequest_new
         on_buildrequest_new_breq_ids = []
 
-        @defer.inlineCallbacks
-        def waiting_on_buildrequest_new(key, breq):
+        async def waiting_on_buildrequest_new(key, breq):
             on_buildrequest_new_breq_ids.append(breq['buildrequestid'])
             if not on_buildrequest_new_d.called:
-                yield on_buildrequest_new_d
-            yield on_buildrequest_new_original(key, breq)
+                await on_buildrequest_new_d
+            await on_buildrequest_new_original(key, breq)
 
         self.canceller._on_buildrequest_new = waiting_on_buildrequest_new
 
@@ -753,7 +742,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         # Unblock reconfigService
         on_buildrequest_new_d.callback(None)
-        yield d
+        await d
         self.assertEqual(on_buildrequest_new_breq_ids, [10, 11, 12])
 
         self.assertFalse(self.canceller._build_tracker.is_buildrequest_tracked(10))

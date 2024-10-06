@@ -96,14 +96,13 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
 
-    @defer.inlineCallbacks
-    def activate(self):
-        yield super().activate()
+    async def activate(self):
+        await super().activate()
 
         if not self.enabled:
             return
 
-        yield self.startConsumingChanges(
+        await self.startConsumingChanges(
             fileIsImportant=self.fileIsImportant,
             change_filter=self.change_filter,
             onlyImportant=self.onlyImportant,
@@ -112,18 +111,17 @@ class BaseBasicScheduler(base.BaseScheduler):
         # if we have a treeStableTimer, if there are classified changes
         # out there, start their timers again
         if self.treeStableTimer:
-            yield self.scanExistingClassifiedChanges()
+            await self.scanExistingClassifiedChanges()
 
         # otherwise, we don't care about classified
         # changes, so get rid of any hanging around from previous
         # configurations
         else:
-            yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
+            await self.master.db.schedulers.flushChangeClassifications(self.serviceid)
 
-    @defer.inlineCallbacks
-    def deactivate(self):
+    async def deactivate(self):
         # the base deactivate will unsubscribe from new changes
-        yield super().deactivate()
+        await super().deactivate()
 
         if not self.enabled:
             return
@@ -135,7 +133,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                     timer.cancel()
             self._stable_timers.clear()
 
-        yield cancel_timers()
+        await cancel_timers()
 
     @util.deferredLocked('_stable_timers_lock')
     def gotChange(self, change, important):
@@ -170,25 +168,24 @@ class BaseBasicScheduler(base.BaseScheduler):
         # record the change's importance
         return self.master.db.schedulers.classifyChanges(self.serviceid, {change.number: important})
 
-    @defer.inlineCallbacks
-    def scanExistingClassifiedChanges(self):
+    async def scanExistingClassifiedChanges(self):
         # call gotChange for each classified change.  This is called at startup
         # and is intended to re-start the treeStableTimer for any changes that
         # had not yet been built when the scheduler was stopped.
 
         # NOTE: this may double-call gotChange for changes that arrive just as
         # the scheduler starts up.  In practice, this doesn't hurt anything.
-        classifications = yield self.master.db.schedulers.getChangeClassifications(self.serviceid)
+        classifications = await self.master.db.schedulers.getChangeClassifications(self.serviceid)
 
         # call gotChange for each change, after first fetching it from the db
         for changeid, important in classifications.items():
-            chdict = yield self.master.db.changes.getChange(changeid)
+            chdict = await self.master.db.changes.getChange(changeid)
 
             if not chdict:
                 continue
 
-            change = yield changes.Change.fromChdict(self.master, chdict)
-            yield self.gotChange(change, important)
+            change = await changes.Change.fromChdict(self.master, chdict)
+            await self.gotChange(change, important)
 
     def getTimerNameForChange(self, change):
         raise NotImplementedError  # see subclasses
@@ -199,26 +196,25 @@ class BaseBasicScheduler(base.BaseScheduler):
         raise NotImplementedError  # see subclasses
 
     @util.deferredLocked('_stable_timers_lock')
-    @defer.inlineCallbacks
-    def stableTimerFired(self, timer_name):
+    async def stableTimerFired(self, timer_name):
         # delete this now-fired timer, if the service has already been stopped
         # then just bail out
         if not self._stable_timers.pop(timer_name, None):
             return
 
-        classifications = yield self.getChangeClassificationsForTimer(self.serviceid, timer_name)
+        classifications = await self.getChangeClassificationsForTimer(self.serviceid, timer_name)
 
         # just in case: databases do weird things sometimes!
         if not classifications:  # pragma: no cover
             return
 
         changeids = sorted(classifications.keys())
-        yield self.addBuildsetForChanges(
+        await self.addBuildsetForChanges(
             reason=self.reason, changeids=changeids, priority=self.priority
         )
 
         max_changeid = changeids[-1]  # (changeids are sorted)
-        yield self.master.db.schedulers.flushChangeClassifications(
+        await self.master.db.schedulers.flushChangeClassifications(
             self.serviceid, less_than=max_changeid + 1
         )
 
@@ -228,12 +224,11 @@ class SingleBranchScheduler(AbsoluteSourceStampsMixin, BaseBasicScheduler):
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         super().__init__(name, **kwargs)
 
-    @defer.inlineCallbacks
-    def gotChange(self, change, important):
+    async def gotChange(self, change, important):
         if self.createAbsoluteSourceStamps:
-            yield self.recordChange(change)
+            await self.recordChange(change)
 
-        yield super().gotChange(change, important)
+        await super().gotChange(change, important)
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:

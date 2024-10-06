@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 
 from buildbot import config
 from buildbot.data import resultspec
@@ -49,7 +48,7 @@ class _FailingBuilderConfig:
 
 
 class FailingBuildsetCanceller(BuildbotService):
-    compare_attrs = BuildbotService.compare_attrs + ('filters',)
+    compare_attrs = (*BuildbotService.compare_attrs, 'filters')
 
     def checkConfig(self, name, filters):
         FailingBuildsetCanceller.check_filters(filters)
@@ -61,16 +60,14 @@ class FailingBuildsetCanceller(BuildbotService):
     def reconfigService(self, name, filters):
         self.filters = FailingBuildsetCanceller.filter_tuples_to_filter_set_object(filters)
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
-        self._build_finished_consumer = yield self.master.mq.startConsuming(
+    async def startService(self):
+        await super().startService()
+        self._build_finished_consumer = await self.master.mq.startConsuming(
             self._on_build_finished, ('builds', None, 'finished')
         )
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._build_finished_consumer.stopConsuming()
+    async def stopService(self):
+        await self._build_finished_consumer.stopConsuming()
 
     @classmethod
     def check_filters(cls, filters):
@@ -98,7 +95,7 @@ class FailingBuildsetCanceller(BuildbotService):
                 if builders_to_cancel is not None:
                     extract_filter_values(builders_to_cancel, 'builders_to_cancel')
             except Exception as e:
-                config.error(f'{cls.__name__}: When processing filter builders: {str(e)}')
+                config.error(f'{cls.__name__}: When processing filter builders: {e!s}')
 
     @classmethod
     def filter_tuples_to_filter_set_object(cls, filters):
@@ -116,14 +113,13 @@ class FailingBuildsetCanceller(BuildbotService):
 
         return filter_set
 
-    @defer.inlineCallbacks
-    def _on_build_finished(self, key, build):
+    async def _on_build_finished(self, key, build):
         if build['results'] != FAILURE:
             return
 
-        buildrequest = yield self.master.data.get(('buildrequests', build['buildrequestid']))
-        builder = yield self.master.data.get(("builders", build['builderid']))
-        buildset = yield self.master.data.get(('buildsets', buildrequest['buildsetid']))
+        buildrequest = await self.master.data.get(('buildrequests', build['buildrequestid']))
+        builder = await self.master.data.get(("builders", build['builderid']))
+        buildset = await self.master.data.get(('buildsets', buildrequest['buildsetid']))
 
         sourcestamps = buildset['sourcestamps']
 
@@ -137,7 +133,7 @@ class FailingBuildsetCanceller(BuildbotService):
                     else:
                         builders_to_cancel.update(c.builders_to_cancel)
 
-        all_bs_buildrequests = yield self.master.data.get(
+        all_bs_buildrequests = await self.master.data.get(
             ('buildrequests',),
             filters=[
                 resultspec.Filter('buildsetid', 'eq', [buildset['bsid']]),
@@ -156,7 +152,7 @@ class FailingBuildsetCanceller(BuildbotService):
             if brid == buildrequest['buildrequestid']:
                 continue  # this one has just failed
 
-            br_builder = yield self.master.data.get(("builders", br['builderid']))
+            br_builder = await self.master.data.get(("builders", br['builderid']))
 
             if builders_to_cancel is not None and br_builder['name'] not in builders_to_cancel:
                 continue

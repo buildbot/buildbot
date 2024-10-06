@@ -58,8 +58,7 @@ class FakeResponse:
 
 
 class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
@@ -110,12 +109,11 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         secret_service = SecretManager()
         secret_service.services = [fake_storage_service]
-        yield secret_service.setServiceParent(self._master)
+        await secret_service.setServiceParent(self._master)
         self.githubAuth_secret.reconfigAuth(master, master.config)
 
-    @defer.inlineCallbacks
-    def test_getGoogleLoginURL(self):
-        res = yield self.googleAuth.getLoginURL('http://redir')
+    async def test_getGoogleLoginURL(self):
+        res = await self.googleAuth.getLoginURL('http://redir')
         exp = (
             "https://accounts.google.com/o/oauth2/auth?client_id=ggclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -124,7 +122,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.googleAuth.getLoginURL(None)
+        res = await self.googleAuth.getLoginURL(None)
         exp = (
             "https://accounts.google.com/o/oauth2/auth?client_id=ggclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -134,9 +132,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_getGithubLoginURL(self):
-        res = yield self.githubAuth.getLoginURL('http://redir')
+    async def test_getGithubLoginURL(self):
+        res = await self.githubAuth.getLoginURL('http://redir')
         exp = (
             "https://github.com/login/oauth/authorize?client_id=ghclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -144,7 +141,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.githubAuth.getLoginURL(None)
+        res = await self.githubAuth.getLoginURL(None)
         exp = (
             "https://github.com/login/oauth/authorize?client_id=ghclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -152,9 +149,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_getGithubLoginURL_with_secret(self):
-        res = yield self.githubAuth_secret.getLoginURL('http://redir')
+    async def test_getGithubLoginURL_with_secret(self):
+        res = await self.githubAuth_secret.getLoginURL('http://redir')
         exp = (
             "https://github.com/login/oauth/authorize?client_id=secretClientId&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -162,7 +158,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.githubAuth_secret.getLoginURL(None)
+        res = await self.githubAuth_secret.getLoginURL(None)
         exp = (
             "https://github.com/login/oauth/authorize?client_id=secretClientId&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -170,9 +166,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_getGithubELoginURL(self):
-        res = yield self.githubAuthEnt.getLoginURL('http://redir')
+    async def test_getGithubELoginURL(self):
+        res = await self.githubAuthEnt.getLoginURL('http://redir')
         exp = (
             "https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -180,7 +175,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.githubAuthEnt.getLoginURL(None)
+        res = await self.githubAuthEnt.getLoginURL(None)
         exp = (
             "https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -188,9 +183,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_getGithubLoginURL_v4(self):
-        res = yield self.githubAuthEnt_v4.getLoginURL('http://redir')
+    async def test_getGithubLoginURL_v4(self):
+        res = await self.githubAuthEnt_v4.getLoginURL('http://redir')
         exp = (
             "https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -198,7 +192,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.githubAuthEnt_v4.getLoginURL(None)
+        res = await self.githubAuthEnt_v4.getLoginURL(None)
         exp = (
             "https://git.corp.fakecorp.com/login/oauth/authorize?client_id=ghclientID&"
             "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
@@ -206,9 +200,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_getGitLabLoginURL(self):
-        res = yield self.gitlabAuth.getLoginURL('http://redir')
+    async def test_getGitLabLoginURL(self):
+        res = await self.gitlabAuth.getLoginURL('http://redir')
         exp = (
             "https://gitlab.test/oauth/authorize"
             "?client_id=glclientID&"
@@ -217,7 +210,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.gitlabAuth.getLoginURL(None)
+        res = await self.gitlabAuth.getLoginURL(None)
         exp = (
             "https://gitlab.test/oauth/authorize"
             "?client_id=glclientID&"
@@ -226,9 +219,8 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_getBitbucketLoginURL(self):
-        res = yield self.bitbucketAuth.getLoginURL('http://redir')
+    async def test_getBitbucketLoginURL(self):
+        res = await self.bitbucketAuth.getLoginURL('http://redir')
         exp = (
             "https://bitbucket.org/site/oauth2/authorize?"
             "client_id=bbclientID&"
@@ -237,7 +229,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             "state=redirect%3Dhttp%253A%252F%252Fredir"
         )
         self.assertEqual(res, exp)
-        res = yield self.bitbucketAuth.getLoginURL(None)
+        res = await self.bitbucketAuth.getLoginURL(None)
         exp = (
             "https://bitbucket.org/site/oauth2/authorize?"
             "client_id=bbclientID&"
@@ -246,14 +238,13 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
         self.assertEqual(res, exp)
 
-    @defer.inlineCallbacks
-    def test_GoogleVerifyCode(self):
+    async def test_GoogleVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         self.googleAuth.get = mock.Mock(
             side_effect=[{"name": 'foo bar', "email": 'bar@foo', "picture": 'http://pic'}]
         )
-        res = yield self.googleAuth.verifyCode("code!")
+        res = await self.googleAuth.verifyCode("code!")
         self.assertEqual(
             {
                 'avatar_url': 'http://pic',
@@ -264,8 +255,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
 
-    @defer.inlineCallbacks
-    def test_GithubVerifyCode(self):
+    async def test_GithubVerifyCode(self):
         test = self
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
@@ -294,7 +284,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 
         self.githubAuth.get = fake_get
 
-        res = yield self.githubAuth.verifyCode("code!")
+        res = await self.githubAuth.verifyCode("code!")
         self.assertEqual(
             {
                 'email': 'bar@foo',
@@ -305,8 +295,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
 
-    @defer.inlineCallbacks
-    def test_GithubVerifyCode_v4(self):
+    async def test_GithubVerifyCode_v4(self):
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         self.githubAuth_v4.post = mock.Mock(
@@ -325,7 +314,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 }
             ]
         )
-        res = yield self.githubAuth_v4.verifyCode("code!")
+        res = await self.githubAuth_v4.verifyCode("code!")
         self.assertEqual(
             {
                 'email': 'bar@foo',
@@ -336,8 +325,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
 
-    @defer.inlineCallbacks
-    def test_GithubVerifyCode_v4_teams(self):
+    async def test_GithubVerifyCode_v4_teams(self):
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         self.githubAuth_v4_teams.post = mock.Mock(
@@ -383,7 +371,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 },
             ]
         )
-        res = yield self.githubAuth_v4_teams.verifyCode("code!")
+        res = await self.githubAuth_v4_teams.verifyCode("code!")
         self.assertEqual(
             {
                 'email': 'bar@foo',
@@ -418,8 +406,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         ):
             oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
 
-    @defer.inlineCallbacks
-    def test_GitlabVerifyCode(self):
+    async def test_GitlabVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         self.gitlabAuth.get = mock.Mock(
@@ -438,7 +425,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 ],
             ]
         )
-        res = yield self.gitlabAuth.verifyCode("code!")
+        res = await self.gitlabAuth.verifyCode("code!")
         self.assertEqual(
             {
                 "full_name": "Foo Bar",
@@ -450,8 +437,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
 
-    @defer.inlineCallbacks
-    def test_BitbucketVerifyCode(self):
+    async def test_BitbucketVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         self.bitbucketAuth.get = mock.Mock(
@@ -466,7 +452,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 {"values": [{'slug': 'hello'}, {'slug': 'grp'}]},  # /workspaces?role=member
             ]
         )
-        res = yield self.bitbucketAuth.verifyCode("code!")
+        res = await self.bitbucketAuth.verifyCode("code!")
         self.assertEqual(
             {
                 'email': 'bar@foo',
@@ -477,8 +463,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
 
-    @defer.inlineCallbacks
-    def test_loginResource(self):
+    async def test_loginResource(self):
         class fakeAuth:
             homeUri = "://me"
             getLoginURL = mock.Mock(side_effect=lambda x: defer.succeed("://"))
@@ -488,19 +473,19 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 
         rsrc = self.githubAuth.getLoginResource()
         rsrc.auth = fakeAuth()
-        res = yield self.render_resource(rsrc, b'/')
+        res = await self.render_resource(rsrc, b'/')
         rsrc.auth.getLoginURL.assert_called_once_with(None)
         rsrc.auth.verifyCode.assert_not_called()
         self.assertEqual(res, {'redirected': b'://'})
         rsrc.auth.getLoginURL.reset_mock()
         rsrc.auth.verifyCode.reset_mock()
-        res = yield self.render_resource(rsrc, b'/?code=code!')
+        res = await self.render_resource(rsrc, b'/?code=code!')
         rsrc.auth.getLoginURL.assert_not_called()
         rsrc.auth.verifyCode.assert_called_once_with(b"code!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': b'://me'})
         # token not supported anymore
-        res = yield self.render_resource(rsrc, b'/?token=token!')
+        res = await self.render_resource(rsrc, b'/?token=token!')
         rsrc.auth.getLoginURL.assert_called_once()
 
     def test_getConfig(self):
@@ -584,8 +569,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             if isinstance(reader, Server):
                 reader.connectionLost(f)
 
-    @defer.inlineCallbacks
-    def test_E2E(self):
+    async def test_E2E(self):
         d = defer.Deferred()
         twisted.web.http._logDateTimeUsers = 1
 
@@ -621,10 +605,10 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             webbrowser.open(content)
 
         threads.deferToThread(thd)
-        res = yield d
-        yield listener.stopListening()
-        yield site.stopFactory()
-        yield site.close_connections()
+        res = await d
+        await listener.stopListening()
+        await site.stopFactory()
+        await site.close_connections()
 
         self.assertIn("full_name", res)
         self.assertIn("email", res)

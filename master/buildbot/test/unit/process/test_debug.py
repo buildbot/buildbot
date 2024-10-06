@@ -16,7 +16,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config.master import MasterConfig
@@ -36,36 +35,35 @@ class TestDebugServices(TestReactorMixin, unittest.TestCase):
         self.master = mock.Mock(name='master')
         self.config = MasterConfig()
 
-    @defer.inlineCallbacks
-    def test_reconfigService_manhole(self):
+    async def test_reconfigService_manhole(self):
         master = fakemaster.make_master(self)
         ds = debug.DebugServices()
-        yield ds.setServiceParent(master)
-        yield master.startService()
+        await ds.setServiceParent(master)
+        await master.startService()
 
         # start off with no manhole
-        yield ds.reconfigServiceWithBuildbotConfig(self.config)
+        await ds.reconfigServiceWithBuildbotConfig(self.config)
 
         # set a manhole, fire it up
         self.config.manhole = manhole = FakeManhole()
-        yield ds.reconfigServiceWithBuildbotConfig(self.config)
+        await ds.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertTrue(manhole.running)
         self.assertIdentical(manhole.master, master)
 
         # unset it, see it stop
         self.config.manhole = None
-        yield ds.reconfigServiceWithBuildbotConfig(self.config)
+        await ds.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertFalse(manhole.running)
         self.assertIdentical(manhole.master, None)
 
         # re-start to test stopService
         self.config.manhole = manhole
-        yield ds.reconfigServiceWithBuildbotConfig(self.config)
+        await ds.reconfigServiceWithBuildbotConfig(self.config)
 
         # disown the service, and see that it unregisters
-        yield ds.disownServiceParent()
+        await ds.disownServiceParent()
 
         self.assertFalse(manhole.running)
         self.assertIdentical(manhole.master, None)

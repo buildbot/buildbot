@@ -19,8 +19,6 @@ password store based provider
 import os
 from pathlib import Path
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import runprocess
@@ -53,13 +51,12 @@ class SecretInPass(SecretProviderBase):
         if dirname:
             self._env["PASSWORD_STORE_DIR"] = dirname
 
-    @defer.inlineCallbacks
-    def get(self, entry):
+    async def get(self, entry):
         """
         get the value from pass identified by 'entry'
         """
         try:
-            rc, output = yield runprocess.run_process(
+            rc, output = await runprocess.run_process(
                 self.master.reactor,
                 ['pass', entry],
                 env=self._env,

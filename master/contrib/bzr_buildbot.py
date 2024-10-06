@@ -252,13 +252,12 @@ if DEFINE_POLLER:
         def describe(self):
             return f"BzrPoller watching {self.url}"
 
-        @defer.inlineCallbacks
-        def poll(self):
+        async def poll(self):
             # On a big tree, even individual elements of the bzr commands
             # can take awhile. So we just push the bzr work off to a
             # thread.
             try:
-                changes = yield twisted.internet.threads.deferToThread(self.getRawChanges)
+                changes = await twisted.internet.threads.deferToThread(self.getRawChanges)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except Exception:
@@ -266,7 +265,7 @@ if DEFINE_POLLER:
                 twisted.python.log.err()
             else:
                 for change_kwargs in changes:
-                    yield self.addChange(change_kwargs)
+                    await self.addChange(change_kwargs)
                     self.last_revision = change_kwargs['revision']
 
         def getRawChanges(self):

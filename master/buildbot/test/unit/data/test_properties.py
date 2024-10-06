@@ -47,9 +47,8 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_properties(self):
-        props = yield self.callGet(('buildsets', 14, 'properties'))
+    async def test_get_properties(self):
+        props = await self.callGet(('buildsets', 14, 'properties'))
 
         self.assertEqual(props, {'prop': (22, 'fakedb')})
 
@@ -74,15 +73,13 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_properties(self):
-        props = yield self.callGet(('builds', 786, 'properties'))
+    async def test_get_properties(self):
+        props = await self.callGet(('builds', 786, 'properties'))
 
         self.assertEqual(props, {'year': (1651, 'Wikipedia'), 'island_name': ("despair", 'Book')})
 
-    @defer.inlineCallbacks
-    def test_get_properties_from_builder(self):
-        props = yield self.callGet(('builders', 1, 'builds', 5, 'properties'))
+    async def test_get_properties_from_builder(self):
+        props = await self.callGet(('builders', 1, 'builds', 5, 'properties'))
         self.assertEqual(props, {'year': (1651, 'Wikipedia'), 'island_name': ("despair", 'Book')})
 
 
@@ -92,14 +89,13 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
         self.master = fakemaster.make_master(self, wantMq=False, wantDb=True, wantData=True)
         self.rtype = properties.Properties(self.master)
 
-    @defer.inlineCallbacks
-    def do_test_callthrough(
+    async def do_test_callthrough(
         self, dbMethodName, method, exp_args=None, exp_kwargs=None, *args, **kwargs
     ):
         rv = (1, 2)
         m = mock.Mock(return_value=defer.succeed(rv))
         setattr(self.master.db.builds, dbMethodName, m)
-        res = yield method(*args, **kwargs)
+        res = await method(*args, **kwargs)
         self.assertIdentical(res, rv)
         m.assert_called_with(*(exp_args or args), **((exp_kwargs is None) and kwargs or exp_kwargs))
 
@@ -123,8 +119,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
             exp_kwargs={},
         )
 
-    @defer.inlineCallbacks
-    def test_setBuildProperties(self):
+    async def test_setBuildProperties(self):
         self.master.db.insert_test_data([
             fakedb.Buildset(id=28),
             fakedb.BuildRequest(id=5, buildsetid=28),
@@ -137,7 +132,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
             wraps=self.master.db.builds.setBuildProperty
         )
         props = processProperties.fromDict({"a": (1, 't'), "b": (['abc', 9], 't')})
-        yield self.rtype.setBuildProperties(1234, props)
+        await self.rtype.setBuildProperties(1234, props)
         setBuildPropertiesCalls = sorted(self.master.db.builds.setBuildProperty.mock_calls)
         self.assertEqual(
             setBuildPropertiesCalls,
@@ -149,14 +144,14 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
         # sync without changes: no db write
         self.master.db.builds.setBuildProperty.reset_mock()
         self.master.mq.clearProductions()
-        yield self.rtype.setBuildProperties(1234, props)
+        await self.rtype.setBuildProperties(1234, props)
         self.master.db.builds.setBuildProperty.assert_not_called()
         self.master.mq.assertProductions([])
 
         # sync with one changes: one db write
         props.setProperty('b', 2, 'step')
         self.master.db.builds.setBuildProperty.reset_mock()
-        yield self.rtype.setBuildProperties(1234, props)
+        await self.rtype.setBuildProperties(1234, props)
 
         self.master.db.builds.setBuildProperty.assert_called_with(1234, 'b', 2, 'step')
         self.master.mq.assertProductions([

@@ -19,7 +19,6 @@ import json
 import types
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import gerritchangesource
@@ -98,26 +97,23 @@ class TestGerritChangeSource(
         self._got_events = []
         return self.setUpChangeSource()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.master.running:
-            yield self.master.stopService()
-        yield self.tearDownChangeSource()
+            await self.master.stopService()
+        await self.tearDownChangeSource()
 
-    @defer.inlineCallbacks
-    def create_gerrit(self, host, user, *args, **kwargs):
+    async def create_gerrit(self, host, user, *args, **kwargs):
         http_url = kwargs.get("http_url", None)
         if http_url:
-            self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self._http = await fakehttpclientservice.HTTPClientService.getService(
                 self.master, self, http_url + "/a", auth=kwargs.pop("expected_auth", None)
             )
         s = gerritchangesource.GerritChangeSource(host, user, *args, **kwargs)
-        yield self.attachChangeSource(s)
+        await self.attachChangeSource(s)
         return s
 
-    @defer.inlineCallbacks
-    def create_gerrit_synchronized(self, host, user, *args, **kwargs):
-        s = yield self.create_gerrit(host, user, *args, **kwargs)
+    async def create_gerrit_synchronized(self, host, user, *args, **kwargs):
+        s = await self.create_gerrit(host, user, *args, **kwargs)
         s._is_synchronized = True
         return s
 
@@ -137,17 +133,15 @@ class TestGerritChangeSource(
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_describe(self):
-        s = yield self.create_gerrit('somehost', 'someuser')
+    async def test_describe(self):
+        s = await self.create_gerrit('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
 
-    @defer.inlineCallbacks
-    def test_name(self):
-        s = yield self.create_gerrit('somehost', 'someuser')
+    async def test_name(self):
+        s = await self.create_gerrit('somehost', 'someuser')
         self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
 
-        s = yield self.create_gerrit('somehost', 'someuser', name="MyName")
+        s = await self.create_gerrit('somehost', 'someuser', name="MyName")
         self.assertEqual("MyName", s.name)
 
     patchset_created_event = {
@@ -213,17 +207,15 @@ class TestGerritChangeSource(
         'when_timestamp': None,
     }
 
-    @defer.inlineCallbacks
-    def test_line_received_patchset_created(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
-        yield s._line_received_stream(json.dumps(self.patchset_created_event))
+    async def test_line_received_patchset_created(self):
+        s = await self.create_gerrit_synchronized('somehost', 'someuser')
+        await s._line_received_stream(json.dumps(self.patchset_created_event))
 
         self.assert_changes([self.expected_change_patchset_created], ignore_keys=['properties'])
 
-    @defer.inlineCallbacks
-    def test_line_received_patchset_created_props(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
-        yield s._line_received_stream(json.dumps(self.patchset_created_event))
+    async def test_line_received_patchset_created_props(self):
+        s = await self.create_gerrit_synchronized('somehost', 'someuser')
+        await s._line_received_stream(json.dumps(self.patchset_created_event))
 
         change = copy.deepcopy(self.expected_change_patchset_created)
         change['properties'] = {
@@ -324,19 +316,17 @@ class TestGerritChangeSource(
         'when_timestamp': None,
     }
 
-    @defer.inlineCallbacks
-    def test_line_received_comment_added(self):
-        s = yield self.create_gerrit_synchronized(
+    async def test_line_received_comment_added(self):
+        s = await self.create_gerrit_synchronized(
             'somehost', 'someuser', handled_events=["comment-added"]
         )
-        yield s._line_received_stream(json.dumps(self.comment_added_event))
+        await s._line_received_stream(json.dumps(self.comment_added_event))
 
         self.assert_changes([self.expected_change_comment_added], ignore_keys=['properties'])
 
-    @defer.inlineCallbacks
-    def test_line_received_ref_updated(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
-        yield s._line_received_stream(
+    async def test_line_received_ref_updated(self):
+        s = await self.create_gerrit_synchronized('somehost', 'someuser')
+        await s._line_received_stream(
             json.dumps({
                 'type': 'ref-updated',
                 'submitter': {
@@ -385,10 +375,9 @@ class TestGerritChangeSource(
             },
         )
 
-    @defer.inlineCallbacks
-    def test_line_received_ref_updated_for_change(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
-        yield s._line_received_stream(
+    async def test_line_received_ref_updated_for_change(self):
+        s = await self.create_gerrit_synchronized('somehost', 'someuser')
+        await s._line_received_stream(
             json.dumps({
                 'type': 'ref-updated',
                 'submitter': {
@@ -407,24 +396,22 @@ class TestGerritChangeSource(
         )
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_duplicate_non_source_events_not_ignored(self):
-        s = yield self.create_gerrit_synchronized(
+    async def test_duplicate_non_source_events_not_ignored(self):
+        s = await self.create_gerrit_synchronized(
             'somehost',
             'someuser',
             handled_events=['patchset-created', 'ref-updated', 'change-merged', 'comment-added'],
         )
-        yield s._line_received_stream(json.dumps(self.comment_added_event))
+        await s._line_received_stream(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-        yield s._line_received_stream(json.dumps(self.comment_added_event))
+        await s._line_received_stream(json.dumps(self.comment_added_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 2)
 
-    @defer.inlineCallbacks
-    def test_malformed_events_ignored(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'someuser')
+    async def test_malformed_events_ignored(self):
+        s = await self.create_gerrit_synchronized('somehost', 'someuser')
         # "change" not in event
-        yield s._line_received_stream(
+        await s._line_received_stream(
             json.dumps({
                 "type": "patchset-created",
                 "patchSet": {"revision": 'abcdef', "number": '12'},
@@ -434,7 +421,7 @@ class TestGerritChangeSource(
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         # "patchSet" not in event
-        yield s._line_received_stream(
+        await s._line_received_stream(
             json.dumps({
                 "type": "patchset-created",
                 "change": {
@@ -465,27 +452,24 @@ class TestGerritChangeSource(
         'eventCreatedOn': 1614528683,
     }
 
-    @defer.inlineCallbacks
-    def test_handled_events_filter_true(self):
-        s = yield self.create_gerrit_synchronized(
+    async def test_handled_events_filter_true(self):
+        s = await self.create_gerrit_synchronized(
             'somehost', 'some_choosy_user', handled_events=["change-merged"]
         )
-        yield s._line_received_stream(json.dumps(self.change_merged_event))
+        await s._line_received_stream(json.dumps(self.change_merged_event))
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(c["category"], "change-merged")
         self.assertEqual(c["branch"], "br")
 
-    @defer.inlineCallbacks
-    def test_handled_events_filter_false(self):
-        s = yield self.create_gerrit_synchronized('somehost', 'some_choosy_user')
-        yield s._line_received_stream(json.dumps(self.change_merged_event))
+    async def test_handled_events_filter_false(self):
+        s = await self.create_gerrit_synchronized('somehost', 'some_choosy_user')
+        await s._line_received_stream(json.dumps(self.change_merged_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_custom_handler(self):
-        s = yield self.create_gerrit_synchronized(
+    async def test_custom_handler(self):
+        s = await self.create_gerrit_synchronized(
             'somehost', 'some_choosy_user', handled_events=["change-merged"]
         )
 
@@ -495,7 +479,7 @@ class TestGerritChangeSource(
 
         # Patches class to not bother with the inheritance
         s.eventReceived_change_merged = types.MethodType(custom_handler, s)
-        yield s._line_received_stream(json.dumps(self.change_merged_event))
+        await s._line_received_stream(json.dumps(self.change_merged_event))
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
@@ -516,13 +500,12 @@ class TestGerritChangeSource(
         "stream-events",
     ]
 
-    @defer.inlineCallbacks
-    def test_activate(self):
-        s = yield self.create_gerrit("somehost", "someuser", debug=True)
+    async def test_activate(self):
+        s = await self.create_gerrit("somehost", "someuser", debug=True)
 
         self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        yield self.master.startService()
+        await self.master.startService()
         s.activate()
 
         self.reactor.process_send_stderr(0, b"test stderr\n")
@@ -531,15 +514,14 @@ class TestGerritChangeSource(
         self.reactor.expect_process_signalProcess(0, "KILL")
         d = self.master.stopService()
         self.reactor.process_done(0, None)
-        yield d
+        await d
 
-    @defer.inlineCallbacks
-    def test_failure_backoff(self):
-        s = yield self.create_gerrit("somehost", "someuser", debug=True)
+    async def test_failure_backoff(self):
+        s = await self.create_gerrit("somehost", "someuser", debug=True)
 
         self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        yield self.master.startService()
+        await self.master.startService()
         s.activate()
 
         pid = 0
@@ -584,12 +566,11 @@ class TestGerritChangeSource(
         ("has_ts_in_db", True),
         ("has_no_ts_in_db", False),
     ])
-    @defer.inlineCallbacks
-    def test_poll_after_broken_connection(self, name, has_ts_in_db):
+    async def test_poll_after_broken_connection(self, name, has_ts_in_db):
         self._set_time_to(2021, 1, 2, 3, 4, 5)
         start_time = self.reactor.seconds()
 
-        s = yield self.create_gerrit(
+        s = await self.create_gerrit(
             "somehost",
             "someuser",
             expected_auth=("user", "pass"),
@@ -619,7 +600,7 @@ class TestGerritChangeSource(
             processing_delay_s=1,
         )
 
-        yield self.master.startService()
+        await self.master.startService()
         s.activate()
 
         # Poll after timeout
@@ -678,7 +659,7 @@ class TestGerritChangeSource(
 
         d = self.master.stopService()
         self.reactor.process_done(1, None)
-        yield d
+        await d
 
         self.master.db.state.assertState(s._oid, last_event_ts=start_time + 42)
         self.master.db.state.assertState(
@@ -693,12 +674,11 @@ class TestGerritChangeSource(
             {'eventCreatedOn': start_time + 42, 'type': 'patchset-created'},
         ])
 
-    @defer.inlineCallbacks
-    def test_poll_after_broken_connection_with_message_before(self):
+    async def test_poll_after_broken_connection_with_message_before(self):
         self._set_time_to(2021, 1, 2, 3, 4, 5)
         start_time = self.reactor.seconds()
 
-        s = yield self.create_gerrit(
+        s = await self.create_gerrit(
             "somehost",
             "someuser",
             expected_auth=("user", "pass"),
@@ -720,7 +700,7 @@ class TestGerritChangeSource(
             content=b"",
         )
 
-        yield self.master.startService()
+        await self.master.startService()
         s.activate()
 
         self.reactor.advance(2)
@@ -803,7 +783,7 @@ class TestGerritChangeSource(
 
         d = self.master.stopService()
         self.reactor.process_done(1, None)
-        yield d
+        await d
 
         self.master.db.state.assertState(s._oid, last_event_ts=start_time + 42)
         self.master.db.state.assertState(
@@ -816,12 +796,11 @@ class TestGerritChangeSource(
             {'eventCreatedOn': start_time + 42, 'type': 'patchset-created'},
         ])
 
-    @defer.inlineCallbacks
-    def test_poll_after_working_connection_but_no_messages(self):
+    async def test_poll_after_working_connection_but_no_messages(self):
         self._set_time_to(2021, 1, 2, 3, 4, 5)
         start_time = self.reactor.seconds()
 
-        s = yield self.create_gerrit(
+        s = await self.create_gerrit(
             "somehost",
             "someuser",
             expected_auth=("user", "pass"),
@@ -843,7 +822,7 @@ class TestGerritChangeSource(
             content=b"",
         )
 
-        yield self.master.startService()
+        await self.master.startService()
         s.activate()
 
         self.reactor.advance(2)
@@ -916,7 +895,7 @@ class TestGerritChangeSource(
 
         d = self.master.stopService()
         self.reactor.process_done(0, None)
-        yield d
+        await d
 
         self.master.db.state.assertState(s._oid, last_event_ts=start_time + 257)
         self.assert_events_received([
@@ -959,9 +938,8 @@ class TestGerritChangeSource(
 
     query_files_failure = b'{"type":"stats","rowCount":0}'
 
-    @defer.inlineCallbacks
-    def test_getFiles(self):
-        s = yield self.create_gerrit_synchronized('host', 'user', gerritport=2222)
+    async def test_getFiles(self):
+        s = await self.create_gerrit_synchronized('host', 'user', gerritport=2222)
         exp_argv = [
             "ssh",
             "-o",
@@ -987,16 +965,15 @@ class TestGerritChangeSource(
             ExpectMasterShell(exp_argv).stdout(self.query_files_failure),
         )
 
-        res = yield s.getFiles(1000, 13)
+        res = await s.getFiles(1000, 13)
         self.assertEqual(set(res), {'/COMMIT_MSG', 'file1', 'file2'})
 
-        res = yield s.getFiles(1000, 13)
+        res = await s.getFiles(1000, 13)
         self.assertEqual(res, ['unknown'])
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_getFilesFromEvent(self):
+    async def test_getFilesFromEvent(self):
         self.expect_commands(
             ExpectMasterShell([
                 "ssh",
@@ -1019,11 +996,11 @@ class TestGerritChangeSource(
             ]).stdout(self.query_files_success)
         )
 
-        s = yield self.create_gerrit_synchronized(
+        s = await self.create_gerrit_synchronized(
             'host', 'user', get_files=True, handled_events=["change-merged"]
         )
 
-        yield s._line_received_stream(json.dumps(self.change_merged_event))
+        await s._line_received_stream(json.dumps(self.change_merged_event))
         c = self.master.data.updates.changesAdded[0]
         self.assertEqual(set(c['files']), {'/COMMIT_MSG', 'file1', 'file2'})
 
@@ -1037,21 +1014,18 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
     EVENT_FORMATTED = '2016-11-16 13:23:19'
     OBJECTID = 1234
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        yield self.setUpChangeSource()
-        yield self.master.startService()
+        await self.setUpChangeSource()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.master.stopService()
+        await self.tearDownChangeSource()
 
-    @defer.inlineCallbacks
-    def newChangeSource(self, **kwargs):
+    async def newChangeSource(self, **kwargs):
         auth = kwargs.pop('auth', ('log', 'pass'))
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'gerrit', auth=auth
         )
         self.changesource = gerritchangesource.GerritEventLogPoller(
@@ -1062,25 +1036,21 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             **kwargs,
         )
 
-    @defer.inlineCallbacks
-    def startChangeSource(self):
-        yield self.changesource.setServiceParent(self.master)
-        yield self.attachChangeSource(self.changesource)
+    async def startChangeSource(self):
+        await self.changesource.setServiceParent(self.master)
+        await self.attachChangeSource(self.changesource)
 
-    @defer.inlineCallbacks
-    def test_describe(self):
+    async def test_describe(self):
         # describe is not used yet in buildbot nine, but it can still be useful in the future, so
         # lets implement and test it
-        yield self.newChangeSource()
+        await self.newChangeSource()
         self.assertSubstring('GerritEventLogPoller', self.changesource.describe())
 
-    @defer.inlineCallbacks
-    def test_name(self):
-        yield self.newChangeSource()
+    async def test_name(self):
+        await self.newChangeSource()
         self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)
 
-    @defer.inlineCallbacks
-    def test_lineReceived_patchset_created(self):
+    async def test_lineReceived_patchset_created(self):
         self.master.db.insert_test_data([
             fakedb.Object(
                 id=self.OBJECTID,
@@ -1088,7 +1058,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
                 class_name='GerritEventLogPoller',
             )
         ])
-        yield self.newChangeSource(get_files=True)
+        await self.newChangeSource(get_files=True)
         thirty_days_ago = datetime.datetime.fromtimestamp(
             self.reactor.seconds(), datetime.timezone.utc
         ) - datetime.timedelta(days=30)
@@ -1121,8 +1091,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             content=self.change_revision_resp,
         )
 
-        yield self.startChangeSource()
-        yield self.changesource._connector.poll()
+        await self.startChangeSource()
+        await self.changesource._connector.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -1166,7 +1136,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             content=self.change_revision_resp,
         )
 
-        yield self.changesource._connector.poll()
+        await self.changesource._connector.poll()
         self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
     change_revision_dict = {
@@ -1175,10 +1145,9 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
     }
     change_revision_resp = b')]}\n' + json.dumps(change_revision_dict).encode('utf8')
 
-    @defer.inlineCallbacks
-    def test_getFiles(self):
-        yield self.newChangeSource(get_files=True)
-        yield self.startChangeSource()
+    async def test_getFiles(self):
+        await self.newChangeSource(get_files=True)
+        await self.startChangeSource()
 
         self._http.expect(
             method='get',
@@ -1186,13 +1155,12 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             content=self.change_revision_resp,
         )
 
-        files = yield self.changesource.getFiles(100, 1)
+        files = await self.changesource.getFiles(100, 1)
         self.assertEqual(set(files), {'/COMMIT_MSG', 'file1'})
 
-    @defer.inlineCallbacks
-    def test_getFiles_handle_error(self):
-        yield self.newChangeSource(get_files=True)
-        yield self.startChangeSource()
+    async def test_getFiles_handle_error(self):
+        await self.newChangeSource(get_files=True)
+        await self.startChangeSource()
 
         self._http.expect(
             method='get',
@@ -1200,7 +1168,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
             content=b')]}\n',  # more than one line expected
         )
 
-        files = yield self.changesource.getFiles(100, 1)
+        files = await self.changesource.getFiles(100, 1)
         self.assertEqual(files, [])
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 

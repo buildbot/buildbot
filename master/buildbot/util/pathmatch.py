@@ -35,7 +35,7 @@ class Matcher:
         self._dirty = True
 
     def __repr__(self):
-        return f'<Matcher {repr(self._patterns)}>'
+        return f'<Matcher {self._patterns!r}>'
 
     path_elt_re = re.compile('^(.?):([a-z0-9_.]+)$')
     type_fns = {"n": int, "i": ident, "s": str}
@@ -67,7 +67,7 @@ class Matcher:
             else:
                 # complete match
                 return patterns[pattern], kwargs
-        raise KeyError(f'No match for {repr(path)}')
+        raise KeyError(f'No match for {path!r}')
 
     def iterPatterns(self):
         return list(self._patterns.items())

@@ -15,7 +15,6 @@
 
 import os
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import hgpoller
@@ -36,16 +35,15 @@ class TestHgPollerBase(
     branches = None
     bookmarks = None
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_master_run_process()
-        yield self.setUpChangeSource()
+        await self.setUpChangeSource()
 
         # To test that environment variables get propagated to subprocesses
         # (See #2116)
         os.environ[ENVIRON_2116_KEY] = 'TRUE'
-        yield self.setUpChangeSource()
+        await self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
         self.remote_hgweb = 'http://example.com/foo/baz/rev/{}'
         self.repo_ready = True
@@ -61,27 +59,24 @@ class TestHgPollerBase(
             bookmarks=self.bookmarks,
             revlink=lambda branch, revision: self.remote_hgweb.format(revision),
         )
-        yield self.poller.setServiceParent(self.master)
+        await self.poller.setServiceParent(self.master)
         self.poller._isRepositoryReady = _isRepositoryReady
 
-        yield self.master.startService()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
+    async def tearDown(self):
+        await self.master.stopService()
+        await self.tearDownChangeSource()
 
-    @defer.inlineCallbacks
-    def check_current_rev(self, wished, branch='default'):
-        rev = yield self.poller._getCurrentRev(branch)
+    async def check_current_rev(self, wished, branch='default'):
+        rev = await self.poller._getCurrentRev(branch)
         self.assertEqual(rev, str(wished))
 
 
 class TestHgPollerBranches(TestHgPollerBase):
     branches = ['one', 'two']
 
-    @defer.inlineCallbacks
-    def test_poll_initial(self):
+    async def test_poll_initial(self):
         self.expect_commands(
             ExpectMasterShell([
                 'hg',
@@ -101,16 +96,15 @@ class TestHgPollerBranches(TestHgPollerBase):
         )
 
         # do the poll
-        yield self.poller.poll()
+        await self.poller.poll()
 
         # check the results
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-        yield self.check_current_rev(73591, 'one')
-        yield self.check_current_rev(22341, 'two')
+        await self.check_current_rev(73591, 'one')
+        await self.check_current_rev(22341, 'two')
 
-    @defer.inlineCallbacks
-    def test_poll_regular(self):
+    async def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
@@ -160,11 +154,11 @@ class TestHgPollerBranches(TestHgPollerBase):
             .stdout(b'3' + LINESEP_BYTES),
         )
 
-        yield self.poller._setCurrentRev(3, 'two')
-        yield self.poller._setCurrentRev(4, 'one')
+        await self.poller._setCurrentRev(3, 'two')
+        await self.poller._setCurrentRev(4, 'one')
 
-        yield self.poller.poll()
-        yield self.check_current_rev(6, 'one')
+        await self.poller.poll()
+        await self.check_current_rev(6, 'one')
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -176,8 +170,7 @@ class TestHgPollerBranches(TestHgPollerBase):
 class TestHgPollerBookmarks(TestHgPollerBase):
     bookmarks = ['one', 'two']
 
-    @defer.inlineCallbacks
-    def test_poll_initial(self):
+    async def test_poll_initial(self):
         self.expect_commands(
             ExpectMasterShell([
                 'hg',
@@ -197,16 +190,15 @@ class TestHgPollerBookmarks(TestHgPollerBase):
         )
 
         # do the poll
-        yield self.poller.poll()
+        await self.poller.poll()
 
         # check the results
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-        yield self.check_current_rev(73591, 'one')
-        yield self.check_current_rev(22341, 'two')
+        await self.check_current_rev(73591, 'one')
+        await self.check_current_rev(22341, 'two')
 
-    @defer.inlineCallbacks
-    def test_poll_regular(self):
+    async def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
@@ -261,11 +253,11 @@ class TestHgPollerBookmarks(TestHgPollerBase):
             .stdout(b'3' + LINESEP_BYTES),
         )
 
-        yield self.poller._setCurrentRev(3, 'two')
-        yield self.poller._setCurrentRev(4, 'one')
+        await self.poller._setCurrentRev(3, 'two')
+        await self.poller._setCurrentRev(4, 'one')
 
-        yield self.poller.poll()
-        yield self.check_current_rev(6, 'one')
+        await self.poller.poll()
+        await self.check_current_rev(6, 'one')
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -307,8 +299,7 @@ class TestHgPoller(TestHgPollerBase):
     def test_hgbin_default(self):
         self.assertEqual(self.poller.hgbin, "hg")
 
-    @defer.inlineCallbacks
-    def test_poll_initial(self):
+    async def test_poll_initial(self):
         self.repo_ready = False
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
@@ -325,15 +316,14 @@ class TestHgPoller(TestHgPollerBase):
         )
 
         # do the poll
-        yield self.poller.poll()
+        await self.poller.poll()
 
         # check the results
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-        yield self.check_current_rev(73591)
+        await self.check_current_rev(73591)
 
-    @defer.inlineCallbacks
-    def test_poll_several_heads(self):
+    async def test_poll_several_heads(self):
         # If there are several heads on the named branch, the poller mustn't
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
@@ -346,14 +336,13 @@ class TestHgPoller(TestHgPollerBase):
             .stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES),
         )
 
-        yield self.poller._setCurrentRev(3)
+        await self.poller._setCurrentRev(3)
 
         # do the poll: we must stay at rev 3
-        yield self.poller.poll()
-        yield self.check_current_rev(3)
+        await self.poller.poll()
+        await self.check_current_rev(3)
 
-    @defer.inlineCallbacks
-    def test_poll_regular(self):
+    async def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
         self.expect_commands(
             ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
@@ -392,18 +381,17 @@ class TestHgPoller(TestHgPollerBase):
             ),
         )
 
-        yield self.poller._setCurrentRev(4)
+        await self.poller._setCurrentRev(4)
 
-        yield self.poller.poll()
-        yield self.check_current_rev(5)
+        await self.poller.poll()
+        await self.check_current_rev(5)
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
         self.assertEqual(change['revision'], '784bd')
         self.assertEqual(change['comments'], 'Comment for rev 5')
 
-    @defer.inlineCallbacks
-    def test_poll_force_push(self):
+    async def test_poll_force_push(self):
         #  There's a previous revision, but not linked with new rev
         self.expect_commands(
             ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
@@ -445,10 +433,10 @@ class TestHgPoller(TestHgPollerBase):
             ),
         )
 
-        yield self.poller._setCurrentRev(4)
+        await self.poller._setCurrentRev(4)
 
-        yield self.poller.poll()
-        yield self.check_current_rev(5)
+        await self.poller.poll()
+        await self.check_current_rev(5)
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]

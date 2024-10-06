@@ -17,7 +17,6 @@
 import re
 from typing import Dict
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.process.properties import Interpolate
@@ -58,8 +57,7 @@ class GitHubStatusPush(ReporterBase):
 
         super().checkConfig(generators=generators, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         token,
         context=None,
@@ -79,14 +77,14 @@ class GitHubStatusPush(ReporterBase):
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators, **kwargs)
+        await super().reconfigService(generators=generators, **kwargs)
 
         if baseURL is None:
             baseURL = HOSTED_BASE_URL
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice,
             baseURL,
             headers={'User-Agent': 'Buildbot'},
@@ -109,13 +107,11 @@ class GitHubStatusPush(ReporterBase):
             ),
         ]
 
-    @defer.inlineCallbacks
-    def _get_auth_header(self, props: Properties) -> Dict[str, str]:
-        token = yield props.render(self.token)
+    async def _get_auth_header(self, props: Properties) -> Dict[str, str]:
+        token = await props.render(self.token)
         return {'Authorization': f"token {token}"}
 
-    @defer.inlineCallbacks
-    def createStatus(
+    async def createStatus(
         self,
         repo_user,
         repo_name,
@@ -155,8 +151,8 @@ class GitHubStatusPush(ReporterBase):
         if context is not None:
             payload['context'] = context
 
-        headers = yield self._get_auth_header(props)
-        ret = yield self._http.post(
+        headers = await self._get_auth_header(props)
+        ret = await self._http.post(
             '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
             json=payload,
             headers=headers,
@@ -189,8 +185,7 @@ class GitHubStatusPush(ReporterBase):
 
         return repo_owner, repo_name
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         report = reports[0]
         build = reports[0]['builds'][0]
 
@@ -212,7 +207,7 @@ class GitHubStatusPush(ReporterBase):
         else:
             state = 'pending'
 
-        context = yield props.render(self.context)
+        context = await props.render(self.context)
 
         sourcestamps = build['buildset'].get('sourcestamps')
         if not sourcestamps:
@@ -245,7 +240,7 @@ class GitHubStatusPush(ReporterBase):
                         f"Updating github status: repo_owner={repo_owner}, repo_name={repo_name}"
                     )
 
-                response = yield self.createStatus(
+                response = await self.createStatus(
                     repo_user=repo_owner,
                     repo_name=repo_name,
                     sha=sha,
@@ -271,7 +266,7 @@ class GitHubStatusPush(ReporterBase):
                     )
             except Exception as e:
                 if response:
-                    content = yield response.content()
+                    content = await response.content()
                     code = response.code
                 else:
                     content = code = "n/a"
@@ -301,15 +296,13 @@ class GitHubCommentPush(GitHubStatusPush):
             )
         ]
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         report = reports[0]
         if 'body' not in report or report['body'] is None:
             return
-        yield super().sendMessage(reports)
+        await super().sendMessage(reports)
 
-    @defer.inlineCallbacks
-    def createStatus(
+    async def createStatus(
         self,
         repo_user,
         repo_name,
@@ -346,6 +339,6 @@ class GitHubCommentPush(GitHubStatusPush):
             return None
 
         url = '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments'])
-        headers = yield self._get_auth_header(props)
-        ret = yield self._http.post(url, json=payload, headers=headers)
+        headers = await self._get_auth_header(props)
+        ret = await self._http.post(url, json=payload, headers=headers)
         return ret

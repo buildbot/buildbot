@@ -124,7 +124,7 @@ class FakeBuildersComponent(FakeDBComponent):
     def removeBuilderMaster(self, builderid=None, masterid=None):
         for id, tup in self.builder_masters.items():
             if tup == (builderid, masterid):
-                del self.builder_masters[id]  # noqa pylint: disable=unnecessary-dict-index-lookup
+                del self.builder_masters[id]
                 break
         return defer.succeed(None)
 
@@ -152,8 +152,7 @@ class FakeBuildersComponent(FakeDBComponent):
             Builder(id=builderid, name=name),
         ])
 
-    @defer.inlineCallbacks
-    def updateBuilderInfo(
+    async def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
     ):
         if builderid in self.builders:
@@ -167,7 +166,7 @@ class FakeBuildersComponent(FakeDBComponent):
             tagids = []
             for tag in tags:
                 if not isinstance(tag, int):
-                    tag = yield self.db.tags.findTagId(tag)
+                    tag = await self.db.tags.findTagId(tag)
                 tagids.append(tag)
             self.builders_tags[builderid] = tagids
 

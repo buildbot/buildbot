@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.process import buildstep
@@ -200,8 +199,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
-    @defer.inlineCallbacks
-    def applyPatch(self, patch):
+    async def applyPatch(self, patch):
         patch_command = [
             'patch',
             f'-p{patch[0]}',
@@ -216,13 +214,12 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         )
 
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
         if cmd.didFail():
             raise buildstep.BuildStepFailed()
         return cmd.rc
 
-    @defer.inlineCallbacks
-    def patch(self, patch):
+    async def patch(self, patch):
         diff = patch[1]
         root = None
         if len(patch) >= 3:
@@ -236,9 +233,9 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             if workdir_root_abspath.startswith(workdir_abspath):
                 self.workdir = workdir_root
 
-        yield self.downloadFileContentToWorker('.buildbot-diff', diff)
-        yield self.downloadFileContentToWorker('.buildbot-patched', 'patched\n')
-        yield self.applyPatch(patch)
+        await self.downloadFileContentToWorker('.buildbot-diff', diff)
+        await self.downloadFileContentToWorker('.buildbot-patched', 'patched\n')
+        await self.applyPatch(patch)
         cmd = remotecommand.RemoteCommand(
             'rmdir',
             {
@@ -247,7 +244,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             },
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail():
             raise buildstep.BuildStepFailed()
@@ -257,8 +254,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         if getattr(self, 'startVC', None) is not None:
             msg = (
                 'Old-style source steps are no longer supported. Please convert your custom '
@@ -291,11 +287,11 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    yield self.addCompleteLog("patch", bytes2unicode(patch[1], errors='ignore'))
+                    await self.addCompleteLog("patch", bytes2unicode(patch[1], errors='ignore'))
             else:
                 log.msg(f"No sourcestamp found in build for codebase '{self.codebase}'")
                 self.descriptionDone = f"Codebase {self.codebase} not in build"
-                yield self.addCompleteLog(
+                await self.addCompleteLog(
                     "log", "No sourcestamp found in build for " f"codebase '{self.codebase}'"
                 )
                 return FAILURE
@@ -305,5 +301,5 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             branch = self.branch
             patch = None
 
-        res = yield self.run_vc(branch, revision, patch)
+        res = await self.run_vc(branch, revision, patch)
         return res

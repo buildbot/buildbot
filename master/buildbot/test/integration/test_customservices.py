@@ -70,11 +70,10 @@ class CustomServiceMaster(RunFakeMasterTestCase):
             )
         return config_dict
 
-    @defer.inlineCallbacks
-    def test_custom_service(self):
-        yield self.setup_master(self.create_master_config())
+    async def test_custom_service(self):
+        await self.setup_master(self.create_master_config())
 
-        yield self.do_test_build_by_name('builder')
+        await self.do_test_build_by_name('builder')
 
         self.assertStepStateString(1, 'worker worker1 ready')
         self.assertStepStateString(2, 'num reconfig: 1')
@@ -85,15 +84,15 @@ class CustomServiceMaster(RunFakeMasterTestCase):
 
         # We do several reconfig, and make sure the service
         # are reconfigured as expected
-        yield self.reconfig_master(self.create_master_config())
+        await self.reconfig_master(self.create_master_config())
 
-        yield self.do_test_build_by_name('builder')
+        await self.do_test_build_by_name('builder')
 
         self.assertEqual(myService.num_reconfig, 2)
         self.assertStepStateString(1, 'worker worker1 ready')
         self.assertStepStateString(2, 'num reconfig: 1')
 
-        yield self.reconfig_master(self.create_master_config())
+        await self.reconfig_master(self.create_master_config())
 
         myService2 = self.master.service_manager.namedServices['myService2']
 
@@ -101,7 +100,7 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         self.assertEqual(myService2.num_reconfig, 3)
         self.assertEqual(myService.num_reconfig, 3)
 
-        yield self.reconfig_master(self.create_master_config())
+        await self.reconfig_master(self.create_master_config())
 
         # second service removed
         self.assertNotIn('myService2', self.master.service_manager.namedServices)

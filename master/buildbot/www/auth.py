@@ -67,11 +67,10 @@ class AuthBase(config.ConfiguredMixin):
     def getLogoutResource(self):
         return LogoutResource(self.master)
 
-    @defer.inlineCallbacks
-    def updateUserInfo(self, request):
+    async def updateUserInfo(self, request):
         session = request.getSession()
         if self.userInfoProvider is not None:
-            infos = yield self.userInfoProvider.getUserInfo(session.user_info['username'])
+            infos = await self.userInfoProvider.getUserInfo(session.user_info['username'])
             session.user_info.update(infos)
             session.updateSession(request)
 
@@ -90,8 +89,7 @@ class LoginResource(resource.Resource):
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderLogin)
 
-    @defer.inlineCallbacks
-    def renderLogin(self, request):
+    async def renderLogin(self, request):
         raise NotImplementedError
 
 
@@ -123,8 +121,7 @@ class RemoteUserAuth(AuthBase):
 
         return forbidden(message="URL is not supported for authentication")
 
-    @defer.inlineCallbacks
-    def maybeAutoLogin(self, request):
+    async def maybeAutoLogin(self, request):
         header = request.getHeader(self.header)
         if header is None:
             msg = b"missing http header " + self.header + b". Check your reverse proxy config!"
@@ -142,7 +139,7 @@ class RemoteUserAuth(AuthBase):
         user_info = {k: bytes2unicode(v) for k, v in res.groupdict().items()}
         if session.user_info != user_info:
             session.user_info = user_info
-            yield self.updateUserInfo(request)
+            await self.updateUserInfo(request)
 
 
 @implementer(IRealm)
@@ -225,11 +222,10 @@ class PreAuthenticatedLoginResource(LoginResource):
         super().__init__(master)
         self.username = username
 
-    @defer.inlineCallbacks
-    def renderLogin(self, request):
+    async def renderLogin(self, request):
         session = request.getSession()
         session.user_info = {"username": bytes2unicode(self.username)}
-        yield self.master.www.auth.updateUserInfo(request)
+        await self.master.www.auth.updateUserInfo(request)
         raise _redirect(self.master, request)
 
 

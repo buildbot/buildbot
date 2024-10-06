@@ -59,36 +59,33 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = trysched.TryBase(name='tsched', builderNames=['a', 'b'], properties={})
         self.assertEqual(sched.filterBuilderList([]), ['a', 'b'])
 
-    @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    async def test_enabled_callback(self):
         sched = self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
-    @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    async def test_disabled_activate(self):
         sched = self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.activate()
+        r = await sched.activate()
         self.assertEqual(r, None)
 
-    @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    async def test_disabled_deactivate(self):
         sched = self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.deactivate()
+        r = await sched.deactivate()
         self.assertEqual(r, None)
 
 
@@ -161,17 +158,16 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched.watcher.startService = mock.Mock()
         sched.watcher.stopService = mock.Mock()
 
-    @defer.inlineCallbacks
-    def do_test_startService(self):
+    async def do_test_startService(self):
         # start it
-        yield self.sched.startService()
+        await self.sched.startService()
 
         # check that it has set the basedir correctly
         self.assertEqual(self.sched.watcher.basedir, self.jobdir)
         self.assertEqual(1, self.sched.watcher.startService.call_count)
         self.assertEqual(0, self.sched.watcher.stopService.call_count)
 
-        yield self.sched.stopService()
+        await self.sched.stopService()
 
         self.assertEqual(1, self.sched.watcher.startService.call_count)
         self.assertEqual(1, self.sched.watcher.stopService.call_count)
@@ -188,8 +184,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.setup_test_startService(os.path.abspath('jobdir'), os.path.abspath('jobdir'))
         return self.do_test_startService()
 
-    @defer.inlineCallbacks
-    def do_test_startService_but_not_active(self, jobdir, exp_jobdir):
+    async def do_test_startService_but_not_active(self, jobdir, exp_jobdir):
         """Same as do_test_startService, but the master wont activate this service"""
         self.setup_test_startService('jobdir', os.path.abspath('basedir/jobdir'))
 
@@ -201,7 +196,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # check that it has set the basedir correctly, even if it doesn't start
         self.assertEqual(self.sched.watcher.basedir, self.jobdir)
 
-        yield self.sched.stopService()
+        await self.sched.stopService()
 
         self.assertEqual(0, self.sched.watcher.startService.call_count)
         self.assertEqual(0, self.sched.watcher.stopService.call_count)
@@ -743,9 +738,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         pj.update(overrides)
         return pj
 
-    @defer.inlineCallbacks
-    def test_handleJobFile(self):
-        yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
+    async def test_handleJobFile(self):
+        await self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
 
         self.assertEqual(
             self.addBuildsetCalls,
@@ -776,12 +770,11 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_handleJobFile_exception(self):
+    async def test_handleJobFile_exception(self):
         def parseJob(f):
             raise trysched.BadJobfile
 
-        yield self.call_handleJobFile(parseJob)
+        await self.call_handleJobFile(parseJob)
 
         self.assertEqual(self.addBuildsetCalls, [])
         self.assertEqual(1, len(self.flushLoggedErrors(trysched.BadJobfile)))
@@ -791,15 +784,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             "flushLoggedErrors does not work correctly on 9.0.0 and earlier with Python-2.7"
         )
 
-    @defer.inlineCallbacks
-    def test_handleJobFile_bad_builders(self):
-        yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob(builderNames=['xxx']))
+    async def test_handleJobFile_bad_builders(self):
+        await self.call_handleJobFile(lambda f: self.makeSampleParsedJob(builderNames=['xxx']))
 
         self.assertEqual(self.addBuildsetCalls, [])
 
-    @defer.inlineCallbacks
-    def test_handleJobFile_subset_builders(self):
-        yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob(builderNames=['buildera']))
+    async def test_handleJobFile_subset_builders(self):
+        await self.call_handleJobFile(lambda f: self.makeSampleParsedJob(builderNames=['buildera']))
 
         self.assertEqual(
             self.addBuildsetCalls,
@@ -830,9 +821,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_handleJobFile_with_try_properties(self):
-        yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
+    async def test_handleJobFile_with_try_properties(self):
+        await self.call_handleJobFile(lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
 
         self.assertEqual(
             self.addBuildsetCalls,
@@ -888,8 +878,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
             createBuilderDB=True,
         )
 
-    @defer.inlineCallbacks
-    def call_perspective_try(self, *args, **kwargs):
+    async def call_perspective_try(self, *args, **kwargs):
         sched = self.makeScheduler(
             name='tsched',
             builderNames=['a', 'b'],
@@ -905,15 +894,14 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
 
         self.db.buildsets.getBuildset = getBuildset
 
-        rbss = yield persp.perspective_try(*args, **kwargs)
+        rbss = await persp.perspective_try(*args, **kwargs)
 
         if rbss is None:
             return
         self.assertIsInstance(rbss, trysched.RemoteBuildSetStatus)
 
-    @defer.inlineCallbacks
-    def test_perspective_try(self):
-        yield self.call_perspective_try(
+    async def test_perspective_try(self):
+        await self.call_perspective_try(
             'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'], properties={'pr': 'op'}
         )
 
@@ -947,9 +935,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_try_bytes(self):
-        yield self.call_perspective_try(
+    async def test_perspective_try_bytes(self):
+        await self.call_perspective_try(
             'default', 'abcdef', (1, b'-- ++\xf8'), 'repo', 'proj', ['a'], properties={'pr': 'op'}
         )
 
@@ -982,9 +969,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_try_who(self):
-        yield self.call_perspective_try(
+    async def test_perspective_try_who(self):
+        await self.call_perspective_try(
             'default',
             'abcdef',
             (1, '-- ++'),
@@ -1025,21 +1011,19 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_perspective_try_bad_builders(self):
-        yield self.call_perspective_try(
+    async def test_perspective_try_bad_builders(self):
+        await self.call_perspective_try(
             'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['xxx'], properties={'pr': 'op'}
         )
 
         self.assertEqual(self.addBuildsetCalls, [])
 
-    @defer.inlineCallbacks
-    def test_getAvailableBuilderNames(self):
+    async def test_getAvailableBuilderNames(self):
         sched = self.makeScheduler(
             name='tsched', builderNames=['a', 'b'], port='xxx', userpass=[('a', 'b')]
         )
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
-        buildernames = yield persp.perspective_getAvailableBuilderNames()
+        buildernames = await persp.perspective_getAvailableBuilderNames()
 
         self.assertEqual(buildernames, ['a', 'b'])
 
@@ -1061,8 +1045,7 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
         )
         return sched
 
-    @defer.inlineCallbacks
-    def test_service(self):
+    async def test_service(self):
         sched = self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
@@ -1079,15 +1062,14 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
 
         sched.master.pbmanager.register = register
         # start it
-        yield sched.startService()
+        await sched.startService()
         # make a fake connection by invoking the factory, and check that we
         # get the correct perspective
         persp = self.got_factory(mock.Mock(), 'fred')
         self.assertTrue(isinstance(persp, trysched.Try_Userpass_Perspective))
-        yield sched.stopService()
+        await sched.stopService()
 
-    @defer.inlineCallbacks
-    def test_service_but_not_active(self):
+    async def test_service_but_not_active(self):
         sched = self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
@@ -1097,6 +1079,6 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
         sched.master.pbmanager = mock.Mock()
 
         sched.startService()
-        yield sched.stopService()
+        await sched.stopService()
 
         self.assertFalse(sched.master.pbmanager.register.called)

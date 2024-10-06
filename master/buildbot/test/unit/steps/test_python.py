@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -579,8 +578,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="sphinx 0 warnings")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_warnings(self):
+    async def test_warnings(self):
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['sphinx-build', '.', '_build'])
@@ -589,7 +587,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(result=WARNINGS, state_string="sphinx 2 warnings (warnings)")
         self.expect_log_file("warnings", warnings)
-        yield self.run_step()
+        await self.run_step()
 
         self.assertEqual(self.get_nth_step(0).statistics, {'warnings': 2})
 

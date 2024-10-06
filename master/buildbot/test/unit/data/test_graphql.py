@@ -16,7 +16,6 @@
 
 import textwrap
 
-from twisted.internet import defer
 from twisted.python import reflect
 from twisted.trial import unittest
 
@@ -35,8 +34,7 @@ except ImportError:
 class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.InterfaceTests):
     maxDiff = None
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         if not graphql:
             raise unittest.SkipTest('Test requires graphql-core module installed')
         self.setup_test_reactor(use_asyncio=True)
@@ -45,9 +43,9 @@ class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.Inter
         self.all_submodules = connector.DataConnector.submodules
         self.patch(connector.DataConnector, 'submodules', [])
         self.master.data = self.data = connector.DataConnector()
-        yield self.data.setServiceParent(self.master)
+        await self.data.setServiceParent(self.master)
         self.graphql = GraphQLConnector()
-        yield self.graphql.setServiceParent(self.master)
+        await self.graphql.setServiceParent(self.master)
 
     def configure_graphql(self):
         self.master.config.www = {'graphql': {}}
@@ -140,16 +138,15 @@ class TestGraphQlConnectorService(TestReactorMixin, unittest.TestCase):
             raise unittest.SkipTest('Test requires graphql-core module installed')
         self.setup_test_reactor(use_asyncio=False)
 
-    @defer.inlineCallbacks
-    def test_start_stop(self):
+    async def test_start_stop(self):
         self.master = fakemaster.make_master(self)
         self.master.data = self.data = connector.DataConnector()
-        yield self.data.setServiceParent(self.master)
+        await self.data.setServiceParent(self.master)
         self.graphql = GraphQLConnector()
-        yield self.graphql.setServiceParent(self.master)
-        yield self.master.startService()
+        await self.graphql.setServiceParent(self.master)
+        await self.master.startService()
         self.master.config.www = {'graphql': {}}
         self.graphql.reconfigServiceWithBuildbotConfig(self.master.config)
         self.assertIsNotNone(self.graphql.asyncio_loop)
-        yield self.master.stopService()
+        await self.master.stopService()
         self.assertIsNone(self.graphql.asyncio_loop)

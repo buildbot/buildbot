@@ -16,7 +16,6 @@
 import os
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.scripts.logwatcher import BuildmasterStartupError
@@ -61,74 +60,67 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
         self.assertEqual(lw.created_paths, ['workdir/test.log'])
         self.assertTrue(lw.running)
 
-    @defer.inlineCallbacks
-    def test_success_before_timeout(self):
+    async def test_success_before_timeout(self):
         lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'BuildMaster is running')
-        res = yield d
+        res = await d
         self.assertEqual(res, 'buildmaster')
 
-    @defer.inlineCallbacks
-    def test_failure_after_timeout(self):
+    async def test_failure_after_timeout(self):
         lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(5.1)
         lw.lineReceived(b'BuildMaster is running')
         with self.assertRaises(BuildmasterTimeoutError):
-            yield d
+            await d
 
-    @defer.inlineCallbacks
-    def test_progress_restarts_timeout(self):
+    async def test_progress_restarts_timeout(self):
         lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'added builder')
         self.reactor.advance(4.9)
         lw.lineReceived(b'BuildMaster is running')
-        res = yield d
+        res = await d
         self.assertEqual(res, 'buildmaster')
 
-    @defer.inlineCallbacks
-    def test_handles_very_long_lines(self):
+    async def test_handles_very_long_lines(self):
         lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         lw.dataReceived(
             b't' * lw.MAX_LENGTH * 2 + self.delimiter + b'BuildMaster is running' + self.delimiter
         )
-        res = yield d
+        res = await d
         self.assertEqual(
             lw.printed_output, ['Got an a very long line in the log (length 32768 bytes), ignoring']
         )
         self.assertEqual(res, 'buildmaster')
 
-    @defer.inlineCallbacks
-    def test_handles_very_long_lines_separate_packet(self):
+    async def test_handles_very_long_lines_separate_packet(self):
         lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         lw.dataReceived(b't' * lw.MAX_LENGTH * 2)
         lw.dataReceived(self.delimiter + b'BuildMaster is running' + self.delimiter)
-        res = yield d
+        res = await d
         self.assertEqual(
             lw.printed_output, ['Got an a very long line in the log (length 32768 bytes), ignoring']
         )
         self.assertEqual(res, 'buildmaster')
 
-    @defer.inlineCallbacks
-    def test_handles_very_long_lines_separate_packet_with_newline(self):
+    async def test_handles_very_long_lines_separate_packet_with_newline(self):
         lw = MockedLogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         lw.dataReceived(b't' * lw.MAX_LENGTH * 2 + self.delimiter)
         lw.dataReceived(b'BuildMaster is running' + self.delimiter)
-        res = yield d
+        res = await d
         self.assertEqual(
             lw.printed_output, ['Got an a very long line in the log (length 32768 bytes), ignoring']
         )
         self.assertEqual(res, 'buildmaster')
 
-    @defer.inlineCallbacks
-    def test_matches_lines(self):
+    async def test_matches_lines(self):
         lines_and_expected = [
             (b'configuration update aborted without making any changes', ReconfigError()),
             (
@@ -149,7 +141,7 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
 
             if isinstance(expected, Exception):
                 with self.assertRaises(type(expected)):
-                    yield d
+                    await d
             else:
-                res = yield d
+                res = await d
                 self.assertEqual(res, expected)

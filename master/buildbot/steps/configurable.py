@@ -21,7 +21,6 @@ import warnings
 import yaml
 from evalidate import Expr
 from evalidate import base_eval_model
-from twisted.internet import defer
 
 from buildbot.db.model import Model
 from buildbot.plugins import util
@@ -228,21 +227,19 @@ class BuildbotTestCiReadConfigMixin:
     config_filenames = ['.bbtravis.yml', '.buildbot-ci.yml']
     config = None
 
-    @defer.inlineCallbacks
-    def get_config_yml_from_worker(self):
+    async def get_config_yml_from_worker(self):
         exceptions = []
         for filename in self.config_filenames:
             try:
-                config_yml = yield self.getFileContentFromWorker(filename, abandonOnFailure=True)
+                config_yml = await self.getFileContentFromWorker(filename, abandonOnFailure=True)
                 return filename, config_yml
             except buildstep.BuildStepFailed as e:
                 exceptions.append(e)
 
         return None, exceptions
 
-    @defer.inlineCallbacks
-    def get_ci_config(self):
-        filename, result = yield self.get_config_yml_from_worker()
+    async def get_ci_config(self):
+        filename, result = await self.get_config_yml_from_worker()
         if not filename:
             exceptions = result
             msg = ' '.join(str(exceptions))
@@ -282,11 +279,10 @@ class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, T
             **kwargs,
         )
 
-    @defer.inlineCallbacks
-    def run(self):
-        self.config = yield self.get_ci_config()
+    async def run(self):
+        self.config = await self.get_ci_config()
 
-        rv = yield super().run()
+        rv = await super().run()
         return rv
 
     def _replace_label(self, v):
@@ -404,9 +400,8 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
             name = name[: max_length - 3] + "..."
         return name
 
-    @defer.inlineCallbacks
-    def run(self):
-        config = yield self.get_ci_config()
+    async def run(self):
+        config = await self.get_ci_config()
         for k in BuildbotCiYml.SCRIPTS:
             for command in config.script_commands[k]:
                 self._add_step(command=command)

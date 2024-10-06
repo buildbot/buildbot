@@ -65,20 +65,18 @@ class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.auth.master = self.master
         self.req = self.make_request(b'/')
 
-    @defer.inlineCallbacks
-    def test_maybeAutoLogin(self):
+    async def test_maybeAutoLogin(self):
         self.assertEqual((yield self.auth.maybeAutoLogin(self.req)), None)
 
     def test_getLoginResource(self):
         with self.assertRaises(Error):
             self.auth.getLoginResource()
 
-    @defer.inlineCallbacks
-    def test_updateUserInfo(self):
+    async def test_updateUserInfo(self):
         self.auth.userInfoProvider = auth.UserInfoProviderBase()
         self.auth.userInfoProvider.getUserInfo = lambda un: {'info': un}
         self.req.session.user_info = {'username': 'elvira'}
-        yield self.auth.updateUserInfo(self.req)
+        await self.auth.updateUserInfo(self.req)
         self.assertEqual(self.req.session.user_info, {'info': 'elvira', 'username': 'elvira'})
 
     def getConfigDict(self):
@@ -86,8 +84,7 @@ class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class UseAuthInfoProviderBase(unittest.TestCase):
-    @defer.inlineCallbacks
-    def test_getUserInfo(self):
+    async def test_getUserInfo(self):
         uip = auth.UserInfoProviderBase()
         self.assertEqual((yield uip.getUserInfo('jess')), {'email': 'jess'})
 
@@ -104,29 +101,26 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.make_master()
         self.request = self.make_request(b'/')
 
-    @defer.inlineCallbacks
-    def test_maybeAutoLogin(self):
+    async def test_maybeAutoLogin(self):
         self.request.input_headers[b'HDR'] = b'rachel@foo.com'
-        yield self.auth.maybeAutoLogin(self.request)
+        await self.auth.maybeAutoLogin(self.request)
         self.assertEqual(
             self.request.session.user_info,
             {'username': 'rachel', 'realm': 'foo.com', 'email': 'rachel'},
         )
 
-    @defer.inlineCallbacks
-    def test_maybeAutoLogin_no_header(self):
+    async def test_maybeAutoLogin_no_header(self):
         try:
-            yield self.auth.maybeAutoLogin(self.request)
+            await self.auth.maybeAutoLogin(self.request)
         except Error as e:
             self.assertEqual(int(e.status), 403)
         else:
             self.fail("403 expected")
 
-    @defer.inlineCallbacks
-    def test_maybeAutoLogin_mismatched_value(self):
+    async def test_maybeAutoLogin_mismatched_value(self):
         self.request.input_headers[b'HDR'] = b'rachel'
         try:
-            yield self.auth.maybeAutoLogin(self.request)
+            await self.auth.maybeAutoLogin(self.request)
         except Error as e:
             self.assertEqual(int(e.status), 403)
         else:
@@ -188,15 +182,14 @@ class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
-    @defer.inlineCallbacks
-    def test_callable(self):
+    async def test_callable(self):
         self.auth = self.MockCustomAuth()
         cred_good = UsernamePassword('fellow', 'correct')
-        result_good = yield self.auth.checkers[0].requestAvatarId(cred_good)
+        result_good = await self.auth.checkers[0].requestAvatarId(cred_good)
         self.assertEqual(result_good, 'fellow')
         cred_bad = UsernamePassword('bandid', 'incorrect')
         defer_bad = self.auth.checkers[0].requestAvatarId(cred_bad)
-        yield self.assertFailure(defer_bad, UnauthorizedLogin)
+        await self.assertFailure(defer_bad, UnauthorizedLogin)
 
 
 class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
@@ -204,14 +197,13 @@ class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unitt
         self.setup_test_reactor()
         self.setUpAuthResource()
 
-    @defer.inlineCallbacks
-    def test_render(self):
+    async def test_render(self):
         self.rsrc = auth.LoginResource(self.master)
         self.rsrc.renderLogin = mock.Mock(
             spec=self.rsrc.renderLogin, return_value=defer.succeed(b'hi')
         )
 
-        yield self.render_resource(self.rsrc, b'/auth/login')
+        await self.render_resource(self.rsrc, b'/auth/login')
         self.rsrc.renderLogin.assert_called_with(mock.ANY)
 
 
@@ -223,8 +215,7 @@ class PreAuthenticatedLoginResource(
         self.setUpAuthResource()
         self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
 
-    @defer.inlineCallbacks
-    def test_render(self):
+    async def test_render(self):
         self.auth.maybeAutoLogin = mock.Mock()
 
         def updateUserInfo(request):
@@ -234,7 +225,7 @@ class PreAuthenticatedLoginResource(
 
         self.auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
 
-        res = yield self.render_resource(self.rsrc, b'/auth/login')
+        res = await self.render_resource(self.rsrc, b'/auth/login')
         self.assertEqual(res, {'redirected': b'h:/a/b/#/'})
         self.assertFalse(self.auth.maybeAutoLogin.called)
         self.auth.updateUserInfo.assert_called_with(mock.ANY)
@@ -247,17 +238,15 @@ class LogoutResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unit
         self.setUpAuthResource()
         self.rsrc = auth.LogoutResource(self.master)
 
-    @defer.inlineCallbacks
-    def test_render(self):
+    async def test_render(self):
         self.master.session.expire = mock.Mock()
-        res = yield self.render_resource(self.rsrc, b'/auth/logout')
+        res = await self.render_resource(self.rsrc, b'/auth/logout')
         self.assertEqual(res, {'redirected': b'h:/a/b/#/'})
         self.master.session.expire.assert_called_with()
 
-    @defer.inlineCallbacks
-    def test_render_with_crlf(self):
+    async def test_render_with_crlf(self):
         self.master.session.expire = mock.Mock()
-        res = yield self.render_resource(self.rsrc, b'/auth/logout?redirect=%0d%0abla')
+        res = await self.render_resource(self.rsrc, b'/auth/logout?redirect=%0d%0abla')
         # everything after a %0d shall be stripped
         self.assertEqual(res, {'redirected': b'h:/a/b/#'})
         self.master.session.expire.assert_called_with()
