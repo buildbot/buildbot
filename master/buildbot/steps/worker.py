@@ -17,8 +17,6 @@
 import os
 import stat
 
-from twisted.internet import defer
-
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
@@ -46,8 +44,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         self.variables = variables
         self.source = source
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # on Windows, environment variables are case-insensitive, but we have
         # a case-sensitive dictionary in worker_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
@@ -69,7 +66,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
                 # note that the property is not uppercased
                 properties.setProperty(variable, value, self.source, runtime=True)
                 log.append(f"{variable} = {value!r}")
-        yield self.addCompleteLog("properties", "\n".join(log))
+        await self.addCompleteLog("properties", "\n".join(log))
         return SUCCESS
 
 
@@ -87,12 +84,11 @@ class FileExists(WorkerBuildStep):
         super().__init__(**kwargs)
         self.file = file
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand('stat')
         cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail():
             self.descriptionDone = ["File not found."]
@@ -128,8 +124,7 @@ class CopyDirectory(WorkerBuildStep):
         self.timeout = timeout
         self.maxTime = maxTime
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand('cpdir')
 
         args = {'fromdir': self.src, 'todir': self.dest}
@@ -139,7 +134,7 @@ class CopyDirectory(WorkerBuildStep):
 
         cmd = remotecommand.RemoteCommand('cpdir', args)
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail():
             self.descriptionDone = ["Copying", self.src, "to", self.dest, "failed."]
@@ -167,12 +162,11 @@ class RemoveDirectory(WorkerBuildStep):
         super().__init__(**kwargs)
         self.dir = dir
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand('rmdir')
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail():
             self.descriptionDone = ["Delete failed."]
@@ -199,11 +193,10 @@ class MakeDirectory(WorkerBuildStep):
         super().__init__(**kwargs)
         self.dir = dir
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand('mkdir')
         cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.didFail():
             self.descriptionDone = ["Create failed."]
@@ -216,13 +209,12 @@ class CompositeStepMixin:
     def workerPathToMasterPath(self, path):
         return os.path.join(*self.worker.path_module.split(path))
 
-    @defer.inlineCallbacks
-    def addLogForRemoteCommands(self, logname):
+    async def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write
         to the last one.
         """
-        self.rc_log = yield self.addLog(logname)
+        self.rc_log = await self.addLog(logname)
         return self.rc_log
 
     def runRemoteCommand(
