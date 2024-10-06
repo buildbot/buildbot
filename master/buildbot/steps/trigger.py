@@ -200,8 +200,7 @@ class Trigger(BuildStep):
             all_got_revisions = {'': all_got_revisions}
         return all_got_revisions
 
-    @defer.inlineCallbacks
-    def worstStatus(self, overall_results, rclist, unimportant_brids):
+    async def worstStatus(self, overall_results, rclist, unimportant_brids):
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, brids_dict = results
@@ -213,14 +212,13 @@ class Trigger(BuildStep):
                     continue
 
             if not was_cb:
-                yield self.addLogWithFailure(results)
+                await self.addLogWithFailure(results)
                 results = EXCEPTION
 
             overall_results = worst_status(overall_results, results)
         return overall_results
 
-    @defer.inlineCallbacks
-    def addBuildUrls(self, rclist):
+    async def addBuildUrls(self, rclist):
         brids = {}
         for was_cb, results in rclist:
             if isinstance(results, tuple):
@@ -228,39 +226,36 @@ class Trigger(BuildStep):
             builderNames = {}
             if was_cb:  # errors were already logged in worstStatus
                 for builderid, br in brids.items():
-                    builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
+                    builds = await self.master.db.builds.getBuilds(buildrequestid=br)
                     for build in builds:
                         builderid = build.builderid
                         # When virtual builders are used, the builderid used for triggering
                         # is not the same as the one that the build actually got
                         if builderid not in builderNames:
-                            builderDict = yield self.master.data.get(("builders", builderid))
+                            builderDict = await self.master.data.get(("builders", builderid))
                             builderNames[builderid] = builderDict["name"]
                         num = build.number
                         url = getURLForBuild(self.master, builderid, num)
-                        yield self.addURL(
+                        await self.addURL(
                             f'{statusToString(build.results)}: '
                             f'{builderNames[builderid]} #{num}',
                             url,
                         )
 
-    @defer.inlineCallbacks
-    def _add_results(self, brid):
-        @defer.inlineCallbacks
-        def _is_buildrequest_complete(brid):
-            buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
+    async def _add_results(self, brid):
+        async def _is_buildrequest_complete(brid):
+            buildrequest = await self.master.db.buildrequests.getBuildRequest(brid)
             return buildrequest.complete
 
         event = ('buildrequests', str(brid), 'complete')
-        yield self.master.mq.waitUntilEvent(event, lambda: _is_buildrequest_complete(brid))
-        builds = yield self.master.db.builds.getBuilds(buildrequestid=brid)
+        await self.master.mq.waitUntilEvent(event, lambda: _is_buildrequest_complete(brid))
+        builds = await self.master.db.builds.getBuilds(buildrequestid=brid)
         for build in builds:
             self._result_list.append(build.results)
         self.updateSummary()
 
-    @defer.inlineCallbacks
-    def run(self):
-        schedulers_and_props = yield self.getSchedulersAndProperties()
+    async def run(self):
+        schedulers_and_props = await self.getSchedulersAndProperties()
 
         schedulers_and_props_list = []
 
@@ -308,9 +303,9 @@ class Trigger(BuildStep):
             # the deferred lists, just let the db writes be serial.
             brids = {}
             try:
-                _, brids = yield idsDeferred
+                _, brids = await idsDeferred
             except Exception as e:
-                yield self.addLogWithException(e)
+                await self.addLogWithException(e)
                 results = EXCEPTION
             if unimportant:
                 unimportant_brids.extend(brids.values())
@@ -319,7 +314,7 @@ class Trigger(BuildStep):
                 # put the url to the brids, so that we can have the status from
                 # the beginning
                 url = getURLForBuildrequest(self.master, brid)
-                yield self.addURL(f"{sch.name} #{brid}", url)
+                await self.addURL(f"{sch.name} #{brid}", url)
                 # No yield since we let this happen as the builds complete
                 self._add_results(brid)
 
@@ -332,14 +327,14 @@ class Trigger(BuildStep):
         if self.waitForFinish:
             self.waitForFinishDeferred = defer.DeferredList(dl, consumeErrors=1)
             try:
-                rclist = yield self.waitForFinishDeferred
+                rclist = await self.waitForFinishDeferred
             except defer.CancelledError:
                 pass
             # we were interrupted, don't bother update status
             if self.ended:
                 return CANCELLED
-            yield self.addBuildUrls(rclist)
-            results = yield self.worstStatus(results, rclist, unimportant_brids)
+            await self.addBuildUrls(rclist)
+            results = await self.worstStatus(results, rclist, unimportant_brids)
         else:
             # do something to handle errors
             for d in dl:
