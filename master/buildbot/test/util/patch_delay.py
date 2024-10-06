@@ -90,9 +90,8 @@ def patchForDelay(target_name):
     delay = DelayWrapper()
 
     @functools.wraps(original)
-    @defer.inlineCallbacks
-    def wrapper(*args, **kwargs):
-        yield delay.add_new()
+    async def wrapper(*args, **kwargs):
+        await delay.add_new()
         return (yield original(*args, **kwargs))
 
     with mock.patch(target_name, new=wrapper):
