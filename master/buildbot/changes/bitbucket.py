@@ -70,8 +70,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
             name=self.build_name(owner, slug), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch
         )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         owner,
         slug,
@@ -104,11 +103,11 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         self.external_property_whitelist = bitbucket_property_whitelist
 
         base_url = "https://api.bitbucket.org/2.0"
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, base_url, auth=auth
         )
 
-        yield super().reconfigService(
+        await super().reconfigService(
             self.build_name(owner, slug), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch
         )
 
@@ -122,17 +121,16 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         )
 
     @deferredLocked('initLock')
-    @defer.inlineCallbacks
-    def poll(self):
-        response = yield self._getChanges()
+    async def poll(self):
+        response = await self._getChanges()
         if response.code != 200:
             log.err(
                 f"{self.__class__.__name__}: error {response.code} while loading {response.url}"
             )
             return
 
-        json_result = yield response.json()
-        yield self._processChanges(json_result)
+        json_result = await response.json()
+        await self._processChanges(json_result)
 
     def _getChanges(self):
         self.lastPoll = time.time()
@@ -143,8 +141,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         url = f"/repositories/{self.owner}/{self.slug}/pullrequests"
         return self._http.get(url, timeout=self.pollInterval)
 
-    @defer.inlineCallbacks
-    def _processChanges(self, result):
+    async def _processChanges(self, result):
         for pr in result['values']:
             branch = pr['source']['branch']['name']
             nr = int(pr['id'])
@@ -155,13 +152,13 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
 
             # check branch
             if not self.branch or branch in self.branch:
-                current = yield self._getCurrentRev(nr)
+                current = await self._getCurrentRev(nr)
 
                 # compare _short_ hashes to check if the PR has been updated
                 if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
-                    response = yield self._http.get(str(pr['links']['self']['href']))
-                    pr_json = yield response.json()
+                    response = await self._http.get(str(pr['links']['self']['href']))
+                    pr_json = await response.json()
 
                     # filter pull requests by user function
                     if not self.pullrequest_filter(pr_json):
@@ -183,18 +180,18 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     title = pr['title']
 
                     # parse commit api page
-                    response = yield self._http.get(
+                    response = await self._http.get(
                         str(pr['source']['commit']['links']['self']['href'])
                     )
-                    commit_json = yield response.json()
+                    commit_json = await response.json()
 
                     # use the full-length hash from now on
                     revision = commit_json['hash']
                     revlink = commit_json['links']['html']['href']
 
                     # Retrieve the list of added/modified files in the commit
-                    response = yield self._http.get(str(commit_json['links']['diff']['href']))
-                    content = yield response.content()
+                    response = await self._http.get(str(commit_json['links']['diff']['href']))
+                    content = await response.content()
                     patchset = PatchSet(content.decode())
                     files = [
                         file.path
@@ -203,17 +200,17 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                     ]
 
                     # parse repo api page
-                    response = yield self._http.get(
+                    response = await self._http.get(
                         str(pr['source']['repository']['links']['self']['href'])
                     )
-                    repo_json = yield response.json()
+                    repo_json = await response.json()
                     repo = repo_json['links']['html']['href']
 
                     # update database
-                    yield self._setCurrentRev(nr, revision)
+                    await self._setCurrentRev(nr, revision)
 
                     # emit the change
-                    yield self.master.data.updates.addChange(
+                    await self.master.data.updates.addChange(
                         author=bytes2unicode(author),
                         committer=None,
                         revision=bytes2unicode(revision),
