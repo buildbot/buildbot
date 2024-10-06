@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import forceschedulers
@@ -196,15 +195,13 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        res = yield self.callGet(('forceschedulers', "defaultforce"))
+    async def test_get_existing(self):
+        res = await self.callGet(('forceschedulers', "defaultforce"))
         self.validateData(res)
         self.assertEqual(res, expected_default)
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        res = yield self.callGet(('forceschedulers', 'foo'))
+    async def test_get_missing(self):
+        res = await self.callGet(('forceschedulers', 'foo'))
         self.assertEqual(res, None)
 
 
@@ -221,7 +218,6 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        res = yield self.callGet(('forceschedulers',))
+    async def test_get_existing(self):
+        res = await self.callGet(('forceschedulers',))
         self.assertEqual(res, [expected_default])
