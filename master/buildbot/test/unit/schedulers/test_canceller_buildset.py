@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -26,8 +25,7 @@ from buildbot.util.ssfilter import SourceStampFilter
 
 
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
@@ -35,7 +33,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.insert_test_data()
         self._cancelled_build_ids = []
 
-        yield self.master.startService()
+        await self.master.startService()
 
     def tearDown(self):
         return self.master.stopService()
@@ -113,15 +111,13 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.mq.assertProductions(expected_productions)
 
-    @defer.inlineCallbacks
-    def send_build_finished(self, id, results):
-        build = yield self.master.data.get(('builds', str(id)))
+    async def send_build_finished(self, id, results):
+        build = await self.master.data.get(('builds', str(id)))
         build['results'] = results
         self.master.mq.callConsumer(('builds', str(id), 'finished'), build)
-        yield self.master.mq.wait_consumed()
+        await self.master.mq.wait_consumed()
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequests_ss_filter_does_not_match(self):
+    async def test_cancel_buildrequests_ss_filter_does_not_match(self):
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -132,12 +128,11 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 ),
             ],
         )
-        yield self.canceller.setServiceParent(self.master)
-        yield self.send_build_finished(500, FAILURE)
+        await self.canceller.setServiceParent(self.master)
+        await self.send_build_finished(500, FAILURE)
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequests_builder_filter_does_not_match(self):
+    async def test_cancel_buildrequests_builder_filter_does_not_match(self):
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -148,12 +143,11 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 ),
             ],
         )
-        yield self.canceller.setServiceParent(self.master)
-        yield self.send_build_finished(500, FAILURE)
+        await self.canceller.setServiceParent(self.master)
+        await self.send_build_finished(500, FAILURE)
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequests_not_failure(self):
+    async def test_cancel_buildrequests_not_failure(self):
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -164,12 +158,11 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 ),
             ],
         )
-        yield self.canceller.setServiceParent(self.master)
-        yield self.send_build_finished(500, SUCCESS)
+        await self.canceller.setServiceParent(self.master)
+        await self.send_build_finished(500, SUCCESS)
         self.assert_cancelled([])
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequests_matches(self):
+    async def test_cancel_buildrequests_matches(self):
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -180,22 +173,21 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 ),
             ],
         )
-        yield self.canceller.setServiceParent(self.master)
-        yield self.send_build_finished(500, FAILURE)
+        await self.canceller.setServiceParent(self.master)
+        await self.send_build_finished(500, FAILURE)
         # Buildrequest cancelling happens in BotMaster and this test uses a fake one that does
         # not implement build cancelling after buildrequest cancels
         self.assert_cancelled([('breq', 401), ('breq', 402)])
 
-    @defer.inlineCallbacks
-    def test_cancel_buildrequests_matches_any_builder(self):
+    async def test_cancel_buildrequests_matches_any_builder(self):
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
                 (['builder1'], None, SourceStampFilter(branch_eq=['branch1'])),
             ],
         )
-        yield self.canceller.setServiceParent(self.master)
-        yield self.send_build_finished(500, FAILURE)
+        await self.canceller.setServiceParent(self.master)
+        await self.send_build_finished(500, FAILURE)
         # Buildrequest cancelling happens in BotMaster and this test uses a fake one that does
         # not implement build cancelling after buildrequest cancels
         self.assert_cancelled([('breq', 401), ('breq', 402)])
