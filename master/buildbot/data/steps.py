@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -56,15 +54,14 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         /builders/s:buildername/builds/n:build_number/steps/n:step_number
         """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
-            dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
+            dbdict = await self.master.db.steps.getStep(kwargs['stepid'])
             return self.db2data(dbdict) if dbdict else None
-        buildid = yield self.getBuildid(kwargs)
+        buildid = await self.getBuildid(kwargs)
         if buildid is None:
             return None
-        dbdict = yield self.master.db.steps.getStep(
+        dbdict = await self.master.db.steps.getStep(
             buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
         )
         return self.db2data(dbdict) if dbdict else None
@@ -78,15 +75,14 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         /builders/s:buildername/builds/n:build_number/steps
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         if 'buildid' in kwargs:
             buildid = kwargs['buildid']
         else:
-            buildid = yield self.getBuildid(kwargs)
+            buildid = await self.getBuildid(kwargs)
             if buildid is None:
                 return None
-        steps = yield self.master.db.steps.getSteps(buildid=buildid)
+        steps = await self.master.db.steps.getSteps(buildid=buildid)
         return [self.db2data(model) for model in steps]
 
 
@@ -122,55 +118,48 @@ class Step(base.ResourceType):
 
     entityType = EntityType(name, 'Step')
 
-    @defer.inlineCallbacks
-    def generateEvent(self, stepid, event):
-        step = yield self.master.data.get(('steps', stepid))
+    async def generateEvent(self, stepid, event):
+        step = await self.master.data.get(('steps', stepid))
         self.produceEvent(step, event)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addStep(self, buildid, name):
-        stepid, num, name = yield self.master.db.steps.addStep(
+    async def addStep(self, buildid, name):
+        stepid, num, name = await self.master.db.steps.addStep(
             buildid=buildid, name=name, state_string='pending'
         )
-        yield self.generateEvent(stepid, 'new')
+        await self.generateEvent(stepid, 'new')
         return (stepid, num, name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def startStep(self, stepid, started_at=None, locks_acquired=False):
+    async def startStep(self, stepid, started_at=None, locks_acquired=False):
         if started_at is None:
             started_at = int(self.master.reactor.seconds())
-        yield self.master.db.steps.startStep(
+        await self.master.db.steps.startStep(
             stepid=stepid, started_at=started_at, locks_acquired=locks_acquired
         )
-        yield self.generateEvent(stepid, 'started')
+        await self.generateEvent(stepid, 'started')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
+    async def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
         if locks_acquired_at is None:
             locks_acquired_at = int(self.master.reactor.seconds())
 
-        yield self.master.db.steps.set_step_locks_acquired_at(
+        await self.master.db.steps.set_step_locks_acquired_at(
             stepid=stepid, locks_acquired_at=locks_acquired_at
         )
-        yield self.generateEvent(stepid, 'updated')
+        await self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def setStepStateString(self, stepid, state_string):
-        yield self.master.db.steps.setStepStateString(stepid=stepid, state_string=state_string)
-        yield self.generateEvent(stepid, 'updated')
+    async def setStepStateString(self, stepid, state_string):
+        await self.master.db.steps.setStepStateString(stepid=stepid, state_string=state_string)
+        await self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def addStepURL(self, stepid, name, url):
-        yield self.master.db.steps.addURL(stepid=stepid, name=name, url=url)
-        yield self.generateEvent(stepid, 'updated')
+    async def addStepURL(self, stepid, name, url):
+        await self.master.db.steps.addURL(stepid=stepid, name=name, url=url)
+        await self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def finishStep(self, stepid, results, hidden):
-        yield self.master.db.steps.finishStep(stepid=stepid, results=results, hidden=hidden)
-        yield self.generateEvent(stepid, 'finished')
+    async def finishStep(self, stepid, results, hidden):
+        await self.master.db.steps.finishStep(stepid=stepid, results=results, hidden=hidden)
+        await self.generateEvent(stepid, 'finished')
