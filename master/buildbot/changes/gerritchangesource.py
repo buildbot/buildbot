@@ -197,8 +197,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             branch = branch[len('refs/heads/') :]
         return branch
 
-    @defer.inlineCallbacks
-    def addChangeFromEvent(self, properties, event):
+    async def addChangeFromEvent(self, properties, event):
         if "change" not in event:
             if self.debug:
                 log.msg(f'unsupported event {event["type"]}')
@@ -214,11 +213,11 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
 
         files = ["unknown"]
         if self._get_files:
-            files = yield self.getFiles(
+            files = await self.getFiles(
                 change=event_change["number"], patchset=event["patchSet"]["number"]
             )
 
-        yield self.master.data.updates.addChange(
+        await self.master.data.updates.addChange(
             author=_gerrit_user_to_author(event_change["owner"]),
             project=util.bytes2unicode(event_change["project"]),
             repository=f'{self.gitBaseURL}/{event_change["project"]}',
@@ -270,8 +269,7 @@ class GerritSshStreamEventsConnector:
             self._output_enabled = True
             self._ended_deferred = defer.Deferred()
 
-        @defer.inlineCallbacks
-        def outLineReceived(self, line):
+        async def outLineReceived(self, line):
             if self.connector.debug:
                 log.msg(
                     f"{self.connector.change_source.name} "
@@ -280,7 +278,7 @@ class GerritSshStreamEventsConnector:
 
             self.connector._append_line_for_debug(line)
             if self._output_enabled:
-                yield self.connector.on_line_received_cb(line)
+                await self.connector.on_line_received_cb(line)
 
         def errLineReceived(self, line):
             if self.connector.debug:
@@ -350,21 +348,19 @@ class GerritSshStreamEventsConnector:
         self._want_process = True
         self.start_stream_process()
 
-    @defer.inlineCallbacks
-    def stop(self):
+    async def stop(self):
         self._want_process = False
         if self._process is not None:
             self._process[0].disable_output()
             self._process[1].signalProcess("KILL")
-            yield self._process[0].wait()
+            await self._process[0].wait()
 
-    @defer.inlineCallbacks
-    def restart(self):
+    async def restart(self):
         if self._process is not None:
             self._process[0].disable_output()
             # Process will restart automatically
             self._process[1].signalProcess("KILL")
-            yield self._process[0].wait()
+            await self._process[0].wait()
         else:
             self.start()
 
@@ -448,8 +444,7 @@ class GerritSshStreamEventsConnector:
             self.start_stream_process()
             self._stream_process_timeout = self.STREAM_BACKOFF_MIN
 
-    @defer.inlineCallbacks
-    def get_files(self, change, patchset):
+    async def get_files(self, change, patchset):
         cmd = self._build_gerrit_command(
             "query", str(change), "--format", "JSON", "--files", "--patch-sets"
         )
@@ -459,7 +454,7 @@ class GerritSshStreamEventsConnector:
                 f"{self.change_source.name}: querying for changed files in change {change}/{patchset}: {cmd}"
             )
 
-        rc, out = yield runprocess.run_process(self.reactor, cmd, env=None, collect_stderr=False)
+        rc, out = await runprocess.run_process(self.reactor, cmd, env=None, collect_stderr=False)
         if rc != 0:
             return ["unknown"]
 
@@ -499,15 +494,13 @@ class GerritHttpEventLogPollerConnector:
         self._on_lines_received_cb = on_lines_received_cb
         self._last_event_time = None
 
-    @defer.inlineCallbacks
-    def setup(self):
-        self._http = yield httpclientservice.HTTPSession(
+    async def setup(self):
+        self._http = await httpclientservice.HTTPSession(
             self._change_source.master.httpservice, self._base_url, auth=self._auth
         )
 
-    @defer.inlineCallbacks
-    def poll(self):
-        last_event_ts = yield self._get_last_event_ts()
+    async def poll(self):
+        last_event_ts = await self._get_last_event_ts()
         if last_event_ts is None:
             # If there is not last event time stored in the database, then set
             # the last event time to some historical look-back
@@ -521,20 +514,19 @@ class GerritHttpEventLogPollerConnector:
         if self.debug:
             log.msg(f"{self._change_source.name}: Polling gerrit: {last_event_formatted}")
 
-        res = yield self._http.get(
+        res = await self._http.get(
             "/plugins/events-log/events/", params={"t1": last_event_formatted}
         )
         if res.code != 200:
             log.msg(f'{self._change_source.name}: Polling gerrit: got HTTP error code {res.code}')
             return
 
-        lines = yield res.content()
-        yield self._on_lines_received_cb(lines.splitlines())
+        lines = await res.content()
+        await self._on_lines_received_cb(lines.splitlines())
 
-    @defer.inlineCallbacks
-    def get_files(self, change, patchset):
-        res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
-        res = yield res.content()
+    async def get_files(self, change, patchset):
+        res = await self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
+        res = await res.content()
         try:
             res = res.splitlines()[1].decode('utf8')  # the first line of every response is `)]}'`
             return list(json.loads(res))
@@ -542,10 +534,9 @@ class GerritHttpEventLogPollerConnector:
             log.err(e, 'while getting files from connector')
             return []
 
-    @defer.inlineCallbacks
-    def do_poll(self):
+    async def do_poll(self):
         try:
-            yield self.poll()
+            await self.poll()
         except Exception as e:
             log.err(e, 'while polling for changes')
 
@@ -643,8 +634,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         check_param_int(http_poll_interval, self.__class__, "http_poll_interval")
         super().checkConfig(**kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         gerritserver,
         username,
@@ -682,16 +672,16 @@ class GerritChangeSource(GerritChangeSourceBase):
             )
         self._stream_messages_timeout = False
 
-        self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
+        self._oid = await self.master.db.state.getObjectId(self.name, self.__class__.__name__)
 
         if self._start_ts is None:
             self._start_ts = self.master.reactor.seconds()
 
         if self._last_event_ts is None:
-            self._last_event_ts = yield self.master.db.state.getState(
+            self._last_event_ts = await self.master.db.state.getState(
                 self._oid, 'last_event_ts', None
             )
-            self._last_second_event_hashes = yield self.master.db.state.getState(
+            self._last_second_event_hashes = await self.master.db.state.getState(
                 self._oid, "last_event_hashes", None
             )
 
@@ -715,7 +705,7 @@ class GerritChangeSource(GerritChangeSourceBase):
                     first_fetch_lookback=0,
                     on_lines_received_cb=self._lines_received_poll,
                 )
-                yield self._poll_connector.setup()
+                await self._poll_connector.setup()
             self._is_synchronized = False
         else:
             self._poll_connector = None
@@ -725,28 +715,27 @@ class GerritChangeSource(GerritChangeSourceBase):
             self.master.reactor, self._no_stream_activity_timed_out, self._http_poll_interval
         )
 
-        yield super().reconfigService(**kwargs)
+        await super().reconfigService(**kwargs)
 
     def activate(self):
         self._is_synchronized = self._poll_connector is None
         self._stream_connector.start()
         self._stream_activity_watchdog.start()
 
-    @defer.inlineCallbacks
-    def deactivate(self):
+    async def deactivate(self):
         self._stream_activity_watchdog.stop()
-        yield self._stream_connector.stop()  # Note that this immediately stops event acceptance
+        await self._stream_connector.stop()  # Note that this immediately stops event acceptance
         self._poll_handler.stop()
-        yield self._deferwaiter.wait()
+        await self._deferwaiter.wait()
 
         if self._last_second_events:
-            yield self.master.db.state.setState(
+            await self.master.db.state.setState(
                 self._oid,
                 "last_event_hashes",
                 [build_gerrit_event_hash(event) for event in self._last_second_events],
             )
         else:
-            yield self.master.db.state.setState(self._oid, "last_event_hashes", None)
+            await self.master.db.state.setState(self._oid, "last_event_hashes", None)
 
     def getFiles(self, change, patchset):
         return self._stream_connector.get_files(change, patchset)
@@ -770,14 +759,12 @@ class GerritChangeSource(GerritChangeSourceBase):
             self._last_second_event_hashes = None
         self._last_second_events.append(event)
 
-    @defer.inlineCallbacks
-    def _update_last_event_ts(self):
+    async def _update_last_event_ts(self):
         if self._last_event_ts != self._last_event_ts_saved:
             self._last_event_ts_saved = self._last_event_ts
-            yield self.master.db.state.setState(self._oid, "last_event_ts", self._last_event_ts)
+            await self.master.db.state.setState(self._oid, "last_event_ts", self._last_event_ts)
 
-    @defer.inlineCallbacks
-    def _line_received_stream(self, line):
+    async def _line_received_stream(self, line):
         self._stream_activity_watchdog.notify()
         try:
             event = json.loads(bytes2unicode(line))
@@ -802,8 +789,8 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._poll_handler.stop()
 
         self._record_last_second_event(event, extract_gerrit_event_time(event))
-        yield self._update_last_event_ts()
-        yield self.eventReceived(event)
+        await self._update_last_event_ts()
+        await self.eventReceived(event)
 
     def _filter_out_already_received_events(self, events):
         if self._last_event_ts is None:
@@ -823,8 +810,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             filtered_events.append((ts, event))
         return filtered_events
 
-    @defer.inlineCallbacks
-    def _lines_received_poll(self, lines):
+    async def _lines_received_poll(self, lines):
         if self._is_synchronized and not self._stream_messages_timeout:
             return
 
@@ -875,9 +861,9 @@ class GerritChangeSource(GerritChangeSourceBase):
 
             for ts, event in events:
                 self._record_last_second_event(event, ts)
-                yield self.eventReceived(event)
+                await self.eventReceived(event)
 
-            yield self._update_last_event_ts()
+            await self._update_last_event_ts()
             self._poll_handler.schedule(self._http_poll_interval, invoke_again_if_running=True)
             if needs_stream_restart:
                 self._deferwaiter.add(self._stream_connector.restart())
@@ -892,7 +878,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         for ts, event in events:
             if ts <= first_queued_ts:
                 self._record_last_second_event(event, ts)
-                yield self.eventReceived(event)
+                await self.eventReceived(event)
 
         i = 0
         while i < len(self._queued_stream_events):
@@ -901,12 +887,12 @@ class GerritChangeSource(GerritChangeSourceBase):
                 i += 1
                 continue
             self._record_last_second_event(event, ts)
-            yield self.eventReceived(event)
+            await self.eventReceived(event)
             i += 1
 
         self._queued_stream_events.clear()
         self._is_synchronized = True
-        yield self._update_last_event_ts()
+        await self._update_last_event_ts()
         if needs_stream_restart:
             self._deferwaiter.add(self._stream_connector.restart())
             self._stream_activity_watchdog.start()
@@ -938,8 +924,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             self.name = f"GerritEventLogPoller:{baseURL}"
         super().checkConfig(**kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         baseURL,
         auth,
@@ -948,12 +933,12 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         firstFetchLookback=FIRST_FETCH_LOOKBACK_DAYS,
         **kwargs,
     ):
-        yield super().reconfigService(**kwargs)
+        await super().reconfigService(**kwargs)
 
         self._poll_interval = pollInterval
         self._poll_at_launch = pollAtLaunch
 
-        self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
+        self._oid = await self.master.db.state.getObjectId(self.name, self.__class__.__name__)
 
         def get_last_event_ts():
             return self.master.db.state.getState(self._oid, 'last_event_ts', None)
@@ -967,7 +952,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             first_fetch_lookback=firstFetchLookback,
             on_lines_received_cb=self._lines_received,
         )
-        yield self._connector.setup()
+        await self._connector.setup()
         self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
 
     def getFiles(self, change, patchset):
@@ -986,8 +971,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
         return msg.format(self.name)
 
-    @defer.inlineCallbacks
-    def _lines_received(self, lines):
+    async def _lines_received(self, lines):
         last_event_ts = None
         for line in lines:
             try:
@@ -1001,7 +985,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                     log.msg(f"no type in event {line}")
                 continue
 
-            yield super().eventReceived(event)
+            await super().eventReceived(event)
 
             this_last_event_ts = extract_gerrit_event_time(event)
             if last_event_ts is None:
@@ -1010,4 +994,4 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                 last_event_ts = max(last_event_ts, this_last_event_ts)
 
         if last_event_ts is not None:
-            yield self.master.db.state.setState(self._oid, "last_event_ts", last_event_ts)
+            await self.master.db.state.setState(self._oid, "last_event_ts", last_event_ts)
