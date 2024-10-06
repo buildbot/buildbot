@@ -22,7 +22,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from packaging.version import parse as parse_version
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -192,8 +191,9 @@ class GitStepMixin(GitMixin):
     def _get_auth_data_workdir(self) -> str:
         raise NotImplementedError()
 
-    @defer.inlineCallbacks
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
+    async def _dovccmd(
+        self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None
+    ):
         full_command = ['git']
         full_env = self.env.copy() if self.env else {}
 
@@ -249,7 +249,7 @@ class GitStepMixin(GitMixin):
             initialStdin=initialStdin,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if abandonOnFailure and cmd.didFail():
             log.msg(f"Source step failed while running command {cmd}")
@@ -258,9 +258,8 @@ class GitStepMixin(GitMixin):
             return cmd.stdout
         return cmd.rc
 
-    @defer.inlineCallbacks
-    def checkFeatureSupport(self):
-        stdout = yield self._dovccmd(['--version'], collectStdout=True)
+    async def checkFeatureSupport(self):
+        stdout = await self._dovccmd(['--version'], collectStdout=True)
 
         self.parseGitFeatures(stdout)
 
