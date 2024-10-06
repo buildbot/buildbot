@@ -37,8 +37,7 @@ class NotifierMaster(RunMasterBase):
     if not ESMTPSenderFactory:
         skip = "twisted-mail unavailable, see: https://twistedmatrix.com/trac/ticket/8770"
 
-    @defer.inlineCallbacks
-    def create_master_config(self, build_set_summary=False):
+    async def create_master_config(self, build_set_summary=False):
         from buildbot.config import BuilderConfig
         from buildbot.plugins import reporters
         from buildbot.plugins import schedulers
@@ -93,10 +92,9 @@ class NotifierMaster(RunMasterBase):
             reporters.PushoverNotifier('1234', 'abcd', generators=generators_pushover),
         ]
 
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def doTest(self, what):
+    async def doTest(self, what):
         change = {
             "branch": "master",
             "files": ["foo.c"],
@@ -106,9 +104,9 @@ class NotifierMaster(RunMasterBase):
             "revision": "HEAD",
             "project": "projectname",
         }
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        mail, recipients = yield self.mailDeferred
+        mail, recipients = await self.mailDeferred
         self.assertEqual(recipients, ["author@foo.com"])
         self.assertIn("From: bot@foo.com", mail)
         self.assertIn(
@@ -116,7 +114,7 @@ class NotifierMaster(RunMasterBase):
             mail,
         )
         self.assertEncodedIn("A passing build has been detected on builder testy while", mail)
-        params = yield self.notification
+        params = await self.notification
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(
             params,
@@ -137,32 +135,29 @@ class NotifierMaster(RunMasterBase):
             encodedText = bytes2unicode(encodedBytes)
             self.assertIn(encodedText, mail)
 
-    @defer.inlineCallbacks
-    def test_notifiy_for_build(self):
-        yield self.create_master_config(build_set_summary=False)
-        yield self.doTest('testy')
+    async def test_notifiy_for_build(self):
+        await self.create_master_config(build_set_summary=False)
+        await self.doTest('testy')
 
-    @defer.inlineCallbacks
-    def test_notifiy_for_buildset(self):
-        yield self.create_master_config(build_set_summary=True)
-        yield self.doTest('projectname')
+    async def test_notifiy_for_buildset(self):
+        await self.create_master_config(build_set_summary=True)
+        await self.doTest('projectname')
 
-    @defer.inlineCallbacks
-    def test_missing_worker(self):
-        yield self.create_master_config(build_set_summary=False)
-        yield self.master.data.updates.workerMissing(
+    async def test_missing_worker(self):
+        await self.create_master_config(build_set_summary=False)
+        await self.master.data.updates.workerMissing(
             workerid='local1',
             masterid=self.master.masterid,
             last_connection='long time ago',
             notify=['admin@worker.org'],
         )
-        mail, recipients = yield self.mailDeferred
+        mail, recipients = await self.mailDeferred
         self.assertIn("From: bot@foo.com", mail)
         self.assertEqual(recipients, ['admin@worker.org'])
         self.assertIn("Subject: Buildbot Buildbot worker local1 missing", mail)
         self.assertIn("disconnected at long time ago", mail)
         self.assertEncodedIn("worker named local1 went away", mail)
-        params = yield self.notification
+        params = await self.notification
         self.assertEqual(
             params, {'title': "Buildbot Buildbot worker local1 missing", 'message': b"No worker."}
         )
