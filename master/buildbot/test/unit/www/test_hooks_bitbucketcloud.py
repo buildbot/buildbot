@@ -16,7 +16,6 @@
 
 from io import BytesIO
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
@@ -714,11 +713,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
             '793d4754230023d85532f9a38dba3290f959beb4',
         )
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnPushEvent(self):
+    async def testHookWithChangeOnPushEvent(self):
         request = _prepare_request(pushJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
 
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -726,10 +724,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'push')
 
-    @defer.inlineCallbacks
-    def testHookWithNonDictOption(self):
+    async def testHookWithNonDictOption(self):
         self.change_hook.dialects = {'bitbucketcloud': True}
-        yield self.testHookWithChangeOnPushEvent()
+        await self.testHookWithChangeOnPushEvent()
 
     def _checkPullRequest(self, change):
         self.assertEqual(change['repository'], 'http://localhost:7990/projects/CI/repos/py-repo')
@@ -742,13 +739,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['revision'], 'a87e21f7433d8c16ac7be7413483fbb76c72a8ba')
         self.assertDictSubset(bitbucketPRproperties, change["properties"])
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnPullRequestCreated(self):
+    async def testHookWithChangeOnPullRequestCreated(self):
         request = _prepare_request(
             pullRequestCreatedJsonPayload, headers={_HEADER_EVENT: 'pullrequest:created'}
         )
 
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -756,13 +752,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['branch'], 'refs/pull-requests/21/merge')
         self.assertEqual(change['category'], 'pull-created')
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnPullRequestUpdated(self):
+    async def testHookWithChangeOnPullRequestUpdated(self):
         request = _prepare_request(
             pullRequestUpdatedJsonPayload, headers={_HEADER_EVENT: 'pullrequest:updated'}
         )
 
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -770,13 +765,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['branch'], 'refs/pull-requests/21/merge')
         self.assertEqual(change['category'], 'pull-updated')
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnPullRequestRejected(self):
+    async def testHookWithChangeOnPullRequestRejected(self):
         request = _prepare_request(
             pullRequestRejectedJsonPayload, headers={_HEADER_EVENT: 'pullrequest:rejected'}
         )
 
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -784,13 +778,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'pull-rejected')
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnPullRequestFulfilled(self):
+    async def testHookWithChangeOnPullRequestFulfilled(self):
         request = _prepare_request(
             pullRequestFulfilledJsonPayload, headers={_HEADER_EVENT: 'pullrequest:fulfilled'}
         )
 
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
@@ -798,83 +791,73 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         self.assertEqual(change['branch'], 'refs/heads/master')
         self.assertEqual(change['category'], 'pull-fulfilled')
 
-    @defer.inlineCallbacks
-    def _checkCodebase(self, event_type, expected_codebase):
+    async def _checkCodebase(self, event_type, expected_codebase):
         payloads = {
             'repo:push': pushJsonPayload,
             'pullrequest:updated': pullRequestUpdatedJsonPayload,
         }
         request = _prepare_request(payloads[event_type], headers={_HEADER_EVENT: event_type})
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
         self.assertEqual(change['codebase'], expected_codebase)
 
-    @defer.inlineCallbacks
-    def testHookWithCodebaseValueOnPushEvent(self):
+    async def testHookWithCodebaseValueOnPushEvent(self):
         self.change_hook.dialects = {'bitbucketcloud': {'codebase': 'super-codebase'}}
-        yield self._checkCodebase('repo:push', 'super-codebase')
+        await self._checkCodebase('repo:push', 'super-codebase')
 
-    @defer.inlineCallbacks
-    def testHookWithCodebaseFunctionOnPushEvent(self):
+    async def testHookWithCodebaseFunctionOnPushEvent(self):
         self.change_hook.dialects = {
             'bitbucketcloud': {'codebase': lambda payload: payload['repository']['project']['key']}
         }
-        yield self._checkCodebase('repo:push', 'CI')
+        await self._checkCodebase('repo:push', 'CI')
 
-    @defer.inlineCallbacks
-    def testHookWithCodebaseValueOnPullEvent(self):
+    async def testHookWithCodebaseValueOnPullEvent(self):
         self.change_hook.dialects = {'bitbucketcloud': {'codebase': 'super-codebase'}}
-        yield self._checkCodebase('pullrequest:updated', 'super-codebase')
+        await self._checkCodebase('pullrequest:updated', 'super-codebase')
 
-    @defer.inlineCallbacks
-    def testHookWithCodebaseFunctionOnPullEvent(self):
+    async def testHookWithCodebaseFunctionOnPullEvent(self):
         self.change_hook.dialects = {
             'bitbucketcloud': {'codebase': lambda payload: payload['repository']['project']['key']}
         }
-        yield self._checkCodebase('pullrequest:updated', 'CI')
+        await self._checkCodebase('pullrequest:updated', 'CI')
 
-    @defer.inlineCallbacks
-    def testHookWithUnhandledEvent(self):
+    async def testHookWithUnhandledEvent(self):
         request = _prepare_request(pushJsonPayload, headers={_HEADER_EVENT: 'invented:event'})
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b"Unknown event: invented_event")
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnCreateTag(self):
+    async def testHookWithChangeOnCreateTag(self):
         request = _prepare_request(newTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/tags/1.0.0')
         self.assertEqual(change['category'], 'push')
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnDeleteTag(self):
+    async def testHookWithChangeOnDeleteTag(self):
         request = _prepare_request(deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/tags/1.0.0')
         self.assertEqual(change['category'], 'ref-deleted')
 
-    @defer.inlineCallbacks
-    def testHookWithChangeOnDeleteBranch(self):
+    async def testHookWithChangeOnDeleteBranch(self):
         request = _prepare_request(deleteBranchJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 1)
         change = self.change_hook.master.data.updates.changesAdded[0]
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496758965')
         self.assertEqual(change['category'], 'ref-deleted')
 
-    @defer.inlineCallbacks
-    def testHookWithInvalidContentType(self):
+    async def testHookWithInvalidContentType(self):
         request = _prepare_request(pushJsonPayload, headers={_HEADER_EVENT: b'repo:push'})
         request.received_headers[b'Content-Type'] = b'invalid/content'
-        yield request.test_render(self.change_hook)
+        await request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b"Unknown content type: invalid/content")
