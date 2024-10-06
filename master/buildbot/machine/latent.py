@@ -44,11 +44,10 @@ class AbstractLatentMachine(Machine):
         self.state = States.STOPPED
         self.latent_workers = []
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self, name, build_wait_timeout=0, missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs
     ):
-        yield super().reconfigService(name, **kwargs)
+        await super().reconfigService(name, **kwargs)
         self.build_wait_timeout = build_wait_timeout
         self.missing_timeout = missing_timeout
 
@@ -72,11 +71,10 @@ class AbstractLatentMachine(Machine):
         # Responsible for shutting down the machine
         raise NotImplementedError
 
-    @defer.inlineCallbacks
-    def substantiate(self, starting_worker):
+    async def substantiate(self, starting_worker):
         if self.state == States.STOPPING:
             # wait until stop action finishes
-            yield self._stop_notifier.wait()
+            await self._stop_notifier.wait()
 
         if self.state == States.STARTED:
             # may happen if we waited for stop to complete and in the mean
@@ -104,13 +102,13 @@ class AbstractLatentMachine(Machine):
         # Start the machine. We don't need to wait for any workers to actually
         # come online as that's handled in their substantiate() functions.
         try:
-            ret = yield self.start_machine()
+            ret = await self.start_machine()
         except Exception as e:
             log.err(e, f'while starting latent machine {self.name}')
             ret = False
 
         if not ret:
-            yield defer.DeferredList(
+            await defer.DeferredList(
                 [worker.insubstantiate() for worker in self.workers], consumeErrors=True
             )
         else:
@@ -121,23 +119,22 @@ class AbstractLatentMachine(Machine):
 
         return ret
 
-    @defer.inlineCallbacks
-    def _stop(self):
+    async def _stop(self):
         if any(worker.building for worker in self.workers) or self.state == States.STARTING:
             return None
 
         if self.state == States.STOPPING:
-            yield self._stop_notifier.wait()
+            await self._stop_notifier.wait()
             return None
 
         self.state = States.STOPPING
 
         # wait until workers insubstantiate, then stop
-        yield defer.DeferredList(
+        await defer.DeferredList(
             [worker.insubstantiate() for worker in self.workers], consumeErrors=True
         )
         try:
-            yield self.stop_machine()
+            await self.stop_machine()
         except Exception as e:
             log.err(e, f'while stopping latent machine {self.name}')
 
