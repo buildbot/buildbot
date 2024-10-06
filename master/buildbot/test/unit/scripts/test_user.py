@@ -55,9 +55,8 @@ class TestUsersClient(unittest.TestCase):
         # un-do the effects of @in_reactor
         self.patch(user, 'user', user.user._orig)
 
-    @defer.inlineCallbacks
-    def test_usersclient_send_ids(self):
-        yield user.user({
+    async def test_usersclient_send_ids(self):
+        await user.user({
             "master": 'a:9990',
             "username": "x",
             "passwd": "y",
@@ -74,15 +73,14 @@ class TestUsersClient(unittest.TestCase):
             ('a', 9990, "x", "y", 'get', ['me', 'you'], None),
         )
 
-    @defer.inlineCallbacks
-    def test_usersclient_send_update_info(self):
+    async def test_usersclient_send_update_info(self):
         def _fake_encrypt(passwd):
             assert passwd == 'day'
             return 'ENCRY'
 
         self.patch(users, 'encrypt', _fake_encrypt)
 
-        yield user.user({
+        await user.user({
             "master": 'a:9990',
             "username": "x",
             "passwd": "y",
@@ -119,9 +117,8 @@ class TestUsersClient(unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_usersclient_send_add_info(self):
-        yield user.user({
+    async def test_usersclient_send_add_info(self):
+        await user.user({
             "master": 'a:9990',
             "username": "x",
             "passwd": "y",
