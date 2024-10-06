@@ -25,6 +25,7 @@ matrix:
     # ruff, docs first as they're more likely to find issues
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - env: PYTHON=3.9 TESTS=mypy-master
 
     # add js tests in separate job. Start it early because it is quite long
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
@@ -173,6 +174,13 @@ script:
       export PATH=/tmp/bbvenv/bin/:$PATH
       ruff check `git ls-files |grep '.py$'` && \
       ruff format --check `git ls-files |grep '.py$'`
+
+  - title: mypy-master
+    condition: TESTS == "mypy-master"
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      cd ./master
+      mypy --config-file ../pyproject.toml buildbot
 
   # Build documentation
   - title: docs
