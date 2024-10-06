@@ -62,28 +62,24 @@ VERSION_ID="1"
 
         self.bot = FakeRemote(self.real_bot)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.real_bot and self.real_bot.running:
-            yield self.real_bot.stopService()
+            await self.real_bot.stopService()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
-    @defer.inlineCallbacks
-    def test_getCommands(self):
-        cmds = yield self.bot.callRemote("getCommands")
+    async def test_getCommands(self):
+        cmds = await self.bot.callRemote("getCommands")
 
         # just check that 'shell' is present..
         self.assertTrue('shell' in cmds)
 
-    @defer.inlineCallbacks
-    def test_getVersion(self):
-        vers = yield self.bot.callRemote("getVersion")
+    async def test_getVersion(self):
+        vers = await self.bot.callRemote("getVersion")
 
         self.assertEqual(vers, buildbot_worker.version)
 
-    @defer.inlineCallbacks
-    def test_getWorkerInfo(self):
+    async def test_getWorkerInfo(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)
         with open(os.path.join(infodir, "admin"), "w") as f:
@@ -93,7 +89,7 @@ VERSION_ID="1"
         with open(os.path.join(infodir, "environ"), "w") as f:
             f.write("something else")
 
-        info = yield self.bot.callRemote("getWorkerInfo")
+        info = await self.bot.callRemote("getWorkerInfo")
 
         # remove any os_ fields as they are dependent on the test environment
         info = {k: v for k, v in info.items() if not k.startswith("os_")}
@@ -113,9 +109,8 @@ VERSION_ID="1"
             },
         )
 
-    @defer.inlineCallbacks
-    def test_getWorkerInfo_nodir(self):
-        info = yield self.bot.callRemote("getWorkerInfo")
+    async def test_getWorkerInfo_nodir(self):
+        info = await self.bot.callRemote("getWorkerInfo")
 
         info = {k: v for k, v in info.items() if not k.startswith("os_")}
 
@@ -132,8 +127,7 @@ VERSION_ID="1"
             ]),
         )
 
-    @defer.inlineCallbacks
-    def test_getWorkerInfo_decode_error(self):
+    async def test_getWorkerInfo_decode_error(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)
         with open(os.path.join(infodir, "admin"), "w") as f:
@@ -150,7 +144,7 @@ VERSION_ID="1"
         # failed
         self.patch(log, "err", lambda f, x: None)
 
-        info = yield self.bot.callRemote("getWorkerInfo")
+        info = await self.bot.callRemote("getWorkerInfo")
 
         # remove any os_ fields as they are dependent on the test environment
         info = {k: v for k, v in info.items() if not k.startswith("os_")}
@@ -205,8 +199,7 @@ class FakeBot(pb.BotPbLike):
 
 
 class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.basedir = os.path.abspath("basedir")
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
@@ -217,17 +210,16 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # get a WorkerForBuilder object from the bot and wrap it as a fake
         # remote
-        builders = yield self.bot.remote_setBuilderList([('wfb', 'wfb')])
+        builders = await self.bot.remote_setBuilderList([('wfb', 'wfb')])
         self.wfb = FakeRemote(builders['wfb'])
 
         self.setUpCommand()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         self.tearDownCommand()
 
         if self.bot and self.bot.running:
-            yield self.bot.stopService()
+            await self.bot.stopService()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
@@ -247,8 +239,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
     def test_startBuild(self):
         return self.wfb.callRemote("startBuild")
 
-    @defer.inlineCallbacks
-    def test_startCommand(self):
+    async def test_startCommand(self):
         # set up a fake step to receive updates
         st = FakeStep()
 
@@ -261,14 +252,14 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             .exit(0)
         )
 
-        yield self.wfb.callRemote(
+        await self.wfb.callRemote(
             "startCommand",
             FakeRemote(st),
             "13",
             "shell",
             {"command": ['echo', 'hello'], "workdir": 'workdir'},
         )
-        yield st.wait_for_finish()
+        await st.wait_for_finish()
         self.assertEqual(
             st.actions,
             [
@@ -280,8 +271,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_startCommand_interruptCommand(self):
+    async def test_startCommand_interruptCommand(self):
         # set up a fake step to receive updates
         st = FakeStep()
 
@@ -293,7 +283,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             .update('wait', True)
         )
 
-        yield self.wfb.callRemote(
+        await self.wfb.callRemote(
             "startCommand",
             FakeRemote(st),
             "13",
@@ -304,12 +294,12 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # wait a jiffy..
         d = defer.Deferred()
         reactor.callLater(0.01, d.callback, None)
-        yield d
+        await d
 
         # and then interrupt the step
-        yield self.wfb.callRemote("interruptCommand", "13", "tl/dr")
+        await self.wfb.callRemote("interruptCommand", "13", "tl/dr")
 
-        yield st.wait_for_finish()
+        await st.wait_for_finish()
 
         self.assertEqual(
             st.actions,
@@ -320,8 +310,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_startCommand_failure(self):
+    async def test_startCommand_failure(self):
         # set up a fake step to receive updates
         st = FakeStep()
 
@@ -335,7 +324,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # failed
         self.patch(log, "err", lambda f: None)
 
-        yield self.wfb.callRemote(
+        await self.wfb.callRemote(
             "startCommand",
             FakeRemote(st),
             "13",
@@ -343,30 +332,28 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             {"command": ['sleep', '10'], "workdir": 'workdir'},
         )
 
-        yield st.wait_for_finish()
+        await st.wait_for_finish()
 
         self.assertEqual(st.actions[1][0], 'complete')
         self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
 
-    @defer.inlineCallbacks
-    def test_startCommand_missing_args(self):
+    async def test_startCommand_missing_args(self):
         # set up a fake step to receive updates
         st = FakeStep()
 
         def do_start():
             return self.wfb.callRemote("startCommand", FakeRemote(st), "13", "shell", {})
 
-        yield self.assertFailure(do_start(), KeyError)
+        await self.assertFailure(do_start(), KeyError)
 
-    @defer.inlineCallbacks
-    def test_startCommand_invalid_command(self):
+    async def test_startCommand_invalid_command(self):
         # set up a fake step to receive updates
         st = FakeStep()
 
         def do_start():
             return self.wfb.callRemote("startCommand", FakeRemote(st), "13", "invalid command", {})
 
-        unknownCommand = yield self.assertFailure(do_start(), base.UnknownCommand)
+        unknownCommand = await self.assertFailure(do_start(), base.UnknownCommand)
         self.assertEqual(
             str(unknownCommand), "(command 13): unrecognized WorkerCommand 'invalid command'"
         )
