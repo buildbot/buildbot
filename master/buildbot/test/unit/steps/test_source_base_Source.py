@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process import results
@@ -119,8 +118,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
 
         self.assertEqual(step.getCurrentSummary(), {'step': 'updating'})
 
-    @defer.inlineCallbacks
-    def test_start_with_codebase(self):
+    async def test_start_with_codebase(self):
         step = self.setup_step(Source(codebase='codebase'))
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
@@ -128,7 +126,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.getCurrentSummary(), {'step': 'updating codebase'})
-        step.name = yield step.build.render(step.name)
+        step.name = await step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
@@ -138,8 +136,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
             step.getResultSummary(), {'step': 'Codebase codebase not in build codebase (failure)'}
         )
 
-    @defer.inlineCallbacks
-    def test_start_with_codebase_and_descriptionSuffix(self):
+    async def test_start_with_codebase_and_descriptionSuffix(self):
         step = self.setup_step(Source(codebase='my-code', descriptionSuffix='suffix'))
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
@@ -147,7 +144,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.getCurrentSummary(), {'step': 'updating suffix'})
-        step.name = yield step.build.render(step.name)
+        step.name = await step.build.render(step.name)
         self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())
