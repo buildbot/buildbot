@@ -18,7 +18,6 @@ BuildSteps that are specific to the Twisted source tree
 
 import re
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import util
@@ -53,8 +52,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
         self.warningLines = []
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # create the command
         html_files = set()
         for f in self.build.allFiles():
@@ -71,14 +69,14 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
             command.append(self.python)
         command += ["bin/lore", "-p", "--output", "lint", *self.hlintFiles]
 
-        cmd = yield self.makeRemoteShellCommand(command=command)
-        yield self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand(command=command)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
-        yield self.addCompleteLog('warnings', '\n'.join(self.warningLines))
-        yield self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
+        await self.addCompleteLog('warnings', '\n'.join(self.warningLines))
+        await self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
 
         # warnings are in stdout, rc is always 0, unless the tools break
         if cmd.didFail():
@@ -295,8 +293,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             ppath.insert(0, self.testpath)
         self.env['PYTHONPATH'] = ppath
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # choose progressMetrics and logfiles based on whether trial is being
         # run with multiple workers or not.
         output_observer = logobserver.OutputProgressObserver('test.log')
@@ -341,11 +338,11 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
         self.setup_python_path()
 
-        cmd = yield self.makeRemoteShellCommand(command=command)
-        yield self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand(command=command)
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         # figure out all status, then let the various hook functions return
         # different pieces of it
@@ -354,11 +351,11 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         warnings = self.warnings
 
         if problems:
-            yield self.addCompleteLog("problems", problems)
+            await self.addCompleteLog("problems", problems)
 
         if warnings:
             lines = sorted(warnings.keys())
-            yield self.addCompleteLog("warnings", "".join(lines))
+            await self.addCompleteLog("warnings", "".join(lines))
 
         return self.build_results(cmd)
 
