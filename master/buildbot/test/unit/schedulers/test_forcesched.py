@@ -15,7 +15,6 @@
 
 import json
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config.master import MasterConfig
@@ -167,11 +166,10 @@ class TestForceScheduler(
             ForceScheduler(name="testched", builderNames=[], codebases=['foo']),
         )
 
-    @defer.inlineCallbacks
-    def test_basicForce(self):
+    async def test_basicForce(self):
         sched = self.makeScheduler()
 
-        res = yield sched.force(
+        res = await sched.force(
             'user',
             builderNames=['a'],
             branch='a',
@@ -211,12 +209,11 @@ class TestForceScheduler(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_basicForce_reasonString(self):
+    async def test_basicForce_reasonString(self):
         """Same as above, but with a reasonString"""
         sched = self.makeScheduler(reasonString='%(owner)s wants it %(reason)s')
 
-        res = yield sched.force(
+        res = await sched.force(
             'user',
             builderNames=['a'],
             branch='a',
@@ -258,11 +255,10 @@ class TestForceScheduler(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_force_allBuilders(self):
+    async def test_force_allBuilders(self):
         sched = self.makeScheduler()
 
-        res = yield sched.force(
+        res = await sched.force(
             'user',
             branch='a',
             reason='because',
@@ -299,11 +295,10 @@ class TestForceScheduler(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_force_someBuilders(self):
+    async def test_force_someBuilders(self):
         sched = self.makeScheduler(builderNames=['a', 'b', 'c'])
 
-        res = yield sched.force(
+        res = await sched.force(
             'user',
             builderNames=['a', 'b'],
             branch='a',
@@ -378,10 +373,9 @@ class TestForceScheduler(
         with self.assertRaisesConfigError(errMsg):
             ForceScheduler(name='foo', builderNames=['bar'], codebases={'cb': {'branch': 'trunk'}})
 
-    @defer.inlineCallbacks
-    def test_good_codebases(self):
+    async def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
-        yield sched.force(
+        await sched.force(
             'user',
             builderNames=['a'],
             reason='because',
@@ -431,12 +425,11 @@ class TestForceScheduler(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_codebase_with_patch(self):
+    async def test_codebase_with_patch(self):
         sched = self.makeScheduler(
             codebases=['foo', CodebaseParameter('bar', patch=PatchParameter())]
         )
-        yield sched.force(
+        await sched.force(
             'user',
             builderNames=['a'],
             reason='because',
@@ -511,8 +504,8 @@ class TestForceScheduler(
     # expect = the expected result (can be an exception type)
     # klass = the parameter class type
     # req = use this request instead of the auto-generated one based on value
-    @defer.inlineCallbacks
-    def do_ParameterTest(
+
+    async def do_ParameterTest(
         self,
         expect,
         klass,
@@ -555,7 +548,7 @@ class TestForceScheduler(
         if not req:
             req = {name: value, 'reason': 'because'}
         try:
-            bsid, brids = yield sched.force(owner, builderNames=['a'], **req)
+            bsid, brids = await sched.force(owner, builderNames=['a'], **req)
         except Exception as e:
             if expectKind is not Exception:
                 # an exception is not expected
