@@ -45,18 +45,17 @@ class FakeWorker2(FakeWorker):
 
 
 class TestWorkerManager(TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.workers = workermanager.WorkerManager(self.master)
-        yield self.workers.setServiceParent(self.master)
+        await self.workers.setServiceParent(self.master)
         # workers expect a botmaster as well as a manager.
         self.master.botmaster.disownServiceParent()
         self.botmaster = botmaster.BotMaster()
         self.master.botmaster = self.botmaster
-        yield self.master.botmaster.setServiceParent(self.master)
+        await self.master.botmaster.setServiceParent(self.master)
 
         self.new_config = mock.Mock()
         self.workers.startService()
@@ -64,12 +63,11 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.workers.stopService()
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceWorkers_add_remove(self):
+    async def test_reconfigServiceWorkers_add_remove(self):
         worker = FakeWorker('worker1')
         self.new_config.workers = [worker]
 
-        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(worker.parent, self.workers)
         self.assertEqual(self.workers.workers, {'worker1': worker})
@@ -77,14 +75,13 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
         self.new_config.workers = []
 
         self.assertEqual(worker.running, True)
-        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertEqual(worker.running, False)
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceWorkers_reconfig(self):
+    async def test_reconfigServiceWorkers_reconfig(self):
         worker = FakeWorker('worker1')
-        yield worker.setServiceParent(self.workers)
+        await worker.setServiceParent(self.workers)
         worker.parent = self.master
         worker.manager = self.workers
         worker.botmaster = self.master.botmaster
@@ -92,29 +89,27 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
         worker_new = FakeWorker('worker1')
         self.new_config.workers = [worker_new]
 
-        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # worker was not replaced..
         self.assertIdentical(self.workers.workers['worker1'], worker)
 
-    @defer.inlineCallbacks
-    def test_reconfigServiceWorkers_class_changes(self):
+    async def test_reconfigServiceWorkers_class_changes(self):
         worker = FakeWorker('worker1')
-        yield worker.setServiceParent(self.workers)
+        await worker.setServiceParent(self.workers)
 
         worker_new = FakeWorker2('worker1')
         self.new_config.workers = [worker_new]
 
-        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # worker *was* replaced (different class)
         self.assertIdentical(self.workers.workers['worker1'], worker_new)
 
-    @defer.inlineCallbacks
-    def test_newConnection_remoteGetWorkerInfo_failure(self):
+    async def test_newConnection_remoteGetWorkerInfo_failure(self):
         class Error(RuntimeError):
             pass
 
         conn = mock.Mock()
         conn.remoteGetWorkerInfo = mock.Mock(return_value=defer.fail(Error()))
-        yield self.assertFailure(self.workers.newConnection(conn, "worker"), Error)
+        await self.assertFailure(self.workers.newConnection(conn, "worker"), Error)
