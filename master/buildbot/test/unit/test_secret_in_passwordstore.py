@@ -16,7 +16,6 @@
 from pathlib import Path
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
@@ -31,20 +30,18 @@ from buildbot.test.util.config import ConfigErrorsMixin
 class TestSecretInPass(
     MasterRunProcessMixin, TestReactorMixin, ConfigErrorsMixin, unittest.TestCase
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_master_run_process()
         self.master = fakemaster.make_master(self)
         with mock.patch.object(Path, "is_file", return_value=True):
             self.tmp_dir = self.create_temp_dir("temp")
             self.srvpass = SecretInPass("password", self.tmp_dir)
-            yield self.srvpass.setServiceParent(self.master)
-            yield self.master.startService()
+            await self.srvpass.setServiceParent(self.master)
+            await self.master.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.srvpass.stopService()
+    async def tearDown(self):
+        await self.srvpass.stopService()
 
     def create_temp_dir(self, dirname):
         tempdir = FilePath(self.mktemp())
@@ -69,61 +66,55 @@ class TestSecretInPass(
             with self.assertRaisesConfigError(expected_error_msg):
                 self.srvpass.checkConfig("password", "temp2")
 
-    @defer.inlineCallbacks
-    def test_reconfig_secret_in_a_file_service(self):
+    async def test_reconfig_secret_in_a_file_service(self):
         with mock.patch.object(Path, "is_file", return_value=True):
             otherdir = self.create_temp_dir("temp2")
-            yield self.srvpass.reconfigService("password2", otherdir)
+            await self.srvpass.reconfigService("password2", otherdir)
         self.assertEqual(self.srvpass.name, "SecretInPass")
         env = self.srvpass._env
         self.assertEqual(env["PASSWORD_STORE_GPG_OPTS"], "--passphrase password2")
         self.assertEqual(env["PASSWORD_STORE_DIR"], otherdir)
 
-    @defer.inlineCallbacks
-    def test_get_secret_in_pass(self):
+    async def test_get_secret_in_pass(self):
         self.expect_commands(ExpectMasterShell(['pass', 'secret']).stdout(b'value'))
 
-        value = yield self.srvpass.get("secret")
+        value = await self.srvpass.get("secret")
         self.assertEqual(value, "value")
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_get_secret_in_pass_multiple_lines_unix(self):
+    async def test_get_secret_in_pass_multiple_lines_unix(self):
         self.expect_commands(
             ExpectMasterShell(['pass', 'secret']).stdout(b"value1\nvalue2\nvalue3")
         )
 
-        value = yield self.srvpass.get("secret")
+        value = await self.srvpass.get("secret")
         self.assertEqual(value, "value1")
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_get_secret_in_pass_multiple_lines_darwin(self):
+    async def test_get_secret_in_pass_multiple_lines_darwin(self):
         self.expect_commands(
             ExpectMasterShell(['pass', 'secret']).stdout(b"value1\rvalue2\rvalue3")
         )
 
-        value = yield self.srvpass.get("secret")
+        value = await self.srvpass.get("secret")
         self.assertEqual(value, "value1")
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_get_secret_in_pass_multiple_lines_windows(self):
+    async def test_get_secret_in_pass_multiple_lines_windows(self):
         self.expect_commands(
             ExpectMasterShell(['pass', 'secret']).stdout(b"value1\r\nvalue2\r\nvalue3")
         )
 
-        value = yield self.srvpass.get("secret")
+        value = await self.srvpass.get("secret")
         self.assertEqual(value, "value1")
 
         self.assert_all_commands_ran()
 
-    @defer.inlineCallbacks
-    def test_get_secret_in_pass_not_found(self):
+    async def test_get_secret_in_pass_not_found(self):
         self.expect_commands(ExpectMasterShell(['pass', 'secret']).stderr(b"Not found"))
 
-        value = yield self.srvpass.get("secret")
+        value = await self.srvpass.get("secret")
         self.assertEqual(value, None)
