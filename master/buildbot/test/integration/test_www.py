@@ -69,10 +69,9 @@ class BodyReader(protocol.Protocol):
 class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     master = None
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         # set up a full master serving HTTP
-        yield self.setUpRealDatabase(
+        await self.setUpRealDatabase(
             table_names=['masters', 'objects', 'object_state'], sqlite_memory=False
         )
 
@@ -80,16 +79,16 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         master.config.db = {"db_url": self.db_url}
         master.db = dbconnector.DBConnector('basedir')
-        yield master.db.setServiceParent(master)
-        yield master.db.setup(check_version=False)
+        await master.db.setServiceParent(master)
+        await master.db.setup(check_version=False)
 
         master.config.mq = {"type": 'simple'}
         master.mq = mqconnector.MQConnector()
-        yield master.mq.setServiceParent(master)
-        yield master.mq.setup()
+        await master.mq.setServiceParent(master)
+        await master.mq.setup()
 
         master.data = dataconnector.DataConnector()
-        yield master.data.setServiceParent(master)
+        await master.data.setServiceParent(master)
 
         master.config.www = {
             "port": 'tcp:0:interface=127.0.0.1',
@@ -100,9 +99,9 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             "logfileName": 'http.log',
         }
         master.www = wwwservice.WWWService()
-        yield master.www.setServiceParent(master)
-        yield master.www.startService()
-        yield master.www.reconfigServiceWithBuildbotConfig(master.config)
+        await master.www.setServiceParent(master)
+        await master.www.startService()
+        await master.www.reconfigServiceWithBuildbotConfig(master.config)
         session = mock.Mock()
         session.uid = "0"
         master.www.site.sessionFactory = mock.Mock(return_value=session)
@@ -113,7 +112,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.url = f'http://127.0.0.1:{master.www.getPortnum()}/'
         self.url = unicode2bytes(self.url)
         master.config.buildbotURL = self.url
-        yield master.www.reconfigServiceWithBuildbotConfig(master.config)
+        await master.www.reconfigServiceWithBuildbotConfig(master.config)
 
         self.master = master
 
@@ -126,23 +125,21 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             self.pool = None
             self.agent = client.Agent(reactor)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.pool:
-            yield self.pool.closeCachedConnections()
+            await self.pool.closeCachedConnections()
         if self.master:
-            yield self.master.www.stopService()
-        yield self.tearDownRealDatabase()
+            await self.master.www.stopService()
+        await self.tearDownRealDatabase()
 
-    @defer.inlineCallbacks
-    def apiGet(self, url, expect200=True):
-        pg = yield self.agent.request(b'GET', url)
+    async def apiGet(self, url, expect200=True):
+        pg = await self.agent.request(b'GET', url)
 
         # this is kind of obscene, but protocols are like that
         d = defer.Deferred()
         bodyReader = BodyReader(d)
         pg.deliverBody(bodyReader)
-        body = yield d
+        body = await d
 
         # check this *after* reading the body, otherwise Trial will
         # complain that the response is half-read
@@ -160,14 +157,13 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     # can get all the way from the DB to a real HTTP client, and a few
     # resources will be sufficient to demonstrate that.
 
-    @defer.inlineCallbacks
-    def test_masters(self):
-        yield self.insert_test_data([
+    async def test_masters(self):
+        await self.insert_test_data([
             fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
             fakedb.Master(id=8, name='other:master', active=1, last_active=OTHERTIME),
         ])
 
-        res = yield self.apiGet(self.link(b'masters'))
+        res = await self.apiGet(self.link(b'masters'))
         self.assertEqual(
             res,
             {
@@ -191,7 +187,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             },
         )
 
-        res = yield self.apiGet(self.link(b'masters/7'))
+        res = await self.apiGet(self.link(b'masters/7'))
         self.assertEqual(
             res,
             {
