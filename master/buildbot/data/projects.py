@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -45,13 +43,12 @@ class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
         /projects/i:projectname
     """
 
-    @defer.inlineCallbacks
-    def get(self, result_spec, kwargs):
-        projectid = yield self.get_project_id(kwargs)
+    async def get(self, result_spec, kwargs):
+        projectid = await self.get_project_id(kwargs)
         if projectid is None:
             return None
 
-        dbdict = yield self.master.db.projects.get_project(projectid)
+        dbdict = await self.master.db.projects.get_project(projectid)
         if not dbdict:
             return None
         return project_db_to_data(dbdict)
@@ -64,17 +61,16 @@ class ProjectsEndpoint(base.Endpoint):
         /projects
     """
 
-    @defer.inlineCallbacks
-    def get(self, result_spec, kwargs):
+    async def get(self, result_spec, kwargs):
         active = result_spec.popBooleanFilter("active")
         if active is None:
-            dbdicts = yield self.master.db.projects.get_projects()
+            dbdicts = await self.master.db.projects.get_projects()
         elif active:
-            dbdicts = yield self.master.db.projects.get_active_projects()
+            dbdicts = await self.master.db.projects.get_active_projects()
         else:
             # This is not optimized case which is assumed to be infrequently required
-            dbdicts_all = yield self.master.db.projects.get_projects()
-            dbdicts_active = yield self.master.db.projects.get_active_projects()
+            dbdicts_all = await self.master.db.projects.get_projects()
+            dbdicts_active = await self.master.db.projects.get_active_projects()
             ids_active = set(dbdict.id for dbdict in dbdicts_active)
             dbdicts = [dbdict for dbdict in dbdicts_all if dbdict.id not in ids_active]
 
@@ -105,9 +101,8 @@ class Project(base.ResourceType):
 
     entityType = EntityType(name, 'Project')
 
-    @defer.inlineCallbacks
-    def generate_event(self, _id, event):
-        project = yield self.master.data.get(('projects', str(_id)))
+    async def generate_event(self, _id, event):
+        project = await self.master.data.get(('projects', str(_id)))
         self.produceEvent(project, event)
 
     @base.updateMethod
@@ -115,11 +110,10 @@ class Project(base.ResourceType):
         return self.master.db.projects.find_project_id(name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def update_project_info(
+    async def update_project_info(
         self, projectid, slug, description, description_format, description_html
     ):
-        yield self.master.db.projects.update_project_info(
+        await self.master.db.projects.update_project_info(
             projectid, slug, description, description_format, description_html
         )
-        yield self.generate_event(projectid, "update")
+        await self.generate_event(projectid, "update")
