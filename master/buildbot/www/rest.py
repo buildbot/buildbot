@@ -136,12 +136,11 @@ class V2RootResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
 
-    @defer.inlineCallbacks
-    def getEndpoint(self, request, method, params):
+    async def getEndpoint(self, request, method, params):
         # note that trailing slashes are not allowed
         request_postpath = tuple(bytes2unicode(p) for p in request.postpath)
-        yield self.master.www.assertUserAllowed(request, request_postpath, method, params)
-        ret = yield self.master.data.getEndpoint(request_postpath)
+        await self.master.www.assertUserAllowed(request, request_postpath, method, params)
+        ret = await self.master.data.getEndpoint(request_postpath)
         return ret
 
     @contextmanager
@@ -228,8 +227,7 @@ class V2RootResource(resource.Resource):
             raise BadJsonRpc2("only JSONRPC 2.0 is supported", JSONRPC_CODES['invalid_request'])
         return data["method"], data["id"], data['params']
 
-    @defer.inlineCallbacks
-    def renderJsonRpc(self, request):
+    async def renderJsonRpc(self, request):
         jsonRpcReply = {'jsonrpc': "2.0"}
 
         def writeError(msg, errcode=399, jsonrpccode=JSONRPC_CODES["internal_error"]):
@@ -248,7 +246,7 @@ class V2RootResource(resource.Resource):
         with self.handleErrors(writeError):
             method, id, params = self.decodeJsonRPC2(request)
             jsonRpcReply['id'] = id
-            ep, kwargs = yield self.getEndpoint(request, method, params)
+            ep, kwargs = await self.getEndpoint(request, method, params)
             userinfos = self.master.www.getUserInfos(request)
             if userinfos.get('anonymous'):
                 owner = "anonymous"
@@ -259,7 +257,7 @@ class V2RootResource(resource.Resource):
                         break
             params['owner'] = owner
 
-            result = yield ep.control(method, params, kwargs)
+            result = await ep.control(method, params, kwargs)
             jsonRpcReply['result'] = result
 
             data = json.dumps(jsonRpcReply, default=toJson, sort_keys=True, separators=(',', ':'))
@@ -340,20 +338,19 @@ class V2RootResource(resource.Resource):
                 return
             request.write(unicode2bytes(chunk))
 
-    @defer.inlineCallbacks
-    def renderRest(self, request: server.Request):
+    async def renderRest(self, request: server.Request):
         def writeError(msg, errcode=404, jsonrpccode=None):
             self._write_rest_error(request, msg=msg, errcode=errcode)
 
         with self.handleErrors(writeError):
-            ep, kwargs = yield self.getEndpoint(request, bytes2unicode(request.method), {})
+            ep, kwargs = await self.getEndpoint(request, bytes2unicode(request.method), {})
 
             rspec = self.decodeResultSpec(request, ep)
             if ep.kind in (EndpointKind.RAW, EndpointKind.RAW_INLINE):
-                yield defer.Deferred.fromCoroutine(self._render_raw(request, ep, rspec, kwargs))
+                await defer.Deferred.fromCoroutine(self._render_raw(request, ep, rspec, kwargs))
                 return
 
-            data = yield ep.get(rspec, kwargs)
+            data = await ep.get(rspec, kwargs)
             if data is None:
                 self._write_not_found_rest_error(request, ep, rspec=rspec, kwargs=kwargs)
                 return
@@ -448,8 +445,7 @@ class V2RootResource(resource.Resource):
 
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
 
-    @defer.inlineCallbacks
-    def asyncRender(self, request):
+    async def asyncRender(self, request):
         # Handle CORS, if necessary.
         origins = self.origins
         if origins is not None:
@@ -482,9 +478,9 @@ class V2RootResource(resource.Resource):
 
         # based on the method, this is either JSONRPC or REST
         if request.method == b'POST':
-            res = yield self.renderJsonRpc(request)
+            res = await self.renderJsonRpc(request)
         elif request.method in (b'GET', b'HEAD'):
-            res = yield self.renderRest(request)
+            res = await self.renderRest(request)
         else:
             raise Error(400, b"invalid HTTP method")
 
