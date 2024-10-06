@@ -132,8 +132,7 @@ class HTTPClientService(service.SharedService):
         self._pool.maxPersistentPerHost = self.MAX_THREADS
         return super().startService()
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         if txrequests is not None:
             sessions = self._txrequests_sessions
             self._txrequests_sessions = []
@@ -141,8 +140,8 @@ class HTTPClientService(service.SharedService):
                 session.close()
             self._txrequests_pool.stop()
         if self._pool:
-            yield self._pool.closeCachedConnections()
-        yield super().stopService()
+            await self._pool.closeCachedConnections()
+        await super().stopService()
 
     def _do_request(self, session, method, ep, **kwargs):
         prefer_treq = self.PREFER_TREQ
@@ -179,9 +178,8 @@ class HTTPClientService(service.SharedService):
                 kwargs['data'] = jsonBytes
         return url, kwargs
 
-    @defer.inlineCallbacks
-    def _do_txrequest(self, session, method, ep, **kwargs):
-        url, kwargs = yield self._prepare_request(session, ep, kwargs)
+    async def _do_txrequest(self, session, method, ep, **kwargs):
+        url, kwargs = await self._prepare_request(session, ep, kwargs)
         if session.debug:
             log.debug("http {url} {kwargs}", url=url, kwargs=kwargs)
 
@@ -204,12 +202,11 @@ class HTTPClientService(service.SharedService):
             # FIXME: remove items from the list as HTTPSession objects are destroyed
             self._txrequests_sessions.append(session._txrequests_session)
 
-        res = yield session._txrequests_session.request(method, url, **kwargs)
+        res = await session._txrequests_session.request(method, url, **kwargs)
         return IHttpResponse(TxRequestsResponseWrapper(res))
 
-    @defer.inlineCallbacks
-    def _do_treq(self, session, method, ep, **kwargs):
-        url, kwargs = yield self._prepare_request(session, ep, kwargs)
+    async def _do_treq(self, session, method, ep, **kwargs):
+        url, kwargs = await self._prepare_request(session, ep, kwargs)
         # treq requires header values to be an array
         if "headers" in kwargs:
             kwargs['headers'] = {k: [v] for k, v in kwargs["headers"].items()}
@@ -218,7 +215,7 @@ class HTTPClientService(service.SharedService):
             session._trex_agent = Agent(self.master.reactor, pool=self._pool)
         kwargs['agent'] = session._trex_agent
 
-        res = yield getattr(treq, method)(url, **kwargs)
+        res = await getattr(treq, method)(url, **kwargs)
         return IHttpResponse(TreqResponseWrapper(res))
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.get()")
