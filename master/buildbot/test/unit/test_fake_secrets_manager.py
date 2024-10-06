@@ -1,4 +1,3 @@
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.secrets.manager import SecretManager
@@ -16,15 +15,14 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
             FakeSecretStorage(secretdict={"foo": "bar", "other": "value"})
         ]
 
-    @defer.inlineCallbacks
-    def testGetManagerService(self):
+    async def testGetManagerService(self):
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
         secret_service_manager.services = [fakeStorageService]
         expectedClassName = FakeSecretStorage.__name__
         expectedSecretDetail = SecretDetails(expectedClassName, "foo", "bar")
-        secret_result = yield secret_service_manager.get("foo")
+        secret_result = await secret_service_manager.get("foo")
         strExpectedSecretDetail = str(secret_result)
         self.assertEqual(secret_result, expectedSecretDetail)
         self.assertEqual(secret_result.key, "foo")
@@ -32,17 +30,15 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
         self.assertEqual(secret_result.source, expectedClassName)
         self.assertEqual(strExpectedSecretDetail, "FakeSecretStorage foo: 'bar'")
 
-    @defer.inlineCallbacks
-    def testGetNoDataManagerService(self):
+    async def testGetNoDataManagerService(self):
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
         secret_service_manager.services = [fakeStorageService]
-        secret_result = yield secret_service_manager.get("foo2")
+        secret_result = await secret_service_manager.get("foo2")
         self.assertEqual(secret_result, None)
 
-    @defer.inlineCallbacks
-    def testGetDataMultipleManagerService(self):
+    async def testGetDataMultipleManagerService(self):
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
@@ -51,11 +47,10 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
 
         secret_service_manager.services = [fakeStorageService, otherFakeStorageService]
         expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__, "foo2", "bar")
-        secret_result = yield secret_service_manager.get("foo2")
+        secret_result = await secret_service_manager.get("foo2")
         self.assertEqual(secret_result, expectedSecretDetail)
 
-    @defer.inlineCallbacks
-    def testGetDataMultipleManagerValues(self):
+    async def testGetDataMultipleManagerValues(self):
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": ""})
@@ -64,16 +59,15 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
 
         secret_service_manager.services = [fakeStorageService, otherFakeStorageService]
         expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__, "other", "")
-        secret_result = yield secret_service_manager.get("other")
+        secret_result = await secret_service_manager.get("other")
         self.assertEqual(secret_result, expectedSecretDetail)
 
-    @defer.inlineCallbacks
-    def testGetDataMultipleManagerServiceNoDatas(self):
+    async def testGetDataMultipleManagerServiceNoDatas(self):
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
         otherFakeStorageService = FakeSecretStorage()
         otherFakeStorageService.reconfigService(secretdict={"foo2": "bar", "other2": "value"})
         secret_service_manager.services = [fakeStorageService, otherFakeStorageService]
-        secret_result = yield secret_service_manager.get("foo3")
+        secret_result = await secret_service_manager.get("foo3")
         self.assertEqual(secret_result, None)
