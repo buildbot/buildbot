@@ -27,7 +27,6 @@ from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
 
-from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
 
@@ -56,8 +55,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     def describe(self):
         return f"{self.__class__.__name__} watching maildir '{self.basedir}'"
 
-    @defer.inlineCallbacks
-    def messageReceived(self, filename):
+    async def messageReceived(self, filename):
         with self.moveToCurDir(filename) as f:
             chtuple = self.parse_file(f, self.prefix)
 
@@ -66,7 +64,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         if chtuple:
             src, chdict = chtuple
         if chdict:
-            yield self.master.data.updates.addChange(src=str(src), **chdict)
+            await self.master.data.updates.addChange(src=str(src), **chdict)
         else:
             log.msg(f"no change found in maildir file '{filename}'")
 
