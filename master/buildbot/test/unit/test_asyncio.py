@@ -51,14 +51,12 @@ class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
             await asyncio.sleep(1)
             self.calls += 1
 
-        @defer.inlineCallbacks
-        def inlineCallbacks1():
-            yield util.asyncSleep(1, self.reactor)
+        async def inlineCallbacks1():
+            await util.asyncSleep(1, self.reactor)
             self.calls += 1
 
-        @defer.inlineCallbacks
-        def inlineCallbacks2():
-            yield util.asyncSleep(1, self.reactor)
+        async def inlineCallbacks2():
+            await util.asyncSleep(1, self.reactor)
             self.calls += 1
 
         async def main_coro():
@@ -84,8 +82,7 @@ class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.calls, 5)
 
-    @defer.inlineCallbacks
-    def test_asyncio_threadsafe(self):
+    async def test_asyncio_threadsafe(self):
         f1 = asyncio.Future()
 
         async def coro():
@@ -93,22 +90,19 @@ class TestAsyncioTestLoop(TestReactorMixin, unittest.TestCase):
             res = await f1
             return res
 
-        res = yield as_deferred(coro())
+        res = await as_deferred(coro())
         self.assertEqual(res, "ok")
 
-    @defer.inlineCallbacks
-    def test_asyncio_negative_call_at(self):
-        res = yield as_deferred(defer.succeed("OK"))
+    async def test_asyncio_negative_call_at(self):
+        res = await as_deferred(defer.succeed("OK"))
         self.assertEqual(res, "OK")
 
-    @defer.inlineCallbacks
-    def test_asyncio_as_deferred_deferred(self):
+    async def test_asyncio_as_deferred_deferred(self):
         d = defer.Deferred()
         self.asyncio_loop.call_at(-1, d.callback, "OK")
-        res = yield d
+        res = await d
         self.assertEqual(res, "OK")
 
-    @defer.inlineCallbacks
-    def test_asyncio_as_deferred_default(self):
-        res = yield as_deferred("OK")
+    async def test_asyncio_as_deferred_default(self):
+        res = await as_deferred("OK")
         self.assertEqual(res, "OK")
