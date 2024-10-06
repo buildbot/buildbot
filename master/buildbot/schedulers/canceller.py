@@ -15,8 +15,6 @@
 
 import re
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.data import resultspec
 from buildbot.util.service import BuildbotService
@@ -225,8 +223,7 @@ class OldBuildCanceller(BuildbotService):
         self._reconfiguring = False
         self._completed_buildrequests_while_reconfiguring = []
 
-    @defer.inlineCallbacks
-    def reconfigService(self, name, filters, branch_key=None):
+    async def reconfigService(self, name, filters, branch_key=None):
         # While reconfiguring we acquire a list of currently pending build
         # requests and seed the build tracker with these. We need to ensure that even if some
         # builds or build requests finish during this process, the tracker gets to know about
@@ -249,14 +246,14 @@ class OldBuildCanceller(BuildbotService):
         else:
             self._build_tracker.reconfig(filter_set_object, branch_key)
 
-        all_running_buildrequests = yield self.master.data.get(
+        all_running_buildrequests = await self.master.data.get(
             ('buildrequests',), filters=[resultspec.Filter('complete', 'eq', [False])]
         )
 
         for breq in all_running_buildrequests:
             if self._build_tracker.is_buildrequest_tracked(breq['buildrequestid']):
                 continue
-            yield self._on_buildrequest_new(None, breq)
+            await self._on_buildrequest_new(None, breq)
 
         self._reconfiguring = False
 
@@ -266,24 +263,22 @@ class OldBuildCanceller(BuildbotService):
         for breq in completed_breqs:
             self._build_tracker.on_complete_buildrequest(breq['buildrequestid'])
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
-        self._change_consumer = yield self.master.mq.startConsuming(
+    async def startService(self):
+        await super().startService()
+        self._change_consumer = await self.master.mq.startConsuming(
             self._on_change, ('changes', None, 'new')
         )
-        self._buildrequest_new_consumer = yield self.master.mq.startConsuming(
+        self._buildrequest_new_consumer = await self.master.mq.startConsuming(
             self._on_buildrequest_new, ('buildrequests', None, 'new')
         )
-        self._buildrequest_complete_consumer = yield self.master.mq.startConsuming(
+        self._buildrequest_complete_consumer = await self.master.mq.startConsuming(
             self._on_buildrequest_complete, ('buildrequests', None, 'complete')
         )
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._change_consumer.stopConsuming()
-        yield self._buildrequest_new_consumer.stopConsuming()
-        yield self._buildrequest_complete_consumer.stopConsuming()
+    async def stopService(self):
+        await self._change_consumer.stopConsuming()
+        await self._buildrequest_new_consumer.stopConsuming()
+        await self._buildrequest_complete_consumer.stopConsuming()
 
     @classmethod
     def check_filters(cls, filters):
@@ -338,10 +333,9 @@ class OldBuildCanceller(BuildbotService):
     def _on_change(self, key, change):
         self._build_tracker.on_change(change)
 
-    @defer.inlineCallbacks
-    def _on_buildrequest_new(self, key, breq):
-        builder = yield self.master.data.get(("builders", breq['builderid']))
-        buildset = yield self.master.data.get(('buildsets', breq['buildsetid']))
+    async def _on_buildrequest_new(self, key, breq):
+        builder = await self.master.data.get(("builders", breq['builderid']))
+        buildset = await self.master.data.get(('buildsets', breq['buildsetid']))
 
         self._build_tracker.on_new_buildrequest(
             breq['buildrequestid'], builder['name'], buildset['sourcestamps']
