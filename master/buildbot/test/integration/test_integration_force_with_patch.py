@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
@@ -37,17 +35,15 @@ index 0000000..8a5cf80
 class MySource(Source):
     """A source class which only applies the patch"""
 
-    @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+    async def run_vc(self, branch, revision, patch):
+        self.stdio_log = await self.addLogForRemoteCommands("stdio")
         if patch:
-            yield self.patch(patch)
+            await self.patch(patch)
         return SUCCESS
 
 
 class ShellMaster(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -69,23 +65,22 @@ class ShellMaster(RunMasterBase):
         f.addStep(steps.ShellCommand(command=["make"]))
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
 
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @skipUnlessPlatformIs("posix")  # make is not installed on windows
-    @defer.inlineCallbacks
-    def test_shell(self):
-        yield self.setup_config()
-        build = yield self.doForceBuild(
+    @skipUnlessPlatformIs("posix")
+    # make is not installed on windows
+    async def test_shell(self):
+        await self.setup_config()
+        build = await self.doForceBuild(
             wantSteps=True, wantLogs=True, forceParams={'foo_patch_body': PATCH}
         )
         self.assertEqual(build['buildid'], 1)
         # if makefile was not properly created, we would have a failure
         self.assertEqual(build['results'], SUCCESS)
 
-    @defer.inlineCallbacks
-    def test_shell_no_patch(self):
-        yield self.setup_config()
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+    async def test_shell_no_patch(self):
+        await self.setup_config()
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         # if no patch, the source step is happy, but the make step cannot find makefile
         self.assertEqual(build['steps'][1]['results'], SUCCESS)
