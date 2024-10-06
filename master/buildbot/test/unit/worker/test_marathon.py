@@ -48,37 +48,33 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         # class instantiation configures nothing
         self.assertEqual(worker._http, None)
 
-    @defer.inlineCallbacks
-    def makeWorker(self, **kwargs):
+    async def makeWorker(self, **kwargs):
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
         master = fakemaster.make_master(self, wantData=True)
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             master, self, 'tcp://marathon.local', auth=kwargs.get('auth')
         )
-        yield worker.setServiceParent(master)
+        await worker.setServiceParent(master)
         worker.reactor = self.reactor
-        yield master.startService()
+        await master.startService()
         worker.masterhash = "masterhash"
         return worker
 
-    @defer.inlineCallbacks
-    def test_builds_may_be_incompatible(self):
-        worker = self.worker = yield self.makeWorker()
+    async def test_builds_may_be_incompatible(self):
+        worker = self.worker = await self.makeWorker()
         # http is lazily created on worker substantiation
         self.assertEqual(worker.builds_may_be_incompatible, True)
 
-    @defer.inlineCallbacks
-    def test_start_service(self):
-        worker = self.worker = yield self.makeWorker()
+    async def test_start_service(self):
+        worker = self.worker = await self.makeWorker()
         # http is lazily created on worker substantiation
         self.assertNotEqual(worker._http, None)
 
-    @defer.inlineCallbacks
-    def test_start_worker(self):
+    async def test_start_worker(self):
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
-        worker = yield self.makeWorker()
+        worker = await self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
         self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
@@ -107,15 +103,14 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
-        yield d
+        await d
 
         self.assertEqual(worker.instance, {'Id': 'id'})
 
-        yield worker.insubstantiate()
+        await worker.insubstantiate()
 
-    @defer.inlineCallbacks
-    def test_start_worker_but_no_connection_and_shutdown(self):
-        worker = yield self.makeWorker()
+    async def test_start_worker_but_no_connection_and_shutdown(self):
+        worker = await self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
         self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
@@ -144,13 +139,12 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertEqual(worker.instance, {'Id': 'id'})
 
-        yield worker.insubstantiate()
+        await worker.insubstantiate()
         with self.assertRaises(LatentWorkerSubstantiatiationCancelled):
-            yield d
+            await d
 
-    @defer.inlineCallbacks
-    def test_start_worker_but_error(self):
-        worker = yield self.makeWorker()
+    async def test_start_worker_but_error(self):
+        worker = await self.makeWorker()
         self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
@@ -176,14 +170,13 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(0.1)
         with self.assertRaises(AssertionError):
-            yield d
+            await d
         self.assertEqual(worker.instance, None)
         # teardown makes sure all containers are cleaned up
 
-    @defer.inlineCallbacks
-    def test_start_worker_with_params(self):
+    async def test_start_worker_with_params(self):
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
-        worker = yield self.makeWorker(
+        worker = await self.makeWorker(
             marathon_extra_config={
                 'container': {'docker': {'network': None}},
                 'env': {'PARAMETER': 'foo'},
@@ -218,8 +211,8 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
-        yield d
+        await d
 
         self.assertEqual(worker.instance, {'Id': 'id'})
 
-        yield worker.insubstantiate()
+        await worker.insubstantiate()
