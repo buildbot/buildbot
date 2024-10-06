@@ -75,33 +75,29 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.Tes
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_upgradeMaster_success(self):
+    async def test_upgradeMaster_success(self):
         self.patchFunctions()
-        rv = yield upgrade_master.upgradeMaster(mkconfig())
+        rv = await upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 0)
         self.assertInStdout('upgrade complete')
 
-    @defer.inlineCallbacks
-    def test_upgradeMaster_quiet(self):
+    async def test_upgradeMaster_quiet(self):
         self.patchFunctions()
-        rv = yield upgrade_master.upgradeMaster(mkconfig(quiet=True))
+        rv = await upgrade_master.upgradeMaster(mkconfig(quiet=True))
 
         self.assertEqual(rv, 0)
         self.assertWasQuiet()
 
-    @defer.inlineCallbacks
-    def test_upgradeMaster_bad_basedir(self):
+    async def test_upgradeMaster_bad_basedir(self):
         self.patchFunctions(basedirOk=False)
-        rv = yield upgrade_master.upgradeMaster(mkconfig())
+        rv = await upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 1)
 
-    @defer.inlineCallbacks
-    def test_upgradeMaster_bad_config(self):
+    async def test_upgradeMaster_bad_config(self):
         self.patchFunctions(configOk=False)
-        rv = yield upgrade_master.upgradeMaster(mkconfig())
+        rv = await upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 1)
 
@@ -181,8 +177,7 @@ class TestUpgradeMasterFunctions(
         upgrade_master.upgradeFiles(mkconfig())
         self.assertInStdout('public_html is not used')
 
-    @defer.inlineCallbacks
-    def test_upgradeDatabase(self):
+    async def test_upgradeDatabase(self):
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
@@ -193,21 +188,20 @@ class TestUpgradeMasterFunctions(
             'setAllMastersActiveLongTimeAgo',
             setAllMastersActiveLongTimeAgo,
         )
-        yield upgrade_master.upgradeDatabase(
+        await upgrade_master.upgradeDatabase(
             mkconfig(basedir='test', quiet=True), config_master.MasterConfig()
         )
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()
 
-    @defer.inlineCallbacks
-    def test_upgradeDatabaseFail(self):
+    async def test_upgradeDatabaseFail(self):
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         self.patch(sys, 'stderr', StringIO())
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.fail(Exception("o noz")))
         self.patch(model.Model, 'upgrade', upgrade)
-        ret = yield upgrade_master._upgradeMaster(
+        ret = await upgrade_master._upgradeMaster(
             mkconfig(basedir='test', quiet=True), config_master.MasterConfig()
         )
         self.assertEqual(ret, 1)
