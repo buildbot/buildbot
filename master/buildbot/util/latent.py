@@ -15,8 +15,6 @@
 
 import copy
 
-from twisted.internet import defer
-
 
 class CompatibleLatentWorkerMixin:
     builds_may_be_incompatible = True
@@ -33,20 +31,18 @@ class CompatibleLatentWorkerMixin:
         # later comparison and return them.
         raise NotImplementedError()
 
-    @defer.inlineCallbacks
-    def renderWorkerPropsOnStart(self, build):
-        props = yield self.renderWorkerProps(build)
+    async def renderWorkerPropsOnStart(self, build):
+        props = await self.renderWorkerProps(build)
         self._actual_build_props = copy.deepcopy(props)
         return props
 
     def resetWorkerPropsOnStop(self):
         self._actual_build_props = None
 
-    @defer.inlineCallbacks
-    def isCompatibleWithBuild(self, build):
+    async def isCompatibleWithBuild(self, build):
         if self._actual_build_props is None:
             return True
 
-        requested_props = yield self.renderWorkerProps(build)
+        requested_props = await self.renderWorkerProps(build)
 
         return requested_props == self._actual_build_props
