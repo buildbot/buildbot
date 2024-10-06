@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import build_data
@@ -58,13 +57,12 @@ class Tests(interfaces.InterfaceTests):
         def getAllBuildDataNoValues(self, buildid):
             pass
 
-    @defer.inlineCallbacks
-    def test_add_data_get_data(self):
-        yield self.insert_test_data(self.common_data)
-        yield self.db.build_data.setBuildData(
+    async def test_add_data_get_data(self):
+        await self.insert_test_data(self.common_data)
+        await self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
         )
-        data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
+        data_dict = await self.db.build_data.getBuildData(buildid=30, name='mykey')
         self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
@@ -77,23 +75,21 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_data_non_existing(self):
-        yield self.insert_test_data(self.common_data)
-        data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
+    async def test_get_data_non_existing(self):
+        await self.insert_test_data(self.common_data)
+        data_dict = await self.db.build_data.getBuildData(buildid=30, name='mykey')
         self.assertIsNone(data_dict)
 
-    @defer.inlineCallbacks
-    def test_add_data_replace_value(self):
-        yield self.insert_test_data(self.common_data)
-        yield self.db.build_data.setBuildData(
+    async def test_add_data_replace_value(self):
+        await self.insert_test_data(self.common_data)
+        await self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
         )
-        yield self.db.build_data.setBuildData(
+        await self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue2', source='mysource2'
         )
 
-        data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
+        data_dict = await self.db.build_data.getBuildData(buildid=30, name='mykey')
         self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
@@ -106,9 +102,8 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_add_data_insert_race(self):
-        yield self.insert_test_data(self.common_data)
+    async def test_add_data_insert_race(self):
+        await self.insert_test_data(self.common_data)
 
         def hook(conn):
             value = b'myvalue_old'
@@ -124,11 +119,11 @@ class Tests(interfaces.InterfaceTests):
 
         self.db.build_data._test_timing_hook = hook
 
-        yield self.db.build_data.setBuildData(
+        await self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
         )
 
-        data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
+        data_dict = await self.db.build_data.getBuildData(buildid=30, name='mykey')
         self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
@@ -141,13 +136,12 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_add_data_get_data_no_value(self):
-        yield self.insert_test_data(self.common_data)
-        yield self.db.build_data.setBuildData(
+    async def test_add_data_get_data_no_value(self):
+        await self.insert_test_data(self.common_data)
+        await self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
         )
-        data_dict = yield self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
+        data_dict = await self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
         self.assertIsInstance(data_dict, build_data.BuildDataModel)
         self.assertEqual(
             data_dict,
@@ -156,22 +150,20 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_data_no_values_non_existing(self):
-        yield self.insert_test_data(self.common_data)
-        data_dict = yield self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
+    async def test_get_data_no_values_non_existing(self):
+        await self.insert_test_data(self.common_data)
+        data_dict = await self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
         self.assertIsNone(data_dict)
 
-    @defer.inlineCallbacks
-    def test_get_all_build_data_no_values(self):
-        yield self.insert_test_data([
+    async def test_get_all_build_data_no_values(self):
+        await self.insert_test_data([
             *self.common_data,
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
             fakedb.BuildData(id=92, buildid=30, name='name2', value=b'value2', source='source2'),
             fakedb.BuildData(id=93, buildid=31, name='name3', value=b'value3', source='source3'),
         ])
 
-        data_dicts = yield self.db.build_data.getAllBuildDataNoValues(30)
+        data_dicts = await self.db.build_data.getAllBuildDataNoValues(30)
         self.assertEqual([d.name for d in data_dicts], ['name1', 'name2'])
         for d in data_dicts:
             self.assertIsInstance(d, build_data.BuildDataModel)
@@ -184,9 +176,9 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-        data_dicts = yield self.db.build_data.getAllBuildDataNoValues(31)
+        data_dicts = await self.db.build_data.getAllBuildDataNoValues(31)
         self.assertEqual([d.name for d in data_dicts], ['name3'])
-        data_dicts = yield self.db.build_data.getAllBuildDataNoValues(32)
+        data_dicts = await self.db.build_data.getAllBuildDataNoValues(32)
         self.assertEqual([d.name for d in data_dicts], [])
 
     @parameterized.expand([
@@ -197,11 +189,10 @@ class Tests(interfaces.InterfaceTests):
         (1000004, 4, ['name1', 'name2']),
         (1000005, 4, ['name1', 'name2']),
     ])
-    @defer.inlineCallbacks
-    def test_remove_old_build_data(
+    async def test_remove_old_build_data(
         self, older_than_timestamp, exp_num_deleted, exp_remaining_names
     ):
-        yield self.insert_test_data([
+        await self.insert_test_data([
             *self.common_data,
             fakedb.Build(
                 id=50,
@@ -247,27 +238,25 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildData(id=96, buildid=53, name='name6', value=b'value6', source='src6'),
         ])
 
-        num_deleted = yield self.db.build_data.deleteOldBuildData(older_than_timestamp)
+        num_deleted = await self.db.build_data.deleteOldBuildData(older_than_timestamp)
         self.assertEqual(num_deleted, exp_num_deleted)
 
         remaining_names = []
         for buildid in [50, 51, 52, 53]:
-            data_dicts = yield self.db.build_data.getAllBuildDataNoValues(buildid)
+            data_dicts = await self.db.build_data.getAllBuildDataNoValues(buildid)
             remaining_names.extend(d.name for d in data_dicts)
 
         self.assertEqual(sorted(remaining_names), sorted(exp_remaining_names))
 
 
 class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'builds',
                 'builders',
