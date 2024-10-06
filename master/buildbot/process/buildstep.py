@@ -414,9 +414,8 @@ class BuildStep(
             stepsumm = self.build.properties.cleanupTextFromSecrets(stepsumm)
         return {'step': stepsumm}
 
-    @defer.inlineCallbacks
-    def getBuildResultSummary(self):
-        summary = yield self.getResultSummary()
+    async def getBuildResultSummary(self):
+        summary = await self.getResultSummary()
         if (
             self.results in self.updateBuildSummaryPolicy
             and 'build' not in summary
@@ -428,8 +427,7 @@ class BuildStep(
     def updateSummary(self):
         self._update_summary_debouncer()
 
-    @defer.inlineCallbacks
-    def _update_summary_impl(self):
+    async def _update_summary_impl(self):
         def methodInfo(m):
             lines = inspect.getsourcelines(m)
             return "\nat {}:{}:\n {}".format(
@@ -437,14 +435,14 @@ class BuildStep(
             )
 
         if not self._running:
-            summary = yield self.getResultSummary()
+            summary = await self.getResultSummary()
             if not isinstance(summary, dict):
                 raise TypeError(
                     'getResultSummary must return a dictionary: '
                     + methodInfo(self.getResultSummary)
                 )
         else:
-            summary = yield self.getCurrentSummary()
+            summary = await self.getCurrentSummary()
             if not isinstance(summary, dict):
                 raise TypeError(
                     'getCurrentSummary must return a dictionary: '
@@ -456,33 +454,31 @@ class BuildStep(
             raise TypeError(f"step result string must be unicode (got {stepResult!r})")
         if self.stepid is not None:
             stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
-            yield self.master.data.updates.setStepStateString(self.stepid, stepResult)
+            await self.master.data.updates.setStepStateString(self.stepid, stepResult)
 
         if not self._running:
             buildResult = summary.get('build', None)
             if buildResult and not isinstance(buildResult, str):
                 raise TypeError("build result string must be unicode")
 
-    @defer.inlineCallbacks
-    def addStep(self):
+    async def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
-        self.name = yield self.build.render(self.name)
+        self.name = await self.build.render(self.name)
         self.build.setUniqueStepName(self)
-        self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
+        self.stepid, self.number, self.name = await self.master.data.updates.addStep(
             buildid=self.build.buildid, name=util.bytes2unicode(self.name)
         )
 
-    @defer.inlineCallbacks
-    def startStep(self, remote):
+    async def startStep(self, remote):
         self.remote = remote
 
-        yield self.addStep()
+        await self.addStep()
         started_at = int(self.master.reactor.seconds())
-        yield self.master.data.updates.startStep(self.stepid, started_at=started_at)
+        await self.master.data.updates.startStep(self.stepid, started_at=started_at)
 
         try:
-            yield self._render_renderables()
+            await self._render_renderables()
             # we describe ourselves only when renderables are interpolated
             self.updateSummary()
 
@@ -490,20 +486,20 @@ class BuildStep(
             if isinstance(self.doStepIf, bool):
                 doStep = self.doStepIf
             else:
-                doStep = yield self.doStepIf(self)
+                doStep = await self.doStepIf(self)
 
             if doStep:
-                yield self._setup_locks()
+                await self._setup_locks()
 
                 # set up locks
                 if self._locks_to_acquire:
-                    yield self.acquireLocks()
+                    await self.acquireLocks()
 
                     if self.stopped:
                         raise BuildStepCancelled
 
                     locks_acquired_at = int(self.master.reactor.seconds())
-                    yield defer.DeferredList([
+                    await defer.DeferredList([
                         self.master.data.updates.set_step_locks_acquired_at(
                             self.stepid, locks_acquired_at=locks_acquired_at
                         ),
@@ -512,17 +508,17 @@ class BuildStep(
                         ),
                     ])
                 else:
-                    yield self.master.data.updates.set_step_locks_acquired_at(
+                    await self.master.data.updates.set_step_locks_acquired_at(
                         self.stepid, locks_acquired_at=started_at
                     )
 
                     if self.stopped:
                         raise BuildStepCancelled
 
-                yield self.addTestResultSets()
+                await self.addTestResultSets()
                 try:
                     self._running = True
-                    self.results = yield self.run()
+                    self.results = await self.run()
                 finally:
                     self._running = False
             else:
@@ -542,7 +538,7 @@ class BuildStep(
             self.results = EXCEPTION
             why = Failure()
             log.err(why, "BuildStep.failed; traceback follows")
-            yield self.addLogWithFailure(why)
+            await self.addLogWithFailure(why)
 
         if self.stopped and self.results != RETRY:
             # We handle this specially because we don't care about
@@ -562,32 +558,31 @@ class BuildStep(
             except Exception:
                 why = Failure()
                 log.err(why, "hidden callback failed; traceback follows")
-                yield self.addLogWithFailure(why)
+                await self.addLogWithFailure(why)
                 self.results = EXCEPTION
                 hidden = False
 
         # perform final clean ups
-        success = yield self._cleanup_logs()
+        success = await self._cleanup_logs()
         if not success:
             self.results = EXCEPTION
 
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
         self.updateSummary()
-        yield self._update_summary_debouncer.stop()
+        await self._update_summary_debouncer.stop()
 
         for sub in self._test_result_submitters.values():
-            yield sub.finish()
+            await sub.finish()
 
         self.releaseLocks()
 
-        yield self.master.data.updates.finishStep(self.stepid, self.results, hidden)
+        await self.master.data.updates.finishStep(self.stepid, self.results, hidden)
 
         return self.results
 
-    @defer.inlineCallbacks
-    def _setup_locks(self):
-        self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self.build)
+    async def _setup_locks(self):
+        self._locks_to_acquire = await get_real_locks_from_accesses(self.locks, self.build)
 
         if self.build._locks_to_acquire:
             build_locks = [l for l, _ in self.build._locks_to_acquire]
@@ -599,8 +594,7 @@ class BuildStep(
                     )
                     raise RuntimeError(f"lock claimed by both Step and Build ({l})")
 
-    @defer.inlineCallbacks
-    def _render_renderables(self):
+    async def _render_renderables(self):
         # render renderables in parallel
         renderables = []
         accumulateClassList(self.__class__, 'renderables', renderables)
@@ -613,21 +607,20 @@ class BuildStep(
             d = self.build.render(getattr(self, renderable))
             d.addCallback(setRenderable, renderable)
             dl.append(d)
-        yield defer.gatherResults(dl)
+        await defer.gatherResults(dl)
         self.rendered = True
 
     def setBuildData(self, name, value, source):
         # returns a Deferred that yields nothing
         return self.master.data.updates.setBuildData(self.build.buildid, name, value, source)
 
-    @defer.inlineCallbacks
-    def _cleanup_logs(self):
+    async def _cleanup_logs(self):
         # Wait until any in-progress interrupt() to finish (that function may add new logs)
-        yield self._interrupt_deferwaiter.wait()
+        await self._interrupt_deferwaiter.wait()
 
         all_success = True
         not_finished_logs = [v for (k, v) in self.logs.items() if not v.finished]
-        finish_logs = yield defer.DeferredList(
+        finish_logs = await defer.DeferredList(
             [v.finish() for v in not_finished_logs], consumeErrors=True
         )
         for success, res in finish_logs:
@@ -644,10 +637,9 @@ class BuildStep(
     def addTestResultSets(self):
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def addTestResultSet(self, description, category, value_unit):
+    async def addTestResultSet(self, description, category, value_unit):
         sub = TestResultSubmitter()
-        yield sub.setup(self, description, category, value_unit)
+        await sub.setup(self, description, category, value_unit)
         setid = sub.get_test_result_set_id()
         self._test_result_submitters[setid] = sub
         return setid
@@ -691,13 +683,12 @@ class BuildStep(
     def run(self):
         raise NotImplementedError("A custom build step must implement run()")
 
-    @defer.inlineCallbacks
-    def _maybe_interrupt_cmd(self, reason):
+    async def _maybe_interrupt_cmd(self, reason):
         if not self.cmd:
             return
 
         try:
-            yield self.cmd.interrupt(reason)
+            await self.cmd.interrupt(reason)
         except Exception as e:
             log.err(e, 'while cancelling command')
 
@@ -706,13 +697,12 @@ class BuildStep(
         # already completed), so extra care needs to be taken to prevent race conditions.
         return self._interrupt_deferwaiter.add(self._interrupt_impl(reason))
 
-    @defer.inlineCallbacks
-    def _interrupt_impl(self, reason):
+    async def _interrupt_impl(self, reason):
         if self.stopped:
             # If we are in the process of interruption and connection is lost then we must tell
             # the command not to wait for the interruption to complete.
             if isinstance(reason, Failure) and reason.check(error.ConnectionLost):
-                yield self._maybe_interrupt_cmd(reason)
+                await self._maybe_interrupt_cmd(reason)
             return
 
         self.stopped = True
@@ -722,8 +712,8 @@ class BuildStep(
             self._acquiringLocks = []
 
         log_name = "cancelled while waiting for locks" if self._waitingForLocks else "cancelled"
-        yield self.addCompleteLog(log_name, str(reason))
-        yield self._maybe_interrupt_cmd(reason)
+        await self.addCompleteLog(log_name, str(reason))
+        await self._maybe_interrupt_cmd(reason)
 
     def releaseLocks(self):
         log.msg(f"releaseLocks({self}): {self._locks_to_acquire}")
@@ -769,31 +759,28 @@ class BuildStep(
     def getLog(self, name):
         return self.logs[name]
 
-    @defer.inlineCallbacks
-    def addCompleteLog(self, name, text):
+    async def addCompleteLog(self, name, text):
         if self.stepid is None:
             raise BuildStepCancelled
-        logid = yield self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), 't')
+        logid = await self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), 't')
         _log = self._newLog(name, 't', logid)
-        yield _log.addContent(text)
-        yield _log.finish()
+        await _log.addContent(text)
+        await _log.finish()
 
-    @defer.inlineCallbacks
-    def addHTMLLog(self, name, html):
+    async def addHTMLLog(self, name, html):
         if self.stepid is None:
             raise BuildStepCancelled
-        logid = yield self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), 'h')
+        logid = await self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), 'h')
         _log = self._newLog(name, 'h', logid)
         html = bytes2unicode(html)
-        yield _log.addContent(html)
-        yield _log.finish()
+        await _log.addContent(html)
+        await _log.finish()
 
-    @defer.inlineCallbacks
-    def addLogWithFailure(self, why, logprefix=""):
+    async def addLogWithFailure(self, why, logprefix=""):
         # helper for showing exceptions to the users
         try:
-            yield self.addCompleteLog(logprefix + "err.text", why.getTraceback())
-            yield self.addHTMLLog(logprefix + "err.html", formatFailure(why))
+            await self.addCompleteLog(logprefix + "err.text", why.getTraceback())
+            await self.addHTMLLog(logprefix + "err.html", formatFailure(why))
         except Exception:
             log.err(Failure(), "error while formatting exceptions")
 
@@ -822,20 +809,18 @@ class BuildStep(
                 observer.setLog(self.logs[logname])
                 self._pendingLogObservers.remove((logname, observer))
 
-    @defer.inlineCallbacks
-    def addURL(self, name, url):
-        yield self.master.data.updates.addStepURL(self.stepid, str(name), str(url))
+    async def addURL(self, name, url):
+        await self.master.data.updates.addStepURL(self.stepid, str(name), str(url))
         return None
 
-    @defer.inlineCallbacks
-    def runCommand(self, command):
+    async def runCommand(self, command):
         if self.stopped:
             return CANCELLED
 
         self.cmd = command
         command.worker = self.worker
         try:
-            res = yield command.run(self, self.remote, self.build.builder.name)
+            res = await command.run(self, self.remote, self.build.builder.name)
             if command.remote_failure_reason in ("timeout", "timeout_without_output"):
                 self.timed_out = True
             elif command.remote_failure_reason in ("max_lines_failure",):
@@ -858,15 +843,14 @@ class BuildStep(
 
 
 class CommandMixin:
-    @defer.inlineCallbacks
-    def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
+    async def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
         cmd = remotecommand.RemoteCommand(cmd, args)
         try:
             log = self.getLog('stdio')
         except Exception:
-            log = yield self.addLog('stdio')
+            log = await self.addLog('stdio')
         cmd.useLog(log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
         if abandonOnFailure and cmd.didFail():
             raise BuildStepFailed()
         if makeResult:
@@ -956,8 +940,7 @@ class ShellMixin:
                 del constructorArgs[arg]
         return constructorArgs
 
-    @defer.inlineCallbacks
-    def makeRemoteShellCommand(
+    async def makeRemoteShellCommand(
         self, collectStdout=False, collectStderr=False, stdioLogName='stdio', **overrides
     ):
         kwargs = {arg: getattr(self, arg) for arg, _ in self._shell_mixin_arg_config}
@@ -966,9 +949,9 @@ class ShellMixin:
         if stdioLogName is not None:
             # Reuse an existing log if possible; otherwise, create one.
             try:
-                stdio = yield self.getLog(stdioLogName)
+                stdio = await self.getLog(stdioLogName)
             except KeyError:
-                stdio = yield self.addLog(stdioLogName)
+                stdio = await self.addLog(stdioLogName)
 
         kwargs['command'] = flatten(kwargs['command'], (list, tuple))
 
@@ -979,13 +962,13 @@ class ShellMixin:
         if kwargs['usePTY'] is not None:
             if self.workerVersionIsOlderThan("shell", "2.7"):
                 if stdio is not None:
-                    yield stdio.addHeader("NOTE: worker does not allow master to override usePTY\n")
+                    await stdio.addHeader("NOTE: worker does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
         if kwargs["interruptSignal"] and self.workerVersionIsOlderThan("shell", "2.15"):
             if stdio is not None:
-                yield stdio.addHeader(
+                await stdio.addHeader(
                     "NOTE: worker does not allow master to specify interruptSignal\n"
                 )
             del kwargs['interruptSignal']
@@ -1025,7 +1008,7 @@ class ShellMixin:
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # add a LogFile
-                newlog = yield self.addLog(logname)
+                newlog = await self.addLog(logname)
                 # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, False)
 
