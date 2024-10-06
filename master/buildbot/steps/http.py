@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot import config
@@ -104,8 +103,7 @@ class HTTPStep(BuildStep):
 
         super().__init__(**kwargs)
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # create a new session if it doesn't exist
         self.session = getSession()
 
@@ -116,41 +114,41 @@ class HTTPStep(BuildStep):
             if value is not None:
                 requestkwargs[param] = value
 
-        log = yield self.addLog('log')
+        log = await self.addLog('log')
 
         # known methods already tested in __init__
 
-        yield log.addHeader(f'Performing {self.method} request to {self.url}\n')
+        await log.addHeader(f'Performing {self.method} request to {self.url}\n')
         if self.params:
-            yield log.addHeader('Parameters:\n')
+            await log.addHeader('Parameters:\n')
             params = sorted(self.params.items(), key=lambda x: x[0])
             requestkwargs['params'] = params
             for k, v in params:
-                yield log.addHeader(f'\t{k}: {v}\n')
+                await log.addHeader(f'\t{k}: {v}\n')
         data = requestkwargs.get("data", None)
         if data:
-            yield log.addHeader('Data:\n')
+            await log.addHeader('Data:\n')
             if isinstance(data, dict):
                 for k, v in data.items():
-                    yield log.addHeader(f'\t{k}: {v}\n')
+                    await log.addHeader(f'\t{k}: {v}\n')
             else:
-                yield log.addHeader(f'\t{data}\n')
+                await log.addHeader(f'\t{data}\n')
 
         try:
-            r = yield self.session.request(**requestkwargs)
+            r = await self.session.request(**requestkwargs)
         except requests.exceptions.ConnectionError as e:
-            yield log.addStderr(f'An exception occurred while performing the request: {e}')
+            await log.addStderr(f'An exception occurred while performing the request: {e}')
             return FAILURE
 
         if r.history:
-            yield log.addStdout(f'\nRedirected {len(r.history)} times:\n\n')
+            await log.addStdout(f'\nRedirected {len(r.history)} times:\n\n')
             for rr in r.history:
-                yield self.log_response(log, rr)
-                yield log.addStdout('=' * 60 + '\n')
+                await self.log_response(log, rr)
+                await log.addStdout('=' * 60 + '\n')
 
-        yield self.log_response(log, r)
+        await self.log_response(log, r)
 
-        yield log.finish()
+        await log.finish()
 
         self.descriptionDone = [f"Status code: {r.status_code}"]
         if r.status_code < 400:
@@ -158,30 +156,29 @@ class HTTPStep(BuildStep):
         else:
             return FAILURE
 
-    @defer.inlineCallbacks
-    def log_response(self, log, response):
-        yield log.addHeader('Request Headers:\n')
+    async def log_response(self, log, response):
+        await log.addHeader('Request Headers:\n')
         for k, v in response.request.headers.items():
             if k.casefold() in self.hide_request_headers:
                 v = '<HIDDEN>'
-            yield log.addHeader(f'\t{k}: {v}\n')
+            await log.addHeader(f'\t{k}: {v}\n')
 
-        yield log.addStdout(f'URL: {response.url}\n')
+        await log.addStdout(f'URL: {response.url}\n')
 
         if response.status_code == requests.codes.ok:
-            yield log.addStdout(f'Status: {response.status_code}\n')
+            await log.addStdout(f'Status: {response.status_code}\n')
         else:
-            yield log.addStderr(f'Status: {response.status_code}\n')
+            await log.addStderr(f'Status: {response.status_code}\n')
 
-        yield log.addHeader('Response Headers:\n')
+        await log.addHeader('Response Headers:\n')
         for k, v in response.headers.items():
             if k.casefold() in self.hide_response_headers:
                 v = '<HIDDEN>'
-            yield log.addHeader(f'\t{k}: {v}\n')
+            await log.addHeader(f'\t{k}: {v}\n')
 
-        yield log.addStdout(f' ------ Content ------\n{response.text}')
-        content_log = yield self.addLog('content')
-        yield content_log.addStdout(response.text)
+        await log.addStdout(f' ------ Content ------\n{response.text}')
+        content_log = await self.addLog('content')
+        await content_log.addStdout(response.text)
 
 
 class POST(HTTPStep):
