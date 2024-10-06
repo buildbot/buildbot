@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 
@@ -47,13 +45,12 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
         /masters/n:masterid/builders/n:builderid
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        builderid = yield self.getBuilderId(kwargs)
+    async def get(self, resultSpec, kwargs):
+        builderid = await self.getBuilderId(kwargs)
         if builderid is None:
             return None
 
-        builder = yield self.master.db.builders.getBuilder(builderid)
+        builder = await self.master.db.builders.getBuilder(builderid)
         if not builder:
             return None
         if 'masterid' in kwargs:
@@ -71,9 +68,8 @@ class BuildersEndpoint(base.Endpoint):
         /projects/n:projectid/builders
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        bdicts = yield self.master.db.builders.getBuilders(
+    async def get(self, resultSpec, kwargs):
+        bdicts = await self.master.db.builders.getBuilders(
             masterid=kwargs.get('masterid', None), projectid=kwargs.get('projectid', None)
         )
         return [_db2data(bd) for bd in bdicts]
@@ -106,9 +102,8 @@ class Builder(base.ResourceType):
 
     entityType = EntityType(name, 'Builder')
 
-    @defer.inlineCallbacks
-    def generateEvent(self, _id, event):
-        builder = yield self.master.data.get(('builders', str(_id)))
+    async def generateEvent(self, _id, event):
+        builder = await self.master.data.get(('builders', str(_id)))
         self.produceEvent(builder, event)
 
     @base.updateMethod
@@ -116,30 +111,28 @@ class Builder(base.ResourceType):
         return self.master.db.builders.findBuilderId(name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def updateBuilderInfo(
+    async def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
     ):
-        ret = yield self.master.db.builders.updateBuilderInfo(
+        ret = await self.master.db.builders.updateBuilderInfo(
             builderid, description, description_format, description_html, projectid, tags
         )
-        yield self.generateEvent(builderid, "update")
+        await self.generateEvent(builderid, "update")
         return ret
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def updateBuilderList(self, masterid, builderNames):
+    async def updateBuilderList(self, masterid, builderNames):
         # get the "current" list of builders for this master, so we know what
         # changes to make.  Race conditions here aren't a great worry, as this
         # is the only master inserting or deleting these records.
-        builders = yield self.master.db.builders.getBuilders(masterid=masterid)
+        builders = await self.master.db.builders.getBuilders(masterid=masterid)
 
         # figure out what to remove and remove it
         builderNames_set = set(builderNames)
         for bldr in builders:
             if bldr.name not in builderNames_set:
                 builderid = bldr.id
-                yield self.master.db.builders.removeBuilderMaster(
+                await self.master.db.builders.removeBuilderMaster(
                     masterid=masterid, builderid=builderid
                 )
                 self.master.mq.produce(
@@ -151,8 +144,8 @@ class Builder(base.ResourceType):
 
         # now whatever's left in builderNames_set is new
         for name in builderNames_set:
-            builderid = yield self.master.db.builders.findBuilderId(name)
-            yield self.master.db.builders.addBuilderMaster(masterid=masterid, builderid=builderid)
+            builderid = await self.master.db.builders.findBuilderId(name)
+            await self.master.db.builders.addBuilderMaster(masterid=masterid, builderid=builderid)
             self.master.mq.produce(
                 ('builders', str(builderid), 'started'),
                 {"builderid": builderid, "masterid": masterid, "name": name},
