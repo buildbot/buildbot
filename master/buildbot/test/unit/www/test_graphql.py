@@ -55,25 +55,23 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         content = json.dumps({"data": result, "errors": None})
         self.assertRequest(content=unicode2bytes(content), responseCode=200)
 
-    @defer.inlineCallbacks
-    def test_failure(self):
+    async def test_failure(self):
         self.master.graphql.query = mock.Mock(return_value=defer.fail(RuntimeError("oh noes")))
-        yield self.render_resource(
+        await self.render_resource(
             self.rsrc,
             b"/?query={builders{name}}",
         )
         self.assertSimpleError("internal error - see logs", 500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def test_invalid_http_method(self):
-        yield self.render_resource(self.rsrc, b"/", method=b"PATCH")
+    async def test_invalid_http_method(self):
+        await self.render_resource(self.rsrc, b"/", method=b"PATCH")
         self.assertSimpleError("invalid HTTP method", 400)
 
     # https://graphql.org/learn/serving-over-http/#get-request
-    @defer.inlineCallbacks
-    def test_get_query(self):
-        yield self.render_resource(
+
+    async def test_get_query(self):
+        await self.render_resource(
             self.rsrc,
             b"/?query={tests{testid}}",
         )
@@ -90,17 +88,15 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             ]
         })
 
-    @defer.inlineCallbacks
-    def test_get_query_item(self):
-        yield self.render_resource(
+    async def test_get_query_item(self):
+        await self.render_resource(
             self.rsrc,
             b"/?query={test(testid:13){testid, info}}",
         )
         self.assertResult({"test": {"testid": 13, "info": "ok"}})
 
-    @defer.inlineCallbacks
-    def test_get_query_subresource(self):
-        yield self.render_resource(
+    async def test_get_query_subresource(self):
+        await self.render_resource(
             self.rsrc,
             b"/?query={test(testid:13){testid, info, steps { info }}}",
         )
@@ -112,9 +108,8 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             }
         })
 
-    @defer.inlineCallbacks
-    def test_get_query_items_result_spec(self):
-        yield self.render_resource(
+    async def test_get_query_items_result_spec(self):
+        await self.render_resource(
             self.rsrc,
             b"/?query={tests(testid__gt:18){testid, info}}",
         )
@@ -122,18 +117,17 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "tests": [{"testid": 19, "info": "todo"}, {"testid": 20, "info": "error"}]
         })
 
-    @defer.inlineCallbacks
-    def test_get_noquery(self):
-        yield self.render_resource(
+    async def test_get_noquery(self):
+        await self.render_resource(
             self.rsrc,
             b"/",
         )
         self.assertSimpleError("GET request must contain a 'query' parameter", 400)
 
     # https://graphql.org/learn/serving-over-http/#post-request
-    @defer.inlineCallbacks
-    def test_post_query_graphql_content(self):
-        yield self.render_resource(
+
+    async def test_post_query_graphql_content(self):
+        await self.render_resource(
             self.rsrc,
             method=b"POST",
             content=b"{tests{testid}}",
@@ -152,10 +146,9 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             ]
         })
 
-    @defer.inlineCallbacks
-    def test_post_query_json_content(self):
+    async def test_post_query_json_content(self):
         query = {"query": "{tests{testid}}"}
-        yield self.render_resource(
+        await self.render_resource(
             self.rsrc,
             method=b"POST",
             content=json.dumps(query).encode(),
@@ -174,13 +167,12 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             ]
         })
 
-    @defer.inlineCallbacks
-    def test_post_query_json_content_operationName(self):
+    async def test_post_query_json_content_operationName(self):
         query = {
             "query": "query foo {tests{testid}} query bar {tests{name}}",
             "operationName": "fsoo",
         }
-        yield self.render_resource(
+        await self.render_resource(
             self.rsrc,
             method=b"POST",
             content=json.dumps(query).encode(),
@@ -188,21 +180,18 @@ class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         self.assertSimpleError("json request unsupported fields: operationName", 400)
 
-    @defer.inlineCallbacks
-    def test_post_query_json_badcontent_type(self):
-        yield self.render_resource(
+    async def test_post_query_json_badcontent_type(self):
+        await self.render_resource(
             self.rsrc, method=b"POST", content=b"foo", content_type=b"application/foo"
         )
         self.assertSimpleError("unsupported content-type: application/foo", 400)
 
-    @defer.inlineCallbacks
-    def test_post_query_json_nocontent_type(self):
-        yield self.render_resource(self.rsrc, method=b"POST")
+    async def test_post_query_json_nocontent_type(self):
+        await self.render_resource(self.rsrc, method=b"POST")
         self.assertSimpleError("no content-type", 400)
 
-    @defer.inlineCallbacks
-    def test_get_bad_query(self):
-        yield self.render_resource(
+    async def test_get_bad_query(self):
+        await self.render_resource(
             self.rsrc,
             b"/?query={notexistant{id}}",
         )
@@ -227,9 +216,8 @@ class DisabledV3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCa
         self.rsrc = graphql.V3RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
-    @defer.inlineCallbacks
-    def test_basic_disabled(self):
-        yield self.render_resource(self.rsrc, b"/")
+    async def test_basic_disabled(self):
+        await self.render_resource(self.rsrc, b"/")
         self.assertRequest(
             content=unicode2bytes(
                 json.dumps({"data": None, "errors": [{"message": "graphql not enabled"}]})
