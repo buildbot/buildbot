@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import sourcestamps
@@ -69,17 +68,16 @@ class Tests(interfaces.InterfaceTests):
         def get_sourcestamps_for_buildset(self, buildsetid):
             pass
 
-    @defer.inlineCallbacks
-    def test_findSourceStampId_simple(self):
+    async def test_findSourceStampId_simple(self):
         self.reactor.advance(CREATED_AT)
-        ssid = yield self.db.sourcestamps.findSourceStampId(
+        ssid = await self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
             repository='test://repo',
             codebase='cb',
             project='stamper',
         )
-        ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
+        ssdict = await self.db.sourcestamps.getSourceStamp(ssid)
         self.assertEqual(
             ssdict,
             sourcestamps.SourceStampModel(
@@ -94,23 +92,22 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_findSourceStampId_simple_unique(self):
-        ssid1 = yield self.db.sourcestamps.findSourceStampId(
+    async def test_findSourceStampId_simple_unique(self):
+        ssid1 = await self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
             repository='test://repo',
             codebase='cb',
             project='stamper',
         )
-        ssid2 = yield self.db.sourcestamps.findSourceStampId(
+        ssid2 = await self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='xxxxx',  # different revision
             repository='test://repo',
             codebase='cb',
             project='stamper',
         )
-        ssid3 = yield self.db.sourcestamps.findSourceStampId(  # same as ssid1
+        ssid3 = await self.db.sourcestamps.findSourceStampId(  # same as ssid1
             branch='production',
             revision='abdef',
             repository='test://repo',
@@ -120,9 +117,8 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(ssid1, ssid3)
         self.assertNotEqual(ssid1, ssid2)
 
-    @defer.inlineCallbacks
-    def test_findSourceStampId_simple_unique_patch(self):
-        ssid1 = yield self.db.sourcestamps.findSourceStampId(
+    async def test_findSourceStampId_simple_unique_patch(self):
+        ssid1 = await self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
             repository='test://repo',
@@ -134,7 +130,7 @@ class Tests(interfaces.InterfaceTests):
             patch_comment='hi',
             patch_subdir='.',
         )
-        ssid2 = yield self.db.sourcestamps.findSourceStampId(
+        ssid2 = await self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
             repository='test://repo',
@@ -149,10 +145,9 @@ class Tests(interfaces.InterfaceTests):
         # even with the same patch contents, we get different ids
         self.assertNotEqual(ssid1, ssid2)
 
-    @defer.inlineCallbacks
-    def test_findSourceStampId_patch(self):
+    async def test_findSourceStampId_patch(self):
         self.reactor.advance(CREATED_AT)
-        ssid = yield self.db.sourcestamps.findSourceStampId(
+        ssid = await self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
             repository='test://repo',
@@ -164,7 +159,7 @@ class Tests(interfaces.InterfaceTests):
             patch_author='me',
             patch_comment="comment",
         )
-        ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
+        ssdict = await self.db.sourcestamps.getSourceStamp(ssid)
         self.assertEqual(
             ssdict,
             sourcestamps.SourceStampModel(
@@ -186,9 +181,8 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_getSourceStamp_simple(self):
-        yield self.insert_test_data([
+    async def test_getSourceStamp_simple(self):
+        await self.insert_test_data([
             fakedb.SourceStamp(
                 id=234,
                 branch='br',
@@ -199,7 +193,7 @@ class Tests(interfaces.InterfaceTests):
                 created_at=CREATED_AT,
             ),
         ])
-        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
+        ssdict = await self.db.sourcestamps.getSourceStamp(234)
 
         self.assertEqual(
             ssdict,
@@ -215,22 +209,20 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_getSourceStamp_simple_None(self):
+    async def test_getSourceStamp_simple_None(self):
         "check that NULL branch and revision are handled correctly"
-        yield self.insert_test_data([
+        await self.insert_test_data([
             fakedb.SourceStamp(
                 id=234, branch=None, revision=None, repository='rep', codebase='cb', project='prj'
             ),
         ])
-        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
+        ssdict = await self.db.sourcestamps.getSourceStamp(234)
 
         self.assertIsInstance(ssdict, sourcestamps.SourceStampModel)
         self.assertEqual((ssdict.branch, ssdict.revision), (None, None))
 
-    @defer.inlineCallbacks
-    def test_getSourceStamp_patch(self):
-        yield self.insert_test_data([
+    async def test_getSourceStamp_patch(self):
+        await self.insert_test_data([
             fakedb.Patch(
                 id=99,
                 patch_base64='aGVsbG8sIHdvcmxk',
@@ -241,7 +233,7 @@ class Tests(interfaces.InterfaceTests):
             ),
             fakedb.SourceStamp(id=234, patchid=99),
         ])
-        ssdict: sourcestamps.SourceStampModel = yield self.db.sourcestamps.getSourceStamp(234)
+        ssdict: sourcestamps.SourceStampModel = await self.db.sourcestamps.getSourceStamp(234)
 
         self.assertIsInstance(ssdict, sourcestamps.SourceStampModel)
         self.assertIsInstance(ssdict.patch, sourcestamps.PatchModel)
@@ -251,15 +243,13 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(ssdict.patch.comment, 'foo')
         self.assertEqual(ssdict.patch.subdir, '/foo')
 
-    @defer.inlineCallbacks
-    def test_getSourceStamp_nosuch(self):
-        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
+    async def test_getSourceStamp_nosuch(self):
+        ssdict = await self.db.sourcestamps.getSourceStamp(234)
 
         self.assertEqual(ssdict, None)
 
-    @defer.inlineCallbacks
-    def test_getSourceStamps(self):
-        yield self.insert_test_data([
+    async def test_getSourceStamps(self):
+        await self.insert_test_data([
             fakedb.Patch(
                 id=99,
                 patch_base64='aGVsbG8sIHdvcmxk',
@@ -289,7 +279,7 @@ class Tests(interfaces.InterfaceTests):
                 created_at=CREATED_AT + 10,
             ),
         ])
-        db_sourcestamps = yield self.db.sourcestamps.getSourceStamps()
+        db_sourcestamps = await self.db.sourcestamps.getSourceStamps()
 
         self.assertEqual(
             sorted(db_sourcestamps, key=sourceStampKey),
@@ -327,15 +317,13 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_getSourceStamps_empty(self):
-        sourcestamps = yield self.db.sourcestamps.getSourceStamps()
+    async def test_getSourceStamps_empty(self):
+        sourcestamps = await self.db.sourcestamps.getSourceStamps()
 
         self.assertEqual(sourcestamps, [])
 
-    @defer.inlineCallbacks
-    def test_get_sourcestamps_for_buildset_one_codebase(self):
-        yield self.insert_test_data([
+    async def test_get_sourcestamps_for_buildset_one_codebase(self):
+        await self.insert_test_data([
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name="one"),
             fakedb.Builder(id=77, name="A"),
@@ -344,7 +332,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
         ])
 
-        db_sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
+        db_sourcestamps = await self.db.sourcestamps.get_sourcestamps_for_buildset(30)
 
         expected = [
             sourcestamps.SourceStampModel(
@@ -363,9 +351,8 @@ class Tests(interfaces.InterfaceTests):
             sorted(db_sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
         )
 
-    @defer.inlineCallbacks
-    def test_get_sourcestamps_for_buildset_three_codebases(self):
-        yield self.insert_test_data([
+    async def test_get_sourcestamps_for_buildset_three_codebases(self):
+        await self.insert_test_data([
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name="one"),
             fakedb.Builder(id=77, name="A"),
@@ -378,7 +365,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=30),
         ])
 
-        db_sourcestamps = yield self.db.sourcestamps.get_sourcestamps_for_buildset(30)
+        db_sourcestamps = await self.db.sourcestamps.get_sourcestamps_for_buildset(30)
 
         expected = [
             sourcestamps.SourceStampModel(
@@ -417,11 +404,10 @@ class Tests(interfaces.InterfaceTests):
             sorted(db_sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
         )
 
-    @defer.inlineCallbacks
-    def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
-        yield self.insert_test_data(rows)
+    async def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
+        await self.insert_test_data(rows)
 
-        sourcestamps = yield self.db.sourcestamps.getSourceStampsForBuild(buildid)
+        sourcestamps = await self.db.sourcestamps.getSourceStampsForBuild(buildid)
 
         self.assertEqual(
             sorted(sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
@@ -534,15 +520,13 @@ class RealTests(Tests):
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'sourcestamps',
                 'patches',
