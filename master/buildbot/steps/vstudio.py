@@ -18,8 +18,6 @@
 
 import re
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
@@ -143,12 +141,11 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
             value = value + ';'
         self.env[name] = oldval + value
 
-    @defer.inlineCallbacks
-    def setup_log_files(self):
-        logwarnings = yield self.addLog("warnings")
-        logerrors = yield self.addLog("errors")
+    async def setup_log_files(self):
+        logwarnings = await self.addLog("warnings")
+        logerrors = await self.addLog("errors")
         self.logobserver = MSLogLineObserver(logwarnings, logerrors)
-        yield self.addLogObserver('stdio', self.logobserver)
+        await self.addLogObserver('stdio', self.logobserver)
 
     def setupEnvironment(self):
         if self.env is None:
@@ -179,15 +176,14 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
             return results.WARNINGS
         return results.SUCCESS
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.setupEnvironment()
-        yield self.setup_log_files()
+        await self.setup_log_files()
 
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        yield self.finish_logs()
+        await self.finish_logs()
         self.results = self.evaluate_result(cmd)
         return self.results
 
@@ -212,12 +208,11 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
 
         return {'step': description}
 
-    @defer.inlineCallbacks
-    def finish_logs(self):
-        log = yield self.getLog("warnings")
-        yield log.finish()
-        log = yield self.getLog("errors")
-        yield log.finish()
+    async def finish_logs(self):
+        log = await self.getLog("warnings")
+        await log.finish()
+        log = await self.getLog("errors")
+        await log.finish()
 
 
 class VC6(VisualStudio):
@@ -243,8 +238,7 @@ class VC6(VisualStudio):
         self.add_env_path("LIB", MSVCDir + '\\LIB')
         self.add_env_path("LIB", MSVCDir + '\\MFC\\LIB')
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         command = ["msdev", self.projectfile, "/MAKE"]
         if self.project is not None:
             command.append(self.project + " - " + self.config)
@@ -260,7 +254,7 @@ class VC6(VisualStudio):
             command.append("/USEENV")
         self.command = command
 
-        res = yield super().run()
+        res = await super().run()
         return res
 
 
@@ -289,8 +283,7 @@ class VC7(VisualStudio):
         self.add_env_path("LIB", MSVCDir + '\\PlatformSDK\\lib')
         self.add_env_path("LIB", VCInstallDir + '\\SDK\\v1.1\\lib')
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         command = ["devenv.com", self.projectfile]
         if self.mode == "rebuild":
             command.append("/Rebuild")
@@ -306,7 +299,7 @@ class VC7(VisualStudio):
             command.append(self.project)
         self.command = command
 
-        res = yield super().run()
+        res = await super().run()
         return res
 
 
@@ -363,8 +356,7 @@ VS2005 = VC8
 
 
 class VCExpress9(VC8):
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         command = ["vcexpress", self.projectfile]
         if self.mode == "rebuild":
             command.append("/Rebuild")
@@ -381,7 +373,7 @@ class VCExpress9(VC8):
         self.command = command
 
         # Do not use super() here. We want to override VC7.start().
-        res = yield VisualStudio.run(self)
+        res = await VisualStudio.run(self)
         return res
 
 
@@ -495,8 +487,7 @@ class MsBuild4(VisualStudio):
     def getResultSummary(self):
         return {'step': 'built ' + self.describe_project()}
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         if self.platform is None:
             config.error('platform is mandatory. Please specify a string such as "Win32"')
 
@@ -512,7 +503,7 @@ class MsBuild4(VisualStudio):
 
         self.command = command
 
-        res = yield super().run()
+        res = await super().run()
         return res
 
 
@@ -552,8 +543,7 @@ class MsBuild141(VisualStudio):
             project = 'solution'
         return f'{project} for {self.config}|{self.platform}'
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         if self.platform is None:
             config.error('platform is mandatory. Please specify a string such as "Win32"')
 
@@ -574,7 +564,7 @@ class MsBuild141(VisualStudio):
 
         self.command = command
 
-        res = yield super().run()
+        res = await super().run()
         return res
 
 
