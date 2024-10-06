@@ -16,7 +16,6 @@
 import functools
 import inspect
 
-from twisted.internet import defer
 from twisted.python import reflect
 
 from buildbot.data import base
@@ -66,9 +65,8 @@ class DataConnector(service.AsyncService):
         self.matcher = pathmatch.Matcher()
         self.rootLinks = []  # links from the root of the API
 
-    @defer.inlineCallbacks
-    def setServiceParent(self, parent):
-        yield super().setServiceParent(parent)
+    async def setServiceParent(self, parent):
+        await super().setServiceParent(parent)
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):
@@ -141,10 +139,9 @@ class DataConnector(service.AsyncService):
         )
         return self.get_with_resultspec(path, resultSpec)
 
-    @defer.inlineCallbacks
-    def get_with_resultspec(self, path, resultSpec):
+    async def get_with_resultspec(self, path, resultSpec):
         endpoint, kwargs = self.getEndpoint(path)
-        rv = yield endpoint.get(resultSpec, kwargs)
+        rv = await endpoint.get(resultSpec, kwargs)
         if resultSpec:
             rv = resultSpec.apply(rv)
         return rv
