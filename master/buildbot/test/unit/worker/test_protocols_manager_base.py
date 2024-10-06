@@ -65,10 +65,9 @@ class TestManagerClass(BaseManager):
 
 
 class TestBaseManager(unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.manager = TestManagerClass('test_base_manager')
-        yield self.manager.setServiceParent(FakeMaster())
+        await self.manager.setServiceParent(FakeMaster())
 
     def assert_equal_registration(self, result, expected):
         result_users = {key: result[key].users for key in result}
@@ -78,17 +77,15 @@ class TestBaseManager(unittest.TestCase):
         self.assertEqual(disp.start_listening_count, start_count)
         self.assertEqual(disp.stop_listening_count, stop_count)
 
-    @defer.inlineCallbacks
-    def test_repr(self):
-        reg = yield self.manager.register('tcp:port', 'x', 'y', 'pf')
+    async def test_repr(self):
+        reg = await self.manager.register('tcp:port', 'x', 'y', 'pf')
         self.assertEqual(
             repr(self.manager.dispatchers['tcp:port']), '<base.BaseDispatcher for x on tcp:port>'
         )
         self.assertEqual(repr(reg), '<base.Registration for x on tcp:port>')
 
-    @defer.inlineCallbacks
-    def test_register_before_start_service(self):
-        yield self.manager.register('tcp:port', 'user', 'pass', 'pf')
+    async def test_register_before_start_service(self):
+        await self.manager.register('tcp:port', 'user', 'pass', 'pf')
 
         self.assert_equal_registration(
             self.manager.dispatchers, {'tcp:port': {'user': ('pass', 'pf')}}
@@ -98,16 +95,15 @@ class TestBaseManager(unittest.TestCase):
         self.assert_start_stop_listening_counts(disp, 0, 0)
         self.assertEqual(len(self.manager.services), 1)
 
-        yield self.manager.startService()
+        await self.manager.startService()
         self.assert_start_stop_listening_counts(disp, 1, 0)
 
-        yield self.manager.stopService()
+        await self.manager.stopService()
         self.assert_start_stop_listening_counts(disp, 1, 1)
 
-    @defer.inlineCallbacks
-    def test_same_registration_two_times(self):
-        yield self.manager.startService()
-        yield self.manager.register('tcp:port', 'user', 'pass', 'pf')
+    async def test_same_registration_two_times(self):
+        await self.manager.startService()
+        await self.manager.register('tcp:port', 'user', 'pass', 'pf')
 
         # one registration is ok
         self.assert_equal_registration(
@@ -120,15 +116,14 @@ class TestBaseManager(unittest.TestCase):
 
         # same user is not allowed to register
         with self.assertRaises(KeyError):
-            yield self.manager.register('tcp:port', 'user', 'pass', 'pf')
+            await self.manager.register('tcp:port', 'user', 'pass', 'pf')
 
-        yield self.manager.stopService()
+        await self.manager.stopService()
         self.assert_start_stop_listening_counts(disp, 1, 1)
 
-    @defer.inlineCallbacks
-    def test_register_unregister_register(self):
-        yield self.manager.startService()
-        reg = yield self.manager.register('tcp:port', 'user', 'pass', 'pf')
+    async def test_register_unregister_register(self):
+        await self.manager.startService()
+        reg = await self.manager.register('tcp:port', 'user', 'pass', 'pf')
         self.assert_equal_registration(
             self.manager.dispatchers, {'tcp:port': {'user': ('pass', 'pf')}}
         )
@@ -140,19 +135,18 @@ class TestBaseManager(unittest.TestCase):
         self.assert_equal_registration(self.manager.dispatchers, {})
 
         # allow registering same user again
-        yield self.manager.register('tcp:port', 'user', 'pass', 'pf')
+        await self.manager.register('tcp:port', 'user', 'pass', 'pf')
 
         self.assert_equal_registration(
             self.manager.dispatchers, {'tcp:port': {'user': ('pass', 'pf')}}
         )
 
-        yield self.manager.stopService()
+        await self.manager.stopService()
         self.assert_start_stop_listening_counts(disp, 1, 1)
 
-    @defer.inlineCallbacks
-    def test_register_unregister_empty_disp_users(self):
-        yield self.manager.startService()
-        reg = yield self.manager.register('tcp:port', 'user', 'pass', 'pf')
+    async def test_register_unregister_empty_disp_users(self):
+        await self.manager.startService()
+        reg = await self.manager.register('tcp:port', 'user', 'pass', 'pf')
         self.assertEqual(len(self.manager.services), 1)
 
         expected = {'tcp:port': {'user': ('pass', 'pf')}}
@@ -165,16 +159,15 @@ class TestBaseManager(unittest.TestCase):
         self.assertEqual(reg.username, None)
         self.assertEqual(len(self.manager.services), 0)
 
-        yield self.manager.stopService()
+        await self.manager.stopService()
         self.assert_start_stop_listening_counts(disp, 1, 1)
 
-    @defer.inlineCallbacks
-    def test_different_ports_same_users(self):
-        yield self.manager.startService()
+    async def test_different_ports_same_users(self):
+        await self.manager.startService()
         # same registrations on different ports is ok
-        reg1 = yield self.manager.register('tcp:port1', "user", "pass", 'pf')
-        reg2 = yield self.manager.register('tcp:port2', "user", "pass", 'pf')
-        reg3 = yield self.manager.register('tcp:port3', "user", "pass", 'pf')
+        reg1 = await self.manager.register('tcp:port1', "user", "pass", 'pf')
+        reg2 = await self.manager.register('tcp:port2', "user", "pass", 'pf')
+        reg3 = await self.manager.register('tcp:port3', "user", "pass", 'pf')
 
         disp1 = self.manager.dispatchers['tcp:port1']
         self.assert_start_stop_listening_counts(disp1, 1, 0)
@@ -195,7 +188,7 @@ class TestBaseManager(unittest.TestCase):
         )
         self.assertEqual(len(self.manager.services), 3)
 
-        yield reg1.unregister()
+        await reg1.unregister()
         self.assert_equal_registration(
             self.manager.dispatchers,
             {'tcp:port2': {'user': ('pass', 'pf')}, 'tcp:port3': {'user': ('pass', 'pf')}},
@@ -204,7 +197,7 @@ class TestBaseManager(unittest.TestCase):
         self.assertEqual(len(self.manager.services), 2)
         self.assert_start_stop_listening_counts(disp1, 1, 1)
 
-        yield reg2.unregister()
+        await reg2.unregister()
         self.assert_equal_registration(
             self.manager.dispatchers, {'tcp:port3': {'user': ('pass', 'pf')}}
         )
@@ -212,24 +205,23 @@ class TestBaseManager(unittest.TestCase):
         self.assertEqual(len(self.manager.services), 1)
         self.assert_start_stop_listening_counts(disp2, 1, 1)
 
-        yield reg3.unregister()
+        await reg3.unregister()
         expected = {}
         self.assert_equal_registration(self.manager.dispatchers, expected)
         self.assertEqual(reg3.username, None)
         self.assertEqual(len(self.manager.services), 0)
         self.assert_start_stop_listening_counts(disp3, 1, 1)
 
-        yield self.manager.stopService()
+        await self.manager.stopService()
         self.assert_start_stop_listening_counts(disp1, 1, 1)
         self.assert_start_stop_listening_counts(disp2, 1, 1)
         self.assert_start_stop_listening_counts(disp3, 1, 1)
 
-    @defer.inlineCallbacks
-    def test_same_port_different_users(self):
-        yield self.manager.startService()
-        reg1 = yield self.manager.register('tcp:port', 'user1', 'pass1', 'pf1')
-        reg2 = yield self.manager.register('tcp:port', 'user2', 'pass2', 'pf2')
-        reg3 = yield self.manager.register('tcp:port', 'user3', 'pass3', 'pf3')
+    async def test_same_port_different_users(self):
+        await self.manager.startService()
+        reg1 = await self.manager.register('tcp:port', 'user1', 'pass1', 'pf1')
+        reg2 = await self.manager.register('tcp:port', 'user2', 'pass2', 'pf2')
+        reg3 = await self.manager.register('tcp:port', 'user3', 'pass3', 'pf3')
         disp = self.manager.dispatchers['tcp:port']
 
         self.assertEqual(len(self.manager.services), 1)
@@ -245,7 +237,7 @@ class TestBaseManager(unittest.TestCase):
         )
         self.assertEqual(len(self.manager.services), 1)
 
-        yield reg1.unregister()
+        await reg1.unregister()
         self.assert_equal_registration(
             self.manager.dispatchers,
             {'tcp:port': {'user2': ('pass2', 'pf2'), 'user3': ('pass3', 'pf3')}},
@@ -253,18 +245,18 @@ class TestBaseManager(unittest.TestCase):
         self.assertEqual(reg1.username, None)
         self.assertEqual(len(self.manager.services), 1)
 
-        yield reg2.unregister()
+        await reg2.unregister()
         self.assert_equal_registration(
             self.manager.dispatchers, {'tcp:port': {'user3': ('pass3', 'pf3')}}
         )
         self.assertEqual(reg2.username, None)
         self.assertEqual(len(self.manager.services), 1)
 
-        yield reg3.unregister()
+        await reg3.unregister()
         expected = {}
         self.assert_equal_registration(self.manager.dispatchers, expected)
         self.assertEqual(reg3.username, None)
         self.assertEqual(len(self.manager.services), 0)
 
-        yield self.manager.stopService()
+        await self.manager.stopService()
         self.assert_start_stop_listening_counts(disp, 1, 1)
