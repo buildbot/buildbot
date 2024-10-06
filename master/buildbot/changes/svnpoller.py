@@ -128,8 +128,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         repourl,
         split_file=None,
@@ -192,7 +191,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 )
                 log.err()
 
-        yield super().reconfigService(
+        await super().reconfigService(
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
@@ -258,8 +257,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         d.addErrback(log.err, 'SVNPoller: Error in  while polling')
         return d
 
-    @defer.inlineCallbacks
-    def get_prefix(self):
+    async def get_prefix(self):
         command = [self.svnbin, "info", "--xml", "--non-interactive", self.repourl]
         if self.svnuser:
             command.append(f"--username={self.svnuser}")
@@ -267,7 +265,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             command.append(f"--password={self.svnpasswd}")
         if self.extra_args:
             command.extend(self.extra_args)
-        rc, output = yield runprocess.run_process(
+        rc, output = await runprocess.run_process(
             self.master.reactor,
             command,
             env=self.environ,
@@ -306,8 +304,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         log.msg(f"SVNPoller: repourl={self.repourl}, root={root}, so prefix={prefix}")
         return prefix
 
-    @defer.inlineCallbacks
-    def get_logs(self, _):
+    async def get_logs(self, _):
         command = [self.svnbin, "log", "--xml", "--verbose", "--non-interactive"]
         if self.svnuser:
             command.extend([f"--username={self.svnuser}"])
@@ -317,7 +314,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             command.extend(self.extra_args)
         command.extend([f"--limit={(self.histmax)}", self.repourl])
 
-        rc, output = yield runprocess.run_process(
+        rc, output = await runprocess.run_process(
             self.master.reactor,
             command,
             env=self.environ,
@@ -494,10 +491,9 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         return changes
 
-    @defer.inlineCallbacks
-    def submit_changes(self, changes):
+    async def submit_changes(self, changes):
         for chdict in changes:
-            yield self.master.data.updates.addChange(src='svn', **chdict)
+            await self.master.data.updates.addChange(src='svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:
