@@ -17,8 +17,6 @@
 import os
 import shutil
 
-from twisted.internet import defer
-
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -41,8 +39,7 @@ from buildbot.test.util.integration import RunMasterBase
 class TransferStepsMasterPb(RunMasterBase):
     proto = "pb"
 
-    @defer.inlineCallbacks
-    def setup_config(self, bigfilename):
+    async def setup_config(self, bigfilename):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -64,19 +61,17 @@ class TransferStepsMasterPb(RunMasterBase):
         f.addStep(FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
         f.addStep(DirectoryUpload(workersrc="dir", masterdest="dir"))
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def setup_config_glob(self):
+    async def setup_config_glob(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
         from buildbot.process.factory import BuildFactory
 
         class CustomStep(BuildStep, CompositeStepMixin):
-            @defer.inlineCallbacks
-            def run(self):
-                content = yield self.getFileContentFromWorker(
+            async def run(self):
+                content = await self.getFileContentFromWorker(
                     "dir/file1.txt", abandonOnFailure=True
                 )
                 assert content == "filecontent"
@@ -97,10 +92,9 @@ class TransferStepsMasterPb(RunMasterBase):
         )
         f.addStep(CustomStep())
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def setup_config_single_step(self, step):
+    async def setup_config_single_step(self, step):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -112,7 +106,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
         f.addStep(step)
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
     def readMasterDirContents(self, top):
         contents = {}
@@ -124,11 +118,10 @@ class TransferStepsMasterPb(RunMasterBase):
         return contents
 
     @flaky(bugNumber=4407, onPlatform='win32')
-    @defer.inlineCallbacks
-    def test_transfer(self):
-        yield self.setup_config(bigfilename=self.mktemp())
+    async def test_transfer(self):
+        await self.setup_config(bigfilename=self.mktemp())
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
         dirContents = self.readMasterDirContents("dir")
         self.assertEqual(
@@ -144,10 +137,9 @@ class TransferStepsMasterPb(RunMasterBase):
         shutil.rmtree("dir")
         os.unlink("master.txt")
 
-    @defer.inlineCallbacks
-    def test_globTransfer(self):
-        yield self.setup_config_glob()
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+    async def test_globTransfer(self):
+        await self.setup_config_glob()
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
         dirContents = self.readMasterDirContents("dest")
         self.assertEqual(
@@ -162,36 +154,33 @@ class TransferStepsMasterPb(RunMasterBase):
         # cleanup
         shutil.rmtree("dest")
 
-    @defer.inlineCallbacks
-    def test_no_exist_file_upload(self):
+    async def test_no_exist_file_upload(self):
         step = FileUpload(workersrc="dir/noexist_path", masterdest="master_dest")
-        yield self.setup_config_single_step(step)
+        await self.setup_config_single_step(step)
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "Cannot open file")
+        res = await self.checkBuildStepLogExist(build, "Cannot open file")
         self.assertTrue(res)
         self.assertFalse(os.path.exists("master_dest"))
 
-    @defer.inlineCallbacks
-    def test_no_exist_directory_upload(self):
+    async def test_no_exist_directory_upload(self):
         step = DirectoryUpload(workersrc="dir/noexist_path", masterdest="master_dest")
-        yield self.setup_config_single_step(step)
+        await self.setup_config_single_step(step)
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "Cannot read directory")
+        res = await self.checkBuildStepLogExist(build, "Cannot read directory")
         self.assertTrue(res)
         self.assertFalse(os.path.exists("master_dest"))
 
-    @defer.inlineCallbacks
-    def test_no_exist_multiple_file_upload(self):
+    async def test_no_exist_multiple_file_upload(self):
         step = MultipleFileUpload(workersrcs=["dir/noexist_path"], masterdest="master_dest")
-        yield self.setup_config_single_step(step)
+        await self.setup_config_single_step(step)
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], FAILURE)
-        res = yield self.checkBuildStepLogExist(build, "not available at worker")
+        res = await self.checkBuildStepLogExist(build, "not available at worker")
         self.assertTrue(res)
         self.assertEqual(self.readMasterDirContents("master_dest"), {})
 
