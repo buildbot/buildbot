@@ -106,9 +106,8 @@ class TestBuildStep(
             self.testcase = testcase
             self.lock_accesses = lock_accesses
 
-        @defer.inlineCallbacks
-        def run(self):
-            locks = yield get_real_locks_from_accesses(self.lock_accesses, self.build)
+        async def run(self):
+            locks = await get_real_locks_from_accesses(self.lock_accesses, self.build)
 
             self.testcase.assertFalse(locks[0][0].isAvailable(self.testcase, self.lock_accesses[0]))
             self.testcase.assertFalse(locks[1][0].isAvailable(self.testcase, self.lock_accesses[1]))
@@ -199,8 +198,7 @@ class TestBuildStep(
             self.record_target.append(self.arg)
             return SUCCESS
 
-    @defer.inlineCallbacks
-    def test_arg_changes(self):
+    async def test_arg_changes(self):
         try:
             recorded_arg = []
 
@@ -208,7 +206,7 @@ class TestBuildStep(
             self.setup_step(step)
 
             self.expect_outcome(result=SUCCESS)
-            yield self.run_step()
+            await self.run_step()
 
             self.assertEqual(recorded_arg, ["orig"])
         except ConfigErrors as e:
@@ -218,8 +216,7 @@ class TestBuildStep(
                 e.errors[0],
             )
 
-    @defer.inlineCallbacks
-    def test_arg_changes_set_step_arg(self):
+    async def test_arg_changes_set_step_arg(self):
         recorded_arg = []
 
         step = self.RecordingBuildStep(record_target=recorded_arg, arg="orig")
@@ -227,7 +224,7 @@ class TestBuildStep(
         self.setup_step(step)
 
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
         self.assertEqual(recorded_arg, ["changed"])
 
@@ -249,8 +246,7 @@ class TestBuildStep(
         bs.setProperty("x", "abc", "test", runtime=True)
         props.setProperty.assert_called_with("x", "abc", "test", runtime=True)
 
-    @defer.inlineCallbacks
-    def test_renderableLocks(self):
+    async def test_renderableLocks(self):
         master_lock = locks.MasterLock("masterlock")
         worker_lock = locks.WorkerLock("workerlock")
 
@@ -268,7 +264,7 @@ class TestBuildStep(
             self.LockBuildStep(testcase=self, lock_accesses=lock_accesses, locks=rendered_locks)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
         self.assertEqual(len(lock_accesses), 2)
 
@@ -290,8 +286,7 @@ class TestBuildStep(
         self.assertEqual(repr(buildstep.BuildStep(name="me")), 'BuildStep(name=' + repr("me") + ')')
         self.assertEqual(repr(NewStyleStep(name="me")), 'NewStyleStep(name=' + repr("me") + ')')
 
-    @defer.inlineCallbacks
-    def test_regularLocks(self):
+    async def test_regularLocks(self):
         master_lock = locks.MasterLock("masterlock")
         worker_lock = locks.WorkerLock("workerlock")
         lock_accesses = [
@@ -303,7 +298,7 @@ class TestBuildStep(
             self.LockBuildStep(testcase=self, lock_accesses=lock_accesses, locks=lock_accesses)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
         self.assertTrue(
             self.get_nth_step(0)._locks_to_acquire[0][0].isAvailable(self, lock_accesses[0])
@@ -312,8 +307,7 @@ class TestBuildStep(
             self.get_nth_step(0)._locks_to_acquire[1][0].isAvailable(self, lock_accesses[1])
         )
 
-    @defer.inlineCallbacks
-    def test_regular_locks_skip_step(self):
+    async def test_regular_locks_skip_step(self):
         # BuildStep should not try to acquire locks when it's skipped
         lock = locks.MasterLock("masterlock")
         lock_access = locks.LockAccess(lock, "exclusive")
@@ -322,14 +316,13 @@ class TestBuildStep(
             buildstep.BuildStep(locks=[locks.LockAccess(lock, "counting")], doStepIf=False)
         )
 
-        locks_list = yield get_real_locks_from_accesses([lock_access], self.build)
+        locks_list = await get_real_locks_from_accesses([lock_access], self.build)
         locks_list[0][0].claim(self, lock_access)
 
         self.expect_outcome(result=SKIPPED)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_acquire_multiple_locks_after_not_available(self):
+    async def test_acquire_multiple_locks_after_not_available(self):
         lock1 = locks.MasterLock("masterlock1")
         lock2 = locks.MasterLock("masterlock2")
 
@@ -342,15 +335,15 @@ class TestBuildStep(
             )
         )
 
-        yield stepa._setup_locks()
-        yield stepb._setup_locks()
-        yield stepc._setup_locks()
+        await stepa._setup_locks()
+        await stepb._setup_locks()
+        await stepc._setup_locks()
 
         real_lock1 = stepc._locks_to_acquire[0][0]
         real_lock2 = stepc._locks_to_acquire[1][0]
 
-        yield stepa.acquireLocks()
-        yield stepb.acquireLocks()
+        await stepa.acquireLocks()
+        await stepb.acquireLocks()
         c_d = stepc.acquireLocks()
 
         self.assertTrue(_is_lock_owned_by_step(stepa, real_lock1))
@@ -364,34 +357,33 @@ class TestBuildStep(
         self.assertFalse(_is_lock_available_for_step(stepc, real_lock2))
 
         stepa.releaseLocks()
-        yield deferLater(self.reactor, 0, lambda: None)
+        await deferLater(self.reactor, 0, lambda: None)
 
         self.assertTrue(_is_lock_available_for_step(stepc, real_lock1))
         self.assertFalse(_is_lock_available_for_step(stepc, real_lock2))
 
         stepb.releaseLocks()
-        yield deferLater(self.reactor, 0, lambda: None)
+        await deferLater(self.reactor, 0, lambda: None)
 
         self.assertTrue(_is_lock_owned_by_step(stepc, real_lock1))
         self.assertTrue(_is_lock_owned_by_step(stepc, real_lock2))
 
-        yield c_d
+        await c_d
 
-    @defer.inlineCallbacks
-    def test_cancel_when_lock_available(self):
+    async def test_cancel_when_lock_available(self):
         lock = locks.MasterLock("masterlock1")
 
         stepa = self.setup_step(self.FakeBuildStep(locks=[locks.LockAccess(lock, 'exclusive')]))
         stepb = self.setup_step(self.FakeBuildStep(locks=[locks.LockAccess(lock, 'exclusive')]))
         stepc = self.setup_step(self.FakeBuildStep(locks=[locks.LockAccess(lock, 'exclusive')]))
 
-        yield stepa._setup_locks()
-        yield stepb._setup_locks()
-        yield stepc._setup_locks()
+        await stepa._setup_locks()
+        await stepb._setup_locks()
+        await stepc._setup_locks()
 
         real_lock = stepc._locks_to_acquire[0][0]
 
-        yield stepa.acquireLocks()
+        await stepa.acquireLocks()
         b_d = stepb.acquireLocks()
         c_d = stepc.acquireLocks()
 
@@ -403,41 +395,40 @@ class TestBuildStep(
         self.assertFalse(_is_lock_available_for_step(stepc, real_lock))
 
         stepa.releaseLocks()
-        yield deferLater(self.reactor, 0, lambda: None)
+        await deferLater(self.reactor, 0, lambda: None)
 
         self.assertFalse(_is_lock_owned_by_step(stepa, real_lock))
         self.assertTrue(_is_lock_owned_by_step(stepb, real_lock))
         self.assertFalse(_is_lock_available_for_step(stepc, real_lock))
 
         stepb.interrupt("cancelling")
-        yield b_d
+        await b_d
         stepb.releaseLocks()
 
         self.assertFalse(_is_lock_owned_by_step(stepa, real_lock))
         self.assertFalse(_is_lock_owned_by_step(stepb, real_lock))
         self.assertTrue(_is_lock_available_for_step(stepc, real_lock))
 
-        yield c_d
+        await c_d
 
         self.assertFalse(_is_lock_owned_by_step(stepa, real_lock))
         self.assertFalse(_is_lock_owned_by_step(stepb, real_lock))
         self.assertTrue(_is_lock_owned_by_step(stepc, real_lock))
 
-    @defer.inlineCallbacks
-    def test_cancel_when_lock_not_available(self):
+    async def test_cancel_when_lock_not_available(self):
         lock = locks.MasterLock("masterlock1")
 
         stepa = self.setup_step(self.FakeBuildStep(locks=[locks.LockAccess(lock, 'exclusive')]))
         stepb = self.setup_step(self.FakeBuildStep(locks=[locks.LockAccess(lock, 'exclusive')]))
         stepc = self.setup_step(self.FakeBuildStep(locks=[locks.LockAccess(lock, 'exclusive')]))
 
-        yield stepa._setup_locks()
-        yield stepb._setup_locks()
-        yield stepc._setup_locks()
+        await stepa._setup_locks()
+        await stepb._setup_locks()
+        await stepc._setup_locks()
 
         real_lock = stepc._locks_to_acquire[0][0]
 
-        yield stepa.acquireLocks()
+        await stepa.acquireLocks()
         b_d = stepb.acquireLocks()
         c_d = stepc.acquireLocks()
 
@@ -449,39 +440,37 @@ class TestBuildStep(
         self.assertFalse(_is_lock_available_for_step(stepc, real_lock))
 
         stepb.interrupt("cancelling")
-        yield b_d
+        await b_d
 
         stepa.releaseLocks()
-        yield deferLater(self.reactor, 0, lambda: None)
+        await deferLater(self.reactor, 0, lambda: None)
 
         self.assertFalse(_is_lock_owned_by_step(stepa, real_lock))
         self.assertFalse(_is_lock_owned_by_step(stepb, real_lock))
         self.assertTrue(_is_lock_owned_by_step(stepc, real_lock))
 
-        yield c_d
+        await c_d
 
         self.assertFalse(_is_lock_owned_by_step(stepa, real_lock))
         self.assertFalse(_is_lock_owned_by_step(stepb, real_lock))
         self.assertTrue(_is_lock_owned_by_step(stepc, real_lock))
 
-    @defer.inlineCallbacks
-    def test_checks_step_and_builder_locks_not_same(self):
+    async def test_checks_step_and_builder_locks_not_same(self):
         lock = locks.MasterLock("masterlock1")
 
         step = self.setup_step(self.FakeBuildStep(locks=[lock.access("exclusive")]))
 
-        lock_list = yield get_real_locks_from_accesses([lock.access("counting")], self.build)
+        lock_list = await get_real_locks_from_accesses([lock.access("counting")], self.build)
         self.build._locks_to_acquire = lock_list
 
         with self.assertRaises(RuntimeError) as e:
-            yield step._setup_locks()
+            await step._setup_locks()
         self.assertEqual(
             e.exception.args,
             ("lock claimed by both Step and Build (<MasterLock(masterlock1, 1)>)",),
         )
 
-    @defer.inlineCallbacks
-    def test_multiple_cancel(self):
+    async def test_multiple_cancel(self):
         step = self.setup_step(CustomActionBuildStep())
 
         def double_interrupt():
@@ -492,10 +481,9 @@ class TestBuildStep(
         step.action = double_interrupt
 
         self.expect_outcome(result=CANCELLED)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_runCommand(self):
+    async def test_runCommand(self):
         bs = create_step_from_step_or_factory(buildstep.BuildStep())
         bs.worker = worker.FakeWorker(master=None)  # master is not used here
         bs.remote = 'dummy'
@@ -509,12 +497,11 @@ class TestBuildStep(
             return SUCCESS
 
         cmd.run = run
-        yield bs.runCommand(cmd)
+        await bs.runCommand(cmd)
         # check that step.cmd is cleared after the command runs
         self.assertEqual(bs.cmd, None)
 
-    @defer.inlineCallbacks
-    def test_run_command_after_interrupt(self):
+    async def test_run_command_after_interrupt(self):
         step = self.setup_step(CustomActionBuildStep())
 
         cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
@@ -524,25 +511,22 @@ class TestBuildStep(
 
         cmd.run = run
 
-        @defer.inlineCallbacks
-        def interrupt_and_run_command():
+        async def interrupt_and_run_command():
             step.interrupt('reason1')
-            res = yield step.runCommand(cmd)
+            res = await step.runCommand(cmd)
             return res
 
         step.action = interrupt_and_run_command
 
         self.expect_outcome(result=CANCELLED)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_lost_remote_during_interrupt(self):
+    async def test_lost_remote_during_interrupt(self):
         step = self.setup_step(CustomActionBuildStep())
 
         cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
 
-        @defer.inlineCallbacks
-        def on_command(cmd):
+        async def on_command(cmd):
             conn = cmd.conn
             conn.set_expect_interrupt()
             conn.set_block_on_interrupt()
@@ -550,8 +534,8 @@ class TestBuildStep(
             d2 = step.interrupt(failure.Failure(error.ConnectionLost()))
 
             conn.unblock_waiters()
-            yield d1
-            yield d2
+            await d1
+            await d2
 
         self.expect_commands(
             ExpectShell(workdir='build', command=['echo', 'hello'])
@@ -559,36 +543,32 @@ class TestBuildStep(
             .break_connection()
         )
 
-        @defer.inlineCallbacks
-        def run_command():
-            res = yield step.runCommand(cmd)
+        async def run_command():
+            res = await step.runCommand(cmd)
             return res.results()
 
         step.action = run_command
 
         self.expect_outcome(result=RETRY)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_start_returns_SKIPPED(self):
+    async def test_start_returns_SKIPPED(self):
         self.setup_step(self.SkippingBuildStep())
         self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.run_step()
+        await self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.get_nth_step(0).finished.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_doStepIf_false(self):
+    async def test_doStepIf_false(self):
         self.setup_step(self.FakeBuildStep(doStepIf=False))
         self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.run_step()
+        await self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.get_nth_step(0).finished.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_doStepIf_renderable_false(self):
+    async def test_doStepIf_renderable_false(self):
         @util.renderer
         def dostepif(props):
             return False
@@ -596,25 +576,23 @@ class TestBuildStep(
         self.setup_step(self.FakeBuildStep(doStepIf=dostepif))
         self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.run_step()
+        await self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.get_nth_step(0).finished.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_doStepIf_returns_false(self):
+    async def test_doStepIf_returns_false(self):
         self.setup_step(self.FakeBuildStep(doStepIf=lambda step: False))
         self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.run_step()
+        await self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.get_nth_step(0).finished.assert_not_called()
 
-    @defer.inlineCallbacks
-    def test_doStepIf_returns_deferred_false(self):
+    async def test_doStepIf_returns_deferred_false(self):
         self.setup_step(self.FakeBuildStep(doStepIf=lambda step: defer.succeed(False)))
         self.get_nth_step(0).finished = mock.Mock()
         self.expect_outcome(result=SKIPPED, state_string='finished (skipped)')
-        yield self.run_step()
+        await self.run_step()
         # 837: we want to specifically avoid calling finished() if skipping
         self.get_nth_step(0).finished.assert_not_called()
 
@@ -626,8 +604,7 @@ class TestBuildStep(
         self._setupWaterfallTest(True, True)
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_hideStepIf_Callable_False(self):
+    async def test_hideStepIf_Callable_False(self):
         called = [False]
 
         def shouldHide(result, step):
@@ -638,11 +615,10 @@ class TestBuildStep(
 
         self._setupWaterfallTest(shouldHide, False)
 
-        yield self.run_step()
+        await self.run_step()
         self.assertTrue(called[0])
 
-    @defer.inlineCallbacks
-    def test_hideStepIf_Callable_True(self):
+    async def test_hideStepIf_Callable_True(self):
         called = [False]
 
         def shouldHide(result, step):
@@ -653,20 +629,18 @@ class TestBuildStep(
 
         self._setupWaterfallTest(shouldHide, True)
 
-        yield self.run_step()
+        await self.run_step()
         self.assertTrue(called[0])
 
-    @defer.inlineCallbacks
-    def test_hideStepIf_fails(self):
+    async def test_hideStepIf_fails(self):
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
 
         self._setupWaterfallTest(lambda x, y: 0 / 0, False, expectedResult=EXCEPTION)
         self.get_nth_step(0).addLogWithFailure = mock.Mock()
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(ZeroDivisionError)), 1)
 
-    @defer.inlineCallbacks
-    def test_hideStepIf_Callable_Exception(self):
+    async def test_hideStepIf_Callable_Exception(self):
         called = [False]
 
         def shouldHide(result, step):
@@ -683,35 +657,32 @@ class TestBuildStep(
         self.expect_hidden(True)
 
         try:
-            yield self.run_step()
+            await self.run_step()
         except Exception as e:
             log.err(e)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertTrue(called[0])
 
-    @defer.inlineCallbacks
-    def test_step_getLog(self):
+    async def test_step_getLog(self):
         testcase = self
 
         class TestGetLogStep(buildstep.BuildStep):
-            @defer.inlineCallbacks
-            def run(self):
+            async def run(self):
                 testcase.assertRaises(KeyError, lambda: self.getLog('testy'))
-                log1 = yield self.addLog('testy')
+                log1 = await self.addLog('testy')
                 log2 = self.getLog('testy')
                 testcase.assertIdentical(log1, log2)
                 return SUCCESS
 
         self.setup_step(TestGetLogStep())
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_step_renders_flunkOnFailure(self):
+    async def test_step_renders_flunkOnFailure(self):
         self.setup_step(TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
         self.build.setProperty('fOF', 'yes', 'test')
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(self.get_nth_step(0).flunkOnFailure, 'yes')
 
     def test_hasStatistic(self):
@@ -887,8 +858,7 @@ class TestBuildStep(
         st.descriptionSuffix = ['bar', 'bar2']
         self.checkSummary(st.getResultSummary(), 'foo ing bar bar2')
 
-    @defer.inlineCallbacks
-    def test_getResultSummary_descriptionSuffix_failure(self):
+    async def test_getResultSummary_descriptionSuffix_failure(self):
         st = create_step_from_step_or_factory(buildstep.BuildStep())
         st.results = FAILURE
         st.description = 'fooing'
@@ -897,16 +867,14 @@ class TestBuildStep(
         )
         self.checkSummary(st.getResultSummary(), 'fooing (failure)')
 
-    @defer.inlineCallbacks
-    def test_getResultSummary_descriptionSuffix_skipped(self):
+    async def test_getResultSummary_descriptionSuffix_skipped(self):
         st = create_step_from_step_or_factory(buildstep.BuildStep())
         st.results = SKIPPED
         st.description = 'fooing'
         self.checkSummary((yield st.getBuildResultSummary()), 'fooing (skipped)')
         self.checkSummary(st.getResultSummary(), 'fooing (skipped)')
 
-    @defer.inlineCallbacks
-    def test_getResultSummary_description_failure_timed_out(self):
+    async def test_getResultSummary_description_failure_timed_out(self):
         st = create_step_from_step_or_factory(buildstep.BuildStep())
         st.results = FAILURE
         st.description = "fooing"
@@ -942,8 +910,7 @@ class TestBuildStep(
         with self.assertRaisesRegex(WorkerSetupError, "worker is too old, does not know about foo"):
             step.checkWorkerHasCommand("foo")
 
-    @defer.inlineCallbacks
-    def testRunRaisesException(self):
+    async def testRunRaisesException(self):
         step = create_step_from_step_or_factory(NewStyleStep())
         step.master = mock.Mock()
         step.master.reactor = self.reactor
@@ -957,7 +924,7 @@ class TestBuildStep(
         step.master.data.updates.addStep = lambda **kwargs: defer.succeed((0, 0, 0))
         step.addLogWithFailure = lambda x: defer.succeed(None)
         step.run = lambda: defer.fail(RuntimeError('got exception'))
-        res = yield step.startStep(mock.Mock())
+        res = await step.startStep(mock.Mock())
         self.assertFalse(step._running)
         errors = self.flushLoggedErrors()
         self.assertEqual(len(errors), 1)
@@ -1095,74 +1062,65 @@ class TestRealItfc(unittest.TestCase, InterfaceTests):
 
 
 class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
-    @defer.inlineCallbacks
-    def run(self):
-        rv = yield self.testMethod()
+    async def run(self):
+        rv = await self.testMethod()
         self.method_return_value = rv
         return SUCCESS
 
 
 class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        yield self.setup_test_build_step()
+        await self.setup_test_build_step()
         self.setup_step(CommandMixinExample())
 
     def tearDown(self):
         return self.tear_down_test_build_step()
 
-    @defer.inlineCallbacks
-    def test_runRmdir(self):
+    async def test_runRmdir(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runRmdir('/some/path')
         self.expect_commands(ExpectRmdir(dir='/some/path', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertTrue(self.get_nth_step(0).method_return_value)
 
-    @defer.inlineCallbacks
-    def test_runMkdir(self):
+    async def test_runMkdir(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runMkdir('/some/path')
         self.expect_commands(ExpectMkdir(dir='/some/path', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertTrue(self.get_nth_step(0).method_return_value)
 
-    @defer.inlineCallbacks
-    def test_runMkdir_fails(self):
+    async def test_runMkdir_fails(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runMkdir('/some/path')
         self.expect_commands(ExpectMkdir(dir='/some/path', log_environ=False).exit(1))
         self.expect_outcome(result=FAILURE)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_runMkdir_fails_no_abandon(self):
+    async def test_runMkdir_fails_no_abandon(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).runMkdir(
             '/some/path', abandonOnFailure=False
         )
         self.expect_commands(ExpectMkdir(dir='/some/path', log_environ=False).exit(1))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertFalse(self.get_nth_step(0).method_return_value)
 
-    @defer.inlineCallbacks
-    def test_pathExists(self):
+    async def test_pathExists(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).pathExists('/some/path')
         self.expect_commands(ExpectStat(file='/some/path', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertTrue(self.get_nth_step(0).method_return_value)
 
-    @defer.inlineCallbacks
-    def test_pathExists_doesnt(self):
+    async def test_pathExists_doesnt(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).pathExists('/some/path')
         self.expect_commands(ExpectStat(file='/some/path', log_environ=False).exit(1))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertFalse(self.get_nth_step(0).method_return_value)
 
-    @defer.inlineCallbacks
-    def test_pathExists_logging(self):
+    async def test_pathExists_logging(self):
         self.get_nth_step(0).testMethod = lambda: self.get_nth_step(0).pathExists('/some/path')
         self.expect_commands(
             ExpectStat(file='/some/path', log_environ=False)
@@ -1170,7 +1128,7 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(1)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertFalse(self.get_nth_step(0).method_return_value)
         self.assertEqual(
             self.get_nth_step(0).getLog('stdio').header,
@@ -1178,9 +1136,8 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
     def test_glob(self):
-        @defer.inlineCallbacks
-        def testFunc():
-            res = yield self.get_nth_step(0).runGlob("*.pyc")
+        async def testFunc():
+            res = await self.get_nth_step(0).runGlob("*.pyc")
             self.assertEqual(res, ["one.pyc", "two.pyc"])
 
         self.get_nth_step(0).testMethod = testFunc
@@ -1210,20 +1167,18 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=prohibit_args)
         super().__init__(**kwargs)
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand(**self.make_cmd_kwargs)
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand(**self.make_cmd_kwargs)
+        await self.runCommand(cmd)
         return cmd.results()
 
 
 class TestShellMixin(
     TestBuildStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
-        yield self.setup_test_build_step(with_secrets={"s3cr3t": "really_safe_string"})
+        await self.setup_test_build_step(with_secrets={"s3cr3t": "really_safe_string"})
 
     def tearDown(self):
         return self.tear_down_test_build_step()
@@ -1251,8 +1206,7 @@ class TestShellMixin(
         self.assertEqual(MySubclass().description, None)
         self.assertEqual(MySubclass(description='charming').description, ['charming'])
 
-    @defer.inlineCallbacks
-    def test_prohibit_args(self):
+    async def test_prohibit_args(self):
         self.setup_step(
             SimpleShellCommand(
                 prohibit_args=['command'], make_cmd_kwargs={'command': ['cmd', 'arg']}
@@ -1260,7 +1214,7 @@ class TestShellMixin(
         )
         self.expect_commands(ExpectShell(workdir='wkdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
     def test_bad_arg_type(self):
         mixin = SimpleShellCommand()
@@ -1269,55 +1223,48 @@ class TestShellMixin(
         ):
             mixin.setupShellMixin({'usePTY': 13})
 
-    @defer.inlineCallbacks
-    def test_no_default_workdir(self):
+    async def test_no_default_workdir(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.expect_commands(ExpectShell(workdir='build', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_build_workdir(self):
+    async def test_build_workdir(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = '/alternate'
         self.expect_commands(ExpectShell(workdir='/alternate', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_build_workdir_callable(self):
+    async def test_build_workdir_callable(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: '/alternate'
         self.expect_commands(ExpectShell(workdir='/alternate', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_build_workdir_callable_error(self):
+    async def test_build_workdir_callable_error(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = lambda x: x.nosuchattribute  # will raise AttributeError
         self.expect_exception(buildstep.CallableAttributeError)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_build_workdir_renderable(self):
+    async def test_build_workdir_renderable(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
         self.build.workdir = properties.Property("myproperty")
         self.build.setProperty("myproperty", "/myproperty", "test")
         self.expect_commands(ExpectShell(workdir='/myproperty', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_step_workdir(self):
+    async def test_step_workdir(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], workdir='/stepdir'))
         self.build.workdir = '/builddir'
         self.expect_commands(ExpectShell(workdir='/stepdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_step_renderable_workdir(self):
+    async def test_step_renderable_workdir(self):
         @renderer
         def rendered_workdir(_):
             return '/stepdir'
@@ -1326,10 +1273,9 @@ class TestShellMixin(
         self.build.workdir = '/builddir'
         self.expect_commands(ExpectShell(workdir='/stepdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_step_workdir_overridden(self):
+    async def test_step_workdir_overridden(self):
         self.setup_step(
             SimpleShellCommand(
                 command=['cmd', 'arg'],
@@ -1340,18 +1286,16 @@ class TestShellMixin(
         self.build.workdir = '/builddir'
         self.expect_commands(ExpectShell(workdir='/overridden', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_step_env_default(self):
+    async def test_step_env_default(self):
         env = {'ENV': 'TRUE'}
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env=env))
         self.expect_commands(ExpectShell(workdir='wkdir', command=['cmd', 'arg'], env=env).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_step_env_overridden(self):
+    async def test_step_env_overridden(self):
         env = {'ENV': 'TRUE'}
         env_override = {'OVERRIDE': 'TRUE'}
         self.setup_step(
@@ -1363,10 +1307,9 @@ class TestShellMixin(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg'], env=env_override).exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_extra_logfile(self):
+    async def test_extra_logfile(self):
         self.setup_step(
             SimpleShellCommand(command=['cmd', 'arg'], logfiles={'logname': 'logpath.log'})
         )
@@ -1379,30 +1322,27 @@ class TestShellMixin(
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(self.get_nth_step(0).getLog('logname').stdout, 'logline\nlogline2\n')
 
-    @defer.inlineCallbacks
-    def test_lazy_logfiles_stdout_has_stdout(self):
+    async def test_lazy_logfiles_stdout_has_stdout(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['cmd', 'arg']).stdout("some log\n").exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(self.get_nth_step(0).getLog('stdio').stdout, 'some log\n')
 
-    @defer.inlineCallbacks
-    def test_lazy_logfiles_stdout_no_stdout(self):
+    async def test_lazy_logfiles_stdout_no_stdout(self):
         # lazy log files do not apply to stdout
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], lazylogfiles=True))
         self.expect_commands(ExpectShell(workdir='wkdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(self.get_nth_step(0).getLog('stdio').stdout, '')
 
-    @defer.inlineCallbacks
-    def test_lazy_logfiles_logfile(self):
+    async def test_lazy_logfiles_logfile(self):
         self.setup_step(
             SimpleShellCommand(
                 command=['cmd', 'arg'], lazylogfiles=True, logfiles={'logname': 'logpath.log'}
@@ -1416,11 +1356,10 @@ class TestShellMixin(
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(self.get_nth_step(0).getLog('logname').stdout, 'logline\nlogline2\n')
 
-    @defer.inlineCallbacks
-    def test_lazy_logfiles_no_logfile(self):
+    async def test_lazy_logfiles_no_logfile(self):
         self.setup_step(
             SimpleShellCommand(
                 command=['cmd', 'arg'], lazylogfiles=True, logfiles={'logname': 'logpath.log'}
@@ -1432,12 +1371,11 @@ class TestShellMixin(
             ).exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         with self.assertRaises(KeyError):
             self.get_nth_step(0).getLog('logname')
 
-    @defer.inlineCallbacks
-    def test_env(self):
+    async def test_env(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env={'BAR': 'BAR'}))
         self.build.builder.config.env = {'FOO': 'FOO'}
         self.expect_commands(
@@ -1446,10 +1384,9 @@ class TestShellMixin(
             ).exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_old_worker_args(self):
+    async def test_old_worker_args(self):
         self.setup_build(worker_version={'*': "1.1"})
         self.setup_step(
             SimpleShellCommand(command=['cmd', 'arg'], usePTY=False, interruptSignal='DIE')
@@ -1459,7 +1396,7 @@ class TestShellMixin(
             # note missing parameters
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(
             self.get_nth_step(0).getLog('stdio').header,
             'NOTE: worker does not allow master to override usePTY\n'
@@ -1467,8 +1404,7 @@ class TestShellMixin(
             'program finished with exit code 0\n',
         )
 
-    @defer.inlineCallbacks
-    def test_new_worker_args(self):
+    async def test_new_worker_args(self):
         self.setup_build(worker_version={'*': "3.0"})
         self.setup_step(
             SimpleShellCommand(command=['cmd', 'arg'], usePTY=False, interruptSignal='DIE')
@@ -1479,21 +1415,19 @@ class TestShellMixin(
             ).exit(0)
         )
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertEqual(
             self.get_nth_step(0).getLog('stdio').header, 'program finished with exit code 0\n'
         )
 
-    @defer.inlineCallbacks
-    def test_description(self):
+    async def test_description(self):
         self.setup_step(SimpleShellCommand(command=['foo', properties.Property('bar', 'BAR')]))
         self.expect_commands(ExpectShell(workdir='wkdir', command=['foo', 'BAR']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="'foo BAR'")
-        yield self.run_step()
+        await self.run_step()
 
     @parameterized.expand(["timeout", "timeout_without_output"])
-    @defer.inlineCallbacks
-    def test_description_timed_out(self, failure_reason):
+    async def test_description_timed_out(self, failure_reason):
         self.setup_step(SimpleShellCommand(command=["foo"]))
         self.expect_commands(
             ExpectShell(workdir="wkdir", command=["foo"])
@@ -1501,7 +1435,7 @@ class TestShellMixin(
             .exit(1)
         )
         self.expect_outcome(result=FAILURE, state_string="'foo' (failure) (timed out)")
-        yield self.run_step()
+        await self.run_step()
 
     def test_getResultSummary(self):
         self.setup_step(SimpleShellCommand(command=['a', ['b', 'c']]))
