@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 
 from buildbot.config import BuilderConfig
 from buildbot.plugins import util
@@ -26,8 +25,7 @@ from buildbot.util.eventual import flushEventualQueue
 
 
 class Tests(RunFakeMasterTestCase):
-    @defer.inlineCallbacks
-    def create_single_worker_two_builder_lock_config(self, lock_cls, mode):
+    async def create_single_worker_two_builder_lock_config(self, lock_cls, mode):
         stepcontrollers = [BuildStepController(), BuildStepController()]
 
         lock = lock_cls("lock1", maxCount=1)
@@ -53,7 +51,7 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
         builder_ids = [
             (yield self.master.data.updates.findBuilderId('builder1')),
             (yield self.master.data.updates.findBuilderId('builder2')),
@@ -61,8 +59,7 @@ class Tests(RunFakeMasterTestCase):
 
         return stepcontrollers, builder_ids
 
-    @defer.inlineCallbacks
-    def create_single_worker_two_builder_step_lock_config(self, lock_cls, mode):
+    async def create_single_worker_two_builder_step_lock_config(self, lock_cls, mode):
         lock = lock_cls("lock1", maxCount=1)
 
         stepcontrollers = [
@@ -89,7 +86,7 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
         builder_ids = [
             (yield self.master.data.updates.findBuilderId('builder1')),
             (yield self.master.data.updates.findBuilderId('builder2')),
@@ -97,8 +94,7 @@ class Tests(RunFakeMasterTestCase):
 
         return stepcontrollers, builder_ids
 
-    @defer.inlineCallbacks
-    def create_two_worker_two_builder_lock_config(self, mode):
+    async def create_two_worker_two_builder_lock_config(self, mode):
         stepcontrollers = [BuildStepController(), BuildStepController()]
 
         master_lock = util.MasterLock("lock1", maxCount=1)
@@ -125,7 +121,7 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
         builder_ids = [
             (yield self.master.data.updates.findBuilderId('builder1')),
             (yield self.master.data.updates.findBuilderId('builder2')),
@@ -133,14 +129,13 @@ class Tests(RunFakeMasterTestCase):
 
         return stepcontrollers, builder_ids
 
-    @defer.inlineCallbacks
-    def assert_two_builds_created_one_after_another(self, stepcontrollers, builder_ids):
+    async def assert_two_builds_created_one_after_another(self, stepcontrollers, builder_ids):
         # start two builds and verify that a second build starts after the
         # first is finished
-        yield self.create_build_request([builder_ids[0]])
-        yield self.create_build_request([builder_ids[1]])
+        await self.create_build_request([builder_ids[0]])
+        await self.create_build_request([builder_ids[1]])
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 1)
         self.assertEqual(builds[0]['results'], None)
         self.assertEqual(builds[0]['builderid'], builder_ids[0])
@@ -148,9 +143,9 @@ class Tests(RunFakeMasterTestCase):
         stepcontrollers[0].finish_step(SUCCESS)
 
         # execute Build.releaseLocks which is called eventually
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], None)
@@ -158,19 +153,18 @@ class Tests(RunFakeMasterTestCase):
 
         stepcontrollers[1].finish_step(SUCCESS)
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], SUCCESS)
 
-    @defer.inlineCallbacks
-    def assert_two_steps_created_one_after_another(self, stepcontrollers, builder_ids):
+    async def assert_two_steps_created_one_after_another(self, stepcontrollers, builder_ids):
         # start two builds and verify that a second build starts after the
         # first is finished
-        yield self.create_build_request([builder_ids[0]])
-        yield self.create_build_request([builder_ids[1]])
+        await self.create_build_request([builder_ids[0]])
+        await self.create_build_request([builder_ids[1]])
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], None)
         self.assertEqual(builds[0]['builderid'], builder_ids[0])
@@ -181,20 +175,20 @@ class Tests(RunFakeMasterTestCase):
         self.assertFalse(stepcontrollers[1].running)
 
         stepcontrollers[0].finish_step(SUCCESS)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
         self.assertFalse(stepcontrollers[0].running)
         self.assertTrue(stepcontrollers[1].running)
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], None)
 
         stepcontrollers[1].finish_step(SUCCESS)
-        yield flushEventualQueue()
+        await flushEventualQueue()
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], SUCCESS)
@@ -205,17 +199,16 @@ class Tests(RunFakeMasterTestCase):
         (util.WorkerLock, 'counting'),
         (util.WorkerLock, 'exclusive'),
     ])
-    @defer.inlineCallbacks
-    def test_builder_lock_prevents_concurrent_builds(self, lock_cls, mode):
+    async def test_builder_lock_prevents_concurrent_builds(self, lock_cls, mode):
         """
         Tests whether a builder lock works at all in preventing a build when
         the lock is taken.
         """
-        stepcontrollers, builder_ids = yield self.create_single_worker_two_builder_lock_config(
+        stepcontrollers, builder_ids = await self.create_single_worker_two_builder_lock_config(
             lock_cls, mode
         )
 
-        yield self.assert_two_builds_created_one_after_another(stepcontrollers, builder_ids)
+        await self.assert_two_builds_created_one_after_another(stepcontrollers, builder_ids)
 
     @parameterized.expand([
         (util.MasterLock, 'counting'),
@@ -223,28 +216,26 @@ class Tests(RunFakeMasterTestCase):
         (util.WorkerLock, 'counting'),
         (util.WorkerLock, 'exclusive'),
     ])
-    @defer.inlineCallbacks
-    def test_step_lock_prevents_concurrent_builds(self, lock_cls, mode):
+    async def test_step_lock_prevents_concurrent_builds(self, lock_cls, mode):
         """
         Tests whether a builder lock works at all in preventing a build when
         the lock is taken.
         """
-        stepcontrollers, builder_ids = yield self.create_single_worker_two_builder_step_lock_config(
+        stepcontrollers, builder_ids = await self.create_single_worker_two_builder_step_lock_config(
             lock_cls, mode
         )
-        yield self.assert_two_steps_created_one_after_another(stepcontrollers, builder_ids)
+        await self.assert_two_steps_created_one_after_another(stepcontrollers, builder_ids)
 
     @parameterized.expand(['counting', 'exclusive'])
-    @defer.inlineCallbacks
-    def test_builder_lock_release_wakes_builds_for_another_builder(self, mode):
+    async def test_builder_lock_release_wakes_builds_for_another_builder(self, mode):
         """
         If a builder locks a master lock then the build request distributor
         must retry running any buildrequests that might have been not scheduled
         due to unavailability of that lock when the lock becomes available.
         """
-        stepcontrollers, builder_ids = yield self.create_two_worker_two_builder_lock_config(mode)
+        stepcontrollers, builder_ids = await self.create_two_worker_two_builder_lock_config(mode)
 
-        yield self.assert_two_builds_created_one_after_another(stepcontrollers, builder_ids)
+        await self.assert_two_builds_created_one_after_another(stepcontrollers, builder_ids)
 
 
 class TestReconfig(RunFakeMasterTestCase):
@@ -267,8 +258,9 @@ class TestReconfig(RunFakeMasterTestCase):
             )
             config_dict['builders'].append(b)
 
-    @defer.inlineCallbacks
-    def create_single_worker_n_builder_lock_config(self, builder_count, lock_cls, max_count, mode):
+    async def create_single_worker_n_builder_lock_config(
+        self, builder_count, lock_cls, max_count, mode
+    ):
         stepcontrollers = self.create_stepcontrollers(builder_count, None, None)
 
         lock = lock_cls("lock1", maxCount=max_count)
@@ -283,7 +275,7 @@ class TestReconfig(RunFakeMasterTestCase):
         }
         self.update_builder_config(config_dict, stepcontrollers, lock, mode)
 
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
 
         builder_ids = []
         for i in range(builder_count):
@@ -291,8 +283,7 @@ class TestReconfig(RunFakeMasterTestCase):
 
         return stepcontrollers, config_dict, lock, builder_ids
 
-    @defer.inlineCallbacks
-    def create_single_worker_n_builder_step_lock_config(
+    async def create_single_worker_n_builder_step_lock_config(
         self, builder_count, lock_cls, max_count, mode
     ):
         lock = lock_cls("lock1", maxCount=max_count)
@@ -308,7 +299,7 @@ class TestReconfig(RunFakeMasterTestCase):
         }
         self.update_builder_config(config_dict, stepcontrollers, None, None)
 
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
 
         builder_ids = []
         for i in range(builder_count):
@@ -326,8 +317,7 @@ class TestReconfig(RunFakeMasterTestCase):
         (2, util.MasterLock, 'exclusive', 2, 1, 1, 1),
         (2, util.WorkerLock, 'exclusive', 2, 1, 1, 1),
     ])
-    @defer.inlineCallbacks
-    def test_changing_max_lock_count_does_not_break_builder_locks(
+    async def test_changing_max_lock_count_does_not_break_builder_locks(
         self,
         builder_count,
         lock_cls,
@@ -348,34 +338,34 @@ class TestReconfig(RunFakeMasterTestCase):
             config_dict,
             lock,
             builder_ids,
-        ) = yield self.create_single_worker_n_builder_lock_config(
+        ) = await self.create_single_worker_n_builder_lock_config(
             builder_count, lock_cls, max_count_before, mode
         )
 
         # create a number of builds and check that the expected number of them
         # start
         for i in range(builder_count):
-            yield self.create_build_request([builder_ids[i]])
+            await self.create_build_request([builder_ids[i]])
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), allowed_builds_before)
 
         # update the config and reconfig the master
         lock = lock_cls(lock.name, maxCount=max_count_after)
         self.update_builder_config(config_dict, stepcontrollers, lock, mode)
-        yield self.master.reconfig()
-        yield flushEventualQueue()
+        await self.master.reconfig()
+        await flushEventualQueue()
 
         # check that the number of running builds matches expectation
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), allowed_builds_after)
 
         # finish the steps and check that builds finished as expected
         for stepcontroller in stepcontrollers:
             stepcontroller.finish_step(SUCCESS)
-            yield flushEventualQueue()
+            await flushEventualQueue()
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         for b in builds[allowed_builds_after:]:
             self.assertEqual(b['results'], SUCCESS)
 
@@ -389,8 +379,7 @@ class TestReconfig(RunFakeMasterTestCase):
         (2, util.MasterLock, 'exclusive', 2, 1, 1, 1),
         (2, util.WorkerLock, 'exclusive', 2, 1, 1, 1),
     ])
-    @defer.inlineCallbacks
-    def test_changing_max_lock_count_does_not_break_step_locks(
+    async def test_changing_max_lock_count_does_not_break_step_locks(
         self,
         builder_count,
         lock_cls,
@@ -411,16 +400,16 @@ class TestReconfig(RunFakeMasterTestCase):
             config_dict,
             lock,
             builder_ids,
-        ) = yield self.create_single_worker_n_builder_step_lock_config(
+        ) = await self.create_single_worker_n_builder_step_lock_config(
             builder_count, lock_cls, max_count_before, mode
         )
 
         # create a number of builds and check that the expected number of them
         # start their steps
         for i in range(builder_count):
-            yield self.create_build_request([builder_ids[i]])
+            await self.create_build_request([builder_ids[i]])
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), builder_count)
 
         self.assertEqual(sum(sc.running for sc in stepcontrollers), allowed_steps_before)
@@ -430,11 +419,11 @@ class TestReconfig(RunFakeMasterTestCase):
         new_stepcontrollers = self.create_stepcontrollers(builder_count, lock, mode)
 
         self.update_builder_config(config_dict, new_stepcontrollers, lock, mode)
-        yield self.master.reconfig()
-        yield flushEventualQueue()
+        await self.master.reconfig()
+        await flushEventualQueue()
 
         # check that all builds are still running
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), builder_count)
 
         # check that the expected number of steps has been started and that
@@ -445,9 +434,9 @@ class TestReconfig(RunFakeMasterTestCase):
         # finish the steps and check that builds finished as expected
         for stepcontroller in stepcontrollers:
             stepcontroller.finish_step(SUCCESS)
-            yield flushEventualQueue()
+            await flushEventualQueue()
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), builder_count)
         for b in builds:
             self.assertEqual(b['results'], SUCCESS)
