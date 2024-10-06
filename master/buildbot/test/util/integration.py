@@ -54,8 +54,7 @@ class DictLoader:
         return MasterConfig.loadFromDict(self.config_dict, '<dict>')
 
 
-@defer.inlineCallbacks
-def getMaster(case, reactor, config_dict):
+async def getMaster(case, reactor, config_dict):
     """
     Create a started ``BuildMaster`` with the given configuration.
     """
@@ -70,11 +69,11 @@ def getMaster(case, reactor, config_dict):
     # TODO: Allow BuildMaster to transparently upgrade the database, at least
     # for tests.
     master.config.db['db_url'] = config_dict['db_url']
-    yield master.db.setup(check_version=False)
-    yield master.db.model.upgrade()
+    await master.db.setup(check_version=False)
+    await master.db.model.upgrade()
     master.db.setup = lambda: None
 
-    yield master.startService()
+    await master.startService()
 
     case.addCleanup(master.db.pool.shutdown)
     case.addCleanup(master.stopService)
@@ -90,42 +89,36 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")
 
-    @defer.inlineCallbacks
-    def setup_master(self, config_dict):
-        self.master = yield getMaster(self, self.reactor, config_dict)
+    async def setup_master(self, config_dict):
+        self.master = await getMaster(self, self.reactor, config_dict)
 
-    @defer.inlineCallbacks
-    def reconfig_master(self, config_dict=None):
+    async def reconfig_master(self, config_dict=None):
         if config_dict is not None:
             self.master.config_loader.config_dict = config_dict
-        yield self.master.doReconfig()
+        await self.master.doReconfig()
 
-    @defer.inlineCallbacks
-    def clean_master_shutdown(self, quick=False):
-        yield self.master.botmaster.cleanShutdown(quickMode=quick, stopReactor=False)
+    async def clean_master_shutdown(self, quick=False):
+        await self.master.botmaster.cleanShutdown(quickMode=quick, stopReactor=False)
 
     def createLocalWorker(self, name, **kwargs):
         workdir = FilePath(self.mktemp())
         workdir.createDirectory()
         return LocalWorker(name, workdir.path, **kwargs)
 
-    @defer.inlineCallbacks
-    def assertBuildResults(self, build_id, result):
-        dbdict = yield self.master.db.builds.getBuild(build_id)
+    async def assertBuildResults(self, build_id, result):
+        dbdict = await self.master.db.builds.getBuild(build_id)
         self.assertEqual(result, dbdict.results)
 
-    @defer.inlineCallbacks
-    def assertStepStateString(self, step_id, state_string):
-        datadict = yield self.master.data.get(('steps', step_id))
+    async def assertStepStateString(self, step_id, state_string):
+        datadict = await self.master.data.get(('steps', step_id))
         self.assertEqual(datadict['state_string'], state_string)
 
-    @defer.inlineCallbacks
-    def assertLogs(self, build_id, exp_logs):
+    async def assertLogs(self, build_id, exp_logs):
         got_logs = {}
-        data_logs = yield self.master.data.get(('builds', build_id, 'steps', 1, 'logs'))
+        data_logs = await self.master.data.get(('builds', build_id, 'steps', 1, 'logs'))
         for log in data_logs:
             self.assertTrue(log['complete'])
-            log_contents = yield self.master.data.get((
+            log_contents = await self.master.data.get((
                 'builds',
                 build_id,
                 'steps',
@@ -139,10 +132,9 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
 
         self.assertEqual(got_logs, exp_logs)
 
-    @defer.inlineCallbacks
-    def create_build_request(self, builder_ids, properties=None):
+    async def create_build_request(self, builder_ids, properties=None):
         properties = properties.asDict() if properties is not None else None
-        ret = yield self.master.data.updates.addBuildset(
+        ret = await self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
@@ -152,13 +144,11 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
         )
         return ret
 
-    @defer.inlineCallbacks
-    def do_test_build_by_name(self, builder_name):
-        builder_id = yield self.master.data.updates.findBuilderId(builder_name)
-        yield self.do_test_build(builder_id)
+    async def do_test_build_by_name(self, builder_name):
+        builder_id = await self.master.data.updates.findBuilderId(builder_name)
+        await self.do_test_build(builder_id)
 
-    @defer.inlineCallbacks
-    def do_test_build(self, builder_id):
+    async def do_test_build(self, builder_id):
         # setup waiting for build to finish
         d_finished = defer.Deferred()
 
@@ -166,14 +156,14 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
             if not d_finished.called:
                 d_finished.callback(None)
 
-        consumer = yield self.master.mq.startConsuming(on_finished, ('builds', None, 'finished'))
+        consumer = await self.master.mq.startConsuming(on_finished, ('builds', None, 'finished'))
 
         # start the builder
-        yield self.create_build_request([builder_id])
+        await self.create_build_request([builder_id])
 
         # and wait for build completion
-        yield d_finished
-        yield consumer.stopConsuming()
+        await d_finished
+        await consumer.stopConsuming()
 
 
 class RunMasterBase(unittest.TestCase):
@@ -186,8 +176,7 @@ class RunMasterBase(unittest.TestCase):
     if Worker is None:
         skip = "buildbot-worker package is not installed"
 
-    @defer.inlineCallbacks
-    def setup_master(self, config_dict, startWorker=True, **worker_kwargs):
+    async def setup_master(self, config_dict, startWorker=True, **worker_kwargs):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
@@ -216,7 +205,7 @@ class RunMasterBase(unittest.TestCase):
             ]
             config_dict['protocols'] = proto
 
-        m = yield getMaster(self, reactor, config_dict)
+        m = await getMaster(self, reactor, config_dict)
         self.master_config_dict = config_dict
         self.master = m
         self.assertFalse(stop.called, "startService tried to stop the reactor; check logs")
@@ -278,23 +267,21 @@ class RunMasterBase(unittest.TestCase):
             self.w = None
 
         if self.w is not None:
-            yield self.w.setServiceParent(m)
+            await self.w.setServiceParent(m)
 
-        @defer.inlineCallbacks
-        def dump():
+        async def dump():
             if not self._passed:
                 dump = StringIO()
                 print("FAILED! dumping build db for debug", file=dump)
-                builds = yield self.master.data.get(("builds",))
+                builds = await self.master.data.get(("builds",))
                 for build in builds:
-                    yield self.printBuild(build, dump, withLogs=True)
+                    await self.printBuild(build, dump, withLogs=True)
 
                 raise self.failureException(dump.getvalue())
 
         self.addCleanup(dump)
 
-    @defer.inlineCallbacks
-    def doForceBuild(
+    async def doForceBuild(
         self,
         wantSteps=False,
         wantProperties=False,
@@ -321,28 +308,28 @@ class RunMasterBase(unittest.TestCase):
             if self.firstbsid == data['bsid']:
                 d.callback(data)
 
-        newConsumer = yield self.master.mq.startConsuming(newCallback, ('buildsets', None, 'new'))
+        newConsumer = await self.master.mq.startConsuming(newCallback, ('buildsets', None, 'new'))
 
-        finishedConsumer = yield self.master.mq.startConsuming(
+        finishedConsumer = await self.master.mq.startConsuming(
             finishedCallback, ('buildsets', None, 'complete')
         )
 
         if triggerCallback is not None:
-            yield triggerCallback()
+            await triggerCallback()
         elif useChange is False:
             # use data api to force a build
-            yield self.master.data.control("force", forceParams, ("forceschedulers", "force"))
+            await self.master.data.control("force", forceParams, ("forceschedulers", "force"))
         else:
             # use data api to force a build, via a new change
-            yield self.master.data.updates.addChange(**useChange)
+            await self.master.data.updates.addChange(**useChange)
 
         # wait until we receive the build finished event
-        buildset = yield d
-        buildrequests = yield self.master.data.get(
+        buildset = await d
+        buildrequests = await self.master.data.get(
             ('buildrequests',), filters=[resultspec.Filter('buildsetid', 'eq', [buildset['bsid']])]
         )
         buildrequest = buildrequests[-1]
-        builds = yield self.master.data.get(
+        builds = await self.master.data.get(
             ('builds',),
             filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])],
         )
@@ -350,38 +337,36 @@ class RunMasterBase(unittest.TestCase):
         # We return the last build
         build = builds[-1]
         finishedConsumer.stopConsuming()
-        yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
+        await self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
         return build
 
-    @defer.inlineCallbacks
-    def enrichBuild(self, build, wantSteps=False, wantProperties=False, wantLogs=False):
+    async def enrichBuild(self, build, wantSteps=False, wantProperties=False, wantLogs=False):
         # enrich the build result, with the step results
         if wantSteps:
-            build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
+            build["steps"] = await self.master.data.get(("builds", build['buildid'], "steps"))
             # enrich the step result, with the logs results
             if wantLogs:
                 build["steps"] = list(build["steps"])
                 for step in build["steps"]:
-                    step['logs'] = yield self.master.data.get(("steps", step['stepid'], "logs"))
+                    step['logs'] = await self.master.data.get(("steps", step['stepid'], "logs"))
                     step["logs"] = list(step['logs'])
                     for log in step["logs"]:
-                        log['contents'] = yield self.master.data.get((
+                        log['contents'] = await self.master.data.get((
                             "logs",
                             log['logid'],
                             "contents",
                         ))
 
         if wantProperties:
-            build["properties"] = yield self.master.data.get((
+            build["properties"] = await self.master.data.get((
                 "builds",
                 build['buildid'],
                 "properties",
             ))
 
-    @defer.inlineCallbacks
-    def printBuild(self, build, out=sys.stdout, withLogs=False):
+    async def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
-        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
+        await self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         print(
             f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
             f"({statusToString(build['results'])})",
@@ -410,8 +395,7 @@ class RunMasterBase(unittest.TestCase):
                     patterns.remove(pattern)
         return patterns
 
-    @defer.inlineCallbacks
-    def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False, regex=False):
+    async def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False, regex=False):
         if isinstance(expectedLog, str):
             expectedLog = [expectedLog]
         if not isinstance(expectedLog, list):
@@ -419,7 +403,7 @@ class RunMasterBase(unittest.TestCase):
                 'The expectedLog argument must be either string or a list of strings'
             )
 
-        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
+        await self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         for step in build['steps']:
             for log in step['logs']:
                 for line in log['contents']['content'].splitlines():
