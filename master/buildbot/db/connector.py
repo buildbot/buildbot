@@ -17,7 +17,6 @@
 import textwrap
 
 from twisted.application import internet
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -65,13 +64,11 @@ class AbstractDBConnector(service.ReconfigurableServiceMixin, service.AsyncMulti
         super().__init__()
         self.configured_url = None
 
-    @defer.inlineCallbacks
-    def setup(self):
-        self.configured_url = yield self.master.get_db_url(self.master.config)
+    async def setup(self):
+        self.configured_url = await self.master.get_db_url(self.master.config)
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        new_db_url = yield self.master.get_db_url(new_config)
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
+        new_db_url = await self.master.get_db_url(new_config)
         if self.configured_url is None:
             self.configured_url = new_db_url
         elif self.configured_url != new_db_url:
@@ -108,9 +105,8 @@ class DBConnector(AbstractDBConnector):
         self.pool = None  # set up in reconfigService
         self.upsert = get_upsert_method(None)  # set up in reconfigService
 
-    @defer.inlineCallbacks
-    def setServiceParent(self, p):
-        yield super().setServiceParent(p)
+    async def setServiceParent(self, p):
+        await super().setServiceParent(p)
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.changesources = changesources.ChangeSourcesConnectorComponent(self)
@@ -134,10 +130,9 @@ class DBConnector(AbstractDBConnector):
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self._doCleanup)
         self.cleanup_timer.clock = self.master.reactor
-        yield self.cleanup_timer.setServiceParent(self)
+        await self.cleanup_timer.setServiceParent(self)
 
-    @defer.inlineCallbacks
-    def setup(self, check_version=True, verbose=True):
+    async def setup(self, check_version=True, verbose=True):
         super().setup()
         db_url = self.configured_url
 
@@ -154,8 +149,8 @@ class DBConnector(AbstractDBConnector):
                 # Using in-memory database. Since it is reset after each process
                 # restart, `buildbot upgrade-master` cannot be used (data is not
                 # persistent). Upgrade model here to allow startup to continue.
-                yield self.model.upgrade()
-            current = yield self.model.is_current()
+                await self.model.upgrade()
+            current = await self.model.is_current()
             if not current:
                 for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):
                     log.msg(l)
