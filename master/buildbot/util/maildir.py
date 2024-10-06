@@ -22,7 +22,6 @@ relative to the top of the maildir (so it will look like "new/blahblah").
 import os
 
 from twisted.application import internet
-from twisted.internet import defer
 from twisted.internet import reactor
 
 # We have to put it here, since we use it to provide feedback
@@ -63,8 +62,7 @@ class MaildirService(service.BuildbotService):
         self.newdir = os.path.join(self.basedir, "new")
         self.curdir = os.path.join(self.basedir, "cur")
 
-    @defer.inlineCallbacks
-    def startService(self):
+    async def startService(self):
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir(f"invalid maildir '{self.basedir}'")
         try:
@@ -81,9 +79,9 @@ class MaildirService(service.BuildbotService):
             log.msg("DNotify failed, falling back to polling")
         if not self.dnotify:
             self.timerService = internet.TimerService(self.pollInterval, self.poll)
-            yield self.timerService.setServiceParent(self)
+            await self.timerService.setServiceParent(self)
         self.poll()
-        yield super().startService()
+        await super().startService()
 
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
@@ -108,8 +106,7 @@ class MaildirService(service.BuildbotService):
             self.timerService = None
         return super().stopService()
 
-    @defer.inlineCallbacks
-    def poll(self):
+    async def poll(self):
         try:
             assert self.basedir
             # see what's new
@@ -123,7 +120,7 @@ class MaildirService(service.BuildbotService):
             self.files.extend(newfiles)
             for n in newfiles:
                 try:
-                    yield self.messageReceived(n)
+                    await self.messageReceived(n)
                 except Exception:
                     log.err(None, f"while reading '{n}' from maildir '{self.basedir}':")
         except Exception:
