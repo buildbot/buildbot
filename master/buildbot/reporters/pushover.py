@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.python import log as twlog
 
 from buildbot import config
@@ -72,16 +71,15 @@ class PushoverNotifier(ReporterBase):
                 "'url', 'url_title', 'device', 'retry', 'expire', or 'html'"
             )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self, user_key, api_token, priorities=None, otherParams=None, generators=None
     ):
-        user_key, api_token = yield self.renderSecrets(user_key, api_token)
+        user_key, api_token = await self.renderSecrets(user_key, api_token)
 
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators)
+        await super().reconfigService(generators=generators)
         self.user_key = user_key
         self.api_token = api_token
         if priorities is None:
@@ -92,7 +90,7 @@ class PushoverNotifier(ReporterBase):
             self.otherParams = {}
         else:
             self.otherParams = otherParams
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, 'https://api.pushover.net'
         )
 
