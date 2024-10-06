@@ -16,7 +16,6 @@
 
 from packaging.version import parse as parse_version
 from twisted import __version__ as twistedVersion
-from twisted.internet import defer
 
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
@@ -25,8 +24,7 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # with one builder and a shellcommand step, which use usePTY
 class ShellMaster(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self, usePTY):
+    async def setup_config(self, usePTY):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -43,16 +41,15 @@ class ShellMaster(RunMasterBase):
             )
         )
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
     @skipUnlessPlatformIs('posix')
-    @defer.inlineCallbacks
-    def test_usePTY(self):
-        yield self.setup_config(usePTY=True)
+    async def test_usePTY(self):
+        await self.setup_config(usePTY=True)
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "in a terminal", onlyStdout=True)
+        res = await self.checkBuildStepLogExist(build, "in a terminal", onlyStdout=True)
         self.assertTrue(res)
 
         # Twisted versions less than 17.1.0 would issue a warning:
@@ -66,11 +63,10 @@ class ShellMaster(RunMasterBase):
             self.flushWarnings()
 
     @skipUnlessPlatformIs('posix')
-    @defer.inlineCallbacks
-    def test_NOusePTY(self):
-        yield self.setup_config(usePTY=False)
+    async def test_NOusePTY(self):
+        await self.setup_config(usePTY=False)
 
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "not a terminal", onlyStdout=True)
+        res = await self.checkBuildStepLogExist(build, "not a terminal", onlyStdout=True)
         self.assertTrue(res)
