@@ -19,7 +19,6 @@ import time
 from unittest import mock
 
 import twisted
-from twisted.internet import defer
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
 from twisted.trial import unittest
@@ -101,41 +100,36 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             if not is_line_good:
                 self.assertEqual(err, b'')  # not valid warning
 
-    @defer.inlineCallbacks
-    def test_start_no_daemon(self):
-        (_, err, rc) = yield self.runStart(nodaemon=True)
+    async def test_start_no_daemon(self):
+        (_, err, rc) = await self.runStart(nodaemon=True)
         self.assert_stderr_ok(err)
         self.assertEqual(rc, 0)
 
-    @defer.inlineCallbacks
-    def test_start_quiet(self):
-        res = yield self.runStart(quiet=True)
+    async def test_start_quiet(self):
+        res = await self.runStart(quiet=True)
 
         self.assertEqual(res[0], b'')
         self.assert_stderr_ok(res[1])
         self.assertEqual(res[2], 0)
 
     @skipUnlessPlatformIs('posix')
-    @defer.inlineCallbacks
-    def test_start_timeout_nonnumber(self):
-        (out, err, rc) = yield self.runStart(start_timeout='a')
+    async def test_start_timeout_nonnumber(self):
+        (out, err, rc) = await self.runStart(start_timeout='a')
 
         self.assertEqual((rc, err), (1, b''))
         self.assertSubstring(b'Start timeout must be a number\n', out)
 
     @skipUnlessPlatformIs('posix')
-    @defer.inlineCallbacks
-    def test_start_timeout_number_string(self):
+    async def test_start_timeout_number_string(self):
         # integer values from command-line options come in as strings
-        res = yield self.runStart(start_timeout='10')
+        res = await self.runStart(start_timeout='10')
 
         self.assertEqual(res, (mock.ANY, b'', 0))
 
     @skipUnlessPlatformIs('posix')
-    @defer.inlineCallbacks
-    def test_start(self):
+    async def test_start(self):
         try:
-            (out, err, rc) = yield self.runStart()
+            (out, err, rc) = await self.runStart()
 
             self.assertEqual((rc, err), (0, b''))
             self.assertSubstring(b'buildmaster appears to have (re)started correctly', out)
