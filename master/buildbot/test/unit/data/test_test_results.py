@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import test_results
@@ -81,16 +80,14 @@ class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing_results(self):
-        results = yield self.callGet(('test_result_sets', 13, 'results'))
+    async def test_get_existing_results(self):
+        results = await self.callGet(('test_result_sets', 13, 'results'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_resultid'] for r in results], [101, 102, 103])
 
-    @defer.inlineCallbacks
-    def test_get_missing_results(self):
-        results = yield self.callGet(('test_result_sets', 14, 'results'))
+    async def test_get_missing_results(self):
+        results = await self.callGet(('test_result_sets', 14, 'results'))
         self.assertEqual(results, [])
 
 
@@ -107,8 +104,7 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
         def addTestResults(self, builderid, test_result_setid, result_values):
             pass
 
-    @defer.inlineCallbacks
-    def test_add_test_results(self):
+    async def test_add_test_results(self):
         result_values = [
             {'test_name': 'name1', 'value': '1'},
             {'test_name': 'name2', 'duration_ns': 1000, 'value': '1'},
@@ -117,13 +113,13 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
             {'test_name': 'name5', 'test_code_path': 'path4', 'line': 4, 'value': '4'},
             {'test_code_path': 'path5', 'line': 5, 'value': '5'},
         ]
-        yield self.rtype.addTestResults(
+        await self.rtype.addTestResults(
             builderid=88, test_result_setid=13, result_values=result_values
         )
 
         self.master.mq.assertProductions([])
 
-        results = yield self.master.db.test_results.getTestResults(
+        results = await self.master.db.test_results.getTestResults(
             builderid=88, test_result_setid=13
         )
         resultid = results[0].id
