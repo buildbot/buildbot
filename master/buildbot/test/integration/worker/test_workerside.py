@@ -109,27 +109,26 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     timeout = 30
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         # set the worker port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = PBManager()
-        yield self.pbmanager.setServiceParent(self.master)
+        await self.pbmanager.setServiceParent(self.master)
 
         # remove the fakeServiceParent from fake service hierarchy, and replace
         # by a real one
-        yield self.master.workers.disownServiceParent()
+        await self.master.workers.disownServiceParent()
         self.workers = self.master.workers = workermanager.WorkerManager(self.master)
-        yield self.workers.setServiceParent(self.master)
+        await self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()
-        yield self.botmaster.setServiceParent(self.master)
+        await self.botmaster.setServiceParent(self.master)
 
         self.master.botmaster = self.botmaster
         self.master.data.updates.workerConfigured = lambda *a, **k: None
-        yield self.master.startService()
+        await self.master.startService()
 
         self.buildworker = None
         self.port = None
@@ -142,21 +141,19 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         self.tmpdirs = set()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         for tmp in self.tmpdirs:
             if os.path.exists(tmp):
                 shutil.rmtree(tmp)
-        yield self.pbmanager.stopService()
-        yield self.botmaster.stopService()
-        yield self.workers.stopService()
+        await self.pbmanager.stopService()
+        await self.botmaster.stopService()
+        await self.workers.stopService()
 
         # if the worker is still attached, wait for it to detach, too
         if self.buildworker:
-            yield self.buildworker.waitForCompleteShutdown()
+            await self.buildworker.waitForCompleteShutdown()
 
-    @defer.inlineCallbacks
-    def addMasterSideWorker(
+    async def addMasterSideWorker(
         self,
         connection_string=f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
         name="testworker",
@@ -181,8 +178,8 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
             )
         ]
 
-        yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
-        yield self.workers.reconfigServiceWithBuildbotConfig(new_config)
+        await self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
+        await self.workers.reconfigServiceWithBuildbotConfig(new_config)
 
         if update_port:
             # as part of the reconfig, the worker registered with the
@@ -217,55 +214,52 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
             connection_string=connection_string_tpl.format(port=self.port),
         )
 
-    @defer.inlineCallbacks
-    def test_connect_disconnect(self):
-        yield self.addMasterSideWorker()
+    async def test_connect_disconnect(self):
+        await self.addMasterSideWorker()
 
         def could_not_connect():
             self.fail("Worker never got connected to master")
 
         timeout = reactor.callLater(self.timeout, could_not_connect)
         worker = self.addWorker()
-        yield worker.startService()
-        yield worker.tests_connected
+        await worker.startService()
+        await worker.tests_connected
 
         timeout.cancel()
         self.assertTrue('bldr' in worker.bot.builders)
-        yield worker.stopService()
-        yield worker.tests_disconnected
+        await worker.stopService()
+        await worker.tests_disconnected
 
-    @defer.inlineCallbacks
-    def test_reconnect_network(self):
-        yield self.addMasterSideWorker()
+    async def test_reconnect_network(self):
+        await self.addMasterSideWorker()
 
         def could_not_connect():
             self.fail("Worker did not reconnect in time to master")
 
         worker = self.addWorker(r"tcp:host=127.0.0.1:port={port}")
-        yield worker.startService()
-        yield worker.tests_connected
+        await worker.startService()
+        await worker.tests_connected
 
         self.assertTrue('bldr' in worker.bot.builders)
 
         timeout = reactor.callLater(self.timeout, could_not_connect)
-        yield self.workerSideDisconnect(worker)
-        yield worker.tests_connected
+        await self.workerSideDisconnect(worker)
+        await worker.tests_connected
 
         timeout.cancel()
-        yield worker.stopService()
-        yield worker.tests_disconnected
+        await worker.stopService()
+        await worker.tests_disconnected
 
-    @defer.inlineCallbacks
-    def test_applicative_reconnection(self):
+    async def test_applicative_reconnection(self):
         """Test reconnection on PB errors.
 
         The worker starts with a password that the master does not accept
         at first, and then the master gets reconfigured to accept it.
         """
-        yield self.addMasterSideWorker()
+        await self.addMasterSideWorker()
         worker = self.addWorker(password="pw2")
-        yield worker.startService()
-        yield worker.tests_login_failed
+        await worker.startService()
+        await worker.tests_login_failed
         self.assertEqual(1, len(self.flushLoggedErrors(UnauthorizedLogin)))
 
         def could_not_connect():
@@ -275,22 +269,21 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
         # - we really need to instantiate a new one master-side worker,
         #   just changing its password has it simply ignored
         # - we need to fix the port
-        yield self.addMasterSideWorker(
+        await self.addMasterSideWorker(
             password='pw2',
             update_port=False,  # don't know why, but it'd fail
             connection_string=f"tcp:{self.port}:interface=127.0.0.1",
         )
         timeout = reactor.callLater(self.timeout, could_not_connect)
-        yield worker.tests_connected
+        await worker.tests_connected
 
         timeout.cancel()
         self.assertTrue('bldr' in worker.bot.builders)
 
-        yield worker.stopService()
-        yield worker.tests_disconnected
+        await worker.stopService()
+        await worker.tests_disconnected
 
-    @defer.inlineCallbacks
-    def test_pb_keepalive(self):
+    async def test_pb_keepalive(self):
         """Test applicative (PB) keepalives.
 
         This works by patching the master to callback a deferred on which the
@@ -307,23 +300,23 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         self.patch(Connection, 'perspective_keepalive', perspective_keepalive)
 
-        yield self.addMasterSideWorker()
+        await self.addMasterSideWorker()
         # short keepalive to make the test bearable to run
         worker = self.addWorker(keepalive=0.1)
         waiter = worker.keepalive_waiter = defer.Deferred()
 
-        yield worker.startService()
-        yield worker.tests_connected
-        first = yield waiter
-        yield worker.bf.currentKeepaliveWaiter
+        await worker.startService()
+        await worker.tests_connected
+        first = await waiter
+        await worker.bf.currentKeepaliveWaiter
 
         waiter = worker.keepalive_waiter = defer.Deferred()
 
-        second = yield waiter
-        yield worker.bf.currentKeepaliveWaiter
+        second = await waiter
+        await worker.bf.currentKeepaliveWaiter
 
         self.assertGreater(second, first)
         self.assertLess(second, first + 1)  # seems safe enough
 
-        yield worker.stopService()
-        yield worker.tests_disconnected
+        await worker.stopService()
+        await worker.tests_disconnected
