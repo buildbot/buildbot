@@ -54,8 +54,7 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def do_fuzz(self, endTime):
+    async def do_fuzz(self, endTime):
         lru.inv_failed = False
 
         def delayed_miss_fn(key):
@@ -89,14 +88,14 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
 
             # give the reactor some time to process pending events
             if random.uniform(0, 1.0) < 0.5:
-                yield deferUntilLater(0)
+                await deferUntilLater(0)
 
         # now wait until all of the pending calls have cleared, noting that
         # this method will be counted as one delayed call, in the current
         # implementation
         while len(reactor.getDelayedCalls()) > 1:
             # give the reactor some time to process pending events
-            yield deferUntilLater(0.001)
+            await deferUntilLater(0.001)
 
         self.assertFalse(lru.inv_failed, "invariant failed; see logs")
         log.msg(f"hits: {self.lru.hits}; misses: {self.lru.misses}; refhits: {self.lru.refhits}")
