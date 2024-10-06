@@ -17,7 +17,6 @@ import os
 import pprint
 import sys
 
-from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
@@ -80,8 +79,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS, state_string='y')
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_env_subst(self):
+    async def test_env_subst(self):
         os.environ['WORLD'] = 'hello'
         self.setup_step(master.MasterShellCommand(command='true', env={'HELLO': '${WORLD}'}))
 
@@ -95,12 +93,11 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
 
         try:
-            yield self.run_step()
+            await self.run_step()
         finally:
             del os.environ['WORLD']
 
-    @defer.inlineCallbacks
-    def test_env_list_subst(self):
+    async def test_env_list_subst(self):
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
         self.setup_step(
@@ -119,7 +116,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
 
         try:
-            yield self.run_step()
+            await self.run_step()
         finally:
             del os.environ['WORLD']
             del os.environ['LIST']
