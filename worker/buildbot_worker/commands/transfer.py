@@ -99,15 +99,14 @@ class WorkerFileUploadCommand(TransferCommand):
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
 
-        @defer.inlineCallbacks
-        def _close_ok(res):
+        async def _close_ok(res):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            yield self.protocol_command.protocol_update_upload_file_close(self.writer)
+            await self.protocol_command.protocol_update_upload_file_close(self.writer)
 
             if self.keepstamp:
-                yield self.protocol_command.protocol_update_upload_file_utime(
+                await self.protocol_command.protocol_update_upload_file_utime(
                     self.writer, access_time, modified_time
                 )
 
