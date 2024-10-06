@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import deferwaiter
@@ -32,10 +31,9 @@ class TestResultSubmitter:
         self._tests_passed = None
         self._tests_failed = None
 
-    @defer.inlineCallbacks
-    def setup(self, step, description, category, value_unit):
-        builderid = yield step.build.getBuilderId()
-        yield self.setup_by_ids(
+    async def setup(self, step, description, category, value_unit):
+        builderid = await step.build.getBuilderId()
+        await self.setup_by_ids(
             step.master,
             builderid,
             step.build.buildid,
@@ -45,8 +43,9 @@ class TestResultSubmitter:
             value_unit,
         )
 
-    @defer.inlineCallbacks
-    def setup_by_ids(self, master, builderid, buildid, stepid, description, category, value_unit):
+    async def setup_by_ids(
+        self, master, builderid, buildid, stepid, description, category, value_unit
+    ):
         self._master = master
         self._category = category
         self._value_unit = value_unit
@@ -54,15 +53,14 @@ class TestResultSubmitter:
         self._initialize_pass_fail_recording_if_needed()
 
         self._builderid = builderid
-        self._setid = yield self._master.data.updates.addTestResultSet(
+        self._setid = await self._master.data.updates.addTestResultSet(
             builderid, buildid, stepid, description, category, value_unit
         )
 
-    @defer.inlineCallbacks
-    def finish(self):
+    async def finish(self):
         self._submit_batch()
-        yield self._waiter.wait()
-        yield self._master.data.updates.completeTestResultSet(
+        await self._waiter.wait()
+        await self._master.data.updates.completeTestResultSet(
             self._setid, tests_passed=self._tests_passed, tests_failed=self._tests_failed
         )
 
@@ -82,12 +80,11 @@ class TestResultSubmitter:
 
         self._waiter.add(self._process_batches())
 
-    @defer.inlineCallbacks
-    def _process_batches(self):
+    async def _process_batches(self):
         # at most one instance of this function may be running at the same time
         while self._pending_batches:
             batch = self._pending_batches.pop(0)
-            yield self._master.data.updates.addTestResults(self._builderid, self._setid, batch)
+            await self._master.data.updates.addTestResults(self._builderid, self._setid, batch)
 
     def _initialize_pass_fail_recording(self, function):
         self._add_pass_fail_result = function
