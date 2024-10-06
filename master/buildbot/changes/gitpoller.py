@@ -140,8 +140,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         repourl,
         branches=None,
@@ -216,7 +215,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg(f"gitpoller: using workdir '{self.workdir}'")
 
-        yield super().reconfigService(
+        await super().reconfigService(
             name=name,
             pollInterval=pollInterval,
             pollAtLaunch=pollAtLaunch,
@@ -224,9 +223,8 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    @defer.inlineCallbacks
-    def _checkGitFeatures(self):
-        stdout = yield self._dovccmd('--version', [])
+    async def _checkGitFeatures(self):
+        stdout = await self._dovccmd('--version', [])
 
         self.parseGitFeatures(stdout)
         if not self.gitInstalled:
@@ -362,12 +360,11 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         # reconfiguration, so we try to exit early.
         return not self.doPoll.running
 
-    @defer.inlineCallbacks
-    def poll(self):
-        yield self._checkGitFeatures()
+    async def poll(self):
+        await self._checkGitFeatures()
 
         try:
-            yield self._dovccmd('init', ['--bare', self.workdir])
+            await self._dovccmd('init', ['--bare', self.workdir])
         except GitError as e:
             log.msg(e.args[0])
             return
@@ -379,9 +376,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         )
         # retrieve auth files
         with tmp_dir as tmp_path:
-            yield self._git_auth.download_auth_files_if_needed(tmp_path)
+            await self._git_auth.download_auth_files_if_needed(tmp_path)
 
-            refs, trim_ref_head = yield self._get_refs(tmp_path)
+            refs, trim_ref_head = await self._get_refs(tmp_path)
 
             # Nothing to fetch and process.
             if not refs:
@@ -393,7 +390,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             refspecs = [f'+{ref}:{self._tracker_ref(self.repourl, ref)}' for ref in refs]
 
             try:
-                yield self._dovccmd(
+                await self._dovccmd(
                     'fetch',
                     ["--progress", self.repourl, *refspecs, "--"],
                     path=self.workdir,
@@ -404,7 +401,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 return
 
         if self.lastRev is None:
-            self.lastRev = yield self.getState('lastRev', {})
+            self.lastRev = await self.getState('lastRev', {})
 
         revs = {}
         log.msg(f'gitpoller: processing changes from "{self.repourl}"')
@@ -416,16 +413,16 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     # we did process
                     break
 
-                rev = yield self._dovccmd(
+                rev = await self._dovccmd(
                     'rev-parse', [self._tracker_ref(self.repourl, ref)], path=self.workdir
                 )
                 revs[branch] = rev
-                yield self._process_changes(rev, branch)
+                await self._process_changes(rev, branch)
             except Exception:
                 log.err(_why=f"trying to poll branch {branch} of {self.repourl}")
 
         self.lastRev = revs
-        yield self.setState('lastRev', self.lastRev)
+        await self.setState('lastRev', self.lastRev)
 
     @async_to_deferred
     async def _get_refs(self, git_auth_files_path: str) -> tuple[list[str], bool]:
@@ -518,16 +515,14 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
         return d
 
-    @defer.inlineCallbacks
-    def _get_commit_committer(self, rev):
+    async def _get_commit_committer(self, rev):
         args = ['--no-walk', r'--format=%cN <%cE>', rev, '--']
-        res = yield self._dovccmd('log', args, path=self.workdir)
+        res = await self._dovccmd('log', args, path=self.workdir)
         if not res:
             raise OSError('could not get commit committer for rev')
         return res
 
-    @defer.inlineCallbacks
-    def _process_changes(self, newRev, branch):
+    async def _process_changes(self, newRev, branch):
         """
         Read changes since last change.
 
@@ -548,7 +543,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             + ['--']
         )
         self.changeCount = 0
-        results = yield self._dovccmd('log', revListArgs, path=self.workdir)
+        results = await self._dovccmd('log', revListArgs, path=self.workdir)
 
         # process oldest change first
         revList = results.split()
@@ -587,7 +582,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 consumeErrors=True,
             )
 
-            results = yield dl
+            results = await dl
 
             # check for failures
             failures = [r[1] for r in results if not r[0]]
@@ -599,7 +594,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
 
             timestamp, author, committer, files, comments = [r[1] for r in results]
 
-            yield self.master.data.updates.addChange(
+            await self.master.data.updates.addChange(
                 author=author,
                 committer=committer,
                 revision=bytes2unicode(rev, encoding=self.encoding),
