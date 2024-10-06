@@ -163,14 +163,13 @@ class ProtocolCommandPb(ProtocolCommandBase):
     def protocol_notify_on_disconnect(self):
         self.command_ref.notifyOnDisconnect(self.on_lost_remote_step)
 
-    @defer.inlineCallbacks
-    def protocol_complete(self, failure):
+    async def protocol_complete(self, failure):
         d_update = self.flush_command_output()
         self.command_ref.dontNotifyOnDisconnect(self.on_lost_remote_step)
         d_complete = self.command_ref.callRemote("complete", failure)
 
-        yield d_update
-        yield d_complete
+        await d_update
+        await d_complete
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
@@ -231,9 +230,8 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     def __repr__(self):
         return f"<WorkerForBuilder '{self.name}' at {id(self)}>"
 
-    @defer.inlineCallbacks
-    def setServiceParent(self, parent):
-        yield service.Service.setServiceParent(self, parent)
+    async def setServiceParent(self, parent):
+        await service.Service.setServiceParent(self, parent)
         self.bot = self.parent
         # note that self.parent will go away when the buildmaster's config
         # file changes and this Builder is removed (possibly because it has
@@ -354,8 +352,7 @@ class WorkerForBuilderPb(WorkerForBuilderPbLike, pb.Referenceable):
 class BotPbLike(BotBase):
     WorkerForBuilder = WorkerForBuilderPbLike
 
-    @defer.inlineCallbacks
-    def remote_setBuilderList(self, wanted):
+    async def remote_setBuilderList(self, wanted):
         retval = {}
         wanted_names = {name for (name, builddir) in wanted}
         wanted_dirs = {builddir for (name, builddir) in wanted}
@@ -383,7 +380,7 @@ class BotPbLike(BotBase):
         # disown any builders no longer desired
         to_remove = list(set(self.builders.keys()) - wanted_names)
         if to_remove:
-            yield defer.gatherResults([
+            await defer.gatherResults([
                 defer.maybeDeferred(self.builders[name].disownServiceParent) for name in to_remove
             ])
 
@@ -428,13 +425,11 @@ class BotMsgpack(BotBase):
         )
         self.protocol_commands = {}
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield BotBase.startService(self)
+    async def startService(self):
+        await BotBase.startService(self)
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield BotBase.stopService(self)
+    async def stopService(self):
+        await BotBase.stopService(self)
 
         # Make any currently-running command die, with no further status
         # output. This is used when the worker is shutting down or the
@@ -559,20 +554,19 @@ class BotFactory(AutoLoginPBFactory):
         assert self.keepaliveInterval
         assert not self.keepaliveTimer
 
-        @defer.inlineCallbacks
-        def doKeepalive():
+        async def doKeepalive():
             self._active_keepalives += 1
             self.keepaliveTimer = None
             self.startTimers()
 
-            yield self.keepalive_lock.acquire()
+            await self.keepalive_lock.acquire()
             self.currentKeepaliveWaiter = defer.Deferred()
 
             # Send the keepalive request.  If an error occurs
             # was already dropped, so just log and ignore.
             log.msg("sending app-level keepalive")
             try:
-                details = yield self.perspective.callRemote("keepalive")
+                details = await self.perspective.callRemote("keepalive")
                 log.msg("Master replied to keepalive, everything's fine")
                 self.currentKeepaliveWaiter.callback(details)
                 self.currentKeepaliveWaiter = None
@@ -612,12 +606,11 @@ class BotFactory(AutoLoginPBFactory):
         self.stopTimers()
         AutoLoginPBFactory.stopFactory(self)
 
-    @defer.inlineCallbacks
-    def waitForCompleteShutdown(self):
+    async def waitForCompleteShutdown(self):
         # This function waits for a complete shutdown to happen. It's fired when all keepalives
         # have been finished and there are no pending ones.
         if self._shutdown_notifier is not None:
-            yield self._shutdown_notifier.wait()
+            await self._shutdown_notifier.wait()
 
 
 class Worker(WorkerBase):
@@ -766,13 +759,12 @@ class Worker(WorkerBase):
             self.shutdown_loop = loop = task.LoopingCall(self._checkShutdownFile)
             loop.start(interval=10)
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         if self.shutdown_loop:
             self.shutdown_loop.stop()
             self.shutdown_loop = None
-        yield WorkerBase.stopService(self)
-        yield self.bf.waitForCompleteShutdown()
+        await WorkerBase.stopService(self)
+        await self.bf.waitForCompleteShutdown()
 
     def _handleSIGHUP(self, *args):
         log.msg("Initiating shutdown because we got SIGHUP")
