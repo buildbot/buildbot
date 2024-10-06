@@ -96,9 +96,8 @@ class Try_Jobdir(TryBase):
 
     # activation handlers
 
-    @defer.inlineCallbacks
-    def activate(self):
-        yield super().activate()
+    async def activate(self):
+        await super().activate()
 
         if not self.enabled:
             return
@@ -114,9 +113,8 @@ class Try_Jobdir(TryBase):
         # child service
         self.watcher.startService()
 
-    @defer.inlineCallbacks
-    def deactivate(self):
-        yield super().deactivate()
+    async def deactivate(self):
+        await super().deactivate()
 
         if not self.enabled:
             return
@@ -274,11 +272,10 @@ class RemoteBuildSetStatus(pb.Referenceable):
         self.bsid = bsid
         self.brids = brids
 
-    @defer.inlineCallbacks
-    def remote_getBuildRequests(self):
+    async def remote_getBuildRequests(self):
         brids = {}
         for builderid, brid in self.brids.items():
-            builderDict = yield self.master.data.get(('builders', builderid))
+            builderDict = await self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid
         return [(n, RemoteBuildRequest(self.master, n, brid)) for n, brid in brids.items()]
 
@@ -290,9 +287,8 @@ class RemoteBuildRequest(pb.Referenceable):
         self.brid = brid
         self.consumer = None
 
-    @defer.inlineCallbacks
-    def remote_subscribe(self, subscriber):
-        brdict = yield self.master.data.get(('buildrequests', self.brid))
+    async def remote_subscribe(self, subscriber):
+        brdict = await self.master.data.get(('buildrequests', self.brid))
         if not brdict:
             return
         builderId = brdict['builderid']
@@ -310,18 +306,18 @@ class RemoteBuildRequest(pb.Referenceable):
                 'newbuild', RemoteBuild(self.master, msg, self.builderName), self.builderName
             )
 
-        self.consumer = yield self.master.mq.startConsuming(
+        self.consumer = await self.master.mq.startConsuming(
             gotBuild, ('builders', str(builderId), 'builds', None, None)
         )
         subscriber.notifyOnDisconnect(lambda _: self.remote_unsubscribe(subscriber))
 
         # and get any existing builds
-        builds = yield self.master.data.get(('buildrequests', self.brid, 'builds'))
+        builds = await self.master.data.get(('buildrequests', self.brid, 'builds'))
         for build in builds:
             if build['buildid'] in reportedBuilds:
                 continue
             reportedBuilds.add(build['buildid'])
-            yield subscriber.callRemote(
+            await subscriber.callRemote(
                 'newbuild', RemoteBuild(self.master, build, self.builderName), self.builderName
             )
 
@@ -338,8 +334,7 @@ class RemoteBuild(pb.Referenceable):
         self.builderName = builderName
         self.consumer = None
 
-    @defer.inlineCallbacks
-    def remote_subscribe(self, subscriber, interval):
+    async def remote_subscribe(self, subscriber, interval):
         # subscribe to any new steps..
         def stepChanged(key, msg):
             if key[-1] == 'started':
@@ -352,7 +347,7 @@ class RemoteBuild(pb.Referenceable):
                 )
             return None
 
-        self.consumer = yield self.master.mq.startConsuming(
+        self.consumer = await self.master.mq.startConsuming(
             stepChanged, ('builds', str(self.builddict['buildid']), 'steps', None, None)
         )
         subscriber.notifyOnDisconnect(lambda _: self.remote_unsubscribe(subscriber))
@@ -362,8 +357,7 @@ class RemoteBuild(pb.Referenceable):
             self.consumer.stopConsuming()
             self.consumer = None
 
-    @defer.inlineCallbacks
-    def remote_waitUntilFinished(self):
+    async def remote_waitUntilFinished(self):
         d = defer.Deferred()
 
         def buildEvent(key, msg):
@@ -371,25 +365,23 @@ class RemoteBuild(pb.Referenceable):
                 d.callback(None)
 
         buildid = self.builddict['buildid']
-        consumer = yield self.master.mq.startConsuming(buildEvent, ('builds', str(buildid), None))
-        builddict = yield self.master.data.get(('builds', buildid))
+        consumer = await self.master.mq.startConsuming(buildEvent, ('builds', str(buildid), None))
+        builddict = await self.master.data.get(('builds', buildid))
         # build might have finished before we called startConsuming
         if not builddict.get('complete', False):
-            yield d  # wait for event
+            await d  # wait for event
 
         consumer.stopConsuming()
         return self  # callers expect result=self
 
-    @defer.inlineCallbacks
-    def remote_getResults(self):
+    async def remote_getResults(self):
         buildid = self.builddict['buildid']
-        builddict = yield self.master.data.get(('builds', buildid))
+        builddict = await self.master.data.get(('builds', buildid))
         return builddict['results']
 
-    @defer.inlineCallbacks
-    def remote_getText(self):
+    async def remote_getText(self):
         buildid = self.builddict['buildid']
-        builddict = yield self.master.data.get(('builds', buildid))
+        builddict = await self.master.data.get(('builds', buildid))
         return [builddict['state_string']]
 
 
@@ -398,8 +390,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         self.scheduler = scheduler
         self.username = username
 
-    @defer.inlineCallbacks
-    def perspective_try(
+    async def perspective_try(
         self,
         branch,
         revision,
@@ -451,7 +442,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
-        (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamps(
+        (bsid, brids) = await self.scheduler.addBuildsetForSourceStamps(
             sourcestamps=[sourcestamp],
             reason=reason,
             properties=requested_props,
@@ -479,9 +470,8 @@ class Try_Userpass(TryBase):
         self.userpass = userpass
         self.registrations = []
 
-    @defer.inlineCallbacks
-    def activate(self):
-        yield super().activate()
+    async def activate(self):
+        await super().activate()
 
         if not self.enabled:
             return
@@ -491,14 +481,13 @@ class Try_Userpass(TryBase):
             return Try_Userpass_Perspective(self, username)
 
         for user, passwd in self.userpass:
-            reg = yield self.master.pbmanager.register(self.port, user, passwd, factory)
+            reg = await self.master.pbmanager.register(self.port, user, passwd, factory)
             self.registrations.append(reg)
 
-    @defer.inlineCallbacks
-    def deactivate(self):
-        yield super().deactivate()
+    async def deactivate(self):
+        await super().deactivate()
 
         if not self.enabled:
             return
 
-        yield defer.gatherResults([reg.unregister() for reg in self.registrations])
+        await defer.gatherResults([reg.unregister() for reg in self.registrations])
