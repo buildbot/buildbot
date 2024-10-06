@@ -19,7 +19,6 @@ from io import StringIO
 from unittest import mock
 from unittest.case import SkipTest
 
-from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
@@ -65,11 +64,10 @@ class KubeClientServiceTestClusterConfig(MockFileBase, config.ConfigErrorsMixin,
         with self.assertRaisesConfigError('kube_dir not found:'):
             kubeclientservice.KubeInClusterConfigLoader()
 
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         self.patchExist(True)
         config = kubeclientservice.KubeInClusterConfigLoader()
-        yield config.startService()
+        await config.startService()
         self.assertEqual(
             config.getConfig(),
             {
@@ -103,18 +101,16 @@ sys.exit(1)
 class KubeClientServiceTestKubeHardcodedConfig(
     TestReactorMixin, config.ConfigErrorsMixin, unittest.TestCase
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self)
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "http://localhost:8001"
         )
-        yield self.master.startService()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
     def test_basic(self):
         self.config = kubeclientservice.KubeHardcodedConfig(
@@ -152,128 +148,117 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest
             return self.config.stopService()
         return None
 
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader()
-        yield self.config.startService()
+        await self.config.startService()
         self.assertEqual(
             self.config.getConfig(), {'master_url': 'http://localhost:8001', 'namespace': 'default'}
         )
 
-    @defer.inlineCallbacks
-    def test_config_args(self):
+    async def test_config_args(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader(
             proxy_port=8002, namespace="system"
         )
-        yield self.config.startService()
+        await self.config.startService()
         self.assertEqual(self.config.kube_proxy_output, b'Starting to serve on 127.0.0.1:8002')
         self.assertEqual(
             self.config.getConfig(), {'master_url': 'http://localhost:8002', 'namespace': 'system'}
         )
-        yield self.config.stopService()
+        await self.config.stopService()
 
-    @defer.inlineCallbacks
-    def test_reconfig(self):
+    async def test_reconfig(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader(
             proxy_port=8002, namespace="system"
         )
-        yield self.config.startService()
+        await self.config.startService()
         self.assertEqual(self.config.kube_proxy_output, b'Starting to serve on 127.0.0.1:8002')
         self.assertEqual(
             self.config.getConfig(), {'master_url': 'http://localhost:8002', 'namespace': 'system'}
         )
-        yield self.config.reconfigService(proxy_port=8003, namespace="system2")
+        await self.config.reconfigService(proxy_port=8003, namespace="system2")
         self.assertEqual(self.config.kube_proxy_output, b'Starting to serve on 127.0.0.1:8003')
         self.assertEqual(
             self.config.getConfig(), {'master_url': 'http://localhost:8003', 'namespace': 'system2'}
         )
-        yield self.config.stopService()
+        await self.config.stopService()
 
-    @defer.inlineCallbacks
-    def test_config_with_error(self):
+    async def test_config_with_error(self):
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE_ERROR)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader()
         with self.assertRaises(RuntimeError):
-            yield self.config.startService()
+            await self.config.startService()
 
 
 class KubeClientServiceTest(unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.parent = service.BuildbotService(name="parent")
         self.client = kubeclientservice.KubeClientService()
-        yield self.client.setServiceParent(self.parent)
+        await self.client.setServiceParent(self.parent)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.parent.running:
-            yield self.parent.stopService()
+            await self.parent.stopService()
 
-    @defer.inlineCallbacks
-    def test_stopped(self):
+    async def test_stopped(self):
         worker = mock.Mock(name="worker1")
         config = service.BuildbotService(name="config")
 
-        yield self.client.register(worker, config)
+        await self.client.register(worker, config)
         self.assertEqual(config.running, 0)
-        yield self.client.unregister(worker)
+        await self.client.unregister(worker)
         self.assertEqual(config.running, 0)
 
-    @defer.inlineCallbacks
-    def test_started(self):
-        yield self.parent.startService()
+    async def test_started(self):
+        await self.parent.startService()
 
         worker = mock.Mock(name="worker1")
         config = service.BuildbotService(name="config")
 
-        yield self.client.register(worker, config)
+        await self.client.register(worker, config)
         self.assertEqual(config.running, 1)
-        yield self.client.unregister(worker)
+        await self.client.unregister(worker)
         self.assertEqual(config.running, 0)
 
-    @defer.inlineCallbacks
-    def test_started_but_stop(self):
-        yield self.parent.startService()
+    async def test_started_but_stop(self):
+        await self.parent.startService()
 
         worker = mock.Mock(name="worker1")
         config = service.BuildbotService(name="config")
 
-        yield self.client.register(worker, config)
+        await self.client.register(worker, config)
         self.assertEqual(config.running, 1)
 
-        yield self.parent.stopService()
+        await self.parent.stopService()
         self.assertEqual(config.running, 0)
 
-    @defer.inlineCallbacks
-    def test_stopped_but_start(self):
+    async def test_stopped_but_start(self):
         worker = mock.Mock(name="worker1")
         config = service.BuildbotService(name="config")
 
-        yield self.client.register(worker, config)
+        await self.client.register(worker, config)
         self.assertEqual(config.running, 0)
 
-        yield self.parent.startService()
+        await self.parent.startService()
         self.assertEqual(config.running, 1)
 
-        yield self.parent.stopService()
+        await self.parent.stopService()
         self.assertEqual(config.running, 0)
 
-    @defer.inlineCallbacks
-    def test_two_workers(self):
-        yield self.parent.startService()
+    async def test_two_workers(self):
+        await self.parent.startService()
 
         worker1 = mock.Mock(name="worker1")
         worker2 = mock.Mock(name="worker2")
         config = service.BuildbotService(name="config")
 
-        yield self.client.register(worker1, config)
+        await self.client.register(worker1, config)
         self.assertEqual(config.running, 1)
-        yield self.client.register(worker2, config)
+        await self.client.register(worker2, config)
         self.assertEqual(config.running, 1)
-        yield self.client.unregister(worker1)
+        await self.client.unregister(worker1)
         self.assertEqual(config.running, 1)
-        yield self.client.unregister(worker2)
+        await self.client.unregister(worker2)
         self.assertEqual(config.running, 0)
