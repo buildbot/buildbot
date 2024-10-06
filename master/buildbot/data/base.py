@@ -376,13 +376,11 @@ class BuildNestingMixin:
     A mixin for methods to decipher the many ways a various entities can be specified.
     """
 
-    @defer.inlineCallbacks
-    def getBuildid(self, kwargs):
+    async def getBuildid(self, kwargs):
         retriever = NestedBuildDataRetriever(self.master, kwargs)
         return (yield retriever.get_build_id())
 
-    @defer.inlineCallbacks
-    def getBuilderId(self, kwargs):
+    async def getBuilderId(self, kwargs):
         retriever = NestedBuildDataRetriever(self.master, kwargs)
         return (yield retriever.get_builder_id())
 
