@@ -165,44 +165,39 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
         self.assertEqual(sched.priority, sched_priority)
 
-    @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    async def test_enabled_callback(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
         expectedValue = not sched.enabled
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
-    @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    async def test_disabled_activate(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.activate()
+        r = await sched.activate()
         self.assertEqual(r, None)
 
-    @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    async def test_disabled_deactivate(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.deactivate()
+        r = await sched.deactivate()
         self.assertEqual(r, None)
 
-    @defer.inlineCallbacks
-    def test_disabled_start_build(self):
+    async def test_disabled_start_build(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
-        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        await sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
-        r = yield sched.startBuild()
+        r = await sched.startBuild()
         self.assertEqual(r, None)
 
     # end-to-end tests: let's see the scheduler in action
 
-    @defer.inlineCallbacks
-    def test_iterations_simple(self):
+    async def test_iterations_simple(self):
         # note that Nightly works in local time, but the TestReactor always
         # starts at midnight UTC, so be careful not to use times that are
         # timezone dependent -- stick to minutes-past-the-half-hour, as some
@@ -214,7 +209,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # add a change classification
         self.db.schedulers.fakeClassifications(self.SCHEDULERID, {19: True})
 
-        yield sched.activate()
+        await sched.activate()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
@@ -264,7 +259,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1260 + self.time_offset)
 
-        yield sched.deactivate()
+        await sched.deactivate()
 
     def test_iterations_simple_with_branch(self):
         # see timezone warning above
@@ -321,9 +316,8 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         return self.do_test_iterations_onlyIfChanged_test(fII, changes_at)
 
-    @defer.inlineCallbacks
-    def do_test_iterations_onlyIfChanged_test(self, fII, changes_at):
-        yield self.sched.activate()
+    async def do_test_iterations_onlyIfChanged_test(self, fII, changes_at):
+        await self.sched.activate()
 
         # check that the scheduler has started to consume changes
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=None, onlyImportant=False)
@@ -336,13 +330,12 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             while changes_at and self.reactor.seconds() >= self.time_offset + changes_at[0][0]:
                 _, newchange, important = changes_at.pop(0)
                 self.db.changes.fakeAddChangeInstance(newchange)
-                yield self.sched.gotChange(newchange, important).addErrback(log.err)
+                await self.sched.gotChange(newchange, important).addErrback(log.err)
             # and advance the clock by a minute
             self.reactor.advance(60)
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_new_scheduler(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_no_changes_new_scheduler(self):
+        await self.do_test_iterations_onlyIfChanged(
             [], last_only_if_changed=None, is_new_scheduler=True
         )
         self.assertEqual(
@@ -362,17 +355,15 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_existing_scheduler(self):
-        yield self.do_test_iterations_onlyIfChanged([], last_only_if_changed=True)
+    async def test_iterations_onlyIfChanged_no_changes_existing_scheduler(self):
+        await self.do_test_iterations_onlyIfChanged([], last_only_if_changed=True)
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_setting_changed(self):
+    async def test_iterations_onlyIfChanged_no_changes_existing_scheduler_setting_changed(self):
         # When onlyIfChanged==False, builds are run every time on the time set
         # (changes or no changes). Changes are being recognized but do not have any effect on
         # starting builds.
@@ -381,7 +372,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # Because onlyIfChanged was False possibly important change will be missed.
         # Therefore the first build should start immediately.
 
-        yield self.do_test_iterations_onlyIfChanged([], last_only_if_changed=False)
+        await self.do_test_iterations_onlyIfChanged([], last_only_if_changed=False)
         self.assertEqual(
             self.addBuildsetCalls,
             [
@@ -399,21 +390,19 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_update_to_v3_5_0(self):
+    async def test_iterations_onlyIfChanged_no_changes_existing_scheduler_update_to_v3_5_0(self):
         # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
         # separately
-        yield self.do_test_iterations_onlyIfChanged([], last_only_if_changed=None)
+        await self.do_test_iterations_onlyIfChanged([], last_only_if_changed=None)
         self.assertEqual(self.addBuildsetCallTimes, [])
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_force_at(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_no_changes_force_at(self):
+        await self.do_test_iterations_onlyIfChanged(
             [], last_only_if_changed=True, force_at_minute=[23, 25, 27]
         )
 
@@ -435,11 +424,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_calls_for_new_scheduler(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_unimp_changes_calls_for_new_scheduler(self):
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (60, mock.Mock(), False),
                 (600, mock.Mock(), False),
@@ -466,11 +454,12 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_changed_only_if_changed(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_unimp_changes_existing_sched_changed_only_if_changed(
+        self,
+    ):
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (60, mock.Mock(), False),
                 (600, mock.Mock(), False),
@@ -496,11 +485,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_same_only_if_changed(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_unimp_changes_existing_sched_same_only_if_changed(self):
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (60, mock.Mock(), False),
                 (600, mock.Mock(), False),
@@ -511,13 +499,12 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [])
 
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_changes_existing_scheduler_update_to_v3_5_0(self):
+    async def test_iterations_onlyIfChanged_changes_existing_scheduler_update_to_v3_5_0(self):
         # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
         # separately
-        yield self.do_test_iterations_onlyIfChanged(
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (120, self.makeFakeChange(number=1, branch=None), False),
                 (1200, self.makeFakeChange(number=2, branch=None), True),
@@ -545,11 +532,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_force_at(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_unimp_changes_force_at(self):
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=1, branch=None), False),
                 (600, self.makeFakeChange(number=2, branch=None), False),
@@ -577,11 +563,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_off_branch_changes(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_off_branch_changes(self):
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=1, branch='testing'), True),
                 (1700, self.makeFakeChange(number=2, branch='staging'), True),
@@ -591,11 +576,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_mixed_changes(self):
-        yield self.do_test_iterations_onlyIfChanged(
+    async def test_iterations_onlyIfChanged_mixed_changes(self):
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (120, self.makeFakeChange(number=3, branch=None), False),
                 (130, self.makeFakeChange(number=4, branch='offbranch'), True),
@@ -628,13 +612,12 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=1500 + self.time_offset)
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(self):
+    async def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(self):
         # Test createAbsoluteSourceStamps=True when only one codebase has
         # changed
-        yield self.do_test_iterations_onlyIfChanged(
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
             ],
@@ -673,10 +656,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'a': {"revision": '2345:bcd', "branch": None, "repository": '', "lastChange": 3}
             },
         )
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged_loadOther(self):
+    async def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged_loadOther(self):
         # Test createAbsoluteSourceStamps=True when only one codebase has changed,
         # but the other was previously changed
         fII = mock.Mock(name='fII')
@@ -701,7 +683,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             {'b': {'branch': 'master', 'repository': 'B', 'revision': '1234:abc', 'lastChange': 2}},
         )
 
-        yield self.do_test_iterations_onlyIfChanged_test(
+        await self.do_test_iterations_onlyIfChanged_test(
             fII,
             [
                 (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
@@ -742,12 +724,11 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 },
             },
         )
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
 
-    @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(self):
+    async def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(self):
         # Test createAbsoluteSourceStamps=True when both codebases have changed
-        yield self.do_test_iterations_onlyIfChanged(
+        await self.do_test_iterations_onlyIfChanged(
             [
                 (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
                 (122, self.makeFakeChange(number=4, codebase='b', revision='1234:abc'), True),
@@ -789,4 +770,4 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 'b': {"revision": '1234:abc', "branch": None, "repository": '', "lastChange": 4},
             },
         )
-        yield self.sched.deactivate()
+        await self.sched.deactivate()
