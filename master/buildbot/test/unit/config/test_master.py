@@ -20,7 +20,6 @@ import textwrap
 from unittest import mock
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implementer
 
@@ -1321,11 +1320,10 @@ class FakeService(service.ReconfigurableServiceMixin, service.AsyncService):
     succeed = True
     call_index = 1
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        yield super().reconfigServiceWithBuildbotConfig(new_config)
+        await super().reconfigServiceWithBuildbotConfig(new_config)
         if not self.succeed:
             raise ValueError("oh noes")
 
@@ -1338,67 +1336,62 @@ class FakeMultiService(service.ReconfigurableServiceMixin, service.AsyncMultiSer
 
 
 class ReconfigurableServiceMixin(unittest.TestCase):
-    @defer.inlineCallbacks
-    def test_service(self):
+    async def test_service(self):
         svc = FakeService()
-        yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+        await svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         self.assertTrue(svc.called)
 
-    @defer.inlineCallbacks
-    def test_service_failure(self):
+    async def test_service_failure(self):
         svc = FakeService()
         svc.succeed = False
         try:
-            yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+            await svc.reconfigServiceWithBuildbotConfig(mock.Mock())
         except ValueError:
             pass
         else:
             self.fail("should have raised ValueError")
 
-    @defer.inlineCallbacks
-    def test_multiservice(self):
+    async def test_multiservice(self):
         svc = FakeMultiService()
         ch1 = FakeService()
-        yield ch1.setServiceParent(svc)
+        await ch1.setServiceParent(svc)
         ch2 = FakeMultiService()
-        yield ch2.setServiceParent(svc)
+        await ch2.setServiceParent(svc)
         ch3 = FakeService()
-        yield ch3.setServiceParent(ch2)
-        yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+        await ch3.setServiceParent(ch2)
+        await svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         self.assertTrue(svc.called)
         self.assertTrue(ch1.called)
         self.assertTrue(ch2.called)
         self.assertTrue(ch3.called)
 
-    @defer.inlineCallbacks
-    def test_multiservice_priority(self):
+    async def test_multiservice_priority(self):
         parent = FakeMultiService()
         svc128 = FakeService()
-        yield svc128.setServiceParent(parent)
+        await svc128.setServiceParent(parent)
 
         services = [svc128]
         for i in range(20, 1, -1):
             svc = FakeService()
             svc.reconfig_priority = i
-            yield svc.setServiceParent(parent)
+            await svc.setServiceParent(parent)
             services.append(svc)
 
-        yield parent.reconfigServiceWithBuildbotConfig(mock.Mock())
+        await parent.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         prio_order = [s.called for s in services]
         called_order = sorted(prio_order)
         self.assertEqual(prio_order, called_order)
 
-    @defer.inlineCallbacks
-    def test_multiservice_nested_failure(self):
+    async def test_multiservice_nested_failure(self):
         svc = FakeMultiService()
         ch1 = FakeService()
-        yield ch1.setServiceParent(svc)
+        await ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
-            yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+            await svc.reconfigServiceWithBuildbotConfig(mock.Mock())
         except ValueError:
             pass
         else:
