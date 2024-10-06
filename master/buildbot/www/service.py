@@ -24,7 +24,6 @@ from packaging.version import parse as parse_version
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
-from twisted.internet import defer
 from twisted.python import components
 from twisted.python import log
 from twisted.python.logfile import LogFile
@@ -205,8 +204,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def auth(self):
         return self.master.config.www['auth']
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         www = new_config.www
 
         self.authz = www.get('authz')
@@ -226,11 +224,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if self.site:
             self.reconfigSite(new_config)
-            yield self.makeSessionSecret()
+            await self.makeSessionSecret()
 
         if www['port'] != self.port:
             if self.port_service:
-                yield self.port_service.disownServiceParent()
+                await self.port_service.disownServiceParent()
                 self.port_service = None
 
             self.port = www['port']
@@ -246,9 +244,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     if hasattr(self.port_service, 'endpoint'):
                         old_listen = self.port_service.endpoint.listen
 
-                        @defer.inlineCallbacks
-                        def listen(factory):
-                            port = yield old_listen(factory)
+                        async def listen(factory):
+                            port = await old_listen(factory)
                             self._getPort = lambda: port
                             return port
 
@@ -258,12 +255,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                         # as an instance attribute
                         self._getPort = lambda: self.port_service._port
 
-                yield self.port_service.setServiceParent(self)
+                await self.port_service.setServiceParent(self)
 
         if not self.port_service:
             log.msg("No web server configured on this master")
 
-        yield super().reconfigServiceWithBuildbotConfig(new_config)
+        await super().reconfigServiceWithBuildbotConfig(new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a
@@ -393,10 +390,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         for rsrc in self.reconfigurableResources:
             rsrc.reconfigResource(new_config)
 
-    @defer.inlineCallbacks
-    def makeSessionSecret(self):
+    async def makeSessionSecret(self):
         state = self.master.db.state
-        objectid = yield state.getObjectId("www", "buildbot.www.service.WWWService")
+        objectid = await state.getObjectId("www", "buildbot.www.service.WWWService")
 
         def create_session_secret():
             # Bootstrap: We need to create a key, that will be shared with other masters
@@ -405,7 +401,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # we encode that in hex for db storage convenience
             return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
-        session_secret = yield state.atomicCreateState(
+        session_secret = await state.atomicCreateState(
             objectid, "session_secret", create_session_secret
         )
         self.site.setSessionSecret(session_secret)
