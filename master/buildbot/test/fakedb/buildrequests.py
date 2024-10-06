@@ -89,8 +89,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 self.claims[row.brid] = row
 
     # component methods
-    @defer.inlineCallbacks
-    def getBuildRequest(self, brid: int):
+
+    async def getBuildRequest(self, brid: int):
         row = self.reqs.get(brid)
         if not row:
             return None
@@ -104,12 +104,11 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         else:
             row.claimed_at = None
             row.masterid = None
-        builder = yield self.db.builders.getBuilder(row.builderid)
+        builder = await self.db.builders.getBuilder(row.builderid)
         row.buildername = builder.name
         return self._modelFromRow(row)
 
-    @defer.inlineCallbacks
-    def getBuildRequests(
+    async def getBuildRequests(
         self,
         builderid=None,
         complete=None,
@@ -153,7 +152,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                     continue
 
             if branch or repository:
-                buildset = yield self.db.buildsets.getBuildset(br.buildsetid)
+                buildset = await self.db.buildsets.getBuildset(br.buildsetid)
                 sourcestamps: list[SourceStampModel] = []
                 for ssid in buildset.sourcestamps:
                     sourcestamps.append((yield self.db.sourcestamps.getSourceStamp(ssid)))
@@ -162,7 +161,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                     continue
                 if repository and not any(repository == s.repository for s in sourcestamps):
                     continue
-            builder = yield self.db.builders.getBuilder(br.builderid)
+            builder = await self.db.builders.getBuilder(br.builderid)
             br.buildername = builder.name
             rv.append(self._modelFromRow(br))
         if resultSpec is not None:
