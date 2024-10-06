@@ -194,9 +194,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getScheduler(self, schedulerid: int):
-        sch = yield self.getSchedulers(_schedulerid=schedulerid)
+    async def getScheduler(self, schedulerid: int):
+        sch = await self.getSchedulers(_schedulerid=schedulerid)
         if sch:
             return sch[0]
         return None
