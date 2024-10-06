@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     from typing import Any
     from typing import Literal
 
+    from buildbot.data import types
+    from buildbot.data.base import Endpoint
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.builders import BuilderModel
     from buildbot.db.builds import BuildModel
@@ -47,12 +49,12 @@ class EndpointKind(enum.Enum):
 
 
 class ResourceType:
-    name = None
-    plural = None
-    endpoints = []
-    keyField = None
+    name: str | None = None
+    plural: str | None = None
+    endpoints: list[type[Endpoint]] = []
+    keyField: str | None = None
     eventPathPatterns = ""
-    entityType = None
+    entityType: types.Type | None = None
     subresources = []
 
     def __init__(self, master):

@@ -348,7 +348,7 @@ class Entity(Type):
     #  * buildsets.Buildset.entityType or
     #  * self.master.data.rtypes.buildsets.entityType
 
-    name = None  # set in constructor
+    name : Identifier | String | None = None  # set in constructor
     graphql_name = None  # set in constructor
     fields = {}
     fieldNames = set([])
