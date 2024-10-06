@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process import buildstep
@@ -32,17 +31,16 @@ class TestStep(buildstep.ShellMixin, buildstep.BuildStep):
         super().__init__()
         self.text = text
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         for file in self.build.allFiles():
-            cmd = yield self.makeRemoteShellCommand(command=["echo", "build_file", file])
-            yield self.runCommand(cmd)
+            cmd = await self.makeRemoteShellCommand(command=["echo", "build_file", file])
+            await self.runCommand(cmd)
         version = self.build.getWorkerCommandVersion("shell", None)
         if version != "99.99":
-            cmd = yield self.makeRemoteShellCommand(command=["echo", "version", version])
-            yield self.runCommand(cmd)
-        cmd = yield self.makeRemoteShellCommand(command=["echo", "done", self.text])
-        yield self.runCommand(cmd)
+            cmd = await self.makeRemoteShellCommand(command=["echo", "version", version])
+            await self.runCommand(cmd)
+        cmd = await self.makeRemoteShellCommand(command=["echo", "done", self.text])
+        await self.runCommand(cmd)
         return SUCCESS
 
 
@@ -54,8 +52,7 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
     def tearDown(self):
         return self.tear_down_test_build_step()
 
-    @defer.inlineCallbacks
-    def test_setup_build(self):
+    async def test_setup_build(self):
         self.setup_build(
             worker_version={"*": "2.9"}, worker_env={"key": "value"}, build_files=["build.txt"]
         )
@@ -72,10 +69,9 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
             ).exit(0),
         )
         self.expect_outcome(SUCCESS)
-        yield self.run_step()
+        await self.run_step()
 
-    @defer.inlineCallbacks
-    def test_old_setup_step_args(self):
+    async def test_old_setup_step_args(self):
         with assertProducesWarnings(
             DeprecatedApiWarning,
             num_warnings=3,
@@ -100,7 +96,7 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         )
         self.expect_outcome(SUCCESS)
 
-        yield self.run_step()
+        await self.run_step()
 
     def test_get_nth_step(self):
         self.setup_step(TestStep("step1"))
@@ -109,8 +105,7 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         with assertProducesWarning(DeprecatedApiWarning, "step attribute has been deprecated"):
             self.assertTrue(isinstance(self.step, TestStep))
 
-    @defer.inlineCallbacks
-    def test_multiple_steps(self):
+    async def test_multiple_steps(self):
         self.setup_step(TestStep("step1"))
         self.setup_step(TestStep("step2"))
         self.expect_commands(
@@ -121,4 +116,4 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file("stdio", "out2\n", step_index=1)
         self.expect_outcome(SUCCESS)
         self.expect_outcome(SUCCESS)
-        yield self.run_step()
+        await self.run_step()
