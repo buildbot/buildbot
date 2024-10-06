@@ -20,7 +20,6 @@ import textwrap
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import compression
@@ -122,8 +121,7 @@ class Tests(interfaces.InterfaceTests):
         ),
     ]
 
-    @defer.inlineCallbacks
-    def checkTestLogLines(self):
+    async def checkTestLogLines(self):
         expLines = [
             'line zero',
             'line 1' + "x" * 200,
@@ -135,11 +133,11 @@ class Tests(interfaces.InterfaceTests):
         ]
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
-                got_lines = yield self.db.logs.getLogLines(201, first_line, last_line)
+                got_lines = await self.db.logs.getLogLines(201, first_line, last_line)
                 self.assertEqual(got_lines, "\n".join(expLines[first_line : last_line + 1] + [""]))
         # check overflow
         self.assertEqual(
-            (yield self.db.logs.getLogLines(201, 5, 20)), "\n".join(expLines[5:7] + [""])
+            (await self.db.logs.getLogLines(201, 5, 20)), "\n".join(expLines[5:7] + [""])
         )
 
     # signature tests
@@ -191,15 +189,14 @@ class Tests(interfaces.InterfaceTests):
 
     # method tests
 
-    @defer.inlineCallbacks
-    def test_getLog(self):
-        yield self.insert_test_data([
+    async def test_getLog(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
             ),
         ])
-        logdict = yield self.db.logs.getLog(201)
+        logdict = await self.db.logs.getLog(201)
         self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(
             logdict,
@@ -214,14 +211,12 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_getLog_missing(self):
-        logdict = yield self.db.logs.getLog(201)
+    async def test_getLog_missing(self):
+        logdict = await self.db.logs.getLog(201)
         self.assertEqual(logdict, None)
 
-    @defer.inlineCallbacks
-    def test_getLogBySlug(self):
-        yield self.insert_test_data([
+    async def test_getLogBySlug(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
@@ -236,24 +231,22 @@ class Tests(interfaces.InterfaceTests):
                 type="s",
             ),
         ])
-        logdict = yield self.db.logs.getLogBySlug(101, 'dbg_log')
+        logdict = await self.db.logs.getLogBySlug(101, 'dbg_log')
         self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(logdict.id, 202)
 
-    @defer.inlineCallbacks
-    def test_getLogBySlug_missing(self):
-        yield self.insert_test_data([
+    async def test_getLogBySlug_missing(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
             ),
         ])
-        logdict = yield self.db.logs.getLogBySlug(102, 'stdio')
+        logdict = await self.db.logs.getLogBySlug(102, 'stdio')
         self.assertEqual(logdict, None)
 
-    @defer.inlineCallbacks
-    def test_getLogs(self):
-        yield self.insert_test_data([
+    async def test_getLogs(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
@@ -271,49 +264,45 @@ class Tests(interfaces.InterfaceTests):
                 id=203, stepid=102, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
             ),
         ])
-        logdicts = yield self.db.logs.getLogs(101)
+        logdicts = await self.db.logs.getLogs(101)
         for logdict in logdicts:
             self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(sorted([ld.id for ld in logdicts]), [201, 202])
 
-    @defer.inlineCallbacks
-    def test_getLogLines(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        yield self.checkTestLogLines()
+    async def test_getLogLines(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
+        await self.checkTestLogLines()
 
         # check line number reversal
-        self.assertEqual((yield self.db.logs.getLogLines(201, 6, 3)), '')
+        self.assertEqual((await self.db.logs.getLogLines(201, 6, 3)), '')
 
-    @defer.inlineCallbacks
-    def test_getLogLines_empty(self):
-        yield self.insert_test_data([
+    async def test_getLogLines_empty(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201, stepid=101, name="stdio", slug="stdio", complete=0, num_lines=200, type="s"
             ),
         ])
-        self.assertEqual((yield self.db.logs.getLogLines(201, 9, 99)), '')
-        self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
+        self.assertEqual((await self.db.logs.getLogLines(201, 9, 99)), '')
+        self.assertEqual((await self.db.logs.getLogLines(999, 9, 99)), '')
 
-    @defer.inlineCallbacks
-    def test_getLogLines_bug3101(self):
+    async def test_getLogLines_bug3101(self):
         # regression test for #3101
         content = self.bug3101Content
-        yield self.insert_test_data(self.backgroundData + self.bug3101Rows)
+        await self.insert_test_data(self.backgroundData + self.bug3101Rows)
         # overall content is the same, with '\n' padding at the end
         expected = bytes2unicode(self.bug3101Content + b'\n')
-        self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 99)), expected)
+        self.assertEqual((await self.db.logs.getLogLines(1470, 0, 99)), expected)
         # try to fetch just one line
         expected = bytes2unicode(content.split(b'\n')[0] + b'\n')
-        self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 0)), expected)
+        self.assertEqual((await self.db.logs.getLogLines(1470, 0, 0)), expected)
 
-    @defer.inlineCallbacks
-    def test_addLog_getLog(self):
-        yield self.insert_test_data(self.backgroundData)
-        logid = yield self.db.logs.addLog(
+    async def test_addLog_getLog(self):
+        await self.insert_test_data(self.backgroundData)
+        logid = await self.db.logs.addLog(
             stepid=101, name='config.log', slug='config_log', type='t'
         )
-        logdict = yield self.db.logs.getLog(logid)
+        logdict = await self.db.logs.getLog(logid)
         self.assertIsInstance(logdict, logs.LogModel)
         self.assertEqual(
             logdict,
@@ -328,19 +317,18 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_appendLog_getLogLines(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        logid = yield self.db.logs.addLog(stepid=102, name='another', slug='another', type='s')
-        self.assertEqual((yield self.db.logs.appendLog(logid, 'xyz\n')), (0, 0))
-        self.assertEqual((yield self.db.logs.appendLog(201, 'abc\ndef\n')), (7, 8))
-        self.assertEqual((yield self.db.logs.appendLog(logid, 'XYZ\n')), (1, 1))
-        self.assertEqual((yield self.db.logs.getLogLines(201, 6, 7)), "yet another line\nabc\n")
-        self.assertEqual((yield self.db.logs.getLogLines(201, 7, 8)), "abc\ndef\n")
-        self.assertEqual((yield self.db.logs.getLogLines(201, 8, 8)), "def\n")
-        self.assertEqual((yield self.db.logs.getLogLines(logid, 0, 1)), "xyz\nXYZ\n")
+    async def test_appendLog_getLogLines(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
+        logid = await self.db.logs.addLog(stepid=102, name='another', slug='another', type='s')
+        self.assertEqual((await self.db.logs.appendLog(logid, 'xyz\n')), (0, 0))
+        self.assertEqual((await self.db.logs.appendLog(201, 'abc\ndef\n')), (7, 8))
+        self.assertEqual((await self.db.logs.appendLog(logid, 'XYZ\n')), (1, 1))
+        self.assertEqual((await self.db.logs.getLogLines(201, 6, 7)), "yet another line\nabc\n")
+        self.assertEqual((await self.db.logs.getLogLines(201, 7, 8)), "abc\ndef\n")
+        self.assertEqual((await self.db.logs.getLogLines(201, 8, 8)), "def\n")
+        self.assertEqual((await self.db.logs.getLogLines(logid, 0, 1)), "xyz\nXYZ\n")
         self.assertEqual(
-            (yield self.db.logs.getLog(logid)),
+            (await self.db.logs.getLog(logid)),
             logs.LogModel(
                 complete=False,
                 id=logid,
@@ -352,41 +340,37 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_compressLog(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        yield self.db.logs.compressLog(201)
+    async def test_compressLog(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
+        await self.db.logs.compressLog(201)
         # test log lines should still be readable just the same
-        yield self.checkTestLogLines()
+        await self.checkTestLogLines()
 
-    @defer.inlineCallbacks
-    def test_addLogLines_big_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
+    async def test_addLogLines_big_chunk(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
         self.assertEqual(
-            (yield self.db.logs.appendLog(201, 'abc\n' * 20000)),  # 80k
+            (await self.db.logs.appendLog(201, 'abc\n' * 20000)),  # 80k
             (7, 20006),
         )
-        lines = yield self.db.logs.getLogLines(201, 7, 50000)
+        lines = await self.db.logs.getLogLines(201, 7, 50000)
         self.assertEqual(len(lines), 80000)
         self.assertEqual(lines, ('abc\n' * 20000))
 
-    @defer.inlineCallbacks
-    def test_addLogLines_big_chunk_big_lines(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
+    async def test_addLogLines_big_chunk_big_lines(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'x' * 33000 + '\n'
         self.assertEqual(
-            (yield self.db.logs.appendLog(201, line * 3)), (7, 9)
+            (await self.db.logs.appendLog(201, line * 3)), (7, 9)
         )  # three long lines, all truncated
-        lines = yield self.db.logs.getLogLines(201, 7, 100)
+        lines = await self.db.logs.getLogLines(201, 7, 100)
         self.assertEqual(len(lines), 99003)
         self.assertEqual(lines, (line * 3))
 
 
 class RealTests(Tests):
-    @defer.inlineCallbacks
-    def test_addLogLines_db(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        self.assertEqual((yield self.db.logs.appendLog(201, 'abc\ndef\nghi\njkl\n')), (7, 10))
+    async def test_addLogLines_db(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
+        self.assertEqual((await self.db.logs.appendLog(201, 'abc\ndef\nghi\njkl\n')), (7, 10))
 
         def thd(conn):
             res = conn.execute(
@@ -396,7 +380,7 @@ class RealTests(Tests):
             res.close()
             return dict(row)
 
-        newRow = yield self.db.pool.do(thd)
+        newRow = await self.db.pool.do(thd)
         self.assertEqual(
             newRow,
             {
@@ -408,13 +392,12 @@ class RealTests(Tests):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_addLogLines_huge_lines(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
+    async def test_addLogLines_huge_lines(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 70000 + '\n'
-        yield self.db.logs.appendLog(201, line * 3)
+        await self.db.logs.appendLog(201, line * 3)
         for lineno in 7, 8, 9:
-            line = yield self.db.logs.getLogLines(201, lineno, lineno)
+            line = await self.db.logs.getLogLines(201, lineno, lineno)
             self.assertEqual(len(line), 65537)
 
     def test_splitBigChunk_unicode_misalignment(self):
@@ -427,11 +410,10 @@ class RealTests(Tests):
         self.assertEqual(len(chunk), 65534)
         chunk.decode('utf-8')
 
-    @defer.inlineCallbacks
-    def test_no_compress_small_chunk(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
+    async def test_no_compress_small_chunk(self):
+        await self.insert_test_data(self.backgroundData + self.testLogLines)
         self.db.master.config.logCompressionMethod = "gz"
-        self.assertEqual((yield self.db.logs.appendLog(201, 'abc\n')), (7, 7))
+        self.assertEqual((await self.db.logs.appendLog(201, 'abc\n')), (7, 7))
 
         def thd(conn):
             res = conn.execute(
@@ -441,7 +423,7 @@ class RealTests(Tests):
             res.close()
             return dict(row)
 
-        newRow = yield self.db.pool.do(thd)
+        newRow = await self.db.pool.do(thd)
         self.assertEqual(
             newRow,
             {'logid': 201, 'first_line': 7, 'last_line': 7, 'content': b'abc', 'compressed': 0},
@@ -521,8 +503,7 @@ class RealTests(Tests):
         self.db.master.config.logCompressionMethod = "br"
         await self._test_compress_big_chunk(compression.BrotliCompressor.dumps, 5)
 
-    @defer.inlineCallbacks
-    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
+    async def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
         if chunk.endswith("\n"):
             chunk = chunk[:-1]
         linesperchunk = chunk.count("\n") + 1
@@ -536,7 +517,7 @@ class RealTests(Tests):
             )
             for i in range(NUM_CHUNKS)
         ]
-        yield self.insert_test_data([
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201,
@@ -549,10 +530,10 @@ class RealTests(Tests):
             ),
             *test_data,
         ])
-        wholeLog = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
+        wholeLog = await self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
         for i in range(10):
-            yield self.db.logs.compressLog(201)
-            wholeLog2 = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
+            await self.db.logs.compressLog(201)
+            wholeLog2 = await self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
             self.assertEqual(wholeLog, wholeLog2)
         self.assertEqual(wholeLog, wholeLog2)
 
@@ -562,7 +543,7 @@ class RealTests(Tests):
             q = q.where(tbl.c.logid == 201)
             return conn.execute(q).fetchone()[0]
 
-        chunks = yield self.db.pool.do(countChunk)
+        chunks = await self.db.pool.do(countChunk)
         # make sure MAX_CHUNK_LINES is taken in account
         self.assertGreaterEqual(
             chunks, NUM_CHUNKS * linesperchunk / logs.LogsConnectorComponent.MAX_CHUNK_LINES
@@ -577,22 +558,20 @@ class RealTests(Tests):
     def test_addLogLines_huge_log_lots_snowmans(self):
         return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk='\N{SNOWMAN}\n' * 50)
 
-    @defer.inlineCallbacks
-    def test_compressLog_non_existing_log(self):
-        yield self.db.logs.compressLog(201)
-        logdict = yield self.db.logs.getLog(201)
+    async def test_compressLog_non_existing_log(self):
+        await self.db.logs.compressLog(201)
+        logdict = await self.db.logs.getLog(201)
         self.assertEqual(logdict, None)
 
-    @defer.inlineCallbacks
-    def test_compressLog_empty_log(self):
-        yield self.insert_test_data([
+    async def test_compressLog_empty_log(self):
+        await self.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
                 id=201, stepid=101, name="stdio", slug="stdio", complete=1, num_lines=0, type="s"
             ),
         ])
-        yield self.db.logs.compressLog(201)
-        logdict = yield self.db.logs.getLog(201)
+        await self.db.logs.compressLog(201)
+        logdict = await self.db.logs.getLog(201)
         self.assertEqual(
             logdict,
             logs.LogModel(
@@ -606,38 +585,37 @@ class RealTests(Tests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_deleteOldLogChunks_basic(self):
-        yield self.insert_test_data(self.backgroundData)
+    async def test_deleteOldLogChunks_basic(self):
+        await self.insert_test_data(self.backgroundData)
         logids = []
         for stepid in (101, 102):
             for i in range(stepid):
-                logid = yield self.db.logs.addLog(
+                logid = await self.db.logs.addLog(
                     stepid=stepid, name='another' + str(i), slug='another' + str(i), type='s'
                 )
-                yield self.db.logs.appendLog(logid, 'xyz\n')
+                await self.db.logs.appendLog(logid, 'xyz\n')
                 logids.append(logid)
 
-        deleted_chunks = yield self.db.logs.deleteOldLogChunks(
+        deleted_chunks = await self.db.logs.deleteOldLogChunks(
             (self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101) / 2
         )
         self.assertEqual(deleted_chunks, 101)
-        deleted_chunks = yield self.db.logs.deleteOldLogChunks(
+        deleted_chunks = await self.db.logs.deleteOldLogChunks(
             self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101
         )
         self.assertEqual(deleted_chunks, 102)
-        deleted_chunks = yield self.db.logs.deleteOldLogChunks(
+        deleted_chunks = await self.db.logs.deleteOldLogChunks(
             self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101
         )
         self.assertEqual(deleted_chunks, 0)
-        deleted_chunks = yield self.db.logs.deleteOldLogChunks(0)
+        deleted_chunks = await self.db.logs.deleteOldLogChunks(0)
         self.assertEqual(deleted_chunks, 0)
         for logid in logids:
-            logdict = yield self.db.logs.getLog(logid)
+            logdict = await self.db.logs.getLog(logid)
             self.assertEqual(logdict.type, 'd')
 
             # we make sure we can still getLogLines, it will just return empty value
-            lines = yield self.db.logs.getLogLines(logid, 0, logdict.num_lines)
+            lines = await self.db.logs.getLogLines(logid, 0, logdict.num_lines)
             self.assertEqual(lines, '')
 
     @async_to_deferred
@@ -736,15 +714,13 @@ class RealTests(Tests):
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'logs',
                 'logchunks',
