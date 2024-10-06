@@ -15,8 +15,6 @@
 #
 import datetime
 
-from twisted.internet import defer
-
 from buildbot.config import BuilderConfig
 from buildbot.configurators import ConfiguratorBase
 from buildbot.process.buildstep import BuildStep
@@ -43,10 +41,9 @@ class LogChunksJanitor(BuildStep):
         super().__init__()
         self.logHorizon = logHorizon
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         older_than_timestamp = datetime2epoch(now() - self.logHorizon)
-        deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp)
+        deleted = await self.master.db.logs.deleteOldLogChunks(older_than_timestamp)
         self.descriptionDone = ["deleted", str(deleted), "logchunks"]
         return SUCCESS
 
@@ -59,10 +56,9 @@ class BuildDataJanitor(BuildStep):
         super().__init__()
         self.build_data_horizon = build_data_horizon
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         older_than_timestamp = datetime2epoch(now() - self.build_data_horizon)
-        deleted = yield self.master.db.build_data.deleteOldBuildData(older_than_timestamp)
+        deleted = await self.master.db.build_data.deleteOldBuildData(older_than_timestamp)
         self.descriptionDone = ["deleted", str(deleted), "build data key-value pairs"]
         return SUCCESS
 
