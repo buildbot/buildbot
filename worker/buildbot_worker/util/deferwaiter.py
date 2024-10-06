@@ -55,8 +55,7 @@ class DeferWaiter:
     def has_waited(self):
         return bool(self._waited)
 
-    @defer.inlineCallbacks
-    def wait(self):
+    async def wait(self):
         if not self._waited:
             return
-        yield self._finish_notifier.wait()
+        await self._finish_notifier.wait()
