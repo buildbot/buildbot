@@ -97,8 +97,7 @@ class SsDict(SourceStampModel):
 
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
-    @defer.inlineCallbacks
-    def findSourceStampId(
+    async def findSourceStampId(
         self,
         branch=None,
         revision=None,
@@ -111,7 +110,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         patch_comment=None,
         patch_subdir=None,
     ):
-        sourcestampid, _ = yield self.findOrCreateId(
+        sourcestampid, _ = await self.findOrCreateId(
             branch,
             revision,
             repository,
@@ -125,8 +124,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         )
         return sourcestampid
 
-    @defer.inlineCallbacks
-    def findOrCreateId(
+    async def findOrCreateId(
         self,
         branch=None,
         revision=None,
@@ -170,10 +168,10 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 patchid = r.inserted_primary_key[0]
             return patchid
 
-        patchid = yield self.db.pool.do(thd)
+        patchid = await self.db.pool.do(thd)
 
         ss_hash = self.hashColumns(branch, revision, repository, project, codebase, patchid)
-        sourcestampid, found = yield self.findOrCreateSomethingId(
+        sourcestampid, found = await self.findOrCreateSomethingId(
             tbl=tbl,
             whereclause=tbl.c.ss_hash == ss_hash,
             insert_values={
