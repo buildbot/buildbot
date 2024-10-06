@@ -78,12 +78,11 @@ class InitTests(unittest.SynchronousTestCase):
 
 
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
-        yield self.setUpDirs(self.basedir)
+        await self.setUpDirs(self.basedir)
 
         # don't create child services
         self.patch(master.BuildMaster, 'create_child_services', lambda self: None)
@@ -99,58 +98,55 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.master.sendBuildbotNetUsageData = mock.Mock()
         self.master.botmaster = FakeBotMaster()
         self.secrets_manager = self.master.secrets_manager = SecretManager()
-        yield self.secrets_manager.setServiceParent(self.master)
+        await self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self)
-        yield self.db.setServiceParent(self.master)
+        await self.db.setServiceParent(self.master)
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
-        yield self.mq.setServiceParent(self.master)
+        await self.mq.setServiceParent(self.master)
         self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
-        yield self.data.setServiceParent(self.master)
+        await self.data.setServiceParent(self.master)
 
     def tearDown(self):
         return self.tearDownDirs()
 
     # tests
-    @defer.inlineCallbacks
-    def test_startup_bad_config(self):
+
+    async def test_startup_bad_config(self):
         self.master.config_loader = FailingLoader()
 
-        yield self.master.startService()
+        await self.master.startService()
 
         self.assertTrue(self.reactor.stop_called)
         self.assertLogged("oh noes")
         self.assertLogged("BuildMaster startup failed")
 
-    @defer.inlineCallbacks
-    def test_startup_db_not_ready(self):
+    async def test_startup_db_not_ready(self):
         def db_setup():
             log.msg("GOT HERE")
             raise exceptions.DatabaseNotReadyError()
 
         self.db.setup = db_setup
 
-        yield self.master.startService()
+        await self.master.startService()
 
         self.assertTrue(self.reactor.stop_called)
         self.assertLogged("GOT HERE")
         self.assertLogged("BuildMaster startup failed")
 
-    @defer.inlineCallbacks
-    def test_startup_error(self):
+    async def test_startup_error(self):
         def db_setup():
             raise RuntimeError("oh noes")
 
         self.db.setup = db_setup
 
-        yield self.master.startService()
+        await self.master.startService()
 
         self.assertTrue(self.reactor.stop_called)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertLogged("BuildMaster startup failed")
 
-    @defer.inlineCallbacks
-    def test_startup_ok(self):
-        yield self.master.startService()
+    async def test_startup_ok(self):
+        await self.master.startService()
 
         self.assertEqual(
             self.master.db.configured_url,
@@ -166,9 +162,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         # check started/stopped messages
         self.assertFalse(self.master.data.updates.thisMasterActive)
 
-    @defer.inlineCallbacks
-    def test_startup_ok_waitforshutdown(self):
-        yield self.master.startService()
+    async def test_startup_ok_waitforshutdown(self):
+        await self.master.startService()
 
         self.assertTrue(self.master.data.updates.thisMasterActive)
         # use fakebotmaster shutdown delaying
@@ -188,44 +183,41 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         # check started/stopped messages
         self.assertFalse(self.master.data.updates.thisMasterActive)
 
-    @defer.inlineCallbacks
-    def test_reconfig(self):
+    async def test_reconfig(self):
         self.master.reconfigServiceWithBuildbotConfig = mock.Mock(
             side_effect=lambda n: defer.succeed(None)
         )
         self.master.masterHeartbeatService = mock.Mock()
-        yield self.master.startService()
-        yield self.master.reconfig()
-        yield self.master.stopService()
+        await self.master.startService()
+        await self.master.reconfig()
+        await self.master.stopService()
         self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
 
-    @defer.inlineCallbacks
-    def test_reconfig_bad_config(self):
+    async def test_reconfig_bad_config(self):
         self.master.reconfigService = mock.Mock(side_effect=lambda n: defer.succeed(None))
 
         self.master.masterHeartbeatService = mock.Mock()
-        yield self.master.startService()
+        await self.master.startService()
 
         # reset, since startService called reconfigService
         self.master.reconfigService.reset_mock()
 
         # reconfig, with a failure
         self.master.config_loader = FailingLoader()
-        yield self.master.reconfig()
+        await self.master.reconfig()
 
         self.master.stopService()
 
         self.assertLogged("configuration update aborted without")
         self.assertFalse(self.master.reconfigService.called)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_db_url_changed(self):
+    async def test_reconfigService_db_url_changed(self):
         old = self.master.config = MasterConfig()
         old.db['db_url'] = Interpolate('%(secret:db_pwd)s')
         old.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
-        yield self.master.secrets_manager.setup()
-        yield self.master.db.setup()
-        yield self.master.reconfigServiceWithBuildbotConfig(old)
+        await self.master.secrets_manager.setup()
+        await self.master.db.setup()
+        await self.master.reconfigServiceWithBuildbotConfig(old)
         self.assertEqual(self.master.db.configured_url, 's3cr3t')
 
         new = MasterConfig()
@@ -233,4 +225,4 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         new.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 'other-s3cr3t'})]
 
         with self.assertRaises(config.ConfigErrors):
-            yield self.master.reconfigServiceWithBuildbotConfig(new)
+            await self.master.reconfigServiceWithBuildbotConfig(new)
