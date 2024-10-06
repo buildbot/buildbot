@@ -16,7 +16,6 @@
 from collections import OrderedDict
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -111,8 +110,7 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_renderable_dist(self):
+    async def test_renderable_dist(self):
         self.setup_step(
             rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s'))
         )
@@ -130,4 +128,4 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
-        yield self.run_step()
+        await self.run_step()
