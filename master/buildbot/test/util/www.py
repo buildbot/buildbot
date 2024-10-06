@@ -194,8 +194,7 @@ class WwwTestMixin(RequiresWwwMixin):
             request.finish()
         return request.deferred
 
-    @defer.inlineCallbacks
-    def render_control_resource(
+    async def render_control_resource(
         self,
         rsrc,
         path=b'/',
@@ -218,7 +217,7 @@ class WwwTestMixin(RequiresWwwMixin):
         request.input_headers = {b'content-type': content_type}
         rv = rsrc.render(request)
         if rv == server.NOT_DONE_YET:
-            rv = yield request.deferred
+            rv = await request.deferred
 
         res = json.loads(bytes2unicode(rv))
         self.assertIn("jsonrpc", res)
