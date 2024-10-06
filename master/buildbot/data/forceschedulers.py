@@ -48,21 +48,19 @@ class ForceSchedulerEndpoint(base.Endpoint):
                 return defer.succeed(sched)
         return None
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        sched = yield self.findForceScheduler(kwargs['schedulername'])
+    async def get(self, resultSpec, kwargs):
+        sched = await self.findForceScheduler(kwargs['schedulername'])
         if sched is not None:
             return forceScheduler2Data(sched)
         return None
 
-    @defer.inlineCallbacks
-    def control(self, action, args, kwargs):
+    async def control(self, action, args, kwargs):
         if action == "force":
-            sched = yield self.findForceScheduler(kwargs['schedulername'])
+            sched = await self.findForceScheduler(kwargs['schedulername'])
             if "owner" not in args:
                 args['owner'] = "user"
             try:
-                res = yield sched.force(**args)
+                res = await sched.force(**args)
                 return res
             except forcesched.CollectedValidationError as e:
                 raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"]) from e
@@ -77,13 +75,12 @@ class ForceSchedulersEndpoint(base.Endpoint):
     """
     rootLinkName = 'forceschedulers'
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         ret = []
         builderid = kwargs.get('builderid', None)
         bdict = None
         if builderid is not None:
-            bdict = yield self.master.db.builders.getBuilder(builderid)
+            bdict = await self.master.db.builders.getBuilder(builderid)
         for sched in self.master.allSchedulers():
             if isinstance(sched, forcesched.ForceScheduler):
                 if builderid is not None and bdict.name not in sched.builderNames:
