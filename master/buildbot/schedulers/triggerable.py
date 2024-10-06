@@ -83,15 +83,13 @@ class Triggerable(base.BaseScheduler):
 
         return idsDeferred, resultsDeferred
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield super().startService()
+    async def startService(self):
+        await super().startService()
         self._updateWaiters.start()
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         # finish any _updateWaiters calls
-        yield self._updateWaiters.stop()
+        await self._updateWaiters.stop()
 
         # cancel any outstanding subscription
         if self._buildset_complete_consumer:
@@ -105,14 +103,13 @@ class Triggerable(base.BaseScheduler):
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
-        yield super().stopService()
+        await super().stopService()
 
     @debounce.method(wait=0)
-    @defer.inlineCallbacks
-    def _updateWaiters(self):
+    async def _updateWaiters(self):
         if self._waiters and not self._buildset_complete_consumer:
             startConsuming = self.master.mq.startConsuming
-            self._buildset_complete_consumer = yield startConsuming(
+            self._buildset_complete_consumer = await startConsuming(
                 self._buildset_complete_cb, ('buildsets', None, 'complete')
             )
         elif not self._waiters and self._buildset_complete_consumer:
