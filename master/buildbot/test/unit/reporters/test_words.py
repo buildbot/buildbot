@@ -16,7 +16,6 @@
 import re
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
@@ -40,8 +39,7 @@ class ContactMixin(TestReactorMixin):
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.patch(reactor, 'seconds', self.reactor.seconds)
@@ -77,8 +75,8 @@ class ContactMixin(TestReactorMixin):
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
         self.contact = self.contactClass(user=self.USER, channel=self.bot.getChannel(self.CHANNEL))
-        yield self.contact.channel.setServiceParent(self.master)
-        yield self.master.startService()
+        await self.contact.channel.setServiceParent(self.master)
+        await self.master.startService()
 
     def patch_send(self):
         self.sent = []
@@ -91,8 +89,7 @@ class ContactMixin(TestReactorMixin):
 
         self.contact.channel.send = send
 
-    @defer.inlineCallbacks
-    def do_test_command(
+    async def do_test_command(
         self,
         command,
         args='',
@@ -116,13 +113,13 @@ class ContactMixin(TestReactorMixin):
 
         if exp_UsageError:
             try:
-                yield cmd(args, **kwargs)
+                await cmd(args, **kwargs)
             except words.UsageError:
                 return
             else:
                 self.fail("no UsageError")
         else:
-            yield cmd(args, **kwargs)
+            await cmd(args, **kwargs)
         if clock_ticks:
             self.reactor.pump(clock_ticks)
 
@@ -182,32 +179,30 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.assertTrue(self.contact.channel.running)
         self.contact.channel.stopService()
 
-    @defer.inlineCallbacks
-    def test_command_notify0(self):
-        yield self.do_test_command('notify', exp_UsageError=True)
-        yield self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
-        yield self.do_test_command('notify', args="on")
+    async def test_command_notify0(self):
+        await self.do_test_command('notify', exp_UsageError=True)
+        await self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
+        await self.do_test_command('notify', args="on")
         self.assertEqual(self.sent, ["The following events are being notified: finished, started."])
-        yield self.do_test_command('notify', args="off")
+        await self.do_test_command('notify', args="off")
         self.assertEqual(self.sent, ['No events are being notified.'])
-        yield self.do_test_command('notify', args="on started")
+        await self.do_test_command('notify', args="on started")
         self.assertEqual(self.sent, ["The following events are being notified: started."])
-        yield self.do_test_command('notify', args="off started")
+        await self.do_test_command('notify', args="off started")
         self.assertEqual(self.sent, ['No events are being notified.'])
-        yield self.assertFailure(self.do_test_command('notify', args="off finished"), KeyError)
-        yield self.do_test_command('notify', args="list")
+        await self.assertFailure(self.do_test_command('notify', args="off finished"), KeyError)
+        await self.do_test_command('notify', args="list")
         self.assertEqual(self.sent, ['No events are being notified.'])
 
-    @defer.inlineCallbacks
-    def notify_build_test(self, notify_args):
+    async def notify_build_test(self, notify_args):
         self.bot.tags = None
-        yield self.test_command_watch_builder0()
-        yield self.do_test_command('notify', args=notify_args)
+        await self.test_command_watch_builder0()
+        await self.do_test_command('notify', args=notify_args)
         buildStarted = self.contact.channel.subscribed[0].callback
         buildFinished = self.contact.channel.subscribed[1].callback
         for buildid in (13, 14, 16):
             self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
-            build = yield self.master.data.get(('builds', buildid))
+            build = await self.master.data.get(('builds', buildid))
             buildStarted("somekey", build)
             buildFinished("somekey", build)
 
@@ -232,10 +227,9 @@ class TestContact(ContactMixin, unittest.TestCase):
     def test_command_notify_build_started_finished(self):
         self.notify_build_test("on")
 
-    @defer.inlineCallbacks
-    def test_notify_missing_worker(self):
+    async def test_notify_missing_worker(self):
         self.patch_send()
-        yield self.do_test_command('notify', args='on worker')
+        await self.do_test_command('notify', args='on worker')
         missing_worker = self.contact.channel.subscribed[2].callback
         missing_worker(
             (None, None, 'missing'), {"workerid": 1, "name": 'work', "last_connection": 'sometime'}
@@ -243,10 +237,9 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.assertEqual(self.sent[1], "Worker `work` is missing. It was seen last on sometime.")
         self.assertIn(1, self.contact.channel.missing_workers)
 
-    @defer.inlineCallbacks
-    def test_notify_worker_is_back(self):
+    async def test_notify_worker_is_back(self):
         self.patch_send()
-        yield self.do_test_command('notify', args='on worker')
+        await self.do_test_command('notify', args='on worker')
         self.contact.channel.missing_workers.add(1)
         missing_worker = self.contact.channel.subscribed[2].callback
         missing_worker(
@@ -256,64 +249,55 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.assertEqual(self.sent[1], "Worker `work` is back online.")
         self.assertNotIn(1, self.contact.channel.missing_workers)
 
-    @defer.inlineCallbacks
-    def test_command_help_noargs(self):
-        yield self.do_test_command('help')
+    async def test_command_help_noargs(self):
+        await self.do_test_command('help')
         self.assertIn('help - ', '\n'.join(self.sent))
 
-    @defer.inlineCallbacks
-    def test_command_help_arg(self):
+    async def test_command_help_arg(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = 'foo - bar'
-        yield self.do_test_command('help', args='foo')
+        await self.do_test_command('help', args='foo')
         self.assertIn('Usage: foo - bar', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_no_usage(self):
+    async def test_command_help_no_usage(self):
         self.contact.command_FOO = lambda: None
-        yield self.do_test_command('help', args='foo')
+        await self.do_test_command('help', args='foo')
         self.assertIn('No usage info for', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_dict_command(self):
+    async def test_command_help_dict_command(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {None: 'foo - bar'}
-        yield self.do_test_command('help', args='foo')
+        await self.do_test_command('help', args='foo')
         self.assertIn('Usage: foo - bar', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_dict_command_no_usage(self):
+    async def test_command_help_dict_command_no_usage(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {}
-        yield self.do_test_command('help', args='foo')
+        await self.do_test_command('help', args='foo')
         self.assertIn("No usage info for 'foo'", self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_dict_command_arg(self):
+    async def test_command_help_dict_command_arg(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {'this': 'foo this - bar'}
-        yield self.do_test_command('help', args='foo this')
+        await self.do_test_command('help', args='foo this')
         self.assertIn('Usage: foo this - bar', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_dict_command_arg_no_usage(self):
+    async def test_command_help_dict_command_arg_no_usage(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
             # nothing for arg 'this'
             ('this', 'first'): 'foo this first - bar'
         }
-        yield self.do_test_command('help', args='foo this')
+        await self.do_test_command('help', args='foo this')
         self.assertIn("No usage info for 'foo' 'this'", self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_dict_command_arg_subarg(self):
+    async def test_command_help_dict_command_arg_subarg(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {('this', 'first'): 'foo this first - bar'}
-        yield self.do_test_command('help', args='foo this first')
+        await self.do_test_command('help', args='foo this first')
         self.assertIn('Usage: foo this first - bar', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_dict_command_arg_subarg_no_usage(self):
+    async def test_command_help_dict_command_arg_subarg_no_usage(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
             None: 'foo - bar',
@@ -321,124 +305,105 @@ class TestContact(ContactMixin, unittest.TestCase):
             ('this', 'first'): 'foo this first - bar',
             # nothing for subarg 'missing'
         }
-        yield self.do_test_command('help', args='foo this missing')
+        await self.do_test_command('help', args='foo this missing')
         self.assertIn("No usage info for 'foo' 'this' 'missing'", self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_help_nosuch(self):
-        yield self.do_test_command('help', args='foo', exp_UsageError=True)
+    async def test_command_help_nosuch(self):
+        await self.do_test_command('help', args='foo', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_shutdown(self):
-        yield self.do_test_command('shutdown', exp_UsageError=True)
+    async def test_command_shutdown(self):
+        await self.do_test_command('shutdown', exp_UsageError=True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
-    @defer.inlineCallbacks
-    def test_command_shutdown_check_running(self):
-        yield self.do_test_command('shutdown', args='check', shuttingDown=False)
+    async def test_command_shutdown_check_running(self):
+        await self.do_test_command('shutdown', args='check', shuttingDown=False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
         self.assertIn('buildbot is running', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_shutdown_check_shutting_down(self):
-        yield self.do_test_command('shutdown', args='check', shuttingDown=True)
+    async def test_command_shutdown_check_shutting_down(self):
+        await self.do_test_command('shutdown', args='check', shuttingDown=True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
         self.assertIn('buildbot is shutting down', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_shutdown_start(self):
-        yield self.do_test_command('shutdown', args='start', shuttingDown=False)
+    async def test_command_shutdown_start(self):
+        await self.do_test_command('shutdown', args='start', shuttingDown=False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
 
-    @defer.inlineCallbacks
-    def test_command_shutdown_stop(self):
-        yield self.do_test_command('shutdown', args='stop', shuttingDown=True)
+    async def test_command_shutdown_stop(self):
+        await self.do_test_command('shutdown', args='stop', shuttingDown=True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
-    @defer.inlineCallbacks
-    def test_command_shutdown_now(self):
-        yield self.do_test_command('shutdown', args='now')
+    async def test_command_shutdown_now(self):
+        await self.do_test_command('shutdown', args='now')
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
         self.assertTrue(self.reactor.stop_called)
 
-    @defer.inlineCallbacks
-    def test_command_source(self):
-        yield self.do_test_command('source')
+    async def test_command_source(self):
+        await self.do_test_command('source')
         self.assertIn('My source', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_commands(self):
-        yield self.do_test_command('commands')
+    async def test_command_commands(self):
+        await self.do_test_command('commands')
         self.assertIn('Buildbot commands', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_hello(self):
-        yield self.do_test_command('hello', exp_usage=False)
+    async def test_command_hello(self):
+        await self.do_test_command('hello', exp_usage=False)
         self.assertIn(self.sent[0], words.GREETINGS)
 
-    @defer.inlineCallbacks
-    def test_command_list(self):
-        yield self.do_test_command('list', exp_UsageError=True)
+    async def test_command_list(self):
+        await self.do_test_command('list', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_list_builders(self):
-        yield self.do_test_command('list', args='all builders')
+    async def test_command_list_builders(self):
+        await self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
             self.assertIn(f'{builder} [offline]', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_list_workers(self):
+    async def test_command_list_workers(self):
         workers = ['worker1', 'worker2']
         for worker in workers:
             self.master.db.workers.db.insert_test_data([fakedb.Worker(name=worker)])
-        yield self.do_test_command('list', args='all workers')
+        await self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
             self.assertIn(f'{worker} [offline]', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_list_workers_online(self):
+    async def test_command_list_workers_online(self):
         self.setup_multi_builders()
         # Also set the connectedness:
         self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)])
-        yield self.do_test_command('list', args='all workers')
+        await self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         self.assertNotIn('linux1 [disconnected]', self.sent[0])
         self.assertIn('linux2 [disconnected]', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_list_changes(self):
+    async def test_command_list_changes(self):
         self.master.db.workers.db.insert_test_data([fakedb.Change()])
-        yield self.do_test_command('list', args='2 changes')
+        await self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 1)
 
-    @defer.inlineCallbacks
-    def test_command_list_builders_not_connected(self):
+    async def test_command_list_builders_not_connected(self):
         self.setup_multi_builders()
 
-        yield self.do_test_command('list', args='all builders')
+        await self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         self.assertIn(f'{self.BUILDER_NAMES[0]} [offline]', self.sent[0])
         self.assertIn(f'{self.BUILDER_NAMES[1]} [offline]', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_list_builders_connected(self):
+    async def test_command_list_builders_connected(self):
         self.setup_multi_builders()
         # Also set the connectedness:
         self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=1)])
 
-        yield self.do_test_command('list', args='all builders')
+        await self.do_test_command('list', args='all builders')
         self.assertEqual(len(self.sent), 1)
         self.assertIn(f'{self.BUILDER_NAMES[0]} [offline]', self.sent[0])
         self.assertNotIn(f'{self.BUILDER_NAMES[1]} [offline]', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_status(self):
-        yield self.do_test_command('status')
+    async def test_command_status(self):
+        await self.do_test_command('status')
 
-    @defer.inlineCallbacks
-    def test_command_status_online(self):
+    async def test_command_status_online(self):
         # we are online and we have some finished builds
         self.setup_multi_builders()
         self.master.db.insert_test_data([
@@ -449,87 +414,75 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.master.db.builds.finishBuild(buildid=13, results=FAILURE)
         self.master.db.builds.finishBuild(buildid=15, results=SUCCESS)
         self.master.db.builds.finishBuild(buildid=16, results=FAILURE)
-        yield self.do_test_command('status')
+        await self.do_test_command('status')
 
-    @defer.inlineCallbacks
-    def test_command_status_all(self):
-        yield self.do_test_command('status', args='all')
+    async def test_command_status_all(self):
+        await self.do_test_command('status', args='all')
 
-    @defer.inlineCallbacks
-    def test_command_status_builder0_offline(self):
-        yield self.do_test_command('status', args=self.BUILDER_NAMES[0])
+    async def test_command_status_builder0_offline(self):
+        await self.do_test_command('status', args=self.BUILDER_NAMES[0])
         self.assertEqual(self.sent, [f'`{self.BUILDER_NAMES[0]}`: offline'])
 
-    @defer.inlineCallbacks
-    def test_command_status_builder0_running(self):
+    async def test_command_status_builder0_running(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('status', args=self.BUILDER_NAMES[0])
+        await self.do_test_command('status', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         self.assertIn('`builder1`: running', self.sent[0])
         self.assertRegex(self.sent[0], r' build \[#3\].* \(no current step\)')
         self.assertRegex(self.sent[0], r' build \[#6\].* \(no current step\)')
 
-    @defer.inlineCallbacks
-    def test_command_status_bogus(self):
-        yield self.do_test_command('status', args='bogus_builder', exp_UsageError=True)
+    async def test_command_status_bogus(self):
+        await self.do_test_command('status', args='bogus_builder', exp_UsageError=True)
 
     def sub_seconds(self, strings):
         # sometimes timing works out wrong, so just call it "n seconds"
         return [re.sub(r'\d seconds|a moment', 'N seconds', s) for s in strings]
 
-    @defer.inlineCallbacks
-    def test_command_last(self):
+    async def test_command_last(self):
         self.setupSomeBuilds()
         self.setup_multi_builders()
         # Also set the connectedness:
         self.master.db.insert_test_data([fakedb.ConnectedWorker(id=113, masterid=13, workerid=2)])
-        yield self.do_test_command('last')
+        await self.do_test_command('last')
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
         self.assertIn('`builder1`: last build completed successfully (N seconds ago)', sent)
 
-    @defer.inlineCallbacks
-    def test_command_last_all(self):
+    async def test_command_last_all(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('last', args='all')
+        await self.do_test_command('last', args='all')
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
         self.assertIn('`builder1`: last build completed successfully (N seconds ago)', sent[0])
         self.assertIn('`builder2`: no builds run since last restart', sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_last_builder_bogus(self):
-        yield self.do_test_command('last', args="BOGUS", exp_UsageError=True)
+    async def test_command_last_builder_bogus(self):
+        await self.do_test_command('last', args="BOGUS", exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_last_builder0(self):
+    async def test_command_last_builder0(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('last', args=self.BUILDER_NAMES[0])
+        await self.do_test_command('last', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
         self.assertIn('`builder1`: last build completed successfully (N seconds ago)', sent)
 
-    @defer.inlineCallbacks
-    def test_command_last_builder1(self):
+    async def test_command_last_builder1(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('last', args=self.BUILDER_NAMES[1])
+        await self.do_test_command('last', args=self.BUILDER_NAMES[1])
         self.assertEqual(len(self.sent), 1)
         self.assertIn('`builder2`: no builds run since last restart', self.sent)
 
-    @defer.inlineCallbacks
-    def test_command_watch(self):
-        yield self.do_test_command('watch', exp_UsageError=True)
+    async def test_command_watch(self):
+        await self.do_test_command('watch', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_watch_builder0_no_builds(self):
-        yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
+    async def test_command_watch_builder0_no_builds(self):
+        await self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         self.assertIn('There are no currently running builds.', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_watch_builder0(self):
+    async def test_command_watch_builder0(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
+        await self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
         self.assertIn(
             'Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
@@ -542,14 +495,13 @@ class TestContact(ContactMixin, unittest.TestCase):
             self.sent,
         )
 
-    @defer.inlineCallbacks
-    def test_command_watch_builder0_get_notifications(self):
+    async def test_command_watch_builder0_get_notifications(self):
         # (continue from the prior test)
         self.bot.tags = None
-        yield self.test_command_watch_builder0()
+        await self.test_command_watch_builder0()
         del self.sent[:]
 
-        yield self.sendBuildFinishedMessage(16)
+        await self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(
             "Build [#6](http://localhost:8080/#/builders/23/builds/6) of "
@@ -557,10 +509,9 @@ class TestContact(ContactMixin, unittest.TestCase):
             self.sent,
         )
 
-    @defer.inlineCallbacks
-    def test_command_watch_builder1(self):
+    async def test_command_watch_builder1(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
+        await self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
         self.assertIn(
             'Watching build [#3](http://localhost:8080/#/builders/23/builds/3) of '
@@ -573,10 +524,9 @@ class TestContact(ContactMixin, unittest.TestCase):
             self.sent,
         )
 
-    @defer.inlineCallbacks
-    def sendBuildFinishedMessage(self, buildid, results=0):
+    async def sendBuildFinishedMessage(self, buildid, results=0):
         self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
-        build = yield self.master.data.get(('builds', buildid))
+        build = await self.master.data.get(('builds', buildid))
         self.master.mq.callConsumer(
             ('builds', str(buildid), 'complete'),
             {
@@ -594,49 +544,41 @@ class TestContact(ContactMixin, unittest.TestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_command_stop(self):
-        yield self.do_test_command('stop', exp_UsageError=True)
+    async def test_command_stop(self):
+        await self.do_test_command('stop', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_stop_bogus_builder(self):
-        yield self.do_test_command(
+    async def test_command_stop_bogus_builder(self):
+        await self.do_test_command(
             'stop', args="build BOGUS 'i have a reason'", exp_UsageError=True
         )
 
-    @defer.inlineCallbacks
-    def test_command_stop_builder0_no_builds(self):
-        yield self.do_test_command('stop', args=f"build {self.BUILDER_NAMES[0]} 'i have a reason'")
+    async def test_command_stop_builder0_no_builds(self):
+        await self.do_test_command('stop', args=f"build {self.BUILDER_NAMES[0]} 'i have a reason'")
         self.assertEqual(len(self.sent), 1)
         self.assertIn('no build is', self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_stop_builder0_1_builds(self):
+    async def test_command_stop_builder0_1_builds(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('stop', args=f"build {self.BUILDER_NAMES[0]} 'i have a reason'")
+        await self.do_test_command('stop', args=f"build {self.BUILDER_NAMES[0]} 'i have a reason'")
         self.assertEqual(len(self.sent), 2)
         self.assertRegex(self.sent[0], r'Build \[#[36]\].* of `builder1` interrupted')
         self.assertRegex(self.sent[1], r'Build \[#[63]\].* of `builder1` interrupted')
 
-    @defer.inlineCallbacks
-    def test_command_force_no_args(self):
-        yield self.do_test_command('force', exp_UsageError=True)
+    async def test_command_force_no_args(self):
+        await self.do_test_command('force', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_wrong_first_arg(self):
-        yield self.do_test_command('force', args='notbuild', exp_UsageError=True)
+    async def test_command_force_wrong_first_arg(self):
+        await self.do_test_command('force', args='notbuild', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_command_force_build_no_args(self):
-        yield self.do_test_command('force', args='build', exp_UsageError=True)
+    async def test_command_force_build_no_args(self):
+        await self.do_test_command('force', args='build', exp_UsageError=True)
 
     # TODO: missing tests for:
     #   - bad args
     #   - arg validation failure (self.master.config.validation)
 
-    @defer.inlineCallbacks
-    def test_command_force(self):
-        yield self.do_test_command(
+    async def test_command_force(self):
+        await self.do_test_command(
             'force',
             args=(
                 'build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 '
@@ -644,68 +586,61 @@ class TestContact(ContactMixin, unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_handleMessage_short_command(self):
+    async def test_handleMessage_short_command(self):
         self.contact.command_TESTY = mock.Mock()
-        yield self.contact.handleMessage('testy')
+        await self.contact.handleMessage('testy')
 
         self.contact.command_TESTY.assert_called_with('')
 
-    @defer.inlineCallbacks
-    def test_handleMessage_long_command(self):
+    async def test_handleMessage_long_command(self):
         self.contact.command_TESTY = mock.Mock()
-        yield self.contact.handleMessage('testy   westy boo')
+        await self.contact.handleMessage('testy   westy boo')
 
         self.contact.command_TESTY.assert_called_with('westy boo')
 
-    @defer.inlineCallbacks
-    def test_handleMessage_excited(self):
+    async def test_handleMessage_excited(self):
         self.patch_send()
-        yield self.contact.handleMessage('hi!')
+        await self.contact.handleMessage('hi!')
 
         self.assertEqual(len(self.sent), 1)  # who cares what it says..
 
-    @defer.inlineCallbacks
-    def test_handleMessage_exception(self):
+    async def test_handleMessage_exception(self):
         self.patch_send()
 
         def command_TESTY(msg):
             raise RuntimeError("FAIL")
 
         self.contact.command_TESTY = command_TESTY
-        yield self.contact.handleMessage('testy boom')
+        await self.contact.handleMessage('testy boom')
 
         self.assertEqual(self.sent, ["Something bad happened (see logs)"])
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.inlineCallbacks
-    def test_handleMessage_UsageError(self):
+    async def test_handleMessage_UsageError(self):
         self.patch_send()
 
         def command_TESTY(msg):
             raise words.UsageError("oh noes")
 
         self.contact.command_TESTY = command_TESTY
-        yield self.contact.handleMessage('testy boom')
+        await self.contact.handleMessage('testy boom')
 
         self.assertEqual(self.sent, ["oh noes"])
 
-    @defer.inlineCallbacks
-    def test_unclosed_quote(self):
-        yield self.do_test_command('list', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('status', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('notify', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('watch', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('force', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('stop', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('last', args='args\'', exp_UsageError=True)
-        yield self.do_test_command('help', args='args\'', exp_UsageError=True)
+    async def test_unclosed_quote(self):
+        await self.do_test_command('list', args='args\'', exp_UsageError=True)
+        await self.do_test_command('status', args='args\'', exp_UsageError=True)
+        await self.do_test_command('notify', args='args\'', exp_UsageError=True)
+        await self.do_test_command('watch', args='args\'', exp_UsageError=True)
+        await self.do_test_command('force', args='args\'', exp_UsageError=True)
+        await self.do_test_command('stop', args='args\'', exp_UsageError=True)
+        await self.do_test_command('last', args='args\'', exp_UsageError=True)
+        await self.do_test_command('help', args='args\'', exp_UsageError=True)
 
-    @defer.inlineCallbacks
-    def test_buildStarted(self):
+    async def test_buildStarted(self):
         self.setupSomeBuilds()
         self.patch_send()
-        build = yield self.master.data.get(('builds', 13))
+        build = await self.master.data.get(('builds', 13))
 
         self.bot.tags = None
         self.contact.channel.notify_for = lambda _: True
@@ -767,13 +702,12 @@ class TestContact(ContactMixin, unittest.TestCase):
         self.contact.access_denied()
         self.assertIn("not pass", self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_bot_loadState(self):
-        boid = yield self.bot._get_object_id()
+    async def test_bot_loadState(self):
+        boid = await self.bot._get_object_id()
         self.master.db.insert_test_data([
             fakedb.ObjectState(
                 objectid=boid, name='notify_events', value_json='[["#channel1", ["warnings"]]]'
             ),
         ])
-        yield self.bot.loadState()
+        await self.bot.loadState()
         self.assertEqual(self.bot.channels['#channel1'].notify_events, {'warnings'})
