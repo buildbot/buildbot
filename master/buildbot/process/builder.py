@@ -96,17 +96,15 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
                 return builder_config
         raise AssertionError(f"no config found for builder '{self.name}'")
 
-    @defer.inlineCallbacks
-    def find_project_id(self, project):
+    async def find_project_id(self, project):
         if project is None:
             return project
-        projectid = yield self.master.data.updates.find_project_id(project)
+        projectid = await self.master.data.updates.find_project_id(project)
         if projectid is None:
             log.msg(f"{self} could not find project ID for project name {project}")
         return projectid
 
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    async def reconfigServiceWithBuildbotConfig(self, new_config):
         builder_config = self._find_builder_config_by_name(new_config)
         old_config = self.config
         self.config = builder_config
@@ -115,15 +113,15 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         # allocate  builderid now, so that the builder is visible in the web
         # UI; without this, the builder wouldn't appear until it preformed a
         # build.
-        builderid = yield self.getBuilderId()
+        builderid = await self.getBuilderId()
 
         if self._has_updated_config_info(old_config, builder_config):
-            projectid = yield self.find_project_id(builder_config.project)
+            projectid = await self.find_project_id(builder_config.project)
 
             self.project_name = builder_config.project
             self.project_id = projectid
 
-            yield self.master.data.updates.updateBuilderInfo(
+            await self.master.data.updates.updateBuilderInfo(
                 builderid,
                 builder_config.description,
                 builder_config.description_format,
@@ -159,26 +157,24 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         name = bytes2unicode(name)
         return self.master.data.updates.findBuilderId(name)
 
-    @defer.inlineCallbacks
-    def getBuilderId(self):
+    async def getBuilderId(self):
         # since findBuilderId is idempotent, there's no reason to add
         # additional locking around this function.
         if self._builderid:
             return self._builderid
 
-        builderid = yield self.getBuilderIdForName(self.name)
+        builderid = await self.getBuilderIdForName(self.name)
         self._builderid = builderid
         return builderid
 
-    @defer.inlineCallbacks
-    def getOldestRequestTime(self):
+    async def getOldestRequestTime(self):
         """Returns the submitted_at of the oldest unclaimed build request for
         this builder, or None if there are no build requests.
 
         @returns: datetime instance or None, via Deferred
         """
-        bldrid = yield self.getBuilderId()
-        unclaimed = yield self.master.data.get(
+        bldrid = await self.getBuilderId()
+        unclaimed = await self.master.data.get(
             ('builders', bldrid, 'buildrequests'),
             [resultspec.Filter('claimed', 'eq', [False])],
             order=['submitted_at'],
@@ -188,15 +184,14 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             return unclaimed[0]['submitted_at']
         return None
 
-    @defer.inlineCallbacks
-    def getNewestCompleteTime(self):
+    async def getNewestCompleteTime(self):
         """Returns the complete_at of the latest completed build request for
         this builder, or None if there are no such build requests.
 
         @returns: datetime instance or None, via Deferred
         """
-        bldrid = yield self.getBuilderId()
-        completed = yield self.master.data.get(
+        bldrid = await self.getBuilderId()
+        completed = await self.master.data.get(
             ('builders', bldrid, 'buildrequests'),
             [resultspec.Filter('complete', 'eq', [True])],
             order=['-complete_at'],
@@ -207,15 +202,14 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         else:
             return None
 
-    @defer.inlineCallbacks
-    def get_highest_priority(self):
+    async def get_highest_priority(self):
         """Returns the priority of the highest priority unclaimed build request
         for this builder, or None if there are no build requests.
 
         @returns: priority or None, via Deferred
         """
-        bldrid = yield self.getBuilderId()
-        unclaimed = yield self.master.data.get(
+        bldrid = await self.getBuilderId()
+        unclaimed = await self.master.data.get(
             ('builders', bldrid, 'buildrequests'),
             [resultspec.Filter('claimed', 'eq', [False])],
             order=['-priority'],
@@ -244,8 +238,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             self.workers.append(wfb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
-    @defer.inlineCallbacks
-    def attached(self, worker, commands):
+    async def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
         registers their builder.
 
@@ -277,7 +270,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         self.attaching_workers.append(wfb)
 
         try:
-            yield wfb.attached(worker, commands)
+            await wfb.attached(worker, commands)
             self.attaching_workers.remove(wfb)
             self.workers.append(wfb)
             return self
@@ -317,19 +310,17 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
 
-    @defer.inlineCallbacks
-    def _setup_props_if_needed(self, props, workerforbuilder, buildrequest):
+    async def _setup_props_if_needed(self, props, workerforbuilder, buildrequest):
         # don't unnecessarily setup properties for build
         if props is not None:
             return props
         props = Properties()
-        yield Build.setup_properties_known_before_build_starts(
+        await Build.setup_properties_known_before_build_starts(
             props, [buildrequest], self, workerforbuilder
         )
         return props
 
-    @defer.inlineCallbacks
-    def canStartBuild(self, workerforbuilder, buildrequest):
+    async def canStartBuild(self, workerforbuilder, buildrequest):
         can_start = True
 
         # check whether the locks that the build will acquire can actually be
@@ -342,19 +333,19 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             # Check if the latent worker is actually compatible with the build.
             # The instance type of the worker may depend on the properties of
             # the build that substantiated it.
-            props = yield self._setup_props_if_needed(props, workerforbuilder, buildrequest)
-            can_start = yield worker.isCompatibleWithBuild(props)
+            props = await self._setup_props_if_needed(props, workerforbuilder, buildrequest)
+            can_start = await worker.isCompatibleWithBuild(props)
             if not can_start:
                 return False
 
         if IRenderable.providedBy(locks):
             # collect properties that would be set for a build if we
             # started it now and render locks using it
-            props = yield self._setup_props_if_needed(props, workerforbuilder, buildrequest)
+            props = await self._setup_props_if_needed(props, workerforbuilder, buildrequest)
         else:
             props = None
 
-        locks_to_acquire = yield get_real_locks_from_accesses_raw(
+        locks_to_acquire = await get_real_locks_from_accesses_raw(
             locks, props, self, workerforbuilder, self.config_version
         )
 
@@ -364,7 +355,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
                 return False
 
         if callable(self.config.canStartBuild):
-            can_start = yield self.config.canStartBuild(self, workerforbuilder, buildrequest)
+            can_start = await self.config.canStartBuild(self, workerforbuilder, buildrequest)
         return can_start
 
     def _can_acquire_locks(self, lock_list):
@@ -373,8 +364,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
                 return False
         return True
 
-    @defer.inlineCallbacks
-    def _startBuildFor(self, workerforbuilder, buildrequests):
+    async def _startBuildFor(self, workerforbuilder, buildrequests):
         build = self.config.factory.newBuild(buildrequests, self)
 
         props = build.getProperties()
@@ -382,7 +372,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         # give the properties a reference back to this build
         props.build = build
 
-        yield Build.setup_properties_known_before_build_starts(
+        await Build.setup_properties_known_before_build_starts(
             props, build.requests, build.builder, workerforbuilder
         )
 
@@ -418,9 +408,8 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
 
         return True
 
-    @defer.inlineCallbacks
-    def setup_properties(self, props):
-        builderid = yield self.getBuilderId()
+    async def setup_properties(self, props):
+        builderid = await self.getBuilderId()
 
         props.setProperty("buildername", self.name, "Builder")
         props.setProperty("builderid", builderid, "Builder")
