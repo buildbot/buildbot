@@ -17,7 +17,6 @@ import os
 from typing import Optional
 from unittest import SkipTest
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
@@ -39,19 +38,17 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
     def setupFakeHttp(self, base_url='https://api.pushjet.io'):
         return fakehttpclientservice.HTTPClientService.getService(self.master, self, base_url)
 
-    @defer.inlineCallbacks
-    def setupPushjetNotifier(self, secret: Optional[Interpolate] = None, **kwargs):
+    async def setupPushjetNotifier(self, secret: Optional[Interpolate] = None, **kwargs):
         if secret is None:
             secret = Interpolate("1234")
         pn = PushjetNotifier(secret, **kwargs)
-        yield pn.setServiceParent(self.master)
-        yield pn.startService()
+        await pn.setServiceParent(self.master)
+        await pn.startService()
         return pn
 
-    @defer.inlineCallbacks
-    def test_sendMessage(self):
-        _http = yield self.setupFakeHttp()
-        pn = yield self.setupPushjetNotifier(levels={'passing': 2})
+    async def test_sendMessage(self):
+        _http = await self.setupFakeHttp()
+        pn = await self.setupPushjetNotifier(levels={'passing': 2})
         _http.expect(
             "post",
             "/message",
@@ -59,39 +56,37 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
             content_json={'status': 'ok'},
         )
 
-        n = yield pn.sendMessage([{"body": "Test", "subject": "Tee", "results": SUCCESS}])
+        n = await pn.sendMessage([{"body": "Test", "subject": "Tee", "results": SUCCESS}])
 
-        j = yield n.json()
+        j = await n.json()
         self.assertEqual(j['status'], 'ok')
 
-    @defer.inlineCallbacks
-    def test_sendNotification(self):
-        _http = yield self.setupFakeHttp('https://tests.io')
-        pn = yield self.setupPushjetNotifier(base_url='https://tests.io')
+    async def test_sendNotification(self):
+        _http = await self.setupFakeHttp('https://tests.io')
+        pn = await self.setupPushjetNotifier(base_url='https://tests.io')
         _http.expect(
             "post",
             "/message",
             data={'secret': "1234", 'message': "Test"},
             content_json={'status': 'ok'},
         )
-        n = yield pn.sendNotification({'message': "Test"})
-        j = yield n.json()
+        n = await pn.sendNotification({'message': "Test"})
+        j = await n.json()
         self.assertEqual(j['status'], 'ok')
 
-    @defer.inlineCallbacks
-    def test_sendRealNotification(self):
+    async def test_sendRealNotification(self):
         secret = os.environ.get('TEST_PUSHJET_SECRET')
         if secret is None:
             raise SkipTest(
                 "real pushjet test runs only if the variable TEST_PUSHJET_SECRET is defined"
             )
-        _http = yield httpclientservice.HTTPClientService.getService(
+        _http = await httpclientservice.HTTPClientService.getService(
             self.master, 'https://api.pushjet.io'
         )
-        yield _http.startService()
-        pn = yield self.setupPushjetNotifier(secret=secret)
-        n = yield pn.sendNotification({'message': "Buildbot Pushjet test passed!"})
-        j = yield n.json()
+        await _http.startService()
+        pn = await self.setupPushjetNotifier(secret=secret)
+        n = await pn.sendNotification({'message': "Buildbot Pushjet test passed!"})
+        j = await n.json()
         self.assertEqual(j['status'], 'ok')
 
         # Test with:
