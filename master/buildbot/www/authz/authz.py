@@ -17,7 +17,6 @@
 import fnmatch
 import re
 
-from twisted.internet import defer
 from twisted.web.error import Error
 from zope.interface import implementer
 
@@ -72,15 +71,14 @@ class Authz:
             roles.update(set(roleMatcher.getRolesFromUser(userDetails, owner)))
         return roles
 
-    @defer.inlineCallbacks
-    def assertUserAllowed(self, ep, action, options, userDetails):
+    async def assertUserAllowed(self, ep, action, options, userDetails):
         roles = self.getRolesFromUser(userDetails)
         for rule in self.allowRules:
-            match = yield rule.match(ep, action, options)
+            match = await rule.match(ep, action, options)
             if match is not None:
                 # only try to get owner if there are owner Matchers
                 if self.ownerRoleMatchers:
-                    owner = yield match.getOwner()
+                    owner = await match.getOwner()
                     if owner is not None:
                         roles.update(self.getOwnerRolesFromUser(userDetails, owner))
                 for role in roles:
