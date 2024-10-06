@@ -63,8 +63,7 @@ class ControllableStep(BuildStep):
 
 
 class Tests(RunFakeMasterTestCase):
-    @defer.inlineCallbacks
-    def test_latent_max_builds(self):
+    async def test_latent_max_builds(self):
         """
         If max_builds is set, only one build is started on a latent
         worker at a time.
@@ -88,19 +87,19 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
         builder_ids = [
             (yield self.master.data.updates.findBuilderId('testy-1')),
             (yield self.master.data.updates.findBuilderId('testy-2')),
         ]
 
         started_builds = []
-        yield self.master.mq.startConsuming(
+        await self.master.mq.startConsuming(
             lambda key, build: started_builds.append(build), ('builds', None, 'new')
         )
 
         # Trigger a buildrequest
-        yield self.master.data.updates.addBuildset(
+        await self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
@@ -111,13 +110,12 @@ class Tests(RunFakeMasterTestCase):
         # The worker fails to substantiate.
         controller.start_instance(True)
 
-        yield controller.connect_worker()
+        await controller.connect_worker()
 
         self.assertEqual(len(started_builds), 1)
-        yield controller.auto_stop(True)
+        await controller.auto_stop(True)
 
-    @defer.inlineCallbacks
-    def test_local_worker_max_builds(self):
+    async def test_local_worker_max_builds(self):
         """
         If max_builds is set, only one build is started on a worker
         at a time.
@@ -140,19 +138,19 @@ class Tests(RunFakeMasterTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
         builder_ids = [
             (yield self.master.data.updates.findBuilderId('testy-1')),
             (yield self.master.data.updates.findBuilderId('testy-2')),
         ]
 
         started_builds = []
-        yield self.master.mq.startConsuming(
+        await self.master.mq.startConsuming(
             lambda key, build: started_builds.append(build), ('builds', None, 'new')
         )
 
         # Trigger a buildrequest
-        yield self.master.data.updates.addBuildset(
+        await self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
@@ -162,8 +160,7 @@ class Tests(RunFakeMasterTestCase):
 
         self.assertEqual(len(started_builds), 1)
 
-    @defer.inlineCallbacks
-    def test_worker_registered_to_machine(self):
+    async def test_worker_registered_to_machine(self):
         worker = self.createLocalWorker('worker1', machine_name='machine1')
         machine = Machine('machine1')
 
@@ -181,12 +178,11 @@ class Tests(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
 
         self.assertIs(worker.machine, machine)
 
-    @defer.inlineCallbacks
-    def test_worker_reconfigure_with_new_builder(self):
+    async def test_worker_reconfigure_with_new_builder(self):
         """
         Checks if we can successfully reconfigure if we add new builders to worker.
         """
@@ -199,7 +195,7 @@ class Tests(RunFakeMasterTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
 
         config_dict['builders'] += [
             BuilderConfig(name="builder2", workernames=['local1'], factory=BuildFactory()),
@@ -207,10 +203,9 @@ class Tests(RunFakeMasterTestCase):
         config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
 
         # reconfig should succeed
-        yield self.reconfig_master(config_dict)
+        await self.reconfig_master(config_dict)
 
-    @defer.inlineCallbacks
-    def test_step_with_worker_build_props_during_worker_disconnect(self):
+    async def test_step_with_worker_build_props_during_worker_disconnect(self):
         """
         We need to handle worker disconnection and steps with worker build properties gracefully
         """
@@ -232,19 +227,18 @@ class Tests(RunFakeMasterTestCase):
             'multiMaster': True,
         }
 
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
 
-        builder_id = yield self.master.data.updates.findBuilderId('builder')
-        yield self.create_build_request([builder_id])
+        builder_id = await self.master.data.updates.findBuilderId('builder')
+        await self.create_build_request([builder_id])
 
-        yield controller.connect_worker()
+        await controller.connect_worker()
         self.reactor.advance(1)
-        yield controller.disconnect_worker()
+        await controller.disconnect_worker()
         self.reactor.advance(1)
-        yield self.assertBuildResults(1, RETRY)
+        await self.assertBuildResults(1, RETRY)
 
-    @defer.inlineCallbacks
-    def test_worker_os_release_info_roundtrip(self):
+    async def test_worker_os_release_info_roundtrip(self):
         """
         Checks if we can successfully get information about the platform the worker is running on.
         This is very similar to test_worker_comm.TestWorkerComm.test_worker_info, except that
@@ -261,7 +255,7 @@ class Tests(RunFakeMasterTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        yield self.setup_master(config_dict)
+        await self.setup_master(config_dict)
 
         props = worker.info
 
