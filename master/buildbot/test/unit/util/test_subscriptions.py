@@ -72,9 +72,8 @@ class subscriptions(unittest.TestCase):
     def test_deferred_exception(self):
         d = defer.Deferred()
 
-        @defer.inlineCallbacks
-        def cb_deferred(*args, **kwargs):
-            yield d
+        async def cb_deferred(*args, **kwargs):
+            await d
             raise RuntimeError('msg')
 
         self.subpt.subscribe(cb_deferred)
@@ -93,9 +92,8 @@ class subscriptions(unittest.TestCase):
         # pop_exceptions.
         d = defer.Deferred()
 
-        @defer.inlineCallbacks
-        def cb_deferred(*args, **kwargs):
-            yield d
+        async def cb_deferred(*args, **kwargs):
+            await d
             raise TestException('msg')
 
         self.subpt.subscribe(cb_deferred)
@@ -111,9 +109,8 @@ class subscriptions(unittest.TestCase):
     def test_multiple_exceptions(self):
         d = defer.Deferred()
 
-        @defer.inlineCallbacks
-        def cb_deferred(*args, **kwargs):
-            yield d
+        async def cb_deferred(*args, **kwargs):
+            await d
             raise RuntimeError('msg')
 
         def cb(*args, **kwargs):
