@@ -331,36 +331,33 @@ class TestBitbucketPullrequestPoller(
 
         self.patch(self.changesource, "getPage", fail)
 
-    @defer.inlineCallbacks
-    def _new_change_source(self, **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+    async def _new_change_source(self, **kwargs):
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'https://api.bitbucket.org/2.0', auth=None
         )
 
         change_source = BitbucketPullrequestPoller(**kwargs)
-        yield self.attachChangeSource(change_source)
+        await self.attachChangeSource(change_source)
         return change_source
 
     # tests
-    @defer.inlineCallbacks
-    def test_describe(self):
-        yield self._new_change_source(owner='owner', slug='slug')
+
+    async def test_describe(self):
+        await self._new_change_source(owner='owner', slug='slug')
         assert re.search(r'owner/slug', self.changesource.describe())
 
-    @defer.inlineCallbacks
-    def test_poll_unknown_repo(self):
+    async def test_poll_unknown_repo(self):
         # Polling a non-existent repository should result in a 404
-        yield self._new_change_source(owner='owner', slug='slug')
+        await self._new_change_source(owner='owner', slug='slug')
 
         self._http.expect('get', '/repositories/owner/slug/pullrequests', content_json={}, code=404)
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertLogged('error 404 while loading')
 
-    @defer.inlineCallbacks
-    def test_poll_no_pull_requests(self):
-        yield self._new_change_source(owner='owner', slug='slug')
+    async def test_poll_no_pull_requests(self):
+        await self._new_change_source(owner='owner', slug='slug')
 
         rest_pr_list = PullRequestListRest(
             owner="owner",
@@ -372,13 +369,12 @@ class TestBitbucketPullrequestPoller(
             'get', '/repositories/owner/slug/pullrequests', content=rest_pr_list.response()
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_poll_new_pull_requests(self):
-        yield self._new_change_source(owner='owner', slug='slug')
+    async def test_poll_new_pull_requests(self):
+        await self._new_change_source(owner='owner', slug='slug')
 
         self._http.expect(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
@@ -408,7 +404,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -434,9 +430,8 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_no_updated_pull_request(self):
-        yield self._new_change_source(owner='owner', slug='slug')
+    async def test_poll_no_updated_pull_request(self):
+        await self._new_change_source(owner='owner', slug='slug')
 
         self._http.expect(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
@@ -470,7 +465,7 @@ class TestBitbucketPullrequestPoller(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -497,12 +492,11 @@ class TestBitbucketPullrequestPoller(
         )
 
         # repoll
-        yield self.changesource.poll()
+        await self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-    @defer.inlineCallbacks
-    def test_poll_updated_pull_request(self):
-        yield self._new_change_source(owner='owner', slug='slug')
+    async def test_poll_updated_pull_request(self):
+        await self._new_change_source(owner='owner', slug='slug')
 
         rest_src2 = SourceRest(
             owner="contributor",
@@ -581,7 +575,7 @@ class TestBitbucketPullrequestPoller(
             content=rest_src2.repo_response(),
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
         self.maxDiff = None
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -607,7 +601,7 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -651,9 +645,8 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_pull_request_filter_False(self):
-        yield self._new_change_source(
+    async def test_poll_pull_request_filter_False(self):
+        await self._new_change_source(
             owner='owner', slug='slug', pullrequest_filter=lambda x: False
         )
 
@@ -667,13 +660,12 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_pr.response(),
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
-    @defer.inlineCallbacks
-    def test_poll_pull_request_filter_True(self):
-        yield self._new_change_source(owner='owner', slug='slug', pullrequest_filter=lambda x: True)
+    async def test_poll_pull_request_filter_True(self):
+        await self._new_change_source(owner='owner', slug='slug', pullrequest_filter=lambda x: True)
 
         self._http.expect(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
@@ -703,7 +695,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -729,9 +721,8 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_pull_request_not_useTimestamps(self):
-        yield self._new_change_source(owner='owner', slug='slug', useTimestamps=False)
+    async def test_poll_pull_request_not_useTimestamps(self):
+        await self._new_change_source(owner='owner', slug='slug', useTimestamps=False)
 
         self._http.expect(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
@@ -763,7 +754,7 @@ class TestBitbucketPullrequestPoller(
 
         self.reactor.advance(1396825656)
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -788,9 +779,8 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_poll_pull_request_properties(self):
-        yield self._new_change_source(
+    async def test_poll_pull_request_properties(self):
+        await self._new_change_source(
             owner='owner', slug='slug', bitbucket_property_whitelist=["bitbucket.*"]
         )
 
@@ -822,7 +812,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()
+        await self.changesource.poll()
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
