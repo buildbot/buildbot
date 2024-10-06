@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -304,8 +303,7 @@ class TestGit(
         )
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_mode_full_clean_ssh_key_1_7(self):
+    async def test_mode_full_clean_ssh_key_1_7(self):
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git',
@@ -369,7 +367,7 @@ class TestGit(
         self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
         )
-        yield self.run_step()
+        await self.run_step()
 
         expected = f'#!/bin/sh\nssh -o "BatchMode=yes" -i "{ssh_key_path}" "$@"\n'
         self.assertEqual(b''.join(read), unicode2bytes(expected))
@@ -513,8 +511,7 @@ class TestGit(
         )
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_mode_full_clean_ssh_host_key_1_7(self):
+    async def test_mode_full_clean_ssh_host_key_1_7(self):
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git',
@@ -590,7 +587,7 @@ class TestGit(
         self.expect_property(
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
         )
-        yield self.run_step()
+        await self.run_step()
 
         expected = (
             '#!/bin/sh\n'
@@ -3640,20 +3637,15 @@ class TestGit(
         self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def _test_WorkerSetupError(self, _dovccmd, step, msg):
+    async def _test_WorkerSetupError(self, _dovccmd, step, msg):
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
         gitStep = self.setup_step(step)
 
         with self.assertRaisesRegex(WorkerSetupError, msg):
-            yield gitStep.run_vc("branch", "revision", "patch")
+            await gitStep.run_vc("branch", "revision", "patch")
 
     def test_noGitCommandInstalled(self):
-        @defer.inlineCallbacks
-        def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
-            """
-            Simulate the case where there is no git command.
-            """
+        async def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
             yield
             return "command not found:"
 
@@ -3664,13 +3656,7 @@ class TestGit(
         return self._test_WorkerSetupError(_dovccmd, step, msg)
 
     def test_gitCommandOutputShowsNoVersion(self):
-        @defer.inlineCallbacks
-        def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
-            """
-            Instead of outputting something like "git version 2.11",
-            simulate truncated output which has no version string,
-            to exercise error handling.
-            """
+        async def _dovccmd(command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
             yield
             return "git "
 
@@ -4511,9 +4497,7 @@ class TestGitPush(
         return self.run_step()
 
     def test_raise_no_git(self):
-        @defer.inlineCallbacks
-        def _checkFeatureSupport(self):
-            yield
+        async def _checkFeatureSupport(self):
             return False
 
         url = 'ssh://github.com/test/test.git'
@@ -4745,9 +4729,7 @@ class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin, TestReactorMixin,
             )
 
     def test_raise_no_git(self):
-        @defer.inlineCallbacks
-        def _checkFeatureSupport(self):
-            yield
+        async def _checkFeatureSupport(self):
             return False
 
         step = self.stepClass(workdir='wdir', tagName='myTag')
@@ -4984,9 +4966,7 @@ class TestGitCommit(
             self.stepClass(workdir='wkdir', paths=self.path_list, messages="my message")
 
     def test_raise_no_git(self):
-        @defer.inlineCallbacks
-        def _checkFeatureSupport(self):
-            yield
+        async def _checkFeatureSupport(self):
             return False
 
         step = self.stepClass(workdir='wkdir', paths=self.path_list, messages=self.message_list)
