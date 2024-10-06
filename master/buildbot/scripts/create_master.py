@@ -16,7 +16,6 @@
 import os
 
 import jinja2
-from twisted.internet import defer
 from twisted.python import util
 
 from buildbot.config import master as config_master
@@ -73,8 +72,7 @@ def makeSampleConfig(config):
     os.chmod(target, 0o600)
 
 
-@defer.inlineCallbacks
-def createDB(config):
+async def createDB(config):
     # create a master with the default configuration, but with db_url
     # overridden
     master_cfg = config_master.MasterConfig()
@@ -82,19 +80,18 @@ def createDB(config):
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
     db = master.db
-    yield db.setup(check_version=False, verbose=not config['quiet'])
+    await db.setup(check_version=False, verbose=not config['quiet'])
     if not config['quiet']:
         print(f"creating database ({master_cfg.db['db_url']})")
-    yield db.model.upgrade()
+    await db.model.upgrade()
 
 
 @in_reactor
-@defer.inlineCallbacks
-def createMaster(config):
+async def createMaster(config):
     makeBasedir(config)
     makeTAC(config)
     makeSampleConfig(config)
-    yield createDB(config)
+    await createDB(config)
 
     if not config['quiet']:
         print(f"buildmaster configured in {config['basedir']}")
