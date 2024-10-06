@@ -46,16 +46,14 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get_existing(self):
-        builder = yield self.callGet(('builders', 2))
+    async def test_get_existing(self):
+        builder = await self.callGet(('builders', 2))
 
         self.validateData(builder)
         self.assertEqual(builder['name'], 'builderb')
 
-    @defer.inlineCallbacks
-    def test_get_missing(self):
-        builder = yield self.callGet(('builders', 99))
+    async def test_get_missing(self):
+        builder = await self.callGet(('builders', 99))
 
         self.assertEqual(builder, None)
 
@@ -75,28 +73,24 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(builder['builderid'], 3)
         self.assertEqual(builder['name'], 'builder unicode \N{SNOWMAN}')
 
-    @defer.inlineCallbacks
-    def test_get_missing_with_name(self):
-        builder = yield self.callGet(('builders', 'builderc'))
+    async def test_get_missing_with_name(self):
+        builder = await self.callGet(('builders', 'builderc'))
 
         self.assertEqual(builder, None)
 
-    @defer.inlineCallbacks
-    def test_get_existing_with_master(self):
-        builder = yield self.callGet(('masters', 13, 'builders', 2))
+    async def test_get_existing_with_master(self):
+        builder = await self.callGet(('masters', 13, 'builders', 2))
 
         self.validateData(builder)
         self.assertEqual(builder['name'], 'builderb')
 
-    @defer.inlineCallbacks
-    def test_get_existing_with_different_master(self):
-        builder = yield self.callGet(('masters', 14, 'builders', 2))
+    async def test_get_existing_with_different_master(self):
+        builder = await self.callGet(('masters', 14, 'builders', 2))
 
         self.assertEqual(builder, None)
 
-    @defer.inlineCallbacks
-    def test_get_missing_with_master(self):
-        builder = yield self.callGet(('masters', 13, 'builders', 99))
+    async def test_get_missing_with_master(self):
+        builder = await self.callGet(('masters', 13, 'builders', 99))
 
         self.assertEqual(builder, None)
 
@@ -128,45 +122,40 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        builders = yield self.callGet(('builders',))
+    async def test_get(self):
+        builders = await self.callGet(('builders',))
 
         for b in builders:
             self.validateData(b)
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [1, 2, 3, 4, 5])
 
-    @defer.inlineCallbacks
-    def test_get_masterid(self):
-        builders = yield self.callGet(('masters', 13, 'builders'))
+    async def test_get_masterid(self):
+        builders = await self.callGet(('masters', 13, 'builders'))
 
         for b in builders:
             self.validateData(b)
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [2])
 
-    @defer.inlineCallbacks
-    def test_get_projectid(self):
-        builders = yield self.callGet(('projects', 201, 'builders'))
+    async def test_get_projectid(self):
+        builders = await self.callGet(('projects', 201, 'builders'))
 
         for b in builders:
             self.validateData(b)
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 4])
 
-    @defer.inlineCallbacks
-    def test_get_masterid_missing(self):
-        builders = yield self.callGet(('masters', 14, 'builders'))
+    async def test_get_masterid_missing(self):
+        builders = await self.callGet(('masters', 14, 'builders'))
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [])
 
-    @defer.inlineCallbacks
-    def test_get_contains_one_tag(self):
+    async def test_get_contains_one_tag(self):
         resultSpec = resultspec.ResultSpec(
             filters=[resultspec.Filter('tags', 'contains', ["tagA"])]
         )
-        builders = yield self.callGet(('builders',))
+        builders = await self.callGet(('builders',))
 
         builders = resultSpec.apply(builders)
 
@@ -175,12 +164,11 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 5])
 
-    @defer.inlineCallbacks
-    def test_get_contains_two_tags(self):
+    async def test_get_contains_two_tags(self):
         resultSpec = resultspec.ResultSpec(
             filters=[resultspec.Filter('tags', 'contains', ["tagA", "tagB"])]
         )
-        builders = yield self.callGet(('builders',))
+        builders = await self.callGet(('builders',))
 
         builders = resultSpec.apply(builders)
 
@@ -189,12 +177,11 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 4, 5])
 
-    @defer.inlineCallbacks
-    def test_get_contains_two_tags_one_unknown(self):
+    async def test_get_contains_two_tags_one_unknown(self):
         resultSpec = resultspec.ResultSpec(
             filters=[resultspec.Filter('tags', 'contains', ["tagA", "tagC"])]
         )
-        builders = yield self.callGet(('builders',))
+        builders = await self.callGet(('builders',))
 
         builders = resultSpec.apply(builders)
 
@@ -243,10 +230,9 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         def updateBuilderList(self, masterid, builderNames):
             pass
 
-    @defer.inlineCallbacks
-    def test_updateBuilderList(self):
+    async def test_updateBuilderList(self):
         # add one builder master
-        yield self.rtype.updateBuilderList(13, ['somebuilder'])
+        await self.rtype.updateBuilderList(13, ['somebuilder'])
         self.assertEqual(
             sorted((yield self.master.db.builders.getBuilders())),
             sorted([
@@ -262,7 +248,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         ])
 
         # add another
-        yield self.rtype.updateBuilderList(13, ['somebuilder', 'another'])
+        await self.rtype.updateBuilderList(13, ['somebuilder', 'another'])
 
         def builderKey(builder: BuilderModel):
             return builder.id
@@ -290,7 +276,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         ])
 
         # add one for another master
-        yield self.rtype.updateBuilderList(14, ['another'])
+        await self.rtype.updateBuilderList(14, ['another'])
         self.assertEqual(
             sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
             sorted(
@@ -314,7 +300,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         ])
 
         # remove both for the first master
-        yield self.rtype.updateBuilderList(13, [])
+        await self.rtype.updateBuilderList(13, [])
         self.assertEqual(
             sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
             sorted(
@@ -338,9 +324,8 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             (('builders', '2', 'stopped'), {'builderid': 2, 'masterid': 13, 'name': 'another'}),
         ])
 
-    @defer.inlineCallbacks
-    def test__masterDeactivated(self):
+    async def test__masterDeactivated(self):
         # this method just calls updateBuilderList, so test that.
         self.rtype.updateBuilderList = mock.Mock(spec=self.rtype.updateBuilderList)
-        yield self.rtype._masterDeactivated(10)
+        await self.rtype._masterDeactivated(10)
         self.rtype.updateBuilderList.assert_called_with(10, [])
