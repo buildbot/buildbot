@@ -24,8 +24,7 @@ from buildbot.schedulers import manager
 
 
 class SchedulerManager(unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.next_objectid = 13
         self.objectids = {}
 
@@ -58,8 +57,8 @@ class SchedulerManager(unittest.TestCase):
         self.new_config = mock.Mock()
 
         self.sm = manager.SchedulerManager()
-        yield self.sm.setServiceParent(self.master)
-        yield self.sm.startService()
+        await self.sm.setServiceParent(self.master)
+        await self.sm.startService()
 
     def tearDown(self):
         if self.sm.running:
@@ -79,9 +78,8 @@ class SchedulerManager(unittest.TestCase):
             self.already_started = True
             return super().startService()
 
-        @defer.inlineCallbacks
-        def stopService(self):
-            yield super().stopService()
+        async def stopService(self):
+            await super().stopService()
 
             assert self.master is not None
             assert self.objectid is not None
@@ -105,12 +103,11 @@ class SchedulerManager(unittest.TestCase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_reconfigService_add_and_change_and_remove(self):
+    async def test_reconfigService_add_and_change_and_remove(self):
         sch1 = self.makeSched(self.ReconfigSched, 'sch1', attr='alpha')
         self.new_config.schedulers = {"sch1": sch1}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -120,7 +117,7 @@ class SchedulerManager(unittest.TestCase):
         sch2 = self.makeSched(self.ReconfigSched, 'sch2', attr='alpha')
         self.new_config.schedulers = {"sch1": sch1_new, "sch2": sch2}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sch1 is still the active scheduler, and has been reconfig'd,
         # and has the correct attribute
@@ -137,15 +134,14 @@ class SchedulerManager(unittest.TestCase):
         self.new_config.schedulers = {}
 
         self.assertEqual(sch1.running, True)
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
         self.assertEqual(sch1.running, False)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_class_name_change(self):
+    async def test_reconfigService_class_name_change(self):
         sch1 = self.makeSched(self.ReconfigSched, 'sch1')
         self.new_config.schedulers = {"sch1": sch1}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -154,19 +150,18 @@ class SchedulerManager(unittest.TestCase):
         sch1_new = self.makeSched(self.ReconfigSched2, 'sch1')
         self.new_config.schedulers = {"sch1": sch1_new}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sch1 had its class name change, so sch1_new is now the active
         # instance
         self.assertIdentical(sch1_new.parent, self.sm)
         self.assertIdentical(sch1_new.master, self.master)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_not_reconfigurable(self):
+    async def test_reconfigService_not_reconfigurable(self):
         sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
         self.new_config.schedulers = {"sch1": sch1}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -174,7 +169,7 @@ class SchedulerManager(unittest.TestCase):
         sch1_new = self.makeSched(self.Sched, 'sch1', attr='alpha')
         self.new_config.schedulers = {"sch1": sch1_new}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sch1 had parameter change but is not reconfigurable, so sch1_new is now the active
         # instance
@@ -183,12 +178,11 @@ class SchedulerManager(unittest.TestCase):
         self.assertIdentical(sch1_new.parent, self.sm)
         self.assertIdentical(sch1_new.master, self.master)
 
-    @defer.inlineCallbacks
-    def test_reconfigService_not_reconfigurable_no_change(self):
+    async def test_reconfigService_not_reconfigurable_no_change(self):
         sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
         self.new_config.schedulers = {"sch1": sch1}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -196,7 +190,7 @@ class SchedulerManager(unittest.TestCase):
         sch1_new = self.makeSched(self.Sched, 'sch1', attr='beta')
         self.new_config.schedulers = {"sch1": sch1_new}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        await self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sch1 had its class name change, so sch1_new is now the active
         # instance
