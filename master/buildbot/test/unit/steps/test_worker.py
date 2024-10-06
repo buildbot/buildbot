@@ -15,7 +15,6 @@
 
 import stat
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.interfaces import WorkerSetupError
@@ -112,12 +111,11 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string="File not found. (failure)")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_old_version(self):
+    async def test_old_version(self):
         self.setup_build(worker_version={})
         self.setup_step(worker.FileExists(file="x"))
         self.expect_outcome(result=EXCEPTION, state_string="finished (exception)")
-        yield self.run_step()
+        await self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
 
 
@@ -226,10 +224,9 @@ class CompositeUser(buildstep.BuildStep, worker.CompositeStepMixin):
         self.logEnviron = False
         super().__init__()
 
-    @defer.inlineCallbacks
-    def run(self):
-        yield self.addLogForRemoteCommands('stdio')
-        res = yield self.payload(self)
+    async def run(self):
+        await self.addLogForRemoteCommands('stdio')
+        res = await self.payload(self)
         return FAILURE if res else SUCCESS
 
 
@@ -254,28 +251,25 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
     def test_runRemoteCommandFail(self):
         cmd_args = ('foo', {'bar': False})
 
-        @defer.inlineCallbacks
-        def testFunc(x):
-            yield x.runRemoteCommand(*cmd_args)
+        async def testFunc(x):
+            await x.runRemoteCommand(*cmd_args)
 
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args).exit(1))
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def test_runRemoteCommandFailNoAbandon(self):
+    async def test_runRemoteCommandFailNoAbandon(self):
         cmd_args = ('foo', {'bar': False})
 
-        @defer.inlineCallbacks
-        def testFunc(x):
-            yield x.runRemoteCommand(*cmd_args, **{"abandonOnFailure": False})
+        async def testFunc(x):
+            await x.runRemoteCommand(*cmd_args, **{"abandonOnFailure": False})
             testFunc.ran = True
 
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args).exit(1))
         self.expect_outcome(result=SUCCESS)
-        yield self.run_step()
+        await self.run_step()
         self.assertTrue(testFunc.ran)
 
     def test_rmfile(self):
@@ -303,9 +297,8 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_glob(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            res = yield x.runGlob("*.pyc")
+        async def testFunc(x):
+            res = await x.runGlob("*.pyc")
             self.assertEqual(res, ["one.pyc", "two.pyc"])
 
         self.setup_step(CompositeUser(testFunc))
@@ -322,10 +315,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_abandonOnFailure(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            yield x.runMkdir("d")
-            yield x.runMkdir("d")
+        async def testFunc(x):
+            await x.runMkdir("d")
+            await x.runMkdir("d")
 
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(ExpectMkdir(dir='d', log_environ=False).exit(1))
@@ -333,10 +325,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_notAbandonOnFailure(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            yield x.runMkdir("d", abandonOnFailure=False)
-            yield x.runMkdir("d", abandonOnFailure=False)
+        async def testFunc(x):
+            await x.runMkdir("d", abandonOnFailure=False)
+            await x.runMkdir("d", abandonOnFailure=False)
 
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(
@@ -347,9 +338,8 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_getFileContentFromWorker(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            res = yield x.getFileContentFromWorker("file.txt")
+        async def testFunc(x):
+            res = await x.getFileContentFromWorker("file.txt")
             self.assertEqual(res, "Hello world!")
 
         self.setup_step(CompositeUser(testFunc))
@@ -368,9 +358,8 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_getFileContentFromWorker2_16(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            res = yield x.getFileContentFromWorker("file.txt")
+        async def testFunc(x):
+            res = await x.getFileContentFromWorker("file.txt")
             self.assertEqual(res, "Hello world!")
 
         self.setup_build(worker_version={'*': '2.16'})
@@ -390,9 +379,8 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_downloadFileContentToWorker(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            res = yield x.downloadFileContentToWorker("/path/dest1", "file text")
+        async def testFunc(x):
+            res = await x.downloadFileContentToWorker("/path/dest1", "file text")
             self.assertEqual(res, None)
 
         self.setup_step(CompositeUser(testFunc))
@@ -410,9 +398,8 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     def test_downloadFileContentToWorkerWithFilePermissions(self):
-        @defer.inlineCallbacks
-        def testFunc(x):
-            res = yield x.downloadFileContentToWorker("/path/dest1", "file text", mode=stat.S_IRUSR)
+        async def testFunc(x):
+            res = await x.downloadFileContentToWorker("/path/dest1", "file text", mode=stat.S_IRUSR)
             self.assertEqual(res, None)
 
         self.setup_step(CompositeUser(testFunc))
