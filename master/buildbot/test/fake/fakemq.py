@@ -39,10 +39,9 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.qrefs = []
         self._deferwaiter = deferwaiter.DeferWaiter()
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._deferwaiter.wait()
-        yield super().stopService()
+    async def stopService(self):
+        await self._deferwaiter.wait()
+        await super().stopService()
 
     def setup(self):
         self.setup_called = True
@@ -102,10 +101,9 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
             self.testcase.assertEqual(sorted(self.productions), sorted(exp))
         self.productions = []
 
-    @defer.inlineCallbacks
-    def wait_consumed(self):
+    async def wait_consumed(self):
         # waits until all messages have been consumed
-        yield self._deferwaiter.wait()
+        await self._deferwaiter.wait()
 
 
 class FakeQueueRef:
