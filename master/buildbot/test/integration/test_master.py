@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
 
@@ -33,12 +32,11 @@ from buildbot.worker import Worker
 class RunMaster(RunMasterBase, www.RequiresWwwMixin):
     proto = 'pb'
 
-    @defer.inlineCallbacks
-    def do_test_master(self):
-        yield self.setup_master(BuildmasterConfig, startWorker=False)
+    async def do_test_master(self):
+        await self.setup_master(BuildmasterConfig, startWorker=False)
 
         # hang out for a fraction of a second, to let startup processes run
-        yield deferLater(reactor, 0.01, lambda: None)
+        await deferLater(reactor, 0.01, lambda: None)
 
     # run this test twice, to make sure the first time shut everything down
     # correctly; if this second test fails, but the first succeeds, then
