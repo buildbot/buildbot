@@ -17,7 +17,6 @@
 import re
 from typing import Optional
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -154,15 +153,14 @@ class P4(Source):
                 "or one of {self.possible_client_types}"
             )
 
-    @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    async def run_vc(self, branch, revision, patch):
         if self.debug:
             log.msg('in run_vc')
 
         self.method = self._getMethod()
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+        self.stdio_log = await self.addLogForRemoteCommands("stdio")
 
-        installed = yield self.checkP4()
+        installed = await self.checkP4()
         if not installed:
             raise WorkerSetupError("p4 is not installed on worker")
 
@@ -175,28 +173,27 @@ class P4(Source):
                 log.msg("Worker does not understand obfuscation; p4 password will be logged")
 
         if self.use_tickets and self.p4passwd:
-            yield self._acquireTicket()
+            await self._acquireTicket()
 
         # First we need to create the client
-        yield self._createClientSpec()
+        await self._createClientSpec()
 
-        self.revision = yield self.get_sync_revision(revision)
+        self.revision = await self.get_sync_revision(revision)
 
-        yield self._getAttrGroupMember('mode', self.mode)()
+        await self._getAttrGroupMember('mode', self.mode)()
         self.updateSourceProperty('got_revision', self.revision)
 
         return results.SUCCESS
 
-    @defer.inlineCallbacks
-    def mode_full(self):
+    async def mode_full(self):
         if self.debug:
             log.msg("P4:full()..")
 
         # Then p4 sync #none
-        yield self._dovccmd(['sync', '#none'])
+        await self._dovccmd(['sync', '#none'])
 
         # Then remove directory.
-        yield self.runRmdir(self.workdir)
+        await self.runRmdir(self.workdir)
 
         # Then we need to sync the client
         if self.revision:
@@ -206,19 +203,18 @@ class P4(Source):
                     self.p4client,
                     int(self.revision),
                 )
-            yield self._dovccmd(
+            await self._dovccmd(
                 ['sync', f'//{self.p4client}/...@{int(self.revision)}'], collectStdout=True
             )
         else:
             if self.debug:
                 log.msg("P4: full() sync command based on :client:%s no revision", self.p4client)
-            yield self._dovccmd(['sync'], collectStdout=True)
+            await self._dovccmd(['sync'], collectStdout=True)
 
         if self.debug:
             log.msg("P4: full() sync done.")
 
-    @defer.inlineCallbacks
-    def mode_incremental(self):
+    async def mode_incremental(self):
         if self.debug:
             log.msg("P4:incremental()")
 
@@ -232,7 +228,7 @@ class P4(Source):
 
         if self.debug:
             log.msg("P4:incremental() command:%s revision:%s", command, self.revision)
-        yield self._dovccmd(command)
+        await self._dovccmd(command)
 
     def _buildVCCommand(self, doCommand):
         assert doCommand, "No command specified"
@@ -257,8 +253,7 @@ class P4(Source):
         command.extend(doCommand)
         return command
 
-    @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None):
+    async def _dovccmd(self, command, collectStdout=False, initialStdin=None):
         command = self._buildVCCommand(command)
 
         if self.debug:
@@ -277,7 +272,7 @@ class P4(Source):
         if self.debug:
             log.msg(f'Starting p4 command : p4 {" ".join(command)}')
 
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.rc != 0:
             if self.debug:
@@ -296,8 +291,7 @@ class P4(Source):
             return 'fresh'
         return None
 
-    @defer.inlineCallbacks
-    def _createClientSpec(self):
+    async def _createClientSpec(self):
         builddir = self.getProperty('builddir')
 
         if self.debug:
@@ -369,21 +363,19 @@ class P4(Source):
         if self.debug:
             log.msg(client_spec)
 
-        stdout = yield self._dovccmd(['client', '-i'], collectStdout=True, initialStdin=client_spec)
+        stdout = await self._dovccmd(['client', '-i'], collectStdout=True, initialStdin=client_spec)
         mo = re.search(r'Client (\S+) (.+)$', stdout, re.M)
         return mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.')
 
-    @defer.inlineCallbacks
-    def _acquireTicket(self):
+    async def _acquireTicket(self):
         if self.debug:
             log.msg("P4:acquireTicket()")
 
         # TODO: check first if the ticket is still valid?
         initialStdin = self.p4passwd + "\n"
-        yield self._dovccmd(['login'], initialStdin=initialStdin)
+        await self._dovccmd(['login'], initialStdin=initialStdin)
 
-    @defer.inlineCallbacks
-    def get_sync_revision(self, revision=None):
+    async def get_sync_revision(self, revision=None):
         revision = f"@{revision}" if revision else "#head"
         if self.debug:
             log.msg("P4: get_sync_revision() retrieve client actual revision at %s", revision)
@@ -400,7 +392,7 @@ class P4(Source):
             collectStdout=True,
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         stdout = cmd.stdout.splitlines(keepends=False)
         # pylint: disable=wrong-spelling-in-comment
@@ -434,24 +426,22 @@ class P4(Source):
 
         return revision
 
-    @defer.inlineCallbacks
-    def purge(self, ignore_ignores):
+    async def purge(self, ignore_ignores):
         """Delete everything that shown up on status."""
         command = ['sync', '#none']
         if ignore_ignores:
             command.append('--no-ignore')
-        yield self._dovccmd(command, collectStdout=True)
+        await self._dovccmd(command, collectStdout=True)
         # FIXME: do the following comments need addressing?
         # add deferred to rm tree
         # then add defer to sync to revision
 
-    @defer.inlineCallbacks
-    def checkP4(self):
+    async def checkP4(self):
         cmd = remotecommand.RemoteShellCommand(
             self.workdir, [self.p4bin, '-V'], env=self.env, logEnviron=self.logEnviron
         )
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
         return cmd.rc == 0
 
     def computeSourceRevision(self, changes):
