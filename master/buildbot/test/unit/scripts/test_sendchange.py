@@ -57,9 +57,8 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         self.setUpStdoutAssertions()
 
-    @defer.inlineCallbacks
-    def test_sendchange_config(self):
-        rc = yield sendchange.sendchange({
+    async def test_sendchange_config(self):
+        rc = await sendchange.sendchange({
             "encoding": 'utf16',
             "who": 'me',
             "auth": ['a', 'b'],
@@ -111,9 +110,8 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_sendchange_config_no_codebase(self):
-        rc = yield sendchange.sendchange({
+    async def test_sendchange_config_no_codebase(self):
+        rc = await sendchange.sendchange({
             "encoding": 'utf16',
             "who": 'me',
             "auth": ['a', 'b'],
@@ -164,9 +162,8 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_sendchange_fail(self):
+    async def test_sendchange_fail(self):
         self.fail = True
-        rc = yield sendchange.sendchange({})
+        rc = await sendchange.sendchange({})
 
         self.assertEqual((self.getStdout().split('\n')[0], rc), ('change not sent:', 1))
