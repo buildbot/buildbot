@@ -172,8 +172,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
                     )
                     continue
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         name,
         password,
@@ -196,7 +195,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         hostname=None,
         **kwargs,
     ):
-        yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
+        await super().reconfigService(name, password, image, masterFQDN, **kwargs)
         self.docker_host = docker_host
         self.volumes = volumes or []
         self.followStartupLogs = followStartupLogs
@@ -253,8 +252,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             self.hostname,
         ))
 
-    @defer.inlineCallbacks
-    def start_instance(self, build):
+    async def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
         (
@@ -268,9 +266,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             target,
             buildargs,
             hostname,
-        ) = yield self.renderWorkerPropsOnStart(build)
+        ) = await self.renderWorkerPropsOnStart(build)
 
-        res = yield threads.deferToThread(
+        res = await threads.deferToThread(
             self._thd_start_instance,
             docker_host,
             image,
