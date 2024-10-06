@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
 from twisted.logger import Logger
 from twisted.python import failure
 
@@ -68,8 +67,7 @@ class GerritVerifyStatusPush(ReporterBase):
 
         super().checkConfig(generators=generators, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         baseURL,
         auth,
@@ -83,7 +81,7 @@ class GerritVerifyStatusPush(ReporterBase):
         generators=None,
         **kwargs,
     ):
-        auth = yield self.renderSecrets(auth)
+        auth = await self.renderSecrets(auth)
         self.debug = debug
         self.verify = verify
         self.verbose = verbose
@@ -91,12 +89,12 @@ class GerritVerifyStatusPush(ReporterBase):
         if generators is None:
             generators = self._create_default_generators()
 
-        yield super().reconfigService(generators=generators, **kwargs)
+        await super().reconfigService(generators=generators, **kwargs)
 
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = await httpclientservice.HTTPSession(
             self.master.httpservice, baseURL, auth=auth, debug=self.debug, verify=self.verify
         )
 
@@ -235,8 +233,7 @@ class GerritVerifyStatusPush(ReporterBase):
             ]
         return []
 
-    @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    async def sendMessage(self, reports):
         report = reports[0]
         build = reports[0]['builds'][0]
 
@@ -252,17 +249,17 @@ class GerritVerifyStatusPush(ReporterBase):
             value = 0
             duration = 'pending'
 
-        name = yield props.render(self._verification_name)
-        reporter = yield props.render(self._reporter)
-        category = yield props.render(self._category)
-        abstain = yield props.render(self._abstain)
+        name = await props.render(self._verification_name)
+        reporter = await props.render(self._reporter)
+        category = await props.render(self._category)
+        abstain = await props.render(self._abstain)
         # TODO: find reliable way to find out whether its a rebuild
         rerun = None
 
-        changes = yield self.getGerritChanges(props)
+        changes = await self.getGerritChanges(props)
         for change in changes:
             try:
-                yield self.createStatus(
+                await self.createStatus(
                     change['change_id'],
                     change['revision_id'],
                     name,
