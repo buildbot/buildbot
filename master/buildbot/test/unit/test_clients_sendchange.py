@@ -77,10 +77,9 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_minimal(self):
+    async def test_send_minimal(self):
         s = sendchange.Sender('localhost:1234')
-        yield s.send('branch', 'rev', 'comm', ['a'])
+        await s.send('branch', 'rev', 'comm', ['a'])
 
         self.assertProcess(
             'localhost',
@@ -105,10 +104,9 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_auth(self):
+    async def test_send_auth(self):
         s = sendchange.Sender('localhost:1234', auth=('me', 'sekrit'))
-        yield s.send('branch', 'rev', 'comm', ['a'])
+        await s.send('branch', 'rev', 'comm', ['a'])
 
         self.assertProcess(
             'localhost',
@@ -133,10 +131,9 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_full(self):
+    async def test_send_full(self):
         s = sendchange.Sender('localhost:1234')
-        yield s.send(
+        await s.send(
             'branch',
             'rev',
             'comm',
@@ -174,11 +171,10 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_files_tuple(self):
+    async def test_send_files_tuple(self):
         # 'buildbot sendchange' sends files as a tuple, rather than a list..
         s = sendchange.Sender('localhost:1234')
-        yield s.send('branch', 'rev', 'comm', ('a', 'b'))
+        await s.send('branch', 'rev', 'comm', ('a', 'b'))
 
         self.assertProcess(
             'localhost',
@@ -203,10 +199,9 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_codebase(self):
+    async def test_send_codebase(self):
         s = sendchange.Sender('localhost:1234')
-        yield s.send('branch', 'rev', 'comm', ['a'], codebase='mycb')
+        await s.send('branch', 'rev', 'comm', ['a'], codebase='mycb')
 
         self.assertProcess(
             'localhost',
@@ -232,10 +227,9 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_unicode(self):
+    async def test_send_unicode(self):
         s = sendchange.Sender('localhost:1234')
-        yield s.send(
+        await s.send(
             '\N{DEGREE SIGN}',
             '\U0001f49e',
             '\N{POSTAL MARK FACE}',
@@ -272,11 +266,10 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_unicode_utf8(self):
+    async def test_send_unicode_utf8(self):
         s = sendchange.Sender('localhost:1234')
 
-        yield s.send(
+        await s.send(
             '\N{DEGREE SIGN}'.encode(),
             '\U0001f49e'.encode(),
             '\N{POSTAL MARK FACE}'.encode(),
@@ -314,13 +307,12 @@ class Sender(unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_send_unicode_latin1(self):
+    async def test_send_unicode_latin1(self):
         # hand send() a bunch of latin1 strings, and expect them recoded
         # to unicode
         s = sendchange.Sender('localhost:1234', encoding='latin1')
 
-        yield s.send(
+        await s.send(
             '\N{YEN SIGN}'.encode('latin1'),
             '\N{POUND SIGN}'.encode('latin1'),
             '\N{BROKEN BAR}'.encode('latin1'),
