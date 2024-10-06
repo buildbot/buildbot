@@ -15,7 +15,6 @@
 
 
 from twisted.application import strports
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import service
@@ -33,8 +32,7 @@ class BaseManager(service.AsyncMultiService):
         self.setName(name)
         self.dispatchers = {}
 
-    @defer.inlineCallbacks
-    def register(self, config_portstr, username, password, pfactory):
+    async def register(self, config_portstr, username, password, pfactory):
         """
         Register a connection code to be executed after a user with its USERNAME/PASSWORD
         was authenticated and a valid high level connection can be established on a PORTSTR.
@@ -50,7 +48,7 @@ class BaseManager(service.AsyncMultiService):
 
         if portstr not in self.dispatchers:
             disp = self.dispatchers[portstr] = self.dispatcher_class(config_portstr, portstr)
-            yield disp.setServiceParent(self)
+            await disp.setServiceParent(self)
         else:
             disp = self.dispatchers[portstr]
 
@@ -58,14 +56,13 @@ class BaseManager(service.AsyncMultiService):
 
         return reg
 
-    @defer.inlineCallbacks
-    def _unregister(self, registration):
+    async def _unregister(self, registration):
         disp = self.dispatchers[registration.portstr]
         disp.unregister(registration.username)
         registration.username = None
         if not disp.users:
             del self.dispatchers[registration.portstr]
-            yield disp.disownServiceParent()
+            await disp.disownServiceParent()
 
 
 class Registration:
@@ -116,14 +113,13 @@ class BaseDispatcher(service.AsyncService):
 
         return super().startService()
 
-    @defer.inlineCallbacks
-    def stopService(self):
+    async def stopService(self):
         # stop listening on the port when shut down
         assert self.port
         port = self.port
         self.port = None
-        yield port.stopListening()
-        yield super().stopService()
+        await port.stopListening()
+        await super().stopService()
 
     def register(self, username, password, pfactory):
         if self.debug:
