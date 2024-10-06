@@ -65,8 +65,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             autoCreate=autoCreate,
         )
 
-    @defer.inlineCallbacks
-    def updateBuilderInfo(
+    async def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
     ):
         # convert to tag IDs first, as necessary
@@ -79,7 +78,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         tagsids = [
             r[1]
             for r in (
-                yield defer.DeferredList(
+                await defer.DeferredList(
                     [toTagid(tag) for tag in tags], fireOnOneErrback=True, consumeErrors=True
                 )
             )
@@ -113,11 +112,10 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        return (yield self.db.pool.do(thd))
+        return await self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
-    def getBuilder(self, builderid: int):
-        bldrs: list[BuilderModel] = yield self.getBuilders(_builderid=builderid)
+    async def getBuilder(self, builderid: int):
+        bldrs: list[BuilderModel] = await self.getBuilders(_builderid=builderid)
         if bldrs:
             return bldrs[0]
         return None
