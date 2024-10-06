@@ -57,12 +57,11 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # (e.g., lion, see #2256)
     timeout = 1200
 
-    @defer.inlineCallbacks
-    def setUpUpgradeTest(self):
+    async def setUpUpgradeTest(self):
         # set up the "real" db if desired
         if self.use_real_db:
             # note this changes self.db_url
-            yield self.setUpRealDatabase(sqlite_memory=False)
+            await self.setUpRealDatabase(sqlite_memory=False)
 
         self.basedir = None
 
@@ -93,17 +92,16 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         self.master = master = fakemaster.make_master(self)
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(self.basedir)
-        yield self.db.setServiceParent(master)
-        yield self.db.setup(check_version=False)
+        await self.db.setServiceParent(master)
+        await self.db.setup(check_version=False)
 
         self._sql_log_handler = querylog.start_log_queries()
 
-    @defer.inlineCallbacks
-    def tearDownUpgradeTest(self):
+    async def tearDownUpgradeTest(self):
         querylog.stop_log_queries(self._sql_log_handler)
 
         if self.use_real_db:
-            yield self.tearDownRealDatabase()
+            await self.tearDownRealDatabase()
 
         if self.basedir:
             shutil.rmtree(self.basedir)
@@ -117,8 +115,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     def tearDown(self):
         return self.tearDownUpgradeTest()
 
-    @defer.inlineCallbacks
-    def assertModelMatches(self):
+    async def assertModelMatches(self):
         def comp(engine):
             # use compare_model_to_db, which gets everything but indexes
             with engine.connect() as conn:
@@ -192,7 +189,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             return None
 
         try:
-            diff = yield self.db.pool.do_with_engine(comp)
+            diff = await self.db.pool.do_with_engine(comp)
         except TypeError as e:
             # older sqlites cause failures in reflection, which manifest as a
             # TypeError.  Reflection is only used for tests, so we can just skip
@@ -212,27 +209,26 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                 self.flushLoggedErrors(DatabaseError)
                 raise unittest.SkipTest(f"sqlite dump not readable on this machine {e!s}")
 
-    @defer.inlineCallbacks
-    def do_test_upgrade(self, pre_callbacks=None):
+    async def do_test_upgrade(self, pre_callbacks=None):
         if pre_callbacks is None:
             pre_callbacks = []
 
-        yield from pre_callbacks
+        for callback in pre_callbacks:
+            await callback()
 
         try:
-            yield self.db.model.upgrade()
+            await self.db.model.upgrade()
         except Exception as e:
             self.gotError(e)
 
-        yield self.db.pool.do(self.verify_thd)
-        yield self.assertModelMatches()
+        await self.db.pool.do(self.verify_thd)
+        await self.assertModelMatches()
 
 
 class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
     use_real_db = True
 
-    @defer.inlineCallbacks
-    def test_emptydb_modelmatches(self):
+    async def test_emptydb_modelmatches(self):
         os_encoding = locale.getpreferredencoding()
         try:
             '\N{SNOWMAN}'.encode(os_encoding)
@@ -243,8 +239,8 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
                 "Cannot encode weird unicode " f"on this platform with {os_encoding}"
             ) from e
 
-        yield self.db.model.upgrade()
-        yield self.assertModelMatches()
+        await self.db.model.upgrade()
+        await self.assertModelMatches()
 
 
 class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
@@ -256,23 +252,21 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
     def verify_thd(self, conn):
         pass
 
-    @defer.inlineCallbacks
-    def test_got_invalid_sqlite_file(self):
+    async def test_got_invalid_sqlite_file(self):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
 
         self.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
-            yield self.do_test_upgrade()
+            await self.do_test_upgrade()
 
-    @defer.inlineCallbacks
-    def test_got_invalid_sqlite_file2(self):
+    async def test_got_invalid_sqlite_file2(self):
         def upgrade():
             return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
 
         self.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
-            yield self.do_test_upgrade()
+            await self.do_test_upgrade()
 
 
 class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
