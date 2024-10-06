@@ -184,8 +184,7 @@ class HangCheckTests(TestCase):
         assert_clock_idle(self, clock)
 
 
-@defer.inlineCallbacks
-def connected_server_and_client(case, server_factory, client_factory):
+async def connected_server_and_client(case, server_factory, client_factory):
     """
     Create a server and client connected to that server.
 
@@ -201,11 +200,11 @@ def connected_server_and_client(case, server_factory, client_factory):
        use the return value.
     """
     try:
-        listening_port = yield TCP4ServerEndpoint(reactor, 0).listen(server_factory)
+        listening_port = await TCP4ServerEndpoint(reactor, 0).listen(server_factory)
         case.addCleanup(listening_port.stopListening)
 
         endpoint = TCP4ClientEndpoint(reactor, '127.0.0.1', listening_port.getHost().port)
-        yield endpoint.connect(client_factory)
+        await endpoint.connect(client_factory)
 
     except Exception as e:
         f = Failure(e)  # we can't use `e` from the lambda itself
@@ -217,8 +216,7 @@ class EndToEndHangCheckTests(TestCase):
     # the default timeout.
     timeout = 20
 
-    @defer.inlineCallbacks
-    def test_http(self):
+    async def test_http(self):
         """
         When connecting to a HTTP server, a PB connection times
         out.
@@ -243,11 +241,11 @@ class EndToEndHangCheckTests(TestCase):
         timer = reactor.callLater(2, cancel_all)
 
         try:
-            yield result
+            await result
         except defer.CancelledError as e:
             raise RuntimeError('Timeout did not happen') from e
         finally:
             d_connected.cancel()
             timer.cancel()
 
-        yield site.close_connections()
+        await site.close_connections()
