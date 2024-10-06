@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
 from buildbot.test.util.integration import RunMasterBase
 
 
@@ -23,8 +21,7 @@ from buildbot.test.util.integration import RunMasterBase
 # with one builder and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {}
         from buildbot.config import BuilderConfig
         from buildbot.plugins import schedulers
@@ -48,14 +45,13 @@ class ShellMaster(RunMasterBase):
                 factory=f,
             )
         ]
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_shell(self):
-        yield self.setup_config()
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+    async def test_shell(self):
+        await self.setup_config()
+        build = await self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        builders = yield self.master.data.get(("builders",))
+        builders = await self.master.data.get(("builders",))
         self.assertEqual(len(builders), 2)
         self.assertEqual(
             builders[1],
