@@ -90,16 +90,15 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
 
     checkConfig = reconfigService
 
-    @defer.inlineCallbacks
-    def getAuthorization(self):
+    async def getAuthorization(self):
         if self.basicAuth is not None:
-            basicAuth = yield self.renderSecrets(self.basicAuth)
+            basicAuth = await self.renderSecrets(self.basicAuth)
             authstring = f"{basicAuth['user']}:{basicAuth['password']}".encode()
             encoded = base64.b64encode(authstring)
             return f"Basic {encoded}"
 
         if self.bearerToken is not None:
-            bearerToken = yield self.renderSecrets(self.bearerToken)
+            bearerToken = await self.renderSecrets(self.bearerToken)
             return f"Bearer {bearerToken}"
 
         return None
@@ -143,26 +142,23 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         self.pp = None
         self.process = None
 
-    @defer.inlineCallbacks
-    def ensure_subprocess_killed(self):
+    async def ensure_subprocess_killed(self):
         if self.pp is not None:
             try:
                 self.process.signalProcess("TERM")
             except ProcessExitedAlready:
                 pass  # oh well
-            yield self.pp.terminated_deferred
+            await self.pp.terminated_deferred
 
-    @defer.inlineCallbacks
-    def reconfigService(self, proxy_port=8001, namespace="default"):
+    async def reconfigService(self, proxy_port=8001, namespace="default"):
         self.proxy_port = proxy_port
         self.namespace = namespace
 
         if self.running:
-            yield self.ensure_subprocess_killed()
-            yield self.start_subprocess()
+            await self.ensure_subprocess_killed()
+            await self.start_subprocess()
 
-    @defer.inlineCallbacks
-    def start_subprocess(self):
+    async def start_subprocess(self):
         self.pp = self.LocalPP()
         self.process = reactor.spawnProcess(
             self.pp,
@@ -170,21 +166,19 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
             [*self.kube_ctl_proxy_cmd, "-p", str(self.proxy_port)],
             env=os.environ,
         )
-        self.kube_proxy_output = yield self.pp.got_output_deferred
+        self.kube_proxy_output = await self.pp.got_output_deferred
 
-    @defer.inlineCallbacks
-    def startService(self):
+    async def startService(self):
         try:
-            yield self.start_subprocess()
+            await self.start_subprocess()
         except Exception:
-            yield self.ensure_subprocess_killed()
+            await self.ensure_subprocess_killed()
             raise
-        yield super().startService()
+        await super().startService()
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self.ensure_subprocess_killed()
-        yield super().stopService()
+    async def stopService(self):
+        await self.ensure_subprocess_killed()
+        await super().stopService()
 
     def getConfig(self):
         return {'master_url': f"http://localhost:{self.proxy_port}", 'namespace': self.namespace}
@@ -227,9 +221,8 @@ class KubeClientService(service.SharedService):
         self._worker_to_config = {}
         self._lock = defer.DeferredLock()
 
-    @defer.inlineCallbacks
-    def register(self, worker, config):
-        yield self._lock.acquire()
+    async def register(self, worker, config):
+        await self._lock.acquire()
         try:
             if worker.name in self._worker_to_config:
                 raise ValueError(f"Worker {worker.name} registered multiple times")
@@ -239,13 +232,12 @@ class KubeClientService(service.SharedService):
                 self._config_id_to_workers[config_id].append(worker.name)
             else:
                 self._config_id_to_workers[config_id] = [worker.name]
-                yield config.setServiceParent(self)
+                await config.setServiceParent(self)
         finally:
             self._lock.release()
 
-    @defer.inlineCallbacks
-    def unregister(self, worker):
-        yield self._lock.acquire()
+    async def unregister(self, worker):
+        await self._lock.acquire()
         try:
             if worker.name not in self._worker_to_config:
                 raise ValueError(f"Worker {worker.name} was not registered")
@@ -255,22 +247,20 @@ class KubeClientService(service.SharedService):
             worker_list.remove(worker.name)
             if not worker_list:
                 del self._config_id_to_workers[config_id]
-                yield config.disownServiceParent()
+                await config.disownServiceParent()
         finally:
             self._lock.release()
 
-    @defer.inlineCallbacks
-    def startService(self):
-        yield self._lock.acquire()
+    async def startService(self):
+        await self._lock.acquire()
         try:
-            yield super().startService()
+            await super().startService()
         finally:
             self._lock.release()
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._lock.acquire()
+    async def stopService(self):
+        await self._lock.acquire()
         try:
-            yield super().stopService()
+            await super().stopService()
         finally:
             self._lock.release()
