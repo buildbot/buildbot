@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import connector
@@ -34,9 +33,8 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        rootlinks = yield self.callGet(('',))
+    async def test_get(self):
+        rootlinks = await self.callGet(('',))
 
         for rootlink in rootlinks:
             self.validateData(rootlink)
@@ -53,20 +51,18 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = root.SpecEndpoint
     resourceTypeClass = root.Spec
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setUpEndpoint()
         # replace fakeConnector with real DataConnector
         self.master.data.disownServiceParent()
         self.master.data = connector.DataConnector()
-        yield self.master.data.setServiceParent(self.master)
+        await self.master.data.setServiceParent(self.master)
 
     def tearDown(self):
         self.tearDownEndpoint()
 
-    @defer.inlineCallbacks
-    def test_get(self):
-        specs = yield self.callGet(('application.spec',))
+    async def test_get(self):
+        specs = await self.callGet(('application.spec',))
 
         for s in specs:
             self.validateData(s)
