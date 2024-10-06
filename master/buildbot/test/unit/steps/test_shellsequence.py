@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import WithProperties
@@ -130,8 +129,7 @@ class TestOneShellCommand(
         self.expect_outcome(result=FAILURE, state_string="'make p1' (failure)")
         return self.run_step()
 
-    @defer.inlineCallbacks
-    def testShellArgsAreRenderedAnewAtEachInvocation(self):
+    async def testShellArgsAreRenderedAnewAtEachInvocation(self):
         """Unit test to ensure that ShellArg instances are properly re-rendered.
         This unit test makes sure that ShellArg instances are rendered anew at each invocation
         """
@@ -149,4 +147,4 @@ class TestOneShellCommand(
         self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST-1'")
         self.expect_outcome(result=SUCCESS, state_string="Set")
         self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST-2'")
-        yield self.run_step()
+        await self.run_step()
