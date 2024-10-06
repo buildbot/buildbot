@@ -16,7 +16,6 @@
 import os
 import tempfile
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config import BuilderConfig
@@ -76,9 +75,8 @@ notifications:
 class BuildbotTestCiTest(RunMasterBase):
     timeout = 300
 
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
+    async def setUp(self):
+        await super().setUp()
         try:
             self.repo = TestGitRepository(
                 repository_path=tempfile.mkdtemp(
@@ -96,8 +94,7 @@ class BuildbotTestCiTest(RunMasterBase):
         self.repo.exec_git(['add', '.bbtravis.yml'])
         self.repo.commit(message='Initial commit', files=['.bbtravis.yml'])
 
-    @defer.inlineCallbacks
-    def setup_config(self):
+    async def setup_config(self):
         c = {
             'workers': [Worker("local1", "p")],
             'services': [
@@ -171,11 +168,10 @@ class BuildbotTestCiTest(RunMasterBase):
             )
         )
 
-        yield self.setup_master(c)
+        await self.setup_master(c)
 
-    @defer.inlineCallbacks
-    def test_buildbot_ci(self):
-        yield self.setup_config()
+    async def test_buildbot_ci(self):
+        await self.setup_config()
         change = dict(
             branch="main",
             files=["foo.c"],
@@ -186,7 +182,7 @@ class BuildbotTestCiTest(RunMasterBase):
             codebase='buildbot',
             project="buildbot",
         )
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = await self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         if 'worker local1 ready' in build['steps'][0]['state_string']:
             build['steps'] = build['steps'][1:]
         self.assertEqual(build['steps'][0]['state_string'], 'update buildbot')
@@ -201,13 +197,13 @@ class BuildbotTestCiTest(RunMasterBase):
         self.assertIn('success: buildbot py:3.8 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0 #1', url_names)
         self.assertEqual(build['steps'][1]['logs'][0]['contents']['content'], buildbot_ci_yml)
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         self.assertEqual(len(builds), 5)
         props = {}
         buildernames = {}
         labels = {}
         for build in builds:
-            build['properties'] = yield self.master.data.get((
+            build['properties'] = await self.master.data.get((
                 "builds",
                 build['buildid'],
                 'properties',
