@@ -17,8 +17,6 @@
 Steps and objects related to lintian
 """
 
-from twisted.internet import defer
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -69,21 +67,20 @@ class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
         self.obs = pkgutil.WEObserver()
         self.addLogObserver('stdio', self.obs)
 
-    @defer.inlineCallbacks
-    def run(self):
-        cmd = yield self.makeRemoteShellCommand()
-        yield self.runCommand(cmd)
+    async def run(self):
+        cmd = await self.makeRemoteShellCommand()
+        await self.runCommand(cmd)
 
-        stdio_log = yield self.getLog('stdio')
-        yield stdio_log.finish()
+        stdio_log = await self.getLog('stdio')
+        await stdio_log.finish()
 
         warnings = self.obs.warnings
         errors = self.obs.errors
 
         if warnings:
-            yield self.addCompleteLog(f'{len(warnings)} Warnings', "\n".join(warnings))
+            await self.addCompleteLog(f'{len(warnings)} Warnings', "\n".join(warnings))
         if errors:
-            yield self.addCompleteLog(f'{len(errors)} Errors', "\n".join(errors))
+            await self.addCompleteLog(f'{len(errors)} Errors', "\n".join(errors))
 
         if cmd.rc != 0 or errors:
             return FAILURE
