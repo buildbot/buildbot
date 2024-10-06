@@ -72,13 +72,12 @@ class Log:
 
     # adding lines
 
-    @defer.inlineCallbacks
-    def addRawLines(self, lines):
+    async def addRawLines(self, lines):
         # used by subclasses to add lines that are already appropriately
         # formatted for the log type, and newline-terminated
         assert lines[-1] == '\n'
         assert not self.finished
-        yield self.lock.run(lambda: self.master.data.updates.appendLog(self.logid, lines))
+        await self.lock.run(lambda: self.master.data.updates.appendLog(self.logid, lines))
 
     # completion
 
@@ -96,8 +95,7 @@ class Log:
     def had_errors(self):
         return self._had_errors
 
-    @defer.inlineCallbacks
-    def finish(self):
+    async def finish(self):
         assert not self._finishing, "Did you maybe forget to yield the method?"
         assert not self.finished
         self._finishing = True
@@ -106,11 +104,11 @@ class Log:
             self.finished = True
             return self.master.data.updates.finishLog(self.logid)
 
-        yield self.lock.run(fToRun)
+        await self.lock.run(fToRun)
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
 
-        yield self.subPoint.waitForDeliveriesToFinish()
+        await self.subPoint.waitForDeliveriesToFinish()
 
         # notify those waiting for finish
         for d in self.finishWaiters:
@@ -141,13 +139,12 @@ class PlainLog(Log):
         self.subPoint.deliver(None, lines)
         return self.addRawLines(lines)
 
-    @defer.inlineCallbacks
-    def finish(self):
+    async def finish(self):
         lines = self.lbf.flush()
         if lines is not None:
             self.subPoint.deliver(None, lines)
-            yield self.addRawLines(lines)
-        yield super().finish()
+            await self.addRawLines(lines)
+        await super().finish()
 
 
 class TextLog(PlainLog):
@@ -222,13 +219,12 @@ class StreamLog(Log):
             text = self.decoder(text)
         return self._on_whole_lines('h', text)
 
-    @defer.inlineCallbacks
-    def finish(self):
+    async def finish(self):
         for stream, lbf in self.lbfs.items():
             lines = lbf.flush()
             if lines is not None:
                 self._on_whole_lines(stream, lines)
-        yield super().finish()
+        await super().finish()
 
 
 Log._byType['s'] = StreamLog
