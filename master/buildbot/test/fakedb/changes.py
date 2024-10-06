@@ -138,8 +138,7 @@ class FakeChangesComponent(FakeDBComponent):
 
     # component methods
 
-    @defer.inlineCallbacks
-    def addChange(
+    async def addChange(
         self,
         author: str | None = None,
         committer: str | None = None,
@@ -165,7 +164,7 @@ class FakeChangesComponent(FakeDBComponent):
         else:
             changeid = 500
 
-        ssid = yield self.db.sourcestamps.findSourceStampId(
+        ssid = await self.db.sourcestamps.findSourceStampId(
             revision=revision,
             branch=branch,
             repository=repository,
@@ -173,7 +172,7 @@ class FakeChangesComponent(FakeDBComponent):
             project=project,
         )
 
-        parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
+        parent_changeids = await self.getParentChangeIds(branch, repository, project, codebase)
 
         self.changes[changeid] = ch = {
             "changeid": changeid,
