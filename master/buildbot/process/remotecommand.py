@@ -152,8 +152,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         )
         return d
 
-    @defer.inlineCallbacks
-    def _finished(self, failure=None):
+    async def _finished(self, failure=None):
         # Finished may be called concurrently by a message from worker and interruption due to
         # lost connection.
         if not self.active:
@@ -166,18 +165,17 @@ class RemoteCommand(base.RemoteCommandImpl):
         if not self._is_conn_test_fake:
             timeout = 10
             while self.rc is None and timeout > 0:
-                yield util.asyncSleep(0.1)
+                await util.asyncSleep(0.1)
                 timeout -= 1
 
         try:
-            yield self.remoteComplete(failure)
+            await self.remoteComplete(failure)
             # this fires the original deferred we returned from .run(),
             self.deferred.callback(self)
         except Exception as e:
             self.deferred.errback(e)
 
-    @defer.inlineCallbacks
-    def interrupt(self, why):
+    async def interrupt(self, why):
         log.msg("RemoteCommand.interrupt", self, why)
 
         if self.conn and isinstance(why, Failure) and why.check(error.ConnectionLost):
@@ -199,7 +197,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # when the interrupt command has been delivered.
 
         try:
-            yield self.conn.remoteInterruptCommand(self.builder_name, self.commandID, str(why))
+            await self.conn.remoteInterruptCommand(self.builder_name, self.commandID, str(why))
             # the worker may not have remote_interruptCommand
         except Exception as e:
             log.msg("RemoteCommand.interrupt failed", self, e)
@@ -331,24 +329,22 @@ class RemoteCommand(base.RemoteCommandImpl):
         return defer.succeed(None)
 
     @util.deferredLocked('loglock')
-    @defer.inlineCallbacks
-    def addToLog(self, logname, data):
+    async def addToLog(self, logname, data):
         # Activate delayed logs on first data.
         if logname in self.delayedLogs:
             (activateCallBack, closeWhenFinished) = self.delayedLogs[logname]
             del self.delayedLogs[logname]
-            loog = yield activateCallBack(self)
+            loog = await activateCallBack(self)
             self.logs[logname] = loog
             self._closeWhenFinished[logname] = closeWhenFinished
 
         if logname in self.logs:
-            yield self.logs[logname].add_stdout_lines(data)
+            await self.logs[logname].add_stdout_lines(data)
         else:
             log.msg(f"{self}.addToLog: no such log {logname}")
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
-    @defer.inlineCallbacks
-    def remoteUpdate(self, key, value, is_flushed):
+    async def remoteUpdate(self, key, value, is_flushed):
         def cleanup(data):
             if self.step is None:
                 return data
@@ -357,18 +353,18 @@ class RemoteCommand(base.RemoteCommandImpl):
         if self.debug:
             log.msg(f"Update[{key}]: {value}")
         if key == "stdout":
-            yield self.add_stdout_lines(cleanup(value), is_flushed)
+            await self.add_stdout_lines(cleanup(value), is_flushed)
         if key == "stderr":
-            yield self.add_stderr_lines(cleanup(value), is_flushed)
+            await self.add_stderr_lines(cleanup(value), is_flushed)
         if key == "header":
-            yield self.add_header_lines(cleanup(value))
+            await self.add_header_lines(cleanup(value))
         if key == "log":
             logname, data = value
-            yield self.addToLog(logname, cleanup(data))
+            await self.addToLog(logname, cleanup(data))
         if key == "rc":
             rc = self.rc = value
             log.msg(f"{self} rc={rc}")
-            yield self.add_header_lines(f"program finished with exit code {rc}\n")
+            await self.add_header_lines(f"program finished with exit code {rc}\n")
         if key == "elapsed":
             self._remoteElapsed = value
         if key == "failure_reason":
@@ -380,8 +376,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                 self.updates[key] = []
             self.updates[key].append(value)
 
-    @defer.inlineCallbacks
-    def remoteComplete(self, maybeFailure):
+    async def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
@@ -390,25 +385,25 @@ class RemoteCommand(base.RemoteCommandImpl):
             if key in ['stdout', 'stderr', 'header']:
                 whole_line = lbf.flush()
                 if whole_line is not None:
-                    yield self.remoteUpdate(key, whole_line, True)
+                    await self.remoteUpdate(key, whole_line, True)
             else:
                 logname = key
                 whole_line = lbf.flush()
                 value = (logname, whole_line)
                 if whole_line is not None:
-                    yield self.remoteUpdate("log", value, True)
+                    await self.remoteUpdate("log", value, True)
 
         try:
-            yield self.loglock.acquire()
+            await self.loglock.acquire()
             for name, loog in self.logs.items():
                 if self._closeWhenFinished[name]:
                     if maybeFailure:
-                        yield loog.addHeader(f"\nremoteFailed: {maybeFailure}")
+                        await loog.addHeader(f"\nremoteFailed: {maybeFailure}")
                     else:
                         log.msg(f"closing log {loog}")
-                    yield loog.finish()
+                    await loog.finish()
         finally:
-            yield self.loglock.release()
+            await self.loglock.release()
 
         if maybeFailure:
             # Message Pack protocol can not send an exception object back to the master, so
