@@ -21,7 +21,6 @@ import re
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.process.properties import Properties
@@ -76,9 +75,8 @@ class GitHubEventHandler(PullRequestMixin):
         self.debug = debug
         self.verify = verify
 
-    @defer.inlineCallbacks
-    def process(self, request):
-        payload = yield self._get_payload(request)
+    async def process(self, request):
+        payload = await self._get_payload(request)
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
@@ -89,11 +87,10 @@ class GitHubEventHandler(PullRequestMixin):
         if handler is None:
             raise ValueError(f'Unknown event: {event_type}')
 
-        result = yield handler(payload, event_type)
+        result = await handler(payload, event_type)
         return result
 
-    @defer.inlineCallbacks
-    def _get_payload(self, request):
+    async def _get_payload(self, request):
         content = request.content.read()
         content = bytes2unicode(content)
 
@@ -114,7 +111,7 @@ class GitHubEventHandler(PullRequestMixin):
 
             p = Properties()
             p.master = self.master
-            rendered_secret = yield p.render(self._secret)
+            rendered_secret = await p.render(self._secret)
 
             mac = hmac.new(
                 unicode2bytes(rendered_secret), msg=unicode2bytes(content), digestmod=sha1
@@ -163,8 +160,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         return changes, 'git'
 
-    @defer.inlineCallbacks
-    def handle_pull_request(self, payload, event):
+    async def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
         refname = f'refs/pull/{number}/{self.pullrequest_ref}'
@@ -178,7 +174,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         log.msg(f'Processing GitHub PR #{number}', logLevel=logging.DEBUG)
 
-        head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
+        head_msg = await self._get_commit_msg(repo_full_name, head_sha)
         if self._has_skip(head_msg):
             log.msg(f"GitHub PR #{number}, Ignoring: head commit message contains skip pattern")
             return ([], 'git')
@@ -188,7 +184,7 @@ class GitHubEventHandler(PullRequestMixin):
             log.msg(f"GitHub PR #{number} {action}, ignoring")
             return (changes, 'git')
 
-        files = yield self._get_pr_files(repo_full_name, number)
+        files = await self._get_pr_files(repo_full_name, number)
 
         properties = {
             'pullrequesturl': revlink,
@@ -224,8 +220,7 @@ class GitHubEventHandler(PullRequestMixin):
         log.msg(f"Received {len(changes)} changes from GitHub PR #{number}")
         return (changes, 'git')
 
-    @defer.inlineCallbacks
-    def _get_commit_msg(self, repo, sha):
+    async def _get_commit_msg(self, repo, sha):
         """
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
@@ -238,27 +233,26 @@ class GitHubEventHandler(PullRequestMixin):
             p = Properties()
             p.master = self.master
             p.setProperty("full_name", repo, "change_hook")
-            token = yield p.render(self._token)
+            token = await p.render(self._token)
             headers['Authorization'] = 'token ' + token
 
         url = f'/repos/{repo}/commits/{sha}'
-        http = yield httpclientservice.HTTPSession(
+        http = await httpclientservice.HTTPSession(
             self.master.httpservice,
             self.github_api_endpoint,
             headers=headers,
             debug=self.debug,
             verify=self.verify,
         )
-        res = yield http.get(url)
+        res = await http.get(url)
         if 200 <= res.code < 300:
-            data = yield res.json()
+            data = await res.json()
             return data['commit']['message']
 
         log.msg(f'Failed fetching PR commit message: response code {res.code}')
         return 'No message field'
 
-    @defer.inlineCallbacks
-    def _get_pr_files(self, repo, number):
+    async def _get_pr_files(self, repo, number):
         """
         Get Files that belong to the Pull Request
         :param repo: the repo full name, ``{owner}/{project}``.
@@ -270,20 +264,20 @@ class GitHubEventHandler(PullRequestMixin):
             p = Properties()
             p.master = self.master
             p.setProperty("full_name", repo, "change_hook")
-            token = yield p.render(self._token)
+            token = await p.render(self._token)
             headers["Authorization"] = "token " + token
 
         url = f"/repos/{repo}/pulls/{number}/files"
-        http = yield httpclientservice.HTTPSession(
+        http = await httpclientservice.HTTPSession(
             self.master.httpservice,
             self.github_api_endpoint,
             headers=headers,
             debug=self.debug,
             verify=self.verify,
         )
-        res = yield http.get(url)
+        res = await http.get(url)
         if 200 <= res.code < 300:
-            data = yield res.json()
+            data = await res.json()
             filenames = []
             for f in data:
                 filenames.append(f["filename"])
