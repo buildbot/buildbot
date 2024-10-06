@@ -55,8 +55,7 @@ class _TransferBuildStep(BuildStep):
         super().__init__(**buildstep_kwargs)
         self.workdir = workdir
 
-    @defer.inlineCallbacks
-    def runTransferCommand(
+    async def runTransferCommand(
         self,
         cmd: remotecommand.RemoteCommand,
         writer: remotetransfer.FileWriter | None = None,
@@ -65,7 +64,7 @@ class _TransferBuildStep(BuildStep):
         # add an error handler that cancels the writer.
         self.cmd = cmd
         try:
-            yield self.runCommand(cmd)
+            await self.runCommand(cmd)
         finally:
             if writer:
                 writer.cancel()
@@ -76,11 +75,10 @@ class _TransferBuildStep(BuildStep):
                 writer.purge()
         return cmd_res
 
-    @defer.inlineCallbacks
-    def interrupt(self, reason):
-        yield self.addCompleteLog('interrupt', str(reason))
+    async def interrupt(self, reason):
+        await self.addCompleteLog('interrupt', str(reason))
         if self.cmd:
-            yield self.cmd.interrupt(reason)
+            await self.cmd.interrupt(reason)
         return None
 
 
@@ -124,10 +122,9 @@ class FileUpload(_TransferBuildStep):
         self.url = url
         self.urlText = urlText
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand("uploadFile")
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = await self.addLog("stdio")
 
         source = self.workersrc
         masterdest = self.masterdest
@@ -150,7 +147,7 @@ class FileUpload(_TransferBuildStep):
             if urlText is None:
                 urlText = os.path.basename(masterdest)
 
-            yield self.addURL(urlText, self.url)
+            await self.addURL(urlText, self.url)
 
         # we use maxsize to limit the amount of data on both sides
         fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
@@ -177,7 +174,7 @@ class FileUpload(_TransferBuildStep):
             args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
-        res = yield self.runTransferCommand(cmd, fileWriter)
+        res = await self.runTransferCommand(cmd, fileWriter)
 
         log.msg(f"File '{os.path.basename(self.workersrc)}' upload finished with results {res!s}")
 
@@ -217,10 +214,9 @@ class DirectoryUpload(_TransferBuildStep):
         self.url = url
         self.urlText = urlText
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand("uploadDirectory")
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = await self.addLog("stdio")
 
         source = self.workersrc
         masterdest = self.masterdest
@@ -238,7 +234,7 @@ class DirectoryUpload(_TransferBuildStep):
             if urlText is None:
                 urlText = os.path.basename(os.path.normpath(masterdest))
 
-            yield self.addURL(urlText, self.url)
+            await self.addURL(urlText, self.url)
 
         # we use maxsize to limit the amount of data on both sides
         dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
@@ -258,7 +254,7 @@ class DirectoryUpload(_TransferBuildStep):
             args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
-        res = yield self.runTransferCommand(cmd, dirWriter)
+        res = await self.runTransferCommand(cmd, dirWriter)
         return res
 
 
@@ -342,49 +338,46 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         return self.runTransferCommand(cmd, dirWriter)
 
-    @defer.inlineCallbacks
-    def startUpload(self, source, destdir):
+    async def startUpload(self, source, destdir):
         masterdest = os.path.join(destdir, os.path.basename(source))
         args = {'file': source, 'workdir': self.workdir}
 
         cmd = makeStatusRemoteCommand(self, 'stat', args)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
         if cmd.rc != 0:
             msg = f'File {self.workdir}/{source} not available at worker'
-            yield self.addCompleteLog('stderr', msg)
+            await self.addCompleteLog('stderr', msg)
             return FAILURE
         s = cmd.updates['stat'][-1]
         if stat.S_ISDIR(s[stat.ST_MODE]):
-            result = yield self.uploadDirectory(source, masterdest)
+            result = await self.uploadDirectory(source, masterdest)
         elif stat.S_ISREG(s[stat.ST_MODE]):
-            result = yield self.uploadFile(source, masterdest)
+            result = await self.uploadFile(source, masterdest)
         else:
             msg = f'{source} is neither a regular file, nor a directory'
-            yield self.addCompleteLog('stderr', msg)
+            await self.addCompleteLog('stderr', msg)
             return FAILURE
 
-        yield self.uploadDone(result, source, masterdest)
+        await self.uploadDone(result, source, masterdest)
         return result
 
     def uploadDone(self, result, source, masterdest):
         pass
 
-    @defer.inlineCallbacks
-    def allUploadsDone(self, result, sources, masterdest):
+    async def allUploadsDone(self, result, sources, masterdest):
         if self.url is not None:
             urlText = self.urlText
 
             if urlText is None:
                 urlText = os.path.basename(os.path.normpath(masterdest))
 
-            yield self.addURL(urlText, self.url)
+            await self.addURL(urlText, self.url)
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand("uploadDirectory")
         self.checkWorkerHasCommand("uploadFile")
         self.checkWorkerHasCommand("stat")
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = await self.addLog("stdio")
 
         masterdest = os.path.expanduser(self.masterdest)
         sources = self.workersrcs if isinstance(self.workersrcs, list) else [self.workersrcs]
@@ -400,7 +393,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             return SKIPPED
 
         if self.glob:
-            results = yield defer.gatherResults([
+            results = await defer.gatherResults([
                 self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
                 for source in sources
             ])
@@ -419,12 +412,12 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         else:
             result = SUCCESS
             for source in sources:
-                result_single = yield self.startUpload(source, masterdest)
+                result_single = await self.startUpload(source, masterdest)
                 if result_single == FAILURE:
                     result = FAILURE
                     break
 
-        yield self.allUploadsDone(result, sources, masterdest)
+        await self.allUploadsDone(result, sources, masterdest)
 
         return result
 
@@ -458,10 +451,9 @@ class FileDownload(_TransferBuildStep):
             config.error('mode must be an integer or None')
         self.mode = mode
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.checkWorkerHasCommand("downloadFile")
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = await self.addLog("stdio")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -476,7 +468,7 @@ class FileDownload(_TransferBuildStep):
             fp = open(source, 'rb')
         except OSError:
             # if file does not exist, bail out with an error
-            yield self.addCompleteLog('stderr', f'File {source!r} not available at master')
+            await self.addCompleteLog('stderr', f'File {source!r} not available at master')
             return FAILURE
 
         fileReader = remotetransfer.FileReader(fp)
@@ -496,7 +488,7 @@ class FileDownload(_TransferBuildStep):
             args['workerdest'] = workerdest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        res = yield self.runTransferCommand(cmd)
+        res = await self.runTransferCommand(cmd)
         return res
 
 
@@ -529,11 +521,10 @@ class StringDownload(_TransferBuildStep):
             config.error(f"StringDownload step's mode must be an integer or None, got '{mode}'")
         self.mode = mode
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         # we use 'downloadFile' remote command on the worker
         self.checkWorkerHasCommand("downloadFile")
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = await self.addLog("stdio")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -560,7 +551,7 @@ class StringDownload(_TransferBuildStep):
             args['workerdest'] = workerdest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        res = yield self.runTransferCommand(cmd)
+        res = await self.runTransferCommand(cmd)
         return res
 
 
@@ -576,10 +567,9 @@ class JSONStringDownload(StringDownload):
             del buildstep_kwargs['s']
         super().__init__(s=o, workerdest=workerdest, **buildstep_kwargs)
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         self.s = json.dumps(self.s)
-        res = yield super().run()
+        res = await super().run()
         return res
 
 
@@ -595,8 +585,7 @@ class JSONPropertiesDownload(StringDownload):
             del buildstep_kwargs['s']
         super().__init__(s=None, workerdest=workerdest, **buildstep_kwargs)
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         properties = self.build.getProperties()
         props = {}
         for key, value, _ in properties.asList():
@@ -608,5 +597,5 @@ class JSONPropertiesDownload(StringDownload):
                 "sourcestamps": [ss.asDict() for ss in self.build.getAllSourceStamps()],
             },
         )
-        res = yield super().run()
+        res = await super().run()
         return res
