@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.internet import threads
 from twisted.trial import unittest
 
@@ -22,11 +21,10 @@ from buildbot.test.util import db
 
 
 class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         # as we will open the db twice, we can't use in memory sqlite
-        yield self.setUpRealDatabase(table_names=['objects', 'object_state'], sqlite_memory=False)
-        yield threads.deferToThread(self.createDbConfig)
+        await self.setUpRealDatabase(table_names=['objects', 'object_state'], sqlite_memory=False)
+        await threads.deferToThread(self.createDbConfig)
 
     def createDbConfig(self):
         self.dbConfig = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
@@ -72,14 +70,12 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
 
 
 class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         # as we will open the db twice, we can't use in memory sqlite
-        yield self.setUpRealDatabase(table_names=[], sqlite_memory=False)
+        await self.setUpRealDatabase(table_names=[], sqlite_memory=False)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownRealDatabase()
+    async def tearDown(self):
+        await self.tearDownRealDatabase()
 
     def createDbConfig(self, db_url=None):
         return dbconfig.DbConfig({"db_url": db_url or self.db_url}, self.basedir)
