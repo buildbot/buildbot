@@ -19,7 +19,6 @@ import hashlib
 import math
 import time
 
-from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
 
@@ -108,8 +107,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
 
         super().checkConfig(name, password, **kwargs)
 
-    @defer.inlineCallbacks
-    def reconfigService(
+    async def reconfigService(
         self,
         name,
         password,
@@ -131,7 +129,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         client_version='2',
         **kwargs,
     ):
-        yield super().reconfigService(name, password, **kwargs)
+        await super().reconfigService(name, password, **kwargs)
 
         if os_auth_args is None:
             os_auth_args = {
@@ -149,7 +147,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         self.flavor = flavor
         self.client_version = client_version
         if client:
-            os_auth_args = yield self.renderSecrets(os_auth_args)
+            os_auth_args = await self.renderSecrets(os_auth_args)
             self.novaclient = self._constructClient(client_version, os_auth_args)
             if region is not None:
                 self.novaclient.client.region_name = region
@@ -201,10 +199,9 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         client_block_device['volume_size'] = block_device.get('volume_size')
         return client_block_device
 
-    @defer.inlineCallbacks
-    def _renderBlockDevice(self, block_device, build):
+    async def _renderBlockDevice(self, block_device, build):
         """Render all of the block device's values."""
-        rendered_block_device = yield build.render(block_device)
+        rendered_block_device = await build.render(block_device)
         if rendered_block_device['volume_size'] is None:
             source_type = rendered_block_device['source_type']
             source_uuid = rendered_block_device['uuid']
@@ -240,9 +237,8 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
             raise ValueError(unknown_source)
         return None
 
-    @defer.inlineCallbacks
-    def _getImage(self, build):
-        image_name = yield build.render(self.image)
+    async def _getImage(self, build):
+        image_name = await build.render(self.image)
         # There is images in block devices
         if image_name is None:
             return None
@@ -254,21 +250,19 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
             raise ValueError(unknown_image) from e
         return image.id
 
-    @defer.inlineCallbacks
-    def _getFlavor(self, build):
-        flavor_uuid = yield build.render(self.flavor)
+    async def _getFlavor(self, build):
+        flavor_uuid = await build.render(self.flavor)
         # check if we got name instead of uuid
         for flavor in self.novaclient.flavors.list():
             if flavor.name == flavor_uuid:
                 flavor_uuid = flavor.id
         return flavor_uuid
 
-    @defer.inlineCallbacks
-    def renderWorkerProps(self, build):
-        image = yield self._getImage(build)
-        flavor = yield self._getFlavor(build)
-        nova_args = yield build.render(self.nova_args)
-        meta = yield build.render(self.meta)
+    async def renderWorkerProps(self, build):
+        image = await self._getImage(build)
+        flavor = await self._getFlavor(build)
+        nova_args = await build.render(self.nova_args)
+        meta = await build.render(self.meta)
 
         worker_meta = {
             'BUILDBOT:instance': self.masterhash,
@@ -282,19 +276,18 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         if self.block_devices is not None:
             block_devices = []
             for bd in self.block_devices:
-                rendered_block_device = yield self._renderBlockDevice(bd, build)
+                rendered_block_device = await self._renderBlockDevice(bd, build)
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
         return (image, flavor, block_devices, nova_args, meta)
 
-    @defer.inlineCallbacks
-    def start_instance(self, build):
+    async def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
 
-        image, flavor, block_devices, nova_args, meta = yield self.renderWorkerPropsOnStart(build)
-        res = yield threads.deferToThread(
+        image, flavor, block_devices, nova_args, meta = await self.renderWorkerPropsOnStart(build)
+        res = await threads.deferToThread(
             self._start_instance, image, flavor, block_devices, nova_args, meta
         )
         return res
