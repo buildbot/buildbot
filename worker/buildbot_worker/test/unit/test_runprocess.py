@@ -124,64 +124,58 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertIsInstance(s.command[0], bytes)
         self.assertIsInstance(s.fake_command[0], bytes)
 
-    @defer.inlineCallbacks
-    def testStart(self):
+    async def testStart(self):
         s = runprocess.RunProcess(
             0, stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testNoStdout(self):
+    async def testNoStdout(self):
         s = runprocess.RunProcess(
             0, stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update, sendStdout=False
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertFalse(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testKeepStdout(self):
+    async def testKeepStdout(self):
         s = runprocess.RunProcess(
             0, stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update, keepStdout=True
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
         self.assertEqual(s.stdout, nl('hello\n'))
 
-    @defer.inlineCallbacks
-    def testStderr(self):
+    async def testStderr(self):
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertFalse(('stderr', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testNoStderr(self):
+    async def testNoStderr(self):
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, sendStderr=False
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertFalse(('stderr', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def test_incrementalDecoder(self):
+    async def test_incrementalDecoder(self):
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, sendStderr=True
         )
@@ -191,14 +185,13 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         pp.outReceived(b"\x98\x83")
         pp.errReceived(b"\xe2")
         pp.errReceived(b"\x98\x83")
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stderr', "\N{SNOWMAN}") in self.updates)
         self.assertTrue(('stdout', "\N{SNOWMAN}") in self.updates)
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testInvalidUTF8(self):
+    async def testInvalidUTF8(self):
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, sendStderr=True
         )
@@ -207,30 +200,28 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         with self.assertRaises(UnicodeDecodeError):
             INVALID_UTF8.decode('utf-8')
         pp.outReceived(INVALID_UTF8)
-        yield s.start()
+        await s.start()
         stdout = next(value for key, value in self.updates if key == 'stdout')
         # On Python < 2.7 bytes is used, on Python >= 2.7 unicode
         self.assertIn(stdout, (b'\xef\xbf\xbd', '\ufffd'))
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testKeepStderr(self):
+    async def testKeepStderr(self):
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, keepStderr=True
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stderr', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
         self.assertEqual(s.stderr, nl('hello\n'))
 
-    @defer.inlineCallbacks
-    def testStringCommand(self):
+    async def testStringCommand(self):
         # careful!  This command must execute the same on windows and UNIX
         s = runprocess.RunProcess(0, 'echo hello', self.basedir, 'utf-8', self.send_update)
 
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
@@ -242,8 +233,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertEqual(s.command, [b'abcd'])
         self.assertEqual(s.fake_command, [b'ABCD'])
 
-    @defer.inlineCallbacks
-    def testMultiWordStringCommand(self):
+    async def testMultiWordStringCommand(self):
         # careful!  This command must execute the same on windows and UNIX
         s = runprocess.RunProcess(
             0, 'echo Happy Days and Jubilation', self.basedir, 'utf-8', self.send_update
@@ -251,24 +241,22 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         # no quoting occurs
         exp = nl('Happy Days and Jubilation\n')
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', exp) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testInitialStdinUnicode(self):
+    async def testInitialStdinUnicode(self):
         s = runprocess.RunProcess(
             0, catCommand(), self.basedir, 'utf-8', self.send_update, initialStdin='hello'
         )
 
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', nl('hello')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testMultiWordStringCommandQuotes(self):
+    async def testMultiWordStringCommandQuotes(self):
         # careful!  This command must execute the same on windows and UNIX
         s = runprocess.RunProcess(
             0, 'echo "Happy Days and Jubilation"', self.basedir, 'utf-8', self.send_update
@@ -280,13 +268,12 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             exp = nl('"Happy Days and Jubilation"\n')
         else:
             exp = nl('Happy Days and Jubilation\n')
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', exp) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testTrickyArguments(self):
+    async def testTrickyArguments(self):
         # make sure non-trivial arguments are passed verbatim
         args = [
             'Happy Days and Jubilation',  # spaces
@@ -300,25 +287,23 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(
             0, printArgsCommand() + args, self.basedir, 'utf-8', self.send_update
         )
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', nl(repr(args))) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
     @compat.skipUnlessPlatformIs("win32")
-    def testPipeString(self):
+    async def testPipeString(self):
         # this is highly contrived, but it proves the point.
         cmd = sys.executable + ' -c "import sys; sys.stdout.write(\'b\\na\\n\')" | sort'
         s = runprocess.RunProcess(0, cmd, self.basedir, 'utf-8', self.send_update)
 
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('stdout', nl('a\nb\n')) in self.updates, self.show())
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testCommandTimeout(self):
+    async def testCommandTimeout(self):
         s = runprocess.RunProcess(
             0, sleepCommand(10), self.basedir, 'utf-8', self.send_update, timeout=5
         )
@@ -327,14 +312,13 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         d = s.start()
         clock.advance(6)
-        yield d
+        await d
 
         self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
         self.assertTrue(("failure_reason", "timeout_without_output") in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def testCommandMaxTime(self):
+    async def testCommandMaxTime(self):
         s = runprocess.RunProcess(
             0, sleepCommand(10), self.basedir, 'utf-8', self.send_update, maxTime=5
         )
@@ -343,14 +327,13 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         d = s.start()
         clock.advance(6)  # should knock out maxTime
-        yield d
+        await d
 
         self.assertTrue(('stdout', nl('hello\n')) not in self.updates, self.show())
         self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
         self.assertTrue(("failure_reason", "timeout") in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def test_command_max_lines(self):
+    async def test_command_max_lines(self):
         s = runprocess.RunProcess(
             0,
             print_text_command(5, 'hello'),
@@ -362,15 +345,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         )
 
         d = s.start()
-        yield d
+        await d
 
         self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
         self.assertTrue(('rc', FATAL_RC) in self.updates, self.show())
         self.assertTrue(("failure_reason", "max_lines_failure") in self.updates, self.show())
 
     @compat.skipUnlessPlatformIs("posix")
-    @defer.inlineCallbacks
-    def test_stdin_closed(self):
+    async def test_stdin_closed(self):
         s = runprocess.RunProcess(
             0,
             scriptCommand('assert_stdin_closed'),
@@ -381,12 +363,11 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             usePTY=False,
             logEnviron=False,
         )
-        yield s.start()
+        await s.start()
 
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    @defer.inlineCallbacks
-    def test_startCommand_exception(self):
+    async def test_startCommand_exception(self):
         s = runprocess.RunProcess(0, ['whatever'], self.basedir, 'utf-8', self.send_update)
 
         # set up to cause an exception in _startCommand
@@ -396,7 +377,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         s._startCommand = _startCommand
 
         try:
-            yield s.start()
+            await s.start()
         except AbandonChain:
             pass
 
@@ -409,10 +390,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         stderr = ''.join(stderr)
         self.assertTrue(stderr.startswith('error in RunProcess._startCommand (error message)'))
 
-        yield self.flushLoggedErrors()
+        await self.flushLoggedErrors()
 
-    @defer.inlineCallbacks
-    def testLogEnviron(self):
+    async def testLogEnviron(self):
         s = runprocess.RunProcess(
             0,
             stdoutCommand('hello'),
@@ -422,13 +402,12 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             environ={"FOO": "BAR"},
         )
 
-        yield s.start()
+        await s.start()
 
         headers = "".join([value for key, value in self.updates if key == "header"])
         self.assertTrue("FOO=BAR" in headers, "got:\n" + headers)
 
-    @defer.inlineCallbacks
-    def testNoLogEnviron(self):
+    async def testNoLogEnviron(self):
         s = runprocess.RunProcess(
             0,
             stdoutCommand('hello'),
@@ -439,15 +418,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             logEnviron=False,
         )
 
-        yield s.start()
+        await s.start()
 
         headers = "".join([
             next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertTrue("FOO=BAR" not in headers, "got:\n" + headers)
 
-    @defer.inlineCallbacks
-    def testEnvironExpandVar(self):
+    async def testEnvironExpandVar(self):
         environ = {
             "EXPND": "-${PATH}-",
             "DOESNT_EXPAND": "-${---}-",
@@ -457,15 +435,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             0, stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update, environ=environ
         )
 
-        yield s.start()
+        await s.start()
 
         headers = "".join([value for key, value in self.updates if key == "header"])
         self.assertTrue("EXPND=-$" not in headers, "got:\n" + headers)
         self.assertTrue("DOESNT_FIND=--" in headers, "got:\n" + headers)
         self.assertTrue("DOESNT_EXPAND=-${---}-" in headers, "got:\n" + headers)
 
-    @defer.inlineCallbacks
-    def testUnsetEnvironVar(self):
+    async def testUnsetEnvironVar(self):
         s = runprocess.RunProcess(
             0,
             stdoutCommand('hello'),
@@ -475,15 +452,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             environ={"PATH": None},
         )
 
-        yield s.start()
+        await s.start()
 
         headers = "".join([
             next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertFalse(re.match('\bPATH=', headers), "got:\n" + headers)
 
-    @defer.inlineCallbacks
-    def testEnvironPythonPath(self):
+    async def testEnvironPythonPath(self):
         s = runprocess.RunProcess(
             0,
             stdoutCommand('hello'),
@@ -493,15 +469,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             environ={"PYTHONPATH": 'a'},
         )
 
-        yield s.start()
+        await s.start()
 
         headers = "".join([
             next(iter(update.values())) for update in self.updates if list(update) == ["header"]
         ])
         self.assertFalse(re.match(f'\bPYTHONPATH=a{os.pathsep}', headers), "got:\n" + headers)
 
-    @defer.inlineCallbacks
-    def testEnvironArray(self):
+    async def testEnvironArray(self):
         s = runprocess.RunProcess(
             0,
             stdoutCommand('hello'),
@@ -511,7 +486,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             environ={"FOO": ['a', 'b']},
         )
 
-        yield s.start()
+        await s.start()
 
         headers = "".join([
             next(iter(update.values())) for update in self.updates if list(update) == ["header"]
@@ -760,8 +735,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # still supported, and correctly fails to kill the child process
         return self.do_test_pgroup(usePTY=False, useProcGroup=False, expectChildSurvival=True)
 
-    @defer.inlineCallbacks
-    def do_test_pgroup(self, usePTY, useProcGroup=True, expectChildSurvival=False):
+    async def do_test_pgroup(self, usePTY, useProcGroup=True, expectChildSurvival=False):
         # test that a process group gets killed
         parent_pidfile = self.newPidfile()
         self.parent_pid = None
@@ -795,7 +769,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfiles_d.addCallback(kill)
 
         # check that both processes are dead after RunProcess is done
-        yield defer.gatherResults([pidfiles_d, runproc_d])
+        await defer.gatherResults([pidfiles_d, runproc_d])
 
         self.assertDead(self.parent_pid)
         if expectChildSurvival:
@@ -814,8 +788,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # still supported, and correctly fails to kill the child process
         return self.do_test_double_fork(usePTY=False, useProcGroup=False, expectChildSurvival=True)
 
-    @defer.inlineCallbacks
-    def do_test_double_fork(self, usePTY, useProcGroup=True, expectChildSurvival=False):
+    async def do_test_double_fork(self, usePTY, useProcGroup=True, expectChildSurvival=False):
         # when a spawned process spawns another process, and then dies itself
         # (either intentionally or accidentally), we should be able to clean up
         # the child.
@@ -851,7 +824,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfiles_d.addCallback(kill)
 
         # check that both processes are dead after RunProcess is done
-        yield defer.gatherResults([pidfiles_d, runproc_d])
+        await defer.gatherResults([pidfiles_d, runproc_d])
 
         self.assertDead(self.parent_pid)
         if expectChildSurvival:
@@ -950,8 +923,7 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
 
     # tests
 
-    @defer.inlineCallbacks
-    def test_simple(self, interrupt_signal=None):
+    async def test_simple(self, interrupt_signal=None):
         # test a simple process that just sleeps waiting to die
         pidfile = self.new_pid_file()
 
@@ -966,18 +938,17 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
             s.interruptSignal = interrupt_signal
         runproc_d = s.start()
 
-        pid = yield self.wait_for_pidfile(pidfile)
+        pid = await self.wait_for_pidfile(pidfile)
 
         self.assert_alive(pid)
 
         # test that the process is still alive and tell the RunProcess object to kill it
         s.kill("diaf")
 
-        yield runproc_d
+        await runproc_d
         self.assert_dead(pid)
 
-    @defer.inlineCallbacks
-    def test_sigterm(self):
+    async def test_sigterm(self):
         # Tests that the process will receive SIGTERM if sigtermTimeout is not None
         pidfile = self.new_pid_file()
 
@@ -1000,18 +971,17 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         s._win32_taskkill = mock_taskkill
 
         runproc_d = s.start()
-        pid = yield self.wait_for_pidfile(pidfile)
+        pid = await self.wait_for_pidfile(pidfile)
         # test that the process is still alive
         self.assert_alive(pid)
         # and tell the RunProcess object to kill it
         s.kill("diaf")
 
-        yield runproc_d
+        await runproc_d
         self.assertEqual(taskkill_calls, [False, True])
         self.assert_dead(pid)
 
-    @defer.inlineCallbacks
-    def test_with_child(self):
+    async def test_with_child(self):
         # test that a process group gets killed
         parent_pidfile = self.new_pid_file()
         child_pidfile = self.new_pid_file()
@@ -1026,18 +996,17 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         runproc_d = s.start()
 
         # wait for both processes to start up, then call s.kill
-        parent_pid = yield self.wait_for_pidfile(parent_pidfile)
-        child_pid = yield self.wait_for_pidfile(child_pidfile)
+        parent_pid = await self.wait_for_pidfile(parent_pidfile)
+        child_pid = await self.wait_for_pidfile(child_pidfile)
 
         s.kill("diaf")
 
-        yield runproc_d
+        await runproc_d
 
         self.assert_dead(parent_pid)
         self.assert_dead(child_pid)
 
-    @defer.inlineCallbacks
-    def test_with_child_parent_dies(self):
+    async def test_with_child_parent_dies(self):
         # when a spawned process spawns another process, and then dies itself
         # (either intentionally or accidentally), we kill the child processes.
         parent_pidfile = self.new_pid_file()
@@ -1052,13 +1021,13 @@ class TestWindowsKilling(BasedirMixin, unittest.TestCase):
         )
         runproc_d = s.start()
         # wait for both processes to start up, then call s.kill
-        parent_pid = yield self.wait_for_pidfile(parent_pidfile)
-        child_pid = yield self.wait_for_pidfile(child_pidfile)
+        parent_pid = await self.wait_for_pidfile(parent_pidfile)
+        child_pid = await self.wait_for_pidfile(child_pidfile)
 
         s.kill("diaf")
 
         # check that both processes are dead after RunProcess is done
-        yield runproc_d
+        await runproc_d
 
         self.assert_dead(parent_pid)
         self.assert_dead(child_pid)
