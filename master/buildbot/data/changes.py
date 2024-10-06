@@ -58,6 +58,7 @@ class FixerMixin:
             data['sourcestampid'] = model.sourcestampid
         else:
             sskey = ('sourcestamps', str(model.sourcestampid))
+            assert hasattr(self, "master"), "FixerMixin requires a master attribute"
             data['sourcestamp'] = yield self.master.data.get(sskey)
 
         if is_graphql:

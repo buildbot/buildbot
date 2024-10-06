@@ -237,12 +237,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.data.changesources"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.data.changes"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.data.root"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.data.sourcestamps"
     ignore_errors = true
     [[tool.mypy.overrides]]
