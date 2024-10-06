@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import test_result_sets
@@ -90,10 +89,9 @@ class Tests(interfaces.InterfaceTests):
         def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
             pass
 
-    @defer.inlineCallbacks
-    def test_add_set_get_set(self):
-        yield self.insert_test_data(self.common_data)
-        set_id = yield self.db.test_result_sets.addTestResultSet(
+    async def test_add_set_get_set(self):
+        await self.insert_test_data(self.common_data)
+        set_id = await self.db.test_result_sets.addTestResultSet(
             builderid=88,
             buildid=30,
             stepid=131,
@@ -101,7 +99,7 @@ class Tests(interfaces.InterfaceTests):
             category='cat',
             value_unit='ms',
         )
-        set_dict = yield self.db.test_result_sets.getTestResultSet(set_id)
+        set_dict = await self.db.test_result_sets.getTestResultSet(set_id)
         self.assertIsInstance(set_dict, test_result_sets.TestResultSetModel)
         self.assertEqual(
             set_dict,
@@ -119,9 +117,8 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_sets(self):
-        yield self.insert_test_data([
+    async def test_get_sets(self):
+        await self.insert_test_data([
             *self.common_data,
             fakedb.TestResultSet(
                 id=91,
@@ -185,31 +182,30 @@ class Tests(interfaces.InterfaceTests):
             ),
         ])
 
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88)
         self.assertEqual([d.id for d in set_dicts], [91, 93, 94, 95])
         for d in set_dicts:
             self.assertIsInstance(d, test_result_sets.TestResultSetModel)
 
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=89)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=89)
         self.assertEqual([d.id for d in set_dicts], [92])
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=30)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88, buildid=30)
         self.assertEqual([d.id for d in set_dicts], [91, 94, 95])
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=31)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88, buildid=31)
         self.assertEqual([d.id for d in set_dicts], [93])
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, stepid=131)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88, stepid=131)
         self.assertEqual([d.id for d in set_dicts], [91, 95])
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, stepid=132)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88, stepid=132)
         self.assertEqual([d.id for d in set_dicts], [94])
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, complete=True)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88, complete=True)
         self.assertEqual([d.id for d in set_dicts], [93, 94])
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, complete=False)
+        set_dicts = await self.db.test_result_sets.getTestResultSets(builderid=88, complete=False)
         self.assertEqual([d.id for d in set_dicts], [91, 95])
 
-    @defer.inlineCallbacks
-    def test_get_set_from_data(self):
-        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
+    async def test_get_set_from_data(self):
+        await self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
-        set_dict = yield self.db.test_result_sets.getTestResultSet(91)
+        set_dict = await self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(
             set_dict,
             test_result_sets.TestResultSetModel(
@@ -226,25 +222,22 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_non_existing_set(self):
-        set_dict = yield self.db.test_result_sets.getTestResultSet(91)
+    async def test_get_non_existing_set(self):
+        set_dict = await self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(set_dict, None)
 
-    @defer.inlineCallbacks
-    def test_complete_already_completed_set(self):
-        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
+    async def test_complete_already_completed_set(self):
+        await self.insert_test_data(self.common_data + self.common_test_result_set_data)
         with self.assertRaises(test_result_sets.TestResultSetAlreadyCompleted):
-            yield self.db.test_result_sets.completeTestResultSet(92)
+            await self.db.test_result_sets.completeTestResultSet(92)
         self.flushLoggedErrors(test_result_sets.TestResultSetAlreadyCompleted)
 
-    @defer.inlineCallbacks
-    def test_complete_set_with_test_counts(self):
-        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
+    async def test_complete_set_with_test_counts(self):
+        await self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
-        yield self.db.test_result_sets.completeTestResultSet(91, tests_passed=12, tests_failed=2)
+        await self.db.test_result_sets.completeTestResultSet(91, tests_passed=12, tests_failed=2)
 
-        set_dict = yield self.db.test_result_sets.getTestResultSet(91)
+        set_dict = await self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(
             set_dict,
             test_result_sets.TestResultSetModel(
@@ -261,13 +254,12 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_complete_set_without_test_counts(self):
-        yield self.insert_test_data(self.common_data + self.common_test_result_set_data)
+    async def test_complete_set_without_test_counts(self):
+        await self.insert_test_data(self.common_data + self.common_test_result_set_data)
 
-        yield self.db.test_result_sets.completeTestResultSet(91)
+        await self.db.test_result_sets.completeTestResultSet(91)
 
-        set_dict = yield self.db.test_result_sets.getTestResultSet(91)
+        set_dict = await self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(
             set_dict,
             test_result_sets.TestResultSetModel(
@@ -286,15 +278,13 @@ class Tests(interfaces.InterfaceTests):
 
 
 class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'steps',
                 'builds',
