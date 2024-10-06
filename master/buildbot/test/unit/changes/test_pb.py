@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -38,11 +37,10 @@ class TestPBChangeSource(
 
     EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
 
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setUpPBChangeSource()
-        yield self.setUpChangeSource()
+        await self.setUpChangeSource()
 
         self.master.pbmanager = self.pbmanager
 
@@ -70,11 +68,10 @@ class TestPBChangeSource(
         # but expect that it will NOT register
         return self._test_registration(None, **self.DEFAULT_CONFIG)
 
-    @defer.inlineCallbacks
-    def test_registration_later_if_master_can_do_it(self):
+    async def test_registration_later_if_master_can_do_it(self):
         # get the changesource running but not active due to the other master
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
-        yield self.attachChangeSource(pb.PBChangeSource(**self.DEFAULT_CONFIG))
+        await self.attachChangeSource(pb.PBChangeSource(**self.DEFAULT_CONFIG))
         self.startChangeSource()
         self.assertNotRegistered()
 
@@ -89,8 +86,7 @@ class TestPBChangeSource(
         self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
-    @defer.inlineCallbacks
-    def _test_registration(
+    async def _test_registration(
         self, exp_registration, exp_ConfigErrors=False, workerPort=None, **constr_kwargs
     ):
         cfg = mock.Mock()
@@ -101,26 +97,25 @@ class TestPBChangeSource(
         if exp_ConfigErrors:
             # if it's not registered, it should raise a ConfigError.
             try:
-                yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)
+                await self.changesource.reconfigServiceWithBuildbotConfig(cfg)
             except config.ConfigErrors:
                 pass
             else:
                 self.fail("Expected ConfigErrors")
         else:
-            yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)
+            await self.changesource.reconfigServiceWithBuildbotConfig(cfg)
 
         if exp_registration:
             self.assertRegistered(*exp_registration)
 
-        yield self.stopChangeSource()
+        await self.stopChangeSource()
 
         if exp_registration:
             self.assertUnregistered(*exp_registration)
         self.assertEqual(self.changesource.registration, None)
 
-    @defer.inlineCallbacks
-    def test_perspective(self):
-        yield self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
+    async def test_perspective(self):
+        await self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
         persp = self.changesource.getPerspective(mock.Mock(), 'alice')
         self.assertIsInstance(persp, pb.ChangePerspective)
 
@@ -148,62 +143,59 @@ class TestPBChangeSource(
         cs = pb.PBChangeSource(port=9989)
         self.assertSubstring("PBChangeSource", cs.describe())
 
-    @defer.inlineCallbacks
-    def test_reconfigService_no_change(self):
+    async def test_reconfigService_no_change(self):
         config = mock.Mock()
-        yield self.attachChangeSource(pb.PBChangeSource(port='9876'))
+        await self.attachChangeSource(pb.PBChangeSource(port='9876'))
 
         self.startChangeSource()
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
+        await self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
-        yield self.stopChangeSource()
+        await self.stopChangeSource()
 
         self.assertUnregistered('9876', 'change', 'changepw')
 
-    @defer.inlineCallbacks
-    def test_reconfigService_default_changed(self):
+    async def test_reconfigService_default_changed(self):
         config = mock.Mock()
         config.protocols = {'pb': {'port': '9876'}}
-        yield self.attachChangeSource(pb.PBChangeSource())
+        await self.attachChangeSource(pb.PBChangeSource())
 
         self.startChangeSource()
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
+        await self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
         config.protocols = {'pb': {'port': '1234'}}
 
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
+        await self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertUnregistered('9876', 'change', 'changepw')
         self.assertRegistered('1234', 'change', 'changepw')
 
-        yield self.stopChangeSource()
+        await self.stopChangeSource()
 
         self.assertUnregistered('1234', 'change', 'changepw')
 
-    @defer.inlineCallbacks
-    def test_reconfigService_default_changed_but_inactive(self):
+    async def test_reconfigService_default_changed_but_inactive(self):
         """reconfig one that's not active on this master"""
         config = mock.Mock()
         config.protocols = {'pb': {'port': '9876'}}
-        yield self.attachChangeSource(pb.PBChangeSource())
+        await self.attachChangeSource(pb.PBChangeSource())
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         self.startChangeSource()
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
+        await self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertNotRegistered()
 
         config.protocols = {'pb': {'port': '1234'}}
 
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
+        await self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertNotRegistered()
 
-        yield self.stopChangeSource()
+        await self.stopChangeSource()
 
         self.assertNotRegistered()
         self.assertNotUnregistered()
@@ -214,10 +206,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
 
-    @defer.inlineCallbacks
-    def test_addChange_noprefix(self):
+    async def test_addChange_noprefix(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"who": 'bar', "files": ['a']})
+        await cp.perspective_addChange({"who": 'bar', "files": ['a']})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -241,10 +232,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_codebase(self):
+    async def test_addChange_codebase(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"who": 'bar', "files": [], "codebase": 'cb'})
+        await cp.perspective_addChange({"who": 'bar', "files": [], "codebase": 'cb'})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -268,10 +258,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_prefix(self):
+    async def test_addChange_prefix(self):
         cp = pb.ChangePerspective(self.master, 'xx/')
-        yield cp.perspective_addChange({"who": 'bar', "files": ['xx/a', 'yy/b']})
+        await cp.perspective_addChange({"who": 'bar', "files": ['xx/a', 'yy/b']})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -295,10 +284,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_sanitize_None(self):
+    async def test_addChange_sanitize_None(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"project": None, "revlink": None, "repository": None})
+        await cp.perspective_addChange({"project": None, "revlink": None, "repository": None})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -322,10 +310,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_when_None(self):
+    async def test_addChange_when_None(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"when": None})
+        await cp.perspective_addChange({"when": None})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -349,10 +336,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_files_tuple(self):
+    async def test_addChange_files_tuple(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"files": ('a', 'b')})
+        await cp.perspective_addChange({"files": ('a', 'b')})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -376,10 +362,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_unicode(self):
+    async def test_addChange_unicode(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({
+        await cp.perspective_addChange({
             "author": "\N{SNOWMAN}",
             "comments": "\N{SNOWMAN}",
             "files": ['\N{VERY MUCH GREATER-THAN}'],
@@ -407,10 +392,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_unicode_as_bytestring(self):
+    async def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({
+        await cp.perspective_addChange({
             "author": "\N{SNOWMAN}".encode(),
             "comments": "\N{SNOWMAN}".encode(),
             "files": ['\N{VERY MUCH GREATER-THAN}'.encode()],
@@ -438,12 +422,11 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_non_utf8_bytestring(self):
+    async def test_addChange_non_utf8_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
         bogus_utf8 = b'\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
-        yield cp.perspective_addChange({"author": bogus_utf8, "files": ['a']})
+        await cp.perspective_addChange({"author": bogus_utf8, "files": ['a']})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -467,10 +450,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_addChange_old_param_names(self):
+    async def test_addChange_old_param_names(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"who": 'me', "when": 1234, "files": []})
+        await cp.perspective_addChange({"who": 'me', "when": 1234, "files": []})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -494,10 +476,9 @@ class TestChangePerspective(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    @defer.inlineCallbacks
-    def test_createUserObject_git_src(self):
+    async def test_createUserObject_git_src(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange({"who": 'c <h@c>', "src": 'git'})
+        await cp.perspective_addChange({"who": 'c <h@c>', "src": 'git'})
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
