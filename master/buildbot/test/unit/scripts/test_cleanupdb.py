@@ -17,7 +17,6 @@ import os
 import textwrap
 
 import sqlalchemy as sa
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.scripts import cleanupdb
@@ -117,22 +116,19 @@ class TestCleanupDb(
             """)
             )
 
-    @defer.inlineCallbacks
-    def test_cleanup_not_basedir(self):
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='doesntexist'))
+    async def test_cleanup_not_basedir(self):
+        res = await cleanupdb._cleanupDatabase(mkconfig(basedir='doesntexist'))
         self.assertEqual(res, 1)
         self.assertInStdout('invalid buildmaster directory')
 
-    @defer.inlineCallbacks
-    def test_cleanup_bad_config(self):
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+    async def test_cleanup_bad_config(self):
+        res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
         self.assertInStdout("master.cfg' does not exist")
 
-    @defer.inlineCallbacks
-    def test_cleanup_bad_config2(self):
+    async def test_cleanup_bad_config2(self):
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+        res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
         self.assertInStdout("encountered a SyntaxError while parsing config file:")
         # config logs an error via log.err, we must eat it or trial will
@@ -149,9 +145,8 @@ class TestCleanupDb(
 
 
 class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield super().setUp()
+    async def setUp(self):
+        await super().setUp()
 
         table_names = [
             'logs',
@@ -167,21 +162,19 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
         ]
 
         self.master = fakemaster.make_master(self, wantRealReactor=True)
-        yield self.setUpRealDatabaseWithConnector(self.master, table_names=table_names)
+        await self.setUpRealDatabaseWithConnector(self.master, table_names=table_names)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownRealDatabaseWithConnector()
+    async def tearDown(self):
+        await self.tearDownRealDatabaseWithConnector()
 
-    @defer.inlineCallbacks
-    def test_cleanup(self):
+    async def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
-        yield self.insert_test_data(test_logs.Tests.backgroundData)
+        await self.insert_test_data(test_logs.Tests.backgroundData)
 
         # insert a log with lots of redundancy
         LOGDATA = "xx\n" * 2000
-        logid = yield self.master.db.logs.addLog(102, "x", "x", "s")
-        yield self.master.db.logs.appendLog(logid, LOGDATA)
+        logid = await self.master.db.logs.addLog(102, "x", "x", "s")
+        await self.master.db.logs.appendLog(logid, LOGDATA)
 
         # test all methods
         lengths = {}
@@ -200,12 +193,12 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 continue
             # create a master.cfg with different compression method
             self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
-            res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+            res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 
             # make sure the compression don't change the data we can retrieve
             # via api
-            res = yield self.master.db.logs.getLogLines(logid, 0, 2000)
+            res = await self.master.db.logs.getLogLines(logid, 0, 2000)
             self.assertEqual(res, LOGDATA)
 
             # retrieve the actual data size in db using raw sqlalchemy
@@ -215,7 +208,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 q = q.where(tbl.c.logid == logid)
                 return conn.execute(q).fetchone()[0]
 
-            lengths[mode] = yield self.master.db.pool.do(thd)
+            lengths[mode] = await self.master.db.pool.do(thd)
 
         self.assertDictAlmostEqual(
             lengths,
