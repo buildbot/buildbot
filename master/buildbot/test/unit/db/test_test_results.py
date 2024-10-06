@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import test_results
@@ -68,9 +67,8 @@ class Tests(interfaces.InterfaceTests):
         def getTestResults(self, builderid, test_result_setid, result_spec=None):
             pass
 
-    @defer.inlineCallbacks
-    def test_add_set_results(self):
-        yield self.insert_test_data(self.common_data)
+    async def test_add_set_results(self):
+        await self.insert_test_data(self.common_data)
 
         result_values = [
             {'test_name': 'name1', 'value': '1'},
@@ -81,11 +79,11 @@ class Tests(interfaces.InterfaceTests):
             {'test_code_path': 'path5', 'line': 5, 'value': '6'},
         ]
 
-        yield self.db.test_results.addTestResults(
+        await self.db.test_results.addTestResults(
             builderid=88, test_result_setid=13, result_values=result_values
         )
 
-        result_dicts = yield self.db.test_results.getTestResults(builderid=88, test_result_setid=13)
+        result_dicts = await self.db.test_results.getTestResults(builderid=88, test_result_setid=13)
         for d in result_dicts:
             self.assertIsInstance(d, test_results.TestResultModel)
 
@@ -157,7 +155,7 @@ class Tests(interfaces.InterfaceTests):
             ],
         )
 
-        result_dict = yield self.db.test_results.getTestResult(test_resultid=resultid)
+        result_dict = await self.db.test_results.getTestResult(test_resultid=resultid)
         self.assertEqual(
             result_dict,
             test_results.TestResultModel(
@@ -172,9 +170,8 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_names(self):
-        yield self.insert_test_data([
+    async def test_get_names(self):
+        await self.insert_test_data([
             *self.common_data,
             fakedb.TestName(id=103, builderid=88, name='name103'),
             fakedb.TestName(id=104, builderid=88, name='name104'),
@@ -183,23 +180,22 @@ class Tests(interfaces.InterfaceTests):
             fakedb.TestName(id=117, builderid=88, name='name117'),
         ])
 
-        name_dicts = yield self.db.test_results.getTestNames(builderid=88)
+        name_dicts = await self.db.test_results.getTestNames(builderid=88)
         self.assertEqual(name_dicts, ['name103', 'name104', 'name105', 'name116', 'name117'])
 
-        name_dicts = yield self.db.test_results.getTestNames(
+        name_dicts = await self.db.test_results.getTestNames(
             builderid=88, name_prefix='non_existing'
         )
         self.assertEqual(name_dicts, [])
 
-        name_dicts = yield self.db.test_results.getTestNames(builderid=88, name_prefix='name10')
+        name_dicts = await self.db.test_results.getTestNames(builderid=88, name_prefix='name10')
         self.assertEqual(name_dicts, ['name103', 'name104', 'name105'])
 
-        name_dicts = yield self.db.test_results.getTestNames(builderid=88, name_prefix='name11')
+        name_dicts = await self.db.test_results.getTestNames(builderid=88, name_prefix='name11')
         self.assertEqual(name_dicts, ['name116', 'name117'])
 
-    @defer.inlineCallbacks
-    def test_get_code_paths(self):
-        yield self.insert_test_data([
+    async def test_get_code_paths(self):
+        await self.insert_test_data([
             *self.common_data,
             fakedb.TestCodePath(id=103, builderid=88, path='path103'),
             fakedb.TestCodePath(id=104, builderid=88, path='path104'),
@@ -208,31 +204,29 @@ class Tests(interfaces.InterfaceTests):
             fakedb.TestCodePath(id=117, builderid=88, path='path117'),
         ])
 
-        path_dicts = yield self.db.test_results.getTestCodePaths(builderid=88)
+        path_dicts = await self.db.test_results.getTestCodePaths(builderid=88)
         self.assertEqual(path_dicts, ['path103', 'path104', 'path105', 'path116', 'path117'])
 
-        path_dicts = yield self.db.test_results.getTestCodePaths(
+        path_dicts = await self.db.test_results.getTestCodePaths(
             builderid=88, path_prefix='non_existing'
         )
         self.assertEqual(path_dicts, [])
 
-        path_dicts = yield self.db.test_results.getTestCodePaths(builderid=88, path_prefix='path10')
+        path_dicts = await self.db.test_results.getTestCodePaths(builderid=88, path_prefix='path10')
         self.assertEqual(path_dicts, ['path103', 'path104', 'path105'])
 
-        path_dicts = yield self.db.test_results.getTestCodePaths(builderid=88, path_prefix='path11')
+        path_dicts = await self.db.test_results.getTestCodePaths(builderid=88, path_prefix='path11')
         self.assertEqual(path_dicts, ['path116', 'path117'])
 
 
 class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=[
                 'steps',
                 'builds',
