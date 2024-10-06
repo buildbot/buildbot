@@ -102,13 +102,12 @@ class Connection(base.Connection, pb.Avatar):
 
     # methods called by the PBManager
 
-    @defer.inlineCallbacks
-    def attached(self, mind):
+    async def attached(self, mind):
         self.startKeepaliveTimer()
         self.notifyOnDisconnect(self._stop_keepalive_timer)
         # pbmanager calls perspective.attached; pass this along to the
         # worker
-        yield self.worker.attached(self)
+        await self.worker.attached(self)
         # and then return a reference to the avatar
         return self
 
@@ -118,10 +117,10 @@ class Connection(base.Connection, pb.Avatar):
         self.notifyDisconnected()
 
     # disconnection handling
-    @defer.inlineCallbacks
-    def _stop_keepalive_timer(self):
+
+    async def _stop_keepalive_timer(self):
         self.stopKeepaliveTimer()
-        yield self._keepalive_waiter.wait()
+        await self._keepalive_waiter.wait()
 
     def loseConnection(self):
         self.stopKeepaliveTimer()
@@ -160,15 +159,14 @@ class Connection(base.Connection, pb.Avatar):
     def remotePrint(self, message):
         return self.mind.callRemote('print', message=message)
 
-    @defer.inlineCallbacks
-    def remoteGetWorkerInfo(self):
+    async def remoteGetWorkerInfo(self):
         try:
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
-                info = yield self.mind.callRemote('getWorkerInfo')
+                info = await self.mind.callRemote('getWorkerInfo')
             return decode(info)
         except _NoSuchMethod:
-            yield self.remotePrint(
+            await self.remotePrint(
                 "buildbot-slave detected, failing back to deprecated buildslave API. "
                 "(Ignoring missing getWorkerInfo method.)"
             )
@@ -181,7 +179,7 @@ class Connection(base.Connection, pb.Avatar):
 
             try:
                 with _wrapRemoteException():
-                    info = yield self.mind.callRemote('getSlaveInfo')
+                    info = await self.mind.callRemote('getSlaveInfo')
             except _NoSuchMethod:
                 log.msg("Worker.getSlaveInfo is unavailable - ignoring")
 
@@ -195,21 +193,20 @@ class Connection(base.Connection, pb.Avatar):
             # commands and version using separate requests.
             try:
                 with _wrapRemoteException():
-                    info["worker_commands"] = yield self.mind.callRemote('getCommands')
+                    info["worker_commands"] = await self.mind.callRemote('getCommands')
             except _NoSuchMethod:
                 log.msg("Worker.getCommands is unavailable - ignoring")
 
             try:
                 with _wrapRemoteException():
-                    info["version"] = yield self.mind.callRemote('getVersion')
+                    info["version"] = await self.mind.callRemote('getVersion')
             except _NoSuchMethod:
                 log.msg("Worker.getVersion is unavailable - ignoring")
 
             return decode(info)
 
-    @defer.inlineCallbacks
-    def remoteSetBuilderList(self, builders):
-        builders = yield self.mind.callRemote('setBuilderList', builders)
+    async def remoteSetBuilderList(self, builders):
+        builders = await self.mind.callRemote('setBuilderList', builders)
         self.builders = builders
         return builders
 
@@ -221,16 +218,15 @@ class Connection(base.Connection, pb.Avatar):
             'startCommand', remoteCommand, commandId, commandName, args
         )
 
-    @defer.inlineCallbacks
-    def remoteShutdown(self):
+    async def remoteShutdown(self):
         # First, try the "new" way - calling our own remote's shutdown
         # method. The method was only added in 0.8.3, so ignore NoSuchMethod
         # failures.
-        @defer.inlineCallbacks
-        def new_way():
+
+        async def new_way():
             try:
                 with _wrapRemoteException():
-                    yield self.mind.callRemote('shutdown')
+                    await self.mind.callRemote('shutdown')
                     # successful shutdown request
                     return True
             except _NoSuchMethod:
@@ -275,7 +271,7 @@ class Connection(base.Connection, pb.Avatar):
             log.err("Couldn't find remote builder to shut down worker")
             return defer.succeed(None)
 
-        yield old_way()
+        await old_way()
 
     def remoteStartBuild(self, builderName):
         workerforbuilder = self.builders.get(builderName)
