@@ -18,7 +18,6 @@ import textwrap
 
 from dateutil.tz import tzutc
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -137,10 +136,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                 ),
             ])
 
-        @defer.inlineCallbacks
-        def getChangesForBuild(buildid):
+        async def getChangesForBuild(buildid):
             assert buildid == 20
-            ch = yield self.master.db.changes.getChange(13)
+            ch = await self.master.db.changes.getChange(13)
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
@@ -159,10 +157,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         log = {'name': log_name, 'stepname': step_name}
         self.assertEqual(utils.should_attach_log(log_config, log), expected)
 
-    @defer.inlineCallbacks
-    def test_getDetailsForBuildset(self):
+    async def test_getDetailsForBuildset(self):
         self.setupDb()
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             self.master, 98, want_properties=True, want_steps=True, want_previous_build=True
         )
         self.assertEqual(len(res['builds']), 2)
@@ -186,11 +183,10 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build1['prev_build']['buildid'], 18)
         self.assertEqual(build2['prev_build']['buildid'], 20)
 
-    @defer.inlineCallbacks
-    def test_getDetailsForBuild(self):
+    async def test_getDetailsForBuild(self):
         self.setupDb()
-        build = yield self.master.data.get(("builds", 21))
-        yield utils.getDetailsForBuild(
+        build = await self.master.data.get(("builds", 21))
+        await utils.getDetailsForBuild(
             self.master,
             build,
             want_properties=False,
@@ -202,11 +198,10 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build['parentbuild'], None)
         self.assertEqual(build['parentbuilder'], None)
 
-    @defer.inlineCallbacks
-    def test_getDetailsForBuildWithParent(self):
+    async def test_getDetailsForBuildWithParent(self):
         self.setupDb()
-        build = yield self.master.data.get(("builds", 22))
-        yield utils.getDetailsForBuild(
+        build = await self.master.data.get(("builds", 22))
+        await utils.getDetailsForBuild(
             self.master,
             build,
             want_properties=False,
@@ -218,10 +213,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build['parentbuild']['buildid'], 21)
         self.assertEqual(build['parentbuilder']['name'], "Builder1")
 
-    @defer.inlineCallbacks
-    def test_getDetailsForBuildsetWithLogs(self):
+    async def test_getDetailsForBuildsetWithLogs(self):
         self.setupDb()
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             self.master,
             98,
             want_properties=True,
@@ -238,10 +232,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio',
         )
 
-    @defer.inlineCallbacks
-    def test_get_details_for_buildset_all(self):
+    async def test_get_details_for_buildset_all(self):
         self.setupDb()
-        res = yield utils.getDetailsForBuildset(
+        res = await utils.getDetailsForBuildset(
             self.master,
             98,
             want_properties=True,
@@ -535,46 +528,40 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_getResponsibleUsers(self):
+    async def test_getResponsibleUsers(self):
         self.setupDb()
-        res = yield utils.getResponsibleUsersForSourceStamp(self.master, 234)
+        res = await utils.getResponsibleUsersForSourceStamp(self.master, 234)
         self.assertEqual(res, ["me@foo"])
 
-    @defer.inlineCallbacks
-    def test_getResponsibleUsersFromPatch(self):
+    async def test_getResponsibleUsersFromPatch(self):
         self.setupDb()
-        res = yield utils.getResponsibleUsersForSourceStamp(self.master, 235)
+        res = await utils.getResponsibleUsersForSourceStamp(self.master, 235)
         self.assertEqual(res, ["him@foo"])
 
-    @defer.inlineCallbacks
-    def test_getResponsibleUsersForBuild(self):
+    async def test_getResponsibleUsersForBuild(self):
         self.setupDb()
-        res = yield utils.getResponsibleUsersForBuild(self.master, 20)
+        res = await utils.getResponsibleUsersForBuild(self.master, 20)
         self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
 
-    @defer.inlineCallbacks
-    def test_getResponsibleUsersForBuildWithBadOwner(self):
+    async def test_getResponsibleUsersForBuildWithBadOwner(self):
         self.setUpLogging()
         self.setupDb()
         self.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owner", value=["him"]),
         ])
-        res = yield utils.getResponsibleUsersForBuild(self.master, 20)
+        res = await utils.getResponsibleUsersForBuild(self.master, 20)
         self.assertLogged("Please report a bug")
         self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
 
-    @defer.inlineCallbacks
-    def test_getResponsibleUsersForBuildWithOwners(self):
+    async def test_getResponsibleUsersForBuildWithOwners(self):
         self.setupDb()
         self.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owners", value=["him", "her"]),
         ])
-        res = yield utils.getResponsibleUsersForBuild(self.master, 20)
+        res = await utils.getResponsibleUsersForBuild(self.master, 20)
         self.assertEqual(sorted(res), sorted(["me@foo", "him", "her"]))
 
-    @defer.inlineCallbacks
-    def test_get_responsible_users_for_buildset_with_owner(self):
+    async def test_get_responsible_users_for_buildset_with_owner(self):
         self.setupDb()
 
         self.db.insert_test_data([
@@ -583,27 +570,24 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             ),
         ])
 
-        res = yield utils.get_responsible_users_for_buildset(self.master, 98)
+        res = await utils.get_responsible_users_for_buildset(self.master, 98)
         self.assertEqual(sorted(res), sorted(["buildset_owner"]))
 
-    @defer.inlineCallbacks
-    def test_get_responsible_users_for_buildset_no_owner(self):
+    async def test_get_responsible_users_for_buildset_no_owner(self):
         self.setupDb()
-        res = yield utils.get_responsible_users_for_buildset(self.master, 99)
+        res = await utils.get_responsible_users_for_buildset(self.master, 99)
         self.assertEqual(sorted(res), sorted([]))
 
-    @defer.inlineCallbacks
-    def test_getPreviousBuild(self):
+    async def test_getPreviousBuild(self):
         self.setupDb()
-        build = yield self.master.data.get(("builds", 21))
-        res = yield utils.getPreviousBuild(self.master, build)
+        build = await self.master.data.get(("builds", 21))
+        res = await utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 20)
 
-    @defer.inlineCallbacks
-    def test_getPreviousBuildWithRetry(self):
+    async def test_getPreviousBuildWithRetry(self):
         self.setupDb()
-        build = yield self.master.data.get(("builds", 20))
-        res = yield utils.getPreviousBuild(self.master, build)
+        build = await self.master.data.get(("builds", 20))
+        res = await utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 18)
 
 
