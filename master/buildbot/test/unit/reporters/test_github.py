@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
@@ -33,8 +32,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 class TestGitHubStatusPush(
     TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -43,8 +41,8 @@ class TestGitHubStatusPush(
 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-        yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        await self.master.startService()
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master,
             self,
             HOSTED_BASE_URL,
@@ -53,7 +51,7 @@ class TestGitHubStatusPush(
             verify=None,
         )
         self.sp = self.createService()
-        yield self.sp.setServiceParent(self.master)
+        await self.sp.setServiceParent(self.master)
 
     def createService(self):
         return GitHubStatusPush(Interpolate('XXYYZZ'))
@@ -61,9 +59,8 @@ class TestGitHubStatusPush(
     def tearDown(self):
         return self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_basic(self):
-        build = yield self.insert_build_new()
+    async def test_basic(self):
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
@@ -100,25 +97,23 @@ class TestGitHubStatusPush(
 
         build['complete'] = False
         build['results'] = None
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_empty(self):
-        build = yield self.insert_build_new(insert_ss=False)
+    async def test_empty(self):
+        build = await self.insert_build_new(insert_ss=False)
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_source_stamp_no_props_nightly_scheduler(self):
+    async def test_source_stamp_no_props_nightly_scheduler(self):
         # no status updates are expected
 
         self.master.db.insert_test_data([
@@ -153,17 +148,16 @@ class TestGitHubStatusPush(
 
         self.setup_fake_get_changes_for_build(has_change=False)
 
-        build = yield self.master.data.get(("builds", 20))
+        build = await self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_multiple_source_stamps_no_props(self):
+    async def test_multiple_source_stamps_no_props(self):
         repository = 'http://test_repo'
         project = 'test_user/test_project'
         codebase1 = 'test_codebase1'
@@ -287,19 +281,18 @@ class TestGitHubStatusPush(
 
         self.setup_fake_get_changes_for_build(has_change=False)
 
-        build = yield self.master.data.get(("builds", 20))
+        build = await self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -309,8 +302,8 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
 
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-        yield self.master.startService()
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        await self.master.startService()
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master,
             self,
             HOSTED_BASE_URL,
@@ -319,7 +312,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
             verify=None,
         )
         self.sp = self.createService()
-        yield self.sp.setServiceParent(self.master)
+        await self.sp.setServiceParent(self.master)
 
     def createService(self):
         return GitHubStatusPush('XXYYZZ')
@@ -327,11 +320,10 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
     def tearDown(self):
         return self.master.stopService()
 
-    @defer.inlineCallbacks
-    def test_ssh(self):
+    async def test_ssh(self):
         self.reporter_test_repo = 'git@github.com:buildbot2/buildbot2.git'
 
-        build = yield self.insert_build_new()
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/repos/buildbot2/buildbot2/statuses/d34db33fd43db33f',
@@ -366,16 +358,15 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
             headers={'Authorization': 'token XXYYZZ'},
         )
 
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_https(self):
-        build = yield self.insert_build_new()
+    async def test_https(self):
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/repos/buildbot1/buildbot1/statuses/d34db33fd43db33f',
@@ -410,21 +401,20 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
             headers={'Authorization': 'token XXYYZZ'},
         )
 
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestGitHubCommentPush(TestGitHubStatusPush):
     def createService(self):
         return GitHubCommentPush('XXYYZZ')
 
-    @defer.inlineCallbacks
-    def test_basic(self):
-        build = yield self.insert_build_new()
+    async def test_basic(self):
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/issues/34/comments',
@@ -439,27 +429,25 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         )
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_empty(self):
-        build = yield self.insert_build_new(insert_ss=False)
+    async def test_empty(self):
+        build = await self.insert_build_new(insert_ss=False)
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_basic_branch_head(self):
+    async def test_basic_branch_head(self):
         self.reporter_test_props['branch'] = 'refs/pull/13/head'
-        build = yield self.insert_build_new()
+        build = await self.insert_build_new()
         self._http.expect(
             'post',
             '/repos/buildbot/buildbot/issues/13/comments',
@@ -474,15 +462,14 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         )
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_multiple_source_stamps_no_props(self):
+    async def test_multiple_source_stamps_no_props(self):
         repository = 'http://test_repo'
         project = 'test_user/test_project'
         codebase1 = 'test_codebase1'
@@ -567,11 +554,11 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
 
         self.setup_fake_get_changes_for_build(has_change=False)
 
-        build = yield self.master.data.get(("builds", 20))
+        build = await self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
