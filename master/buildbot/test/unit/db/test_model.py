@@ -28,9 +28,8 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpRealDatabase(
+    async def setUp(self):
+        await self.setUpRealDatabase(
             basedir=os.path.abspath('basedir'),
             want_pool=False,
         )
@@ -46,15 +45,13 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
         self.db.stop()
         return self.tearDownRealDatabase()
 
-    @defer.inlineCallbacks
-    def test_is_current_empty(self):
-        res = yield self.db.model.is_current()
+    async def test_is_current_empty(self):
+        res = await self.db.model.is_current()
         self.assertFalse(res)
 
-    @defer.inlineCallbacks
-    def test_is_current_full(self):
-        yield self.db.model.upgrade()
-        res = yield self.db.model.is_current()
+    async def test_is_current_full(self):
+        await self.db.model.upgrade()
+        res = await self.db.model.is_current()
         self.assertTrue(res)
 
     # the upgrade method is very well-tested by the integration tests; the
