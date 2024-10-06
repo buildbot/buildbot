@@ -96,9 +96,8 @@ class FakeDBConnector(AbstractDBConnector):
         self.test_result_sets = comp = FakeTestResultSetsComponent(self, testcase, reactor)
         self._components.append(comp)
 
-    @defer.inlineCallbacks
-    def setup(self):
-        yield super().setup()
+    async def setup(self):
+        await super().setup()
         self.is_setup = True
 
     def insert_test_data(self, rows):
