@@ -52,29 +52,25 @@ class TestException(Exception):
 class TestBitbucketServerStatusPush(
     TestReactorMixin, ConfigErrorsMixin, unittest.TestCase, ReporterTestMixin, LoggingMixin
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
-        yield self.master.startService()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def setupReporter(self, **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+    async def setupReporter(self, **kwargs):
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None, verify=None
         )
         self.sp = BitbucketServerStatusPush(
             "serv", Interpolate("username"), Interpolate("passwd"), **kwargs
         )
-        yield self.sp.setServiceParent(self.master)
+        await self.sp.setServiceParent(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def _check_start_and_finish_build(self, build):
+    async def _check_start_and_finish_build(self, build):
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
@@ -108,27 +104,25 @@ class TestBitbucketServerStatusPush(
             },
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_basic(self):
+    async def test_basic(self):
         self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self._check_start_and_finish_build(build)
+        build = await self.insert_build_finished(SUCCESS)
+        await self._check_start_and_finish_build(build)
 
-    @defer.inlineCallbacks
-    def test_setting_options(self):
+    async def test_setting_options(self):
         generator = BuildStartEndStatusGenerator(
             start_formatter=MessageFormatterRenderable('Build started.'),
             end_formatter=MessageFormatterRenderable('Build finished.'),
         )
 
         self.setupReporter(statusName='Build', generators=[generator])
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
@@ -166,16 +160,15 @@ class TestBitbucketServerStatusPush(
             code=HTTP_PROCESSED,
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_error(self):
+    async def test_error(self):
         self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
         self._http.expect(
             'post',
             '/rest/build-status/1.0/commits/d34db33fd43db33f',
@@ -193,32 +186,30 @@ class TestBitbucketServerStatusPush(
         )
         build['complete'] = False
         self.setUpLogging()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: Unable to send Bitbucket Server status')
 
-    @defer.inlineCallbacks
-    def test_basic_with_no_revision(self):
-        yield self.setupReporter()
+    async def test_basic_with_no_revision(self):
+        await self.setupReporter()
         self.reporter_test_revision = None
 
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Unable to get the commit hash")
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
 
 class TestBitbucketServerCoreAPIStatusPush(
     ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin, LoggingMixin
 ):
-    @defer.inlineCallbacks
-    def setupReporter(self, token=None, **kwargs):
+    async def setupReporter(self, token=None, **kwargs):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
@@ -236,26 +227,24 @@ class TestBitbucketServerCoreAPIStatusPush(
         http_headers = {} if token is None else {'Authorization': 'Bearer tokentoken'}
         http_auth = ('username', 'passwd') if token is None else None
 
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'serv', auth=http_auth, headers=http_headers, debug=None, verify=None
         )
 
         auth = (Interpolate("username"), Interpolate("passwd")) if token is None else None
 
         self.sp = BitbucketServerCoreAPIStatusPush("serv", token=token, auth=auth, **kwargs)
-        yield self.sp.setServiceParent(self.master)
-        yield self.master.startService()
+        await self.sp.setServiceParent(self.master)
+        await self.master.startService()
 
     def setUp(self):
         self.master = None
 
-    @defer.inlineCallbacks
-    def tearDown(self):
+    async def tearDown(self):
         if self.master and self.master.running:
-            yield self.master.stopService()
+            await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def _check_start_and_finish_build(self, build, parentPlan=False, epoch=False):
+    async def _check_start_and_finish_build(self, build, parentPlan=False, epoch=False):
         _name = "Builder_parent #1 \u00bb Builder0 #0" if parentPlan else "Builder0 #0"
         _parent = "Builder_parent" if parentPlan else "Builder0"
 
@@ -315,20 +304,19 @@ class TestBitbucketServerCoreAPIStatusPush(
         else:
             build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         if epoch:
             build["complete_at"] = 1554161923
         else:
             build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_buildrequest(self):
-        yield self.setupReporter()
-        buildrequest = yield self.insert_buildrequest_new()
+    async def test_buildrequest(self):
+        await self.setupReporter()
+        buildrequest = await self.insert_buildrequest_new()
 
         _name = "Builder0 #(build request)"
         _parent = "Builder0"
@@ -367,8 +355,8 @@ class TestBitbucketServerCoreAPIStatusPush(
             code=HTTP_PROCESSED,
         )
 
-        yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
-        yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
+        await self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
+        await self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
 
     def test_config_no_base_url(self):
         with self.assertRaisesConfigError("Parameter base_url has to be given"):
@@ -380,48 +368,41 @@ class TestBitbucketServerCoreAPIStatusPush(
         ):
             BitbucketServerCoreAPIStatusPush("serv", token="x", auth=("username", "passwd"))
 
-    @defer.inlineCallbacks
-    def test_basic(self):
-        yield self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self._check_start_and_finish_build(build)
+    async def test_basic(self):
+        await self.setupReporter()
+        build = await self.insert_build_finished(SUCCESS)
+        await self._check_start_and_finish_build(build)
 
-    @defer.inlineCallbacks
-    def test_basic_epoch(self):
-        yield self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self._check_start_and_finish_build(build, epoch=True)
+    async def test_basic_epoch(self):
+        await self.setupReporter()
+        build = await self.insert_build_finished(SUCCESS)
+        await self._check_start_and_finish_build(build, epoch=True)
 
-    @defer.inlineCallbacks
-    def test_with_parent(self):
-        yield self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS, parent_plan=True)
-        yield self._check_start_and_finish_build(build, parentPlan=True)
+    async def test_with_parent(self):
+        await self.setupReporter()
+        build = await self.insert_build_finished(SUCCESS, parent_plan=True)
+        await self._check_start_and_finish_build(build, parentPlan=True)
 
-    @defer.inlineCallbacks
-    def test_with_token(self):
-        yield self.setupReporter(token='tokentoken')
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self._check_start_and_finish_build(build)
+    async def test_with_token(self):
+        await self.setupReporter(token='tokentoken')
+        build = await self.insert_build_finished(SUCCESS)
+        await self._check_start_and_finish_build(build)
 
-    @defer.inlineCallbacks
-    def test_error_setup_status(self):
-        yield self.setupReporter()
+    async def test_error_setup_status(self):
+        await self.setupReporter()
 
-        @defer.inlineCallbacks
-        def raise_deferred_exception(**kwargs):
+        async def raise_deferred_exception(**kwargs):
             raise TestException()
 
         self.sp.createStatus = Mock(side_effect=raise_deferred_exception)
-        build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        build = await self.insert_build_finished(SUCCESS)
+        await self.sp._got_event(('builds', 20, 'new'), build)
 
         self.assertEqual(len(self.flushLoggedErrors(TestException)), 1)
 
-    @defer.inlineCallbacks
-    def test_error(self):
+    async def test_error(self):
         self.setupReporter()
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
         self.setUpLogging()
         self._http.expect(
             'post',
@@ -441,23 +422,21 @@ class TestBitbucketServerCoreAPIStatusPush(
             code=HTTP_NOT_FOUND,
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('404: Unable to send Bitbucket Server status')
 
-    @defer.inlineCallbacks
-    def test_with_full_ref(self):
-        yield self.setupReporter()
+    async def test_with_full_ref(self):
+        await self.setupReporter()
         self.reporter_test_branch = "refs/heads/master"
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
-        yield self._check_start_and_finish_build(build)
+        await self._check_start_and_finish_build(build)
 
-    @defer.inlineCallbacks
-    def test_with_no_ref(self):
-        yield self.setupReporter()
+    async def test_with_no_ref(self):
+        await self.setupReporter()
 
         self.reporter_test_branch = None
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
         self.setUpLogging()
         self._http.expect(
@@ -478,37 +457,34 @@ class TestBitbucketServerCoreAPIStatusPush(
             code=HTTP_PROCESSED,
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("WARNING: Unable to resolve ref for SSID: 234.")
 
-    @defer.inlineCallbacks
-    def test_with_no_revision(self):
-        yield self.setupReporter()
+    async def test_with_no_revision(self):
+        await self.setupReporter()
 
         self.reporter_test_revision = None
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Unable to get the commit hash for SSID: 234")
 
-    @defer.inlineCallbacks
-    def test_with_no_repo(self):
-        yield self.setupReporter()
+    async def test_with_no_repo(self):
+        await self.setupReporter()
 
         self.reporter_test_repo = None
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged("Unable to parse repository info from 'None' for SSID: 234")
 
-    @defer.inlineCallbacks
-    def test_with_renderers(self):
+    async def test_with_renderers(self):
         @util.renderer
         def r_testresults(props):
             return {
@@ -521,7 +497,7 @@ class TestBitbucketServerCoreAPIStatusPush(
         def r_duration(props):
             return props.getProperty("unittests_runtime")
 
-        yield self.setupReporter(
+        await self.setupReporter(
             statusName=Interpolate("%(prop:plan_name)s"),
             statusSuffix=Interpolate(" [%(prop:unittests_os)s]"),
             buildNumber=Interpolate('100'),
@@ -538,7 +514,7 @@ class TestBitbucketServerCoreAPIStatusPush(
         self.reporter_test_props['unittests_os'] = "win10"
         self.reporter_test_props['plan_name'] = "Unittests"
         self.reporter_test_props['master_plan'] = "Unittests-master"
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
         self._http.expect(
             'post',
@@ -558,15 +534,14 @@ class TestBitbucketServerCoreAPIStatusPush(
             code=HTTP_PROCESSED,
         )
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_with_test_results(self):
-        yield self.setupReporter()
+    async def test_with_test_results(self):
+        await self.setupReporter()
 
         self.reporter_test_props['tests_skipped'] = 2
         self.reporter_test_props['tests_successful'] = 3
-        build = yield self.insert_build_finished(SUCCESS)
+        build = await self.insert_build_finished(SUCCESS)
 
         self._http.expect(
             'post',
@@ -588,12 +563,11 @@ class TestBitbucketServerCoreAPIStatusPush(
         build['started_at'] = datetime.datetime(2019, 4, 1, 23, 38, 33, 154354, tzinfo=tzutc())
         build["complete_at"] = datetime.datetime(2019, 4, 1, 23, 38, 43, 154354, tzinfo=tzutc())
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        await self.sp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_verbose(self):
-        yield self.setupReporter(verbose=True)
-        build = yield self.insert_build_finished(SUCCESS)
+    async def test_verbose(self):
+        await self.setupReporter(verbose=True)
+        build = await self.insert_build_finished(SUCCESS)
         self.setUpLogging()
         self._http.expect(
             'post',
@@ -613,7 +587,7 @@ class TestBitbucketServerCoreAPIStatusPush(
             code=HTTP_PROCESSED,
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        await self.sp._got_event(('builds', 20, 'new'), build)
         self.assertLogged('Sending payload:')
         self.assertLogged('Status "INPROGRESS" sent for example.org/repo d34db33fd43db33f')
 
@@ -626,16 +600,14 @@ PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 class TestBitbucketServerPRCommentPush(
     TestReactorMixin, unittest.TestCase, ReporterTestMixin, LoggingMixin
 ):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
-        yield self.master.startService()
+        await self.master.startService()
 
-    @defer.inlineCallbacks
-    def setupReporter(self, verbose=True, generator_class=BuildStatusGenerator, **kwargs):
-        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+    async def setupReporter(self, verbose=True, generator_class=BuildStatusGenerator, **kwargs):
+        self._http = await fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None, verify=None
         )
 
@@ -661,61 +633,54 @@ class TestBitbucketServerPRCommentPush(
             generators=[generator],
             **kwargs,
         )
-        yield self.cp.setServiceParent(self.master)
+        await self.cp.setServiceParent(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
+    async def tearDown(self):
+        await self.master.stopService()
 
-    @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults, set_pr=True):
-        yield super().insert_test_data([buildResults], buildResults)
-        build = yield self.master.data.get(('builds', 20))
+    async def setupBuildResults(self, buildResults, set_pr=True):
+        await super().insert_test_data([buildResults], buildResults)
+        build = await self.master.data.get(('builds', 20))
         if set_pr:
-            yield self.master.db.builds.setBuildProperty(20, "pullrequesturl", PR_URL, "test")
+            await self.master.db.builds.setBuildProperty(20, "pullrequesturl", PR_URL, "test")
         return build
 
-    @defer.inlineCallbacks
-    def test_reporter_basic(self):
-        yield self.setupReporter()
-        build = yield self.setupBuildResults(SUCCESS)
+    async def test_reporter_basic(self):
+        await self.setupReporter()
+        build = await self.setupBuildResults(SUCCESS)
         self._http.expect("post", EXPECTED_API, json={"text": UNICODE_BODY}, code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        yield self.cp._got_event(('builds', 20, 'finished'), build)
+        await self.cp._got_event(('builds', 20, 'finished'), build)
         self.assertLogged(f'Comment sent to {PR_URL}')
 
-    @defer.inlineCallbacks
-    def test_reporter_basic_without_logging(self):
-        yield self.setupReporter(verbose=False)
-        build = yield self.setupBuildResults(SUCCESS)
+    async def test_reporter_basic_without_logging(self):
+        await self.setupReporter(verbose=False)
+        build = await self.setupBuildResults(SUCCESS)
         self._http.expect("post", EXPECTED_API, json={"text": UNICODE_BODY}, code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        yield self.cp._got_event(('builds', 20, 'finished'), build)
+        await self.cp._got_event(('builds', 20, 'finished'), build)
 
         self.assertNotLogged(f'Comment sent to {PR_URL}')
 
-    @defer.inlineCallbacks
-    def test_reporter_without_pullrequest(self):
-        yield self.setupReporter()
-        build = yield self.setupBuildResults(SUCCESS, set_pr=False)
+    async def test_reporter_without_pullrequest(self):
+        await self.setupReporter()
+        build = await self.setupBuildResults(SUCCESS, set_pr=False)
         build["complete"] = True
         # we don't expect any request
-        yield self.cp._got_event(('builds', 20, 'finished'), build)
+        await self.cp._got_event(('builds', 20, 'finished'), build)
 
-    @defer.inlineCallbacks
-    def test_reporter_with_buildset(self):
-        yield self.setupReporter(generator_class=BuildSetStatusGenerator)
-        yield self.setupBuildResults(SUCCESS)
-        buildset = yield self.get_inserted_buildset()
+    async def test_reporter_with_buildset(self):
+        await self.setupReporter(generator_class=BuildSetStatusGenerator)
+        await self.setupBuildResults(SUCCESS)
+        buildset = await self.get_inserted_buildset()
         self._http.expect("post", EXPECTED_API, json={"text": UNICODE_BODY}, code=HTTP_CREATED)
-        yield self.cp._got_event(("buildsets", 98, "complete"), buildset)
+        await self.cp._got_event(("buildsets", 98, "complete"), buildset)
 
-    @defer.inlineCallbacks
-    def test_reporter_logs_error_code_and_content_on_invalid_return_code(self):
-        yield self.setupReporter()
-        build = yield self.setupBuildResults(SUCCESS)
+    async def test_reporter_logs_error_code_and_content_on_invalid_return_code(self):
+        await self.setupReporter()
+        build = await self.setupBuildResults(SUCCESS)
 
         http_error_code = 500
         error_body = {"errors": [{"message": "A dataXXXbase error has occurred."}]}
@@ -729,29 +694,27 @@ class TestBitbucketServerPRCommentPush(
         )
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp._got_event(('builds', 20, 'finished'), build)
+        await self.cp._got_event(('builds', 20, 'finished'), build)
 
         self.assertLogged(f"^{http_error_code}: Unable to send a comment: ")
         self.assertLogged("A dataXXXbase error has occurred")
 
-    @defer.inlineCallbacks
-    def test_reporter_logs_error_code_without_content_on_invalid_return_code(self):
-        yield self.setupReporter()
-        build = yield self.setupBuildResults(SUCCESS)
+    async def test_reporter_logs_error_code_without_content_on_invalid_return_code(self):
+        await self.setupReporter()
+        build = await self.setupBuildResults(SUCCESS)
         http_error_code = 503
         self._http.expect("post", EXPECTED_API, json={"text": UNICODE_BODY}, code=http_error_code)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp._got_event(('builds', 20, 'finished'), build)
+        await self.cp._got_event(('builds', 20, 'finished'), build)
         self.assertLogged(f"^{http_error_code}: Unable to send a comment: ")
 
-    @defer.inlineCallbacks
-    def test_reporter_does_not_log_return_code_on_valid_return_code(self):
-        yield self.setupReporter()
-        build = yield self.setupBuildResults(SUCCESS)
+    async def test_reporter_does_not_log_return_code_on_valid_return_code(self):
+        await self.setupReporter()
+        build = await self.setupBuildResults(SUCCESS)
         http_code = 201
         self._http.expect("post", EXPECTED_API, json={"text": UNICODE_BODY}, code=http_code)
         self.setUpLogging()
         build['complete'] = True
-        yield self.cp._got_event(('builds', 20, 'finished'), build)
+        await self.cp._got_event(('builds', 20, 'finished'), build)
         self.assertNotLogged(f"^{http_code}:")
