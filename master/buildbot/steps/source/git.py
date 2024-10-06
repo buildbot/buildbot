@@ -164,135 +164,128 @@ class Git(Source, GitStepMixin):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
-    @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    async def run_vc(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
 
         self.method = self._getMethod()
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+        self.stdio_log = await self.addLogForRemoteCommands("stdio")
 
         auth_workdir = self._get_auth_data_workdir()
 
         try:
-            gitInstalled = yield self.checkFeatureSupport()
+            gitInstalled = await self.checkFeatureSupport()
 
             if not gitInstalled:
                 raise WorkerSetupError("git is not installed on worker")
 
-            patched = yield self.sourcedirIsPatched()
+            patched = await self.sourcedirIsPatched()
 
             if patched:
-                yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
+                await self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
-            yield self._git_auth.download_auth_files_if_needed(auth_workdir)
+            await self._git_auth.download_auth_files_if_needed(auth_workdir)
 
-            yield self._getAttrGroupMember('mode', self.mode)()
+            await self._getAttrGroupMember('mode', self.mode)()
             if patch:
-                yield self.patch(patch)
-            yield self.parseGotRevision()
-            res = yield self.parseCommitDescription()
+                await self.patch(patch)
+            await self.parseGotRevision()
+            res = await self.parseCommitDescription()
             return res
         finally:
-            yield self._git_auth.remove_auth_files_if_needed(auth_workdir)
+            await self._git_auth.remove_auth_files_if_needed(auth_workdir)
 
-    @defer.inlineCallbacks
-    def mode_full(self):
+    async def mode_full(self):
         if self.method == 'clobber':
-            yield self.clobber()
+            await self.clobber()
             return
         elif self.method == 'copy':
-            yield self.copy()
+            await self.copy()
             return
 
-        action = yield self._sourcedirIsUpdatable()
+        action = await self._sourcedirIsUpdatable()
         if action == "clobber":
-            yield self.clobber()
+            await self.clobber()
             return
         elif action == "clone":
             log.msg("No git repo present, making full clone")
-            yield self._fullCloneOrFallback(self.shallow)
+            await self._fullCloneOrFallback(self.shallow)
         elif self.method == 'clean':
-            yield self.clean()
+            await self.clean()
         elif self.method == 'fresh':
-            yield self.fresh()
+            await self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
 
-    @defer.inlineCallbacks
-    def mode_incremental(self):
-        action = yield self._sourcedirIsUpdatable()
+    async def mode_incremental(self):
+        action = await self._sourcedirIsUpdatable()
         # if not updatable, do a full checkout
         if action == "clobber":
-            yield self.clobber()
+            await self.clobber()
             return
         elif action == "clone":
             log.msg("No git repo present, making full clone")
-            yield self._fullCloneOrFallback(shallowClone=self.shallow)
+            await self._fullCloneOrFallback(shallowClone=self.shallow)
             return
 
-        yield self._fetchOrFallback()
+        await self._fetchOrFallback()
 
-        yield self._syncSubmodule(None)
-        yield self._updateSubmodule(None)
+        await self._syncSubmodule(None)
+        await self._updateSubmodule(None)
 
-    @defer.inlineCallbacks
-    def clean(self):
+    async def clean(self):
         clean_command = ['clean', '-f', '-f', '-d']
-        rc = yield self._dovccmd(clean_command)
+        rc = await self._dovccmd(clean_command)
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
 
-        rc = yield self._fetchOrFallback()
+        rc = await self._fetchOrFallback()
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
-        rc = yield self._syncSubmodule()
+        rc = await self._syncSubmodule()
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
-        rc = yield self._updateSubmodule()
+        rc = await self._updateSubmodule()
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
-        rc = yield self._cleanSubmodule()
+        rc = await self._cleanSubmodule()
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
 
         if self.submodules:
-            rc = yield self._dovccmd(clean_command)
+            rc = await self._dovccmd(clean_command)
             if rc != RC_SUCCESS:
                 raise buildstep.BuildStepFailed
         return RC_SUCCESS
 
-    @defer.inlineCallbacks
-    def clobber(self):
-        yield self._doClobber()
-        res = yield self._fullClone(shallowClone=self.shallow)
+    async def clobber(self):
+        await self._doClobber()
+        res = await self._fullClone(shallowClone=self.shallow)
         if res != RC_SUCCESS:
             raise buildstep.BuildStepFailed
 
-    @defer.inlineCallbacks
-    def fresh(self):
+    async def fresh(self):
         clean_command = ['clean', '-f', '-f', '-d', '-x']
-        res = yield self._dovccmd(clean_command, abandonOnFailure=False)
+        res = await self._dovccmd(clean_command, abandonOnFailure=False)
         if res == RC_SUCCESS:
-            yield self._fetchOrFallback()
+            await self._fetchOrFallback()
         else:
-            yield self._doClobber()
-            yield self._fullCloneOrFallback(shallowClone=self.shallow)
-        yield self._syncSubmodule()
-        yield self._updateSubmodule()
-        yield self._cleanSubmodule()
+            await self._doClobber()
+            await self._fullCloneOrFallback(shallowClone=self.shallow)
+        await self._syncSubmodule()
+        await self._updateSubmodule()
+        await self._cleanSubmodule()
         if self.submodules:
-            yield self._dovccmd(clean_command)
+            await self._dovccmd(clean_command)
 
-    @defer.inlineCallbacks
-    def copy(self):
-        yield self.runRmdir(self.workdir, abandonOnFailure=False, timeout=self.timeout)
+    async def copy(self):
+        await self.runRmdir(self.workdir, abandonOnFailure=False, timeout=self.timeout)
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
 
         try:
-            yield self.mode_incremental()
+            await self.mode_incremental()
             cmd = remotecommand.RemoteCommand(
                 'cpdir',
                 {
@@ -303,16 +296,15 @@ class Git(Source, GitStepMixin):
                 },
             )
             cmd.useLog(self.stdio_log, False)
-            yield self.runCommand(cmd)
+            await self.runCommand(cmd)
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
             return RC_SUCCESS
         finally:
             self.workdir = old_workdir
 
-    @defer.inlineCallbacks
-    def parseGotRevision(self, _=None):
-        stdout = yield self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
+    async def parseGotRevision(self, _=None):
+        stdout = await self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
         revision = stdout.strip()
         if len(revision) != GIT_HASH_LENGTH:
             raise buildstep.BuildStepFailed()
@@ -321,8 +313,7 @@ class Git(Source, GitStepMixin):
 
         return RC_SUCCESS
 
-    @defer.inlineCallbacks
-    def parseCommitDescription(self, _=None):
+    async def parseCommitDescription(self, _=None):
         # dict() should not return here
         if isinstance(self.getDescription, bool) and not self.getDescription:
             return RC_SUCCESS
@@ -340,7 +331,7 @@ class Git(Source, GitStepMixin):
             cmd.append('HEAD')
 
         try:
-            stdout = yield self._dovccmd(cmd, collectStdout=True)
+            stdout = await self._dovccmd(cmd, collectStdout=True)
             desc = stdout.strip()
             self.updateSourceProperty('commit-description', desc)
         except Exception:
@@ -353,14 +344,13 @@ class Git(Source, GitStepMixin):
             return self.srcdir
         return self.workdir
 
-    @defer.inlineCallbacks
-    def _fetch(self, _, shallowClone, abandonOnFailure=True):
+    async def _fetch(self, _, shallowClone, abandonOnFailure=True):
         fetch_required = True
 
         # If the revision already exists in the repo, we don't need to fetch. However, if tags
         # were requested, then fetch still needs to be performed for the tags.
         if not self.tags and self.revision:
-            rc = yield self._dovccmd(['cat-file', '-e', self.revision], abandonOnFailure=False)
+            rc = await self._dovccmd(['cat-file', '-e', self.revision], abandonOnFailure=False)
             if rc == RC_SUCCESS:
                 fetch_required = False
 
@@ -382,7 +372,7 @@ class Git(Source, GitStepMixin):
                     log.msg("Git versions < 1.7.2 don't support progress")
 
             command += [self.repourl, self.branch]
-            res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+            res = await self._dovccmd(command, abandonOnFailure=abandonOnFailure)
             if res != RC_SUCCESS:
                 return res
 
@@ -391,17 +381,16 @@ class Git(Source, GitStepMixin):
         else:
             rev = 'FETCH_HEAD'
         command = ['checkout', '-f', rev]
-        res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+        res = await self._dovccmd(command, abandonOnFailure=abandonOnFailure)
 
         # Rename the branch if needed.
         if res == RC_SUCCESS and self.branch != 'HEAD':
             # Ignore errors
-            yield self._dovccmd(['checkout', '-B', self.branch], abandonOnFailure=False)
+            await self._dovccmd(['checkout', '-B', self.branch], abandonOnFailure=False)
 
         return res
 
-    @defer.inlineCallbacks
-    def _fetchOrFallback(self, _=None):
+    async def _fetchOrFallback(self, _=None):
         """
         Handles fallbacks for failure of fetch,
         wrapper for self._fetch
@@ -409,19 +398,18 @@ class Git(Source, GitStepMixin):
 
         abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
 
-        res = yield self._fetch(None, shallowClone=self.shallow, abandonOnFailure=abandonOnFailure)
+        res = await self._fetch(None, shallowClone=self.shallow, abandonOnFailure=abandonOnFailure)
         if res == RC_SUCCESS:
             return res
         elif self.retryFetch:
-            yield self._fetch(None, shallowClone=self.shallow)
+            await self._fetch(None, shallowClone=self.shallow)
         elif self.clobberOnFailure:
-            yield self.clobber()
+            await self.clobber()
         else:
             raise buildstep.BuildStepFailed()
         return None
 
-    @defer.inlineCallbacks
-    def _clone(self, shallowClone):
+    async def _clone(self, shallowClone):
         """Retry if clone failed"""
 
         command = ['clone']
@@ -458,10 +446,10 @@ class Git(Source, GitStepMixin):
         else:
             abandonOnFailure = True
         # If it's a shallow clone abort build step
-        res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+        res = await self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
 
         if switchToBranch:
-            res = yield self._fetch(None, shallowClone=shallowClone)
+            res = await self._fetch(None, shallowClone=shallowClone)
 
         done = self.stopped or res == RC_SUCCESS  # or shallow clone??
         if self.retry and not done:
@@ -474,22 +462,21 @@ class Git(Source, GitStepMixin):
                 df.addCallback(lambda _: self._doClobber())
                 df.addCallback(lambda _: self._clone(shallowClone))
                 reactor.callLater(delay, df.callback, None)
-                res = yield df
+                res = await df
 
         return res
 
-    @defer.inlineCallbacks
-    def _fullClone(self, shallowClone=False):
+    async def _fullClone(self, shallowClone=False):
         """Perform full clone and checkout to the revision if specified
         In the case of shallow clones if any of the step fail abort whole build step.
         """
-        res = yield self._clone(shallowClone)
+        res = await self._clone(shallowClone)
         if res != RC_SUCCESS:
             return res
 
         # If revision specified checkout that revision
         if self.revision:
-            res = yield self._dovccmd(['checkout', '-f', self.revision], shallowClone)
+            res = await self._dovccmd(['checkout', '-f', self.revision], shallowClone)
 
         # init and update submodules, recursively. If there's not recursion
         # it will not do it.
@@ -499,27 +486,25 @@ class Git(Source, GitStepMixin):
                 cmdArgs.append("--remote")
             if shallowClone:
                 cmdArgs.extend(["--depth", str(int(shallowClone))])
-            res = yield self._dovccmd(cmdArgs, shallowClone)
+            res = await self._dovccmd(cmdArgs, shallowClone)
 
         return res
 
-    @defer.inlineCallbacks
-    def _fullCloneOrFallback(self, shallowClone):
+    async def _fullCloneOrFallback(self, shallowClone):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
         is set to True remove the build directory and try a full clone again.
         """
 
-        res = yield self._fullClone(shallowClone)
+        res = await self._fullClone(shallowClone)
         if res != RC_SUCCESS:
             if not self.clobberOnFailure:
                 raise buildstep.BuildStepFailed()
-            res = yield self.clobber()
+            res = await self.clobber()
         return res
 
-    @defer.inlineCallbacks
-    def _doClobber(self):
+    async def _doClobber(self):
         """Remove the work directory"""
-        rc = yield self.runRmdir(self.workdir, timeout=self.timeout)
+        rc = await self.runRmdir(self.workdir, timeout=self.timeout)
         if rc != RC_SUCCESS:
             raise RuntimeError("Failed to delete directory")
         return rc
@@ -529,15 +514,13 @@ class Git(Source, GitStepMixin):
             return None
         return changes[-1].revision
 
-    @defer.inlineCallbacks
-    def _syncSubmodule(self, _=None):
+    async def _syncSubmodule(self, _=None):
         rc = RC_SUCCESS
         if self.submodules:
-            rc = yield self._dovccmd(['submodule', 'sync'])
+            rc = await self._dovccmd(['submodule', 'sync'])
         return rc
 
-    @defer.inlineCallbacks
-    def _updateSubmodule(self, _=None):
+    async def _updateSubmodule(self, _=None):
         rc = RC_SUCCESS
         if self.submodules:
             vccmd = ['submodule', 'update', '--init', '--recursive']
@@ -548,18 +531,17 @@ class Git(Source, GitStepMixin):
             if self.remoteSubmodules:
                 vccmd.extend(["--remote"])
 
-            rc = yield self._dovccmd(vccmd)
+            rc = await self._dovccmd(vccmd)
         return rc
 
-    @defer.inlineCallbacks
-    def _cleanSubmodule(self, _=None):
+    async def _cleanSubmodule(self, _=None):
         rc = RC_SUCCESS
         if self.submodules:
             subcommand = 'git clean -f -f -d'
             if self.mode == 'full' and self.method == 'fresh':
                 subcommand += ' -x'
             command = ['submodule', 'foreach', '--recursive', subcommand]
-            rc = yield self._dovccmd(command)
+            rc = await self._dovccmd(command)
         return rc
 
     def _getMethod(self):
@@ -571,18 +553,16 @@ class Git(Source, GitStepMixin):
             return 'fresh'
         return None
 
-    @defer.inlineCallbacks
-    def applyPatch(self, patch):
-        yield self._dovccmd(['update-index', '--refresh'])
+    async def applyPatch(self, patch):
+        await self._dovccmd(['update-index', '--refresh'])
 
-        res = yield self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
+        res = await self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
         return res
 
-    @defer.inlineCallbacks
-    def _sourcedirIsUpdatable(self):
+    async def _sourcedirIsUpdatable(self):
         if self.workerVersionIsOlderThan('listdir', '2.16'):
             git_path = self.build.path_module.join(self.workdir, '.git')
-            exists = yield self.pathExists(git_path)
+            exists = await self.pathExists(git_path)
 
             if exists:
                 return "update"
@@ -591,7 +571,7 @@ class Git(Source, GitStepMixin):
 
         cmd = remotecommand.RemoteCommand('listdir', {'dir': self.workdir})
         cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if 'files' not in cmd.updates:
             # no files - directory doesn't exist
@@ -662,31 +642,29 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     def _get_auth_data_workdir(self):
         return self.workdir
 
-    @defer.inlineCallbacks
-    def run(self):
-        self.stdio_log = yield self.addLog("stdio")
+    async def run(self):
+        self.stdio_log = await self.addLog("stdio")
 
         auth_workdir = self._get_auth_data_workdir()
 
         try:
-            gitInstalled = yield self.checkFeatureSupport()
+            gitInstalled = await self.checkFeatureSupport()
 
             if not gitInstalled:
                 raise WorkerSetupError("git is not installed on worker")
 
-            yield self._git_auth.download_auth_files_if_needed(auth_workdir)
-            ret = yield self._doPush()
+            await self._git_auth.download_auth_files_if_needed(auth_workdir)
+            ret = await self._doPush()
             return ret
         finally:
-            yield self._git_auth.remove_auth_files_if_needed(auth_workdir)
+            await self._git_auth.remove_auth_files_if_needed(auth_workdir)
 
-    @defer.inlineCallbacks
-    def _doPush(self):
+    async def _doPush(self):
         cmd = ['push', self.repourl, self.branch]
         if self.force:
             cmd.append('--force')
 
-        ret = yield self._dovccmd(cmd)
+        ret = await self._dovccmd(cmd)
         return ret
 
 
@@ -740,19 +718,17 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         if self.messages and not isinstance(self.messages, list):
             bbconfig.error('GitTag: messages should be a list')
 
-    @defer.inlineCallbacks
-    def run(self):
-        self.stdio_log = yield self.addLog("stdio")
-        gitInstalled = yield self.checkFeatureSupport()
+    async def run(self):
+        self.stdio_log = await self.addLog("stdio")
+        gitInstalled = await self.checkFeatureSupport()
 
         if not gitInstalled:
             raise WorkerSetupError("git is not installed on worker")
 
-        ret = yield self._doTag()
+        ret = await self._doTag()
         return ret
 
-    @defer.inlineCallbacks
-    def _doTag(self):
+    async def _doTag(self):
         cmd = ['tag']
 
         if self.annotated:
@@ -767,7 +743,7 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         if self.force:
             cmd.append('--force')
 
-        ret = yield self._dovccmd(cmd)
+        ret = await self._dovccmd(cmd)
         return ret
 
 
@@ -827,43 +803,39 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
                 '"create-empty-commit" and "ignore"'
             )
 
-    @defer.inlineCallbacks
-    def run(self):
-        self.stdio_log = yield self.addLog("stdio")
-        gitInstalled = yield self.checkFeatureSupport()
+    async def run(self):
+        self.stdio_log = await self.addLog("stdio")
+        gitInstalled = await self.checkFeatureSupport()
 
         if not gitInstalled:
             raise WorkerSetupError("git is not installed on worker")
 
-        yield self._checkDetachedHead()
-        yield self._doAdd()
-        yield self._doCommit()
+        await self._checkDetachedHead()
+        await self._doAdd()
+        await self._doCommit()
 
         return RC_SUCCESS
 
-    @defer.inlineCallbacks
-    def _checkDetachedHead(self):
+    async def _checkDetachedHead(self):
         cmd = ['symbolic-ref', 'HEAD']
-        rc = yield self._dovccmd(cmd, abandonOnFailure=False)
+        rc = await self._dovccmd(cmd, abandonOnFailure=False)
 
         if rc != RC_SUCCESS:
-            yield self.stdio_log.addStderr("You are in detached HEAD")
+            await self.stdio_log.addStderr("You are in detached HEAD")
             raise buildstep.BuildStepFailed
 
-    @defer.inlineCallbacks
-    def _checkHasSomethingToCommit(self):
+    async def _checkHasSomethingToCommit(self):
         cmd = ['status', '--porcelain=v1']
-        stdout = yield self._dovccmd(cmd, collectStdout=True)
+        stdout = await self._dovccmd(cmd, collectStdout=True)
 
         for line in stdout.splitlines(False):
             if line[0] in 'MADRCU':
                 return True
         return False
 
-    @defer.inlineCallbacks
-    def _doCommit(self):
+    async def _doCommit(self):
         if self.emptyCommits == 'ignore':
-            has_commit = yield self._checkHasSomethingToCommit()
+            has_commit = await self._checkHasSomethingToCommit()
             if not has_commit:
                 return 0
 
@@ -878,14 +850,13 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         if self.no_verify:
             cmd.extend(['--no-verify'])
 
-        ret = yield self._dovccmd(cmd)
+        ret = await self._dovccmd(cmd)
         return ret
 
-    @defer.inlineCallbacks
-    def _doAdd(self):
+    async def _doAdd(self):
         cmd = ['add']
 
         cmd.extend(self.paths)
 
-        ret = yield self._dovccmd(cmd)
+        ret = await self._dovccmd(cmd)
         return ret
