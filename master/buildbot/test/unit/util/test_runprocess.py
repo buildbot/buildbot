@@ -18,7 +18,6 @@ import os
 from unittest import mock
 
 from parameterized import parameterized
-from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
@@ -64,8 +63,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         reason.value.exitCode = rc
         self.pp.processEnded(reason)
 
-    @defer.inlineCallbacks
-    def test_no_output(self):
+    async def test_no_output(self):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=False)
         self.assertEqual(
             self.process_spawned_args,
@@ -77,11 +75,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.end_process()
         self.assertTrue(d.called)
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (0, b''))
 
-    @defer.inlineCallbacks
-    def test_env_new_kv(self):
+    async def test_env_new_kv(self):
         d = self.run_process(
             ['cmd'], collect_stdout=False, collect_stderr=False, env={'custom': 'custom-value'}
         )
@@ -98,11 +95,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.connectionMade()
         self.end_process()
 
-        res = yield d
+        res = await d
         self.assertEqual(res, 0)
 
-    @defer.inlineCallbacks
-    def test_env_overwrite_os_kv(self):
+    async def test_env_overwrite_os_kv(self):
         d = self.run_process(
             ['cmd'], collect_stdout=True, collect_stderr=False, env={'OS_ENV': 'custom-value'}
         )
@@ -119,11 +115,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.connectionMade()
         self.end_process()
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (0, b''))
 
-    @defer.inlineCallbacks
-    def test_env_remove_os_kv(self):
+    async def test_env_remove_os_kv(self):
         d = self.run_process(
             ['cmd'], collect_stdout=True, collect_stderr=False, env={'OS_ENV': None}
         )
@@ -135,11 +130,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.connectionMade()
         self.end_process()
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (0, b''))
 
-    @defer.inlineCallbacks
-    def test_collect_nothing(self):
+    async def test_collect_nothing(self):
         d = self.run_process(['cmd'], collect_stdout=False, collect_stderr=False)
 
         self.pp.connectionMade()
@@ -153,11 +147,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.end_process()
         self.assertTrue(d.called)
 
-        res = yield d
+        res = await d
         self.assertEqual(res, 0)
 
-    @defer.inlineCallbacks
-    def test_collect_stdout_no_stderr(self):
+    async def test_collect_stdout_no_stderr(self):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=False)
 
         self.pp.connectionMade()
@@ -171,11 +164,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.end_process()
         self.assertTrue(d.called)
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (0, b'stdout_data'))
 
-    @defer.inlineCallbacks
-    def test_collect_stdout_with_stdin(self):
+    async def test_collect_stdout_with_stdin(self):
         d = self.run_process(
             ['cmd'], collect_stdout=True, collect_stderr=False, initial_stdin=b'stdin'
         )
@@ -188,11 +180,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.errReceived(b'stderr_data')
         self.end_process()
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (0, b'stdout_data'))
 
-    @defer.inlineCallbacks
-    def test_collect_stdout_and_stderr(self):
+    async def test_collect_stdout_and_stderr(self):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=True)
 
         self.pp.connectionMade()
@@ -203,11 +194,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.errReceived(b'stderr_data')
         self.end_process()
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (0, b'stdout_data', b'stderr_data'))
 
-    @defer.inlineCallbacks
-    def test_process_failed_with_rc(self):
+    async def test_process_failed_with_rc(self):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=True)
 
         self.pp.connectionMade()
@@ -215,11 +205,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.errReceived(b'stderr_data')
         self.end_process(rc=1)
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (1, b'stdout_data', b'stderr_data'))
 
-    @defer.inlineCallbacks
-    def test_process_failed_with_signal(self):
+    async def test_process_failed_with_signal(self):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=True)
 
         self.pp.connectionMade()
@@ -227,7 +216,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.pp.errReceived(b'stderr_data')
         self.end_process(signal='SIGILL')
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (-1, b'stdout_data', b'stderr_data'))
 
     @parameterized.expand([
@@ -239,8 +228,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         ('stderr_prevented_timeout', 1.0, 4.9, False, False, True),
         ('timed_out_after_extra_output', 1.0, 5.1, True, True, True),
     ])
-    @defer.inlineCallbacks
-    def test_io_timeout(self, name, wait1, wait2, timed_out, had_stdout, had_stderr):
+    async def test_io_timeout(self, name, wait1, wait2, timed_out, had_stdout, had_stderr):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=True, io_timeout=5)
 
         self.pp.connectionMade()
@@ -260,7 +248,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         else:
             self.run_process_obj.send_signal.assert_not_called()
 
-        res = yield d
+        res = await d
         self.assertEqual(
             res,
             (
@@ -274,8 +262,7 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         ('too_short_time', 4.9, False),
         ('timed_out', 5.1, True),
     ])
-    @defer.inlineCallbacks
-    def test_runtime_timeout(self, name, wait, timed_out):
+    async def test_runtime_timeout(self, name, wait, timed_out):
         d = self.run_process(['cmd'], collect_stdout=True, collect_stderr=True, runtime_timeout=5)
 
         self.pp.connectionMade()
@@ -290,11 +277,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         else:
             self.run_process_obj.send_signal.assert_not_called()
 
-        res = yield d
+        res = await d
         self.assertEqual(res, (FATAL_RC if timed_out else 0, b'', b''))
 
-    @defer.inlineCallbacks
-    def test_runtime_timeout_failing_to_kill(self):
+    async def test_runtime_timeout_failing_to_kill(self):
         d = self.run_process(
             ['cmd'],
             collect_stdout=True,
@@ -315,6 +301,6 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         self.end_process()
 
         with self.assertRaises(RuntimeError):
-            yield d
+            await d
 
         self.assertLogged("attempted to kill process, but it wouldn't die")
