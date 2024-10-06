@@ -112,6 +112,74 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "psutil.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "pywintypes.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32api.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32con.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "servicemanager.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32file.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32pipe.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32service.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32serviceutil.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "pythoncom.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32event.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32process.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32security.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32com.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "winerror.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "msgpack.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "autobahn.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.buildbot_net_usage_data"
     ignore_errors = true
     [[tool.mypy.overrides]]
@@ -978,3 +1046,52 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.www.ws"
     ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.base"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.commands.base"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.commands.utils"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.null"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.pb"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.runprocess"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.scripts.runner"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.scripts.windows_service"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.test.fake.reactor"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.test.__init__"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.test.unit.runprocess-scripts"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.test.unit.test_bot"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.test.unit.test_msgpack"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.test.unit.test_scripts_runner"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.tunnel"
+    ignore_errors = true
+    [[tool.mypy.overrides]]
+    module = "buildbot_worker.util._hangcheck"
+    ignore_errors = true
+
