@@ -124,7 +124,7 @@ class SubResource:
 
 class Endpoint:
     pathPatterns = ""
-    rootLinkName = None
+    rootLinkName: str | None = None
     isPseudoCollection = False
     kind = EndpointKind.SINGLE
     parentMapping = {}
