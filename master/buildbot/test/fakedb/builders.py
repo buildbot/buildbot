@@ -152,8 +152,7 @@ class FakeBuildersComponent(FakeDBComponent):
             Builder(id=builderid, name=name),
         ])
 
-    @defer.inlineCallbacks
-    def updateBuilderInfo(
+    async def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
     ):
         if builderid in self.builders:
@@ -167,7 +166,7 @@ class FakeBuildersComponent(FakeDBComponent):
             tagids = []
             for tag in tags:
                 if not isinstance(tag, int):
-                    tag = yield self.db.tags.findTagId(tag)
+                    tag = await self.db.tags.findTagId(tag)
                 tagids.append(tag)
             self.builders_tags[builderid] = tagids
 
