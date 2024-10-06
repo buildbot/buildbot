@@ -17,8 +17,6 @@
 import os
 from unittest.case import SkipTest
 
-from twisted.internet import defer
-
 from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
 from buildbot.plugins import steps
@@ -53,8 +51,7 @@ class MarathonMaster(RunMasterBase):
                 " is with url to Marathon api "
             )
 
-    @defer.inlineCallbacks
-    def setup_config(self, num_concurrent, extra_steps=None):
+    async def setup_config(self, num_concurrent, extra_steps=None):
         if extra_steps is None:
             extra_steps = []
         c = {}
@@ -114,14 +111,13 @@ class MarathonMaster(RunMasterBase):
         else:
             c['protocols'] = {"pb": {"port": "tcp:0"}}
 
-        yield self.setup_master(c, startWorker=False)
+        await self.setup_master(c, startWorker=False)
 
-    @defer.inlineCallbacks
-    def test_trigger(self):
-        yield self.setup_master(num_concurrent=NUM_CONCURRENT)
-        yield self.doForceBuild()
+    async def test_trigger(self):
+        await self.setup_master(num_concurrent=NUM_CONCURRENT)
+        await self.doForceBuild()
 
-        builds = yield self.master.data.get(("builds",))
+        builds = await self.master.data.get(("builds",))
         # if there are some retry, there will be more builds
         self.assertEqual(len(builds), 1 + NUM_CONCURRENT)
         for b in builds:
