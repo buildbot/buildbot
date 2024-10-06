@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import types
@@ -57,9 +55,8 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
         /builders/n:builderid/workers/i:name
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
-        sldict = yield self.master.db.workers.getWorker(
+    async def get(self, resultSpec, kwargs):
+        sldict = await self.master.db.workers.getWorker(
             workerid=kwargs.get('workerid'),
             name=kwargs.get('name'),
             masterid=kwargs.get('masterid'),
@@ -69,12 +66,11 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             return self.db2data(sldict)
         return None
 
-    @defer.inlineCallbacks
-    def control(self, action, args, kwargs):
+    async def control(self, action, args, kwargs):
         if action not in ("stop", "pause", "unpause", "kill"):
             raise exceptions.InvalidControlException(f"action: {action} is not supported")
 
-        worker = yield self.get(None, kwargs)
+        worker = await self.get(None, kwargs)
         if worker is not None:
             self.master.mq.produce(
                 ("control", "worker", str(worker["workerid"]), action),
@@ -94,11 +90,10 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
         /builders/n:builderid/workers
     """
 
-    @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    async def get(self, resultSpec, kwargs):
         paused = resultSpec.popBooleanFilter('paused')
         graceful = resultSpec.popBooleanFilter('graceful')
-        workers_dicts = yield self.master.db.workers.getWorkers(
+        workers_dicts = await self.master.db.workers.getWorkers(
             builderid=kwargs.get('builderid'),
             masterid=kwargs.get('masterid'),
             paused=paused,
@@ -152,43 +147,38 @@ class Worker(base.ResourceType):
         return self.master.db.workers.findWorkerId(name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def workerConnected(self, workerid, masterid, workerinfo):
-        yield self.master.db.workers.workerConnected(
+    async def workerConnected(self, workerid, masterid, workerinfo):
+        await self.master.db.workers.workerConnected(
             workerid=workerid, masterid=masterid, workerinfo=workerinfo
         )
-        bs = yield self.master.data.get(('workers', workerid))
+        bs = await self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'connected')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def workerDisconnected(self, workerid, masterid):
-        yield self.master.db.workers.workerDisconnected(workerid=workerid, masterid=masterid)
-        bs = yield self.master.data.get(('workers', workerid))
+    async def workerDisconnected(self, workerid, masterid):
+        await self.master.db.workers.workerDisconnected(workerid=workerid, masterid=masterid)
+        bs = await self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'disconnected')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def workerMissing(self, workerid, masterid, last_connection, notify):
-        bs = yield self.master.data.get(('workers', workerid))
+    async def workerMissing(self, workerid, masterid, last_connection, notify):
+        bs = await self.master.data.get(('workers', workerid))
         bs['last_connection'] = last_connection
         bs['notify'] = notify
         self.produceEvent(bs, 'missing')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def set_worker_paused(self, workerid, paused, pause_reason=None):
-        yield self.master.db.workers.set_worker_paused(
+    async def set_worker_paused(self, workerid, paused, pause_reason=None):
+        await self.master.db.workers.set_worker_paused(
             workerid=workerid, paused=paused, pause_reason=pause_reason
         )
-        bs = yield self.master.data.get(('workers', workerid))
+        bs = await self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'state_updated')
 
     @base.updateMethod
-    @defer.inlineCallbacks
-    def set_worker_graceful(self, workerid, graceful):
-        yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
-        bs = yield self.master.data.get(('workers', workerid))
+    async def set_worker_graceful(self, workerid, graceful):
+        await self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
+        bs = await self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'state_updated')
 
     @base.updateMethod
