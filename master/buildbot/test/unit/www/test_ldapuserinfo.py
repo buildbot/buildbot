@@ -16,7 +16,6 @@
 import types
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -109,12 +108,11 @@ class LdapUserInfo(CommonTestCase):
             accountExtraFields=["myfield"],
         )
 
-    @defer.inlineCallbacks
-    def test_updateUserInfoNoResults(self):
+    async def test_updateUserInfoNoResults(self):
         self.makeSearchSideEffect([[], [], []])
 
         try:
-            yield self.userInfoProvider.getUserInfo("me")
+            await self.userInfoProvider.getUserInfo("me")
         except KeyError as e:
             self.assertRegex(
                 repr(e), r"KeyError\('ldap search \"accpattern\" returned 0 results',?\)"
@@ -122,14 +120,13 @@ class LdapUserInfo(CommonTestCase):
         else:
             self.fail("should have raised a key error")
 
-    @defer.inlineCallbacks
-    def test_updateUserInfoNoGroups(self):
+    async def test_updateUserInfoNoGroups(self):
         self.makeSearchSideEffect([
             [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
             [],
             [],
         ])
-        res = yield self.userInfoProvider.getUserInfo("me")
+        res = await self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
             (('accbase', 'accpattern', ['accountEmail', 'accountFullName', 'myfield']), {}),
             (('groupbase', 'groupMemberPattern', ['groupName']), {}),
@@ -138,14 +135,13 @@ class LdapUserInfo(CommonTestCase):
             res, {'email': 'mee@too', 'full_name': 'me too', 'groups': [], 'username': 'me'}
         )
 
-    @defer.inlineCallbacks
-    def test_updateUserInfoGroups(self):
+    async def test_updateUserInfoGroups(self):
         self.makeSearchSideEffect([
             [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
             [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
             [],
         ])
-        res = yield self.userInfoProvider.getUserInfo("me")
+        res = await self.userInfoProvider.getUserInfo("me")
         self.assertEqual(
             res,
             {
@@ -156,8 +152,7 @@ class LdapUserInfo(CommonTestCase):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_updateUserInfoGroupsUnicodeDn(self):
+    async def test_updateUserInfoGroupsUnicodeDn(self):
         # In case of non Ascii DN, ldap3 lib returns an UTF-8 str
         dn = "cn=Sébastien,dc=example,dc=org"
         # If groupMemberPattern is an str, and dn is not decoded,
@@ -170,7 +165,7 @@ class LdapUserInfo(CommonTestCase):
             [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
             [],
         ])
-        res = yield self.userInfoProvider.getUserInfo("me")
+        res = await self.userInfoProvider.getUserInfo("me")
         self.assertEqual(
             res,
             {
@@ -183,8 +178,7 @@ class LdapUserInfo(CommonTestCase):
 
 
 class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
+    async def setUp(self):
         CommonTestCase.setUp(self)
         self.setup_test_reactor()
 
@@ -193,7 +187,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         self.rsrc = avatar.AvatarResource(master)
         self.rsrc.reconfigResource(master.config)
 
-        yield self.master.startService()
+        await self.master.startService()
 
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
@@ -212,56 +206,49 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
             accountExtraFields=["myfield"],
         )
 
-    @defer.inlineCallbacks
-    def _getUserAvatar(self, mimeTypeAndData):
+    async def _getUserAvatar(self, mimeTypeAndData):
         _, data = mimeTypeAndData
         self.makeRawSearchSideEffect([[("cn", {"picture": [data]})]])
-        res = yield self.render_resource(self.rsrc, b'/?email=me')
+        res = await self.render_resource(self.rsrc, b'/?email=me')
         self.assertSearchCalledWith([
             (('accbase', 'avatar=me', ['picture']), {}),
         ])
         return res
 
-    @defer.inlineCallbacks
-    def test_getUserAvatarPNG(self):
+    async def test_getUserAvatarPNG(self):
         mimeTypeAndData = (b'image/png', b'\x89PNG lljklj')
-        yield self._getUserAvatar(mimeTypeAndData)
+        await self._getUserAvatar(mimeTypeAndData)
         self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
-    @defer.inlineCallbacks
-    def test_getUserAvatarJPEG(self):
+    async def test_getUserAvatarJPEG(self):
         mimeTypeAndData = (b'image/jpeg', b'\xff\xd8\xff lljklj')
-        yield self._getUserAvatar(mimeTypeAndData)
+        await self._getUserAvatar(mimeTypeAndData)
         self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
-    @defer.inlineCallbacks
-    def test_getUserAvatarGIF(self):
+    async def test_getUserAvatarGIF(self):
         mimeTypeAndData = (b'image/gif', b'GIF8 lljklj')
-        yield self._getUserAvatar(mimeTypeAndData)
+        await self._getUserAvatar(mimeTypeAndData)
         self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
-    @defer.inlineCallbacks
-    def test_getUserAvatarUnknownType(self):
+    async def test_getUserAvatarUnknownType(self):
         mimeTypeAndData = (b'', b'unknown image format')
-        res = yield self._getUserAvatar(mimeTypeAndData)
+        res = await self._getUserAvatar(mimeTypeAndData)
         # Unknown format means data won't be sent
         self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
-    @defer.inlineCallbacks
-    def test_getUsernameAvatar(self):
+    async def test_getUsernameAvatar(self):
         mimeType = b'image/gif'
         data = b'GIF8 lljklj'
         self.makeRawSearchSideEffect([[("cn", {"picture": [data]})]])
-        yield self.render_resource(self.rsrc, b'/?username=me')
+        await self.render_resource(self.rsrc, b'/?username=me')
         self.assertSearchCalledWith([
             (('accbase', 'accpattern=me', ['picture']), {}),
         ])
         self.assertRequest(contentType=mimeType, content=data)
 
-    @defer.inlineCallbacks
-    def test_getUnknownUsernameAvatar(self):
+    async def test_getUnknownUsernameAvatar(self):
         self.makeSearchSideEffect([[], [], []])
-        res = yield self.render_resource(self.rsrc, b'/?username=other')
+        res = await self.render_resource(self.rsrc, b'/?username=other')
         self.assertSearchCalledWith([
             (('accbase', 'accpattern=other', ['picture']), {}),
         ])
@@ -285,8 +272,7 @@ class LdapUserInfoNotEscCharsDn(CommonTestCase):
             avatarData="picture",
         )
 
-    @defer.inlineCallbacks
-    def test_getUserInfoGroupsNotEscCharsDn(self):
+    async def test_getUserInfoGroupsNotEscCharsDn(self):
         dn = "cn=Lastname, Firstname \28UIDxxx\29,dc=example,dc=org"
         pattern = self.userInfoProvider.groupMemberPattern % {"dn": dn}
         self.makeSearchSideEffect([
@@ -294,7 +280,7 @@ class LdapUserInfoNotEscCharsDn(CommonTestCase):
             [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
             [],
         ])
-        res = yield self.userInfoProvider.getUserInfo("me")
+        res = await self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
             (('accbase', 'accpattern', ['accountEmail', 'accountFullName']), {}),
             (('groupbase', pattern, ['groupName']), {}),
@@ -325,14 +311,13 @@ class LdapUserInfoNoGroups(CommonTestCase):
             accountExtraFields=["myfield"],
         )
 
-    @defer.inlineCallbacks
-    def test_updateUserInfo(self):
+    async def test_updateUserInfo(self):
         self.makeSearchSideEffect([
             [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
             [],
             [],
         ])
-        res = yield self.userInfoProvider.getUserInfo("me")
+        res = await self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
             (('accbase', 'accpattern', ['accountEmail', 'accountFullName', 'myfield']), {}),
         ])
