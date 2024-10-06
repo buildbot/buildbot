@@ -55,6 +55,8 @@ class ReconfigurableServiceMixin:
 # twisted 16's Service is now an new style class, better put everybody new style
 # to catch issues even on twisted < 16
 class AsyncService(service.Service):
+    name: str | None
+
     # service.Service.setServiceParent does not wait for neither disownServiceParent nor addService
     # to complete
     @defer.inlineCallbacks
