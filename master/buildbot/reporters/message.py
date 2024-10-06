@@ -196,8 +196,7 @@ class MessageFormatterBase(util.ComparableMixin):
     def buildAdditionalContext(self, master, ctx):
         pass
 
-    @defer.inlineCallbacks
-    def render_message_dict(self, master, context):
+    async def render_message_dict(self, master, context):
         """Generate a buildbot reporter message and return a dictionary
         containing the message body, type and subject.
 
@@ -229,10 +228,10 @@ class MessageFormatterBase(util.ComparableMixin):
         the values returned by message formatter are concatenated. If this is not possible
         (e.g. if the body is a dictionary), any subsequent messages are ignored.
         """
-        yield self.buildAdditionalContext(master, context)
+        await self.buildAdditionalContext(master, context)
         context.update(self.context)
 
-        body, subject, extra_info = yield defer.gatherResults([
+        body, subject, extra_info = await defer.gatherResults([
             defer.maybeDeferred(self.render_message_body, context),
             defer.maybeDeferred(self.render_message_subject, context),
             defer.maybeDeferred(self.render_message_extra_info, context),
@@ -276,10 +275,11 @@ class MessageFormatterFunctionRaw(MessageFormatterBase):
         super().__init__(**kwargs)
         self._function = function
 
-    @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, is_buildset=False, users=None, mode=None):
+    async def format_message_for_build(
+        self, master, build, is_buildset=False, users=None, mode=None
+    ):
         ctx = create_context_for_build(mode, build, is_buildset, master, users)
-        msgdict = yield self._function(master, ctx)
+        msgdict = await self._function(master, ctx)
         return {
             "body": msgdict.get("body", None),
             "type": msgdict.get("type", "plain"),
@@ -287,12 +287,11 @@ class MessageFormatterFunctionRaw(MessageFormatterBase):
             "extra_info": msgdict.get("extra_info", None),
         }
 
-    @defer.inlineCallbacks
-    def format_message_for_buildset(
+    async def format_message_for_buildset(
         self, master, buildset, builds, users=None, mode=None, **kwargs
     ):
         ctx = create_context_for_buildset(mode, buildset, builds, master, users)
-        msgdict = yield self._function(master, ctx)
+        msgdict = await self._function(master, ctx)
         return {
             "body": msgdict.get("body", None),
             "type": msgdict.get("type", "plain"),
@@ -307,14 +306,12 @@ class MessageFormatterFunction(MessageFormatterBase):
         self.template_type = template_type
         self._function = function
 
-    @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, **kwargs):
-        msgdict = yield self.render_message_dict(master, {'build': build})
+    async def format_message_for_build(self, master, build, **kwargs):
+        msgdict = await self.render_message_dict(master, {'build': build})
         return msgdict
 
-    @defer.inlineCallbacks
-    def format_message_for_buildset(self, master, buildset, builds, **kwargs):
-        msgdict = yield self.render_message_dict(master, {"buildset": buildset, "builds": builds})
+    async def format_message_for_buildset(self, master, buildset, builds, **kwargs):
+        msgdict = await self.render_message_dict(master, {"buildset": buildset, "builds": builds})
         return msgdict
 
     def render_message_body(self, context):
@@ -332,31 +329,28 @@ class MessageFormatterRenderable(MessageFormatterBase):
         self.template = template
         self.subject = subject
 
-    @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, **kwargs):
-        msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
+    async def format_message_for_build(self, master, build, **kwargs):
+        msgdict = await self.render_message_dict(master, {'build': build, 'master': master})
         return msgdict
 
     def format_message_for_buildset(self, master, buildset, builds, **kwargs):
         raise NotImplementedError
 
-    @defer.inlineCallbacks
-    def render_message_body(self, context):
+    async def render_message_body(self, context):
         props = Properties.fromDict(context['build']['properties'])
         props.master = context['master']
 
-        body = yield props.render(self.template)
+        body = await props.render(self.template)
         return body
 
-    @defer.inlineCallbacks
-    def render_message_subject(self, context):
+    async def render_message_subject(self, context):
         if self.subject is None:
             return None
 
         props = Properties.fromDict(context['build']['properties'])
         props.master = context['master']
 
-        body = yield props.render(self.subject)
+        body = await props.render(self.subject)
         return body
 
 
@@ -480,16 +474,16 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
 
 class MessageFormatter(MessageFormatterBaseJinja):
-    @defer.inlineCallbacks
-    def format_message_for_build(self, master, build, is_buildset=False, users=None, mode=None):
+    async def format_message_for_build(
+        self, master, build, is_buildset=False, users=None, mode=None
+    ):
         ctx = create_context_for_build(mode, build, is_buildset, master, users)
-        msgdict = yield self.render_message_dict(master, ctx)
+        msgdict = await self.render_message_dict(master, ctx)
         return msgdict
 
-    @defer.inlineCallbacks
-    def format_message_for_buildset(self, master, buildset, builds, users=None, mode=None):
+    async def format_message_for_buildset(self, master, buildset, builds, users=None, mode=None):
         ctx = create_context_for_buildset(mode, buildset, builds, master, users)
-        msgdict = yield self.render_message_dict(master, ctx)
+        msgdict = await self.render_message_dict(master, ctx)
         return msgdict
 
 
@@ -538,8 +532,7 @@ class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
             subject = default_missing_worker_subject_template
         super().__init__(template=template, subject=subject, template_type=template_type, **kwargs)
 
-    @defer.inlineCallbacks
-    def formatMessageForMissingWorker(self, master, worker):
+    async def formatMessageForMissingWorker(self, master, worker):
         ctx = create_context_for_worker(master, worker)
-        msgdict = yield self.render_message_dict(master, ctx)
+        msgdict = await self.render_message_dict(master, ctx)
         return msgdict
