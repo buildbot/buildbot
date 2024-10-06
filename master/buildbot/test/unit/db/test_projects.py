@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import projects
@@ -54,16 +53,15 @@ class Tests(interfaces.InterfaceTests):
         ):
             pass
 
-    @defer.inlineCallbacks
-    def test_update_project_info(self):
-        yield self.insert_test_data([
+    async def test_update_project_info(self):
+        await self.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
         ])
 
-        yield self.db.projects.update_project_info(
+        await self.db.projects.update_project_info(
             7, "slug7", "project7 desc", "format", "html desc"
         )
-        dbdict = yield self.db.projects.get_project(7)
+        dbdict = await self.db.projects.get_project(7)
         self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
             dbdict,
@@ -77,10 +75,9 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_find_project_id_new(self):
-        id = yield self.db.projects.find_project_id('fake_project')
-        dbdict = yield self.db.projects.get_project(id)
+    async def test_find_project_id_new(self):
+        id = await self.db.projects.find_project_id('fake_project')
+        dbdict = await self.db.projects.get_project(id)
         self.assertEqual(
             dbdict,
             projects.ProjectModel(
@@ -93,25 +90,22 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_find_project_id_new_no_auto_create(self):
-        id = yield self.db.projects.find_project_id('fake_project', auto_create=False)
+    async def test_find_project_id_new_no_auto_create(self):
+        id = await self.db.projects.find_project_id('fake_project', auto_create=False)
         self.assertIsNone(id)
 
-    @defer.inlineCallbacks
-    def test_find_project_id_exists(self):
-        yield self.insert_test_data([
+    async def test_find_project_id_exists(self):
+        await self.insert_test_data([
             fakedb.Project(id=7, name='fake_project'),
         ])
-        id = yield self.db.projects.find_project_id('fake_project')
+        id = await self.db.projects.find_project_id('fake_project')
         self.assertEqual(id, 7)
 
-    @defer.inlineCallbacks
-    def test_get_project(self):
-        yield self.insert_test_data([
+    async def test_get_project(self):
+        await self.insert_test_data([
             fakedb.Project(id=7, name='fake_project'),
         ])
-        dbdict = yield self.db.projects.get_project(7)
+        dbdict = await self.db.projects.get_project(7)
         self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
             dbdict,
@@ -125,19 +119,17 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_project_missing(self):
-        dbdict = yield self.db.projects.get_project(7)
+    async def test_get_project_missing(self):
+        dbdict = await self.db.projects.get_project(7)
         self.assertIsNone(dbdict)
 
-    @defer.inlineCallbacks
-    def test_get_projects(self):
-        yield self.insert_test_data([
+    async def test_get_projects(self):
+        await self.insert_test_data([
             fakedb.Project(id=7, name="fake_project7"),
             fakedb.Project(id=8, name="fake_project8"),
             fakedb.Project(id=9, name="fake_project9"),
         ])
-        dblist = yield self.db.projects.get_projects()
+        dblist = await self.db.projects.get_projects()
         for dbdict in dblist:
             self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
@@ -173,14 +165,12 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
-    @defer.inlineCallbacks
-    def test_get_projects_empty(self):
-        dblist = yield self.db.projects.get_projects()
+    async def test_get_projects_empty(self):
+        dblist = await self.db.projects.get_projects()
         self.assertEqual(dblist, [])
 
-    @defer.inlineCallbacks
-    def test_get_active_projects(self):
-        yield self.insert_test_data([
+    async def test_get_active_projects(self):
+        await self.insert_test_data([
             fakedb.Project(id=1, name='fake_project1'),
             fakedb.Project(id=2, name='fake_project2'),
             fakedb.Project(id=3, name='fake_project3'),
@@ -189,7 +179,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Builder(id=201, name="builder_201", projectid=3),
             fakedb.BuilderMaster(id=300, builderid=200, masterid=100),
         ])
-        dblist = yield self.db.projects.get_active_projects()
+        dblist = await self.db.projects.get_active_projects()
         for dbdict in dblist:
             self.assertIsInstance(dbdict, projects.ProjectModel)
         self.assertEqual(
@@ -214,15 +204,13 @@ class RealTests(Tests):
 
 
 class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
+    async def setUp(self):
+        await self.setUpConnectorComponent()
 
 
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
+    async def setUp(self):
+        await self.setUpConnectorComponent(
             table_names=["projects", "builders", "masters", "builder_masters"]
         )
 
