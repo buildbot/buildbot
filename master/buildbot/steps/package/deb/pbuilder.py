@@ -21,7 +21,6 @@ import re
 import stat
 import time
 
-from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
@@ -106,8 +105,7 @@ class DebPbuilder(WarningCountingShellCommand):
 
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    @defer.inlineCallbacks
-    def run(self):
+    async def run(self):
         if self.basetgz is None:
             self.basetgz = self._default_basetgz
             kwargs = {}
@@ -125,17 +123,16 @@ class DebPbuilder(WarningCountingShellCommand):
         if self.extrapackages:
             self.command += ['--extrapackages', " ".join(self.extrapackages)]
 
-        res = yield self.checkBasetgz()
+        res = await self.checkBasetgz()
         if res != results.SUCCESS:
             return res
 
-        res = yield super().run()
+        res = await super().run()
         return res
 
-    @defer.inlineCallbacks
-    def checkBasetgz(self):
+    async def checkBasetgz(self):
         cmd = remotecommand.RemoteCommand('stat', {'file': self.basetgz})
-        yield self.runCommand(cmd)
+        await self.runCommand(cmd)
 
         if cmd.rc != 0:
             log.msg("basetgz not found, initializing it.")
@@ -164,13 +161,13 @@ class DebPbuilder(WarningCountingShellCommand):
 
             cmd = remotecommand.RemoteShellCommand(self.workdir, command)
 
-            stdio_log = yield self.addLog("pbuilder")
+            stdio_log = await self.addLog("pbuilder")
             cmd.useLog(stdio_log, True, "stdio")
 
             self.description = ["PBuilder", "create."]
-            yield self.updateSummary()
+            await self.updateSummary()
 
-            yield self.runCommand(cmd)
+            await self.runCommand(cmd)
             if cmd.rc != 0:
                 log.msg(f"Failure when running {cmd}.")
                 return results.FAILURE
@@ -187,10 +184,10 @@ class DebPbuilder(WarningCountingShellCommand):
                 command = ['sudo', self.pbuilder, '--update', self.baseOption, self.basetgz]
 
                 cmd = remotecommand.RemoteShellCommand(self.workdir, command)
-                stdio_log = yield self.addLog("pbuilder")
+                stdio_log = await self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
 
-                yield self.runCommand(cmd)
+                await self.runCommand(cmd)
                 if cmd.rc != 0:
                     log.msg(f"Failure when running {cmd}.")
                     return results.FAILURE
