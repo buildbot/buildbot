@@ -35,7 +35,6 @@ from buildbot.process import metrics
 from buildbot.util.sautils import get_sqlite_version
 
 if TYPE_CHECKING:
-    from typing import Any
     from typing import Callable
     from typing import TypeVar
 
@@ -214,10 +213,10 @@ class DBThreadPool:
 
     def __thd(
         self,
-        with_engine,
+        with_engine: bool,
         callable: Callable[Concatenate[sa.engine.Engine | sa.engine.Connection, _P], _T],
-        args: list[Any],
-        kwargs: dict[str, Any],
+        args: _P.args,
+        kwargs: _P.kwargs,
     ) -> _T:
         # try to call callable(arg, *args, **kwargs) repeatedly until no
         # OperationalErrors occur, where arg is either the engine (with_engine)
@@ -289,7 +288,7 @@ class DBThreadPool:
             callable: Callable[Concatenate[sa.engine.Connection, _P], _T],
             *args: _P.args,
             **kwargs: _P.kwargs,
-        ) -> defer.Deferred[_T]:
+        ) -> _T:
             with conn.begin():
                 return callable(conn, *args, **kwargs)
 
@@ -302,7 +301,13 @@ class DBThreadPool:
         **kwargs: _P.kwargs,
     ) -> defer.Deferred[_T]:
         return threads.deferToThreadPool(
-            self.reactor, self._pool, self.__thd, False, callable, args, kwargs
+            self.reactor,
+            self._pool,
+            self.__thd,  # type: ignore[arg-type]
+            False,
+            callable,
+            args,
+            kwargs,
         )
 
     def do_with_engine(
@@ -312,5 +317,11 @@ class DBThreadPool:
         **kwargs: _P.kwargs,
     ) -> defer.Deferred[_T]:
         return threads.deferToThreadPool(
-            self.reactor, self._pool, self.__thd, True, callable, args, kwargs
+            self.reactor,
+            self._pool,
+            self.__thd,  # type: ignore[arg-type]
+            True,
+            callable,
+            args,
+            kwargs,
         )
