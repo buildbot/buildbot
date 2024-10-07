@@ -189,9 +189,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.db.model"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.db.pool"
     ignore_errors = true
     [[tool.mypy.overrides]]
