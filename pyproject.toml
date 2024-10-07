@@ -184,11 +184,11 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.changes.bitbucket"
-    ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.changes.changes"
     ignore_errors = true
+    module = "unidiff.*"
+    ignore_missing_imports = true
     [[tool.mypy.overrides]]
     module = "buildbot.changes.gerritchangesource"
     ignore_errors = true
