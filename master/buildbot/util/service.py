@@ -188,7 +188,7 @@ class BuildbotService(
     AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin, ReconfigurableServiceMixin
 ):
     compare_attrs: ClassVar[Sequence[str]] = ('name', '_config_args', '_config_kwargs')
-    name = None
+    name: str | None = None
     configured = False
     objectid = None
 

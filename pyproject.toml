@@ -188,19 +188,7 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.changes.gerritchangesource"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.github"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.changes.gitpoller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.hgpoller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.mail"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.changes.manager"
