@@ -35,7 +35,7 @@ class DBConnectorComponent:
     # of the necessary backlinks and other housekeeping.
 
     connector = None
-    data2db = {}
+    data2db: dict[str, str] = {}
 
     def __init__(self, connector: DBConnector):
         self.db = connector
