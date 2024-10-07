@@ -35,11 +35,11 @@ class Change:
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
 
-    number = None
-    branch = None
-    category = None
-    revision = None  # used to create a source-stamp
-    links = []  # links are gone, but upgrade code expects this attribute
+    number: int | None = None
+    branch: str | None = None
+    category: str | None = None
+    revision: str | None = None  # used to create a source-stamp
+    links: list[str] = []  # links are gone, but upgrade code expects this attribute
 
     @classmethod
     def fromChdict(cls, master, chdict: ChangeModel) -> Change:
@@ -56,7 +56,7 @@ class Change:
         return cache.get(chdict.changeid, chdict=chdict, master=master)
 
     @classmethod
-    def _make_ch(cls, changeid: int, master, chdict: ChangeModel) -> Change:
+    def _make_ch(cls, changeid: int, master, chdict: ChangeModel) -> defer.Deferred[Change]:
         change = cls(None, None, None, _fromChdict=True)
         change.who = chdict.author
         change.committer = chdict.committer
