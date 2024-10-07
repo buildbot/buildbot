@@ -16,6 +16,8 @@
 from __future__ import annotations
 
 import hashlib
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.application import service
 from twisted.internet import defer
@@ -185,7 +187,7 @@ class SharedService(AsyncMultiService):
 class BuildbotService(
     AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin, ReconfigurableServiceMixin
 ):
-    compare_attrs = ('name', '_config_args', '_config_kwargs')
+    compare_attrs: ClassVar[Sequence[str]] = ('name', '_config_args', '_config_kwargs')
     name = None
     configured = False
     objectid = None
@@ -282,7 +284,7 @@ class ClusteredBuildbotService(BuildbotService):
     - return after it starts else.
     """
 
-    compare_attrs = ('name',)
+    compare_attrs: ClassVar[Sequence[str]] = ('name',)
 
     POLL_INTERVAL_SEC = 5 * 60  # 5 minutes
 

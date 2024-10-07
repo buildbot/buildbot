@@ -19,6 +19,8 @@ import contextlib
 import os
 import re
 from typing import TYPE_CHECKING
+from typing import ClassVar
+from typing import Sequence
 from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
@@ -54,7 +56,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "repourl",
         "branches",
         "workdir",

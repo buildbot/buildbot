@@ -15,7 +15,9 @@
 
 import re
 import traceback
+from typing import ClassVar
 from typing import Optional
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
@@ -641,7 +643,7 @@ class ForceScheduler(base.BaseScheduler):
     builds. For example, a web form be populated to trigger a build.
     """
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         *base.BaseScheduler.compare_attrs,
         "builderNames",
         "reason",

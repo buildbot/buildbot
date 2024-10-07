@@ -17,6 +17,8 @@ import base64
 import binascii
 import os
 import types
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.application import strports
 from twisted.conch import manhole
@@ -207,7 +209,7 @@ class _BaseManhole(service.AsyncMultiService):
 
 
 class TelnetManhole(_BaseManhole, ComparableMixin):
-    compare_attrs = ("port", "username", "password")
+    compare_attrs: ClassVar[Sequence[str]] = ("port", "username", "password")
 
     def __init__(self, port, username, password):
         self.username = username
@@ -220,7 +222,7 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
 
 
 class PasswordManhole(_BaseManhole, ComparableMixin):
-    compare_attrs = ("port", "username", "password", "ssh_hostkey_dir")
+    compare_attrs: ClassVar[Sequence[str]] = ("port", "username", "password", "ssh_hostkey_dir")
 
     def __init__(self, port, username, password, ssh_hostkey_dir):
         if not manhole_ssh:
@@ -236,7 +238,7 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
 
 
 class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
-    compare_attrs = ("port", "keyfile", "ssh_hostkey_dir")
+    compare_attrs: ClassVar[Sequence[str]] = ("port", "keyfile", "ssh_hostkey_dir")
 
     def __init__(self, port, keyfile, ssh_hostkey_dir):
         if not manhole_ssh:
@@ -253,7 +255,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
     """This Manhole accepts ssh connections, but uses an arbitrary
     user-supplied 'checker' object to perform authentication."""
 
-    compare_attrs = ("port", "checker")
+    compare_attrs: ClassVar[Sequence[str]] = ("port", "checker")
 
     def __init__(self, port, checker):
         """

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from zope.interface import implementer
 
@@ -31,7 +34,7 @@ from .utils import BuildStatusGeneratorMixin
 class BuildRequestGenerator(BuildStatusGeneratorMixin):
     wanted_event_keys = [('buildrequests', None, 'new'), ('buildrequests', None, 'cancel')]
 
-    compare_attrs = ['formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['formatter']
 
     def __init__(
         self,

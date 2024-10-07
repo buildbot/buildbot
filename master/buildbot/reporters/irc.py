@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import base64
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -506,7 +508,7 @@ class IRC(service.BuildbotService):
     name = "IRC"
     in_test_harness = False
     f = None
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "host",
         "port",
         "nick",

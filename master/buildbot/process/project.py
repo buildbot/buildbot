@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
 
 from buildbot import util
 from buildbot.config.checks import check_markdown_support
@@ -22,7 +24,7 @@ from buildbot.config.errors import error
 
 
 class Project(util.ComparableMixin):
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "name",
         "slug",
         "description",

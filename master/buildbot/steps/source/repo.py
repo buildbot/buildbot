@@ -16,6 +16,8 @@
 
 import re
 import textwrap
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -37,7 +39,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin):
         re.compile(r"([^ ]+)/([0-9]+/[0-9]+)"),
     )
 
-    compare_attrs = ('names',)
+    compare_attrs: ClassVar[Sequence[str]] = ('names',)
 
     def __init__(self, names):
         self.names = names
@@ -73,7 +75,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin):
 
 @implementer(IRenderable)
 class RepoDownloadsFromChangeSource(util.ComparableMixin):
-    compare_attrs = ('codebase',)
+    compare_attrs: ClassVar[Sequence[str]] = ('codebase',)
 
     def __init__(self, codebase=None):
         self.codebase = codebase

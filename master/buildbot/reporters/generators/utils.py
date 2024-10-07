@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -38,7 +41,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         "cancelled",
     )
 
-    compare_attrs = [
+    compare_attrs: ClassVar[Sequence[str]] = [
         'mode',
         'tags',
         'builders',

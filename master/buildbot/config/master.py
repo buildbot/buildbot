@@ -19,6 +19,8 @@ import re
 import sys
 import traceback
 import warnings
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.python import failure
 from twisted.python import log
@@ -117,7 +119,7 @@ def loadConfigDict(basedir, configFileName):
 
 @implementer(interfaces.IConfigLoader)
 class FileLoader(ComparableMixin):
-    compare_attrs = ['basedir', 'configFileName']
+    compare_attrs: ClassVar[Sequence[str]] = ['basedir', 'configFileName']
 
     def __init__(self, basedir, configFileName):
         self.basedir = basedir
@@ -229,7 +231,7 @@ class MasterConfig(util.ComparableMixin):
         "www",
         "workers",
     ])
-    compare_attrs = list(_known_config_keys)
+    compare_attrs: ClassVar[Sequence[str]] = list(_known_config_keys)
 
     def preChangeGenerator(self, **kwargs):
         return {

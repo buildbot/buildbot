@@ -17,6 +17,8 @@ import io
 import json
 import random
 import shlex
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -979,7 +981,7 @@ class TelegramBot(service.BuildbotService):
 
     in_test_harness = False
 
-    compare_attrs = [
+    compare_attrs: ClassVar[Sequence[str]] = [
         "bot_token",
         "chat_ids",
         "authz",

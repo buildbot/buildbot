@@ -18,6 +18,8 @@
 
 import os
 import xml.dom.minidom
+from typing import ClassVar
+from typing import Sequence
 from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
@@ -72,7 +74,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "repourl",
         "split_file",
         "svnuser",

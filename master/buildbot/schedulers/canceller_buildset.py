@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 
 from buildbot import config
@@ -49,7 +52,7 @@ class _FailingBuilderConfig:
 
 
 class FailingBuildsetCanceller(BuildbotService):
-    compare_attrs = (*BuildbotService.compare_attrs, 'filters')
+    compare_attrs: ClassVar[Sequence[str]] = (*BuildbotService.compare_attrs, 'filters')
 
     def checkConfig(self, name, filters):
         FailingBuildsetCanceller.check_filters(filters)

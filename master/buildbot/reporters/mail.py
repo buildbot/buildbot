@@ -23,6 +23,8 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from email.utils import parseaddr
 from io import BytesIO
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -74,7 +76,7 @@ VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 @implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
-    compare_attrs = ("domain",)
+    compare_attrs: ClassVar[Sequence[str]] = ("domain",)
 
     def __init__(self, domain):
         assert "@" not in domain
