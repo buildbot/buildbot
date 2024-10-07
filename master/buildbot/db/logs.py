@@ -238,7 +238,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     ) -> tuple[int, int]:
         # Break the content up into chunks.  This takes advantage of the
         # fact that no character but u'\n' maps to b'\n' in UTF-8.
-        remaining = content
+        remaining: bytes | None = content
         chunk_first_line = last_line = first_line
         while remaining:
             chunk, remaining = self._splitBigChunk(remaining, logid)
@@ -272,7 +272,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         # the trailing newline
         assert content[-1] == '\n'
         # Note that row.content is stored as bytes, and our caller is sending unicode
-        content = content[:-1].encode('utf-8')
+        content_bytes = content[:-1].encode('utf-8')
         q = sa.select(self.db.model.logs.c.num_lines)
         q = q.where(self.db.model.logs.c.id == logid)
         res = conn.execute(q)
@@ -282,7 +282,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return None  # ignore a missing log
 
         return self.thdSplitAndAppendChunk(
-            conn=conn, logid=logid, content=content, first_line=num_lines[0]
+            conn=conn, logid=logid, content=content_bytes, first_line=num_lines[0]
         )
 
     def appendLog(self, logid, content) -> defer.Deferred[tuple[int, int] | None]:
