@@ -244,8 +244,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
             if url_item not in urls:
                 urls.append(url_item)
-                q = tbl.update().where(wc)
-                conn.execute(q.values(urls_json=json.dumps(urls)))
+                q2 = tbl.update().where(wc)
+                conn.execute(q2.values(urls_json=json.dumps(urls)))
                 conn.commit()
 
         return self.url_lock.run(self.db.pool.do, thd)
