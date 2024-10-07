@@ -192,9 +192,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.changes.gitpoller"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.changes.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.changes.p4poller"
     ignore_errors = true
     [[tool.mypy.overrides]]
