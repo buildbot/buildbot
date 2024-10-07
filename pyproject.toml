@@ -180,8 +180,9 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.buildbot_net_usage_data"
-    ignore_errors = true
+    module = "requests.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.changes.bitbucket"
     ignore_errors = true
