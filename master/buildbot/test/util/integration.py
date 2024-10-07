@@ -229,10 +229,10 @@ class RunMasterBase(unittest.TestCase):
             worker_python_version = os.environ.get("WORKER_PYTHON", None)
             if self.proto == 'pb':
                 protocol = 'pb'
-                dispatcher = list(m.pbmanager.dispatchers.values())[0]
+                dispatcher = next(iter(m.pbmanager.dispatchers.values()))
             else:
                 protocol = 'msgpack_experimental_v7'
-                dispatcher = list(m.msgmanager.dispatchers.values())[0]
+                dispatcher = next(iter(m.msgmanager.dispatchers.values()))
 
                 unsupported_python_versions = ['2.7', '3.4', '3.5']
                 if (
