@@ -558,18 +558,18 @@ class IRC(service.BuildbotService):
             if authz is not None:
                 config.error("If you specify authz, you must not use allowForce anymore")
             if allowForce not in (True, False):
-                config.error(f"allowForce must be boolean, not {repr(allowForce)}")
+                config.error(f"allowForce must be boolean, not {allowForce!r}")
             log.msg('IRC: allowForce is deprecated: use authz instead')
         if allowShutdown is not None:
             if authz is not None:
                 config.error("If you specify authz, you must not use allowShutdown anymore")
             if allowShutdown not in (True, False):
-                config.error(f"allowShutdown must be boolean, not {repr(allowShutdown)}")
+                config.error(f"allowShutdown must be boolean, not {allowShutdown!r}")
             log.msg('IRC: allowShutdown is deprecated: use authz instead')
         # ###
 
         if noticeOnChannel not in (True, False):
-            config.error(f"noticeOnChannel must be boolean, not {repr(noticeOnChannel)}")
+            config.error(f"noticeOnChannel must be boolean, not {noticeOnChannel!r}")
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             ssl.ensureHasSSL(self.__class__.__name__)

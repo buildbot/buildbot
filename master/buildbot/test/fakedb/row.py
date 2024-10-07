@@ -119,7 +119,7 @@ class Row:
         return self.values >= other.values
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(**{repr(self.values)})'
+        return f'{self.__class__.__name__}(**{self.values!r})'
 
     @staticmethod
     def nextId():
@@ -161,7 +161,7 @@ class Row:
                 if key is not None:
                     val = yield accessors[foreign_key](key)
                     t.assertTrue(
-                        val is not None, f"foreign key {foreign_key}:{repr(key)} does not exit"
+                        val is not None, f"foreign key {foreign_key}:{key!r} does not exit"
                     )
             else:
                 raise ValueError("warning, unsupported foreign key", foreign_key, self.table)

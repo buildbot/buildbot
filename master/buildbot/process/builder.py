@@ -151,7 +151,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         return False
 
     def __repr__(self):
-        return f"<Builder '{repr(self.name)}' at {id(self)}>"
+        return f"<Builder '{self.name!r}' at {id(self)}>"
 
     def getBuilderIdForName(self, name):
         # buildbot.config should ensure this is already unicode, but it doesn't

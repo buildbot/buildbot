@@ -278,7 +278,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 
 def show(x):
     """Display the data attributes of an object in a readable format"""
-    print(f"data attributes of {repr(x)}")
+    print(f"data attributes of {x!r}")
     names = dir(x)
     maxlen = max([0] + [len(n) for n in names])
     for k in names:

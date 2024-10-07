@@ -98,7 +98,7 @@ class FailingBuildsetCanceller(BuildbotService):
                 if builders_to_cancel is not None:
                     extract_filter_values(builders_to_cancel, 'builders_to_cancel')
             except Exception as e:
-                config.error(f'{cls.__name__}: When processing filter builders: {str(e)}')
+                config.error(f'{cls.__name__}: When processing filter builders: {e!s}')
 
     @classmethod
     def filter_tuples_to_filter_set_object(cls, filters):

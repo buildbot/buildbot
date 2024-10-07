@@ -138,7 +138,7 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
             property_changes = new_props
 
-        props_set = [f"{k}: {repr(v)}" for k, v in sorted(property_changes.items())]
+        props_set = [f"{k}: {v!r}" for k, v in sorted(property_changes.items())]
         yield self.addCompleteLog('property changes', "\n".join(props_set))
 
         if len(property_changes) > 1:
