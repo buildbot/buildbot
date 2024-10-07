@@ -86,6 +86,7 @@ quote-style = "preserve"
 [tool.mypy]
 python_version = "3.8"
 namespace_packages = true
+pretty = true
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "setuptools.*"
