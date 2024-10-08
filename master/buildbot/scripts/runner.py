@@ -742,7 +742,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
         # when this command has several maintenance jobs, we should make
         # them optional here. For now there is only one.
     ]
-    optParameters = []
+    optParameters: List[Tuple[str, Optional[str], Any, str]] = []
 
     def getSynopsis(self):
         return "Usage:    buildbot cleanupdb [options] [<basedir>]"
