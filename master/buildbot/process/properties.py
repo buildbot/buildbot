@@ -306,6 +306,9 @@ class RenderableOperatorsMixin:
     def in_(self, other):
         return _OperatorRenderer(self, other, "in", lambda v1, v2: v1 in v2)
 
+    def getRenderingFor(self, iprops: IProperties) -> defer.Deferred:
+        raise NotImplementedError
+
 
 @implementer(IRenderable)
 class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):

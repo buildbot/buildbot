@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from typing import Optional
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -36,7 +36,7 @@ log = Logger()
 
 
 class GerritVerifyStatusPush(ReporterBase):
-    name = "GerritVerifyStatusPush"
+    name: Optional[str] = "GerritVerifyStatusPush"  # type: ignore[assignment]
     # overridable constants
     RESULTS_TABLE = {
         SUCCESS: 1,
