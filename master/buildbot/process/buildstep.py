@@ -151,7 +151,7 @@ class BuildStepWrapperMixin:
 
 # This is also needed for comparisons to work because ComparableMixin requires type(x) and
 # x.__class__ to be equal in order to perform comparison at all.
-_buildstep_wrapper_cache = {}
+_buildstep_wrapper_cache: dict[int, type[BuildStep]] = {}
 
 
 def _create_buildstep_wrapper_class(klass):
@@ -900,12 +900,12 @@ class CommandMixin:
 
 class ShellMixin:
     command = None
-    env = {}
+    env: dict[str, str] = {}
     want_stdout = True
     want_stderr = True
     usePTY = None
-    logfiles = {}
-    lazylogfiles = {}
+    logfiles: dict[str, str] = {}
+    lazylogfiles: bool = False
     timeout = 1200
     maxTime = None
     max_lines = None

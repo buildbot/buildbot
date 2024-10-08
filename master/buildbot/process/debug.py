@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import Optional
 
 from twisted.internet import defer
 
@@ -20,7 +21,7 @@ from buildbot.util import service
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    name = 'debug_services'
+    name: Optional[str] = 'debug_services'  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()

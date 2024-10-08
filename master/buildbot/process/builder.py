@@ -42,6 +42,7 @@ from buildbot.util.render_description import render_description
 if TYPE_CHECKING:
     from buildbot.config.builder import BuilderConfig
     from buildbot.config.master import MasterConfig
+    from buildbot.master import BuildMaster
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -56,6 +57,8 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
 class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
     # reconfigure builders before workers
     reconfig_priority = 196
+
+    master: BuildMaster | None = None
 
     @property
     def expectations(self):
