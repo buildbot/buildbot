@@ -180,7 +180,7 @@ class BuildStep(
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties: bool = True
 
-    renderables: list[str] = [
+    renderables: Sequence[str] = [
         *results.ResultComputingConfigMixin.resultConfig,
         'alwaysRun',
         'description',
@@ -933,7 +933,7 @@ class ShellMixin:
         ('initialStdin', check_param_str_none),
         ('decodeRC', None),
     ]
-    renderables = [arg for arg, _ in _shell_mixin_arg_config]
+    renderables: Sequence[str] = [arg for arg, _ in _shell_mixin_arg_config]
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=None):
         constructorArgs = constructorArgs.copy()

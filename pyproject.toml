@@ -212,9 +212,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.steps.cmake"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.steps.configurable"
     ignore_errors = true
     [[tool.mypy.overrides]]
