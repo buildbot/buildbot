@@ -26,6 +26,7 @@ from buildbot.process.results import SKIPPED
 
 if TYPE_CHECKING:
     from buildbot.db.buildrequests import BuildRequestModel
+    from buildbot.master import BuildMaster
 
 
 class BuildRequestCollapser:
@@ -109,6 +110,8 @@ class TempSourceStamp:
         ('patch_author', 'author'),
         ('patch_comment', 'comment'),
     )
+
+    changes: list[TempChange]
 
     def __init__(self, ssdict):
         self._ssdict = ssdict
@@ -198,7 +201,16 @@ class BuildRequest:
     """
 
     submittedAt = None
-    sources = {}
+    sources: dict[str, TempSourceStamp] = {}
+    id: int
+    bsid: int
+    buildername: str
+    builderid: int
+    priority: int
+    master: BuildMaster
+    waitedFor: int
+    reason: str
+    properties: properties.Properties
 
     @classmethod
     def fromBrdict(cls, master, brdict: BuildRequestModel):
@@ -220,7 +232,7 @@ class BuildRequest:
 
     @classmethod
     @defer.inlineCallbacks
-    def _make_br(cls, brid: int, brdict: BuildRequestModel, master):
+    def _make_br(cls, brid: int, brdict: BuildRequestModel, master: BuildMaster):
         buildrequest = cls()
         buildrequest.id = brid
         buildrequest.bsid = brdict.buildsetid
