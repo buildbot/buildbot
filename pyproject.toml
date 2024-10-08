@@ -217,10 +217,11 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.scripts.windows_service"
-    ignore_errors = true
+    module = "subunit.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.steps.subunit"
+    module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.steps.transfer"
