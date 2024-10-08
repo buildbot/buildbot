@@ -120,7 +120,7 @@ class BuildStepStatus:
     pass
 
 
-def get_factory_from_step_or_factory(step_or_factory):
+def get_factory_from_step_or_factory(step_or_factory: BuildStep | interfaces.IBuildStepFactory):
     if hasattr(step_or_factory, 'get_step_factory'):
         factory = step_or_factory.get_step_factory()
     else:
@@ -834,7 +834,7 @@ class BuildStep(
         return None
 
     @defer.inlineCallbacks
-    def runCommand(self, command):
+    def runCommand(self, command: remotecommand.RemoteCommand):
         if self.stopped:
             return CANCELLED
 
