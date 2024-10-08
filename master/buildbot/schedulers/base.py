@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from typing import ClassVar
+from typing import Dict
 from typing import Sequence
 
 from twisted.internet import defer
@@ -30,7 +31,7 @@ from buildbot.util.state import StateMixin
 
 @implementer(interfaces.IScheduler)
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
-    DEFAULT_CODEBASES = {'': {}}
+    DEFAULT_CODEBASES: Dict[str, Dict[str, str]] = {'': {}}
 
     compare_attrs: ClassVar[Sequence[str]] = (
         *ClusteredBuildbotService.compare_attrs,
