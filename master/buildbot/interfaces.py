@@ -333,7 +333,7 @@ class ITriggerableScheduler(Interface):
 
 
 class IBuildStepFactory(Interface):
-    def buildStep() -> None:
+    def buildStep() -> IBuildStep:
         pass
 
 
