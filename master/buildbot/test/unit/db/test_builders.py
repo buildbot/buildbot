@@ -20,9 +20,11 @@ from twisted.trial import unittest
 
 from buildbot.db import builders
 from buildbot.db import tags
+from buildbot.db import workers
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
+from buildbot.util.twisted import async_to_deferred
 
 
 def builderKey(builder: builders.Builder):
@@ -60,7 +62,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuilders(self):
         @self.assertArgSpecMatches(self.db.builders.getBuilders)
-        def getBuilders(self, masterid=None, projectid=None):
+        def getBuilders(self, masterid=None, projectid=None, workerid=None):
             pass
 
     def test_signature_updateBuilderInfo(self):
@@ -355,6 +357,43 @@ class Tests(interfaces.InterfaceTests):
             ),
         )
 
+    @async_to_deferred
+    async def test_getBuilders_workerid(self):
+        await self.insert_test_data([
+            fakedb.Builder(id=101, name="b101"),
+            fakedb.Builder(id=102, name="b102"),
+            fakedb.Builder(id=103, name="b103"),
+            fakedb.Builder(id=104, name="b104"),
+            fakedb.Master(id=3, name='m1'),
+            fakedb.BuilderMaster(id=1, builderid=101, masterid=3),
+            fakedb.BuilderMaster(id=2, builderid=102, masterid=3),
+            fakedb.BuilderMaster(id=3, builderid=103, masterid=3),
+            fakedb.BuilderMaster(id=4, builderid=104, masterid=3),
+            fakedb.Worker(id=1, name='zero'),
+            fakedb.ConnectedWorker(id=1, workerid=1, masterid=3),
+            fakedb.ConfiguredWorker(id=1, workerid=1, buildermasterid=2),
+            fakedb.ConfiguredWorker(id=2, workerid=1, buildermasterid=3),
+        ])
+        builderlist = await self.db.builders.getBuilders(workerid=1)
+        self.assertEqual(
+            sorted(builderlist, key=builderKey),
+            sorted(
+                [
+                    builders.BuilderModel(
+                        id=102,
+                        name="b102",
+                        masterids=[3],
+                    ),
+                    builders.BuilderModel(
+                        id=103,
+                        name="b103",
+                        masterids=[3],
+                    ),
+                ],
+                key=builderKey,
+            ),
+        )
+
     @defer.inlineCallbacks
     def test_getBuilders_empty(self):
         builderlist = yield self.db.builders.getBuilders()
@@ -384,11 +423,15 @@ class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin,
                 'builder_masters',
                 'builders_tags',
                 'tags',
+                'workers',
+                'connected_workers',
+                'configured_workers',
             ]
         )
 
         self.db.builders = builders.BuildersConnectorComponent(self.db)
         self.db.tags = tags.TagsConnectorComponent(self.db)
+        self.db.workers = workers.WorkersConnectorComponent(self.db)
         self.master = self.db.master
         self.master.db = self.db
 

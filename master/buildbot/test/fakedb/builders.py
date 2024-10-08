@@ -134,7 +134,10 @@ class FakeBuildersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getBuilders(
-        self, masterid: int | None = None, projectid: int | None = None
+        self,
+        masterid: int | None = None,
+        projectid: int | None = None,
+        workerid: int | None = None,
     ) -> defer.Deferred[list[builders.BuilderModel]]:
         rv: list[builders.BuilderModel] = [
             self._row2builder(bldr) for bldr in self.builders.values()
@@ -143,6 +146,17 @@ class FakeBuildersComponent(FakeDBComponent):
             rv = [bd for bd in rv if masterid in bd.masterids]
         if projectid is not None:
             rv = [bd for bd in rv if bd.projectid == projectid]
+        if workerid is not None:
+            worker_buildermaster = [
+                configured_worker["buildermasterid"]
+                for configured_worker in self.db.workers.configured.values()
+                if configured_worker["workerid"] == workerid
+            ]
+            builder_ids = set(
+                self.builder_masters[buildmaster_id][0] for buildmaster_id in worker_buildermaster
+            )
+            rv = [bd for bd in rv if bd.id in builder_ids]
+
         return defer.succeed(rv)
 
     def addTestBuilder(self, builderid, name=None):
