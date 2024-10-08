@@ -30,7 +30,7 @@ from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine.base import Connectable as SQLAConnection
+    from sqlalchemy.engine import Connection as SQLAConnection
     from sqlalchemy.engine.reflection import Inspector
 
 

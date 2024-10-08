@@ -18,6 +18,7 @@ from __future__ import annotations
 import warnings
 import weakref
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.application import service
 from twisted.internet import defer
@@ -25,6 +26,7 @@ from twisted.python import log
 
 from buildbot import interfaces
 from buildbot.data import resultspec
+from buildbot.data.workers import Worker
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
@@ -60,9 +62,9 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         warnings.warn("'Builder.expectations' is deprecated.", stacklevel=2)
         return None
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         super().__init__()
-        self.name = name
+        self.name: str | None = name  # type: ignore[assignment]
 
         # this is filled on demand by getBuilderId; don't access it directly
         self._builderid = None
@@ -70,18 +72,18 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         # build/wannabuild slots: Build objects move along this sequence
         self.building: list[Build] = []
         # old_building holds active builds that were stolen from a predecessor
-        self.old_building = weakref.WeakKeyDictionary()
+        self.old_building: weakref.WeakKeyDictionary[Build, Any] = weakref.WeakKeyDictionary()
 
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
-        self.attaching_workers = []
+        self.attaching_workers: list[Worker] = []
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
-        self.workers = []
+        self.workers: list[Worker] = []
 
-        self.config = None
+        self.config: BuilderConfig | None = None
 
         # Updated in reconfigServiceWithBuildbotConfig
         self.project_name = None

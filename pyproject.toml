@@ -189,54 +189,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.data.build_data"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.data.builders"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.db.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.db.logs"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.db.migrations.env"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.db.model"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.db.pool"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.db.steps"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.interfaces"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.machine.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.manhole"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.mq.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.mq.connector"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.mq.wamp"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.process.botmaster"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.process.builder"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.process.build"
     ignore_errors = true
     [[tool.mypy.overrides]]
