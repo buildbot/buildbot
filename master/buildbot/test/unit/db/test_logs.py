@@ -494,7 +494,7 @@ class RealTests(Tests):
     @async_to_deferred
     async def test_lz4_compress_big_chunk(self):
         try:
-            import lz4  # noqa pylint: disable=unused-import,import-outside-toplevel
+            import lz4  # noqa: F401
         except ImportError as e:
             raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
@@ -504,7 +504,7 @@ class RealTests(Tests):
     @async_to_deferred
     async def test_zstd_compress_big_chunk(self):
         try:
-            import zstandard  # noqa pylint: disable=unused-import,import-outside-toplevel
+            import zstandard  # noqa: F401
         except ImportError as e:
             raise unittest.SkipTest("zstandard not installed, skip the test") from e
 
@@ -514,7 +514,7 @@ class RealTests(Tests):
     @async_to_deferred
     async def test_br_compress_big_chunk(self):
         try:
-            import brotli  # noqa pylint: disable=unused-import,import-outside-toplevel
+            import brotli  # noqa: F401
         except ImportError as e:
             raise unittest.SkipTest("brotli not installed, skip the test") from e
 

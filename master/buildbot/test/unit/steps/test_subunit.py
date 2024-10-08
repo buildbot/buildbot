@@ -110,7 +110,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 .*""",
                 re.MULTILINE | re.DOTALL,
             ),
-        )  # noqa pylint: disable=line-too-long
+        )
         return self.run_step()
 
     def test_multiple_errors(self):
@@ -142,7 +142,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 .*""",
                 re.MULTILINE | re.DOTALL,
             ),
-        )  # noqa pylint: disable=line-too-long
+        )
         return self.run_step()
 
     def test_warnings(self):
@@ -174,5 +174,5 @@ ValueError: invalid literal for int\(\) with base 10: '_error2'
 """,
                 re.MULTILINE | re.DOTALL,
             ),
-        )  # noqa pylint: disable=line-too-long
+        )
         return self.run_step()

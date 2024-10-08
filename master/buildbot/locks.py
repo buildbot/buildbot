@@ -25,7 +25,7 @@ from buildbot.util.eventual import eventually
 if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg
 else:
-    debuglog = lambda m: None  # noqa
+    debuglog = lambda m: None
 
 
 class BaseLock:

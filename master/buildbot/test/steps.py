@@ -415,7 +415,7 @@ class ExpectUploadDirectory(Expect):
     def upload_tar_file(self, filename, members, error=None, out_writers=None):
         def behavior(command):
             f = BytesIO()
-            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')  # noqa pylint: disable=consider-using-with
+            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
             for name, content in members.items():
                 content = unicode2bytes(content)
                 archive.addfile(tarfile.TarInfo(name), BytesIO(content))

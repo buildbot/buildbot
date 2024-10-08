@@ -322,7 +322,7 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
 
 # Spell checker.
 try:
-    import enchant  # noqa # pylint: disable=unused-import
+    import enchant  # noqa: F401
 except ImportError as ex:
     print("enchant module import failed:\n" f"{ex}\n" "Spell checking disabled.", file=sys.stderr)
 

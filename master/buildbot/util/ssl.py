@@ -25,7 +25,7 @@ import unittest
 from buildbot.config import error
 
 try:
-    from twisted.internet.ssl import *  # noqa pylint: disable=unused-wildcard-import, wildcard-import
+    from twisted.internet.ssl import *  # noqa: F403
 
     ssl_import_error = None
     has_ssl = True
