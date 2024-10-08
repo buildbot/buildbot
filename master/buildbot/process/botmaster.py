@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -89,7 +90,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     them."""
 
     debug = 0
-    name = "botmaster"
+    name : Optional[str] = "botmaster" # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()
