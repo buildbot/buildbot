@@ -351,7 +351,9 @@ class IConfigured(Interface):
 
 
 class IReportGenerator(Interface):
-    def generate(master: "IConfigured", reporter: "ReporterBase", key: str, build: "Build") -> None:
+    def generate(
+        master: "IConfigured", reporter: "ReporterBase", key: str, build: "Build"
+    ) -> "Deferred[None]":
         raise NotImplementedError
 
 

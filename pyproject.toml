@@ -193,9 +193,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.generators.build"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.reporters.generators.buildrequest"
     ignore_errors = true
     [[tool.mypy.overrides]]
