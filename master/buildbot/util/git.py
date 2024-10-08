@@ -566,7 +566,11 @@ class GitStepAuth(AbstractGitAuth):
 
         # basename and dirname interpret the last element being empty for paths
         # ending with a slash
-        assert isinstance(self.step, buildstep.BuildStep) and self.step.build is not None
+        assert (
+            isinstance(self.step, buildstep.BuildStep)
+            and self.step.build is not None
+            and self.step.build.builder.config is not None
+        )
 
         workerbuilddir = bytes2unicode(self.step.build.builder.config.workerbuilddir)
         workdir = data_workdir.rstrip('/\\')

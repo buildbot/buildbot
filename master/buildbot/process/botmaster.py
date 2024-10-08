@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -90,17 +89,18 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     them."""
 
     debug = 0
-    name : Optional[str] = "botmaster" # type: ignore[assignment]
+    name: str | None = "botmaster"  # type: ignore[assignment]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.builders: dict[str, Builder] = {}
-        self.builderNames = []
+        self.builderNames: list[str] = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
         # which is the master-side object that defines and controls a build.
 
-        self.watchers = {}
+        # Unused?
+        self.watchers: dict[object, object] = {}
 
         self.shuttingDown = False
 
@@ -115,7 +115,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
 
         # Dictionary of build request ID to False or cancellation reason string in case cancellation
         # has been requested.
-        self._starting_brid_to_cancel = {}
+        self._starting_brid_to_cancel: dict[int, bool | str] = {}
 
     @defer.inlineCallbacks
     def cleanShutdown(self, quickMode=False, stopReactor=True):
