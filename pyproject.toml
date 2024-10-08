@@ -193,8 +193,9 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.timed"
-    ignore_errors = true
+    module = "croniter.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.schedulers.trysched"
     ignore_errors = true
