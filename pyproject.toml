@@ -204,9 +204,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.secrets.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.secrets.providers.file"
     ignore_errors = true
     [[tool.mypy.overrides]]
