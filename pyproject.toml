@@ -189,12 +189,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.mq.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.mq.connector"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.mq.wamp"
     ignore_errors = true
     [[tool.mypy.overrides]]
