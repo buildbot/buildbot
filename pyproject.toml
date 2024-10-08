@@ -213,16 +213,11 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "txrequests.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.cppcheck"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.gitdiffinfo"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.http"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.steps.master"
