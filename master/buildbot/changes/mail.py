@@ -26,6 +26,9 @@ from email.iterators import body_line_iterator
 from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
+from typing import ClassVar
+from typing import Optional
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -40,8 +43,9 @@ from buildbot.util.maildir import MaildirService
 class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
 
-    compare_attrs = ("basedir", "pollInterval", "prefix")
-    name = 'MaildirSource'
+    compare_attrs: ClassVar[Sequence[str]] = ("basedir", "pollInterval", "prefix")
+    # twisted is marked as typed, but doesn't specify this type correctly
+    name: Optional[str] = 'MaildirSource'  # type: ignore[assignment]
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
         super().__init__(maildir)
@@ -435,7 +439,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 class BzrLaunchpadEmailMaildirSource(MaildirSource):
     name = "Launchpad"
 
-    compare_attrs = ("branchMap", "defaultBranch")
+    compare_attrs: ClassVar[Sequence[str]] = ("branchMap", "defaultBranch")
 
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap

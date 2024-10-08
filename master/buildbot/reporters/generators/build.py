@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from zope.interface import implementer
 
@@ -30,7 +33,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         ('builds', None, 'finished'),
     ]
 
-    compare_attrs = ['formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['formatter']
 
     def __init__(
         self,
@@ -92,7 +95,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         ('builds', None, 'finished'),
     ]
 
-    compare_attrs = ['start_formatter', 'end_formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['start_formatter', 'end_formatter']
 
     def __init__(
         self,

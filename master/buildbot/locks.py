@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -340,7 +342,7 @@ class LockAccess(util.ComparableMixin):
                   compatibility
     """
 
-    compare_attrs = ('lockid', 'mode', 'count')
+    compare_attrs: ClassVar[Sequence[str]] = ('lockid', 'mode', 'count')
 
     def __init__(self, lockid, mode, count=1):
         self.lockid = lockid
@@ -398,7 +400,7 @@ class MasterLock(BaseLockId):
     workers, for example to limit the load on a common SVN repository.
     """
 
-    compare_attrs = ('name', 'maxCount')
+    compare_attrs: ClassVar[Sequence[str]] = ('name', 'maxCount')
     lockClass = RealMasterLock
 
     def __init__(self, name, maxCount=1):
@@ -426,7 +428,7 @@ class WorkerLock(BaseLockId):
 
     """
 
-    compare_attrs = ('name', 'maxCount', '_maxCountForWorkerList')
+    compare_attrs: ClassVar[Sequence[str]] = ('name', 'maxCount', '_maxCountForWorkerList')
     lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForWorker=None):

@@ -17,6 +17,8 @@ import collections
 import json
 import re
 import weakref
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -46,7 +48,7 @@ class Properties(util.ComparableMixin):
     string when used as a mapping.
     """
 
-    compare_attrs = ('properties',)
+    compare_attrs: ClassVar[Sequence[str]] = ('properties',)
 
     def __init__(self, **kwargs):
         """
@@ -313,7 +315,7 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
 
     """
 
-    compare_attrs = ('fn',)
+    compare_attrs: ClassVar[Sequence[str]] = ('fn',)
 
     def __init__(self, v1, v2, cstr, comparator):
         self.v1 = v1
@@ -412,7 +414,7 @@ class WithProperties(util.ComparableMixin):
     want to interpolate build properties.
     """
 
-    compare_attrs = ('fmtstring', 'args', 'lambda_subs')
+    compare_attrs: ClassVar[Sequence[str]] = ('fmtstring', 'args', 'lambda_subs')
 
     def __init__(self, fmtstring, *args, **lambda_subs):
         self.fmtstring = fmtstring
@@ -448,7 +450,7 @@ class _NotHasKey(util.ComparableMixin):
     check it with ``==`` or ``!=``.
     """
 
-    compare_attrs = ()
+    compare_attrs: ClassVar[Sequence[str]] = ()
 
 
 # any instance of _NotHasKey would do, yet we don't want to create and delete
@@ -458,7 +460,14 @@ _notHasKey = _NotHasKey()
 
 @implementer(IRenderable)
 class _Lookup(util.ComparableMixin):
-    compare_attrs = ('value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
+    compare_attrs: ClassVar[Sequence[str]] = (
+        'value',
+        'index',
+        'default',
+        'defaultWhenFalse',
+        'hasKey',
+        'elideNoneAs',
+    )
 
     def __init__(
         self, value, index, default=None, defaultWhenFalse=True, hasKey=_notHasKey, elideNoneAs=None
@@ -571,7 +580,7 @@ class _SecretIndexer:
 
 @implementer(IRenderable)
 class _SourceStampDict(util.ComparableMixin):
-    compare_attrs = ('codebase',)
+    compare_attrs: ClassVar[Sequence[str]] = ('codebase',)
 
     def __init__(self, codebase):
         self.codebase = codebase
@@ -585,7 +594,7 @@ class _SourceStampDict(util.ComparableMixin):
 
 @implementer(IRenderable)
 class _Lazy(util.ComparableMixin):
-    compare_attrs = ('value',)
+    compare_attrs: ClassVar[Sequence[str]] = ('value',)
 
     def __init__(self, value):
         self.value = value
@@ -604,7 +613,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
     want to interpolate build properties.
     """
 
-    compare_attrs = ('fmtstring', 'args', 'kwargs')
+    compare_attrs: ClassVar[Sequence[str]] = ('fmtstring', 'args', 'kwargs')
 
     identifier_re = re.compile(r'^[\w._-]*$')
 
@@ -805,7 +814,7 @@ class Property(RenderableOperatorsMixin, util.ComparableMixin):
     An instance of this class renders a property of a build.
     """
 
-    compare_attrs = ('key', 'default', 'defaultWhenFalse')
+    compare_attrs: ClassVar[Sequence[str]] = ('key', 'default', 'defaultWhenFalse')
 
     def __init__(self, key, default=None, defaultWhenFalse=True):
         """
@@ -845,7 +854,7 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
     An instance of this class flattens all nested lists in a list
     """
 
-    compare_attrs = ('nestedlist',)
+    compare_attrs: ClassVar[Sequence[str]] = ('nestedlist',)
 
     def __init__(self, nestedlist, types=(list, tuple)):
         """
@@ -872,7 +881,7 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
 
 @implementer(IRenderable)
 class _Renderer(util.ComparableMixin):
-    compare_attrs = ('fn',)
+    compare_attrs: ClassVar[Sequence[str]] = ('fn',)
 
     def __init__(self, fn):
         self.fn = fn

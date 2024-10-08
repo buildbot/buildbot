@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.python import deprecate
 from twisted.python import versions
@@ -56,7 +58,7 @@ class BuildFactory(util.ComparableMixin):
     buildClass = Build
     useProgress = 1
     workdir = "build"
-    compare_attrs = ('buildClass', 'steps', 'useProgress', 'workdir')
+    compare_attrs: ClassVar[Sequence[str]] = ('buildClass', 'steps', 'useProgress', 'workdir')
 
     def __init__(self, steps=None):
         self.steps = []

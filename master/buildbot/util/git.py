@@ -20,6 +20,8 @@ import re
 import stat
 from pathlib import Path
 from typing import TYPE_CHECKING
+from typing import ClassVar
+from typing import Sequence
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -268,7 +270,7 @@ class GitStepMixin(GitMixin):
 
 
 class AbstractGitAuth(ComparableMixin):
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "ssh_private_key",
         "ssh_host_key",
         "ssh_known_hosts",

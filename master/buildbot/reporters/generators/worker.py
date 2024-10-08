@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from zope.interface import implementer
 
@@ -26,7 +29,7 @@ ENCODING = 'utf-8'
 
 @implementer(interfaces.IReportGenerator)
 class WorkerMissingGenerator(util.ComparableMixin):
-    compare_attrs = ['workers', 'formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['workers', 'formatter']
 
     wanted_event_keys = [
         ('workers', None, 'missing'),

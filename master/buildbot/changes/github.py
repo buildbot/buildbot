@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 from datetime import datetime
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -33,7 +35,7 @@ link_urls = {"https": "clone_url", "svn": "svn_url", "git": "git_url", "ssh": "s
 
 
 class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin, PullRequestMixin):
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "owner",
         "repo",
         "token",

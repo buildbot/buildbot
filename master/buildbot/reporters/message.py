@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
 
 import jinja2
 from twisted.internet import defer
@@ -420,7 +422,7 @@ Buildbot ({{ buildbot_title }}): {{ build['properties'].get('project', ['whole b
 
 
 class MessageFormatterBaseJinja(MessageFormatterBase):
-    compare_attrs = ['body_template', 'subject_template', 'template_type']
+    compare_attrs: ClassVar[Sequence[str]] = ['body_template', 'subject_template', 'template_type']
     subject_template = None
     template_type = 'plain'
     uses_default_body_template = False

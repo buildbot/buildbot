@@ -20,6 +20,8 @@
 import datetime
 import os
 import re
+from typing import ClassVar
+from typing import Sequence
 
 import dateutil.tz
 from twisted.internet import defer
@@ -91,7 +93,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "p4port",
         "p4user",
         "p4passwd",

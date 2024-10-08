@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from zope.interface import implementer
@@ -30,7 +32,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         ('buildsets', None, 'complete'),
     ]
 
-    compare_attrs = ['formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['formatter']
 
     def __init__(
         self,
@@ -147,7 +149,7 @@ class BuildSetCombinedStatusGenerator:
         ("buildsets", None, "complete"),
     ]
 
-    compare_attrs = ["formatter"]
+    compare_attrs: ClassVar[Sequence[str]] = ["formatter"]
 
     def __init__(self, message_formatter):
         self.formatter = message_formatter

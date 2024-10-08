@@ -15,6 +15,8 @@
 
 import os
 import time
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -31,7 +33,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "repourl",
         "branch",
         "branches",

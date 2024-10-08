@@ -20,6 +20,7 @@ relative to the top of the maildir (so it will look like "new/blahblah").
 """
 
 import os
+from typing import Optional
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -44,7 +45,7 @@ class NoSuchMaildir(Exception):
 
 class MaildirService(service.BuildbotService):
     pollInterval = 10  # only used if we don't have DNotify
-    name = 'MaildirService'
+    name: Optional[str] = 'MaildirService'  # type: ignore
 
     def __init__(self, basedir=None):
         super().__init__()

@@ -24,6 +24,7 @@ from twisted.internet import defer
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -88,14 +89,14 @@ class StepModel:
 class StepsConnectorComponent(base.DBConnectorComponent):
     url_lock: defer.DeferredLock | None = None
 
-    @defer.inlineCallbacks
-    def getStep(
+    @async_to_deferred
+    async def getStep(
         self,
         stepid: int | None = None,
         buildid: int | None = None,
         number: int | None = None,
         name: str | None = None,
-    ):
+    ) -> StepModel | None:
         tbl = self.db.model.steps
         if stepid is not None:
             wc = tbl.c.id == stepid
@@ -121,7 +122,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             res.close()
             return rv
 
-        return (yield self.db.pool.do(thd))
+        return await self.db.pool.do(thd)
 
     def getSteps(self, buildid: int) -> defer.Deferred[list[StepModel]]:
         def thd(conn) -> list[StepModel]:

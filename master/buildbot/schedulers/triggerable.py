@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from twisted.python import failure
 from zope.interface import implementer
@@ -25,7 +28,7 @@ from buildbot.util import debounce
 
 @implementer(ITriggerableScheduler)
 class Triggerable(base.BaseScheduler):
-    compare_attrs = (*base.BaseScheduler.compare_attrs, 'reason')
+    compare_attrs: ClassVar[Sequence[str]] = (*base.BaseScheduler.compare_attrs, 'reason')
 
     def __init__(self, name, builderNames, reason=None, **kwargs):
         super().__init__(name, builderNames, **kwargs)

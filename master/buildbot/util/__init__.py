@@ -25,6 +25,8 @@ import sys
 import textwrap
 import time
 from typing import TYPE_CHECKING
+from typing import ClassVar
+from typing import Sequence
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 

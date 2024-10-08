@@ -94,7 +94,7 @@ class _BuildStepFactory(util.ComparableMixin):
     easier to test that the right factories are getting created.
     """
 
-    compare_attrs = ('factory', 'args', 'kwargs')
+    compare_attrs: ClassVar[Sequence[str]] = ('factory', 'args', 'kwargs')
 
     def __init__(self, step_class, *args, **kwargs):
         self.step_class = step_class

@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import abc
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -30,7 +32,7 @@ class ReporterBase(service.BuildbotService):
     name = None
     __meta__ = abc.ABCMeta
 
-    compare_attrs = ['generators']
+    compare_attrs: ClassVar[Sequence[str]] = ['generators']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

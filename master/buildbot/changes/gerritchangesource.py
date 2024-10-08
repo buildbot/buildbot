@@ -17,6 +17,8 @@ import copy
 import datetime
 import hashlib
 import json
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -68,7 +70,7 @@ def _canonicalize_event(event):
 class GerritChangeFilter(ChangeFilter):
     """This gerrit specific change filter helps creating pre-commit and post-commit builders"""
 
-    compare_attrs = ('eventtype_fn', 'gerrit_branch_fn')
+    compare_attrs: ClassVar[Sequence[str]] = ('eventtype_fn', 'gerrit_branch_fn')
 
     def __init__(
         self,
@@ -137,7 +139,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = ("gerritserver", "gerritport")
+    compare_attrs: ClassVar[Sequence[str]] = ("gerritserver", "gerritport")
     name = None
     # list of properties that are no of no use to be put in the event dict
     external_property_denylist = ["event.eventCreatedOn"]
@@ -575,7 +577,7 @@ class GerritChangeSource(GerritChangeSourceBase):
      - Gerrit HTTP and SSH APIs return events encoded identically
     """
 
-    compare_attrs = ("gerritserver", "gerritport")
+    compare_attrs: ClassVar[Sequence[str]] = ("gerritserver", "gerritport")
 
     name = None
 

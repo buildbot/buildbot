@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import re
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 
@@ -211,7 +213,7 @@ class _OldBuildrequestTracker:
 
 
 class OldBuildCanceller(BuildbotService):
-    compare_attrs = (*BuildbotService.compare_attrs, 'filters')
+    compare_attrs: ClassVar[Sequence[str]] = (*BuildbotService.compare_attrs, 'filters')
 
     def checkConfig(self, name, filters, branch_key=None):
         OldBuildCanceller.check_filters(filters)

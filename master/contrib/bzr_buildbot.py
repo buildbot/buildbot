@@ -98,6 +98,8 @@ Maintainer/author: gary.poster@canonical.com
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
 import socket
+from typing import ClassVar
+from typing import Sequence
 
 import bzrlib.branch
 import bzrlib.errors
@@ -198,7 +200,7 @@ if DEFINE_POLLER:
     SHORT = object()
 
     class BzrPoller(buildbot.changes.base.PollingChangeSource, buildbot.util.ComparableMixin):
-        compare_attrs = 'url'
+        compare_attrs: ClassVar[Sequence[str]] = 'url'
 
         def __init__(
             self,

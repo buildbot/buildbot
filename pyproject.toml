@@ -86,6 +86,7 @@ quote-style = "preserve"
 [tool.mypy]
 python_version = "3.8"
 namespace_packages = true
+pretty = true
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "setuptools.*"
@@ -180,44 +181,13 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.buildbot_net_usage_data"
-    ignore_errors = true
+    module = "requests.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.changes.bitbucket"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.changes"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.gerritchangesource"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.github"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.gitpoller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.hgpoller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.mail"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.p4poller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.pb"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.changes.svnpoller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.data.base"
-    ignore_errors = true
+    module = "unidiff.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.data.build_data"
     ignore_errors = true

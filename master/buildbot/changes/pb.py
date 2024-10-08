@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -96,7 +99,7 @@ class ChangePerspective(NewCredPerspective):
 
 
 class PBChangeSource(base.ChangeSource):
-    compare_attrs = ("user", "passwd", "port", "prefix", "port")
+    compare_attrs: ClassVar[Sequence[str]] = ("user", "passwd", "port", "prefix", "port")
 
     def __init__(self, user="change", passwd="changepw", port=None, prefix=None, name=None):
         if name is None:
