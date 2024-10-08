@@ -193,12 +193,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.reporters.bitbucket"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.reporters.bitbucketserver"
     ignore_errors = true
     [[tool.mypy.overrides]]
