@@ -132,7 +132,7 @@ class IRCContact(Contact):
         for channel in args:
             self.bot.join(channel)
 
-    command_JOIN.usage = "join #channel - join a channel #channel"
+    command_JOIN.usage = "join #channel - join a channel #channel"  # type: ignore[attr-defined]
 
     @dangerousCommand
     def command_LEAVE(self, args, **kwargs):
@@ -141,7 +141,7 @@ class IRCContact(Contact):
         for channel in args:
             self.bot.leave(channel)
 
-    command_LEAVE.usage = "leave #channel - leave a channel #channel"
+    command_LEAVE.usage = "leave #channel - leave a channel #channel"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def command_MUTE(self, args, **kwargs):
@@ -155,7 +155,7 @@ class IRCContact(Contact):
         yield self.send("Shutting up for now.")
         self.channel.muted = True
 
-    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
+    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def command_UNMUTE(self, args, **kwargs):
@@ -170,7 +170,7 @@ class IRCContact(Contact):
                 "No one had told me to be quiet, but it's the thought that counts, right?"
             )
 
-    command_UNMUTE.usage = "unmute - disable a previous 'mute'"
+    command_UNMUTE.usage = "unmute - disable a previous 'mute'"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     @Contact.overrideCommand
@@ -202,7 +202,7 @@ class IRCContact(Contact):
     def command_HUSTLE(self, args):
         self.act("does the hustle")
 
-    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"
+    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"  # type: ignore[attr-defined]
 
 
 class IrcStatusBot(StatusBot, irc.IRCClient):
@@ -417,7 +417,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
 
 class IrcStatusFactory(ThrottledClientFactory):
-    protocol = IrcStatusBot
+    protocol = IrcStatusBot  # type: ignore[assignment]
 
     shuttingDown = False
     p = None
