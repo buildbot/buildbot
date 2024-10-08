@@ -224,9 +224,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.steps.transfer"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.steps.vstudio"
     ignore_errors = true
     [[tool.mypy.overrides]]
