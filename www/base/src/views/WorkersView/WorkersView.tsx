@@ -35,12 +35,16 @@ import {
   useTopbarActions,
 } from "buildbot-ui";
 import {makePagination} from "../../util/Pagination";
+import {Form} from "react-bootstrap";
 
-const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean) => {
-  if (showOldWorkers) {
-    return true;
+const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean, workerNameFilter: string) => {
+  if (!showOldWorkers && worker.configured_on.length === 0) {
+    return false;
   }
-  return worker.configured_on.length !== 0;
+  if (workerNameFilter !== "" && worker.name.indexOf(workerNameFilter) < 0) {
+    return false;
+  }
+  return true;
 }
 
 // Returns an object mapping worker name to its known builds. The returned object has an entry
@@ -92,9 +96,10 @@ export const WorkersView = observer(() => {
 
   const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [workerNameFilter, setWorkerNameFilter] = useState("");
 
   const filteredWorkers = workersQuery.array.filter(worker => {
-    return isWorkerFiltered(worker, showOldWorkers);
+    return isWorkerFiltered(worker, showOldWorkers, workerNameFilter);
   }).sort((a, b) => a.name.localeCompare(b.name))
     .sort((a, b) => b.connected_to.length - a.connected_to.length);
 
@@ -119,6 +124,12 @@ export const WorkersView = observer(() => {
 
   return (
     <div className="container">
+      <form role="search" style={{width: "200px"}}>
+        <Form.Control
+          type="text" value={workerNameFilter}
+          onChange={e => setWorkerNameFilter(e.target.value)}
+          placeholder="Search for workers" />
+      </form>
       <WorkersTable workers={paginatedWorkers} buildersQuery={buildersQuery}
                     mastersQuery={mastersQuery}
                     buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}
