@@ -209,10 +209,11 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.scripts.windows_service"
-    ignore_errors = true
+    module = "evalidate.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.steps.configurable"
+    module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.steps.cppcheck"
