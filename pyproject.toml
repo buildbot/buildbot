@@ -201,10 +201,11 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.scripts.windows_service"
-    ignore_errors = true
+    module = "hvac.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.secrets.providers.vault_hvac"
+    module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.statistics.storage_backends.influxdb_client"
