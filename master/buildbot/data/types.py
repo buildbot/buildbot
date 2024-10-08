@@ -17,6 +17,10 @@
 import datetime
 import json
 import re
+from typing import Dict
+from typing import Set
+from typing import Tuple
+from typing import Union
 
 from buildbot import util
 from buildbot.util import bytes2unicode
@@ -27,7 +31,7 @@ def capitalize(word):
 
 
 class Type:
-    name = None
+    name: Union["Identifier", "String", str, None] = None
     doc = None
     graphQLType = "unknown"
 
@@ -115,7 +119,7 @@ class NoneOk(Type):
 
 
 class Instance(Type):
-    types = ()
+    types: Tuple[type, ...] = ()
     ramlType = "unknown"
     graphQLType = "unknown"
 
@@ -348,10 +352,10 @@ class Entity(Type):
     #  * buildsets.Buildset.entityType or
     #  * self.master.data.rtypes.buildsets.entityType
 
-    name = None  # set in constructor
+    name: Union["Identifier", "String", str, None] = None  # set in constructor
     graphql_name = None  # set in constructor
-    fields = {}
-    fieldNames = set([])
+    fields: Dict[str, Type] = {}
+    fieldNames: Set[str] = set([])
 
     def __init__(self, name, graphql_name):
         fields = {}

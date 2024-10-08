@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from typing import List
+
 from buildbot.data import base
 from buildbot.data import types
 
@@ -23,7 +25,7 @@ from buildbot.data import types
 class Patch(base.ResourceType):
     name = "patch"
     plural = "patches"
-    endpoints = []
+    endpoints: List[base.Endpoint] = []
     keyField = 'patchid'
 
     class EntityType(types.Entity):

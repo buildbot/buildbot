@@ -73,6 +73,7 @@ class Db2DataMixin:
     def get_buildset_properties_filtered(self, buildsetid: int, filters: Sequence):
         if not filters:
             return None
+        assert hasattr(self, 'master')
         props = yield self.master.db.buildsets.getBuildsetProperties(buildsetid)
         return _generate_filtered_properties(props, filters)
 
