@@ -12,12 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from typing import Dict
 
 from buildbot.data import resultspec
 
 
 class FakeDBComponent:
-    data2db = {}
+    data2db: Dict[str, str] = {}
 
     def __init__(self, db, testcase, reactor=None):
         self.db = db
