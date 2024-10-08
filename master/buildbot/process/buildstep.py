@@ -899,7 +899,7 @@ class CommandMixin:
 
 
 class ShellMixin:
-    command = None
+    command: list[str] | None = None
     env: dict[str, str] = {}
     want_stdout = True
     want_stderr = True
