@@ -55,8 +55,8 @@ class BuildFactory(util.ComparableMixin):
     @type  buildClass: L{buildbot.process.build.Build}
     """
 
-    buildClass = Build
-    useProgress = 1
+    buildClass: type[Build] = Build
+    useProgress = True
     workdir = "build"
     compare_attrs: ClassVar[Sequence[str]] = ('buildClass', 'steps', 'useProgress', 'workdir')
 
@@ -65,7 +65,7 @@ class BuildFactory(util.ComparableMixin):
         if steps:
             self.addSteps(steps)
 
-    def newBuild(self, requests, builder: Builder) -> buildClass:
+    def newBuild(self, requests, builder: Builder) -> Build:
         """Create a new Build instance.
 
         @param requests: a list of buildrequest dictionaries describing what is
