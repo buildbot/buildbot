@@ -123,6 +123,9 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildersTags(builderid=5, tagid=4),
             fakedb.Master(id=13),
             fakedb.BuilderMaster(id=1, builderid=2, masterid=13),
+            fakedb.Worker(id=1, name='zero'),
+            fakedb.ConnectedWorker(id=1, workerid=1, masterid=13),
+            fakedb.ConfiguredWorker(id=1, workerid=1, buildermasterid=1),
         ])
 
     def tearDown(self):
@@ -154,6 +157,15 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.validateData(b)
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 4])
+
+    @async_to_deferred
+    async def test_get_workerid(self):
+        builders = await self.callGet(('workers', 1, 'builders'))
+
+        for b in builders:
+            self.validateData(b)
+
+        self.assertEqual(sorted([b['builderid'] for b in builders]), [2])
 
     @defer.inlineCallbacks
     def test_get_masterid_missing(self):
