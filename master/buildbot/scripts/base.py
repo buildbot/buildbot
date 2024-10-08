@@ -20,6 +20,7 @@ import stat
 import sys
 import traceback
 from contextlib import contextmanager
+from typing import List
 
 from twisted.python import runtime
 from twisted.python import usage
@@ -175,7 +176,7 @@ class SubcommandOptions(usage.Options):
     buildbotOptions = None
 
     # set this to options that must have non-None values
-    requiredOptions = []
+    requiredOptions: List[str] = []
 
     def __init__(self, *args):
         # for options in self.buildbotOptions, optParameters, and the options
