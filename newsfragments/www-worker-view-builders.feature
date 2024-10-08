@@ -1,0 +1,1 @@
+Web UI's Worker view (``workers/{workerId}``) now has a ``Builders`` tab showing Builders configured on the worker

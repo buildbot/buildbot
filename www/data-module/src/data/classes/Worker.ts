@@ -10,6 +10,7 @@ import {BaseClass} from "./BaseClass";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
+import {Builder, builderDescriptor} from "./Builder";
 
 export type ConfiguredBuilder = {
   builderid: number,
@@ -58,6 +59,10 @@ export class Worker extends BaseClass {
       graceful: this.graceful,
       workerinfo: this.workerinfo,
     };
+  }
+
+  getBuilders(query: RequestQuery = {}) {
+    return this.get<Builder>("builders", query, builderDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
