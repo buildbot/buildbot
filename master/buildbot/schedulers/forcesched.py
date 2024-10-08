@@ -88,14 +88,14 @@ class BaseParameter:
     parentName = None
     label = ""
     tablabel = ""
-    type = ""
-    default = ""
+    type: str = ""
+    default: Any = ""
     required = False
     multiple = False
     regex = None
     debug = True
     hide = False
-    maxsize = None
+    maxsize: Optional[int] = None
     autopopulate = None
     tooltip = ""
 
@@ -297,7 +297,7 @@ class ChoiceStringParameter(BaseParameter):
 
     spec_attributes = ["choices", "strict"]
     type = "list"
-    choices = []
+    choices: List[str] = []
     strict = True
 
     def parse_from_arg(self, s):
@@ -424,7 +424,7 @@ class NestedParameter(BaseParameter):
     type = 'nested'
     layout = 'vertical'
     fields = None
-    columns = None
+    columns: Optional[int] = None
 
     def __init__(self, name, fields, **kwargs):
         super().__init__(fields=fields, name=name, **kwargs)

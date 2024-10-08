@@ -193,15 +193,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.canceller_buildset"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.canceller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.forcesched"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.schedulers.manager"
     ignore_errors = true
     [[tool.mypy.overrides]]
