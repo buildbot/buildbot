@@ -220,15 +220,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.rpm.mock"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.rpm.rpmbuild"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.rpm.rpmlint"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.steps.python"
     ignore_errors = true
     [[tool.mypy.overrides]]
