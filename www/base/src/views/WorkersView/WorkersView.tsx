@@ -34,6 +34,7 @@ import {
   getBuildLinkDisplayProperties,
   useTopbarActions,
 } from "buildbot-ui";
+import {makePagination} from "../../util/Pagination";
 
 const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean) => {
   if (showOldWorkers) {
@@ -75,7 +76,8 @@ const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
 export const WorkersView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const showOldWorkers = buildbotGetSettings().getBooleanSetting("Workers.show_old_workers");
+  const settings = buildbotGetSettings();
+  const showOldWorkers = settings.getBooleanSetting("Workers.show_old_workers");
 
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {query: {order: 'name'}}));
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
@@ -89,6 +91,7 @@ export const WorkersView = observer(() => {
     }));
 
   const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const filteredWorkers = workersQuery.array.filter(worker => {
     return isWorkerFiltered(worker, showOldWorkers);
@@ -108,9 +111,15 @@ export const WorkersView = observer(() => {
     },
   ]);
 
+  const [paginatedWorkers, paginationElement] = makePagination(
+    currentPage, setCurrentPage,
+    settings.getIntegerSetting("Workers.page_size"),
+    filteredWorkers
+  );
+
   return (
     <div className="container">
-      <WorkersTable workers={filteredWorkers} buildersQuery={buildersQuery}
+      <WorkersTable workers={paginatedWorkers} buildersQuery={buildersQuery}
                     mastersQuery={mastersQuery}
                     buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}
                     onWorkerIconClick={(worker) => setWorkerForActions(worker)}/>
@@ -122,10 +131,11 @@ export const WorkersView = observer(() => {
       { showWorkersActions
         ? <MultipleWorkersActionsModal
             workers={workersQuery.array}
-            preselectedWorkers={filteredWorkers}
+            preselectedWorkers={paginatedWorkers}
             onClose={() => setShowWorkersActions(false)}/>
         : <></>
       }
+      {paginationElement}
     </div>
   );
 });
@@ -153,6 +163,11 @@ buildbotSetupPlugin((reg) => {
       name: 'show_old_workers',
       caption: 'Show old workers',
       defaultValue: false
+    }, {
+      type: 'integer',
+      name: 'page_size',
+      caption: 'Number of workers to show per page',
+      defaultValue: 25
     }]
   });
 });
