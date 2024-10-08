@@ -223,9 +223,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.steps.master"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.deb.lintian"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.steps.package.deb.pbuilder"
     ignore_errors = true
     [[tool.mypy.overrides]]
