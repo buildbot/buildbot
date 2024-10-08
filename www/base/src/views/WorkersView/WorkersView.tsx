@@ -25,6 +25,7 @@ import {
   Master,
   Worker,
   useDataAccessor,
+  useDataApiDynamicQuery,
   useDataApiQuery
 } from "buildbot-data-js";
 import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
@@ -83,28 +84,43 @@ export const WorkersView = observer(() => {
   const settings = buildbotGetSettings();
   const showOldWorkers = settings.getBooleanSetting("Workers.show_old_workers");
 
-  const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {query: {order: 'name'}}));
-  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
-  const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
-  const buildsQuery = useDataApiQuery(() =>
-    Build.getAll(accessor, {query: {
-        property: ["owners", "workername", "branch", ...getBuildLinkDisplayProperties()],
-        limit: 200,
-        order: '-buildid'
-      }
-    }));
-
   const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [workerNameFilter, setWorkerNameFilter] = useState("");
+  const [showWorkersActions, setShowWorkersActions] = useState<boolean>(false);
+
+  const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {query: {order: 'name'}}));
+  const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
+  const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
 
   const filteredWorkers = workersQuery.array.filter(worker => {
     return isWorkerFiltered(worker, showOldWorkers, workerNameFilter);
   }).sort((a, b) => a.name.localeCompare(b.name))
     .sort((a, b) => b.connected_to.length - a.connected_to.length);
 
-  const [showWorkersActions, setShowWorkersActions] =
-    useState<boolean>(false);
+  const [paginatedWorkers, paginationElement] = makePagination(
+    currentPage, setCurrentPage,
+    settings.getIntegerSetting("Workers.page_size"),
+    filteredWorkers
+  );
+
+  const paginatedWorkerIds = paginatedWorkers.map(w => w.workerid).sort();
+  const buildsQuery = useDataApiDynamicQuery(paginatedWorkerIds, () => {
+    // wait for workersQuery to be resolved to avoid querying without
+    // workerid filter
+    if (!workersQuery.isResolved()) {
+      const col = new DataCollection<Build>();
+      col.resolved = true;
+      return col;
+    }
+    return Build.getAll(accessor, {query: {
+      property: ["owners", "workername", "branch", ...getBuildLinkDisplayProperties()],
+      limit: 50,
+      order: '-buildid',
+      workerid: paginatedWorkerIds,
+    }});
+  });
+
 
   useTopbarActions([
     {
@@ -115,12 +131,6 @@ export const WorkersView = observer(() => {
       },
     },
   ]);
-
-  const [paginatedWorkers, paginationElement] = makePagination(
-    currentPage, setCurrentPage,
-    settings.getIntegerSetting("Workers.page_size"),
-    filteredWorkers
-  );
 
   return (
     <div className="container">
