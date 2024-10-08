@@ -52,7 +52,7 @@ try:
 
     assert resource
 except ImportError:
-    resource = None
+    resource = None  # type: ignore[assignment]
 
 
 class MetricEvent:
