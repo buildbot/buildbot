@@ -193,9 +193,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.telegram"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.reporters.words"
     ignore_errors = true
     [[tool.mypy.overrides]]
