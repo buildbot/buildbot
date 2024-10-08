@@ -3,7 +3,7 @@ line-length = 100
 target-version = "py38"
 
 [tool.ruff.lint]
-    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B"]
+    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B", "RUF"]
     ignore = [
         "E711", # comparison to None should be 'if cond is None:'
         "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
@@ -33,6 +33,10 @@ target-version = "py38"
         "UP027", # unpacked-list-comprehension Deprecated, see: https://github.com/astral-sh/ruff/issues/12754
 
         "B007", # unused-loop-control-variable
+
+        # Might be nice to have in future, but requires significant refactoring for now.
+        "RUF012", # mutable-class-default
+        "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
     ]
 
 [tool.ruff.lint.isort]
