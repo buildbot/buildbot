@@ -81,7 +81,7 @@ class HTTPStep(BuildStep):
         "verify",
         "cert",
     ]
-    renderables = requestsParams + ["method", "url"]
+    renderables = [*requestsParams, "method", "url"]
     session = None
 
     def __init__(

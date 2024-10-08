@@ -42,7 +42,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
     @defer.inlineCallbacks
     def onJoin(self, details):
         log.msg("Wamp connection succeed!")
-        for handler in [self] + self.services:
+        for handler in [self, *self.services]:
             yield self.register(handler)
             yield self.subscribe(handler)
         yield self.publish(f"org.buildbot.{self.master.masterid}.connected")

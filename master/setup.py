@@ -705,11 +705,7 @@ if sys.platform != 'win32':
 setup_args['tests_require'] = test_deps
 
 setup_args['extras_require'] = {
-    'test': [
-        'setuptools_trial',
-        'ruff',
-    ]
-    + test_deps,
+    'test': ["setuptools_trial", "ruff", *test_deps],
     'bundle': [
         f"buildbot-www=={bundle_version}",
         f"buildbot-worker=={bundle_version}",

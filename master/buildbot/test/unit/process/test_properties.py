@@ -1222,7 +1222,7 @@ class TestProperty(unittest.TestCase):
     def testFlattenListAdd2(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = FlattenList([Property("do-tests"), ["bla"]])
-        value = value + [Property("do-tests"), ["bla"]]
+        value = value + [Property('do-tests'), ['bla']]  # noqa: RUF005
 
         res = yield self.build.render(value)
         self.assertEqual(res, ["string", "bla", "string", "bla"])

@@ -176,7 +176,7 @@ class FakeWorkersComponent(FakeDBComponent):
             worker['info'] = workerinfo
         new_conn = {"masterid": masterid, "workerid": workerid}
         if new_conn not in self.connected.values():
-            conn_id = max([0] + list(self.connected)) + 1
+            conn_id = max([0, *list(self.connected)]) + 1
             self.connected[conn_id] = new_conn
         return defer.succeed(None)
 

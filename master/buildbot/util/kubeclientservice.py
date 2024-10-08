@@ -167,7 +167,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         self.process = reactor.spawnProcess(
             self.pp,
             self.kube_ctl_proxy_cmd[0],
-            self.kube_ctl_proxy_cmd + ["-p", str(self.proxy_port)],
+            [*self.kube_ctl_proxy_cmd, "-p", str(self.proxy_port)],
             env=os.environ,
         )
         self.kube_proxy_output = yield self.pp.got_output_deferred

@@ -251,7 +251,7 @@ class CVS(Source):
             raise ValueError("No command specified")
         cmd = remotecommand.RemoteShellCommand(
             workdir,
-            ['cvs'] + command,
+            ["cvs", *command],
             env=self.env,
             timeout=self.timeout,
             logEnviron=self.logEnviron,

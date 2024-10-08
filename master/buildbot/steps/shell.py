@@ -160,26 +160,27 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
             # check validity of arguments being passed to RemoteShellCommand
             valid_rsc_args = [
-                'command',
-                'env',
-                'want_stdout',
-                'want_stderr',
-                'timeout',
-                'maxTime',
-                'max_lines',
-                'sigtermTime',
-                'logfiles',
-                'lazylogfiles',
-                'usePTY',
-                'logEnviron',
-                'collectStdout',
-                'collectStderr',
-                'interruptSignal',
-                'initialStdin',
-                'decodeRC',
-                'stdioLogName',
-                'workdir',
-            ] + buildstep.BuildStep._params_names
+                "command",
+                "env",
+                "want_stdout",
+                "want_stderr",
+                "timeout",
+                "maxTime",
+                "max_lines",
+                "sigtermTime",
+                "logfiles",
+                "lazylogfiles",
+                "usePTY",
+                "logEnviron",
+                "collectStdout",
+                "collectStderr",
+                "interruptSignal",
+                "initialStdin",
+                "decodeRC",
+                "stdioLogName",
+                "workdir",
+                *buildstep.BuildStep._params_names,
+            ]
 
             invalid_args = []
             for arg in kwargs:

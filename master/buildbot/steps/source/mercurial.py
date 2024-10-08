@@ -235,7 +235,7 @@ class Mercurial(Source):
             decodeRC = {0: SUCCESS}
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
-            ['hg', '--verbose'] + command,
+            ["hg", "--verbose", *command],
             env=self.env,
             logEnviron=self.logEnviron,
             timeout=self.timeout,
