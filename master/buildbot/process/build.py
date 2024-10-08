@@ -44,6 +44,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
+    from buildbot.interfaces import IBuildStep
     from buildbot.locks import BaseLockId
     from buildbot.process.builder import Builder
     from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
@@ -577,37 +578,25 @@ class Build(properties.PropertiesMixin):
         # Add the new steps to the end.
         self.steps.extend(self.setupBuildSteps(step_factories))
 
-    def getNextStep(self):
+    def getNextStep(self) -> IBuildStep | None:
         """This method is called to obtain the next BuildStep for this build.
-        When it returns None (or raises a StopIteration exception), the build
-        is complete."""
-        if not self.steps:
-            return None
-        if not self.conn:
-            return None
-        if self.terminate or self.stopped:
-            # Run any remaining alwaysRun steps, and skip over the others
-            while True:
-                s = self.steps.pop(0)
-                if s.alwaysRun:
-                    return s
-                if not self.steps:
-                    return None
-        else:
-            return self.steps.pop(0)
+        When it returns None, the build is complete."""
+        while self.steps and self.conn:
+            s = self.steps.pop(0)
+            if not (self.terminate or self.stopped) or s.alwaysRun:
+                return s
+
+        return None
 
     def startNextStep(self):
-        try:
-            s = self.getNextStep()
-        except StopIteration:
-            s = None
-        if not s:
+        next_step = self.getNextStep()
+        if next_step is None:
             return self.allStepsDone()
-        self.executedSteps.append(s)
-        self.currentStep = s
+        self.executedSteps.append(next_step)
+        self.currentStep = next_step
 
         # the following function returns a deferred, but we don't wait for it
-        self._start_next_step_impl(s)
+        self._start_next_step_impl(next_step)
         return defer.succeed(None)
 
     @defer.inlineCallbacks
