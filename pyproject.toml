@@ -197,8 +197,9 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.scripts.devproxy"
-    ignore_errors = true
+    module = "aiohttp.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.scripts.runner"
     ignore_errors = true
