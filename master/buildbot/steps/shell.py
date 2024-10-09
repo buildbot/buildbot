@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import re
+import subprocess
 
 from twisted.internet import defer
 
@@ -153,7 +154,7 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
 class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
     name = 'shell'
 
-    def __init__(self, **kwargs):
+    def __init__(self, merge_streams=False, **kwargs):
         if self.is_exact_step_class(ShellCommand):
             if 'command' not in kwargs:
                 config.error("ShellCommand's `command' argument is not specified")
@@ -191,16 +192,20 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 config.error(
                     "Invalid argument(s) passed to ShellCommand: " + ', '.join(invalid_args)
                 )
-
+        self.merge_streams = merge_streams
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def run(self):
         cmd = yield self.makeRemoteShellCommand()
+        if self.merge_streams:
+            # Merge stderr into stdout
+            cmd.usePTY = False  # Disable PTY when merging
+            cmd.stderr = subprocess.STDOUT  # Merge stderr into stdout
+
         yield self.runCommand(cmd)
         return cmd.results()
-
 
 class Configure(ShellCommand):
     name = "configure"
@@ -418,6 +423,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
 
     @defer.inlineCallbacks
     def run(self):
+        
         yield self.setup_suppression()
 
         cmd = yield self.makeRemoteShellCommand()
@@ -426,6 +432,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         yield self.finish_logs()
         yield self.createSummary()
         return self.evaluateCommand(cmd)
+        
 
     @defer.inlineCallbacks
     def finish_logs(self):
