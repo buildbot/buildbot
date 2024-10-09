@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import Optional
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 
 
 class SchedulerManager(MeasuredBuildbotServiceManager):
-    name = "SchedulerManager"
+    name: Optional[str] = "SchedulerManager"  # type: ignore[assignment]
     managed_services_name = "schedulers"
     config_attr = "schedulers"

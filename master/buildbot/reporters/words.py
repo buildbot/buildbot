@@ -687,7 +687,7 @@ class Contact:
                 )
             self.send('\n\n'.join(response))
 
-    command_LIST.usage = (
+    command_LIST.usage = (  # type: ignore[attr-defined]
         "list [all|N] builders|workers|changes - "
         "list configured builders, workers, or N recent changes"
     )
@@ -721,7 +721,7 @@ class Contact:
         if response:
             self.send('\n'.join(response))
 
-    command_STATUS.usage = "status [_which_] - list status of a builder (or all builders)"
+    command_STATUS.usage = "status [_which_] - list status of a builder (or all builders)"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def command_NOTIFY(self, args, **kwargs):
@@ -758,7 +758,7 @@ class Contact:
         else:
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off|list [_EVENT_]'.")
 
-    command_NOTIFY.usage = (
+    command_NOTIFY.usage = (  # type: ignore[attr-defined]
         "notify on|off|list [_EVENT_] ... - notify me about build events;"
         "  event should be one or more of: 'started', 'finished', 'failure',"
         " 'success', 'exception', 'problem', 'recovery', 'better', or 'worse'"
@@ -805,7 +805,7 @@ class Contact:
 
             self.send(r)
 
-    command_WATCH.usage = "watch _which_ - announce the completion of an active build"
+    command_WATCH.usage = "watch _which_ - announce the completion of an active build"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     @dangerousCommand
@@ -896,7 +896,7 @@ class Contact:
         else:
             self.send("Force build successfully requested.")
 
-    command_FORCE.usage = (
+    command_FORCE.usage = (  # type: ignore[attr-defined]
         "force build [--codebase=CODEBASE] [--branch=branch] "
         "[--revision=revision] [--props=prop1=val1,prop2=val2...] "
         "_which_ _reason_ - Force a build"
@@ -937,7 +937,7 @@ class Contact:
                 response = f"Build [#{num}]({url}) of `{which}` interrupted."
             self.send(response)
 
-    command_STOP.usage = "stop build _which_ _reason_ - Stop a running build"
+    command_STOP.usage = "stop build _which_ _reason_ - Stop a running build"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def command_LAST(self, args, **kwargs):
@@ -982,7 +982,7 @@ class Contact:
         if messages:
             self.send('\n'.join(messages))
 
-    command_LAST.usage = "last [_which_] - list last build status for builder _which_"
+    command_LAST.usage = "last [_which_] - list last build status for builder _which_"  # type: ignore[attr-defined]
 
     @classmethod
     def build_commands(cls):
@@ -1039,7 +1039,7 @@ class Contact:
         else:
             self.send("No usage info for " + ' '.join([f"'{arg}'" for arg in args]))
 
-    command_HELP.usage = (
+    command_HELP.usage = (  # type: ignore[attr-defined]
         "help [_command_ _arg_ [_subarg_ ...]] - "
         "Give help for _command_ or one of it's arguments"
     )
@@ -1048,7 +1048,7 @@ class Contact:
         "the source code for buildbot"
         self.send("My source can be found at https://github.com/buildbot/buildbot")
 
-    command_SOURCE.usage = "source - the source code for Buildbot"
+    command_SOURCE.usage = "source - the source code for Buildbot"  # type: ignore[attr-defined]
 
     def command_COMMANDS(self, args, **kwargs):
         """list available commands"""
@@ -1056,7 +1056,7 @@ class Contact:
         str = "Buildbot commands: " + ", ".join(self.bot.commandPrefix + c for c in commands)
         self.send(str)
 
-    command_COMMANDS.usage = "commands - List available commands"
+    command_COMMANDS.usage = "commands - List available commands"  # type: ignore[attr-defined]
 
     @dangerousCommand
     def command_SHUTDOWN(self, args, **kwargs):

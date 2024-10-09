@@ -22,6 +22,10 @@
 import getpass
 import sys
 import textwrap
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import sqlalchemy as sa
 from twisted.python import reflect
@@ -65,7 +69,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         ],
         ["replace", "r", "Replace any modified files without confirmation."],
     ]
-    optParameters = []
+    optParameters: List[Tuple[str, Optional[str], Any, str]] = []
 
     def getSynopsis(self):
         return "Usage:    buildbot upgrade-master [options] [<basedir>]"
@@ -738,7 +742,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
         # when this command has several maintenance jobs, we should make
         # them optional here. For now there is only one.
     ]
-    optParameters = []
+    optParameters: List[Tuple[str, Optional[str], Any, str]] = []
 
     def getSynopsis(self):
         return "Usage:    buildbot cleanupdb [options] [<basedir>]"

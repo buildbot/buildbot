@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from typing import Optional
 from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
@@ -38,7 +38,7 @@ HOSTED_BASE_URL = 'https://gitlab.com'
 
 
 class GitLabStatusPush(ReporterBase):
-    name = "GitLabStatusPush"
+    name: Optional[str] = "GitLabStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,

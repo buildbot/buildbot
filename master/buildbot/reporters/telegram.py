@@ -17,7 +17,10 @@ import io
 import json
 import random
 import shlex
+from typing import Any
 from typing import ClassVar
+from typing import Dict
+from typing import Optional
 from typing import Sequence
 
 from twisted.internet import defer
@@ -154,7 +157,7 @@ class TelegramContact(Contact):
         else:
             self.send(f"Never mind, {self.user_name}...")
 
-    command_NAY.usage = "nay - never mind the command we are currently discussing"
+    command_NAY.usage = "nay - never mind the command we are currently discussing"  # type: ignore[attr-defined]
 
     @classmethod
     def get_commands(cls):
@@ -193,7 +196,7 @@ class TelegramContact(Contact):
             yield self.send(f"{self.user_name}, your ID is `{self.user_id}`.")
             self.send(f'This {self.channel.chat_info.get("type", "group")} ID is `{self.chat_id}`.')
 
-    command_GETID.usage = (
+    command_GETID.usage = (  # type: ignore[attr-defined]
         "getid - get user and chat ID that can be put in the master configuration file"
     )
 
@@ -607,7 +610,7 @@ class TelegramContact(Contact):
         else:
             raise UsageError("Try '/force' and follow the instructions")
 
-    command_FORCE.usage = "force - Force a build"
+    command_FORCE.usage = "force - Force a build"  # type: ignore[attr-defined]
 
 
 class TelegramStatusBot(StatusBot):
@@ -619,7 +622,7 @@ class TelegramStatusBot(StatusBot):
     idle_string = "idle 💤"
     running_string = "running 🌀:"
 
-    query_cache = {}
+    query_cache: Dict[int, Dict[str, Any]] = {}
 
     @property
     def commandSuffix(self):
@@ -880,7 +883,7 @@ class TelegramStatusBot(StatusBot):
 
 
 class TelegramWebhookBot(TelegramStatusBot):
-    name = "TelegramWebhookBot"
+    name: Optional[str] = "TelegramWebhookBot"  # type: ignore[assignment]
 
     def __init__(self, token, *args, certificate=None, **kwargs):
         TelegramStatusBot.__init__(self, token, *args, **kwargs)
@@ -923,7 +926,7 @@ class TelegramWebhookBot(TelegramStatusBot):
 
 
 class TelegramPollingBot(TelegramStatusBot):
-    name = "TelegramPollingBot"
+    name: Optional[str] = "TelegramPollingBot"  # type: ignore[assignment]
 
     def __init__(self, *args, poll_timeout=120, **kwargs):
         super().__init__(*args, **kwargs)

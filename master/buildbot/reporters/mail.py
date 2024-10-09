@@ -54,10 +54,8 @@ charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
-
-    _ = ESMTPSenderFactory  # for pyflakes
 except ImportError:
-    ESMTPSenderFactory = None
+    ESMTPSenderFactory = None  # type: ignore[misc,assignment]
 
 # Email parsing can be complex. We try to take a very liberal
 # approach. The local part of an email address matches ANY non
@@ -69,9 +67,9 @@ except ImportError:
 #    full.name@example.net
 #    Full Name <full.name@example.net>
 #    <full.name@example.net>
-VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
-VALID_EMAIL = re.compile(rf"^(?:{VALID_EMAIL_ADDR}|(.+\s+)?<{VALID_EMAIL_ADDR}>\s*)$")
-VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
+_VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
+VALID_EMAIL = re.compile(rf"^(?:{_VALID_EMAIL_ADDR}|(.+\s+)?<{_VALID_EMAIL_ADDR}>\s*)$")
+VALID_EMAIL_ADDR = re.compile(_VALID_EMAIL_ADDR)
 
 
 @implementer(interfaces.IEmailLookup)

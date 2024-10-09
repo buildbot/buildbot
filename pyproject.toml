@@ -193,109 +193,31 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.github"
-    ignore_errors = true
+    module = "croniter.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.gitlab"
-    ignore_errors = true
+    module = "aiohttp.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.http"
-    ignore_errors = true
+    module = "hvac.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.irc"
-    ignore_errors = true
+    module = "influxdb.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.mail"
-    ignore_errors = true
+    module = "evalidate.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
-    module = "buildbot.reporters.telegram"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.reporters.words"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.reporters.zulip"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.canceller_buildset"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.canceller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.forcesched"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.timed"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.schedulers.trysched"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.scripts.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.scripts.devproxy"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.scripts.runner"
-    ignore_errors = true
+    module = "txrequests.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.secrets.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.secrets.providers.file"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.secrets.providers.passwordstore"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.secrets.providers.vault_hvac"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.statistics.storage_backends.influxdb_client"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.cmake"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.configurable"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.cppcheck"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.gitdiffinfo"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.http"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.master"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.deb.lintian"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.deb.pbuilder"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.rpm.mock"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.rpm.rpmbuild"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.package.rpm.rpmlint"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.steps.python"
