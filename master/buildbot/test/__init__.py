@@ -142,13 +142,6 @@ warnings.filterwarnings(
     'ignore', ".*'urllib3.contrib.pyopenssl' module is deprecated", category=DeprecationWarning
 )
 
-# pipes is still used in astroid and buildbot_worker in default installation
-warnings.filterwarnings(
-    'ignore',
-    "'pipes' is deprecated and slated for removal in Python 3.13",
-    category=DeprecationWarning,
-)
-
 # boto3 shows this warning when on old Python
 warnings.filterwarnings('ignore', ".*Boto3 will no longer support Python .*", category=Warning)
 
