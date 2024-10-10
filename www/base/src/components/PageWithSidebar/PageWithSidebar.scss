@@ -8,10 +8,11 @@ $gl-sidebar-width: 600px;
 }
 .gl-page-with-sidebar {
   padding-left: 70px;
+  height: 100%;
+  overflow-y: visible;
   @media (max-width: $gl-sidebar-small-threshold) {
     padding-left: 30px;
   }
-  height: 100%;
   /* theme */
   .sidebar {
     background: var(--bb-sidebar-background-color);
@@ -95,13 +96,15 @@ $gl-sidebar-width: 600px;
     -ms-user-select: none;
     margin-left: -150px;
 
-    @media (max-width: $gl-sidebar-small-threshold) {
-      width: 210px;
-    }
     left: -30px;
     width: 250px;
     position: fixed;
     height: 100%;
+
+    @media (max-width: $gl-sidebar-small-threshold) {
+      width: 210px;
+    }
+
     ul {
       position: absolute;
       top: 0;
@@ -253,5 +256,4 @@ $gl-sidebar-width: 600px;
       width: 100%;
     }
   }
-  overflow-y: visible;
 }
