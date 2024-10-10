@@ -188,7 +188,7 @@ buildbotSetupPlugin((reg) => {
       type: 'integer',
       name: 'page_size',
       caption: 'Number of workers to show per page',
-      defaultValue: 25
+      defaultValue: 100
     }]
   });
 });
