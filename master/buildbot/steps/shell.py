@@ -204,8 +204,8 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
 class Configure(ShellCommand):
     name = "configure"
-    haltOnFailure = 1
-    flunkOnFailure = 1
+    haltOnFailure = True
+    flunkOnFailure = True
     description = "configuring"
     descriptionDone = "configure"
     command = ["./configure"]
@@ -466,8 +466,8 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
 
 class Compile(WarningCountingShellCommand):
     name = "compile"
-    haltOnFailure = 1
-    flunkOnFailure = 1
+    haltOnFailure = True
+    flunkOnFailure = True
     description = ["compiling"]
     descriptionDone = ["compile"]
     command = ["make", "all"]
@@ -475,7 +475,7 @@ class Compile(WarningCountingShellCommand):
 
 class Test(WarningCountingShellCommand):
     name = "test"
-    warnOnFailure = 1
+    warnOnFailure = True
     description = ["testing"]
     descriptionDone = ["test"]
     command = ["make", "test"]

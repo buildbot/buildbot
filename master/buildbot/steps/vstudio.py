@@ -17,6 +17,8 @@
 
 
 import re
+from typing import List
+from typing import Optional
 
 from twisted.internet import defer
 
@@ -78,8 +80,8 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
 
     logobserver = None
 
-    installdir = None
-    default_installdir = None
+    installdir: Optional[str] = None
+    default_installdir: Optional[str] = None
 
     # One of build, clean or rebuild
     mode = "rebuild"
@@ -88,9 +90,9 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     config = None
     useenv = False
     project = None
-    PATH = []
-    INCLUDE = []
-    LIB = []
+    PATH: List[str] = []
+    INCLUDE: List[str] = []
+    LIB: List[str] = []
 
     renderables = ['projectfile', 'config', 'project', 'mode']
 

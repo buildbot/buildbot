@@ -17,6 +17,7 @@ BuildSteps that are specific to the Twisted source tree
 """
 
 import re
+from typing import List
 
 from twisted.internet import defer
 from twisted.python import log
@@ -186,7 +187,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     trial = "trial"
     trialMode = ["--reporter=bwverbose"]  # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
-    trialArgs = []
+    trialArgs: List[str] = []
     jobs = None
     testpath = UNSPECIFIED  # required (but can be None)
     testChanges = False  # TODO: needs better name

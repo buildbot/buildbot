@@ -217,34 +217,11 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "subunit.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.python"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.python_twisted"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.shell"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.subunit"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.transfer"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.vstudio"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.steps.worker"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.fake.change"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.fakedb.base"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.test.fakedb.build_data"
