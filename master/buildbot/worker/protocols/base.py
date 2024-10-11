@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import Dict
+from typing import Type
+
 from twisted.internet import defer
 
 from buildbot.util import ComparableMixin
@@ -74,7 +77,7 @@ class UpdateRegistrationListener(Listener):
 
 
 class Connection:
-    proxies = {}
+    proxies: Dict[Type, Type] = {}
 
     def __init__(self, name):
         self._disconnectSubs = subscription.SubscriptionPoint(f"disconnections from {name}")
