@@ -782,9 +782,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot_worker.test.__init__"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.runprocess-scripts"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.test_bot"
-    ignore_errors = true
