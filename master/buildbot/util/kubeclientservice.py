@@ -16,6 +16,7 @@
 import abc
 import base64
 import os
+from typing import Optional
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -219,7 +220,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 
 class KubeClientService(service.SharedService):
-    name = "KubeClientService"
+    name: Optional[str] = "KubeClientService"  # type: ignore[assignment]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
