@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -71,7 +72,7 @@ class WorkerRegistration:
 
 
 class WorkerManager(MeasuredBuildbotServiceManager):
-    name = "WorkerManager"
+    name: Optional[str] = "WorkerManager"  # type: ignore[assignment]
     managed_services_name = "workers"
 
     config_attr = "workers"
