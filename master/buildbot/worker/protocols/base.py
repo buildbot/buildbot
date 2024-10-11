@@ -107,6 +107,8 @@ class Connection:
 
     def notifyDisconnected(self):
         self._disconnectSubs.deliver()
+        # Ensure that the disconnect notifications are not called twice
+        self._disconnectSubs = subscription.SubscriptionPoint(self._disconnectSubs.name)
 
     def loseConnection(self):
         raise NotImplementedError
