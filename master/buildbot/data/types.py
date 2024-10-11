@@ -33,7 +33,7 @@ def capitalize(word):
 
 
 class Type:
-    name: Union["Identifier", "String", str, None] = None
+    name: Union[Identifier, String, str, None] = None
     doc = None
     graphQLType = "unknown"
 
@@ -354,7 +354,7 @@ class Entity(Type):
     #  * buildsets.Buildset.entityType or
     #  * self.master.data.rtypes.buildsets.entityType
 
-    name: Union["Identifier", "String", str, None] = None  # set in constructor
+    name: Union[Identifier, String, str, None] = None  # set in constructor
     graphql_name = None  # set in constructor
     fields: Dict[str, Type] = {}
     fieldNames: Set[str] = set([])

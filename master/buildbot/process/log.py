@@ -27,7 +27,7 @@ from buildbot.util import lineboundaries
 
 
 class Log:
-    _byType: Dict[str, Type["Log"]] = {}
+    _byType: Dict[str, Type[Log]] = {}
 
     def __init__(self, master, name, type, logid, decoder):
         self.type = type

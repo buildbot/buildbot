@@ -41,7 +41,6 @@ target-version = "py38"
         # Temporary disable following 'FA' rules addition
         "UP006",
         "UP007",
-        "UP037",
     ]
 
 [tool.ruff.lint.isort]

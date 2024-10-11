@@ -116,19 +116,19 @@ class ISourceStamp(Interface):
     @type repository: string
     """
 
-    def canBeMergedWith(other: 'ISourceStamp') -> bool:
+    def canBeMergedWith(other: ISourceStamp) -> bool:
         """
         Can this SourceStamp be merged with OTHER?
         """
         raise NotImplementedError
 
-    def mergeWith(others: List['ISourceStamp']) -> 'ISourceStamp':
+    def mergeWith(others: List[ISourceStamp]) -> ISourceStamp:
         """Generate a SourceStamp for the merger of me and all the other
         SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
         raise NotImplementedError
 
-    def getAbsoluteSourceStamp(got_revision: str) -> 'ISourceStamp':
+    def getAbsoluteSourceStamp(got_revision: str) -> ISourceStamp:
         """Get a new SourceStamp object reflecting the actual revision found
         by a Source step."""
         raise NotImplementedError
@@ -147,7 +147,7 @@ class IEmailSender(Interface):
 
 
 class IEmailLookup(Interface):
-    def getAddress(user: str) -> "Deferred":
+    def getAddress(user: str) -> Deferred:
         """Turn a User-name string into a valid email address. Either return
         a string (with an @ in it), None (to indicate that the user cannot
         be reached by email), or a Deferred which will fire with the same."""
@@ -160,14 +160,14 @@ class ILogObserver(Interface):
     """
 
     # internal methods
-    def setStep(step: "IBuildStep") -> None:
+    def setStep(step: IBuildStep) -> None:
         pass
 
-    def setLog(log: "Log") -> None:
+    def setLog(log: Log) -> None:
         pass
 
     # methods called by the LogFile
-    def logChunk(build: "Build", step: "IBuildStep", log: "Log", channel: str, text: str) -> None:
+    def logChunk(build: Build, step: IBuildStep, log: Log, channel: str, text: str) -> None:
         pass
 
 
@@ -184,7 +184,7 @@ class ILatentWorker(IWorker):
         'Whether the latent worker is currently substantiated with a real instance.',
     )
 
-    def substantiate() -> "Deferred":
+    def substantiate() -> Deferred:
         """Request that the worker substantiate with a real instance.
 
         Returns a deferred that will callback when a real instance has
@@ -193,7 +193,7 @@ class ILatentWorker(IWorker):
 
     # there is an insubstantiate too, but that is not used externally ATM.
 
-    def buildStarted(wfb: "LatentWorkerForBuilder") -> None:
+    def buildStarted(wfb: LatentWorkerForBuilder) -> None:
         """Inform the latent worker that a build has started.
 
         @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
@@ -201,7 +201,7 @@ class ILatentWorker(IWorker):
         """
         raise NotImplementedError
 
-    def buildFinished(wfb: "LatentWorkerForBuilder") -> None:
+    def buildFinished(wfb: LatentWorkerForBuilder) -> None:
         """Inform the latent worker that a build has finished.
 
         @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
@@ -215,7 +215,7 @@ class IMachine(Interface):
 
 
 class IMachineAction(Interface):
-    def perform(manager: IMachine) -> "Deferred":
+    def perform(manager: IMachine) -> Deferred:
         """Perform an action on the machine managed by manager. Returns a
         deferred evaluating to True if it was possible to execute the
         action.
@@ -229,7 +229,7 @@ class ILatentMachine(IMachine):
 class IRenderable(Interface):
     """An object that can be interpolated with properties from a build."""
 
-    def getRenderingFor(iprops: "IProperties") -> "Deferred":
+    def getRenderingFor(iprops: IProperties) -> Deferred:
         """Return a deferred that fires with interpolation with the given properties
 
         @param iprops: the L{IProperties} provider supplying the properties.
@@ -286,7 +286,7 @@ class IProperties(Interface):
         @type runtime: boolean
         """
 
-    def getProperties() -> "Properties":
+    def getProperties() -> Properties:
         """Get the L{buildbot.process.properties.Properties} instance storing
         these properties.  Note that the interface for this class is not
         stable, so where possible the other methods of this interface should be
@@ -296,7 +296,7 @@ class IProperties(Interface):
         """
         raise NotImplementedError
 
-    def getBuild() -> "Build":
+    def getBuild() -> Build:
         """Get the L{buildbot.process.build.Build} instance for the current
         build.  Note that this object is not available after the build is
         complete, at which point this method will return None.
@@ -308,7 +308,7 @@ class IProperties(Interface):
         """
         raise NotImplementedError
 
-    def render(value: Any) -> "IRenderable":
+    def render(value: Any) -> IRenderable:
         """Render @code{value} as an L{IRenderable}.  This essentially coerces
         @code{value} to an L{IRenderable} and calls its @L{getRenderingFor}
         method.
@@ -354,13 +354,13 @@ class IConfigured(Interface):
 
 class IReportGenerator(Interface):
     def generate(
-        master: "IConfigured", reporter: "ReporterBase", key: str, build: "Build"
-    ) -> "Deferred[None]":
+        master: IConfigured, reporter: ReporterBase, key: str, build: Build
+    ) -> Deferred[None]:
         raise NotImplementedError
 
 
 class IConfigLoader(Interface):
-    def loadConfig() -> "MasterConfig":
+    def loadConfig() -> MasterConfig:
         """
         Load the specified configuration.
 
@@ -370,13 +370,13 @@ class IConfigLoader(Interface):
 
 
 class IHttpResponse(Interface):
-    def content() -> "Deferred":
+    def content() -> Deferred:
         """
         :returns: raw (``bytes``) content of the response via deferred
         """
         raise NotImplementedError
 
-    def json() -> "Deferred":
+    def json() -> Deferred:
         """
         :returns: json decoded content of the response via deferred
         """
