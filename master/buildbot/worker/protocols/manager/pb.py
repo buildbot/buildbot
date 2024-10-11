@@ -14,6 +14,13 @@
 # Copyright Buildbot Team Members
 
 
+from typing import Any
+from typing import Callable
+from typing import Generator
+from typing import Tuple
+from typing import Type
+from typing import Union
+
 from twisted.cred import checkers
 from twisted.cred import credentials
 from twisted.cred import error
@@ -21,6 +28,7 @@ from twisted.cred import portal
 from twisted.internet import defer
 from twisted.python import log
 from twisted.spread import pb
+from zope.interface import Interface
 from zope.interface import implementer
 
 from buildbot.process.properties import Properties
@@ -46,17 +54,19 @@ class Dispatcher(BaseDispatcher):
     # IRealm
 
     @defer.inlineCallbacks
-    def requestAvatar(self, username, mind, interface):
-        assert interface == pb.IPerspective
-        username = bytes2unicode(username)
+    def requestAvatar(
+        self, avatarId: Union[bytes, Tuple[()]], mind: object, *interfaces: Type[Interface]
+    ) -> Generator[defer.Deferred[Any], None, Tuple[Type[Interface], object, Callable]]:
+        assert interfaces[0] == pb.IPerspective
+        avatarIdStr = bytes2unicode(avatarId)
 
         persp = None
-        if username in self.users:
-            _, afactory = self.users.get(username)
-            persp = yield afactory(mind, username)
+        if avatarIdStr in self.users:
+            _, afactory = self.users.get(avatarIdStr)
+            persp = yield afactory(mind, avatarIdStr)
 
         if not persp:
-            raise ValueError(f"no perspective for '{username}'")
+            raise ValueError(f"no perspective for '{avatarIdStr}'")
 
         yield persp.attached(mind)
 
