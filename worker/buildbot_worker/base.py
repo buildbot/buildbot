@@ -18,6 +18,7 @@ import os.path
 import socket
 import sys
 import time
+from typing import Type
 
 from twisted.application import service
 from twisted.internet import defer
@@ -168,7 +169,7 @@ class BotBase(service.MultiService):
     """I represent the worker-side bot."""
 
     name = "bot"
-    WorkerForBuilder = WorkerForBuilderBase
+    WorkerForBuilder: Type[WorkerForBuilderBase] = WorkerForBuilderBase
 
     os_release_file = "/etc/os-release"
 
