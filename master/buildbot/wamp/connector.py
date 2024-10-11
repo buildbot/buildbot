@@ -13,6 +13,7 @@
 #
 # Copyright  Team Members
 
+from typing import Optional
 
 import txaio
 from autobahn.twisted.wamp import ApplicationSession
@@ -81,7 +82,7 @@ def make(config):
 
 class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     serviceClass = Service
-    name = "wamp"
+    name: Optional[str] = "wamp"  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()

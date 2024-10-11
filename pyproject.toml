@@ -258,6 +258,10 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "txaio.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
@@ -724,7 +728,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.util.service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.wamp.connector"
     ignore_errors = true
