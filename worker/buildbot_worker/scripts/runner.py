@@ -20,7 +20,8 @@ import os
 import re
 import sys
 import textwrap
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 from twisted.python import log
 from twisted.python import reflect

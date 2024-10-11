@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import os
+from typing import Optional
+from typing import Type
 
 from twisted.python import log
 from twisted.python import runtime
@@ -42,7 +44,7 @@ def getCommand(name):
 
 # this just keeps pyflakes happy on non-Windows systems
 if runtime.platformType != 'win32':
-    WindowsError = RuntimeError
+    WindowsError: Optional[Type] = RuntimeError
 else:
     WindowsError = None
 
