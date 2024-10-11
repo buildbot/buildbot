@@ -21,6 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+from collections.abc import Callable
+from typing import Any
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.base import _ThreePhaseEvent
@@ -63,6 +66,18 @@ class CoreReactor:
 
     def callWhenRunning(self, f, *args, **kwargs):
         f(*args, **kwargs)
+
+    def crash(self):
+        raise NotImplementedError("crash() is not implemented in this reactor")
+
+    def iterate(self, delay=None):
+        raise NotImplementedError("iterate() is not implemented in this reactor")
+
+    def run(self):
+        raise NotImplementedError("run() is not implemented in this reactor")
+
+    def runUntilCurrent(self):
+        raise NotImplementedError("runUntilCurrent() is not implemented in this reactor")
 
 
 class NonThreadPool:
@@ -108,8 +123,11 @@ class NonReactor:
     the execution model defined by ``NonThreadPool``.
     """
 
-    def callFromThread(self, f, *args, **kwargs):
-        f(*args, **kwargs)
+    def suggestThreadPoolSize(self, size: int) -> None:
+        pass
+
+    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:  # type: ignore[override]
+        callable(*args, **kwargs)
 
     def getThreadPool(self):
         return NonThreadPool()

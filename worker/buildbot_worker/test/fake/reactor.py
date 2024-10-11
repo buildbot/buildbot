@@ -21,6 +21,11 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Any
+from typing import Optional
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.base import _ThreePhaseEvent
@@ -46,9 +51,11 @@ class CoreReactor:
         super().__init__()
         self._triggers = {}
 
-    def addSystemEventTrigger(self, phase, eventType, f, *args, **kw):
+    def addSystemEventTrigger(
+        self, phase: str, eventType: str, callable: Callable, *args: object, **kw: object
+    ) -> Any:
         event = self._triggers.setdefault(eventType, _ThreePhaseEvent())
-        return eventType, event.addTrigger(phase, f, *args, **kw)
+        return eventType, event.addTrigger(phase, callable, *args, **kw)
 
     def removeSystemEventTrigger(self, triggerID):
         eventType, handle = triggerID
@@ -60,8 +67,27 @@ class CoreReactor:
         if event is not None:
             event.fireEvent()
 
-    def callWhenRunning(self, f, *args, **kwargs):
-        f(*args, **kwargs)
+    def callWhenRunning(self, callable: Callable, *args: object, **kwargs: object) -> Optional[Any]:
+        callable(*args, **kwargs)
+        return None
+
+    def crash(self) -> None:
+        raise NotImplementedError()
+
+    def iterate(self, delay: float = 0) -> None:
+        raise NotImplementedError()
+
+    def run(self) -> None:
+        raise NotImplementedError()
+
+    def running(self) -> bool:
+        raise NotImplementedError()
+
+    def resolve(self, name: str, timeout: Sequence[int]) -> defer.Deferred[str]:
+        raise NotImplementedError()
+
+    def stop(self) -> None:
+        raise NotImplementedError()
 
 
 class NonThreadPool:
@@ -107,8 +133,17 @@ class NonReactor:
     the execution model defined by ``NonThreadPool``.
     """
 
-    def callFromThread(self, f, *args, **kwargs):
-        f(*args, **kwargs)
+    def suggestThreadPoolSize(self, size: int) -> None:
+        # we don't do threads, so this is a no-op
+        pass
+
+    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:
+        callable(*args, **kwargs)
+        return None
+
+    def callInThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:
+        callable(*args, **kwargs)
+        return None
 
     def getThreadPool(self):
         return NonThreadPool()
