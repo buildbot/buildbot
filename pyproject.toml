@@ -242,6 +242,10 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "libvirt.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
@@ -720,7 +724,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.worker.latent"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.libvirt"
     ignore_errors = true
