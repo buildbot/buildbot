@@ -234,6 +234,14 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "keystoneauth1.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "novaclient.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
@@ -721,7 +729,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.worker.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.openstack"
     ignore_errors = true
