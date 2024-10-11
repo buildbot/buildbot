@@ -757,6 +757,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.www.ws"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.base"
-    ignore_errors = true
