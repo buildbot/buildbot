@@ -20,6 +20,7 @@ import os
 import re
 import sys
 import textwrap
+from typing import List, Optional
 
 from twisted.python import log
 from twisted.python import reflect
@@ -33,7 +34,7 @@ from twisted.python import usage
 
 
 class MakerBase(usage.Options):
-    optFlags = [
+    optFlags: List[List[Optional[str]]] = [
         ['help', 'h', "Display this message"],
         ["quiet", "q", "Do not emit the commands being run"],
     ]
