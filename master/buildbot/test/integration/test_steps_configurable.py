@@ -41,20 +41,20 @@ label_mapping:
   python: py
 
 python:
-  - "3.8"
+  - "3.9"
 env:
   global:
       - CI=true
 matrix:
   include:
     # Test different versions of SQLAlchemy
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=12.0.0 SQLALCHEMY=0.6.0 SQLALCHEMY_MIGRATE=0.7.1
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=13.0.0 SQLALCHEMY=0.6.8 SQLALCHEMY_MIGRATE=0.7.1
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=14.0.0 SQLALCHEMY=0.6.8 SQLALCHEMY_MIGRATE=0.7.1
-    - python: "3.8"
+    - python: "3.9"
       env: TWISTED=15.0.0 SQLALCHEMY=0.6.8 SQLALCHEMY_MIGRATE=0.7.1
 
 before_install:
@@ -198,7 +198,7 @@ class BuildbotTestCiTest(RunMasterBase):
         url_names = [url['name'] for url in build['steps'][1]['urls']]
         url_urls = [url['url'] for url in build['steps'][1]['urls']]
         self.assertIn('http://localhost:8080/#/builders/4/builds/1', url_urls)
-        self.assertIn('success: buildbot py:3.8 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0 #1', url_names)
+        self.assertIn('success: buildbot py:3.9 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0 #1', url_names)
         self.assertEqual(build['steps'][1]['logs'][0]['contents']['content'], buildbot_ci_yml)
 
         builds = yield self.master.data.get(("builds",))
@@ -222,72 +222,72 @@ class BuildbotTestCiTest(RunMasterBase):
             {
                 1: {},
                 2: {
-                    'python': '3.8',
+                    'python': '3.9',
                     'CI': 'true',
                     'TWISTED': '12.0.0',
                     'SQLALCHEMY': '0.6.0',
                     'SQLALCHEMY_MIGRATE': '0.7.1',
-                    'virtual_builder_name': 'buildbot py:3.8 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0',
+                    'virtual_builder_name': 'buildbot py:3.9 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0',
                     'virtual_builder_tags': [
                         'buildbot',
-                        'py:3.8',
+                        'py:3.9',
                         'sqla:0.6.0',
                         'sqlam:0.7.1',
                         'tw:12.0.0',
                         '_virtual_',
                     ],
-                    'matrix_label': 'py:3.8/sqla:0.6.0/sqlam:0.7.1/tw:12.0.0',
+                    'matrix_label': 'py:3.9/sqla:0.6.0/sqlam:0.7.1/tw:12.0.0',
                 },
                 3: {
-                    'python': '3.8',
+                    'python': '3.9',
                     'CI': 'true',
                     'TWISTED': '13.0.0',
                     'SQLALCHEMY': '0.6.8',
                     'SQLALCHEMY_MIGRATE': '0.7.1',
-                    'virtual_builder_name': 'buildbot py:3.8 sqla:0.6.8 sqlam:0.7.1 tw:13.0.0',
+                    'virtual_builder_name': 'buildbot py:3.9 sqla:0.6.8 sqlam:0.7.1 tw:13.0.0',
                     'virtual_builder_tags': [
                         'buildbot',
-                        'py:3.8',
+                        'py:3.9',
                         'sqla:0.6.8',
                         'sqlam:0.7.1',
                         'tw:13.0.0',
                         '_virtual_',
                     ],
-                    'matrix_label': 'py:3.8/sqla:0.6.8/sqlam:0.7.1/tw:13.0.0',
+                    'matrix_label': 'py:3.9/sqla:0.6.8/sqlam:0.7.1/tw:13.0.0',
                 },
                 4: {
-                    'python': '3.8',
+                    'python': '3.9',
                     'CI': 'true',
                     'TWISTED': '14.0.0',
                     'SQLALCHEMY': '0.6.8',
                     'SQLALCHEMY_MIGRATE': '0.7.1',
-                    'virtual_builder_name': 'buildbot py:3.8 sqla:0.6.8 sqlam:0.7.1 tw:14.0.0',
+                    'virtual_builder_name': 'buildbot py:3.9 sqla:0.6.8 sqlam:0.7.1 tw:14.0.0',
                     'virtual_builder_tags': [
                         'buildbot',
-                        'py:3.8',
+                        'py:3.9',
                         'sqla:0.6.8',
                         'sqlam:0.7.1',
                         'tw:14.0.0',
                         '_virtual_',
                     ],
-                    'matrix_label': 'py:3.8/sqla:0.6.8/sqlam:0.7.1/tw:14.0.0',
+                    'matrix_label': 'py:3.9/sqla:0.6.8/sqlam:0.7.1/tw:14.0.0',
                 },
                 5: {
-                    'python': '3.8',
+                    'python': '3.9',
                     'CI': 'true',
                     'TWISTED': '15.0.0',
                     'SQLALCHEMY': '0.6.8',
                     'SQLALCHEMY_MIGRATE': '0.7.1',
-                    'virtual_builder_name': 'buildbot py:3.8 sqla:0.6.8 sqlam:0.7.1 tw:15.0.0',
+                    'virtual_builder_name': 'buildbot py:3.9 sqla:0.6.8 sqlam:0.7.1 tw:15.0.0',
                     'virtual_builder_tags': [
                         'buildbot',
-                        'py:3.8',
+                        'py:3.9',
                         'sqla:0.6.8',
                         'sqlam:0.7.1',
                         'tw:15.0.0',
                         '_virtual_',
                     ],
-                    'matrix_label': 'py:3.8/sqla:0.6.8/sqlam:0.7.1/tw:15.0.0',
+                    'matrix_label': 'py:3.9/sqla:0.6.8/sqlam:0.7.1/tw:15.0.0',
                 },
             },
         )
@@ -296,19 +296,19 @@ class BuildbotTestCiTest(RunMasterBase):
             buildernames,
             {
                 1: None,
-                2: ('buildbot py:3.8 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0', 'BuildbotTestCiTrigger'),
-                3: ('buildbot py:3.8 sqla:0.6.8 sqlam:0.7.1 tw:13.0.0', 'BuildbotTestCiTrigger'),
-                4: ('buildbot py:3.8 sqla:0.6.8 sqlam:0.7.1 tw:14.0.0', 'BuildbotTestCiTrigger'),
-                5: ('buildbot py:3.8 sqla:0.6.8 sqlam:0.7.1 tw:15.0.0', 'BuildbotTestCiTrigger'),
+                2: ('buildbot py:3.9 sqla:0.6.0 sqlam:0.7.1 tw:12.0.0', 'BuildbotTestCiTrigger'),
+                3: ('buildbot py:3.9 sqla:0.6.8 sqlam:0.7.1 tw:13.0.0', 'BuildbotTestCiTrigger'),
+                4: ('buildbot py:3.9 sqla:0.6.8 sqlam:0.7.1 tw:14.0.0', 'BuildbotTestCiTrigger'),
+                5: ('buildbot py:3.9 sqla:0.6.8 sqlam:0.7.1 tw:15.0.0', 'BuildbotTestCiTrigger'),
             },
         )
         self.assertEqual(
             labels,
             {
                 1: None,
-                2: ('py:3.8/sqla:0.6.0/sqlam:0.7.1/tw:12.0.0', 'BuildbotTestCiTrigger'),
-                3: ('py:3.8/sqla:0.6.8/sqlam:0.7.1/tw:13.0.0', 'BuildbotTestCiTrigger'),
-                4: ('py:3.8/sqla:0.6.8/sqlam:0.7.1/tw:14.0.0', 'BuildbotTestCiTrigger'),
-                5: ('py:3.8/sqla:0.6.8/sqlam:0.7.1/tw:15.0.0', 'BuildbotTestCiTrigger'),
+                2: ('py:3.9/sqla:0.6.0/sqlam:0.7.1/tw:12.0.0', 'BuildbotTestCiTrigger'),
+                3: ('py:3.9/sqla:0.6.8/sqlam:0.7.1/tw:13.0.0', 'BuildbotTestCiTrigger'),
+                4: ('py:3.9/sqla:0.6.8/sqlam:0.7.1/tw:14.0.0', 'BuildbotTestCiTrigger'),
+                5: ('py:3.9/sqla:0.6.8/sqlam:0.7.1/tw:15.0.0', 'BuildbotTestCiTrigger'),
             },
         )
