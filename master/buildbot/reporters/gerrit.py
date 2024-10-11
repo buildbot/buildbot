@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import time
 import warnings
-from typing import Optional
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -320,7 +319,7 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
 class GerritStatusPush(ReporterBase):
     """Event streamer to a gerrit ssh server."""
 
-    name: Optional[str] = "GerritStatusPush"  # type: ignore[assignment]
+    name: str | None = "GerritStatusPush"  # type: ignore[assignment]
     gerrit_server = None
     gerrit_username = None
     gerrit_port = None

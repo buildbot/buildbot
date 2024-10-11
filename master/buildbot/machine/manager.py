@@ -15,15 +15,13 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from buildbot.util import service
 from buildbot.worker.manager import WorkerManager
 
 
 class MachineManager(service.BuildbotServiceManager):
     reconfig_priority = WorkerManager.reconfig_priority + 1
-    name: Optional[str] = 'MachineManager'  # type: ignore[assignment]
+    name: str | None = 'MachineManager'  # type: ignore[assignment]
     managed_services_name = 'machines'
     config_attr = 'machines'
 

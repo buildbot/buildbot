@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import re
 from typing import Generator
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -43,7 +42,7 @@ HOSTED_BASE_URL = 'https://api.github.com'
 
 
 class GitHubStatusPush(ReporterBase):
-    name: Optional[str] = "GitHubStatusPush"  # type: ignore[assignment]
+    name: str | None = "GitHubStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,

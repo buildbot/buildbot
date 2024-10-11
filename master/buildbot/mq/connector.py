@@ -15,8 +15,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from twisted.internet import defer
 from twisted.python.reflect import namedObject
 
@@ -34,7 +32,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
             'keys': set(["router_url", "realm", "wamp_debug_level"]),
         },
     }
-    name: Optional[str] = 'mq'  # type: ignore[assignment]
+    name: str | None = 'mq'  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()

@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
 from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
@@ -41,7 +40,7 @@ HOSTED_BASE_URL = 'https://gitlab.com'
 
 
 class GitLabStatusPush(ReporterBase):
-    name: Optional[str] = "GitLabStatusPush"  # type: ignore[assignment]
+    name: str | None = "GitLabStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,

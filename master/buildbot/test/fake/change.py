@@ -15,8 +15,6 @@
 
 from __future__ import annotations
 
-from typing import Union
-
 from buildbot.process.properties import Properties
 from buildbot.test.fake.state import State
 
@@ -27,7 +25,7 @@ class Change(State):
     branch = ''
     category = ''
     codebase = ''
-    properties: Union[dict, Properties] = {}
+    properties: dict | Properties = {}
 
     def __init__(self, **kw):
         super().__init__(**kw)

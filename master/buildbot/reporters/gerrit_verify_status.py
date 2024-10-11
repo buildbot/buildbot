@@ -15,8 +15,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from twisted.internet import defer
 from twisted.logger import Logger
 from twisted.python import failure
@@ -39,7 +37,7 @@ log = Logger()
 
 
 class GerritVerifyStatusPush(ReporterBase):
-    name: Optional[str] = "GerritVerifyStatusPush"  # type: ignore[assignment]
+    name: str | None = "GerritVerifyStatusPush"  # type: ignore[assignment]
     # overridable constants
     RESULTS_TABLE = {
         SUCCESS: 1,

@@ -37,9 +37,6 @@ target-version = "py38"
         # Might be nice to have in future, but requires significant refactoring for now.
         "RUF012", # mutable-class-default
         "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
-
-        # Temporary disable following 'FA' rules addition
-        "UP007",
     ]
 
 [tool.ruff.lint.isort]

@@ -15,8 +15,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from twisted.internet import defer
 from twisted.logger import Logger
 
@@ -29,7 +27,7 @@ log = Logger()
 
 
 class ZulipStatusPush(ReporterBase):
-    name: Optional[str] = "ZulipStatusPush"  # type: ignore[assignment]
+    name: str | None = "ZulipStatusPush"  # type: ignore[assignment]
 
     def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None):
         if not isinstance(endpoint, str):

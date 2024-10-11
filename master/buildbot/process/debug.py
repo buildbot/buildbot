@@ -15,15 +15,13 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from twisted.internet import defer
 
 from buildbot.util import service
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    name: Optional[str] = 'debug_services'  # type: ignore[assignment]
+    name: str | None = 'debug_services'  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()

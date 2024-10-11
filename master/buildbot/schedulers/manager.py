@@ -15,12 +15,10 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 
 
 class SchedulerManager(MeasuredBuildbotServiceManager):
-    name: Optional[str] = "SchedulerManager"  # type: ignore[assignment]
+    name: str | None = "SchedulerManager"  # type: ignore[assignment]
     managed_services_name = "schedulers"
     config_attr = "schedulers"

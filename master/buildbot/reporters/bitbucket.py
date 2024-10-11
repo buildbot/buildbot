@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Optional
 from urllib.parse import urlparse
 
 from twisted.internet import defer
@@ -42,7 +41,7 @@ _GET_TOKEN_DATA = {'grant_type': 'client_credentials'}
 
 
 class BitbucketStatusPush(ReporterBase):
-    name: Optional[str] = "BitbucketStatusPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,

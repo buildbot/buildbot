@@ -22,7 +22,6 @@ import stat
 import sys
 import traceback
 from contextlib import contextmanager
-from typing import Optional
 
 from twisted.python import runtime
 from twisted.python import usage
@@ -175,7 +174,7 @@ class SubcommandOptions(usage.Options):
     # .buildbot/options file.  Note that this *only* works with optParameters,
     # not optFlags.  Example:
     # buildbotOptions = [ [ 'optfile-name', 'parameter-name' ], .. ]
-    buildbotOptions: Optional[list[list[str]]] = None
+    buildbotOptions: list[list[str]] | None = None
 
     # set this to options that must have non-None values
     requiredOptions: list[str] = []
