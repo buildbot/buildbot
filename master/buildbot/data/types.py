@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from __future__ import annotations
+
 import datetime
 import json
 import re

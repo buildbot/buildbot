@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
+from __future__ import annotations
+
 import re
 from typing import Optional
 

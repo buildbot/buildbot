@@ -16,6 +16,8 @@
 HVAC based providers
 """
 
+from __future__ import annotations
+
 import importlib.metadata
 from typing import Optional
 

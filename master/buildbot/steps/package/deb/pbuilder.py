@@ -17,6 +17,8 @@
 Steps and objects related to pbuilder
 """
 
+from __future__ import annotations
+
 import re
 import stat
 import time

@@ -19,6 +19,8 @@
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and reStructuredText documentation.
 
+from __future__ import annotations
+
 import getpass
 import sys
 import textwrap

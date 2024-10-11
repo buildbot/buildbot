@@ -16,6 +16,8 @@
 BuildSteps that are specific to the Twisted source tree
 """
 
+from __future__ import annotations
+
 import re
 from typing import List
 

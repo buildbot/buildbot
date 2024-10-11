@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from typing import Union
 
 from buildbot.process.properties import Properties

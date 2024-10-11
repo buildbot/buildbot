@@ -23,6 +23,8 @@ Define the interfaces that are implemented by various buildbot classes.
 # pylint: disable=no-method-argument
 # pylint: disable=inherit-non-class
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict

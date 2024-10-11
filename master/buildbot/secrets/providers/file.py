@@ -16,6 +16,8 @@
 file based provider
 """
 
+from __future__ import annotations
+
 import os
 import stat
 from typing import Optional

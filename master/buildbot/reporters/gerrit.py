@@ -16,6 +16,8 @@
 Push events to Gerrit
 """
 
+from __future__ import annotations
+
 import time
 import warnings
 from typing import Optional

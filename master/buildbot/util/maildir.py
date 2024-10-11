@@ -19,6 +19,8 @@ linux dirwatcher API (if available) to look for new files. The
 relative to the top of the maildir (so it will look like "new/blahblah").
 """
 
+from __future__ import annotations
+
 import os
 from typing import Optional
 

@@ -17,6 +17,8 @@
 Parse various kinds of 'CVS notify' email.
 """
 
+from __future__ import annotations
+
 import calendar
 import datetime
 import re

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from typing import Optional
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
