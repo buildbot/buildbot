@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 import re
-from typing import List
 from typing import Optional
 
 from twisted.internet import defer
@@ -91,9 +90,9 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
     config = None
     useenv = False
     project = None
-    PATH: List[str] = []
-    INCLUDE: List[str] = []
-    LIB: List[str] = []
+    PATH: list[str] = []
+    INCLUDE: list[str] = []
+    LIB: list[str] = []
 
     renderables = ['projectfile', 'config', 'project', 'mode']
 

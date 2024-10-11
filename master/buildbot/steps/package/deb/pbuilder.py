@@ -22,7 +22,6 @@ from __future__ import annotations
 import re
 import stat
 import time
-from typing import List
 from typing import Optional
 
 from twisted.internet import defer
@@ -53,7 +52,7 @@ class DebPbuilder(WarningCountingShellCommand):
     _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.tgz"
     mirror = "http://cdn.debian.net/debian/"
     othermirror = ""
-    extrapackages: List[str] = []
+    extrapackages: list[str] = []
     keyring = None
     components: Optional[str] = None
 

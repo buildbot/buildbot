@@ -19,7 +19,6 @@ import re
 import traceback
 from typing import Any
 from typing import ClassVar
-from typing import List
 from typing import Optional
 from typing import Sequence
 
@@ -301,7 +300,7 @@ class ChoiceStringParameter(BaseParameter):
 
     spec_attributes = ["choices", "strict"]
     type = "list"
-    choices: List[str] = []
+    choices: list[str] = []
     strict = True
 
     def parse_from_arg(self, s):

@@ -16,8 +16,6 @@
 from __future__ import annotations
 
 import re
-from typing import Dict
-from typing import Type
 
 from twisted.internet import defer
 from twisted.python import log
@@ -27,7 +25,7 @@ from buildbot.util import lineboundaries
 
 
 class Log:
-    _byType: Dict[str, Type[Log]] = {}
+    _byType: dict[str, type[Log]] = {}
 
     def __init__(self, master, name, type, logid, decoder):
         self.type = type

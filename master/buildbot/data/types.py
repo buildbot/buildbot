@@ -19,9 +19,6 @@ from __future__ import annotations
 import datetime
 import json
 import re
-from typing import Dict
-from typing import Set
-from typing import Tuple
 from typing import Union
 
 from buildbot import util
@@ -121,7 +118,7 @@ class NoneOk(Type):
 
 
 class Instance(Type):
-    types: Tuple[type, ...] = ()
+    types: tuple[type, ...] = ()
     ramlType = "unknown"
     graphQLType = "unknown"
 
@@ -356,8 +353,8 @@ class Entity(Type):
 
     name: Union[Identifier, String, str, None] = None  # set in constructor
     graphql_name = None  # set in constructor
-    fields: Dict[str, Type] = {}
-    fieldNames: Set[str] = set([])
+    fields: dict[str, Type] = {}
+    fieldNames: set[str] = set([])
 
     def __init__(self, name, graphql_name):
         fields = {}

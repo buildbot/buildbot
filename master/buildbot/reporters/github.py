@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import re
-from typing import Dict
 from typing import Generator
 from typing import Optional
 
@@ -116,7 +115,7 @@ class GitHubStatusPush(ReporterBase):
     @defer.inlineCallbacks
     def _get_auth_header(
         self, props: Properties
-    ) -> Generator[defer.Deferred[str], None, Dict[str, str]]:
+    ) -> Generator[defer.Deferred[str], None, dict[str, str]]:
         token = yield props.render(self.token)
         return {'Authorization': f"token {token}"}
 

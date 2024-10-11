@@ -21,7 +21,6 @@ import random
 import shlex
 from typing import Any
 from typing import ClassVar
-from typing import Dict
 from typing import Optional
 from typing import Sequence
 
@@ -624,7 +623,7 @@ class TelegramStatusBot(StatusBot):
     idle_string = "idle 💤"
     running_string = "running 🌀:"
 
-    query_cache: Dict[int, Dict[str, Any]] = {}
+    query_cache: dict[int, dict[str, Any]] = {}
 
     @property
     def commandSuffix(self):

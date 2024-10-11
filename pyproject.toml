@@ -39,7 +39,6 @@ target-version = "py38"
         "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
 
         # Temporary disable following 'FA' rules addition
-        "UP006",
         "UP007",
     ]
 

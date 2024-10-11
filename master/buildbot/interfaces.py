@@ -27,8 +27,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Dict
-from typing import List
 
 from zope.interface import Attribute
 from zope.interface import Interface
@@ -122,7 +120,7 @@ class ISourceStamp(Interface):
         """
         raise NotImplementedError
 
-    def mergeWith(others: List[ISourceStamp]) -> ISourceStamp:
+    def mergeWith(others: list[ISourceStamp]) -> ISourceStamp:
         """Generate a SourceStamp for the merger of me and all the other
         SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
@@ -348,7 +346,7 @@ class IBuildStep(IPlugin):
 
 
 class IConfigured(Interface):
-    def getConfigDict() -> Dict[str, Any]:
+    def getConfigDict() -> dict[str, Any]:
         return {}  # return something to silence warnings at call sites
 
 
@@ -387,7 +385,7 @@ class IHttpResponse(Interface):
 
 
 class IConfigurator(Interface):
-    def configure(config_dict: Dict[str, Any]) -> None:
+    def configure(config_dict: dict[str, Any]) -> None:
         """
         Alter the buildbot config_dict, as defined in master.cfg
 
