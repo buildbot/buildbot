@@ -15,11 +15,12 @@
 
 
 from fnmatch import fnmatch
+from typing import List
 
 
 class PullRequestMixin:
-    external_property_whitelist = []
-    external_property_denylist = []
+    external_property_whitelist: List[str] = []
+    external_property_denylist: List[str] = []
 
     def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
