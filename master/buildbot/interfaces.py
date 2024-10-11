@@ -182,7 +182,7 @@ class ILatentWorker(IWorker):
         'Whether the latent worker is currently substantiated with a real instance.',
     )
 
-    def substantiate() -> "Deferred":
+    def substantiate(wfb: Any, build: Any) -> "Deferred[Any]":
         """Request that the worker substantiate with a real instance.
 
         Returns a deferred that will callback when a real instance has
