@@ -23,6 +23,7 @@ from __future__ import print_function
 import os
 import pprint
 import re
+import shlex
 import signal
 import stat
 import subprocess
@@ -79,7 +80,8 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
     # in some versions where an empty string is not quoted.
     #
     # So:
-    #  - use pipes.quote on UNIX, handling '' as a special case
+    #  - use pipes.quote on UNIX, handling '' as a special case only in Python version < 3
+    #  - use shlex.quote on UNIX, handling '' as a special case
     #  - use our own custom function on Windows
     if isinstance(cmd_list, bytes):
         cmd_list = bytes2unicode(cmd_list, unicode_encoding)
@@ -88,14 +90,23 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
         return win32_batch_quote(cmd_list, unicode_encoding)
 
     # only available on unix
-    import pipes  # pylint: disable=import-outside-toplevel
+    if sys.version_info[0] < 3:
+        import pipes  # pylint: disable=import-outside-toplevel
+
+        def quote27(e):
+            if not e:
+                return u'""'
+            e = bytes2unicode(e, unicode_encoding)
+            return pipes.quote(e)
+        return u" ".join([quote27(e) for e in cmd_list])
 
     def quote(e):
         if not e:
             return u'""'
         e = bytes2unicode(e, unicode_encoding)
-        return pipes.quote(e)
-    return u" ".join([quote(e) for e in cmd_list])
+        return shlex.quote(e)
+
+    return " ".join(quote(e) for e in cmd_list)
 
 
 class LogFileWatcher(object):
