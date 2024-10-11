@@ -737,6 +737,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.www.encoding"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.hooks.bitbucketcloud"
-    ignore_errors = true
