@@ -91,7 +91,7 @@ quote-style = "preserve"
 python_version = "3.8"
 namespace_packages = true
 pretty = true
-mypy_path = "$MYPY_CONFIG_FILE_DIR/master"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/master:$MYPY_CONFIG_FILE_DIR/worker"
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "setuptools.*"
@@ -723,7 +723,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.worker.libvirt"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.local"
     ignore_errors = true
