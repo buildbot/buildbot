@@ -274,27 +274,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_fake_httpclientservice"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_janitor_configurator"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_locks"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_machine_generic"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_mq_wamp"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_plugins"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.test_secret_in_hvac"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.test_secret_rendered_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
