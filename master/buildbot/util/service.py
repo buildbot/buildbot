@@ -190,7 +190,7 @@ class BuildbotService(
     compare_attrs: ClassVar[Sequence[str]] = ('name', '_config_args', '_config_kwargs')
     name: str | None = None  # type: ignore[assignment]
     configured = False
-    objectid = None
+    objectid: int | None = None
 
     def __init__(self, *args, **kwargs):
         name = kwargs.pop("name", None)
@@ -288,7 +288,7 @@ class ClusteredBuildbotService(BuildbotService):
 
     POLL_INTERVAL_SEC = 5 * 60  # 5 minutes
 
-    serviceid = None
+    serviceid: int | None = None
     active = False
 
     def __init__(self, *args, **kwargs):

@@ -200,7 +200,7 @@ class BuildRequest:
     @ivar bsid: ID of the parent buildset
     """
 
-    submittedAt = None
+    submittedAt: None | int = None
     sources: dict[str, TempSourceStamp] = {}
     id: int
     bsid: int
@@ -240,7 +240,8 @@ class BuildRequest:
         buildrequest.builderid = brdict.builderid
         buildrequest.priority = brdict.priority
         dt = brdict.submitted_at
-        buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
+        if dt:
+            buildrequest.submittedAt = calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
         buildrequest.waitedFor = brdict.waited_for
 

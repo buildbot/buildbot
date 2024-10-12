@@ -21,6 +21,7 @@ from __future__ import annotations
 import re
 
 from twisted.internet import defer
+from twisted.internet.base import ReactorBase
 from twisted.python import log
 
 from buildbot import util
@@ -184,18 +185,18 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
     renderables = ['tests', 'jobs']
     flunkOnFailure = True
-    python = None
+    python: list[str] | str | None = None
     trial = "trial"
     trialMode = ["--reporter=bwverbose"]  # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs: list[str] = []
-    jobs = None
+    jobs: int | None = None
     testpath = UNSPECIFIED  # required (but can be None)
     testChanges = False  # TODO: needs better name
     recurse = False
-    reactor = None
+    reactor: ReactorBase | None = None
     randomly = False
-    tests = None  # required
+    tests: list[str] | None = None  # required
 
     description = 'testing'
     descriptionDone = 'tests'

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import re
 
@@ -226,7 +227,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     # The defaults work for GNU Make.
     directoryEnterPattern = "make.*: Entering directory [\u2019\"`'](.*)[\u2019'`\"]"
     directoryLeavePattern = "make.*: Leaving directory"
-    suppressionFile = None
+    suppressionFile: str | None = None
 
     commentEmptyLineRe = re.compile(r"^\s*(#.*)?$")
     suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
