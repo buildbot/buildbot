@@ -274,24 +274,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_path_expand_user"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_poll"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_runprocess"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_ssfilter"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.worker.test_base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.worker.test_ec2"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.worker.test_libvirt"
     ignore_errors = true
     [[tool.mypy.overrides]]
