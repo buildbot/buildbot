@@ -274,18 +274,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_deferwaiter"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_eventual"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_git"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.util.test_httpclientservice"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.util.test_kubeclientservice"
     ignore_errors = true
     [[tool.mypy.overrides]]

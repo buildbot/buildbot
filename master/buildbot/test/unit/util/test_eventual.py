@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.python import log
@@ -58,7 +58,10 @@ class Eventually(unittest.TestCase):
 
     def test_eventually_err(self):
         # monkey-patch log.err; this is restored by tearDown
-        log.err = lambda: self.results.append("err")
+        def cb_err():
+            self.results.append("err")
+
+        log.err = cb_err
 
         def cb_fails():
             raise RuntimeError("should not cause test failure")
