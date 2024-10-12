@@ -19,10 +19,9 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -126,7 +125,7 @@ class NonReactor:
     def suggestThreadPoolSize(self, size: int) -> None:
         pass
 
-    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:  # type: ignore[override]
+    def callFromThread(self, callable: Callable, *args: object, **kwargs: object) -> None:  # type: ignore[override]
         callable(*args, **kwargs)
 
     def getThreadPool(self):

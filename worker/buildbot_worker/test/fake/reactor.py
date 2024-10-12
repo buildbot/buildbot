@@ -137,11 +137,11 @@ class NonReactor:
         # we don't do threads, so this is a no-op
         pass
 
-    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:
+    def callFromThread(self, callable: Callable, *args: object, **kwargs: object) -> None:
         callable(*args, **kwargs)
         return None
 
-    def callInThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:
+    def callInThread(self, callable: Callable, *args: object, **kwargs: object) -> None:
         callable(*args, **kwargs)
         return None
 
