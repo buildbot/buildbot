@@ -270,15 +270,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.changes.test_filter"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.changes.test_gerritchangesource"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.changes.test_gitpoller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.changes.test_hgpoller"
     ignore_errors = true
     [[tool.mypy.overrides]]
