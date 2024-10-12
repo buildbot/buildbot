@@ -94,181 +94,54 @@ pretty = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/master:$MYPY_CONFIG_FILE_DIR/worker"
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
-    module = "setuptools.*"
+    module = [
+      "setuptools.*",
+      "lz4.*",
+      "brotli.*",
+      "markdown.*",
+      "dateutil.*",
+      "yaml.*",
+      "psutil.*",
+      "pywintypes.*",
+      "win32api.*",
+      "win32con.*",
+      "servicemanager.*",
+      "win32file.*",
+      "win32pipe.*",
+      "win32service.*",
+      "win32serviceutil.*",
+      "pythoncom.*",
+      "win32event.*",
+      "win32process.*",
+      "win32security.*",
+      "win32com.*",
+      "winerror.*",
+      "msgpack.*",
+      "autobahn.*",
+      "requests.*",
+      "unidiff.*",
+      "croniter.*",
+      "aiohttp.*",
+      "hvac.*",
+      "influxdb.*",
+      "evalidate.*",
+      "txrequests.*",
+      "subunit.*",
+      "parameterized.*",
+      "win32job.*",
+      "ldap3.*",
+      "keystoneauth1.*",
+      "novaclient.*",
+      "libvirt.*",
+      "boto3.*",
+      "botocore.*",
+      "docker.*",
+      "txaio.*",
+      "dnotify.*",
+      "treq.*",
+      "xerox.*",
+      "ruamel.*",
+    ]
     ignore_missing_imports = true
 
-    [[tool.mypy.overrides]]
-    module = "lz4.*"
-    ignore_missing_imports = true
 
-    [[tool.mypy.overrides]]
-    module = "brotli.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "markdown.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "dateutil.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "yaml.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "psutil.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "pywintypes.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32api.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32con.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "servicemanager.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32file.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32pipe.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32service.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32serviceutil.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "pythoncom.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32event.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32process.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32security.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32com.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "winerror.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "msgpack.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "autobahn.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "requests.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "unidiff.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "croniter.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "aiohttp.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "hvac.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "influxdb.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "evalidate.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "txrequests.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "subunit.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "parameterized.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "win32job.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "ldap3.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "keystoneauth1.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "novaclient.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "libvirt.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "boto3.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "botocore.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "docker.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "txaio.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "dnotify.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "treq.*"
-    ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "xerox.*"
-    ignore_missing_imports = true
