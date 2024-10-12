@@ -14,13 +14,14 @@
 # Copyright Buildbot Team Members
 
 import re
-from unittest import mock
+from typing import Any
+from typing import Generator
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
-from buildbot.process.results import FAILURE
+
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import words
 from buildbot.test import fakedb
@@ -41,7 +42,7 @@ class ContactMixin(TestReactorMixin):
     BUILDER_IDS = [23, 45]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> Generator[Any, None, None]:
         self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.patch(reactor, 'seconds', self.reactor.seconds)
