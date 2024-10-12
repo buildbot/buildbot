@@ -274,8 +274,5 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.util.scheduler"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.util.validation"
     ignore_errors = true
