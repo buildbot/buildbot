@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import contextlib
 
@@ -36,7 +37,7 @@ class ConfigErrors(Exception):
         return bool(len(self.errors))
 
 
-_errors = None
+_errors: ConfigErrors | None = None
 
 
 def error(error, always_raise=False):

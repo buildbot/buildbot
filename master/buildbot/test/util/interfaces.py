@@ -12,10 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import inspect
 from collections import OrderedDict
+from typing import Callable
 
 import zope.interface.interface
 from zope.interface.interface import Attribute
@@ -23,6 +24,7 @@ from zope.interface.interface import Attribute
 
 class InterfaceTests:
     # assertions
+    assertEqual: Callable[..., None]
 
     def assertArgSpecMatches(self, actualMethod, *fakeMethods):
         """Usage::

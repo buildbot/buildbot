@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
+from typing import Sequence
 
 from twisted.internet import defer
 
@@ -40,16 +43,17 @@ class Row:
     @ivar values: the values to be inserted into this row
     """
 
-    id_column = ()
-    required_columns = ()
-    lists = ()
-    dicts = ()
-    hashedColumns = []
-    foreignKeys = []
+    id_column: tuple[()] | str = ()
+    required_columns: Sequence[str] = ()
+
+    lists: Sequence[str] = ()
+    dicts: Sequence[str] = ()
+    hashedColumns: Sequence[tuple[str, Sequence[str]]] = ()
+    foreignKeys: Sequence[str] = []
     # Columns that content is represented as sa.Binary-like type in DB model.
     # They value is bytestring (in contrast to text-like columns, which are
     # unicode).
-    binary_columns = ()
+    binary_columns: Sequence[str] = ()
 
     _next_id = None
 

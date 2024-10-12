@@ -39,13 +39,13 @@ from buildbot.util import bytes2unicode
 try:
     import requests
 except ImportError:
-    requests = None
+    requests = None  # type: ignore[assignment]
 
 
 if requests:
     from buildbot.www import oauth2  # pylint: disable=ungrouped-imports
 else:
-    oauth2 = None
+    oauth2 = None  # type: ignore[assignment]
 
 
 class FakeResponse:

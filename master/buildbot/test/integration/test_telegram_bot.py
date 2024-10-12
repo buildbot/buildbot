@@ -45,6 +45,9 @@ class BytesProducer:
         self.body = body
         self.length = len(body)
 
+    def resumeProducing(self) -> None:
+        raise NotImplementedError()
+
     def startProducing(self, consumer):
         consumer.write(self.body)
         return defer.succeed(None)

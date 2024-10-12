@@ -104,12 +104,12 @@ class TestGitPoller(TestGitPollerBase):
             yield methodToTest(self.dummyRevStr)
             if emptyRaisesException:
                 self.fail("run_process should have failed on empty output")
-        except Exception as e:
+        except Exception as error:
             if not emptyRaisesException:
                 import traceback
 
                 traceback.print_exc()
-                self.fail("run_process should NOT have failed on empty output: " + repr(e))
+                self.fail("run_process should NOT have failed on empty output: " + repr(error))
 
         self.assert_all_commands_ran()
 

@@ -24,7 +24,7 @@ if sys.version_info[:2] >= (3, 9):
     # https://docs.python.org/3/library/importlib.resources.html
     import importlib.resources as importlib_resources
 else:
-    import importlib_resources
+    import importlib_resources  # type: ignore[import-not-found]
 
 
 class Application:

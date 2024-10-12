@@ -903,16 +903,16 @@ class ShellMixin:
     env: dict[str, str] = {}
     want_stdout = True
     want_stderr = True
-    usePTY = None
+    usePTY: bool | None = None
     logfiles: dict[str, str] = {}
     lazylogfiles: bool = False
     timeout = 1200
-    maxTime = None
-    max_lines = None
+    maxTime: float | None = None
+    max_lines: int | None = None
     logEnviron = True
     interruptSignal = 'KILL'
-    sigtermTime = None
-    initialStdin = None
+    sigtermTime: int | None = None
+    initialStdin: str | None = None
     decodeRC = {0: SUCCESS}
 
     _shell_mixin_arg_config = [

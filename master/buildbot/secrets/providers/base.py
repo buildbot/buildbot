@@ -16,6 +16,8 @@
 secret provider interface
 """
 
+from __future__ import annotations
+
 import abc
 
 from buildbot.util.service import BuildbotService

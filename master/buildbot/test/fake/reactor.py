@@ -19,7 +19,11 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import annotations
 
+from typing import Any
+from typing import Callable
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -47,9 +51,11 @@ class CoreReactor:
         super().__init__()
         self._triggers = {}
 
-    def addSystemEventTrigger(self, phase, eventType, f, *args, **kw):
+    def addSystemEventTrigger(
+        self, phase: str, eventType: str, callable: Callable[..., Any], *args, **kw
+    ):
         event = self._triggers.setdefault(eventType, _ThreePhaseEvent())
-        return eventType, event.addTrigger(phase, f, *args, **kw)
+        return eventType, event.addTrigger(phase, callable, *args, **kw)
 
     def removeSystemEventTrigger(self, triggerID):
         eventType, handle = triggerID
@@ -61,8 +67,29 @@ class CoreReactor:
         if event is not None:
             event.fireEvent()
 
-    def callWhenRunning(self, f, *args, **kwargs):
-        f(*args, **kwargs)
+    def callWhenRunning(self, callable: Callable[..., Any], *args, **kwargs):
+        callable(*args, **kwargs)
+
+    def resolve(self, name: str, timeout: Sequence[int]) -> defer.Deferred[str]:
+        raise NotImplementedError("resolve() is not implemented in this reactor")
+
+    def stop(self) -> None:
+        raise NotImplementedError("stop() is not implemented in this reactor")
+
+    def running(self) -> bool:
+        raise NotImplementedError("running() is not implemented in this reactor")
+
+    def crash(self):
+        raise NotImplementedError("crash() is not implemented in this reactor")
+
+    def iterate(self, delay=None):
+        raise NotImplementedError("iterate() is not implemented in this reactor")
+
+    def run(self):
+        raise NotImplementedError("run() is not implemented in this reactor")
+
+    def runUntilCurrent(self):
+        raise NotImplementedError("runUntilCurrent() is not implemented in this reactor")
 
 
 class NonThreadPool:
@@ -108,8 +135,14 @@ class NonReactor:
     the execution model defined by ``NonThreadPool``.
     """
 
-    def callFromThread(self, f, *args, **kwargs):
-        f(*args, **kwargs)
+    def suggestThreadPoolSize(self, size: int) -> None:
+        pass
+
+    def callInThread(self, callable: Callable, *args, **kwargs) -> None:
+        callable(*args, **kwargs)
+
+    def callFromThread(self, callable: Callable, *args: object, **kwargs: object) -> None:  # type: ignore[override]
+        callable(*args, **kwargs)
 
     def getThreadPool(self):
         return NonThreadPool()

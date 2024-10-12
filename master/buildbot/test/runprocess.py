@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -51,7 +52,7 @@ class MasterRunProcessMixin:
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
         if not self._expected_master_commands:
-            self.fail(f"got command {command} when no further commands were expected")
+            self.fail(f"got command {command} when no further commands were expected")  # type: ignore[attr-defined]
 
         expect = self._expected_master_commands.pop(0)
 

@@ -12,13 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from typing import Optional
+from __future__ import annotations
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 
 
 class SchedulerManager(MeasuredBuildbotServiceManager):
-    name: Optional[str] = "SchedulerManager"  # type: ignore[assignment]
+    name: str | None = "SchedulerManager"  # type: ignore[assignment]
     managed_services_name = "schedulers"
     config_attr = "schedulers"

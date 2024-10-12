@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 from twisted import trial
 from twisted.internet import defer
@@ -30,11 +30,11 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
 
     # class being tested
-    endpointClass = None
+    endpointClass: type[base.Endpoint] | None = None
 
     # the corresponding resource type - this will be instantiated at
     # self.data.rtypes[rtype.type] and self.rtype
-    resourceTypeClass = None
+    resourceTypeClass: type[base.ResourceType] | None = None
 
     def setUpEndpoint(self):
         self.setup_test_reactor()

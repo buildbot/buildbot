@@ -88,7 +88,7 @@ class ITestInterface(IPlugin):
     test interface
     """
 
-    def hello(self):
+    def hello():
         pass
 
 

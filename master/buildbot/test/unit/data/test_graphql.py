@@ -29,7 +29,7 @@ from buildbot.test.util import interfaces
 try:
     import graphql
 except ImportError:
-    graphql = None
+    graphql = None  # type: ignore[assignment]
 
 
 class TestGraphQlConnector(TestReactorMixin, unittest.TestCase, interfaces.InterfaceTests):

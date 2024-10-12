@@ -223,7 +223,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         )
 
         # this is kind of obscene, but protocols are like that
-        d = defer.Deferred()
+        d: defer.Deferred[bytes] = defer.Deferred()
         bodyReader = BodyReader(d)
         pg.deliverBody(bodyReader)
         body = await d

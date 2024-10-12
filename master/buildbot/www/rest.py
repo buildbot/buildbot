@@ -70,7 +70,7 @@ JSON_ENCODED = b"application/json"
 
 
 class RestRootResource(resource.Resource):
-    version_classes = {}
+    version_classes: dict[int, type[V2RootResource]] = {}
 
     @classmethod
     def addApiVersion(cls, version, version_cls):
@@ -201,6 +201,7 @@ class V2RootResource(resource.Resource):
             )
 
         try:
+            assert request.content is not None
             data = json.loads(bytes2unicode(request.content.read()))
         except Exception as e:
             raise BadJsonRpc2(f"JSON parse error: {e!s}", JSONRPC_CODES["parse_error"]) from e

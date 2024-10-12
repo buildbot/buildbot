@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import getpass
 import os
 import sys
@@ -209,8 +211,8 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 class BaseTestSimpleOptions(OptionsMixin):
     # tests for options with just --quiet and a usage message
 
-    commandName = None
-    optionsClass = None
+    commandName: str | None = None
+    optionsClass: type[usage.Options] | None = None
 
     def setUp(self):
         self.setUpOptions()

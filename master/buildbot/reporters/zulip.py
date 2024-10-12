@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from typing import Optional
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -26,7 +26,7 @@ log = Logger()
 
 
 class ZulipStatusPush(ReporterBase):
-    name: Optional[str] = "ZulipStatusPush"  # type: ignore[assignment]
+    name: str | None = "ZulipStatusPush"  # type: ignore[assignment]
 
     def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None):
         if not isinstance(endpoint, str):

@@ -12,12 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import textwrap
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.data import base
 from buildbot.data import logchunks
 from buildbot.data import resultspec
 from buildbot.test import fakedb
@@ -25,8 +27,8 @@ from buildbot.test.util import endpoint
 
 
 class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
-    endpointClass = logchunks.LogChunkEndpoint
-    resourceTypeClass = logchunks.LogChunk
+    endpointClass: type[base.Endpoint] = logchunks.LogChunkEndpoint
+    resourceTypeClass: type[base.ResourceType] = logchunks.LogChunk
     endpointname = "contents"
     log60Lines = [
         'line zero',

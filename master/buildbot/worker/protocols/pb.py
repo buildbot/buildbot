@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import contextlib
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -86,9 +87,9 @@ class Connection(base.Connection, pb.Avatar):
     proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
     # TODO: configure keepalive_interval in
     # c['protocols']['pb']['keepalive_interval']
-    keepalive_timer = None
+    keepalive_timer: None = None
     keepalive_interval = 3600
-    info = None
+    info: Any = None
 
     def __init__(self, master, worker, mind):
         super().__init__(worker.workername)

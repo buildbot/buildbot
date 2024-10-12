@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -74,7 +75,7 @@ class UpdateRegistrationListener(Listener):
 
 
 class Connection:
-    proxies = {}
+    proxies: dict[type, type] = {}
 
     def __init__(self, name):
         self._disconnectSubs = subscription.SubscriptionPoint(f"disconnections from {name}")

@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from typing import Optional
+from __future__ import annotations
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 
 
 class ChangeManager(MeasuredBuildbotServiceManager):
-    name: Optional[str] = "ChangeManager"  # type: ignore[assignment]
+    name: str | None = "ChangeManager"  # type: ignore[assignment]
     managed_services_name = "changesources"
     config_attr = "change_sources"
