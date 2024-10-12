@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Sequence
 
 from twisted.internet import defer
 
@@ -42,12 +43,13 @@ class Row:
     @ivar values: the values to be inserted into this row
     """
 
-    id_column : tuple[()] | str = ()
-    required_columns : Sequence[str] = ()
-    lists = ()
-    dicts = ()
-    hashedColumns : Sequence[tuple[str, Sequence[str]]] = ()
-    foreignKeys : Sequence[str] = []
+    id_column: tuple[()] | str = ()
+    required_columns: Sequence[str] = ()
+
+    lists: Sequence[str] = ()
+    dicts: Sequence[str] = ()
+    hashedColumns: Sequence[tuple[str, Sequence[str]]] = ()
+    foreignKeys: Sequence[str] = []
     # Columns that content is represented as sa.Binary-like type in DB model.
     # They value is bytestring (in contrast to text-like columns, which are
     # unicode).
