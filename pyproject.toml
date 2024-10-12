@@ -270,9 +270,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.integration.test_upgrade"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.integration.test_www"
     ignore_errors = true
     [[tool.mypy.overrides]]

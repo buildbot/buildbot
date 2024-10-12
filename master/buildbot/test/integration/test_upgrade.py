@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import locale
 import os
@@ -45,7 +45,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # class variables to set in subclasses
 
     # filename of the tarball (sibling to this file)
-    source_tarball = None
+    source_tarball: None | str = None
 
     # set to true in subclasses to set up and use a real DB
     use_real_db = False
