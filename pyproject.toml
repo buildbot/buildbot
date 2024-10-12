@@ -273,9 +273,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.test.integration.interop.test_worker_reconnect"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.test.integration.test_custom_buildstep"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.integration.test_download_secret_to_worker"
     ignore_errors = true
     [[tool.mypy.overrides]]
