@@ -17,6 +17,9 @@
 Support for running 'shell commands'
 """
 
+from __future__ import annotations
+
+import datetime
 import os
 import pprint
 import re
@@ -261,8 +264,8 @@ class RunProcess:
     interruptSignal = "KILL"
 
     # For sending elapsed time:
-    startTime = None
-    elapsedTime = None
+    startTime: datetime.datetime | None = None
+    elapsedTime: datetime.timedelta | None = None
 
     # For scheduling future events
     _reactor = reactor

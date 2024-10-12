@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Callable
 
 from twisted.python import log
 from twisted.python import usage
@@ -398,7 +399,7 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 
 
 # used by TestRun.test_run_good to patch in a callback
-functionPlaceholder = None
+functionPlaceholder: Callable | None = None
 
 
 class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
