@@ -274,21 +274,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.worker.test_libvirt"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.worker.test_local"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.worker.test_protocols_manager_msgmanager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.worker.test_protocols_msgpack"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.www.test_auth"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.www.test_config"
     ignore_errors = true
     [[tool.mypy.overrides]]
