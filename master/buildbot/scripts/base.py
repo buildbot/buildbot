@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import copy
 import errno
@@ -20,8 +21,6 @@ import stat
 import sys
 import traceback
 from contextlib import contextmanager
-from typing import List
-from typing import Optional
 
 from twisted.python import runtime
 from twisted.python import usage
@@ -174,10 +173,10 @@ class SubcommandOptions(usage.Options):
     # .buildbot/options file.  Note that this *only* works with optParameters,
     # not optFlags.  Example:
     # buildbotOptions = [ [ 'optfile-name', 'parameter-name' ], .. ]
-    buildbotOptions: Optional[List[List[str]]] = None
+    buildbotOptions: list[list[str]] | None = None
 
     # set this to options that must have non-None values
-    requiredOptions: List[str] = []
+    requiredOptions: list[str] = []
 
     def __init__(self, *args):
         # for options in self.buildbotOptions, optParameters, and the options

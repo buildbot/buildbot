@@ -12,13 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import asyncio
 import functools
 import textwrap
 from types import ModuleType
-from typing import Optional
 
 from buildbot.asyncio import AsyncIOLoopWithTwisted
 from buildbot.asyncio import as_deferred
@@ -28,7 +27,7 @@ from buildbot.data.base import EndpointKind
 from buildbot.data.types import Entity
 from buildbot.util import service
 
-graphql: Optional[ModuleType] = None
+graphql: ModuleType | None = None
 try:
     import graphql
     from graphql.execution.execute import default_field_resolver

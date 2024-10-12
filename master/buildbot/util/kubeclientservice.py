@@ -12,11 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import abc
 import base64
 import os
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -220,7 +220,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 
 class KubeClientService(service.SharedService):
-    name: Optional[str] = "KubeClientService"  # type: ignore[assignment]
+    name: str | None = "KubeClientService"  # type: ignore[assignment]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

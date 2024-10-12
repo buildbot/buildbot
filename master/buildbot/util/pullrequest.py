@@ -12,15 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 from fnmatch import fnmatch
-from typing import List
 
 
 class PullRequestMixin:
-    external_property_whitelist: List[str] = []
-    external_property_denylist: List[str] = []
+    external_property_whitelist: list[str] = []
+    external_property_denylist: list[str] = []
 
     def extractProperties(self, payload):
         def flatten(properties, base, info_dict):

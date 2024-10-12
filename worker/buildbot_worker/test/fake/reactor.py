@@ -20,11 +20,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import annotations
 
 from collections.abc import Callable
 from collections.abc import Sequence
 from typing import Any
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -67,7 +67,7 @@ class CoreReactor:
         if event is not None:
             event.fireEvent()
 
-    def callWhenRunning(self, callable: Callable, *args: object, **kwargs: object) -> Optional[Any]:
+    def callWhenRunning(self, callable: Callable, *args: object, **kwargs: object) -> Any | None:
         callable(*args, **kwargs)
         return None
 

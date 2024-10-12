@@ -16,9 +16,10 @@
 file based provider
 """
 
+from __future__ import annotations
+
 import os
 import stat
-from typing import Optional
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
@@ -29,7 +30,7 @@ class SecretInAFile(SecretProviderBase):
     secret is stored in a separate file under the given directory name
     """
 
-    name: Optional[str] = "SecretInAFile"  # type: ignore[assignment]
+    name: str | None = "SecretInAFile"  # type: ignore[assignment]
 
     def checkFileIsReadOnly(self, dirname, secretfile):
         filepath = os.path.join(dirname, secretfile)

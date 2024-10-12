@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import multiprocessing
 import os.path
 import socket
 import sys
 import time
-from typing import Optional
-from typing import Type
 
 from twisted.application import service
 from twisted.internet import defer
@@ -163,14 +163,14 @@ class ProtocolCommandBase:
 
 
 class WorkerForBuilderBase(service.Service):
-    ProtocolCommand: Type[ProtocolCommandBase] = ProtocolCommandBase
+    ProtocolCommand: type[ProtocolCommandBase] = ProtocolCommandBase
 
 
 class BotBase(service.MultiService):
     """I represent the worker-side bot."""
 
-    name: Optional[str] = "bot"  # type: ignore[assignment]
-    WorkerForBuilder: Type[WorkerForBuilderBase] = WorkerForBuilderBase
+    name: str | None = "bot"  # type: ignore[assignment]
+    WorkerForBuilder: type[WorkerForBuilderBase] = WorkerForBuilderBase
 
     os_release_file = "/etc/os-release"
 

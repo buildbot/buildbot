@@ -16,7 +16,7 @@
 manage providers and handle secrets
 """
 
-from typing import Optional
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -30,7 +30,7 @@ class SecretManager(service.BuildbotServiceManager):
     Secret manager
     """
 
-    name: Optional[str] = 'secrets'  # type: ignore[assignment]
+    name: str | None = 'secrets'  # type: ignore[assignment]
     config_attr = "secretsProviders"
 
     @defer.inlineCallbacks

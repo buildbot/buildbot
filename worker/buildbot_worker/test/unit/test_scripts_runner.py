@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import sys
-from typing import Optional
-from typing import Type
 
 from twisted.python import log
 from twisted.python import usage
@@ -52,7 +52,7 @@ class BaseDirTestsMixin:
     MY_BASEDIR = "my-basedir"
 
     # the options class to instantiate for test cases
-    options_class: Optional[Type[usage.Options]] = None
+    options_class: type[usage.Options] | None = None
 
     def setUp(self):
         self.patch(os, "getcwd", lambda: self.GETCWD_PATH)

@@ -12,13 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import re
 import traceback
 from typing import Any
 from typing import ClassVar
-from typing import List
-from typing import Optional
 from typing import Sequence
 
 from twisted.internet import defer
@@ -97,7 +96,7 @@ class BaseParameter:
     regex = None
     debug = True
     hide = False
-    maxsize: Optional[int] = None
+    maxsize: int | None = None
     autopopulate = None
     tooltip = ""
 
@@ -299,7 +298,7 @@ class ChoiceStringParameter(BaseParameter):
 
     spec_attributes = ["choices", "strict"]
     type = "list"
-    choices: List[str] = []
+    choices: list[str] = []
     strict = True
 
     def parse_from_arg(self, s):
@@ -426,7 +425,7 @@ class NestedParameter(BaseParameter):
     type = 'nested'
     layout = 'vertical'
     fields = None
-    columns: Optional[int] = None
+    columns: int | None = None
 
     def __init__(self, name, fields, **kwargs):
         super().__init__(fields=fields, name=name, **kwargs)
@@ -657,14 +656,14 @@ class ForceScheduler(base.BaseScheduler):
         self,
         name,
         builderNames,
-        username: Optional[UserNameParameter] = None,
-        reason: Optional[StringParameter] = None,
+        username: UserNameParameter | None = None,
+        reason: StringParameter | None = None,
         reasonString="A build was forced by '%(owner)s': %(reason)s",
         buttonName=None,
         codebases=None,
         label=None,
         properties=None,
-        priority: Optional[IntParameter] = None,
+        priority: IntParameter | None = None,
     ):
         """
         Initialize a ForceScheduler.

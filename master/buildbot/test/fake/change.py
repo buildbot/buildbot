@@ -12,8 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from typing import Union
+from __future__ import annotations
 
 from buildbot.process.properties import Properties
 from buildbot.test.fake.state import State
@@ -25,7 +24,7 @@ class Change(State):
     branch = ''
     category = ''
     codebase = ''
-    properties: Union[dict, Properties] = {}
+    properties: dict | Properties = {}
 
     def __init__(self, **kw):
         super().__init__(**kw)

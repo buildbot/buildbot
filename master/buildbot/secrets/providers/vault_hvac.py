@@ -16,8 +16,9 @@
 HVAC based providers
 """
 
+from __future__ import annotations
+
 import importlib.metadata
-from typing import Optional
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -67,7 +68,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
     In case more secret engines are going to be supported, each engine should have it's own class.
     """
 
-    name: Optional[str] = 'SecretInVaultKv'  # type: ignore[assignment]
+    name: str | None = 'SecretInVaultKv'  # type: ignore[assignment]
 
     def checkConfig(
         self,

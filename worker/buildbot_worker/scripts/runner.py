@@ -16,12 +16,12 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 
+from __future__ import annotations
+
 import os
 import re
 import sys
 import textwrap
-from typing import List
-from typing import Optional
 
 from twisted.python import log
 from twisted.python import reflect
@@ -35,7 +35,7 @@ from twisted.python import usage
 
 
 class MakerBase(usage.Options):
-    optFlags: List[List[Optional[str]]] = [
+    optFlags: list[list[str | None]] = [
         ['help', 'h', "Display this message"],
         ["quiet", "q", "Do not emit the commands being run"],
     ]

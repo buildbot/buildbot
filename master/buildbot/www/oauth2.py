@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import re
 import textwrap
 from posixpath import join
-from typing import Dict
-from typing import Optional
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -76,11 +76,11 @@ class OAuth2LoginResource(auth.LoginResource):
 class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
     getTokenUseAuthHeaders = False
-    authUri: Optional[str] = None
-    tokenUri: Optional[str] = None
+    authUri: str | None = None
+    tokenUri: str | None = None
     grantType = 'authorization_code'
-    authUriAdditionalParams: Dict[str, str] = {}
-    tokenUriAdditionalParams: Dict[str, str] = {}
+    authUriAdditionalParams: dict[str, str] = {}
+    tokenUriAdditionalParams: dict[str, str] = {}
     loginUri = None
     homeUri = None
 

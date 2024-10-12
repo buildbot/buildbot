@@ -13,14 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 # See "Type Validation" in master/docs/developer/tests.rst
 import datetime
 import json
 import re
-from typing import Dict
-from typing import Set
-from typing import Tuple
-from typing import Union
 
 from buildbot import util
 from buildbot.util import bytes2unicode
@@ -31,7 +29,7 @@ def capitalize(word):
 
 
 class Type:
-    name: Union["Identifier", "String", str, None] = None
+    name: Identifier | String | str | None = None
     doc = None
     graphQLType = "unknown"
 
@@ -119,7 +117,7 @@ class NoneOk(Type):
 
 
 class Instance(Type):
-    types: Tuple[type, ...] = ()
+    types: tuple[type, ...] = ()
     ramlType = "unknown"
     graphQLType = "unknown"
 
@@ -352,10 +350,10 @@ class Entity(Type):
     #  * buildsets.Buildset.entityType or
     #  * self.master.data.rtypes.buildsets.entityType
 
-    name: Union["Identifier", "String", str, None] = None  # set in constructor
+    name: Identifier | String | str | None = None  # set in constructor
     graphql_name = None  # set in constructor
-    fields: Dict[str, Type] = {}
-    fieldNames: Set[str] = set([])
+    fields: dict[str, Type] = {}
+    fieldNames: set[str] = set([])
 
     def __init__(self, name, graphql_name):
         fields = {}

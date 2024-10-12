@@ -12,8 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
-
-from typing import Optional
+from __future__ import annotations
 
 import txaio
 from autobahn.twisted.wamp import ApplicationSession
@@ -82,7 +81,7 @@ def make(config):
 
 class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     serviceClass = Service
-    name: Optional[str] = "wamp"  # type: ignore[assignment]
+    name: str | None = "wamp"  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()

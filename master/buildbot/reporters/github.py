@@ -12,12 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import re
-from typing import Dict
 from typing import Generator
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -42,7 +40,7 @@ HOSTED_BASE_URL = 'https://api.github.com'
 
 
 class GitHubStatusPush(ReporterBase):
-    name: Optional[str] = "GitHubStatusPush"  # type: ignore[assignment]
+    name: str | None = "GitHubStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,
@@ -114,7 +112,7 @@ class GitHubStatusPush(ReporterBase):
     @defer.inlineCallbacks
     def _get_auth_header(
         self, props: Properties
-    ) -> Generator[defer.Deferred[str], None, Dict[str, str]]:
+    ) -> Generator[defer.Deferred[str], None, dict[str, str]]:
         token = yield props.render(self.token)
         return {'Authorization': f"token {token}"}
 
