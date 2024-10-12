@@ -53,7 +53,9 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
 
-    # Worker tests on python and twisted package combinations.
+    # Worker tests on older python and twisted package combinations.
+    - env: PYTHON=3.7 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
+    - env: PYTHON=3.8 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
     - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
@@ -94,8 +96,9 @@ install:
     cmd: |
       set -e
       rm -rf /tmp/bbworkervenv
-      python$PYTHON -m venv /tmp/bbworkervenv
-      /tmp/bbworkervenv/bin/pip install -e worker
+      python$WORKER_PYTHON -m venv /tmp/bbworkervenv
+      /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
+      /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
   - title: pip installs for backward compat
     cmd: |
       # pip installs for backward compat
