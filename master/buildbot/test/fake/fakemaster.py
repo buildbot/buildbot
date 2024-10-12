@@ -86,6 +86,11 @@ class FakeMaster(service.MasterService):
     - Non-caching implementation for C{self.caches}
     """
 
+    buildbotURL: str
+    mq: fakemq.FakeMQConnector
+    data: fakedata.FakeDataConnector
+    graphql: GraphQLConnector
+
     def __init__(self, reactor, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
         super().__init__()
         self._master_id = master_id
