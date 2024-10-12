@@ -9,6 +9,16 @@ Release Notes
 .. towncrier release notes start
 
 
+Buildbot ``3.11.9`` ( ``2024-10-13`` )
+======================================
+
+Bug fixes
+---------
+
+- Fixed missing builder force scheduler route ``/builders/:builderid/force/:scheduler``.
+- Fixed URL of WGSI dashboards to keep backward compatibility with the old non-React WSGI plugin.
+- Fixed display of long property values by wrapping them
+
 Buildbot ``3.11.8`` ( ``2024-09-27`` )
 ======================================
 
