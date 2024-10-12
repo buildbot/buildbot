@@ -23,7 +23,7 @@ from pathlib import Path
 
 
 class TestGitRepository:
-    def __init__(self, repository_path: os.PathLike, git_bin: os.PathLike | None = None):
+    def __init__(self, repository_path: os.PathLike, git_bin: os.PathLike | None | str = None):
         if git_bin is None:
             git_bin = shutil.which('git')
             if git_bin is None:
@@ -54,7 +54,7 @@ class TestGitRepository:
             fp.write(contents)
         os.utime(path, (self.curr_date.timestamp(), self.curr_date.timestamp()))
 
-    def exec_git(self, args: list[str], env: dict[str] | None = None):
+    def exec_git(self, args: list[str], env: dict[str, str] | None = None):
         final_env = self.git_author_env(
             author_name=self.curr_author_name, author_mail=self.curr_author_email
         )
@@ -74,7 +74,7 @@ class TestGitRepository:
         self,
         message: str,
         files: list[os.PathLike] | None = None,
-        env: dict[str] | None = None,
+        env: dict[str, str] | None = None,
     ) -> str:
         args = ['commit', '--quiet', f'--message={message}']
         if files is not None:
