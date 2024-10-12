@@ -35,9 +35,9 @@ class ContactMixin(TestReactorMixin):
 
     channelClass = words.Channel
     contactClass = words.Contact
-    USER = "me"
-    CHANNEL = "#buildbot"
-
+    USER : Any = "me"
+    USER: Any = "me"
+    CHANNEL: Any = "#buildbot"
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
 
