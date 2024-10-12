@@ -272,7 +272,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "xerox.*"
     ignore_missing_imports = true
-
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.util.validation"
-    ignore_errors = true
