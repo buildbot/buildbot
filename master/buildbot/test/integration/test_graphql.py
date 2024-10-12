@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import json
 import os
@@ -33,13 +33,13 @@ from buildbot.util import toJson
 try:
     from ruamel.yaml import YAML
 except ImportError:
-    YAML = None
+    YAML = None  # type: ignore[assignment,misc]
 
 
 try:
     import graphql as graphql_core
 except ImportError:
-    graphql_core = None
+    graphql_core = None  # type: ignore[assignment,misc]
 
 
 class GraphQL(unittest.TestCase, TestReactorMixin):

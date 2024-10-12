@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
-
 from twisted.internet import defer
 
 from buildbot.process.buildstep import BuildStep
@@ -23,7 +22,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class DisconnectingStep(BuildStep):
-    disconnection_list : list[DisconnectingStep] = []
+    disconnection_list: list[DisconnectingStep] = []
 
     def run(self):
         self.disconnection_list.append(self)
