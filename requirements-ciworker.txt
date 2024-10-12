@@ -1,25 +1,31 @@
 attrs==24.2.0
 autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9"  # pyup: ignore
-Automat==24.8.1
-cffi==1.17.1
+Automat==22.10.0;  python_version < "3.8"  # pyup: ignore
+Automat==24.8.1;  python_version >= "3.8"
+cffi==1.15.1;  python_version < "3.8"  # pyup: ignore
+cffi==1.17.1;  python_version >= "3.8"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
 cryptography==43.0.1
 funcsigs==1.0.2
 hyperlink==21.0.0
 idna==3.10
-incremental==24.7.2
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
+incremental==24.7.2;  python_version >= "3.8"
 mock==5.1.0
 parameterized==0.9.0
 pbr==6.1.0
 PyHamcrest==1.9.0
 psutil==6.0.0
-pycparser==2.22
+pycparser==2.21;  python_version < "3.8" # pyup: ignore
+pycparser==2.22;  python_version >= "3.8"
 six==1.16.0
-Twisted==24.7.0
+Twisted==23.8.0;  python_version < "3.8" # pyup: ignore
+Twisted==24.7.0;  python_version >= "3.8"
 txaio==23.1.1
-typing-extensions==4.12.2
-zope.interface==7.0.3
+typing-extensions==4.7.1;  python_version < "3.8" # pyup: ignore
+typing-extensions==4.12.2;  python_version >= "3.8"
+zope.interface==6.4.post2;  python_version < "3.8" # pyup: ignore
+zope.interface==7.0.3;  python_version >= "3.8"
 -e worker
