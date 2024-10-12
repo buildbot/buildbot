@@ -34,7 +34,7 @@ class DBConnectorComponent:
     # C{master.db.model} or C{master.db.changes}.  This parent class takes care
     # of the necessary backlinks and other housekeeping.
 
-    connector = None
+    connector: DBConnector | None = None
     data2db: dict[str, str] = {}
 
     def __init__(self, connector: DBConnector):
@@ -50,7 +50,7 @@ class DBConnectorComponent:
     def master(self):
         return self.db.master
 
-    _isCheckLengthNecessary = None
+    _isCheckLengthNecessary: bool | None = None
 
     def checkLength(self, col, value):
         if not self._isCheckLengthNecessary:

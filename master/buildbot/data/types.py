@@ -30,7 +30,7 @@ def capitalize(word):
 
 class Type:
     name: Identifier | String | str | None = None
-    doc = None
+    doc: str | None = None
     graphQLType = "unknown"
 
     @property
@@ -351,7 +351,7 @@ class Entity(Type):
     #  * self.master.data.rtypes.buildsets.entityType
 
     name: Identifier | String | str | None = None  # set in constructor
-    graphql_name = None  # set in constructor
+    graphql_name: str | None = None  # set in constructor
     fields: dict[str, Type] = {}
     fieldNames: set[str] = set([])
 

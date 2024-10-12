@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from buildbot.locks import BaseLockId
     from buildbot.process.builder import Builder
     from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+    from buildbot.util.subscription import Subscription
 
 
 class Build(properties.PropertiesMixin):
@@ -74,10 +75,10 @@ class Build(properties.PropertiesMixin):
     workdir = "build"
     reason = "changes"
     finished = False
-    results = None
+    results: int | None = None
     stopped = False
     set_runtime_properties = True
-    subs = None
+    subs: set[Subscription] | None = None
 
     class Sentinel:
         pass
