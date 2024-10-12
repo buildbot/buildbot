@@ -52,8 +52,6 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
     # Worker tests on python and twisted package combinations.
     - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker

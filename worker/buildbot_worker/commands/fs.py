@@ -258,7 +258,6 @@ class GlobPath(base.Command):
         pathname = self.args['path']
 
         try:
-            # recursive matching is only support in python3.5+
             files = glob.glob(pathname, recursive=True)
             self.sendStatus([('files', files), ('rc', 0)])
         except OSError as e:

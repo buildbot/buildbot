@@ -18,7 +18,6 @@ import re
 import sys
 from io import StringIO
 from unittest import mock
-from unittest.case import SkipTest
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -226,20 +225,12 @@ class RunMasterBase(unittest.TestCase):
 
         if self.proto in ('pb', 'msgpack'):
             sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
-            worker_python_version = os.environ.get("WORKER_PYTHON", None)
             if self.proto == 'pb':
                 protocol = 'pb'
                 dispatcher = next(iter(m.pbmanager.dispatchers.values()))
             else:
                 protocol = 'msgpack_experimental_v7'
                 dispatcher = next(iter(m.msgmanager.dispatchers.values()))
-
-                unsupported_python_versions = ['2.7', '3.4', '3.5']
-                if (
-                    sandboxed_worker_path is not None
-                    and worker_python_version in unsupported_python_versions
-                ):
-                    raise SkipTest('MessagePack protocol requires worker python >= 3.6')
 
                 # We currently don't handle connection closing cleanly.
                 dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)

@@ -114,7 +114,7 @@ $(VENV_NAME):
 	$(PIP) install -r requirements-pip.txt
 
 # helper for virtualenv creation
-virtualenv: $(VENV_NAME) check_for_yarn   # usage: make virtualenv VENV_PY_VERSION=python3.4
+virtualenv: $(VENV_NAME) check_for_yarn   # usage: make virtualenv VENV_PY_VERSION=python3.8
 	$(PIP) install -r requirements-ci.txt \
 		-r requirements-ciworker.txt \
 		-r requirements-cidocs.txt \
