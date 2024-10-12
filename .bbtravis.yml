@@ -97,7 +97,8 @@ install:
       set -e
       rm -rf /tmp/bbworkervenv
       python$WORKER_PYTHON -m venv /tmp/bbworkervenv
-      /tmp/bbworkervenv/bin/pip install -e worker
+      /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
+      /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
   - title: pip installs for backward compat
     cmd: |
       # pip installs for backward compat
