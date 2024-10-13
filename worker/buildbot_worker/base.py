@@ -162,7 +162,7 @@ class ProtocolCommandBase:
 
 
 class WorkerForBuilderBase(service.Service):
-    ProtocolCommand : Type[ProtocolCommandBase] = ProtocolCommandBase
+    ProtocolCommand: Type[ProtocolCommandBase] = ProtocolCommandBase
 
 
 class BotBase(service.MultiService):
