@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import re
@@ -38,10 +39,11 @@ from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.sandboxed_worker import SandboxedWorker
 from buildbot.worker.local import LocalWorker
 
+Worker: type | None = None
 try:
     from buildbot_worker.bot import Worker
 except ImportError:
-    Worker = None
+    pass
 
 
 @implementer(IConfigLoader)
