@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import enum
 
@@ -24,11 +24,12 @@ from buildbot.test.fake.worker import SeverWorkerConnectionMixin
 from buildbot.test.fake.worker import disconnect_master_side_worker
 from buildbot.worker import AbstractLatentWorker
 
+RemoteWorker: type | None = None
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker
     from buildbot_worker.pb import BotPbLike
 except ImportError:
-    RemoteWorker = None
+    pass
 
 
 class States(enum.Enum):
