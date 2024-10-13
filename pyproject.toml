@@ -91,6 +91,7 @@ quote-style = "preserve"
 python_version = "3.8"
 namespace_packages = true
 pretty = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/master"
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "setuptools.*"
@@ -772,7 +773,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot_worker.scripts.runner"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.scripts.windows_service"
     ignore_errors = true
