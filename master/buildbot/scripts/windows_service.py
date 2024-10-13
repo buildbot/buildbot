@@ -541,7 +541,7 @@ def DetermineRunner(bbdir):
 
     try:
         if 'import BuildSlave' in contents:
-            import buildslave.scripts.runner
+            import buildslave.scripts.runner  # type: ignore[import-not-found]
 
             return buildslave.scripts.runner.run
 
