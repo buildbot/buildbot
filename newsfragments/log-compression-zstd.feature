@@ -1,1 +1,0 @@
-``logCompressionMethod`` can now be set to ``zstd`` (using zstandard, requires the buildbot[zstd] extra)

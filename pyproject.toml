@@ -85,7 +85,7 @@ quote-style = "preserve"
     [[tool.towncrier.type]]
         directory = "misc"
         name = "Misc"
-        showcontent = false
+        showcontent = true
 
 [tool.mypy]
 python_version = "3.8"

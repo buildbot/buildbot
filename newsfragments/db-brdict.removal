@@ -1,1 +1,0 @@
-:class:`buildbot.db.buildrequests.BrDict` is deprecated in favor of :class:`buildbot.db.buildrequests.BuildRequestModel`

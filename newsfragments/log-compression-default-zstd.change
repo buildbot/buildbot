@@ -1,1 +1,0 @@
-``logCompressionMethod`` will default to ``zstd`` if the buildbot[zstd] extra was installed (otherwise, default to ``gzip``)

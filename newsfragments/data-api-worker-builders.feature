@@ -1,1 +1,0 @@
-Add data API ``/workers/n:workerid/builders`` allowing to query the Builders assigned to a worker

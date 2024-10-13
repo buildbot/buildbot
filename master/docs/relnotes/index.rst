@@ -8,6 +8,190 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``4.1.0`` ( ``2024-10-13`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed crash in ``GerritEventLogPoller`` when invalid input is passed (:issue:`7612`)
+- Fixed ``Build`` summary containing non obfuscated ``Secret`` values present in a failed
+  ``BuildStep`` summary (:issue:`7833`)
+- Fixed data API query using buildername to correctly work with buildername containing spaces and
+  unicode characters (:issue:`7752`)
+- Fixed an error when master is reconfigured with new builders and a build finishing at this time,
+  causing the build to never finish.
+- Fixed crash on master shutdown trying to insubstantiate build's worker when no worker is assigned
+  to the build (:issue:`7753`)
+- Fixed confusing error messages in case of HTTP errors that occur when connecting to Gerrit server.
+- Fixed ``GitPoller`` merge commit processing. ``GitPoller`` now correctly list merge commit files.
+  (:issue:`7494`)
+- Fixed hang in ``buildbot stop --clean`` when a in progress build was waiting on a not yet started
+  BuildRequest that it triggered.
+- Improved error message in case of OAuth2 failures.
+- Fixed display of navigation links when the web frontend is displayed in narrow window (:issue:`7818`)
+- Fixed inconsistent logs data in reports produced by report generators. In particular, ``stepname``
+  key is consistently attached to logs regardless if they come with build steps or with the global
+  ``logs`` key.
+- Fixed a regression where a ``ChoiceStringParameter`` requires a user selected
+  value (no default value), but the force build form incorrectly displays the
+  first choice as being selected which later causes validation error.
+- Fixed logs ``/raw`` and ``/raw_inline`` endpoint requiring large memory on master (more than full log size)
+  (:issue:`3011`)
+- Fixed sidebar group expander to use different icon for expanded groups.
+- Log queries in BuildView (``builders/:builderid/builds/:buildnumber``) have been reduced when
+  logs won't be displayed to the user.
+- REST API json responses now correctly provide the ``Content-Length`` header for non-HEAD requests.
+- Buildbot is now compatible with SQLAlchemy v2.0+
+
+Changes
+-------
+
+- Buildbot will now add a trailing '/' to the ``buildbotURL`` and ``titleURL`` configured values if it
+  does not have one.
+- The internal API presented by the database connectors has been changed to return data classes
+  instead of Python dictionaries. For backwards compatibility the classes also support being
+  accessed as dictionaries. The following functions have been affected:
+
+  - ``BuildDataConnectorComponent`` ``getBuildData``, ``getBuildDataNoValue``, and ``getAllBuildDataNoValues``
+    now return a ``BuildDataModel`` instead of a dictionary.
+  - ``BuildsConnectorComponent`` ``getBuild``, ``getBuildByNumber``, ``getPrevSuccessfulBuild``,
+    ``getBuildsForChange``, ``getBuilds``, ``_getRecentBuilds``, and ``_getBuild`` now return a ``BuildModel``
+    instead of a dictionary.
+  - ``BuildRequestsConnectorComponent`` ``getBuildRequest``, and ``getBuildRequests`` now return a
+    ``BuildRequestModel`` instead of a dictionary.
+  - ``BuildsetsConnectorComponent`` ``getBuildset``, ``getBuildsets``, and ``getRecentBuildsets`` now
+    return a ``BuildSetModel`` instead of a dictionary.
+  - ``BuildersConnectorComponent`` ``getBuilder`` and ``getBuilders`` now return a ``BuilderModel`` instead
+    of a dictionary.
+  - ``ChangesConnectorComponent`` ``getChange``, ``getChangesForBuild``, ``getChangeFromSSid``, and
+    ``getChanges`` now return a ``ChangeModel`` instead of a dictionary.
+  - ``ChangeSourcesConnectorComponent`` ``getChangeSource``, and ``getChangeSources`` now return a
+    ``ChangeSourceModel`` instead of a dictionary.
+  - ``LogsConnectorComponent`` ``getLog``, ``getLogBySlug``, and ``getLogs`` now return a ``LogModel``
+    instead of a dictionary.
+  - ``MastersConnectorComponent`` ``getMaster``, and ``getMasters`` now return a ``MasterModel`` instead
+    of a dictionary.
+  - ``ProjectsConnectorComponent`` ``get_project``, ``get_projects``, and ``get_active_projects`` now
+    return a ``ProjectModel`` instead of a dictionary.
+  - ``SchedulersConnectorComponent`` ``getScheduler``, and ``getSchedulers`` now return a
+    ``SchedulerModel`` instead of a dictionary.
+  - ``SourceStampsConnectorComponent`` ``getSourceStamp``, ``get_sourcestamps_for_buildset``,
+    ``getSourceStampsForBuild``, and ``getSourceStamps`` now return a ``SourceStampModel`` instead of a
+    dictionary.
+  - ``StepsConnectorComponent`` ``getStep``, and ``getSteps`` now return a ``StepModel`` instead of a
+    dictionary.
+  - ``TestResultsConnectorComponent`` ``getTestResult``, and ``getTestResults`` now return a
+    ``TestResultModel`` instead of a dictionary.
+  - ``TestResultSetsConnectorComponent`` ``getTestResultSet``, and ``getTestResultSets`` now return
+    a ``TestResultSetModel`` instead of a dictionary.
+  - ``UsersConnectorComponent`` ``getUser``, ``getUserByUsername``, and ``getUsers`` now return a
+    ``UserModel`` instead of a dictionary.
+  - ``WorkersConnectorComponent`` ``getWorker``, and ``getWorkers`` now return a ``WorkerModel`` instead
+    of a dictionary.
+- ``Git`` step no longer includes ``-t`` (tags) option when fetching by default. Explicitly enabling
+  with ``tags=True`` is now required to achieve the same functionality.
+- ``logCompressionMethod`` will default to ``zstd`` if the ``buildbot[zstd]`` extra set was
+  installed (otherwise, it default to ``gzip`` as before).
+- Buildbot now requires ``treq`` package to be installed.
+- Buildbot worker will now run process in ``JobObject`` on Windows, so child processes can be killed
+  if main  process dies itself either intentionally or accidentally.
+- Worker docker image now uses Debian 12.
+- Settings UI has been improved by reducing group header size and adding space between groups.
+
+Features
+--------
+
+- ``copy-db`` script now reads/writes in parallel and in batches. This results in it being faster
+  and having smaller memory footprint
+- Added possibility to set ``START_TIMEOUT`` via environment variable.
+- Added data API ``/workers/n:workerid/builders`` allowing to query the Builders assigned to a worker
+- The ``db_url`` config value can now be a renderable, allowing usage of secrets from secrets providers.
+  eg. ``util.Interpolate("postgresql+psycopg2://db_user:%(secret:db_password)s@db_host:db_port/db_name")``
+- Added ``tooltip`` parameter to the forcescheduler, allowing passing help text to web frontend
+  to explain the user what the parameters mean.
+- ``Git`` and ``GitPush`` steps and ``GitPoller`` change source now support authentication with
+  username/password. Credentials can be provided through the ``auth_credentials`` and/or
+  ``git_credentials`` parameters.
+- ``Git`` step ``getDescription`` configuration now supports the first-parent and exclude arguments.
+- ``Git`` step now honors the shallow option in fetching in addition to clone and submodules.
+- Github change hooks how have access to ``full_name`` of the repository when rendering GitHub
+  tokens.
+- Implemented simpler way to perform HTTP requests via ``httpclientservice.HTTPSession``. It does
+  not require a parent service.
+- ``logCompressionMethod`` can now be set to ``br`` (using brotli, requires the ``buildbot[brotli]``
+  extra) or ``zstd`` (using zstandard, requires the ``buildbot[zstd]`` extra)
+- Buildbot now compress REST API responses with the appropriate ``accept-encoding`` header is set.
+  Available encodings are: gzip, brotli (requires the ``buildbot[brotli]`` extra), and zstd
+  (requires the ``buildbot[zstd]`` extra)
+- Added ``max_lines`` parameter to the shell command, allowing processes to be terminated if they
+  exceed a specified line count.
+- The ``want_logs_content`` argument of message formatters now supports being passed a list of logs
+  for which to load the content.
+- Exposed log URLs as ``url``, ``url_raw``, ``url_raw_inline`` in the log dictionary generated by
+  report generators.
+- ``TestBuildStepMixin`` now supports testing multiple steps added via ``setup_step()`` in a single
+  unit test.
+- Worker base directory has been exposed as a normal build property called ``basedir``.
+- Show build and step start and stop times when hovering on duration in build step table.
+- The following website URLs now support receiving ``buildername`` instead of ``builderid`` to
+  select the builder: ``builders/:builderid``, ``builders/:builderid/builds/:buildnumber``, and
+  ``builders/:builderid/builds/:buildnumber/steps/:stepnumber/logs/:logslug``.
+- Human readable time is now shown in addition to timestamp in various debug tabs in the web frontend.
+- ``ChoiceStringParameter`` can now have both ``multiple=True`` and ``strict=False`` allowing to
+  create values in the web UI.
+- Buildrequests tables in various places in the web UI now have a button to load more items.
+- Added a way to configure sidebar menu group expand behavior in web frontend.
+- Web UI's Worker view (``workers/{workerId}``) now has a ``Builders`` tab showing Builders
+  configured on the worker
+- Builders view now paginates builders list. Page size can be configured with the setting
+  'Builders page related settings > Number of builders to show per page'.
+- Workers view now paginates workers list. Page size can be configured with the setting
+  'Workers page related settings > Number of workers to show per page'.
+- Workers view now includes a search box to filter on worker's name.
+
+Deprecations and Removals
+-------------------------
+
+- Buildbot worker no longer supports Python 3.4, 3.5 and 3.6. Older version of Buildbot worker should
+  be used in case it needs to run on these old versions of Python. Old versions of Buildbot worker
+  are fully supported by Buildbot master.
+- ``buildbot.db.test_results.TestResultDict`` is deprecated in favor of ``buildbot.db.test_results.TestResultModel``.
+- ``buildbot.db.test_result_sets.TestResultSetDict`` is deprecated in favor of ``buildbot.db.test_result_sets.TestResultSetModel``.
+- ``buildbot.db.buildrequests.BrDict`` is deprecated in favor of ``buildbot.db.buildrequests.BuildRequestModel``.
+- ``buildbot.db.build_data.BuildDataDict`` is deprecated in favor of ``buildbot.db.build_data.BuildDataModel``.
+- ``buildbot.db.changes.ChDict`` is deprecated in favor of ``buildbot.db.changes.ChangeModel``.
+- ``buildbot.db.masters.MasterDict`` is deprecated in favor of ``buildbot.db.masters.MasterModel``.
+- ``buildbot.db.sourcestamps.SsDict`` is deprecated in favor of ``buildbot.db.sourcestamps.SourceStampModel``.
+- ``buildbot.db.users.UsDict`` is deprecated in favor of ``buildbot.db.users.UserModel``.
+- The following methods of ``httpclientservice.HTTPClientService`` have been deprecated:
+  ``get``, ``delete``, ``post``, ``put``, ``updateHeaders``. Use corresponding methods from ``HTTPSession``.
+- The ``add_logs`` argument of ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and
+  ``BuildSetStatusGenerator`` has been removed. As a replacement, set ``want_logs_content`` of the
+  passed message formatter.
+- The ``build_files``, ``worker_env`` and ``worker_version`` arguments of
+  ``TestBuildStepMixin.setup_step()`` have been deprecated. As a replacement, call
+  ``TestBuildStepMixin.setup_build()`` before ``setup_step``.
+- The ``step`` attribute of ``TestBuildStepMixin`` has been deprecated. As a replacement, call
+  ``TestBuildStepMixin.get_nth_step()``.
+- Master running with Twisted >= 24.7.0 does not work with buildbot-worker 0.8.
+  Use Twisted 24.3.0 on master if you need to communicate with buildbot-worker 0.8. This may be
+  fixed in the future.
+- Buildbot master now requires Twisted 22.1.0 or newer.
+
+
+Buildbot ``4.0.4`` ( ``2024-10-12`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed missing builder force scheduler route ``/builders/:builderid/force/:scheduler``.
+- Fixed URL of WGSI dashboards to keep backward compatibility with the old non-React WSGI plugin.
+- Fixed display of long property values by wrapping them
+- Dropped no longer needed dependency on the ``future`` library
+
 Buildbot ``4.0.3`` ( ``2024-09-27`` )
 =====================================
 
