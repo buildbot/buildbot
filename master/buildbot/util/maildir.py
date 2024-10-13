@@ -35,7 +35,7 @@ from buildbot.util import service
 
 dnotify = None
 try:
-    import dnotify
+    import dnotify  # type: ignore[no-redef]
 except ImportError:
     log.msg("unable to import dnotify, so Maildir will use polling instead")
 
