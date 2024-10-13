@@ -793,7 +793,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot_worker.tunnel"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.util._hangcheck"
-    ignore_errors = true
-
