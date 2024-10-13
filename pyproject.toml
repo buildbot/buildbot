@@ -270,11 +270,9 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.schedulers.test_canceller"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.schedulers.test_forcesched"
-    ignore_errors = true
+    module = "xerox.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.test.unit.schedulers.test_trysched"
     ignore_errors = true
