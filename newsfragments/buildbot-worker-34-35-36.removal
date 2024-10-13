@@ -1,3 +1,0 @@
-Buildbot worker no longer supports Python 3.4, 3.5 and 3.6. Older version of Buildbot worker should
-be used in case it needs to run on these old versions of Python. Old versions of Buildbot worker
-are fully supported by Buildbot master.

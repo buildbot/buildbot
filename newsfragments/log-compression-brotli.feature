@@ -1,1 +1,0 @@
-``logCompressionMethod`` can now be set to ``br`` (using brotli, requires the buildbot[brotli] extra)

@@ -1,1 +1,0 @@
-Added possibility to set `START_TIMEOUT` via environment variable.

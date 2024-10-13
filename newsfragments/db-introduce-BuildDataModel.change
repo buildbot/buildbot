@@ -1,1 +1,0 @@
-:class:`BuildDataConnectorComponent` `getBuildData`, `getBuildDataNoValue`, and `getAllBuildDataNoValues` now return a :class`BuildDataModel` instead of a dictionary of BuildData data
