@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.python import log
@@ -71,7 +71,7 @@ class WorkerRegistration:
 
 
 class WorkerManager(MeasuredBuildbotServiceManager):
-    name = "WorkerManager"
+    name: str | None = "WorkerManager"  # type: ignore[assignment]
     managed_services_name = "workers"
 
     config_attr = "workers"
