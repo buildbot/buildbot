@@ -280,9 +280,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.test.unit.www.test_endpointmatchers"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.www.test_ldapuserinfo"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.www.test_oauth"
     ignore_errors = true
     [[tool.mypy.overrides]]
