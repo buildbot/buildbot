@@ -13,6 +13,4 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process.buildrequest import BuildRequest
-
-_hush_pyflakes = [BuildRequest]
+from buildbot.process.buildrequest import BuildRequest  # noqa: F401

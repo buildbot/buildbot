@@ -13,10 +13,12 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from __future__ import annotations
 
 import time
 
 from twisted.internet import defer
+from twisted.internet.base import DelayedCall
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from zope.interface import implementer
@@ -46,7 +48,7 @@ class AbstractWorker(service.BuildbotService):
     # reconfig workers after builders
     reconfig_priority = 64
 
-    quarantine_timer = None
+    quarantine_timer: DelayedCall | None = None
     quarantine_timeout = quarantine_initial_timeout = 10
     quarantine_max_timeout = 60 * 60
     start_missing_on_startup = True

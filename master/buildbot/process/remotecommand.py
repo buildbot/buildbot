@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -39,7 +40,7 @@ class RemoteCommand(base.RemoteCommandImpl):
     _commandCounter = 0
 
     active = False
-    rc = None
+    rc: int | None = None
     debug = False
 
     def __init__(

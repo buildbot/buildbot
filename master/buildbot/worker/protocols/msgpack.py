@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import stat
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -98,9 +99,9 @@ class BasicRemoteCommand:
 class Connection(base.Connection):
     # TODO: configure keepalive_interval in
     # c['protocols']['msgpack']['keepalive_interval']
-    keepalive_timer = None
+    keepalive_timer: None = None
     keepalive_interval = 3600
-    info = None
+    info: Any = None
 
     def __init__(self, master, worker, protocol):
         super().__init__(worker.workername)

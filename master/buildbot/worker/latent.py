@@ -13,6 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from __future__ import annotations
 
 import enum
 import random
@@ -20,6 +21,7 @@ import string
 from typing import Any
 
 from twisted.internet import defer
+from twisted.internet.base import DelayedCall
 from twisted.python import failure
 from twisted.python import log
 from zope.interface import implementer
@@ -81,8 +83,8 @@ class AbstractLatentWorker(AbstractWorker):
     See ec2.py for a concrete example.
     """
 
-    substantiation_build = None
-    build_wait_timer = None
+    substantiation_build: Any = None
+    build_wait_timer: DelayedCall | None = None
     start_missing_on_startup = False
 
     # override if the latent worker may connect without substantiate. Most
