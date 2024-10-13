@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import json
 from unittest import mock
@@ -28,7 +29,7 @@ from buildbot.www import graphql
 try:
     import graphql as graphql_core
 except ImportError:
-    graphql_core = None
+    graphql_core = None  # type: ignore[assignment]
 
 
 class V3RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
