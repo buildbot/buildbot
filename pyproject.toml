@@ -718,6 +718,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.util.__init__"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.kubeclientservice"
-    ignore_errors = true
