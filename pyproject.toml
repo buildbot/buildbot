@@ -363,9 +363,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.test.unit.data.test_forceschedulers"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_graphql"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.data.test_logchunks"
     ignore_errors = true
     [[tool.mypy.overrides]]
