@@ -246,6 +246,14 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "boto3.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "botocore.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
@@ -718,7 +726,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot.worker.docker"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.ec2"
     ignore_errors = true

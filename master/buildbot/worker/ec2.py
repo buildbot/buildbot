@@ -340,12 +340,12 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise ValueError('no available images match constraints')
         return options[-1][-1]
 
-    def dns(self):
+    def _dns(self):
         if self.instance is None:
             return None
         return self.instance.public_dns_name
 
-    dns = property(dns)
+    dns = property(_dns)
 
     def start_instance(self, build):
         if self.instance is not None:
