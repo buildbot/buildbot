@@ -17,11 +17,11 @@
 Steps and objects related to pbuilder
 """
 
+from __future__ import annotations
+
 import re
 import stat
 import time
-from typing import List
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -46,14 +46,14 @@ class DebPbuilder(WarningCountingShellCommand):
     warningPattern = r".*(warning[: ]|\sW: ).*"
 
     architecture = None
-    distribution: Optional[str] = 'stable'
+    distribution: str | None = 'stable'
     basetgz = None
     _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.tgz"
     mirror = "http://cdn.debian.net/debian/"
     othermirror = ""
-    extrapackages: List[str] = []
+    extrapackages: list[str] = []
     keyring = None
-    components: Optional[str] = None
+    components: str | None = None
 
     maxAge = 60 * 60 * 24 * 7
     pbuilder = '/usr/sbin/pbuilder'

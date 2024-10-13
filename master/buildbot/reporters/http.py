@@ -12,7 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from typing import Optional
+
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.python import log
@@ -24,7 +25,7 @@ from buildbot.util import httpclientservice
 
 
 class HttpStatusPush(ReporterBase):
-    name: Optional[str] = "HttpStatusPush"  # type: ignore[assignment]
+    name: str | None = "HttpStatusPush"  # type: ignore[assignment]
     secrets = ["auth"]
 
     def checkConfig(

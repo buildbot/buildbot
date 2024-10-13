@@ -12,8 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
 from typing import ClassVar
-from typing import Dict
 from typing import Sequence
 
 from twisted.internet import defer
@@ -31,7 +32,7 @@ from buildbot.util.state import StateMixin
 
 @implementer(interfaces.IScheduler)
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
-    DEFAULT_CODEBASES: Dict[str, Dict[str, str]] = {'': {}}
+    DEFAULT_CODEBASES: dict[str, dict[str, str]] = {'': {}}
 
     compare_attrs: ClassVar[Sequence[str]] = (
         *ClusteredBuildbotService.compare_attrs,

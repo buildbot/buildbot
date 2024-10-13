@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
 import re
-from typing import Optional
 from urllib.parse import urlparse
 
 from twisted.internet import defer
@@ -50,7 +51,7 @@ HTTP_CREATED = 201
 
 
 class BitbucketServerStatusPush(ReporterBase):
-    name: Optional[str] = "BitbucketServerStatusPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketServerStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,
@@ -174,7 +175,7 @@ class BitbucketServerStatusPush(ReporterBase):
 
 
 class BitbucketServerCoreAPIStatusPush(ReporterBase):
-    name: Optional[str] = "BitbucketServerCoreAPIStatusPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketServerCoreAPIStatusPush"  # type: ignore[assignment]
     secrets = ["token", "auth"]
 
     def checkConfig(
@@ -438,7 +439,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
 
 class BitbucketServerPRCommentPush(ReporterBase):
-    name: Optional[str] = "BitbucketServerPRCommentPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketServerPRCommentPush"  # type: ignore[assignment]
 
     @defer.inlineCallbacks
     def reconfigService(

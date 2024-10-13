@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import io
 import json
 import random
 import shlex
 from typing import Any
 from typing import ClassVar
-from typing import Dict
-from typing import Optional
 from typing import Sequence
 
 from twisted.internet import defer
@@ -622,7 +622,7 @@ class TelegramStatusBot(StatusBot):
     idle_string = "idle 💤"
     running_string = "running 🌀:"
 
-    query_cache: Dict[int, Dict[str, Any]] = {}
+    query_cache: dict[int, dict[str, Any]] = {}
 
     @property
     def commandSuffix(self):
@@ -883,7 +883,7 @@ class TelegramStatusBot(StatusBot):
 
 
 class TelegramWebhookBot(TelegramStatusBot):
-    name: Optional[str] = "TelegramWebhookBot"  # type: ignore[assignment]
+    name: str | None = "TelegramWebhookBot"  # type: ignore[assignment]
 
     def __init__(self, token, *args, certificate=None, **kwargs):
         TelegramStatusBot.__init__(self, token, *args, **kwargs)
@@ -926,7 +926,7 @@ class TelegramWebhookBot(TelegramStatusBot):
 
 
 class TelegramPollingBot(TelegramStatusBot):
-    name: Optional[str] = "TelegramPollingBot"  # type: ignore[assignment]
+    name: str | None = "TelegramPollingBot"  # type: ignore[assignment]
 
     def __init__(self, *args, poll_timeout=120, **kwargs):
         super().__init__(*args, **kwargs)
