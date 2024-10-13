@@ -725,6 +725,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.worker.openstack"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.protocols.base"
-    ignore_errors = true
