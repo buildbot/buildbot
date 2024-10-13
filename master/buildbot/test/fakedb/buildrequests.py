@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Generator
 
 from twisted.internet import defer
 
@@ -111,15 +112,15 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def getBuildRequests(
         self,
-        builderid=None,
-        complete=None,
-        claimed=None,
-        bsid=None,
-        branch=None,
-        repository=None,
-        resultSpec=None,
-    ):
-        rv = []
+        builderid: int | None = None,
+        complete: bool | None = None,
+        claimed: bool | int | None = None,
+        bsid: int | None = None,
+        branch: str | None = None,
+        repository: str | None = None,
+        resultSpec: dict | None = None,
+    ) -> Generator[defer.Deferred[str], None, list[buildrequests.BuildRequestModel]]:
+        rv: list[buildrequests.BuildRequestModel] = []
         for br in self.reqs.values():
             if builderid and br.builderid != builderid:
                 continue
@@ -155,6 +156,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             if branch or repository:
                 buildset = yield self.db.buildsets.getBuildset(br.buildsetid)
                 sourcestamps: list[SourceStampModel] = []
+                assert buildset is not None
                 for ssid in buildset.sourcestamps:
                     sourcestamps.append((yield self.db.sourcestamps.getSourceStamp(ssid)))
 
@@ -163,6 +165,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 if repository and not any(repository == s.repository for s in sourcestamps):
                     continue
             builder = yield self.db.builders.getBuilder(br.builderid)
+            assert builder is not None
             br.buildername = builder.name
             rv.append(self._modelFromRow(br))
         if resultSpec is not None:
