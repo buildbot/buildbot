@@ -327,9 +327,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.test.unit.data.test_test_results"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_types"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.data.test_workers"
     ignore_errors = true
     [[tool.mypy.overrides]]
