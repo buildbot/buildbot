@@ -745,6 +745,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.www.oauth2"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.plugin"
-    ignore_errors = true
