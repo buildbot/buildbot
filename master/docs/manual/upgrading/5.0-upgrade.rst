@@ -39,6 +39,35 @@ The following methods of ``httpclientservice.HTTPClientService`` have been depre
 
 As a replacement, use ``httpclientservice.HTTPSession`` and call corresponding methods on it.
 
+Database connectors
+===================
+
+The internal API presented by the database connectors has been changed to return data classes
+instead of Python dictionaries. To upgrade to the data classes simply access the data as class
+attributes, not dictionary keys.
+
+The following functions have been affected:
+
+- ``BuildDataConnectorComponent`` ``getBuildData``, ``getBuildDataNoValue``, and ``getAllBuildDataNoValues``.
+- ``BuildsConnectorComponent`` ``getBuild``, ``getBuildByNumber``, ``getPrevSuccessfulBuild``,
+  ``getBuildsForChange``, ``getBuilds``, ``_getRecentBuilds``, and ``_getBuild``.
+- ``BuildRequestsConnectorComponent`` ``getBuildRequest``, and ``getBuildRequests``.
+- ``BuildsetsConnectorComponent`` ``getBuildset``, ``getBuildsets``, and ``getRecentBuildsets``.
+- ``BuildersConnectorComponent`` ``getBuilder`` and ``getBuilders``.
+- ``ChangesConnectorComponent`` ``getChange``, ``getChangesForBuild``, ``getChangeFromSSid``.
+- ``ChangeSourcesConnectorComponent`` ``getChangeSource``, and ``getChangeSources``.
+- ``LogsConnectorComponent`` ``getLog``, ``getLogBySlug``, and ``getLogs``.
+- ``MastersConnectorComponent`` ``getMaster``, and ``getMasters``.
+- ``ProjectsConnectorComponent`` ``get_project``, ``get_projects``.
+- ``SchedulersConnectorComponent`` ``getScheduler``, and ``getSchedulers``.
+- ``SourceStampsConnectorComponent`` ``getSourceStamp``, ``get_sourcestamps_for_buildset``,
+  ``getSourceStampsForBuild``, and ``getSourceStamps``.
+- ``StepsConnectorComponent`` ``getStep``, and ``getSteps``.
+- ``TestResultsConnectorComponent`` ``getTestResult`` and ``getTestResults``.
+- ``TestResultSetsConnectorComponent`` ``getTestResultSet``, and ``getTestResultSets``.
+- ``UsersConnectorComponent`` ``getUser``, ``getUserByUsername``, and ``getUsers``.
+- ``WorkersConnectorComponent`` ``getWorker``, and ``getWorkers``.
+
 Reporters
 =========
 
