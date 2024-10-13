@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import types
 from typing import TYPE_CHECKING
@@ -28,12 +28,13 @@ from buildbot.util.sautils import get_upsert_method
 if TYPE_CHECKING:
     from buildbot.db import logs
     from buildbot.db import pool
+    from buildbot.db import sourcestamps
 
 
 class FakeDBConnector:
     logs: logs.LogsConnectorComponent
     pool: pool.DBThreadPool
-    pass
+    sourcestamps: sourcestamps.SourceStampsConnectorComponent
 
 
 class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
