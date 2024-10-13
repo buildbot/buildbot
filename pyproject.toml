@@ -270,66 +270,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_build_data"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_builders"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_buildrequests"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_buildsets"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_builds"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_changesources"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_changes"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_connector"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_forceschedulers"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_logs"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_masters"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_projects"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_properties"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_root"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_schedulers"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_sourcestamps"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_steps"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_test_result_sets"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_test_results"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.data.test_workers"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.db.test_build_data"
     ignore_errors = true
     [[tool.mypy.overrides]]
