@@ -74,6 +74,7 @@ class Build(properties.PropertiesMixin):
     VIRTUAL_BUILDER_PROJECT_PROP = "virtual_builder_project"
     VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
+    workername: str | None
     reason = "changes"
     finished = False
     results: int | None = None
@@ -101,8 +102,8 @@ class Build(properties.PropertiesMixin):
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
-        self._preparation_step = None
-        self._locks_acquire_step = None
+        self._preparation_step: buildstep.BuildStep | None = None
+        self._locks_acquire_step: buildstep.BuildStep | None = None
         self.currentStep = None
 
         self.workerEnvironment: dict[str, str] = {}
@@ -214,7 +215,7 @@ class Build(properties.PropertiesMixin):
     def getWorkerCommandVersion(self, command, oldversion=None):
         return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)
 
-    def getWorkerName(self):
+    def getWorkerName(self) -> str | None:
         return self.workername
 
     @staticmethod
@@ -399,7 +400,7 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildProperties(self.buildid, self)
         yield self.master.data.updates.setBuildStateString(self.buildid, 'preparing worker')
         try:
-            ready_or_failure = False
+            ready_or_failure: bool | Failure = False
             if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
                 self._is_substantiating = True
                 ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
@@ -447,6 +448,7 @@ class Build(properties.PropertiesMixin):
         )
         yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
 
+        assert workerforbuilder.worker is not None
         self.conn = workerforbuilder.worker.conn
 
         # To retrieve the worker properties, the worker must be attached as we depend on its
@@ -468,6 +470,7 @@ class Build(properties.PropertiesMixin):
         if self._locks_to_acquire:
             yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
             locks_acquire_start_at = int(self.master.reactor.seconds())
+            assert self._locks_acquire_step is not None
             yield self.master.data.updates.startStep(
                 self._locks_acquire_step.stepid, started_at=locks_acquire_start_at
             )
