@@ -787,6 +787,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot_worker.test.unit.test_msgpack"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.test_scripts_runner"
-    ignore_errors = true
