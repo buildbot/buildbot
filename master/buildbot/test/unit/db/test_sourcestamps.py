@@ -15,6 +15,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import Generator
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -24,6 +28,9 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from buildbot.test.util.connector_component import FakeDBConnector
+
 CREATED_AT = 927845299
 
 
@@ -32,6 +39,9 @@ def sourceStampKey(sourceStamp: sourcestamps.SourceStampModel):
 
 
 class Tests(interfaces.InterfaceTests):
+    insert_test_data: Callable[[list], defer.Deferred]
+    db: FakeDBConnector
+
     def test_signature_findSourceStampId(self):
         @self.assertArgSpecMatches(self.db.sourcestamps.findSourceStampId)
         def findSourceStampId(
@@ -229,7 +239,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual((ssdict.branch, ssdict.revision), (None, None))
 
     @defer.inlineCallbacks
-    def test_getSourceStamp_patch(self):
+    def test_getSourceStamp_patch(self) -> Generator[defer.Deferred, None, None]:
         yield self.insert_test_data([
             fakedb.Patch(
                 id=99,
@@ -241,7 +251,9 @@ class Tests(interfaces.InterfaceTests):
             ),
             fakedb.SourceStamp(id=234, patchid=99),
         ])
-        ssdict: sourcestamps.SourceStampModel = yield self.db.sourcestamps.getSourceStamp(234)
+        res = yield self.db.sourcestamps.getSourceStamp(234)
+        assert res is not None
+        ssdict = res
 
         self.assertIsInstance(ssdict, sourcestamps.SourceStampModel)
         self.assertIsInstance(ssdict.patch, sourcestamps.PatchModel)

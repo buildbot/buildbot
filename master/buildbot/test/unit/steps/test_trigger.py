@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from unittest.mock import Mock
 
@@ -40,7 +41,7 @@ class FakeTriggerable:
     triggered_with = None
     result = SUCCESS
     bsid = 1
-    brids = {}
+    brids: dict[int, int] = {}
     exception = False
     never_finish = False
 
