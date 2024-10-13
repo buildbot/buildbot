@@ -273,9 +273,6 @@ plugins = "mypy_zope:plugin"
     module = "buildbot.test.integration.worker.test_latent"
     ignore_errors = true
     [[tool.mypy.overrides]]
-    module = "buildbot.test.integration.worker.test_misc"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.integration.worker.test_proxy"
     ignore_errors = true
     [[tool.mypy.overrides]]
