@@ -18,12 +18,15 @@
 # have access to any of the Buildbot source.  Functions here should be kept
 # very simple!
 
+from __future__ import annotations
+
 import os
 import select
 import signal
 import subprocess
 import sys
 import time
+from typing import Callable
 
 import psutil
 
@@ -61,7 +64,7 @@ def sleep_forever():
         time.sleep(10)
 
 
-script_fns = {}
+script_fns: dict[str, Callable] = {}
 
 
 def script(fn):
