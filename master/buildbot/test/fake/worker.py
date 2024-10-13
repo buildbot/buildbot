@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import os
 
@@ -25,10 +25,11 @@ from buildbot.process import properties
 from buildbot.test.fake import fakeprotocol
 from buildbot.worker import Worker
 
+RemoteWorker: type | None = None
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker
 except ImportError:
-    RemoteWorker = None
+    pass
 
 
 class FakeWorker:
