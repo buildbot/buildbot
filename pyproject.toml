@@ -270,33 +270,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.process.test_builder"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.process.test_buildrequestdistributor"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.process.test_buildstep"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.reporters.test_generators_build"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.reporters.test_generators_buildrequest"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.reporters.test_generators_utils"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.reporters.test_generators_worker"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.reporters.test_gerrit"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.unit.reporters.test_irc"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.unit.reporters.test_telegram"
     ignore_errors = true
     [[tool.mypy.overrides]]
