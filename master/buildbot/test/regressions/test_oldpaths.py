@@ -38,78 +38,48 @@ class OldImportPaths(unittest.TestCase):
     """
 
     def test_scheduler_Scheduler(self):
-        from buildbot.scheduler import Scheduler
-
-        assert Scheduler
+        from buildbot.scheduler import Scheduler  # noqa: F401
 
     def test_schedulers_basic_Scheduler(self):
         # renamed to basic.SingleBranchScheduler
-        from buildbot.schedulers.basic import Scheduler
-
-        assert Scheduler
+        from buildbot.schedulers.basic import Scheduler  # noqa: F401
 
     def test_scheduler_AnyBranchScheduler(self):
-        from buildbot.scheduler import AnyBranchScheduler
-
-        assert AnyBranchScheduler
+        from buildbot.scheduler import AnyBranchScheduler  # noqa: F401
 
     def test_scheduler_basic_Dependent(self):
-        from buildbot.schedulers.basic import Dependent
-
-        assert Dependent
+        from buildbot.schedulers.basic import Dependent  # noqa: F401
 
     def test_scheduler_Dependent(self):
-        from buildbot.scheduler import Dependent
-
-        assert Dependent
+        from buildbot.scheduler import Dependent  # noqa: F401
 
     def test_scheduler_Periodic(self):
-        from buildbot.scheduler import Periodic
-
-        assert Periodic
+        from buildbot.scheduler import Periodic  # noqa: F401
 
     def test_scheduler_Nightly(self):
-        from buildbot.scheduler import Nightly
-
-        assert Nightly
+        from buildbot.scheduler import Nightly  # noqa: F401
 
     def test_scheduler_Triggerable(self):
-        from buildbot.scheduler import Triggerable
-
-        assert Triggerable
+        from buildbot.scheduler import Triggerable  # noqa: F401
 
     def test_scheduler_Try_Jobdir(self):
-        from buildbot.scheduler import Try_Jobdir
-
-        assert Try_Jobdir
+        from buildbot.scheduler import Try_Jobdir  # noqa: F401
 
     def test_scheduler_Try_Userpass(self):
-        from buildbot.scheduler import Try_Userpass
-
-        assert Try_Userpass
+        from buildbot.scheduler import Try_Userpass  # noqa: F401
 
     def test_schedulers_filter_ChangeFilter(self):
         # this was the location of ChangeFilter until 0.8.4
-        from buildbot.schedulers.filter import ChangeFilter
-
-        assert ChangeFilter
+        from buildbot.schedulers.filter import ChangeFilter  # noqa: F401
 
     def test_process_base_Build(self):
-        from buildbot.process.base import Build
-
-        assert Build
+        from buildbot.process.base import Build  # noqa: F401
 
     def test_buildrequest_BuildRequest(self):
-        from buildbot.buildrequest import BuildRequest
-
-        assert BuildRequest
+        from buildbot.buildrequest import BuildRequest  # noqa: F401
 
     def test_process_subunitlogobserver_SubunitShellCommand(self):
-        from buildbot.process.subunitlogobserver import SubunitShellCommand
-
-        assert SubunitShellCommand
+        from buildbot.process.subunitlogobserver import SubunitShellCommand  # noqa: F401
 
     def test_steps_source_Source(self):
-        from buildbot.steps.source import Source
-
-        assert Source
+        from buildbot.steps.source import Source  # noqa: F401

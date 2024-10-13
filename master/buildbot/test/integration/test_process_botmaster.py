@@ -32,7 +32,6 @@ from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from typing import Any
-    from typing import Awaitable
     from typing import Callable
     from typing import Coroutine
     from typing import TypeVar
@@ -85,7 +84,7 @@ class Tests(RunFakeMasterTestCase):
 
     async def _query_until_result(
         self,
-        fn: Callable[_P, Coroutine[Any, Any, Awaitable[_T]]],
+        fn: Callable[_P, Coroutine[Any, Any, _T]],
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> _T:
@@ -96,7 +95,7 @@ class Tests(RunFakeMasterTestCase):
         self.fail('Fail to get result in appropriate timeout')
 
     @async_to_deferred
-    async def test_shutdown_busy_with_child(self):
+    async def test_shutdown_busy_with_child(self) -> None:
         """
         Test that clean shutdown complete correctly
         even when a running Build trigger another

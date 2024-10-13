@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -21,12 +22,12 @@ from buildbot.data import types
 
 
 class TypeMixin:
-    klass = None
-    good = []
-    bad = []
-    stringValues = []
-    badStringValues = []
-    cmpResults = []
+    klass: type[types.Type] | None = None
+    good: list[object] = []
+    bad: list[object] = []
+    stringValues: list[tuple[str | bytes, object]] = []
+    badStringValues: list[str | bytes] = []
+    cmpResults: list[tuple[object, str | bytes, int]] = []
 
     def setUp(self):
         self.ty = self.makeInstance()

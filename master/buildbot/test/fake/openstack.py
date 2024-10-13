@@ -13,7 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
-
+from __future__ import annotations
 
 import uuid
 
@@ -108,7 +108,7 @@ class Servers:
     fail_to_start = False
     gets_until_active = 3
     gets_until_disappears = 1
-    instances = {}
+    instances: dict[uuid.UUID, Instance] = {}
 
     def create(self, *boot_args, **boot_kwargs):
         instance_id = uuid.uuid4()
