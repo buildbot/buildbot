@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.sql.elements import BooleanClauseList
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
 
@@ -84,12 +85,12 @@ def withoutSqliteForeignKeys(connection: Connection):
 
     # This context is not re-entrant. Ensure it.
     assert not getattr(connection.engine, 'fk_disabled', False)
-    connection.fk_disabled = True
+    connection.fk_disabled = True  # type: ignore[attr-defined]
     connection.exec_driver_sql('pragma foreign_keys=OFF')
     try:
         yield
     finally:
-        connection.fk_disabled = False
+        connection.fk_disabled = False  # type: ignore[attr-defined]
         connection.exec_driver_sql('pragma foreign_keys=ON')
 
 
@@ -233,5 +234,5 @@ def _column_value_kwargs(values: Sequence[tuple[sa.Column, Any]]) -> dict[str, A
     return {c.name: v for (c, v) in values}
 
 
-def _column_values_where_clause(values: Sequence[tuple[sa.Column, Any]]) -> BooleanClauseList:
-    return BooleanClauseList.and_(c == v for (c, v) in values)
+def _column_values_where_clause(values: Sequence[tuple[sa.Column, Any]]) -> ColumnElement[bool]:
+    return BooleanClauseList.and_(*[c == v for (c, v) in values])

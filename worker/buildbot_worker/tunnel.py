@@ -83,7 +83,7 @@ class HTTPTunnelFactory(protocol.ClientFactory):
     from all the proxy business.
     """
 
-    protocol = HTTPTunnelClient
+    protocol = HTTPTunnelClient  # type: ignore[assignment]
 
     def __init__(self, host, port, wrappedFactory):
         self.host = host

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import re
 import textwrap
@@ -74,11 +76,11 @@ class OAuth2LoginResource(auth.LoginResource):
 class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
     getTokenUseAuthHeaders = False
-    authUri = None
-    tokenUri = None
+    authUri: str | None = None
+    tokenUri: str | None = None
     grantType = 'authorization_code'
-    authUriAdditionalParams = {}
-    tokenUriAdditionalParams = {}
+    authUriAdditionalParams: dict[str, str] = {}
+    tokenUriAdditionalParams: dict[str, str] = {}
     loginUri = None
     homeUri = None
 

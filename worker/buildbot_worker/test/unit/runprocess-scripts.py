@@ -130,7 +130,7 @@ def assert_stdin_closed():
 # make sure this process dies if necessary
 
 if not hasattr(signal, 'alarm'):
-    signal.alarm = lambda t: None
+    signal.alarm = lambda t: 0
 signal.alarm(110)  # die after 110 seconds
 
 # dispatcher

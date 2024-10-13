@@ -28,7 +28,7 @@ except ImportError:
 try:
     import zstandard
 except ImportError:
-    zstandard = None
+    zstandard = None  # type: ignore[assignment]
 
 
 @implementer(iweb._IRequestEncoderFactory)

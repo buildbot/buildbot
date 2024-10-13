@@ -35,10 +35,9 @@ try:
     import docker
     from docker.errors import NotFound
 
-    _hush_pyflakes = [docker]
-    docker_py_version = parse_version(docker.__version__)
+    docker_py_version = parse_version(docker.__version__)  # type: ignore[attr-defined]
 except ImportError:
-    docker = None
+    docker = None  # type: ignore[assignment]
     docker_py_version = parse_version("0.0")
 
 

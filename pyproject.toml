@@ -91,6 +91,7 @@ quote-style = "preserve"
 python_version = "3.8"
 namespace_packages = true
 pretty = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/master:$MYPY_CONFIG_FILE_DIR/worker"
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "setuptools.*"
@@ -221,8 +222,53 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.scripts.windows_service"
-    ignore_errors = true
+    module = "parameterized.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32job.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "ldap3.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "keystoneauth1.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "novaclient.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "libvirt.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "boto3.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "botocore.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "docker.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "txaio.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "dnotify.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "treq.*"
+    ignore_missing_imports = true
+
     [[tool.mypy.overrides]]
     module = "buildbot.test.fakedb.build_data"
     ignore_errors = true
@@ -664,136 +710,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.test.util.validation"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.bbcollections"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.httpclientservice"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.__init__"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.kubeclientservice"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.maildir"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.pullrequest"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.sautils"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.wamp.connector"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.docker"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.ec2"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.latent"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.libvirt"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.local"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.manager"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.openstack"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.protocols.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.protocols.manager.msgpack"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.protocols.manager.pb"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.encoding"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.hooks.bitbucketcloud"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.hooks.bitbucketserver"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.ldapuserinfo"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.oauth2"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.plugin"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.rest"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.www.ws"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.commands.base"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.commands.utils"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.null"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.pb"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.runprocess"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.scripts.runner"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.scripts.windows_service"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.fake.reactor"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.__init__"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.runprocess-scripts"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.test_bot"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.test_msgpack"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.test_scripts_runner"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.tunnel"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.util._hangcheck"
-    ignore_errors = true
-
