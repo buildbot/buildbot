@@ -12,16 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import re
 from typing import Any
+from typing import Callable
 from typing import Generator
+from unittest import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
-
+from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import words
 from buildbot.test import fakedb
@@ -35,11 +38,13 @@ class ContactMixin(TestReactorMixin):
 
     channelClass = words.Channel
     contactClass = words.Contact
-    USER : Any = "me"
     USER: Any = "me"
     CHANNEL: Any = "#buildbot"
+
     BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
+
+    patch: Callable[[Any, str, Any], Any]
 
     @defer.inlineCallbacks
     def setUp(self) -> Generator[Any, None, None]:
@@ -57,13 +62,13 @@ class ContactMixin(TestReactorMixin):
         self.bot.channelClass = self.channelClass
         self.bot.contactClass = self.contactClass
         self.bot.nickname = 'nick'
-        self.missing_workers = set()
+        self.missing_workers: set[int] = set()
 
         # fake out subscription/unsubscription
         self.subscribed = False
 
         # fake out clean shutdown
-        self.bot.parent = self
+        self.bot.parent = self  # type: ignore[assignment]
         self.bot.master.botmaster = mock.Mock(name='StatusBot-instance.master.botmaster')
         self.bot.master.botmaster.shuttingDown = False
 
@@ -178,7 +183,7 @@ class ContactMixin(TestReactorMixin):
         ])
 
 
-class TestContact(ContactMixin, unittest.TestCase):
+class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
     def test_channel_service(self):
         self.assertTrue(self.contact.channel.running)
         self.contact.channel.stopService()
