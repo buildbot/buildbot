@@ -722,6 +722,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.worker.ec2"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.worker.latent"
-    ignore_errors = true

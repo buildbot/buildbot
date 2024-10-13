@@ -17,6 +17,7 @@
 import enum
 import random
 import string
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -237,7 +238,7 @@ class AbstractLatentWorker(AbstractWorker):
     def substantiated(self):
         return self.state == States.SUBSTANTIATED and self.conn is not None
 
-    def substantiate(self, wfb, build):
+    def substantiate(self, wfb: Any, build: Any) -> defer.Deferred[Any]:
         log.msg(f"substantiating worker {wfb}")
 
         if self.state == States.SHUT_DOWN:
