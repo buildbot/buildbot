@@ -771,6 +771,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot_worker.runprocess"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.scripts.runner"
-    ignore_errors = true
