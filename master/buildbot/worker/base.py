@@ -160,7 +160,7 @@ class AbstractWorker(service.BuildbotService):
         return f"<{self.__class__.__name__} {self.name!r}>"
 
     @property
-    def workername(self):
+    def workername(self) -> str | None:
         # workername is now an alias to twisted.Service's name
         return self.name
 
