@@ -221,6 +221,10 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
+    module = "parameterized.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
     module = "buildbot.scripts.windows_service"
     ignore_errors = true
     [[tool.mypy.overrides]]
@@ -783,7 +787,4 @@ plugins = "mypy_zope:plugin"
     ignore_errors = true
     [[tool.mypy.overrides]]
     module = "buildbot_worker.test.unit.test_bot"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.unit.test_msgpack"
     ignore_errors = true
