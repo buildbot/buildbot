@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -129,7 +131,7 @@ class Command:
     #  sendStatus(list of tuples) (zero or more)
     #  commandComplete() or commandInterrupted() (one, at end)
 
-    requiredArgs = []
+    requiredArgs: list[str] = []
     debug = False
     interrupted = False
     # set by Builder, cleared on shutdown or when the Deferred fires

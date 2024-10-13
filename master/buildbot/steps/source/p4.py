@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
+from __future__ import annotations
 
 import re
-from typing import Optional
 
 from twisted.internet import defer
 from twisted.python import log
@@ -71,7 +71,7 @@ class P4(Source):
         p4line_end='local',
         p4viewspec=None,
         p4viewspec_suffix='...',
-        p4client: Optional[Interpolate] = None,
+        p4client: Interpolate | None = None,
         p4client_spec_options='allwrite rmdir',
         p4client_type=None,
         p4extra_args=None,

@@ -12,9 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
-
-
-from typing import Optional
+from __future__ import annotations
 
 from buildbot.util import service
 from buildbot.worker.manager import WorkerManager
@@ -22,7 +20,7 @@ from buildbot.worker.manager import WorkerManager
 
 class MachineManager(service.BuildbotServiceManager):
     reconfig_priority = WorkerManager.reconfig_priority + 1
-    name: Optional[str] = 'MachineManager'  # type: ignore[assignment]
+    name: str | None = 'MachineManager'  # type: ignore[assignment]
     managed_services_name = 'machines'
     config_attr = 'machines'
 

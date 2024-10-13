@@ -18,10 +18,8 @@ import sys
 import time
 from unittest import mock
 
-import twisted
 from twisted.internet import defer
 from twisted.internet.utils import getProcessOutputAndValue
-from twisted.python import versions
 from twisted.trial import unittest
 
 from buildbot.scripts import start
@@ -145,9 +143,6 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             pidfile = os.path.join('basedir', 'twistd.pid')
             while os.path.exists(pidfile):
                 time.sleep(0.01)
-
-    if twisted.version <= versions.Version('twisted', 9, 0, 0):
-        test_start.skip = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
 
     # the remainder of this script does obscene things:
     #  - forks

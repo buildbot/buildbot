@@ -94,7 +94,7 @@ class UseAuthInfoProviderBase(unittest.TestCase):
 
 class NoAuth(unittest.TestCase):
     def test_exists(self):
-        assert auth.NoAuth
+        assert auth.NoAuth  # type: ignore[truthy-function]
 
 
 class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):

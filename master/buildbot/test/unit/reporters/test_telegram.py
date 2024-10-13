@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import platform
 import sys
@@ -88,7 +90,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
         def post(self, path, **kwargs):
             return True
 
-    USER = {
+    USER: dict[str, str | int] = {
         "id": 123456789,
         "first_name": "Harry",
         "last_name": "Potter",

@@ -44,9 +44,8 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
     def process(self, request):
         payload = self._get_payload(request)
-        event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2unicode(event_type)
-        log.msg(f"Processing event {_HEADER_EVENT}: {event_type}")
+        event_type = bytes2unicode(request.getHeader(_HEADER_EVENT))
+        log.msg(f"Processing event {_HEADER_EVENT.decode()}: {event_type}")
         event_type = event_type.replace(":", "_")
         handler = getattr(self, f'handle_{event_type}', None)
 

@@ -4,7 +4,7 @@ from buildbot.secrets.providers.base import SecretProviderBase
 
 
 class FakeSecretStorage(SecretProviderBase):
-    name = "SecretsInFake"
+    name: str | None = "SecretsInFake"  # type: ignore[assignment]
 
     def __init__(self, *args, secretdict: dict | None = None, **kwargs):
         super().__init__(*args, **kwargs, secretdict=secretdict)

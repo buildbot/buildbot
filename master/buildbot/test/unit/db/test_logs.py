@@ -35,6 +35,8 @@ from buildbot.util.twisted import async_to_deferred
 if TYPE_CHECKING:
     from typing import Callable
 
+    from buildbot.test.util.connector_component import FakeDBConnector
+
 
 class FakeUnavailableCompressor(compression.CompressorInterface):
     name = "fake"
@@ -65,6 +67,7 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Step(id=101, buildid=30, number=1, name='one', started_at=TIMESTAMP_STEP101),
         fakedb.Step(id=102, buildid=30, number=2, name='two', started_at=TIMESTAMP_STEP102),
     ]
+    insert_test_data: Callable[[list], defer.Deferred]
 
     testLogLines = [
         fakedb.Log(
@@ -383,6 +386,9 @@ class Tests(interfaces.InterfaceTests):
 
 
 class RealTests(Tests):
+    insert_test_data: Callable[[list], defer.Deferred]
+    db: FakeDBConnector
+
     @defer.inlineCallbacks
     def test_addLogLines_db(self):
         yield self.insert_test_data(self.backgroundData + self.testLogLines)

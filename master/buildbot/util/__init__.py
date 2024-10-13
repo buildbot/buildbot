@@ -268,7 +268,7 @@ def unicode2bytes(x, encoding='utf-8', errors='strict'):
     return x
 
 
-def bytes2unicode(x, encoding='utf-8', errors='strict'):
+def bytes2unicode(x: str | None | bytes, encoding='utf-8', errors='strict'):
     if isinstance(x, (str, type(None))):
         return x
     return str(x, encoding, errors)

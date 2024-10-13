@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from __future__ import annotations
 
 import datetime
 import json
@@ -28,7 +29,7 @@ validatorsByName = {}
 
 
 class Validator:
-    name = None
+    name: str | None = None
     hasArgs = False
 
     def validate(self, name, object):
@@ -47,7 +48,7 @@ class Validator:
 
 
 class InstanceValidator(Validator):
-    types = ()
+    types: tuple[type] | tuple[()] = ()
 
     def validate(self, name, object):
         if not isinstance(object, self.types):
@@ -166,7 +167,7 @@ class DictValidator(Validator):
 
 
 class SequenceValidator(Validator):
-    type = None
+    type: type | None = None
 
     def __init__(self, elementValidator):
         self.elementValidator = elementValidator
@@ -230,7 +231,7 @@ class JsonValidator(Validator):
 
 
 class PatchValidator(Validator):
-    name = 'patch'
+    name: str | None = 'patch'  # type: ignore[assignment]
 
     validator = DictValidator(
         body=NoneOk(BinaryValidator()),

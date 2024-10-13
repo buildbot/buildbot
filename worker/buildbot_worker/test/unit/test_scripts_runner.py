@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import sys
 
@@ -50,7 +52,7 @@ class BaseDirTestsMixin:
     MY_BASEDIR = "my-basedir"
 
     # the options class to instantiate for test cases
-    options_class = None
+    options_class: type[usage.Options] | None = None
 
     def setUp(self):
         self.patch(os, "getcwd", lambda: self.GETCWD_PATH)

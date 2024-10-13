@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 
@@ -33,8 +34,8 @@ class TestHgPollerBase(
     MasterRunProcessMixin, changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
 ):
     usetimestamps = True
-    branches = None
-    bookmarks = None
+    branches: list[str] | None = None
+    bookmarks: list[str] | None = None
 
     @defer.inlineCallbacks
     def setUp(self):

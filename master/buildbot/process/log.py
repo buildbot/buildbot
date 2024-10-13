@@ -12,10 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import re
-from typing import Dict
-from typing import Type
 
 from twisted.internet import defer
 from twisted.python import log
@@ -25,7 +24,7 @@ from buildbot.util import lineboundaries
 
 
 class Log:
-    _byType: Dict[str, Type["Log"]] = {}
+    _byType: dict[str, type[Log]] = {}
 
     def __init__(self, master, name, type, logid, decoder):
         self.type = type
@@ -133,7 +132,7 @@ class PlainLog(Log):
 
         self.lbf = lineboundaries.LineBoundaryFinder()
 
-    def addContent(self, text):
+    def addContent(self, text: str | bytes):
         if not isinstance(text, str):
             text = self.decoder(text)
         # add some text in the log's default stream

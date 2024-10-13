@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import re
 from email import charset
@@ -52,10 +53,12 @@ from .utils import merge_reports_prop_take_first
 # needs to match notifier.ENCODING
 charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
+
+ESMTPSenderFactory: None | type = None
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
 except ImportError:
-    ESMTPSenderFactory = None  # type: ignore[misc,assignment]
+    pass
 
 # Email parsing can be complex. We try to take a very liberal
 # approach. The local part of an email address matches ANY non

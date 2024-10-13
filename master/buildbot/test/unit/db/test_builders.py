@@ -27,7 +27,7 @@ from buildbot.test.util import interfaces
 from buildbot.util.twisted import async_to_deferred
 
 
-def builderKey(builder: builders.Builder):
+def builderKey(builder: builders.BuilderModel) -> int:
     return builder.id
 
 

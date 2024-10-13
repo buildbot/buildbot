@@ -17,6 +17,7 @@ import random
 import re
 import shlex
 
+from twisted.application.service import Service
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -1110,6 +1111,8 @@ class StatusBot(service.AsyncMultiService):
     offline_string = "offline"
     idle_string = "idle"
     running_string = "running:"
+    nickname: str
+    parent: Service  # type: ignore[assignment]
 
     def __init__(
         self, authz=None, tags=None, notify_events=None, useRevisions=False, showBlameList=False

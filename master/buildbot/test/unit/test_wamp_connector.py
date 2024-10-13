@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from unittest import mock
 
@@ -31,7 +32,7 @@ class FakeConfig:
 
 
 class FakeService(service.AsyncMultiService):
-    name = "fakeWampService"
+    name: str | None = "fakeWampService"  # type: ignore[assignment]
     # Fake wamp service
     # just call the maker on demand by the test
 

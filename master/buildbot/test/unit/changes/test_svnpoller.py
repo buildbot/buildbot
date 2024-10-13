@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import xml.dom.minidom
@@ -110,7 +111,7 @@ sample_base = (
     "file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/"
     + "_trial_temp/test_vc/repositories/SVN-Repository/sample"
 )
-sample_logentries = [None] * 6
+sample_logentries: list[bytes | None] = [None] * 6
 
 sample_logentries[5] = b"""\
 <logentry

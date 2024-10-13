@@ -12,11 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import collections
 import json
 import re
 import weakref
+from typing import Callable
 from typing import ClassVar
 from typing import Sequence
 
@@ -237,6 +239,7 @@ class PropertiesMixin:
     """
 
     set_runtime_properties = False
+    getProperties: Callable[[], IProperties]
 
     def getProperty(self, propname, default=None):
         return self.getProperties().getProperty(propname, default)
@@ -254,7 +257,7 @@ class PropertiesMixin:
             runtime = self.set_runtime_properties
         props.setProperty(propname, value, source, runtime=runtime)
 
-    def render(self, value):
+    def render(self, value) -> defer.Deferred[IRenderable]:
         return self.getProperties().render(value)
 
 

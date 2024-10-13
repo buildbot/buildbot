@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import sys
 from typing import Any
-from typing import List
 
 import twisted
 from twisted.trial import unittest
@@ -61,7 +62,7 @@ def add_debugging_monkeypatches():
 
 add_debugging_monkeypatches()
 
-__all__: List[Any] = []
+__all__: list[Any] = []
 
 # import mock so we bail out early if it's not installed
 try:
