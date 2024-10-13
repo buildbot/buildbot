@@ -134,7 +134,7 @@ class PlainLog(Log):
 
         self.lbf = lineboundaries.LineBoundaryFinder()
 
-    def addContent(self, text):
+    def addContent(self, text: str | bytes):
         if not isinstance(text, str):
             text = self.decoder(text)
         # add some text in the log's default stream
