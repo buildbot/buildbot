@@ -776,9 +776,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot_worker.scripts.windows_service"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.fake.reactor"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot_worker.test.__init__"
-    ignore_errors = true
