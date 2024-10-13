@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import calendar
 import datetime
 import os
@@ -188,7 +190,7 @@ class BuildbotSite(server.Site):
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    name = 'www'
+    name: str | None = 'www'  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()
