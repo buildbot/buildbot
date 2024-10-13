@@ -270,15 +270,6 @@ plugins = "mypy_zope:plugin"
     ignore_missing_imports = true
 
     [[tool.mypy.overrides]]
-    module = "buildbot.test.fakedb.builds"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.fakedb.changesources"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.test.fakedb.changes"
-    ignore_errors = true
-    [[tool.mypy.overrides]]
     module = "buildbot.test.fakedb.logs"
     ignore_errors = true
     [[tool.mypy.overrides]]
