@@ -662,9 +662,9 @@ class TestBuildStepMixin:
         if not hasattr(self, 'reactor'):
             raise RuntimeError('Reactor has not yet been setup for step')
 
-        self._interrupt_remote_command_numbers = []
+        self._interrupt_remote_command_numbers: list[int] = []
 
-        self._expected_commands = []
+        self._expected_commands: list[Expect] = []
         self._expected_commands_popped = 0
 
         self.master = fakemaster.make_master(
@@ -675,8 +675,8 @@ class TestBuildStepMixin:
             with_secrets=with_secrets,
         )
 
-        self.patch(runprocess, "create_process", self._patched_create_process)
-        self._master_run_process_expect_env = {}
+        self.patch(runprocess, "create_process", self._patched_create_process)  # type: ignore[attr-defined]
+        self._master_run_process_expect_env: dict[str, str] = {}
 
         self._worker_version = None
         self._worker_env = None
@@ -690,18 +690,18 @@ class TestBuildStepMixin:
 
         # expectations
 
-        self._exp_results = []
-        self.exp_properties = {}
-        self.exp_missing_properties = []
-        self._exp_logfiles = {}
-        self._exp_logfiles_stderr = {}
+        self._exp_results: list[tuple[int, str | None]] = []
+        self.exp_properties: dict[str, tuple[object, str | None]] = {}
+        self.exp_missing_properties: list[str] = []
+        self._exp_logfiles: dict[int, dict[str, bytes]] = {}
+        self._exp_logfiles_stderr: dict[int, dict[str, bytes]] = {}
         self.exp_hidden = False
         self.exp_exception = None
-        self._exp_test_result_sets = []
-        self._exp_test_results = []
-        self._exp_build_data = {}
-        self._exp_result_summaries = []
-        self._exp_build_result_summaries = []
+        self._exp_test_result_sets: list[tuple[str, str, str]] = []
+        self._exp_test_results: list[tuple[int, object, str, str, int, int]] = []
+        self._exp_build_data: dict[str, tuple[object, str]] = {}
+        self._exp_result_summaries: list[str] = []
+        self._exp_build_result_summaries: list[str] = []
 
     def tear_down_test_build_step(self):
         pass
