@@ -723,6 +723,3 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = "buildbot.util.pullrequest"
     ignore_errors = true
-    [[tool.mypy.overrides]]
-    module = "buildbot.util.sautils"
-    ignore_errors = true
