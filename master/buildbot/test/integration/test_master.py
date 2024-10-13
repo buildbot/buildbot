@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -57,7 +59,8 @@ class RunMaster(RunMasterBase, www.RequiresWwwMixin):
 # will generally re-execute master.cfg on startup.  However, it's good form and
 # will help to flush out any bugs that may otherwise be difficult to find.
 
-c = BuildmasterConfig = {}
+c: dict[str, Any] = {}
+BuildmasterConfig = c
 c['workers'] = [Worker("local1", "localpw")]
 c['protocols'] = {'pb': {'port': 'tcp:0'}}
 c['change_source'] = []
