@@ -1127,8 +1127,9 @@ class TestBuildStepMixin:
         return FakeRunProcess(start_retval, result_rc)
 
     def change_worker_system(self, system):
+        assert system != 'win32'
         self.worker.worker_system = system
-        if system in ['nt', 'win32']:
+        if system == 'nt':
             self.build.path_module = namedModule('ntpath')
             self.worker.worker_basedir = '\\wrk'
         else:
