@@ -19,20 +19,27 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import annotations
+
+from typing import Generic
+from typing import TypeVar
 
 from twisted.internet.defer import Deferred
+from twisted.python.failure import Failure
+
+_SelfResultT = TypeVar("_SelfResultT")
 
 
-class Notifier:
-    def __init__(self):
-        self._waiters = []
+class Notifier(Generic[_SelfResultT]):
+    def __init__(self) -> None:
+        self._waiters: list[Deferred[_SelfResultT]] = list()
 
-    def wait(self):
-        d = Deferred()
+    def wait(self) -> Deferred[_SelfResultT]:
+        d: Deferred[_SelfResultT] = Deferred()
         self._waiters.append(d)
         return d
 
-    def notify(self, result):
+    def notify(self, result: _SelfResultT | Failure) -> None:
         if self._waiters:
             waiters = self._waiters
             self._waiters = []
