@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
@@ -39,17 +38,14 @@ async def doCleanupDatabase(config, master_cfg) -> None:
     db = master.db
     await db.setup(check_version=False, verbose=not config['quiet'])
     res = await db.logs.getLogs()
-    i = 0
     percent = 0
     saved = 0
-    for log in res:
+    for i, log in enumerate(res, start=1):
         saved += await db.logs.compressLog(log.id, force=config['force'])
-        i += 1
-        if not config['quiet'] and percent != i * 100 / len(res):
-            percent = i * 100 / len(res)
-            print(f" {percent}%  {saved} saved")
+        if not config['quiet'] and percent != int(i * 100 / len(res)):
+            percent = int(i * 100 / len(res))
+            print(f" {percent}%  {saved} saved", flush=True)
             saved = 0
-            sys.stdout.flush()
 
     assert master.db._engine is not None
     vacuum_stmt = {
