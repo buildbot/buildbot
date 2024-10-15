@@ -159,9 +159,9 @@ class AbstractLatentWorker(AbstractWorker):
         NOT_SUBSTANTIATED -> SHUT_DOWN
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._substantiation_notifier = Notifier()
+        self._substantiation_notifier: Notifier[bool] = Notifier()
         self._start_stop_lock = defer.DeferredLock()
         self._check_instance_timer = None
 
@@ -240,7 +240,7 @@ class AbstractLatentWorker(AbstractWorker):
     def substantiated(self):
         return self.state == States.SUBSTANTIATED and self.conn is not None
 
-    def substantiate(self, wfb: Any, build: Any) -> defer.Deferred[Any]:
+    def substantiate(self, wfb: Any, build: Any) -> defer.Deferred[bool]:
         log.msg(f"substantiating worker {wfb}")
 
         if self.state == States.SHUT_DOWN:
@@ -324,7 +324,7 @@ class AbstractLatentWorker(AbstractWorker):
             self._substantiation_failed(failure.Failure(e))
             # swallow the failure as it is notified
 
-    def _fireSubstantiationNotifier(self, result):
+    def _fireSubstantiationNotifier(self, result: bool | failure.Failure) -> None:
         if not self._substantiation_notifier:
             log.msg(f"No substantiation deferred for {self.name}")
             return
@@ -373,7 +373,7 @@ class AbstractLatentWorker(AbstractWorker):
         self.missing_timer = None
         return self._substantiation_failed(defer.TimeoutError())
 
-    def _substantiation_failed(self, failure):
+    def _substantiation_failed(self, failure: failure.Failure) -> defer.Deferred | None:
         if self.state in [States.SUBSTANTIATING, States.SUBSTANTIATING_STARTING]:
             self._fireSubstantiationNotifier(failure)
 
