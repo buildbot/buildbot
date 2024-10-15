@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 import sys
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -23,6 +25,9 @@ from buildbot import config as config_module
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
 
 
 @defer.inlineCallbacks
@@ -47,24 +52,28 @@ def doCleanupDatabase(config, master_cfg):
             saved = 0
             sys.stdout.flush()
 
-    if master_cfg.db['db_url'].startswith("sqlite"):
-        if not config['quiet']:
-            print("executing sqlite vacuum function...")
+    assert master.db._engine is not None
+    vacuum_stmt = {
+        # https://www.postgresql.org/docs/current/sql-vacuum.html
+        'postgresql': f'VACUUM FULL {master.db.model.logchunks.name};',
+        # https://dev.mysql.com/doc/refman/5.7/en/optimize-table.html
+        'mysql': f'OPTIMIZE TABLE {master.db.model.logchunks.name};',
+        # https://www.sqlite.org/lang_vacuum.html
+        'sqlite': 'vacuum;',
+    }.get(master.db._engine.dialect.name)
 
-        # sqlite vacuum function rebuild the whole database to claim
-        # free disk space back
-        def thd(conn):
-            # In Python 3.6 and higher, sqlite3 no longer commits an
-            # open transaction before DDL statements.
-            # It is necessary to set the isolation_level to none
-            # for auto-commit mode before doing a VACUUM.
-            # See: https://bugs.python.org/issue28518
+    if vacuum_stmt is not None:
 
-            # Get the underlying sqlite connection from SQLAlchemy.
-            sqlite_conn = conn.connection
-            # Set isolation_level to 'auto-commit mode'
-            sqlite_conn.isolation_level = None
-            sqlite_conn.execute("vacuum;").close()
+        def thd(conn: Connection) -> None:
+            if not config['quiet']:
+                print(f"executing vacuum operation '{vacuum_stmt}'...", flush=True)
+
+            # vacuum operation cannot be done in a transaction
+            # https://github.com/sqlalchemy/sqlalchemy/discussions/6959#discussioncomment-1251681
+            with conn.execution_options(isolation_level='AUTOCOMMIT'):
+                conn.exec_driver_sql(vacuum_stmt).close()
+
+            conn.commit()
 
         yield db.pool.do(thd)
 
