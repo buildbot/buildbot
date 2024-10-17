@@ -27,6 +27,7 @@ from buildbot.test.unit.db import test_logs
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.util.twisted import async_to_deferred
 
 try:
     import lz4
@@ -117,22 +118,22 @@ class TestCleanupDb(
             """)
             )
 
-    @defer.inlineCallbacks
-    def test_cleanup_not_basedir(self):
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='doesntexist'))
+    @async_to_deferred
+    async def test_cleanup_not_basedir(self):
+        res = await cleanupdb._cleanupDatabase(mkconfig(basedir='doesntexist'))
         self.assertEqual(res, 1)
         self.assertInStdout('invalid buildmaster directory')
 
-    @defer.inlineCallbacks
-    def test_cleanup_bad_config(self):
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+    @async_to_deferred
+    async def test_cleanup_bad_config(self):
+        res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
         self.assertInStdout("master.cfg' does not exist")
 
-    @defer.inlineCallbacks
-    def test_cleanup_bad_config2(self):
+    @async_to_deferred
+    async def test_cleanup_bad_config2(self):
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
-        res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+        res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
         self.assertInStdout("encountered a SyntaxError while parsing config file:")
         # config logs an error via log.err, we must eat it or trial will
@@ -173,15 +174,15 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
     def tearDown(self):
         yield self.tearDownRealDatabaseWithConnector()
 
-    @defer.inlineCallbacks
-    def test_cleanup(self):
+    @async_to_deferred
+    async def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
-        yield self.insert_test_data(test_logs.Tests.backgroundData)
+        await self.insert_test_data(test_logs.Tests.backgroundData)
 
         # insert a log with lots of redundancy
         LOGDATA = "xx\n" * 2000
-        logid = yield self.master.db.logs.addLog(102, "x", "x", "s")
-        yield self.master.db.logs.appendLog(logid, LOGDATA)
+        logid = await self.master.db.logs.addLog(102, "x", "x", "s")
+        await self.master.db.logs.appendLog(logid, LOGDATA)
 
         # test all methods
         lengths = {}
@@ -200,12 +201,12 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 continue
             # create a master.cfg with different compression method
             self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
-            res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
+            res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 
             # make sure the compression don't change the data we can retrieve
             # via api
-            res = yield self.master.db.logs.getLogLines(logid, 0, 2000)
+            res = await self.master.db.logs.getLogLines(logid, 0, 2000)
             self.assertEqual(res, LOGDATA)
 
             # retrieve the actual data size in db using raw sqlalchemy
@@ -215,7 +216,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 q = q.where(tbl.c.logid == logid)
                 return conn.execute(q).fetchone()[0]
 
-            lengths[mode] = yield self.master.db.pool.do(thd)
+            lengths[mode] = await self.master.db.pool.do(thd)
 
         self.assertDictAlmostEqual(
             lengths,

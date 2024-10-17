@@ -1,0 +1,1 @@
+master's ``cleanupdb`` command can now run database optimization on PostgreSQL and MySQL (only available on SQLite previously)
