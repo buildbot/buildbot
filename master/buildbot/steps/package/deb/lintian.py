@@ -17,6 +17,8 @@
 Steps and objects related to lintian
 """
 
+from __future__ import annotations
+
 from twisted.internet import defer
 
 from buildbot import config
@@ -44,7 +46,7 @@ class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
     descriptionDone = "Lintian"
 
     fileloc = None
-    suppressTags = []
+    suppressTags: list[str] = []
 
     flunkOnFailure = False
     warnOnFailure = True

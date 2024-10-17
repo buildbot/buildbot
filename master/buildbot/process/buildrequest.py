@@ -26,6 +26,7 @@ from buildbot.process.results import SKIPPED
 
 if TYPE_CHECKING:
     from buildbot.db.buildrequests import BuildRequestModel
+    from buildbot.master import BuildMaster
 
 
 class BuildRequestCollapser:
@@ -109,6 +110,8 @@ class TempSourceStamp:
         ('patch_author', 'author'),
         ('patch_comment', 'comment'),
     )
+
+    changes: list[TempChange]
 
     def __init__(self, ssdict):
         self._ssdict = ssdict
@@ -197,8 +200,17 @@ class BuildRequest:
     @ivar bsid: ID of the parent buildset
     """
 
-    submittedAt = None
-    sources = {}
+    submittedAt: None | int = None
+    sources: dict[str, TempSourceStamp] = {}
+    id: int
+    bsid: int
+    buildername: str
+    builderid: int
+    priority: int
+    master: BuildMaster
+    waitedFor: int
+    reason: str
+    properties: properties.Properties
 
     @classmethod
     def fromBrdict(cls, master, brdict: BuildRequestModel):
@@ -220,7 +232,7 @@ class BuildRequest:
 
     @classmethod
     @defer.inlineCallbacks
-    def _make_br(cls, brid: int, brdict: BuildRequestModel, master):
+    def _make_br(cls, brid: int, brdict: BuildRequestModel, master: BuildMaster):
         buildrequest = cls()
         buildrequest.id = brid
         buildrequest.bsid = brdict.buildsetid
@@ -228,7 +240,8 @@ class BuildRequest:
         buildrequest.builderid = brdict.builderid
         buildrequest.priority = brdict.priority
         dt = brdict.submitted_at
-        buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
+        if dt:
+            buildrequest.submittedAt = calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
         buildrequest.waitedFor = brdict.waited_for
 
@@ -361,7 +374,7 @@ class BuildRequest:
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""
         reasons = []
-        for req in [self] + others:
+        for req in [self, *others]:
             if req.reason and req.reason not in reasons:
                 reasons.append(req.reason)
         return ", ".join(reasons)

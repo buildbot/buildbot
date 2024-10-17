@@ -42,7 +42,7 @@ Features
 * The :class:`DockerLatentBuildSlave` image attribute is now renderable (can take properties in account).
 
 * The :class:`DockerLatentBuildSlave` sets environment variables describing how to connect to the master.
-  Example dockerfiles can be found in :contrib-src:`master/contrib/docker`.
+  Example dockerfiles can be found in `https://github.com/buildbot/buildbot-contrib/tree/master/master/contrib/docker`.
 
 
 Details

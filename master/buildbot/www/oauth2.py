@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import re
 import textwrap
@@ -74,20 +76,20 @@ class OAuth2LoginResource(auth.LoginResource):
 class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
     getTokenUseAuthHeaders = False
-    authUri = None
-    tokenUri = None
+    authUri: str | None = None
+    tokenUri: str | None = None
     grantType = 'authorization_code'
-    authUriAdditionalParams = {}
-    tokenUriAdditionalParams = {}
+    authUriAdditionalParams: dict[str, str] = {}
+    tokenUriAdditionalParams: dict[str, str] = {}
     loginUri = None
     homeUri = None
-    sslVerify = None
 
-    def __init__(self, clientId, clientSecret, autologin=False, **kwargs):
+    def __init__(self, clientId, clientSecret, autologin=False, ssl_verify: bool = True, **kwargs):
         super().__init__(**kwargs)
         self.clientId = clientId
         self.clientSecret = clientSecret
         self.autologin = autologin
+        self.ssl_verify = ssl_verify
 
     def reconfigAuth(self, master, new_config):
         self.master = master
@@ -132,7 +134,7 @@ class OAuth2Auth(auth.AuthBase):
             msg = f"OAuth2 session: creation failed: {error_description}"
             raise Error(503, msg)
         s.params = {'access_token': token['access_token']}
-        s.verify = self.sslVerify
+        s.verify = self.ssl_verify
         return s
 
     def get(self, session, path):
@@ -154,7 +156,7 @@ class OAuth2Auth(auth.AuthBase):
             else:
                 data.update({'client_id': client_id, 'client_secret': client_secret})
             data.update(self.tokenUriAdditionalParams)
-            response = requests.post(url, data=data, timeout=30, auth=auth, verify=self.sslVerify)
+            response = requests.post(url, data=data, timeout=30, auth=auth, verify=self.ssl_verify)
             response.raise_for_status()
             responseContent = bytes2unicode(response.content)
             try:
@@ -311,7 +313,7 @@ class GitHubAuth(OAuth2Auth):
             'Authorization': 'token ' + token['access_token'],
             'User-Agent': f'buildbot/{buildbot.version}',
         }
-        s.verify = self.sslVerify
+        s.verify = self.ssl_verify
         return s
 
     def getUserInfoFromOAuthClient_v4(self, c):

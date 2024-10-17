@@ -16,6 +16,8 @@
 from __future__ import annotations
 
 import hashlib
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.application import service
 from twisted.internet import defer
@@ -55,6 +57,8 @@ class ReconfigurableServiceMixin:
 # twisted 16's Service is now an new style class, better put everybody new style
 # to catch issues even on twisted < 16
 class AsyncService(service.Service):
+    name: str | None  # type: ignore[assignment]
+
     # service.Service.setServiceParent does not wait for neither disownServiceParent nor addService
     # to complete
     @defer.inlineCallbacks
@@ -183,10 +187,10 @@ class SharedService(AsyncMultiService):
 class BuildbotService(
     AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin, ReconfigurableServiceMixin
 ):
-    compare_attrs = ('name', '_config_args', '_config_kwargs')
-    name = None
+    compare_attrs: ClassVar[Sequence[str]] = ('name', '_config_args', '_config_kwargs')
+    name: str | None = None  # type: ignore[assignment]
     configured = False
-    objectid = None
+    objectid: int | None = None
 
     def __init__(self, *args, **kwargs):
         name = kwargs.pop("name", None)
@@ -280,11 +284,11 @@ class ClusteredBuildbotService(BuildbotService):
     - return after it starts else.
     """
 
-    compare_attrs = ('name',)
+    compare_attrs: ClassVar[Sequence[str]] = ('name',)
 
     POLL_INTERVAL_SEC = 5 * 60  # 5 minutes
 
-    serviceid = None
+    serviceid: int | None = None
     active = False
 
     def __init__(self, *args, **kwargs):
@@ -438,7 +442,7 @@ class ClusteredBuildbotService(BuildbotService):
 
 class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, ReconfigurableServiceMixin):
     config_attr = "services"
-    name = "services"
+    name: str | None = "services"  # type: ignore[assignment]
 
     def getConfigDict(self):
         return {

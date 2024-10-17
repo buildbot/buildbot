@@ -433,8 +433,7 @@ class CommandToString(unittest.TestCase):
         self.assertEqual(util.command_to_string(object()), None)
 
     def test_list_with_objects(self):
-        # the object looks like a renderable, and is skipped
-        self.assertEqual(util.command_to_string(['ab', object(), 'cd']), "'ab cd'")
+        self.assertRegex(util.command_to_string(['ab', object(), 'cd']), r"'ab <object .*> \.\.\.'")
 
     def test_invalid_ascii(self):
         self.assertEqual(util.command_to_string(b'a\xffc'), "'a\ufffdc'")

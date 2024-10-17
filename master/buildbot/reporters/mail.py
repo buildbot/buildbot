@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import re
 from email import charset
@@ -23,6 +24,8 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from email.utils import parseaddr
 from io import BytesIO
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -50,12 +53,12 @@ from .utils import merge_reports_prop_take_first
 # needs to match notifier.ENCODING
 charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
+
+ESMTPSenderFactory: None | type = None
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
-
-    [ESMTPSenderFactory]  # for pyflakes
 except ImportError:
-    ESMTPSenderFactory = None
+    pass
 
 # Email parsing can be complex. We try to take a very liberal
 # approach. The local part of an email address matches ANY non
@@ -67,14 +70,14 @@ except ImportError:
 #    full.name@example.net
 #    Full Name <full.name@example.net>
 #    <full.name@example.net>
-VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
-VALID_EMAIL = re.compile(rf"^(?:{VALID_EMAIL_ADDR}|(.+\s+)?<{VALID_EMAIL_ADDR}>\s*)$")
-VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
+_VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
+VALID_EMAIL = re.compile(rf"^(?:{_VALID_EMAIL_ADDR}|(.+\s+)?<{_VALID_EMAIL_ADDR}>\s*)$")
+VALID_EMAIL_ADDR = re.compile(_VALID_EMAIL_ADDR)
 
 
 @implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
-    compare_attrs = ("domain",)
+    compare_attrs: ClassVar[Sequence[str]] = ("domain",)
 
     def __init__(self, domain):
         assert "@" not in domain

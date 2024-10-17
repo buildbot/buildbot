@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from zope.interface import implementer
 
@@ -30,7 +33,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         ('builds', None, 'finished'),
     ]
 
-    compare_attrs = ['formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['formatter']
 
     def __init__(
         self,
@@ -39,7 +42,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         builders=None,
         schedulers=None,
         branches=None,
-        add_logs=False,
+        add_logs=None,
         add_patch=False,
         report_new=False,
         message_formatter=None,
@@ -69,6 +72,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
             want_steps=self.formatter.want_steps,
             want_previous_build=want_previous_build,
             want_logs=self.formatter.want_logs,
+            add_logs=self.add_logs,
             want_logs_content=self.formatter.want_logs_content,
         )
 
@@ -91,7 +95,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         ('builds', None, 'finished'),
     ]
 
-    compare_attrs = ['start_formatter', 'end_formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['start_formatter', 'end_formatter']
 
     def __init__(
         self,
@@ -99,7 +103,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         builders=None,
         schedulers=None,
         branches=None,
-        add_logs=False,
+        add_logs=None,
         add_patch=False,
         start_formatter=None,
         end_formatter=None,
@@ -125,6 +129,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
             want_properties=formatter.want_properties,
             want_steps=formatter.want_steps,
             want_logs=formatter.want_logs,
+            add_logs=self.add_logs,
             want_logs_content=formatter.want_logs_content,
         )
 

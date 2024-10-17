@@ -48,8 +48,8 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
 
     renderables = ["root", "resultdir"]
 
-    haltOnFailure = 1
-    flunkOnFailure = 1
+    haltOnFailure = True
+    flunkOnFailure = True
 
     mock_logfiles = ['build.log', 'root.log', 'state.log']
 

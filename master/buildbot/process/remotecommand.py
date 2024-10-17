@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -39,7 +40,7 @@ class RemoteCommand(base.RemoteCommandImpl):
     _commandCounter = 0
 
     active = False
-    rc = None
+    rc: int | None = None
     debug = False
 
     def __init__(
@@ -239,7 +240,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         updates = decode(updates)
         self.worker.messageReceivedFromWorker()
         max_updatenum = 0
-        for update, num in updates:  # noqa pylint: disable=too-many-nested-blocks
+        for update, num in updates:
             # log.msg("update[%d]:" % num)
             try:
                 if self.active and not self.ignore_updates:
@@ -532,4 +533,4 @@ class RemoteShellCommand(RemoteCommand):
         return super()._start()
 
     def __repr__(self):
-        return f"<RemoteShellCommand '{repr(self.fake_command)}'>"
+        return f"<RemoteShellCommand '{self.fake_command!r}'>"

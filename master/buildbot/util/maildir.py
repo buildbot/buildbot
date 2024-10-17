@@ -19,6 +19,8 @@ linux dirwatcher API (if available) to look for new files. The
 relative to the top of the maildir (so it will look like "new/blahblah").
 """
 
+from __future__ import annotations
+
 import os
 
 from twisted.application import internet
@@ -33,7 +35,7 @@ from buildbot.util import service
 
 dnotify = None
 try:
-    import dnotify
+    import dnotify  # type: ignore[no-redef]
 except ImportError:
     log.msg("unable to import dnotify, so Maildir will use polling instead")
 
@@ -44,7 +46,7 @@ class NoSuchMaildir(Exception):
 
 class MaildirService(service.BuildbotService):
     pollInterval = 10  # only used if we don't have DNotify
-    name = 'MaildirService'
+    name: str | None = 'MaildirService'  # type: ignore
 
     def __init__(self, basedir=None):
         super().__init__()
@@ -143,7 +145,7 @@ class MaildirService(service.BuildbotService):
             # Denied error on bear's win32-twisted1.3 worker.
             os.rename(os.path.join(self.newdir, filename), os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)
-            f = open(path, "r", encoding='utf-8')  # noqa pylint: disable=consider-using-with
+            f = open(path, encoding='utf-8')
 
         return f
 

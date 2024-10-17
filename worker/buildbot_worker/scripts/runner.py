@@ -16,6 +16,8 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 
+from __future__ import annotations
+
 import os
 import re
 import sys
@@ -33,7 +35,7 @@ from twisted.python import usage
 
 
 class MakerBase(usage.Options):
-    optFlags = [
+    optFlags: list[list[str | None]] = [
         ['help', 'h', "Display this message"],
         ["quiet", "q", "Do not emit the commands being run"],
     ]
@@ -182,18 +184,18 @@ class CreateWorkerOptions(MakerBase):
         else:
             try:
                 master, port = master_arg.split(":")
-            except ValueError:
+            except ValueError as e:
                 raise usage.UsageError(
                     f"invalid <master> argument '{master_arg}', "
                     "if it is an ipv6 address, it must be enclosed by []"
-                )
+                ) from e
 
         if not master:
             raise usage.UsageError(f"invalid <master> argument '{master_arg}'")
         try:
             port = int(port)
-        except ValueError:
-            raise usage.UsageError(f"invalid master port '{port}', needs to be a number")
+        except ValueError as e:
+            raise usage.UsageError(f"invalid master port '{port}', needs to be a number") from e
 
         return master, port
 
@@ -219,8 +221,8 @@ class CreateWorkerOptions(MakerBase):
         for argument in ["keepalive", "maxdelay", "log-size"]:
             try:
                 self[argument] = int(self[argument])
-            except ValueError:
-                raise usage.UsageError(f"{argument} parameter needs to be a number")
+            except ValueError as e:
+                raise usage.UsageError(f"{argument} parameter needs to be a number") from e
 
         for argument in ["log-count", "maxretries", "umask", "numcpus"]:
             if not re.match(r'^((0o)\d+|0|[1-9]\d*)$', self[argument]) and self[argument] != 'None':

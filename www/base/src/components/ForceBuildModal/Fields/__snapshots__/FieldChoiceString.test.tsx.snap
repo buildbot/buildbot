@@ -1,540 +1,1600 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`ForceFieldChoiceString component > change multiple state on click 1`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={true}
-        onChange={[Function]}
-        value={
-          [
-            "B",
-            "C",
-          ]
-        }
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-9-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              1 result available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  B
+                </div>
+                <div
+                  aria-label="Remove B"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  C
+                </div>
+                <div
+                  aria-label="Remove C"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-9-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-9-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-9-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-9-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-9-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > change state on click 1`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={false}
-        onChange={[Function]}
-        value="B"
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-8-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                B
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-8-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-8-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-8-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-8-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-8-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-8-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-8-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > render default value 1`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={false}
-        onChange={[Function]}
-        value="A"
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-2-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                A
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-2-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-2-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-2-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-2-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-2-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-2-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-2-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > render default value 2`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={false}
-        onChange={[Function]}
-        value="B"
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-3-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                B
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-3-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-3-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-3-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-3-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-3-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-3-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-3-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > render multiple default value 1`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={true}
-        onChange={[Function]}
-        value={
-          [
-            "A",
-          ]
-        }
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-4-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              2 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  A
+                </div>
+                <div
+                  aria-label="Remove A"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-4-option-1"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-4-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-4-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-4-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-4-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-4-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > render multiple default value 2`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={true}
-        onChange={[Function]}
-        value={
-          [
-            "A",
-            "B",
-          ]
-        }
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-5-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              1 result available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  A
+                </div>
+                <div
+                  aria-label="Remove A"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  B
+                </div>
+                <div
+                  aria-label="Remove B"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-5-option-2"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-5-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-5-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-5-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-5-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > render multiple non-default value 1`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={true}
-        onChange={[Function]}
-        value={
-          [
-            "B",
-            "C",
-          ]
-        }
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-7-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              1 result available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-1dyz3mf"
+            >
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  B
+                </div>
+                <div
+                  aria-label="Remove B"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-1p3m7a8-multiValue"
+              >
+                <div
+                  class="css-9jq23d"
+                >
+                  C
+                </div>
+                <div
+                  aria-label="Remove C"
+                  class="css-v7duua"
+                  role="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="css-tj5bde-Svg"
+                    focusable="false"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    width="14"
+                  >
+                    <path
+                      d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-7-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-7-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-7-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z"
+                  />
+                </svg>
+              </div>
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="true"
+              class="css-qr46ko"
+              id="react-select-7-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-7-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`ForceFieldChoiceString component > render non-default value 1`] = `
-<div>
-  <div
-    className="form-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      popover-is-open="field.haserrors"
-      popover-title="{{field.label}}"
-      popover-trigger="none"
-      uib-popover="{{field.errors}}"
-    />
-    <label
-      className="col-sm-10 form-label"
+      class="form-group"
     >
-      dummyLabel
-      <span
-        data-tooltip-html="dummy"
-        data-tooltip-id="my-tooltip"
+      <div
+        popover-is-open="field.haserrors"
+        popover-title="{{field.label}}"
+        popover-trigger="none"
+        uib-popover="{{field.errors}}"
+      />
+      <label
+        class="col-sm-10 form-label"
       >
-        <svg
-          className="tooltip-icon"
-          fill="currentColor"
-          height="1em"
-          stroke="currentColor"
-          strokeWidth="0"
-          style={
-            {
-              "color": undefined,
-            }
-          }
-          viewBox="0 0 512 512"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
+        dummyLabel
+        <span
+          data-tooltip-html="dummy"
+          data-tooltip-id="my-tooltip"
         >
-          <path
-            d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
-          />
-        </svg>
-      </span>
-    </label>
-    <div
-      className="col-sm-10"
-    >
-      <select
-        className="form-control"
+          <svg
+            class="tooltip-icon"
+            fill="currentColor"
+            height="1em"
+            stroke="currentColor"
+            stroke-width="0"
+            viewBox="0 0 512 512"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 448c-110.532 0-200-89.431-200-200 0-110.495 89.472-200 200-200 110.491 0 200 89.471 200 200 0 110.53-89.431 200-200 200zm107.244-255.2c0 67.052-72.421 68.084-72.421 92.863V300c0 6.627-5.373 12-12 12h-45.647c-6.627 0-12-5.373-12-12v-8.659c0-35.745 27.1-50.034 47.579-61.516 17.561-9.845 28.324-16.541 28.324-29.579 0-17.246-21.999-28.693-39.784-28.693-23.189 0-33.894 10.977-48.942 29.969-4.057 5.12-11.46 6.071-16.666 2.124l-27.824-21.098c-5.107-3.872-6.251-11.066-2.644-16.363C184.846 131.491 214.94 112 261.794 112c49.071 0 101.45 38.304 101.45 88.8zM298 368c0 23.159-18.841 42-42 42s-42-18.841-42-42 18.841-42 42-42 42 18.841 42 42z"
+            />
+          </svg>
+        </span>
+      </label>
+      <div
+        class="col-sm-10"
         data-bb-test-id="force-field-fullDummy"
-        multiple={false}
-        onChange={[Function]}
-        value="B"
       >
-        <option>
-          A
-        </option>
-        <option>
-          B
-        </option>
-        <option>
-          C
-        </option>
-      </select>
+        <div
+          class="css-b62m3t-container"
+        >
+          <span
+            class="css-1f43avz-a11yText-A11yText"
+            id="react-select-6-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="css-1f43avz-a11yText-A11yText"
+            role="log"
+          >
+            <span
+              id="aria-selection"
+            />
+            <span
+              id="aria-focused"
+            />
+            <span
+              id="aria-results"
+            >
+              3 results available.
+            </span>
+            <span
+              id="aria-guidance"
+            >
+              Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+            </span>
+          </span>
+          <div
+            class="css-t3ipsp-control"
+          >
+            <div
+              class="css-hlgwow"
+            >
+              <div
+                class="css-1dimb5e-singleValue"
+              >
+                B
+              </div>
+              <div
+                class="css-19bb58m"
+                data-value=""
+              >
+                <input
+                  aria-activedescendant="react-select-6-option-0"
+                  aria-autocomplete="list"
+                  aria-controls="react-select-6-listbox"
+                  aria-expanded="true"
+                  aria-haspopup="true"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=""
+                  id="react-select-6-input"
+                  role="combobox"
+                  spellcheck="false"
+                  style="opacity: 1; width: 100%; grid-area: 1 / 2; min-width: 2px; border: 0px; margin: 0px; outline: 0; padding: 0px;"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="css-1wy0on6"
+            >
+              <span
+                class="css-1u9des2-indicatorSeparator"
+              />
+              <div
+                aria-hidden="true"
+                class="css-15lsz6c-indicatorContainer"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="css-tj5bde-Svg"
+                  focusable="false"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  width="20"
+                >
+                  <path
+                    d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div
+            class="css-1nmdiq5-menu"
+          >
+            <div
+              aria-multiselectable="false"
+              class="css-qr46ko"
+              id="react-select-6-listbox"
+              role="listbox"
+            >
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-d7l1ni-option"
+                id="react-select-6-option-0"
+                role="option"
+                tabindex="-1"
+              >
+                A
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="true"
+                class="css-tr4s17-option"
+                id="react-select-6-option-1"
+                role="option"
+                tabindex="-1"
+              >
+                B
+              </div>
+              <div
+                aria-disabled="false"
+                aria-selected="false"
+                class="css-10wo9uf-option"
+                id="react-select-6-option-2"
+                role="option"
+                tabindex="-1"
+              >
+                C
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;

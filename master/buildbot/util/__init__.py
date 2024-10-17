@@ -25,6 +25,8 @@ import sys
 import textwrap
 import time
 from typing import TYPE_CHECKING
+from typing import ClassVar
+from typing import Sequence
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 
@@ -286,12 +288,12 @@ def toJson(obj):
 # is always false.
 
 
-class NotABranch:
+class _NotABranch:
     def __bool__(self):
         return False
 
 
-NotABranch = NotABranch()
+NotABranch = _NotABranch()
 
 # time-handling methods
 

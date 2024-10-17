@@ -27,6 +27,10 @@ export function alignCeil(n: number, align: number) {
   return Math.ceil(n / align) * align;
 }
 
+export function clamp(n: number, min: number, max: number) {
+  return Math.min(Math.max(n, min), max);
+}
+
 export function expandRange(start: number, end: number, limitStart: number, limitEnd: number,
                             expand: number): [number, number] {
   start -= expand;

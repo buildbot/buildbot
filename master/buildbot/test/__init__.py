@@ -19,15 +19,11 @@ from unittest import mock
 import setuptools  # force import setuptools before any other distutils imports
 
 from buildbot import monkeypatches
-from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-position
-    assertProducesWarning,
-)
-from buildbot.test.util.warnings import (  # noqa pylint: disable=wrong-import-position
-    assertProducesWarnings,
-)
-from buildbot.warnings import DeprecatedApiWarning  # noqa pylint: disable=wrong-import-position
+from buildbot.test.util.warnings import assertProducesWarning  # noqa: F401
+from buildbot.test.util.warnings import assertProducesWarnings  # noqa: F401
+from buildbot.warnings import DeprecatedApiWarning  # noqa: F401
 
-[mock]
+_ = mock
 
 # apply the same patches the buildmaster does when it starts
 monkeypatches.patch_all()
@@ -35,7 +31,7 @@ monkeypatches.patch_all()
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
 
-[setuptools]  # force use for pylint
+_ = setuptools  # force use for pylint
 
 # This is where we load deprecated module-level APIs to ignore warning produced by importing them.
 # After the deprecated API has been removed, leave at least one instance of the import in a
@@ -45,7 +41,7 @@ warnings.filterwarnings('always', category=DeprecationWarning)
 #                             messages_patterns=[
 #                                 r" buildbot\.status\.base has been deprecated",
 #                             ]):
-#     import buildbot.status.base as _  # noqa
+#     import buildbot.status.base as _
 
 # All deprecated modules should be loaded, consider future warnings in tests as errors.
 # In order to not pollute the test outputs,
@@ -88,5 +84,29 @@ warnings.filterwarnings(
     "ignore",
     r"The `hash` argument is deprecated in favor of `unsafe_hash` "
     r"and will be removed in or after August 2025\.",
+    category=DeprecationWarning,
+)
+
+warnings.filterwarnings(
+    "ignore",
+    r"twisted.web.resource._UnsafeErrorPage.__init__ was deprecated in "
+    r"Twisted 22.10.0; please use Use twisted.web.pages.errorPage instead, "
+    r"which properly escapes HTML. instead",
+    category=DeprecationWarning,
+)
+
+warnings.filterwarnings(
+    "ignore",
+    r"twisted.web.resource._UnsafeNoResource.__init__ was deprecated in "
+    r"Twisted 22.10.0; please use Use twisted.web.pages.notFound instead, "
+    r"which properly escapes HTML. instead",
+    category=DeprecationWarning,
+)
+
+warnings.filterwarnings(
+    "ignore",
+    r"twisted.web.resource._UnsafeForbiddenResource.__init__ was deprecated in "
+    r"Twisted 22.10.0; please use Use twisted.web.pages.forbidden instead, "
+    r"which properly escapes HTML. instead",
     category=DeprecationWarning,
 )

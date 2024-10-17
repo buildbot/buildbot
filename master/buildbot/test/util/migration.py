@@ -106,8 +106,11 @@ class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
             dbs = [r[0] for r in conn.exec_driver_sql("show tables")]
             for tbl in dbs:
                 r = conn.exec_driver_sql(f"show create table {tbl}")
-                create_table = r.fetchone()[1]
-                self.assertIn(
+                assert r is not None
+                res = r.fetchone()
+                assert res is not None
+                create_table = res[1]
+                self.assertIn(  # type: ignore[attr-defined]
                     'DEFAULT CHARSET=utf8',
                     create_table,
                     f"table {tbl} does not have the utf8 charset",

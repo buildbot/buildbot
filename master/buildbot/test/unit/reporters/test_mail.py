@@ -159,7 +159,10 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
             l['content'] = yield self.master.data.get(("logs", l['logid'], 'contents'))
 
         mn = yield self.setupMailNotifier(
-            'from@example.org', generators=[BuildStatusGenerator(add_logs=True)]
+            'from@example.org',
+            generators=[
+                BuildStatusGenerator(message_formatter=MessageFormatter(want_logs_content=True))
+            ],
         )
 
         m = yield mn.createEmail(msgdict, 'project-n\u00e5me', SUCCESS, [build], patches, logs)
@@ -180,7 +183,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
             self.fail('Failed to call as_string() on email message.')
 
     @defer.inlineCallbacks
-    def setupBuildMessage(self, **generator_kwargs):
+    def setupBuildMessage(self, want_logs_content=False, **generator_kwargs):
         build = yield self.insert_build_finished(SUCCESS)
 
         formatter = Mock(spec=MessageFormatter)
@@ -193,7 +196,7 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
         formatter.want_properties = False
         formatter.want_steps = False
         formatter.want_logs = False
-        formatter.want_logs_content = False
+        formatter.want_logs_content = want_logs_content
 
         generator = BuildStatusGenerator(message_formatter=formatter, **generator_kwargs)
 

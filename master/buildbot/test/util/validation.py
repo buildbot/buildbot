@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from __future__ import annotations
 
 import datetime
 import json
@@ -28,7 +29,7 @@ validatorsByName = {}
 
 
 class Validator:
-    name = None
+    name: str | None = None
     hasArgs = False
 
     def validate(self, name, object):
@@ -37,7 +38,7 @@ class Validator:
     class __metaclass__(type):
         def __new__(mcs, name, bases, attrs):
             cls = type.__new__(mcs, name, bases, attrs)
-            if 'name' in attrs and attrs['name']:
+            if attrs.get('name'):
                 assert attrs['name'] not in validatorsByName
                 validatorsByName[attrs['name']] = cls
             return cls
@@ -47,7 +48,7 @@ class Validator:
 
 
 class InstanceValidator(Validator):
-    types = ()
+    types: tuple[type] | tuple[()] = ()
 
     def validate(self, name, object):
         if not isinstance(object, self.types):
@@ -166,13 +167,13 @@ class DictValidator(Validator):
 
 
 class SequenceValidator(Validator):
-    type = None
+    type: type | None = None
 
     def __init__(self, elementValidator):
         self.elementValidator = elementValidator
 
     def validate(self, name, object):
-        if not isinstance(object, self.type):  # noqa pylint: disable=isinstance-second-argument-not-valid-type
+        if not isinstance(object, self.type):
             yield f"{name} ({object!r}) is not a {self.name}"
             return
 
@@ -230,7 +231,7 @@ class JsonValidator(Validator):
 
 
 class PatchValidator(Validator):
-    name = 'patch'
+    name: str | None = 'patch'  # type: ignore[assignment]
 
     validator = DictValidator(
         body=NoneOk(BinaryValidator()),

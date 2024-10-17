@@ -13,19 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import asyncio
 import functools
 import textwrap
+from types import ModuleType
 
 from buildbot.asyncio import AsyncIOLoopWithTwisted
 from buildbot.asyncio import as_deferred
 from buildbot.asyncio import as_future
+from buildbot.data import connector
 from buildbot.data import resultspec
 from buildbot.data.base import EndpointKind
 from buildbot.data.types import Entity
 from buildbot.util import service
 
+graphql: ModuleType | None = None
 try:
     import graphql
     from graphql.execution.execute import default_field_resolver
@@ -50,12 +54,12 @@ class GraphQLConnector(service.AsyncService):
     with as_future()
     """
 
-    data = None
-    asyncio_loop = None
+    data: connector.DataConnector | None = None
+    asyncio_loop: AsyncIOLoopWithTwisted | None = None
 
     # asyncio will create an event loop if none exists yet in get_event_loop(). We need to set it
     # back via set_event_loop() if we want it to be properly closed.
-    _saved_event_loop = None
+    _saved_event_loop: asyncio.AbstractEventLoop | None = None
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.data is None:
@@ -113,7 +117,7 @@ class GraphQLConnector(service.AsyncService):
 
         return super().stopService()
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def get_schema(self):
         """Return the graphQL Schema of the buildbot data model"""
         types = {}

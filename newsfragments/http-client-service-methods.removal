@@ -1,2 +1,0 @@
-The following methods of `httpclientservice.HTTPClientService` have been deprecated:
-`get`, `delete`, `post`, `put`, `updateHeaders`. Use corresponding methods from `HTTPSession`.

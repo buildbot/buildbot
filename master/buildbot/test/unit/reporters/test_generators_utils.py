@@ -53,7 +53,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         schedulers=None,
         branches=None,
         subject="Some subject",
-        add_logs=False,
+        add_logs=None,
         add_patch=False,
     ):
         return BuildStatusGeneratorMixin(
@@ -260,19 +260,6 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
 
     def test_is_message_needed_mode_change_ignores_same_result_in_sequence2(self):
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
-
-    @parameterized.expand([
-        ('bool_true', True, 'step', 'log', True),
-        ('bool_false', False, 'step', 'log', False),
-        ('match_by_log_name', ['log'], 'step', 'log', True),
-        ('no_match_by_log_name', ['not_existing'], 'step', 'log', False),
-        ('match_by_log_step_name', ['step.log'], 'step', 'log', True),
-        ('no_match_by_log_step_name', ['step1.log1'], 'step', 'log', False),
-    ])
-    def test_should_attach_log(self, name, add_logs, log_step_name, log_name, expected_result):
-        g = self.create_generator(add_logs=add_logs)
-        log = {'stepname': log_step_name, 'name': log_name}
-        self.assertEqual(g._should_attach_log(log), expected_result)
 
     @parameterized.expand([
         ('both_none', None, None, (None, False)),

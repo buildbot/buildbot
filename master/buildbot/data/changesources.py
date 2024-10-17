@@ -32,7 +32,7 @@ class Db2DataMixin:
     @defer.inlineCallbacks
     def db2data(self, dbdict: ChangeSourceModel):
         master = None
-        if dbdict.masterid is not None:
+        if dbdict.masterid is not None and hasattr(self, 'master'):
             master = yield self.master.data.get(('masters', dbdict.masterid))
         data = {
             'changesourceid': dbdict.id,

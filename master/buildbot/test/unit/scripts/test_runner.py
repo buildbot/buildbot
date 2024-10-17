@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import getpass
 import os
 import sys
@@ -40,7 +42,7 @@ class OptionsMixin:
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(f" {k}: expected {repr(exp[k])}, got {repr(opts[k])}")
+                    msg.append(f" {k}: expected {exp[k]!r}, got {opts[k]!r}")
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
@@ -209,8 +211,8 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 class BaseTestSimpleOptions(OptionsMixin):
     # tests for options with just --quiet and a usage message
 
-    commandName = None
-    optionsClass = None
+    commandName: str | None = None
+    optionsClass: type[usage.Options] | None = None
 
     def setUp(self):
         self.setUpOptions()
@@ -548,7 +550,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_files(self):
-        opts = self.parse(*self.master_and_who + ['a', 'b', 'c'])
+        opts = self.parse(*[*self.master_and_who, 'a', 'b', 'c'])
         self.assertEqual(opts['files'], ('a', 'b', 'c'))
 
     def test_properties(self):

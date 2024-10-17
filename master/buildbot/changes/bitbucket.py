@@ -16,6 +16,8 @@
 
 import time
 from datetime import datetime
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -31,7 +33,7 @@ from buildbot.util.pullrequest import PullRequestMixin
 
 
 class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullRequestMixin):
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "owner",
         "slug",
         "branch",
@@ -91,7 +93,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         if bitbucket_property_whitelist is None:
             bitbucket_property_whitelist = []
 
-        if hasattr(pullrequest_filter, '__call__'):
+        if callable(pullrequest_filter):
             self.pullrequest_filter = pullrequest_filter
         else:
             self.pullrequest_filter = lambda _: pullrequest_filter

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -24,6 +27,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
+from buildbot.warnings import warn_deprecated
 
 
 class BuildStatusGeneratorMixin(util.ComparableMixin):
@@ -37,7 +41,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         "cancelled",
     )
 
-    compare_attrs = [
+    compare_attrs: ClassVar[Sequence[str]] = [
         'mode',
         'tags',
         'builders',
@@ -50,6 +54,15 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
     def __init__(self, mode, tags, builders, schedulers, branches, subject, add_logs, add_patch):
         self.mode = self._compute_shortcut_modes(mode)
+
+        if add_logs is not None:
+            warn_deprecated(
+                '4.1.0',
+                (
+                    f'{self.__class__.__name__} argument add_logs have been deprecated. '
+                    'Please use want_logs_content of the passed message formatter.'
+                ),
+            )
 
         self.tags = tags
         self.builders = builders
@@ -90,19 +103,6 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             name += "_branches_" + "+".join(self.branches)
         name += "_".join(self.mode)
         return name
-
-    def _should_attach_log(self, log):
-        if isinstance(self.add_logs, bool):
-            return self.add_logs
-
-        if log['name'] in self.add_logs:
-            return True
-
-        long_name = f"{log['stepname']}.{log['name']}"
-        if long_name in self.add_logs:
-            return True
-
-        return False
 
     def is_message_needed_by_props(self, build):
         builder = build['builder']
@@ -209,7 +209,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
     def build_message(self, formatter, master, reporter, build):
         patches = self._get_patches_for_build(build)
 
-        logs = yield self._get_logs_for_build(master, build)
+        logs = self._get_logs_for_build(build)
 
         users = yield reporter.getResponsibleUsersForBuild(master, build['buildid'])
 
@@ -241,19 +241,16 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             "extra_info": buildmsg["extra_info"],
         }
 
-    @defer.inlineCallbacks
-    def _get_logs_for_build(self, master, build):
-        if not self.add_logs:
+    def _get_logs_for_build(self, build):
+        if 'steps' not in build:
             return []
 
         all_logs = []
-        steps = yield master.data.get(('builds', build['buildid'], "steps"))
-        for step in steps:
-            logs = yield master.data.get(("steps", step['stepid'], 'logs'))
-            for l in logs:
-                l['stepname'] = step['name']
-                if self._should_attach_log(l):
-                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+        for step in build['steps']:
+            if 'logs' not in step:
+                continue
+            for l in step['logs']:
+                if 'content' in l:
                     all_logs.append(l)
         return all_logs
 

@@ -3,7 +3,7 @@ line-length = 100
 target-version = "py38"
 
 [tool.ruff.lint]
-    select = ["W", "E", "F", "I", "PL", "UP"]
+    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B", "RUF", "FA"]
     ignore = [
         "E711", # comparison to None should be 'if cond is None:'
         "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
@@ -31,6 +31,12 @@ target-version = "py38"
         "PLW2901", # redefined-loop-name
 
         "UP027", # unpacked-list-comprehension Deprecated, see: https://github.com/astral-sh/ruff/issues/12754
+
+        "B007", # unused-loop-control-variable
+
+        # Might be nice to have in future, but requires significant refactoring for now.
+        "RUF012", # mutable-class-default
+        "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
     ]
 
 [tool.ruff.lint.isort]
@@ -79,9 +85,190 @@ quote-style = "preserve"
     [[tool.towncrier.type]]
         directory = "misc"
         name = "Misc"
-        showcontent = false
+        showcontent = true
 
 [tool.mypy]
 python_version = "3.8"
 namespace_packages = true
+pretty = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/master:$MYPY_CONFIG_FILE_DIR/worker"
 plugins = "mypy_zope:plugin"
+    [[tool.mypy.overrides]]
+    module = "setuptools.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "lz4.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "brotli.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "markdown.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "dateutil.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "yaml.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "psutil.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "pywintypes.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32api.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32con.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "servicemanager.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32file.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32pipe.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32service.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32serviceutil.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "pythoncom.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32event.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32process.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32security.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32com.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "winerror.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "msgpack.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "autobahn.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "requests.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "unidiff.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "croniter.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "aiohttp.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "hvac.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "influxdb.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "evalidate.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "txrequests.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "subunit.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "parameterized.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "win32job.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "ldap3.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "keystoneauth1.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "novaclient.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "libvirt.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "boto3.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "botocore.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "docker.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "txaio.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "dnotify.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "treq.*"
+    ignore_missing_imports = true
+
+    [[tool.mypy.overrides]]
+    module = "xerox.*"
+    ignore_missing_imports = true

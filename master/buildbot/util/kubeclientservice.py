@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import abc
 import base64
@@ -167,7 +168,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         self.process = reactor.spawnProcess(
             self.pp,
             self.kube_ctl_proxy_cmd[0],
-            self.kube_ctl_proxy_cmd + ["-p", str(self.proxy_port)],
+            [*self.kube_ctl_proxy_cmd, "-p", str(self.proxy_port)],
             env=os.environ,
         )
         self.kube_proxy_output = yield self.pp.got_output_deferred
@@ -219,7 +220,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 
 class KubeClientService(service.SharedService):
-    name = "KubeClientService"
+    name: str | None = "KubeClientService"  # type: ignore[assignment]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

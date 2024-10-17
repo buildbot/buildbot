@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 from collections import defaultdict
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -37,7 +39,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     """
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         'treeStableTimer',
         'change_filter',
         'fileIsImportant',

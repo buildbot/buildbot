@@ -11,8 +11,9 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright Buildbot Team Members
+# Copyright Buildbot Team Member
 
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -36,7 +37,7 @@ log = Logger()
 
 
 class GerritVerifyStatusPush(ReporterBase):
-    name = "GerritVerifyStatusPush"
+    name: str | None = "GerritVerifyStatusPush"  # type: ignore[assignment]
     # overridable constants
     RESULTS_TABLE = {
         SUCCESS: 1,

@@ -25,6 +25,7 @@ matrix:
     # ruff, docs first as they're more likely to find issues
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - env: PYTHON=3.9 TESTS=mypy
 
     # add js tests in separate job. Start it early because it is quite long
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
@@ -36,8 +37,8 @@ matrix:
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
-    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
-    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=22.4.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=22.1.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.9 TREQ=23.8.0 TWISTED=22.4.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=1.4.52 NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.8 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
@@ -51,10 +52,10 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.5
 
-    # Worker tests on python and twisted package combinations.
+    # Worker tests on older python and twisted package combinations.
+    - env: PYTHON=3.7 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
+    - env: PYTHON=3.8 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
     - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
@@ -95,8 +96,9 @@ install:
     cmd: |
       set -e
       rm -rf /tmp/bbworkervenv
-      python$PYTHON -m venv /tmp/bbworkervenv
-      /tmp/bbworkervenv/bin/pip install -e worker
+      python$WORKER_PYTHON -m venv /tmp/bbworkervenv
+      /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
+      /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
   - title: pip installs for backward compat
     cmd: |
       # pip installs for backward compat
@@ -173,6 +175,13 @@ script:
       export PATH=/tmp/bbvenv/bin/:$PATH
       ruff check `git ls-files |grep '.py$'` && \
       ruff format --check `git ls-files |grep '.py$'`
+
+  - title: mypy
+    condition: TESTS == "mypy"
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      (cd ./master && mypy --config-file ../pyproject.toml buildbot)
+      (cd ./worker && mypy --config-file ../pyproject.toml buildbot_worker)
 
   # Build documentation
   - title: docs

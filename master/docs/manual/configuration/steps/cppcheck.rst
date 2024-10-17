@@ -11,7 +11,7 @@ This step runs ``cppcheck``, analyse its output, and set the outcome in :ref:`Pr
 
     from buildbot.plugins import steps
 
-    f.addStep(steps.Cppcheck(enable=['all'], inconclusive=True]))
+    f.addStep(steps.Cppcheck(enable=['all'], inconclusive=True))
 
 This class adds the following arguments:
 

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 
 from twisted.internet import defer
@@ -23,7 +25,7 @@ from buildbot.util import lineboundaries
 
 
 class Log:
-    _byType = {}
+    _byType: dict[str, type[Log]] = {}
 
     def __init__(self, master, name, type, logid, decoder):
         self.type = type
@@ -31,7 +33,7 @@ class Log:
         self.master = master
         self.name = name
 
-        self.subPoint = util.subscription.SubscriptionPoint(f"{repr(name)} log")
+        self.subPoint = util.subscription.SubscriptionPoint(f"{name!r} log")
         self.subscriptions = {}
         self._finishing = False
         self.finished = False
@@ -58,7 +60,7 @@ class Log:
         try:
             subcls = cls._byType[type]
         except KeyError as e:
-            raise RuntimeError(f"Invalid log type {repr(type)}") from e
+            raise RuntimeError(f"Invalid log type {type!r}") from e
         decoder = Log._decoderFromString(logEncoding)
         return subcls(master, name, type, logid, decoder)
 

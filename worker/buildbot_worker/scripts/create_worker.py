@@ -124,7 +124,7 @@ def _makeBaseDir(basedir, quiet):
     try:
         os.mkdir(basedir)
     except OSError as exception:
-        raise CreateWorkerError(f"error creating directory {basedir}: {exception.strerror}")
+        raise CreateWorkerError(f"error creating directory {basedir}") from exception
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -145,7 +145,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
             with open(tacfile) as f:
                 oldcontents = f.read()
         except OSError as exception:
-            raise CreateWorkerError(f"error reading {tacfile}: {exception.strerror}")
+            raise CreateWorkerError(f"error reading {tacfile}") from exception
 
         if oldcontents == tac_file_contents:
             if not quiet:
@@ -163,7 +163,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
             f.write(tac_file_contents)
         os.chmod(tacfile, 0o600)
     except OSError as exception:
-        raise CreateWorkerError(f"could not write {tacfile}: {exception.strerror}")
+        raise CreateWorkerError(f"could not write {tacfile}") from exception
 
 
 def _makeInfoFiles(basedir, quiet):
@@ -191,7 +191,7 @@ def _makeInfoFiles(basedir, quiet):
         try:
             open(filepath, "w").write(contents)
         except OSError as exception:
-            raise CreateWorkerError(f"could not write {filepath}: {exception.strerror}")
+            raise CreateWorkerError(f"could not write {filepath}") from exception
         return True
 
     path = os.path.join(basedir, "info")
@@ -201,7 +201,7 @@ def _makeInfoFiles(basedir, quiet):
         try:
             os.mkdir(path)
         except OSError as exception:
-            raise CreateWorkerError(f"error creating directory {path}: {exception.strerror}")
+            raise CreateWorkerError(f"error creating directory {path}") from exception
 
     # create 'info/admin' file
     created = createFile(path, "admin", "Your Name Here <admin@youraddress.invalid>\n")

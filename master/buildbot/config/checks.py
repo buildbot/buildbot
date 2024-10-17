@@ -71,7 +71,7 @@ def check_markdown_support(class_inst):
     try:
         import markdown  # pylint: disable=import-outside-toplevel
 
-        [markdown]
+        _ = markdown
         return True
     except ImportError:  # pragma: no cover
         error(

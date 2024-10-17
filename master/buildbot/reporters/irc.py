@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import base64
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -130,7 +132,7 @@ class IRCContact(Contact):
         for channel in args:
             self.bot.join(channel)
 
-    command_JOIN.usage = "join #channel - join a channel #channel"
+    command_JOIN.usage = "join #channel - join a channel #channel"  # type: ignore[attr-defined]
 
     @dangerousCommand
     def command_LEAVE(self, args, **kwargs):
@@ -139,7 +141,7 @@ class IRCContact(Contact):
         for channel in args:
             self.bot.leave(channel)
 
-    command_LEAVE.usage = "leave #channel - leave a channel #channel"
+    command_LEAVE.usage = "leave #channel - leave a channel #channel"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def command_MUTE(self, args, **kwargs):
@@ -153,7 +155,7 @@ class IRCContact(Contact):
         yield self.send("Shutting up for now.")
         self.channel.muted = True
 
-    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
+    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def command_UNMUTE(self, args, **kwargs):
@@ -168,7 +170,7 @@ class IRCContact(Contact):
                 "No one had told me to be quiet, but it's the thought that counts, right?"
             )
 
-    command_UNMUTE.usage = "unmute - disable a previous 'mute'"
+    command_UNMUTE.usage = "unmute - disable a previous 'mute'"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     @Contact.overrideCommand
@@ -200,7 +202,7 @@ class IRCContact(Contact):
     def command_HUSTLE(self, args):
         self.act("does the hustle")
 
-    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"
+    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"  # type: ignore[attr-defined]
 
 
 class IrcStatusBot(StatusBot, irc.IRCClient):
@@ -415,7 +417,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
 
 class IrcStatusFactory(ThrottledClientFactory):
-    protocol = IrcStatusBot
+    protocol = IrcStatusBot  # type: ignore[assignment]
 
     shuttingDown = False
     p = None
@@ -506,7 +508,7 @@ class IRC(service.BuildbotService):
     name = "IRC"
     in_test_harness = False
     f = None
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "host",
         "port",
         "nick",
@@ -558,18 +560,18 @@ class IRC(service.BuildbotService):
             if authz is not None:
                 config.error("If you specify authz, you must not use allowForce anymore")
             if allowForce not in (True, False):
-                config.error(f"allowForce must be boolean, not {repr(allowForce)}")
+                config.error(f"allowForce must be boolean, not {allowForce!r}")
             log.msg('IRC: allowForce is deprecated: use authz instead')
         if allowShutdown is not None:
             if authz is not None:
                 config.error("If you specify authz, you must not use allowShutdown anymore")
             if allowShutdown not in (True, False):
-                config.error(f"allowShutdown must be boolean, not {repr(allowShutdown)}")
+                config.error(f"allowShutdown must be boolean, not {allowShutdown!r}")
             log.msg('IRC: allowShutdown is deprecated: use authz instead')
         # ###
 
         if noticeOnChannel not in (True, False):
-            config.error(f"noticeOnChannel must be boolean, not {repr(noticeOnChannel)}")
+            config.error(f"noticeOnChannel must be boolean, not {noticeOnChannel!r}")
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             ssl.ensureHasSSL(self.__class__.__name__)

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import sys
@@ -32,7 +33,7 @@ from buildbot.util import service
 
 
 class MockFileBase:
-    file_mock_config = {}
+    file_mock_config: dict[str, str] = {}
 
     def setUp(self):
         self.patcher = mock.patch('buildbot.util.kubeclientservice.open', self.mock_open)
@@ -126,7 +127,7 @@ class KubeClientServiceTestKubeHardcodedConfig(
         )
 
     def test_cannot_pass_both_bearer_and_basic_auth(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             kubeclientservice.KubeHardcodedConfig(
                 master_url="http://localhost:8001",
                 namespace="default",

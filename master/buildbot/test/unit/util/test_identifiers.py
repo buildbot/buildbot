@@ -35,7 +35,7 @@ class Tests(unittest.TestCase):
 
         good = ["linux", "Linux", "abc123", "a" * 50, '\N{SNOWMAN}']
         for g in good:
-            log.msg(f'expect {repr(g)} to be good')
+            log.msg(f'expect {g!r} to be good')
             self.assertTrue(identifiers.isIdentifier(50, g))
         bad = [
             None,
@@ -50,7 +50,7 @@ class Tests(unittest.TestCase):
             '\N{SNOWMAN}.\N{SNOWMAN}',
         ]
         for b in bad:
-            log.msg(f'expect {repr(b)} to be bad')
+            log.msg(f'expect {b!r} to be bad')
             self.assertFalse(identifiers.isIdentifier(50, b))
 
     def assertEqualUnicode(self, got, exp):

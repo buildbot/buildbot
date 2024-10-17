@@ -17,7 +17,7 @@
 
 import './BuildsTable.scss';
 import {observer} from "mobx-react";
-import {Button, Table} from "react-bootstrap";
+import {Table} from "react-bootstrap";
 import {
   Build,
   Builder,
@@ -34,12 +34,9 @@ import {
 } from "buildbot-ui";
 import {Link} from "react-router-dom";
 import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
+import {LoadMoreTableRow} from "../LoadMoreTableRow/LoadMoreTableRow";
 import {TableHeading} from "../TableHeading/TableHeading";
-import {durationFormat} from "buildbot-ui";
-import {buildbotGetSettings, buildbotSetupPlugin} from "../../../../plugin_support";
-import {FaHome} from "react-icons/fa";
-import {HomeView} from "../../views/HomeView/HomeView";
-import {LoadMoreListItem} from "../LoadMoreListItem/LoadMoreListItem";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 
 type BuildsTableProps = {
   builds: DataCollection<Build>;
@@ -125,13 +122,7 @@ export const BuildsTable = observer(({builds, builders, fetchLimit, onLoadMore}:
     if (!builds.isResolved() || onLoadMore === null || builds.array.length < fetchLimit) {
       return <></>;
     }
-    return (
-      <tr>
-        <td colSpan={builders !== null ? 8 : 7}>
-          <Button variant="outline-secondary" onClick={onLoadMore}>Load more</Button>
-        </td>
-      </tr>
-    );
+    return <LoadMoreTableRow colSpan={builders !== null ? 8 : 7} onLoadMore={onLoadMore}/>;
   };
 
   const tableElement = () => {

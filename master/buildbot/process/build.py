@@ -44,8 +44,10 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
+    from buildbot.locks import BaseLockId
     from buildbot.process.builder import Builder
     from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+    from buildbot.util.subscription import Subscription
 
 
 class Build(properties.PropertiesMixin):
@@ -73,10 +75,10 @@ class Build(properties.PropertiesMixin):
     workdir = "build"
     reason = "changes"
     finished = False
-    results = None
+    results: int | None = None
     stopped = False
     set_runtime_properties = True
-    subs = None
+    subs: set[Subscription] | None = None
 
     class Sentinel:
         pass
@@ -89,8 +91,11 @@ class Build(properties.PropertiesMixin):
         self.master = builder.master
         self.workerforbuilder: AbstractWorkerForBuilder | None = None
 
-        self.locks = []  # list of lock accesses
-        self._locks_to_acquire = []  # list of (real_lock, access) tuples
+        self.locks: list[BaseLockId] = []  # list of lock accesses
+
+        self._locks_to_acquire: list[
+            tuple[BaseLockId, str]
+        ] = []  # list of (real_lock, access) tuples
         # build a source stamp
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -99,12 +104,12 @@ class Build(properties.PropertiesMixin):
         self._locks_acquire_step = None
         self.currentStep = None
 
-        self.workerEnvironment = {}
+        self.workerEnvironment: dict[str, str] = {}
         self.buildid = None
         self._buildid_notifier = Notifier()
         self.number = None
-        self.executedSteps = []
-        self.stepnames = {}
+        self.executedSteps: list[buildstep.BuildStep] = []
+        self.stepnames: dict[str, int] = {}
 
         self.terminate = False
 
@@ -168,7 +173,7 @@ class Build(properties.PropertiesMixin):
 
     def __repr__(self):
         return (
-            f"<Build {self.builder.name} number:{repr(self.number)} "
+            f"<Build {self.builder.name} number:{self.number!r} "
             f"results:{statusToString(self.results)}>"
         )
 
@@ -258,16 +263,18 @@ class Build(properties.PropertiesMixin):
             props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
 
-    def setupWorkerBuildirProperty(self, workerforbuilder):
+    def setupWorkerProperties(self, workerforbuilder):
         path_module = workerforbuilder.worker.path_module
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        if workerforbuilder.worker.worker_basedir:
+        worker_basedir = workerforbuilder.worker.worker_basedir
+        if worker_basedir:
             builddir = path_module.join(
-                bytes2unicode(workerforbuilder.worker.worker_basedir),
+                bytes2unicode(worker_basedir),
                 bytes2unicode(self.builder.config.workerbuilddir),
             )
+            self.setProperty("basedir", worker_basedir, "Worker")
             self.setProperty("builddir", builddir, "Worker")
 
     def setupWorkerForBuilder(self, workerforbuilder: AbstractWorkerForBuilder):
@@ -312,6 +319,7 @@ class Build(properties.PropertiesMixin):
         self.conn = None
 
         worker = workerforbuilder.worker
+        assert worker is not None
 
         # Cache the worker information as variables instead of accessing via worker, as the worker
         # will disappear during disconnection and some of these properties may still be needed.
@@ -324,11 +332,14 @@ class Build(properties.PropertiesMixin):
         # then we just assign the build to the first buildrequest
         brid = self.requests[0].id
         builderid = yield self.getBuilderId()
+        assert self.master is not None
+        assert self.master.data is not None
         self.buildid, self.number = yield self.master.data.updates.addBuild(
             builderid=builderid, buildrequestid=brid, workerid=worker.workerid
         )
         self._buildid_notifier.notify(self.buildid)
 
+        assert self.master.mq is not None
         self.stopBuildConsumer = yield self.master.mq.startConsuming(
             self.controlStopBuild, ("control", "builds", str(self.buildid), "stop")
         )
@@ -347,8 +358,10 @@ class Build(properties.PropertiesMixin):
         self._preparation_step = buildstep.create_step_from_step_or_factory(
             buildstep.BuildStep(name="worker_preparation")
         )
+        assert self._preparation_step is not None
         self._preparation_step.setBuild(self)
         yield self._preparation_step.addStep()
+        assert self.master.data.updates is not None
         yield self.master.data.updates.startStep(self._preparation_step.stepid, locks_acquired=True)
 
         Build.setupBuildProperties(self.getProperties(), self.requests, self.sources, self.number)
@@ -434,11 +447,11 @@ class Build(properties.PropertiesMixin):
 
         self.conn = workerforbuilder.worker.conn
 
-        # To retrieve the builddir property, the worker must be attached as we
-        # depend on its path_module. Latent workers become attached only after
-        # preparing them, so we can't setup the builddir property earlier like
-        # the rest of properties
-        self.setupWorkerBuildirProperty(workerforbuilder)
+        # To retrieve the worker properties, the worker must be attached as we depend on its
+        # path_module for at least the builddir property. Latent workers become attached only after
+        # preparing them, so we can't setup the builddir property earlier like the rest of
+        # properties
+        self.setupWorkerProperties(workerforbuilder)
         self.setupWorkerForBuilder(workerforbuilder)
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
@@ -631,7 +644,7 @@ class Build(properties.PropertiesMixin):
         text = None
         if isinstance(results, tuple):
             results, text = results
-        assert isinstance(results, type(SUCCESS)), f"got {repr(results)}"
+        assert isinstance(results, type(SUCCESS)), f"got {results!r}"
         summary = yield step.getBuildResultSummary()
         if 'build' in summary:
             text = [summary['build']]

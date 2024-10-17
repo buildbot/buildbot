@@ -252,7 +252,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         request.headers = {"authorization": ''}
         request.peer = ''
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ConnectionDeny):
             yield self.protocol.onConnect(request)
 
     @defer.inlineCallbacks

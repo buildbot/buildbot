@@ -64,7 +64,7 @@ class FakeEntry:
         handle loading
         """
         for w in self._warnings:
-            warnings.warn(w, DeprecationWarning)
+            warnings.warn(w, DeprecationWarning, stacklevel=2)
         return self._value
 
 
@@ -88,7 +88,7 @@ class ITestInterface(IPlugin):
     test interface
     """
 
-    def hello(self):
+    def hello():
         pass
 
 
@@ -446,7 +446,7 @@ class TestBuildbotPlugins(unittest.TestCase):
         plugins = db.get_plugins('interface', interface=ITestInterface)
 
         with self.assertRaises(AttributeError):
-            getattr(plugins, 'bad')
+            _ = plugins.bad
         with self.assertRaises(PluginDBError):
             plugins.get('bad')
         with self.assertRaises(PluginDBError):

@@ -16,6 +16,8 @@
 import base64
 import json
 import os
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.protocols import basic
@@ -77,7 +79,7 @@ class JobdirService(MaildirService):
 
 
 class Try_Jobdir(TryBase):
-    compare_attrs = ('jobdir',)
+    compare_attrs: ClassVar[Sequence[str]] = ('jobdir',)
 
     def __init__(self, name, builderNames, jobdir, **kwargs):
         super().__init__(name, builderNames, **kwargs)
@@ -165,9 +167,9 @@ class Try_Jobdir(TryBase):
         ver = bytes2unicode(p.strings.pop(0))
 
         v1_keys = ['jobid', 'branch', 'baserev', 'patch_level', 'patch_body']
-        v2_keys = v1_keys + ['repository', 'project']
-        v3_keys = v2_keys + ['who']
-        v4_keys = v3_keys + ['comment']
+        v2_keys = [*v1_keys, "repository", "project"]
+        v3_keys = [*v2_keys, "who"]
+        v4_keys = [*v3_keys, "comment"]
         keys = [v1_keys, v2_keys, v3_keys, v4_keys]
         # v5 introduces properties and uses JSON serialization
 
@@ -471,7 +473,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
 
 class Try_Userpass(TryBase):
-    compare_attrs = ('name', 'builderNames', 'port', 'userpass', 'properties')
+    compare_attrs: ClassVar[Sequence[str]] = (
+        'name',
+        'builderNames',
+        'port',
+        'userpass',
+        'properties',
+    )
 
     def __init__(self, name, builderNames, port, userpass, **kwargs):
         super().__init__(name, builderNames, **kwargs)

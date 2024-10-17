@@ -96,7 +96,7 @@ class TestGitPoller(TestGitPollerBase):
         self, methodToTest, args, desiredGoodOutput, desiredGoodResult, emptyRaisesException=True
     ):
         self.expect_commands(
-            ExpectMasterShell(['git'] + args).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell(['git', *args]).workdir(self.POLLER_WORKDIR),
         )
 
         # we should get an Exception with empty output from git
@@ -104,18 +104,18 @@ class TestGitPoller(TestGitPollerBase):
             yield methodToTest(self.dummyRevStr)
             if emptyRaisesException:
                 self.fail("run_process should have failed on empty output")
-        except Exception as e:
+        except Exception as error:
             if not emptyRaisesException:
                 import traceback
 
                 traceback.print_exc()
-                self.fail("run_process should NOT have failed on empty output: " + repr(e))
+                self.fail("run_process should NOT have failed on empty output: " + repr(error))
 
         self.assert_all_commands_ran()
 
         # and the method shouldn't suppress any exceptions
         self.expect_commands(
-            ExpectMasterShell(['git'] + args).workdir(self.POLLER_WORKDIR).exit(1),
+            ExpectMasterShell(['git', *args]).workdir(self.POLLER_WORKDIR).exit(1),
         )
 
         try:
@@ -128,7 +128,7 @@ class TestGitPoller(TestGitPollerBase):
 
         # finally we should get what's expected from good output
         self.expect_commands(
-            ExpectMasterShell(['git'] + args).workdir(self.POLLER_WORKDIR).stdout(desiredGoodOutput)
+            ExpectMasterShell(['git', *args]).workdir(self.POLLER_WORKDIR).stdout(desiredGoodOutput)
         )
 
         r = yield methodToTest(self.dummyRevStr)

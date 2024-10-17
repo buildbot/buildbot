@@ -17,6 +17,7 @@ import datetime
 import textwrap
 
 from dateutil.tz import tzutc
+from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -143,6 +144,20 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
+
+    @parameterized.expand([
+        ('disabled', 'log', 'step', False, False),
+        ('enabled', 'log', 'step', True, True),
+        ('empty_list', 'log', 'step', [], False),
+        ('name_no_match', 'log', 'step', ['log2'], False),
+        ('name_match', 'log', 'step', ['log'], True),
+        ('name_match_step_no_match', 'log', 'step', ['step2.log'], False),
+        ('name_no_match_step_match', 'log', 'step', ['step.log2'], False),
+        ('name_match_step_match', 'log', 'step', ['step.log'], True),
+    ])
+    def test_should_attach_log(self, name, log_name, step_name, log_config, expected):
+        log = {'name': log_name, 'stepname': step_name}
+        self.assertEqual(utils.should_attach_log(log_config, log), expected)
 
     @defer.inlineCallbacks
     def test_getDetailsForBuildset(self):
@@ -328,8 +343,11 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                         'num_lines': 2,
                                         'slug': 'stdio',
                                         'stepid': 120,
+                                        'stepname': 'step1',
                                         'type': 's',
                                         'url': 'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio',
+                                        'url_raw': 'http://localhost:8080/api/v2/logs/80/raw',
+                                        'url_raw_inline': 'http://localhost:8080/api/v2/logs/80/raw_inline',
                                     }
                                 ],
                                 'name': 'step1',
@@ -451,8 +469,11 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                         'num_lines': 2,
                                         'slug': 'stdio',
                                         'stepid': 121,
+                                        'stepname': 'step1',
                                         'type': 's',
                                         'url': 'http://localhost:8080/#/builders/80/builds/3/steps/29/logs/stdio',
+                                        'url_raw': 'http://localhost:8080/api/v2/logs/81/raw',
+                                        'url_raw_inline': 'http://localhost:8080/api/v2/logs/81/raw_inline',
                                     }
                                 ],
                                 'name': 'step1',

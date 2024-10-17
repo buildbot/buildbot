@@ -120,31 +120,31 @@ Choosing a Change Source
 There are a variety of :class:`ChangeSource` classes available, some of which are meant to be used in conjunction with other tools to deliver :class:`Change` events from the VC repository to the buildmaster.
 
 As a quick guide, here is a list of VC systems and the :class:`ChangeSource`\s that might be useful with them.
-Note that some of these modules are in Buildbot's :contrib-src:`master/contrib` directory, meaning that they have been offered by other users in hopes they may be useful, and might require some additional work to make them functional.
+Note that some of these modules are in Buildbot's :src:`master/contrib` directory, meaning that they have been offered by other users in hopes they may be useful, and might require some additional work to make them functional.
 
 CVS
 
-* :bb:chsrc:`CVSMaildirSource` (watching mail sent by :contrib-src:`master/contrib/buildbot_cvs_mail.py` script)
+* :bb:chsrc:`CVSMaildirSource` (watching mail sent by :src:`master/contrib/buildbot_cvs_mail.py` script)
 * :bb:chsrc:`PBChangeSource` (listening for connections from ``buildbot sendchange`` run in a loginfo script)
-* :bb:chsrc:`PBChangeSource` (listening for connections from a long-running :contrib-src:`master/contrib/viewcvspoll.py` polling process which examines the ViewCVS database directly)
+* :bb:chsrc:`PBChangeSource` (listening for connections from a long-running :src:`master/contrib/viewcvspoll.py` polling process which examines the ViewCVS database directly)
 * :bb:chsrc:`Change Hooks` in WebStatus
 
 SVN
 
-* :bb:chsrc:`PBChangeSource` (listening for connections from :contrib-src:`master/contrib/svn_buildbot.py` run in a postcommit script)
-* :bb:chsrc:`PBChangeSource` (listening for connections from a long-running :contrib-src:`master/contrib/svn_watcher.py` or :contrib-src:`master/contrib/svnpoller.py` polling process
+* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`master/contrib/svn_buildbot.py` run in a postcommit script)
+* :bb:chsrc:`PBChangeSource` (listening for connections from a long-running :src:`master/contrib/svn_watcher.py` or :src:`master/contrib/svnpoller.py` polling process
 * :bb:chsrc:`SVNCommitEmailMaildirSource` (watching for email sent by :file:`commit-email.pl`)
 * :bb:chsrc:`SVNPoller` (polling the SVN repository)
 * :bb:chsrc:`Change Hooks` in WebStatus
 
 Darcs
 
-* :bb:chsrc:`PBChangeSource` (listening for connections from :contrib-src:`master/contrib/darcs_buildbot.py` in a commit script)
+* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`master/contrib/darcs_buildbot.py` in a commit script)
 * :bb:chsrc:`Change Hooks` in WebStatus
 
 Mercurial
 
-* :bb:chsrc:`Change Hooks` in WebStatus (including :contrib-src:`master/contrib/hgbuildbot.py`, configurable in a ``changegroup`` hook)
+* :bb:chsrc:`Change Hooks` in WebStatus (including :src:`master/contrib/hgbuildbot.py`, configurable in a ``changegroup`` hook)
 * `BitBucket change hook <BitBucket hook>`_ (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
 * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
 * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
@@ -152,14 +152,14 @@ Mercurial
 
 Bzr (the newer Bazaar)
 
-* :bb:chsrc:`PBChangeSource` (listening for connections from :contrib-src:`master/contrib/bzr_buildbot.py` run in a post-change-branch-tip or commit hook)
+* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`master/contrib/bzr_buildbot.py` run in a post-change-branch-tip or commit hook)
 * :bb:chsrc:`BzrPoller` (polling the Bzr repository)
 * :bb:chsrc:`Change Hooks` in WebStatus
 
 Git
 
-* :bb:chsrc:`PBChangeSource` (listening for connections from :contrib-src:`master/contrib/git_buildbot.py` run in the post-receive hook)
-* :bb:chsrc:`PBChangeSource` (listening for connections from :contrib-src:`master/contrib/github_buildbot.py`, which listens for notifications from GitHub)
+* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`master/contrib/git_buildbot.py` run in the post-receive hook)
+* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`master/contrib/github_buildbot.py`, which listens for notifications from GitHub)
 * :bb:chsrc:`Change Hooks` in WebStatus
 * :bb:chsrc:`GitHub` change hook (specifically designed for GitHub notifications, but requiring a publicly-accessible WebStatus)
 * :bb:chsrc:`BitBucket` change hook (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
@@ -358,7 +358,7 @@ CVSMaildirSource
 
 .. py:class:: buildbot.changes.mail.CVSMaildirSource
 
-This parser works with the :contrib-src:`master/contrib/buildbot_cvs_mail.py` script.
+This parser works with the :src:`master/contrib/buildbot_cvs_mail.py` script.
 
 The script sends an email containing all the files submitted in one directory.
 It is invoked by using the :file:`CVSROOT/loginfo` facility.
@@ -373,10 +373,10 @@ For example:
 
     c['change_source'] = changes.CVSMaildirSource("/home/buildbot/Mail")
 
-Configuration of CVS and :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>`
+Configuration of CVS and :src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>`
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-CVS must be configured to invoke the :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script when files are checked in.
+CVS must be configured to invoke the :src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script when files are checked in.
 This is done via the CVS loginfo configuration file.
 
 To update this, first do:
@@ -396,7 +396,7 @@ cd to the CVSROOT directory and edit the file loginfo, adding a line like:
    For cvs version 1.12.x, the ``--path %p`` option is required.
    Version 1.11.x and 1.12.x report the directory path differently.
 
-The above example you put the :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script under /cvsroot/CVSROOT.
+The above example you put the :src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script under /cvsroot/CVSROOT.
 It can be anywhere.
 Run the script with ``--help`` to see all the options.
 At the very least, the options ``-e`` (email) and ``-P`` (project) should be specified.
@@ -524,7 +524,7 @@ Bzr Hook
 
 Bzr is also written in Python, and the Bzr hook depends on Twisted to send the changes.
 
-To install, put :contrib-src:`master/contrib/bzr_buildbot.py` in one of your plugins locations a bzr plugins directory (e.g., :file:`~/.bazaar/plugins`).
+To install, put :src:`master/contrib/bzr_buildbot.py` in one of your plugins locations a bzr plugins directory (e.g., :file:`~/.bazaar/plugins`).
 Then, in one of your bazaar conf files (e.g., :file:`~/.bazaar/locations.conf`), set the location you want to connect with Buildbot with these keys:
 
   * ``buildbot_on``
@@ -824,7 +824,7 @@ Bzr Poller
 ~~~~~~~~~~
 
 If you cannot insert a Bzr hook in the server, you can use the :bb:chsrc:`BzrPoller`.
-To use it, put :contrib-src:`master/contrib/bzr_buildbot.py` somewhere that your Buildbot configuration can import it.
+To use it, put :src:`master/contrib/bzr_buildbot.py` somewhere that your Buildbot configuration can import it.
 Even putting it in the same directory as the :file:`master.cfg` should work.
 Install the poller in the Buildbot configuration as with any other change source.
 Minimally, provide a URL that you want to poll (``bzr://``, ``bzr+ssh://``, or ``lp:``), making sure the Buildbot user has necessary privileges.
@@ -849,7 +849,7 @@ The ``BzrPoller`` parameters are:
 
 ``branch_name``
     Any value to be used as the branch name.
-    Defaults to None, or specify a string, or specify the constants from :contrib-src:`bzr_buildbot.py <master/contrib/bzr_buildbot.py>` ``SHORT`` or ``FULL`` to get the short branch name or full branch address.
+    Defaults to None, or specify a string, or specify the constants from :src:`bzr_buildbot.py <master/contrib/bzr_buildbot.py>` ``SHORT`` or ``FULL`` to get the short branch name or full branch address.
 
 ``blame_merge_author``
     Normally, the user that commits the revision is the user that is responsible for the change.
@@ -863,7 +863,7 @@ The ``BzrPoller`` parameters are:
 GitPoller
 ~~~~~~~~~
 
-If you cannot take advantage of post-receive hooks as provided by :contrib-src:`master/contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
+If you cannot take advantage of post-receive hooks as provided by :src:`master/contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
 
 The :bb:chsrc:`GitPoller` periodically fetches from a remote Git repository and processes any changes.
 It requires its own working directory for operation.

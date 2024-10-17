@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
+from __future__ import annotations
+
 import re
 
 from twisted.internet import defer
@@ -70,7 +72,7 @@ class P4(Source):
         p4line_end='local',
         p4viewspec=None,
         p4viewspec_suffix='...',
-        p4client=Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s'),
+        p4client: Interpolate | None = None,
         p4client_spec_options='allwrite rmdir',
         p4client_type=None,
         p4extra_args=None,
@@ -92,6 +94,8 @@ class P4(Source):
         self.p4viewspec = p4viewspec
         self.p4viewspec_suffix = p4viewspec_suffix
         self.p4line_end = p4line_end
+        if p4client is None:
+            p4client = Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s')
         self.p4client = p4client
         self.p4client_spec_options = p4client_spec_options
         self.p4client_type = p4client_type
@@ -424,7 +428,7 @@ class P4(Source):
         except ValueError as error:
             log.msg(
                 "p4.get_sync_revision unable to parse output of %s: %s",
-                ['p4'] + changes_command_args,
+                ['p4', *changes_command_args],
                 stdout,
             )
             raise buildstep.BuildStepFailed() from error

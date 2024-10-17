@@ -13,6 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.util import service
 from buildbot.worker.manager import WorkerManager
@@ -20,7 +21,7 @@ from buildbot.worker.manager import WorkerManager
 
 class MachineManager(service.BuildbotServiceManager):
     reconfig_priority = WorkerManager.reconfig_priority + 1
-    name = 'MachineManager'
+    name: str | None = 'MachineManager'  # type: ignore[assignment]
     managed_services_name = 'machines'
     config_attr = 'machines'
 

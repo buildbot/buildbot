@@ -33,7 +33,11 @@ import {
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Tab, Tabs} from "react-bootstrap";
 import {TopbarAction, TopbarItem, useTopbarActions, useTopbarItems} from "buildbot-ui";
-import {RawData} from "../../components/RawData/RawData";
+import {
+  displayBuildRequestEntry,
+  displayBuildsetEntry,
+  RawData
+} from "../../components/RawData/RawData";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
@@ -163,9 +167,9 @@ export const BuildRequestView = observer(() => {
         </Tab>
         <Tab eventKey="debug" title="Debug">
           <TableHeading>Buildrequest</TableHeading>
-          <RawData data={buildRequest !== null ? buildRequest.toObject() : {}}/>
+          <RawData data={buildRequest !== null ? buildRequest.toObject() : {}} displayCallback={displayBuildRequestEntry}/>
           <TableHeading>Buildset</TableHeading>
-          <RawData data={buildset !== null ? buildset.toObject() : {}}/>
+          <RawData data={buildset !== null ? buildset.toObject() : {}} displayCallback={displayBuildsetEntry}/>
           <TableHeading>Builder</TableHeading>
           <RawData data={builder !== null ? builder.toObject() : {}}/>
           {buildRawData}

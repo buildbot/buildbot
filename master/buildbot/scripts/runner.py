@@ -19,9 +19,12 @@
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and reStructuredText documentation.
 
+from __future__ import annotations
+
 import getpass
 import sys
 import textwrap
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.python import reflect
@@ -65,7 +68,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         ],
         ["replace", "r", "Replace any modified files without confirmation."],
     ]
-    optParameters = []
+    optParameters: list[tuple[str, str | None, Any, str]] = []
 
     def getSynopsis(self):
         return "Usage:    buildbot upgrade-master [options] [<basedir>]"
@@ -616,7 +619,7 @@ class UserOptions(base.SubcommandOptions):
     def _checkValidTypes(self, info):
         from buildbot.process.users import users
 
-        valid = set(['identifier', 'email'] + users.srcs)
+        valid = set(["identifier", "email", *users.srcs])
 
         for user in info:
             for attr_type in user:
@@ -634,7 +637,7 @@ class UserOptions(base.SubcommandOptions):
         if not op:
             raise usage.UsageError("you must specify an operation: add, remove, update, get")
         if op not in ['add', 'remove', 'update', 'get']:
-            raise usage.UsageError(f"bad op {repr(op)}, use 'add', 'remove', 'update', " "or 'get'")
+            raise usage.UsageError(f"bad op {op!r}, use 'add', 'remove', 'update', " "or 'get'")
 
         if not self.get('username') or not self.get('passwd'):
             raise usage.UsageError("A username and password must be given")
@@ -738,7 +741,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
         # when this command has several maintenance jobs, we should make
         # them optional here. For now there is only one.
     ]
-    optParameters = []
+    optParameters: list[tuple[str, str | None, Any, str]] = []
 
     def getSynopsis(self):
         return "Usage:    buildbot cleanupdb [options] [<basedir>]"

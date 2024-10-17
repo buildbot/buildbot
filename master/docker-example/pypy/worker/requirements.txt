@@ -1,0 +1,1 @@
+buildbot-slave==0.8.14

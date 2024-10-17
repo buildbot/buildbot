@@ -108,7 +108,7 @@ class MySQLStrategy(Strategy):
                 if self.is_disconnect(ex.args):
                     # sqlalchemy will re-create the connection
                     log.msg('connection will be removed')
-                    raise sa.exc.DisconnectionError()
+                    raise sa.exc.DisconnectionError() from ex
                 log.msg(f'exception happened {ex}')
                 raise
 

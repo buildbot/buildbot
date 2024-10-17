@@ -152,7 +152,6 @@ extlinks = {
     # "pretty" reference that looks like relative path in Buildbot source tree
     # by default.
     'src': ('https://github.com/buildbot/buildbot/tree/master/%s', '%s'),
-    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/tree/master/%s', '%s'),
 }
 
 # Sphinx' link checker.
@@ -323,7 +322,7 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
 
 # Spell checker.
 try:
-    import enchant  # noqa # pylint: disable=unused-import
+    import enchant  # noqa: F401
 except ImportError as ex:
     print("enchant module import failed:\n" f"{ex}\n" "Spell checking disabled.", file=sys.stderr)
 

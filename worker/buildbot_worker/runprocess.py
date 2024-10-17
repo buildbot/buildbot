@@ -17,6 +17,9 @@
 Support for running 'shell commands'
 """
 
+from __future__ import annotations
+
+import datetime
 import os
 import pprint
 import re
@@ -261,8 +264,8 @@ class RunProcess:
     interruptSignal = "KILL"
 
     # For sending elapsed time:
-    startTime = None
-    elapsedTime = None
+    startTime: datetime.datetime | None = None
+    elapsedTime: datetime.timedelta | None = None
 
     # For scheduling future events
     _reactor = reactor
@@ -461,11 +464,11 @@ class RunProcess:
             self._startCommand()
         except Exception as e:
             log.err(failure.Failure(), "error in RunProcess._startCommand")
-            self.send_update([('stderr', f"error in RunProcess._startCommand ({str(e)})\n")])
+            self.send_update([('stderr', f"error in RunProcess._startCommand ({e!s})\n")])
 
             self.send_update([('stderr', traceback.format_exc())])
             # pretend it was a shell error
-            self.deferred.errback(AbandonChain(-1, f'Got exception ({str(e)})'))
+            self.deferred.errback(AbandonChain(-1, f'Got exception ({e!s})'))
         return self.deferred
 
     def _startCommand(self):
@@ -872,7 +875,7 @@ class RunProcess:
                 )
                 if force or len(pr_info) < 2:
                     win32job.TerminateJobObject(self.job_object, 1)
-            self.log_msg(f"terminating job object with pids {str(pr_info)}")
+            self.log_msg(f"terminating job object with pids {pr_info!s}")
             if pid is None:
                 return
             self.log_msg(f"using {cmd} to kill pid {pid}")

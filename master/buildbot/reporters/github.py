@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import re
-from typing import Dict
+from typing import Generator
 
 from twisted.internet import defer
 from twisted.python import log
@@ -40,7 +42,7 @@ HOSTED_BASE_URL = 'https://api.github.com'
 
 
 class GitHubStatusPush(ReporterBase):
-    name = "GitHubStatusPush"
+    name: str | None = "GitHubStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,
@@ -110,7 +112,9 @@ class GitHubStatusPush(ReporterBase):
         ]
 
     @defer.inlineCallbacks
-    def _get_auth_header(self, props: Properties) -> Dict[str, str]:
+    def _get_auth_header(
+        self, props: Properties
+    ) -> Generator[defer.Deferred[str], None, dict[str, str]]:
         token = yield props.render(self.token)
         return {'Authorization': f"token {token}"}
 

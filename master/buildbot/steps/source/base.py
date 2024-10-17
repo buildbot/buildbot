@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 from twisted.internet import defer
 from twisted.python import log
@@ -43,7 +43,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
     haltOnFailure = True
     flunkOnFailure = True
 
-    branch = None  # the default branch, should be set in __init__
+    branch: str | None = None  # the default branch, should be set in __init__
 
     def __init__(
         self,

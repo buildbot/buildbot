@@ -1407,7 +1407,6 @@ Its arguments, in addition to the common options, are:
 ``strict`` (optional; default is True)
 
     If true, verify that the user's input is from the list.
-    Note that this only affects the validation of the form request; even if this argument is False, there is no HTML form component available to enter an arbitrary value.
 
 ``multiple``
 

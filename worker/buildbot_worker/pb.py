@@ -12,10 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os.path
 import shutil
 import signal
+from typing import TYPE_CHECKING
 
 from twisted.application import service
 from twisted.application.internet import ClientService
@@ -24,6 +26,7 @@ from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet.base import DelayedCall
 from twisted.internet.endpoints import clientFromString
 from twisted.python import log
 from twisted.spread import pb
@@ -41,6 +44,9 @@ from buildbot_worker.msgpack import ProtocolCommandMsgpack
 from buildbot_worker.pbutil import AutoLoginPBFactory
 from buildbot_worker.pbutil import decode
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 
 class UnknownCommand(pb.Error):
@@ -214,7 +220,7 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
     # remote is a ref to the Builder object on the master side, and is set
     # when they attach. We use it to detect when the connection to the master
     # is severed.
-    remote = None
+    remote: BuildMaster | None = None
 
     def __init__(
         self, name, unicode_encoding, buffer_size, buffer_timeout, max_line_length, newline_re
@@ -525,9 +531,9 @@ class BotFactory(AutoLoginPBFactory):
     compatibility only.
     """
 
-    keepaliveInterval = None  # None = do not use keepalives
-    keepaliveTimer = None
-    perspective = None
+    keepaliveInterval: int | None = None  # None = do not use keepalives
+    keepaliveTimer: DelayedCall | None = None
+    perspective: pb.Avatar | None = None
 
     _reactor = reactor
 

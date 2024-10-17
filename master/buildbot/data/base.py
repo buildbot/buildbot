@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from typing import Any
     from typing import Literal
 
+    from buildbot.data import types
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.builders import BuilderModel
     from buildbot.db.builds import BuildModel
@@ -47,13 +48,13 @@ class EndpointKind(enum.Enum):
 
 
 class ResourceType:
-    name = None
-    plural = None
-    endpoints = []
-    keyField = None
+    name: str | None = None
+    plural: str | None = None
+    endpoints: list[type[Endpoint]] = []
+    keyField: str | None = None
     eventPathPatterns = ""
-    entityType = None
-    subresources = []
+    entityType: types.Type | None = None
+    subresources: list[str] = []
 
     def __init__(self, master):
         self.master = master
@@ -72,7 +73,7 @@ class ResourceType:
             pathPatterns[i] = pp
         self.eventPaths = pathPatterns
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def getEndpoints(self):
         endpoints = self.endpoints[:]
         for i, ep in enumerate(endpoints):
@@ -81,14 +82,14 @@ class ResourceType:
             endpoints[i] = ep(self, self.master)
         return endpoints
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def getDefaultEndpoint(self):
         for ep in self.getEndpoints():
             if ep.kind != EndpointKind.COLLECTION:
                 return ep
         return None
 
-    @functools.lru_cache(1)
+    @functools.lru_cache(1)  # noqa: B019
     def getCollectionEndpoint(self):
         for ep in self.getEndpoints():
             if ep.kind == EndpointKind.COLLECTION or ep.isPseudoCollection:
@@ -105,7 +106,7 @@ class ResourceType:
             msg = self.sanitizeMessage(msg)
             for path in self.eventPaths:
                 path = path.format(**msg)
-                routingKey = tuple(path.split("/")) + (event,)
+                routingKey = (*tuple(path.split("/")), event)
                 self.master.mq.produce(routingKey, msg)
 
 
@@ -122,10 +123,10 @@ class SubResource:
 
 class Endpoint:
     pathPatterns = ""
-    rootLinkName = None
+    rootLinkName: str | None = None
     isPseudoCollection = False
     kind = EndpointKind.SINGLE
-    parentMapping = {}
+    parentMapping: dict[str, str] = {}
 
     def __init__(self, rtype, master):
         self.rtype = rtype
@@ -223,8 +224,10 @@ class NestedBuildDataRetriever:
             return self.step_dict
 
         if 'stepid' in self.args:
-            self.step_dict = await self.master.db.steps.getStep(stepid=self.args['stepid'])
-            return self.step_dict
+            step_dict = self.step_dict = await self.master.db.steps.getStep(
+                stepid=self.args['stepid']
+            )
+            return step_dict
 
         if 'step_name' in self.args or 'step_number' in self.args:
             build_dict = await self.get_build_dict()
@@ -232,19 +235,21 @@ class NestedBuildDataRetriever:
                 self.step_dict = None
                 return None
 
-            self.step_dict = await self.master.db.steps.getStep(
+            step_dict = self.step_dict = await self.master.db.steps.getStep(
                 buildid=build_dict.id,
                 number=self.args.get('step_number'),
                 name=self.args.get('step_name'),
             )
-            return self.step_dict
+            return step_dict
 
         # fallback when there's only indirect information
         if 'logid' in self.args:
             log_dict = await self.get_log_dict()
             if log_dict is not None:
-                self.step_dict = await self.master.db.steps.getStep(stepid=log_dict.stepid)
-                return self.step_dict
+                step_dict = self.step_dict = await self.master.db.steps.getStep(
+                    stepid=log_dict.stepid
+                )
+                return step_dict
 
         self.step_dict = None
         return self.step_dict
@@ -255,8 +260,10 @@ class NestedBuildDataRetriever:
             return self.build_dict
 
         if 'buildid' in self.args:
-            self.build_dict = await self.master.db.builds.getBuild(self.args['buildid'])
-            return self.build_dict
+            build_dict = self.build_dict = await self.master.db.builds.getBuild(
+                self.args['buildid']
+            )
+            return build_dict
 
         if 'build_number' in self.args:
             builder_id = await self.get_builder_id()
@@ -265,16 +272,16 @@ class NestedBuildDataRetriever:
                 self.build_dict = None
                 return None
 
-            self.build_dict = await self.master.db.builds.getBuildByNumber(
+            build_dict = self.build_dict = await self.master.db.builds.getBuildByNumber(
                 builderid=builder_id, number=self.args['build_number']
             )
-            return self.build_dict
+            return build_dict
 
         # fallback when there's only indirect information
         step_dict = await self.get_step_dict()
         if step_dict is not None:
-            self.build_dict = await self.master.db.builds.getBuild(step_dict.buildid)
-            return self.build_dict
+            build_dict = self.build_dict = await self.master.db.builds.getBuild(step_dict.buildid)
+            return build_dict
 
         self.build_dict = None
         return None
@@ -295,8 +302,10 @@ class NestedBuildDataRetriever:
             return self.builder_dict
 
         if 'builderid' in self.args:
-            self.builder_dict = await self.master.db.builders.getBuilder(self.args['builderid'])
-            return self.builder_dict
+            builder_dict = self.builder_dict = await self.master.db.builders.getBuilder(
+                self.args['builderid']
+            )
+            return builder_dict
 
         if 'buildername' in self.args:
             builder_id = await self.master.db.builders.findBuilderId(
@@ -306,13 +315,15 @@ class NestedBuildDataRetriever:
             if builder_id is not None:
                 builder_dict = await self.master.db.builders.getBuilder(builder_id)
             self.builder_dict = builder_dict
-            return self.builder_dict
+            return builder_dict
 
         # fallback when there's only indirect information
         build_dict = await self.get_build_dict()
         if build_dict is not None:
-            self.builder_dict = await self.master.db.builders.getBuilder(build_dict.builderid)
-            return self.builder_dict
+            builder_dict = self.builder_dict = await self.master.db.builders.getBuilder(
+                build_dict.builderid
+            )
+            return builder_dict
 
         self.builder_dict = None
         return None
@@ -333,17 +344,17 @@ class NestedBuildDataRetriever:
             return self.log_dict
 
         if 'logid' in self.args:
-            self.log_dict = await self.master.db.logs.getLog(self.args['logid'])
-            return self.log_dict
+            log_dict = self.log_dict = await self.master.db.logs.getLog(self.args['logid'])
+            return log_dict
 
         step_dict = await self.get_step_dict()
         if step_dict is None:
             self.log_dict = None
             return None
-        self.log_dict = await self.master.db.logs.getLogBySlug(
+        log_dict = self.log_dict = await self.master.db.logs.getLogBySlug(
             step_dict.id, self.args.get('log_slug')
         )
-        return self.log_dict
+        return log_dict
 
     @async_to_deferred
     async def get_log_id(self):
@@ -364,8 +375,10 @@ class NestedBuildDataRetriever:
         if build_dict is not None:
             workerid = build_dict.workerid
             if workerid is not None:
-                self.worker_dict = await self.master.db.workers.getWorker(workerid=workerid)
-                return self.worker_dict
+                worker_dict = self.worker_dict = await self.master.db.workers.getWorker(
+                    workerid=workerid
+                )
+                return worker_dict
 
         self.worker_dict = None
         return None
@@ -411,8 +424,8 @@ class ListResult(UserList):
 
     def __repr__(self):
         return (
-            f"ListResult({repr(self.data)}, offset={repr(self.offset)}, "
-            f"total={repr(self.total)}, limit={repr(self.limit)})"
+            f"ListResult({self.data!r}, offset={self.offset!r}, "
+            f"total={self.total!r}, limit={self.limit!r})"
         )
 
     def __eq__(self, other):

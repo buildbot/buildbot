@@ -17,6 +17,8 @@
 Steps and objects related to pbuilder
 """
 
+from __future__ import annotations
+
 import re
 import stat
 import time
@@ -36,22 +38,22 @@ class DebPbuilder(WarningCountingShellCommand):
 
     name = "pbuilder"
 
-    haltOnFailure = 1
-    flunkOnFailure = 1
+    haltOnFailure = True
+    flunkOnFailure = True
     description = ["building"]
     descriptionDone = ["built"]
 
     warningPattern = r".*(warning[: ]|\sW: ).*"
 
     architecture = None
-    distribution = 'stable'
+    distribution: str | None = 'stable'
     basetgz = None
     _default_basetgz = "/var/cache/pbuilder/{distribution}-{architecture}-buildbot.tgz"
     mirror = "http://cdn.debian.net/debian/"
     othermirror = ""
-    extrapackages = []
+    extrapackages: list[str] = []
     keyring = None
-    components = None
+    components: str | None = None
 
     maxAge = 60 * 60 * 24 * 7
     pbuilder = '/usr/sbin/pbuilder'

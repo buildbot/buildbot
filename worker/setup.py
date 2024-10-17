@@ -84,9 +84,6 @@ setup_args = {
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
@@ -124,7 +121,7 @@ setup_args = {
         'console_scripts': [
             'buildbot-worker=buildbot_worker.scripts.runner:run',
             # this will also be shipped on non windows :-(
-            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',  # noqa pylint: disable=line-too-long
+            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
         ]
     },
 }

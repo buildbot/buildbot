@@ -22,6 +22,7 @@ import {
   useDataApiQuery
 } from "buildbot-data-js";
 import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {useLoadMoreItemsState} from "../../../../ui";
 import {LoadingSpan} from "../../components/LoadingSpan/LoadingSpan";
 import {
   PendingBuildRequestsTable
@@ -31,10 +32,13 @@ import {TableHeading} from "../../components/TableHeading/TableHeading";
 export const PendingBuildRequestsView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const buildRequestFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
+  const initialRequestsFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
+  const [requestsFetchLimit, onLoadMoreRequests] =
+    useLoadMoreItemsState(initialRequestsFetchLimit, initialRequestsFetchLimit);
+
   const buildRequestsQuery = useDataApiQuery(
     () => Buildrequest.getAll(accessor, {query: {
-      limit: buildRequestFetchLimit,
+      limit: requestsFetchLimit,
       order: ['-priority', '-submitted_at'],
       claimed: false
     }}));
@@ -48,7 +52,9 @@ export const PendingBuildRequestsView = observer(() => {
     }
 
     return (
-      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}/>
+      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}
+                                 fetchLimit={requestsFetchLimit}
+                                 onLoadMore={onLoadMoreRequests}/>
     );
   }
 

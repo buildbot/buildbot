@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -21,12 +22,12 @@ from buildbot.data import types
 
 
 class TypeMixin:
-    klass = None
-    good = []
-    bad = []
-    stringValues = []
-    badStringValues = []
-    cmpResults = []
+    klass: type[types.Type] | None = None
+    good: list[object] = []
+    bad: list[object] = []
+    stringValues: list[tuple[str | bytes, object]] = []
+    badStringValues: list[str | bytes] = []
+    cmpResults: list[tuple[object, str | bytes, int]] = []
 
     def setUp(self):
         self.ty = self.makeInstance()
@@ -37,25 +38,25 @@ class TypeMixin:
     def test_valueFromString(self):
         for string, expValue in self.stringValues:
             self.assertEqual(
-                self.ty.valueFromString(string), expValue, f"value of string {repr(string)}"
+                self.ty.valueFromString(string), expValue, f"value of string {string!r}"
             )
         for string in self.badStringValues:
-            with self.assertRaises(Exception):
-                self.ty.valueFromString(string, f"expected error for {repr(string)}")
+            with self.assertRaises(TypeError):
+                self.ty.valueFromString(string, f"expected error for {string!r}")
 
     def test_cmp(self):
         for val, string, expResult in self.cmpResults:
             self.assertEqual(
-                self.ty.cmp(val, string), expResult, f"compare of {repr(val)} and {repr(string)}"
+                self.ty.cmp(val, string), expResult, f"compare of {val!r} and {string!r}"
             )
 
     def test_validate(self):
         for o in self.good:
             errors = list(self.ty.validate(repr(o), o))
-            self.assertEqual(errors, [], f"{repr(o)} -> {errors}")
+            self.assertEqual(errors, [], f"{o!r} -> {errors}")
         for o in self.bad:
             errors = list(self.ty.validate(repr(o), o))
-            self.assertNotEqual(errors, [], f"no error for {repr(o)}")
+            self.assertNotEqual(errors, [], f"no error for {o!r}")
 
 
 class NoneOk(TypeMixin, unittest.TestCase):

@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import sys
+from typing import Any
 
 import twisted
 from twisted.trial import unittest
@@ -59,15 +62,15 @@ def add_debugging_monkeypatches():
 
 add_debugging_monkeypatches()
 
-__all__ = []
+__all__: list[Any] = []
 
 # import mock so we bail out early if it's not installed
 try:
     from unittest import mock
 
-    [mock]
+    _ = mock
 except ImportError:
     try:
         from unittest import mock
-    except ImportError:
-        raise ImportError("Buildbot tests require the 'mock' module; try 'pip install mock'")
+    except ImportError as e:
+        raise ImportError("Buildbot tests require the 'mock' module; try 'pip install mock'") from e

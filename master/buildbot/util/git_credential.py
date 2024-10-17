@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from typing import NamedTuple
+from typing import Sequence
 
 from zope.interface import implementer
 
@@ -26,7 +28,7 @@ from buildbot.util.twisted import async_to_deferred
 
 @implementer(IRenderable)
 class GitCredentialInputRenderer(ComparableMixin):
-    compare_attrs = ('_credential_attributes',)
+    compare_attrs: ClassVar[Sequence[str]] = ('_credential_attributes',)
 
     def __init__(self, **credential_attributes) -> None:
         self._credential_attributes: dict[str, IRenderable | str] = credential_attributes

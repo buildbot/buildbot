@@ -37,7 +37,7 @@ def isIdentifier(maxLength, obj):
 
 def forceIdentifier(maxLength, s):
     if not isinstance(s, str):
-        raise TypeError(f"{repr(str)} cannot be coerced to an identifier")
+        raise TypeError(f"{str!r} cannot be coerced to an identifier")
 
     # usually bytes2unicode can handle it
     s = util.bytes2unicode(s)

@@ -16,17 +16,17 @@
 */
 
 import {describe, expect, it} from "vitest";
-import renderer from 'react-test-renderer';
+import {render} from '@testing-library/react';
 import {MemoryRouter} from "react-router-dom";
 import {PropertiesTable} from './PropertiesTable';
 
 function assertRenderSnapshot(properties: Map<string, any>) {
-  const component = renderer.create(
+  const component = render(
     <MemoryRouter>
       <PropertiesTable properties={properties}/>
     </MemoryRouter>
   );
-  expect(component.toJSON()).toMatchSnapshot();
+  expect(component.asFragment()).toMatchSnapshot();
 }
 
 describe('PropertiesTable component', function() {

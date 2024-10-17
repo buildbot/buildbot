@@ -36,12 +36,12 @@ non_callable = 1
 
 class Tests(SynchronousTestCase):
     def test_raises_not_found(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             with patchForDelay(__name__ + '.notfound'):
                 pass
 
     def test_raises_not_callable(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             with patchForDelay(__name__ + '.non_callable'):
                 pass
 

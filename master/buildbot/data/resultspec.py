@@ -103,7 +103,7 @@ class FieldBase:
         # only support string values, because currently there are no queries against lists in SQL
     }
 
-    def __init__(self, field: bytes, op: str, values: Sequence):
+    def __init__(self, field: bytes | str, op: str, values: Sequence | set):
         self.field = field
         self.op = op
         self.values = values

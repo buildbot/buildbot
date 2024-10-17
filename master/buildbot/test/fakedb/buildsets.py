@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING
+from typing import Any
+from typing import Generator
 
 from twisted.internet import defer
 
@@ -138,7 +140,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         priority=0,
     ):
         # We've gotten this wrong a couple times.
-        assert isinstance(waited_for, bool), f'waited_for should be boolean: {repr(waited_for)}'
+        assert isinstance(waited_for, bool), f'waited_for should be boolean: {waited_for!r}'
 
         # calculate submitted at
         if submitted_at is not None:
@@ -223,11 +225,19 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return defer.succeed(rv)
 
     @defer.inlineCallbacks
-    def getRecentBuildsets(self, count=None, branch=None, repository=None, complete=None):
+    def getRecentBuildsets(
+        self,
+        count: int | None = None,
+        branch: str | None = None,
+        repository: str | None = None,
+        complete: bool | None = None,
+    ) -> Generator[defer.Deferred[Any], None, list[buildsets.BuildSetModel]]:
         if not count:
             return []
-        rv = []
-        for bs in (yield self.getBuildsets(complete=complete)):
+        rv: list[buildsets.BuildSetModel] = []
+        buildsets = yield self.getBuildsets(complete=complete)
+        assert buildsets is not None
+        for bs in buildsets:
             if branch or repository:
                 ok = True
                 if not bs.sourcestamps:

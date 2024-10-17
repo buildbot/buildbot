@@ -16,6 +16,8 @@
 HVAC based providers
 """
 
+from __future__ import annotations
+
 import importlib.metadata
 
 from packaging.version import parse as parse_version
@@ -66,7 +68,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
     In case more secret engines are going to be supported, each engine should have it's own class.
     """
 
-    name = 'SecretInVaultKv'
+    name: str | None = 'SecretInVaultKv'  # type: ignore[assignment]
 
     def checkConfig(
         self,
@@ -80,7 +82,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         try:
             import hvac
 
-            [hvac]
+            _ = hvac
         except ImportError:  # pragma: no cover
             config.error(
                 f"{self.__class__.__name__} needs the hvac package installed "

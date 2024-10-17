@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -21,7 +22,7 @@ from buildbot.util import service
 
 
 class FakeMachineManager(service.AsyncMultiService):
-    name = 'MachineManager'
+    name: str | None = 'MachineManager'  # type: ignore
 
     @property
     def machines(self):

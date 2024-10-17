@@ -420,7 +420,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # check that correct exception was raised
         with self.assertRaisesRegex(
-            create_worker.CreateWorkerError, "error creating directory dummy: dummy-error"
+            create_worker.CreateWorkerError, "error creating directory dummy"
         ):
             create_worker._makeBaseDir("dummy", False)
 
@@ -450,7 +450,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpOpenError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = f"error reading {self.tac_file_path}: dummy-msg"
+        expected_message = f"error reading {self.tac_file_path}"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -463,7 +463,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpReadError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = f"error reading {self.tac_file_path}: dummy-msg"
+        expected_message = f"error reading {self.tac_file_path}"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -476,7 +476,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         self.setUpWriteError(0)
 
         # call _makeBuildbotTac() and check that correct exception is raised
-        expected_message = f"could not write {self.tac_file_path}: dummy-msg"
+        expected_message = f"could not write {self.tac_file_path}"
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
@@ -605,7 +605,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         # call _makeInfoFiles() and check that correct exception is raised
         with self.assertRaisesRegex(
             create_worker.CreateWorkerError,
-            "error creating directory {}: err-msg".format(_regexp_path("bdir", "info")),
+            "error creating directory {}".format(_regexp_path("bdir", "info")),
         ):
             create_worker._makeInfoFiles("bdir", quiet)
 
@@ -645,16 +645,16 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
 
         # set-up requested IO error
         if error_type == "open":
-            self.setUpOpenError(strerror="info-err-msg")
+            self.setUpOpenError()
         elif error_type == "write":
-            self.setUpWriteError(strerror="info-err-msg")
+            self.setUpWriteError()
         else:
             self.fail(f"unexpected error_type '{error_type}'")
 
         # call _makeInfoFiles() and check that correct exception is raised
         with self.assertRaisesRegex(
             create_worker.CreateWorkerError,
-            "could not write {}: info-err-msg".format(_regexp_path("bdir", "info", "admin")),
+            "could not write {}".format(_regexp_path("bdir", "info", "admin")),
         ):
             create_worker._makeInfoFiles("bdir", quiet)
 

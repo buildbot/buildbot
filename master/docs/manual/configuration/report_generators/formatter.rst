@@ -53,9 +53,19 @@ The constructor of the class takes the following arguments:
     Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
 
 ``want_logs_content``
-    This parameter (defaults to False) will extend the content of the logs with the log contents of each steps from the build.
-    This implies ``want_logs`` and ``wantSteps`` to be `True`.
-    Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
+    This parameter (defaults to ``False``) controls whether to include log content together with log
+    metadata as controlled by ``want_logs``.
+
+    ``False`` disables log content inclusion. ``True`` enables log content inclusion for all logs.
+    A list of strings specifies which logs to include. The logs can be included by name; or
+    by step name and log name separated by dot character. If log name is specified, logs with
+    that name will be included regardless of the step it is in. If both step and log names
+    are specified, then logs with that name will be included only from the specific step.
+
+    ``want_logs_content`` being not ``False`` implies ``want_logs=True`` and ``want_steps=True``.
+
+    Enabling `want_logs_content` dumps the *full* content of logs and may consume lots of
+    memory and CPU depending on the log size.
 
 ``extra_info_cb``
     This parameter (defaults to ``None``) can be used to customize extra information that is passed

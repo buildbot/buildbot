@@ -31,8 +31,8 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
 
     renderables = ['dist']
     name = "rpmbuilder"
-    haltOnFailure = 1
-    flunkOnFailure = 1
+    haltOnFailure = True
+    flunkOnFailure = True
     description = ["RPMBUILD"]
     descriptionDone = ["RPMBUILD"]
 

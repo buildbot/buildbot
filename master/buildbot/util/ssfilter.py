@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import re
+from typing import ClassVar
+from typing import Sequence
 
 from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
@@ -72,7 +74,7 @@ def extract_filter_values_dict_regex(values, filter_name):
 
 
 class _FilterExactMatch(ComparableMixin):
-    compare_attrs = ('prop', 'values')
+    compare_attrs: ClassVar[Sequence[str]] = ('prop', 'values')
 
     def __init__(self, prop, values):
         self.prop = prop
@@ -86,7 +88,7 @@ class _FilterExactMatch(ComparableMixin):
 
 
 class _FilterExactMatchInverse(ComparableMixin):
-    compare_attrs = ('prop', 'values')
+    compare_attrs: ClassVar[Sequence[str]] = ('prop', 'values')
 
     def __init__(self, prop, values):
         self.prop = prop
@@ -100,7 +102,7 @@ class _FilterExactMatchInverse(ComparableMixin):
 
 
 class _FilterRegex(ComparableMixin):
-    compare_attrs = ('prop', 'regexes')
+    compare_attrs: ClassVar[Sequence[str]] = ('prop', 'regexes')
 
     def __init__(self, prop, regexes):
         self.prop = prop
@@ -124,7 +126,7 @@ class _FilterRegex(ComparableMixin):
 
 
 class _FilterRegexInverse(ComparableMixin):
-    compare_attrs = ('prop', 'regexes')
+    compare_attrs: ClassVar[Sequence[str]] = ('prop', 'regexes')
 
     def __init__(self, prop, regexes):
         self.prop = prop
@@ -211,7 +213,7 @@ def _create_property_filters(eq, not_eq, regex, not_regex, arg_prefix):
 
 
 class SourceStampFilter(ComparableMixin):
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         'filter_fn',
         'filters',
     )

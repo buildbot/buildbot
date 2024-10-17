@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -20,7 +21,7 @@ from buildbot.util import service
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    name = 'debug_services'
+    name: str | None = 'debug_services'  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()

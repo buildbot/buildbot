@@ -67,10 +67,10 @@ class QueueRef:
         try:
             x = self.callback(routing_key, data)
         except Exception:
-            log.err(failure.Failure(), f'while invoking {repr(self.callback)}')
+            log.err(failure.Failure(), f'while invoking {self.callback!r}')
             return None
         if isinstance(x, defer.Deferred):
-            x.addErrback(log.err, f'while invoking {repr(self.callback)}')
+            x.addErrback(log.err, f'while invoking {self.callback!r}')
         return x
 
     def stopConsuming(self):

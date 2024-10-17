@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import cgi
 import datetime
 import fnmatch
 import json
@@ -28,6 +27,8 @@ from twisted.internet import defer
 from twisted.internet.error import ConnectionDone
 from twisted.python import log
 from twisted.web.error import Error
+from twisted.web.resource import EncodingResourceWrapper
+from twisted.web.server import GzipEncoderFactory
 
 from buildbot.data import exceptions
 from buildbot.data.base import EndpointKind
@@ -36,6 +37,8 @@ from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
+from buildbot.www.encoding import BrotliEncoderFactory
+from buildbot.www.encoding import ZstandardEncoderFactory
 
 if TYPE_CHECKING:
     from typing import Any
@@ -53,12 +56,13 @@ class BadJsonRpc2(Exception):
 
 
 class ContentTypeParser:
-    def __init__(self, contenttype):
+    def __init__(self, contenttype: str | bytes | None) -> None:
         self.typeheader = contenttype
 
-    def gettype(self):
-        mimetype, _ = cgi.parse_header(bytes2unicode(self.typeheader))
-        return mimetype
+    def gettype(self) -> str | None:
+        if self.typeheader is None:
+            return None
+        return bytes2unicode(self.typeheader).split(';', 1)[0]
 
 
 URL_ENCODED = b"application/x-www-form-urlencoded"
@@ -66,7 +70,7 @@ JSON_ENCODED = b"application/json"
 
 
 class RestRootResource(resource.Resource):
-    version_classes = {}
+    version_classes: dict[int, type[V2RootResource]] = {}
 
     @classmethod
     def addApiVersion(cls, version, version_cls):
@@ -77,11 +81,17 @@ class RestRootResource(resource.Resource):
         super().__init__(master)
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
+        encoders = [
+            BrotliEncoderFactory(),
+            ZstandardEncoderFactory(),
+            GzipEncoderFactory(),
+        ]
+
         latest = max(list(self.version_classes))
         for version, klass in self.version_classes.items():
             if version < min_vers:
                 continue
-            child = klass(master)
+            child = EncodingResourceWrapper(klass(master), encoders)
             child_path = f'v{version}'
             child_path = unicode2bytes(child_path)
             self.putChild(child_path, child)
@@ -181,7 +191,7 @@ class V2RootResource(resource.Resource):
 
     # JSONRPC2 support
 
-    def decodeJsonRPC2(self, request):
+    def decodeJsonRPC2(self, request: server.Request):
         # Verify the content-type.  Browsers are easily convinced to send
         # POST data to arbitrary URLs via 'form' elements, but they won't
         # use the application/json content-type.
@@ -191,9 +201,10 @@ class V2RootResource(resource.Resource):
             )
 
         try:
+            assert request.content is not None
             data = json.loads(bytes2unicode(request.content.read()))
         except Exception as e:
-            raise BadJsonRpc2(f"JSON parse error: {str(e)}", JSONRPC_CODES["parse_error"]) from e
+            raise BadJsonRpc2(f"JSON parse error: {e!s}", JSONRPC_CODES["parse_error"]) from e
 
         if isinstance(data, list):
             raise BadJsonRpc2(
@@ -240,7 +251,7 @@ class V2RootResource(resource.Resource):
             jsonRpcReply['id'] = id
             ep, kwargs = yield self.getEndpoint(request, method, params)
             userinfos = self.master.www.getUserInfos(request)
-            if 'anonymous' in userinfos and userinfos['anonymous']:
+            if userinfos.get('anonymous'):
                 owner = "anonymous"
             else:
                 for field in ('email', 'username', 'full_name'):
@@ -289,8 +300,7 @@ class V2RootResource(resource.Resource):
         self._write_rest_error(
             request=request,
             msg=(
-                f"not found while getting from {repr(ep)} with "
-                f"arguments {repr(rspec)} and {str(kwargs)}"
+                f"not found while getting from {ep!r} with " f"arguments {rspec!r} and {kwargs!s}"
             ),
         )
 

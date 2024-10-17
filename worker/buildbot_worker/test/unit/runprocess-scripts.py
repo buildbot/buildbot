@@ -18,12 +18,15 @@
 # have access to any of the Buildbot source.  Functions here should be kept
 # very simple!
 
+from __future__ import annotations
+
 import os
 import select
 import signal
 import subprocess
 import sys
 import time
+from typing import Callable
 
 import psutil
 
@@ -31,7 +34,7 @@ import psutil
 
 
 def invoke_script(function, *args):
-    cmd = [sys.executable, __file__, function] + list(args)
+    cmd = [sys.executable, __file__, function, *list(args)]
     if os.name == 'nt':
         DETACHED_PROCESS = 0x00000008
         subprocess.Popen(
@@ -61,7 +64,7 @@ def sleep_forever():
         time.sleep(10)
 
 
-script_fns = {}
+script_fns: dict[str, Callable] = {}
 
 
 def script(fn):
@@ -124,13 +127,13 @@ def assert_stdin_closed():
         if r == [0]:
             return  # success!
         if time.time() > bail_at:
-            assert False  # failure :(
+            raise AssertionError()  # failure :(
 
 
 # make sure this process dies if necessary
 
 if not hasattr(signal, 'alarm'):
-    signal.alarm = lambda t: None
+    signal.alarm = lambda t: 0
 signal.alarm(110)  # die after 110 seconds
 
 # dispatcher

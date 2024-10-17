@@ -16,7 +16,8 @@
 */
 
 import {observer} from "mobx-react";
-import {SettingItem, SettingValue} from "../../../plugins/GlobalSettings";
+import {SettingValue} from "buildbot-plugin-support";;
+import {SettingItem} from "../../../plugins/GlobalSettings";
 
 type FieldStringProps = {
   item: SettingItem;

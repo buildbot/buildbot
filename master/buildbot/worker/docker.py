@@ -35,10 +35,9 @@ try:
     import docker
     from docker.errors import NotFound
 
-    _hush_pyflakes = [docker]
-    docker_py_version = parse_version(docker.__version__)
+    docker_py_version = parse_version(docker.__version__)  # type: ignore[attr-defined]
 except ImportError:
-    docker = None
+    docker = None  # type: ignore[assignment]
     docker_py_version = parse_version("0.0")
 
 
@@ -398,7 +397,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             docker_client.close()
             # The following was noticed in certain usage of Docker on Windows
             if 'The container operating system does not match the host operating system' in str(e):
-                msg = f'Image used for build is wrong: {str(e)}'
+                msg = f'Image used for build is wrong: {e!s}'
                 raise LatentWorkerCannotSubstantiate(msg) from e
             raise
 

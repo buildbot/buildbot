@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import calendar
 import datetime
 import os
@@ -115,7 +117,7 @@ class BuildbotSession(server.Session):
         else:
             cookieString = b"TWISTED_SECURE_SESSION"
 
-        cookiename = b"_".join([cookieString] + request.sitepath)
+        cookiename = b"_".join([cookieString, *request.sitepath])
         request.addCookie(cookiename, self.uid, path=b"/", secure=secure)
 
     def expire(self):
@@ -188,7 +190,7 @@ class BuildbotSite(server.Site):
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    name = 'www'
+    name: str | None = 'www'  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()
@@ -274,8 +276,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def refresh_base_plugin_name(self, new_config):
         if 'base_react' in new_config.www.get('plugins', {}):
             config.error(
-                "base_react is no longer supported. Remove buildbot-www-react and install "
-                "buildbot-www package"
+                "'base_react' plugin is no longer supported. Use 'base' plugin in master.cfg "
+                "BuildmasterConfig['www'] dictionary instead. Remove 'buildbot-www-react' and "
+                "install 'buildbot-www' package."
             )
         self.base_plugin_name = 'base'
 
@@ -294,7 +297,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
         for key, plugin in list(new_config.www.get('plugins', {}).items()):
-            log.msg(f"initializing www plugin {repr(key)}")
+            log.msg(f"initializing www plugin {key!r}")
             if key not in self.apps:
                 raise RuntimeError(f"could not find plugin {key}; is it installed?")
             app = self.apps.get(key)
@@ -303,7 +306,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             plugin_root.putChild(unicode2bytes(key), app.resource)
 
         for plugin_name in set(self.apps.names) - known_plugins:
-            log.msg(f"NOTE: www plugin {repr(plugin_name)} is installed but not configured")
+            log.msg(f"NOTE: www plugin {plugin_name!r} is installed but not configured")
 
     def setupSite(self, new_config):
         self.refresh_base_plugin_name(new_config)
@@ -330,7 +333,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # /api
         root.putChild(b'api', rest.RestRootResource(self.master))
-        [graphql]  # import is made for side effects
+        _ = graphql  # import is made for side effects
 
         # /config
         root.putChild(b'config', wwwconfig.ConfigResource(self.master))

@@ -18,6 +18,9 @@ from __future__ import annotations
 import inspect
 import sys
 from typing import TYPE_CHECKING
+from typing import Callable
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -40,6 +43,7 @@ from buildbot.config.checks import check_param_str_none
 from buildbot.db.model import Model
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
+from buildbot.locks import BaseLock
 from buildbot.process import log as plog
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -90,7 +94,7 @@ class _BuildStepFactory(util.ComparableMixin):
     easier to test that the right factories are getting created.
     """
 
-    compare_attrs = ('factory', 'args', 'kwargs')
+    compare_attrs: ClassVar[Sequence[str]] = ('factory', 'args', 'kwargs')
 
     def __init__(self, step_class, *args, **kwargs):
         self.step_class = step_class
@@ -101,7 +105,7 @@ class _BuildStepFactory(util.ComparableMixin):
         try:
             step = object.__new__(self.step_class)
             step._factory = self
-            step.__init__(*self.args, **self.kwargs)  # noqa pylint: disable=unnecessary-dunder-call
+            step.__init__(*self.args, **self.kwargs)
             return step
         except Exception:
             log.msg(
@@ -130,7 +134,7 @@ def create_step_from_step_or_factory(step_or_factory):
 
 
 class BuildStepWrapperMixin:
-    __init_completed = False
+    __init_completed: bool = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -147,7 +151,7 @@ class BuildStepWrapperMixin:
 
 # This is also needed for comparisons to work because ComparableMixin requires type(x) and
 # x.__class__ to be equal in order to perform comparison at all.
-_buildstep_wrapper_cache = {}
+_buildstep_wrapper_cache: dict[int, type[BuildStep]] = {}
 
 
 def _create_buildstep_wrapper_class(klass):
@@ -169,14 +173,15 @@ class BuildStep(
     # constructed. This works by creating a new IBuildStepFactory in __new__, retrieving it via
     # get_step_factory() and then calling buildStep() on that factory.
 
-    alwaysRun = False
-    doStepIf = True
-    hideStepIf = False
-    compare_attrs = ("_factory",)
+    alwaysRun: bool = False
+    doStepIf: bool | Callable[[BuildStep], bool] = True
+    hideStepIf: bool | Callable[[int, BuildStep], bool] = False
+    compare_attrs: ClassVar[Sequence[str]] = ("_factory",)
     # properties set on a build step are, by nature, always runtime properties
-    set_runtime_properties = True
+    set_runtime_properties: bool = True
 
-    renderables = results.ResultComputingConfigMixin.resultConfig + [
+    renderables: Sequence[str] = [
+        *results.ResultComputingConfigMixin.resultConfig,
         'alwaysRun',
         'description',
         'descriptionDone',
@@ -193,7 +198,7 @@ class BuildStep(
     # arguments to the RemoteShellCommand that it creates). Such delegating
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
-    _params_config = [
+    _params_config: list[tuple[str, Callable | None]] = [
         ('alwaysRun', check_param_bool),
         ('description', None),
         ('descriptionDone', None),
@@ -214,25 +219,27 @@ class BuildStep(
         ('workdir', check_param_str_none),
     ]
 
-    _params_names = [arg for arg, _ in _params_config]
+    _params_names: list[str] = [arg for arg, _ in _params_config]
 
-    name = "generic"
-    description = None  # set this to a list of short strings to override
-    descriptionDone = None  # alternate description when the step is complete
-    descriptionSuffix = None  # extra information to append to suffix
-    updateBuildSummaryPolicy = None
-    locks = []
-    _locks_to_acquire = []
-    progressMetrics = ()  # 'time' is implicit
-    useProgress = True  # set to False if step is really unpredictable
+    name: str = "generic"
+    description: str | list[str] | None = None  # set this to a list of short strings to override
+    descriptionDone: str | list[str] | None = (
+        None  # alternate description when the step is complete
+    )
+    descriptionSuffix: str | list[str] | None = None  # extra information to append to suffix
+    updateBuildSummaryPolicy: list[int] | None | bool = None
+    locks: list[str] | None = None
+    _locks_to_acquire: list[BaseLock] = []
+    progressMetrics: tuple[str, ...] = ()  # 'time' is implicit
+    useProgress: bool = True  # set to False if step is really unpredictable
     build: Build | None = None
-    step_status = None
-    progress = None
-    logEncoding = None
-    cmd = None
-    rendered = False  # true if attributes are rendered
-    _workdir = None
-    _waitingForLocks = False
+    step_status: None = None
+    progress: None = None
+    logEncoding: str | None = None
+    cmd: remotecommand.RemoteCommand | None = None
+    rendered: bool = False  # true if attributes are rendered
+    _workdir: str | None = None
+    _waitingForLocks: bool = False
 
     def __init__(self, **kwargs):
         self.worker = None
@@ -276,7 +283,7 @@ class BuildStep(
             config.error(
                 "BuildStep updateBuildSummaryPolicy must be "
                 "a list of result ids or boolean but it is "
-                f"{repr(self.updateBuildSummaryPolicy)}"
+                f"{self.updateBuildSummaryPolicy!r}"
             )
         self._acquiringLocks = []
         self.stopped = False
@@ -352,7 +359,7 @@ class BuildStep(
                     # python will then swallow the attribute error and call
                     # __getattr__ from worker_transition
                     _, _, traceback = sys.exc_info()
-                    raise CallableAttributeError(e).with_traceback(traceback)
+                    raise CallableAttributeError(e).with_traceback(traceback) from e
                     # we re-raise the original exception by changing its type,
                     # but keeping its stacktrace
             else:
@@ -452,7 +459,7 @@ class BuildStep(
 
         stepResult = summary.get('step', 'finished')
         if not isinstance(stepResult, str):
-            raise TypeError(f"step result string must be unicode (got {repr(stepResult)})")
+            raise TypeError(f"step result string must be unicode (got {stepResult!r})")
         if self.stepid is not None:
             stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
             yield self.master.data.updates.setStepStateString(self.stepid, stepResult)
@@ -892,20 +899,20 @@ class CommandMixin:
 
 
 class ShellMixin:
-    command = None
-    env = {}
+    command: list[str] | None = None
+    env: dict[str, str] = {}
     want_stdout = True
     want_stderr = True
-    usePTY = None
-    logfiles = {}
-    lazylogfiles = {}
+    usePTY: bool | None = None
+    logfiles: dict[str, str] = {}
+    lazylogfiles: bool = False
     timeout = 1200
-    maxTime = None
-    max_lines = None
+    maxTime: float | None = None
+    max_lines: int | None = None
     logEnviron = True
     interruptSignal = 'KILL'
-    sigtermTime = None
-    initialStdin = None
+    sigtermTime: int | None = None
+    initialStdin: str | None = None
     decodeRC = {0: SUCCESS}
 
     _shell_mixin_arg_config = [
@@ -926,7 +933,7 @@ class ShellMixin:
         ('initialStdin', check_param_str_none),
         ('decodeRC', None),
     ]
-    renderables = [arg for arg, _ in _shell_mixin_arg_config]
+    renderables: Sequence[str] = [arg for arg, _ in _shell_mixin_arg_config]
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=None):
         constructorArgs = constructorArgs.copy()

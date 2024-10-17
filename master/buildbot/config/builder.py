@@ -85,8 +85,8 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         if workername:
             if not isinstance(workername, str):
-                error(f"builder '{name}': workername must be a string but it is {repr(workername)}")
-            workernames = workernames + [workername]
+                error(f"builder '{name}': workername must be a string but it is {workername!r}")
+            workernames = [*workernames, workername]
         if not workernames:
             error(f"builder '{name}': at least one workername is required")
 

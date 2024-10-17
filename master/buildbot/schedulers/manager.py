@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 
 
 class SchedulerManager(MeasuredBuildbotServiceManager):
-    name = "SchedulerManager"
+    name: str | None = "SchedulerManager"  # type: ignore[assignment]
     managed_services_name = "schedulers"
     config_attr = "schedulers"

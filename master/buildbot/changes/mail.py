@@ -17,6 +17,8 @@
 Parse various kinds of 'CVS notify' email.
 """
 
+from __future__ import annotations
+
 import calendar
 import datetime
 import re
@@ -26,6 +28,8 @@ from email.iterators import body_line_iterator
 from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -40,8 +44,9 @@ from buildbot.util.maildir import MaildirService
 class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
 
-    compare_attrs = ("basedir", "pollInterval", "prefix")
-    name = 'MaildirSource'
+    compare_attrs: ClassVar[Sequence[str]] = ("basedir", "pollInterval", "prefix")
+    # twisted is marked as typed, but doesn't specify this type correctly
+    name: str | None = 'MaildirSource'  # type: ignore[assignment]
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
         super().__init__(maildir)
@@ -219,11 +224,11 @@ class CVSMaildirSource(MaildirSource):
             fileList = fileList[len(path) :].strip()
             singleFileRE = re.compile(
                 r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)'
-            )  # noqa pylint: disable=line-too-long
+            )
         elif cvsmode == '1.12':
             singleFileRE = re.compile(
                 r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)'
-            )  # noqa pylint: disable=line-too-long
+            )
             if path is None:
                 raise ValueError('CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
         else:
@@ -435,7 +440,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 class BzrLaunchpadEmailMaildirSource(MaildirSource):
     name = "Launchpad"
 
-    compare_attrs = ("branchMap", "defaultBranch")
+    compare_attrs: ClassVar[Sequence[str]] = ("branchMap", "defaultBranch")
 
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap
@@ -500,7 +505,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             match = re.search(
                 r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$",
                 line,
-            )  # noqa pylint: disable=line-too-long
+            )
             if match:
                 datestr = match.group(1)
                 tz_sign = match.group(2)

@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import datetime
+from typing import ClassVar
+from typing import Sequence
 
 import croniter
 from twisted.internet import defer
@@ -78,7 +80,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
     before the service stops.
     """
 
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         'reason',
         'createAbsoluteSourceStamps',
         'onlyIfChanged',
@@ -360,7 +362,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
 
 class Periodic(Timed):
-    compare_attrs = ('periodicBuildTimer',)
+    compare_attrs: ClassVar[Sequence[str]] = ('periodicBuildTimer',)
 
     def __init__(
         self,
@@ -382,7 +384,7 @@ class Periodic(Timed):
 
 
 class NightlyBase(Timed):
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         "minute",
         "hour",
         "dayOfMonth",

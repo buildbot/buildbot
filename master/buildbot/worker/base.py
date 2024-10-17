@@ -13,10 +13,12 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from __future__ import annotations
 
 import time
 
 from twisted.internet import defer
+from twisted.internet.base import DelayedCall
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from zope.interface import implementer
@@ -46,7 +48,7 @@ class AbstractWorker(service.BuildbotService):
     # reconfig workers after builders
     reconfig_priority = 64
 
-    quarantine_timer = None
+    quarantine_timer: DelayedCall | None = None
     quarantine_timeout = quarantine_initial_timeout = 10
     quarantine_max_timeout = 60 * 60
     start_missing_on_startup = True
@@ -137,7 +139,7 @@ class AbstractWorker(service.BuildbotService):
         self.notify_on_missing = notify_on_missing
         for i in notify_on_missing:
             if not isinstance(i, str):
-                config.error(f'notify_on_missing arg {repr(i)} is not a string')
+                config.error(f'notify_on_missing arg {i!r} is not a string')
 
         self.missing_timeout = missing_timeout
         self.missing_timer = None
@@ -155,7 +157,7 @@ class AbstractWorker(service.BuildbotService):
         self._configured_builderid_list = None
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {repr(self.name)}>"
+        return f"<{self.__class__.__name__} {self.name!r}>"
 
     @property
     def workername(self):

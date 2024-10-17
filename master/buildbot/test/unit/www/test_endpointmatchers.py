@@ -99,7 +99,7 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
         ret = yield self.matcher.match(("builds", "15"))
         self.assertMatch(ret)
 
-    test_build.skip = "ViewBuildsEndpointMatcher is not implemented yet"
+    test_build.skip = "ViewBuildsEndpointMatcher is not implemented yet"  # type: ignore[attr-defined]
 
 
 class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
 from buildbot.util.ssfilter import _create_branch_filters
@@ -24,7 +27,7 @@ class ChangeFilter(ComparableMixin):
     # NOTE: If users use a filter_fn, we have no way to determine whether it has
     # changed at reconfig, so the scheduler will always be restarted.  That's as
     # good as Python can do.
-    compare_attrs = (
+    compare_attrs: ClassVar[Sequence[str]] = (
         'filter_fn',
         'filters',
         'property_filters',

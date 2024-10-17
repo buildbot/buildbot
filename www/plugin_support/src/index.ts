@@ -37,13 +37,13 @@ export type SettingItemConfig = {
   name: string;
   type: SettingType;
   caption: string;
-  choices?: string[];
+  choices?: string[]; // only when type == "choice_combo"
   defaultValue: SettingValue;
 }
 
 export type SettingGroupConfig = {
   name: string;
-  caption: string;
+  caption: string | null;
   items: SettingItemConfig[];
 }
 

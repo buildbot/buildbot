@@ -1,0 +1,58 @@
+version: '2'
+services:
+
+  lb:
+    image: dockercloud/haproxy
+    links:
+      - buildbot
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    expose:
+        - 8080
+        - 9989
+    ports:
+      - 8080:8080
+      - 9989:9989   # for external workers
+
+  buildbot:
+    image: buildbot/buildbot-master:latest
+    env_file: db.env
+    environment:
+        - BUILDBOT_CONFIG_DIR=config
+        - BUILDBOT_CONFIG_URL=https://github.com/buildbot/buildbot-docker-example-config/archive/master.tar.gz
+        - BUILDBOT_WORKER_PORT=9989
+        - BUILDBOT_WEB_URL=http://localhost:8080/
+        - BUILDBOT_WEB_PORT=8080
+        - BUILDBOT_MQ_URL=ws://mq:8080/ws
+        - BUILDBOT_MQ_DEBUG=true
+        - BUILDBOT_MQ_REALM=realm1
+        - TCP_PORTS=8080,9989
+    links:
+      - db
+    expose:
+        - 8080
+        - 9989
+
+  db:
+    image: "postgres:9.4"
+    env_file: db.env
+    expose:
+        - 5432
+
+  mq:
+    image: "crossbario/crossbar"
+    env_file: db.env
+    expose:
+        - 8080
+
+  worker:
+    image: "buildbot/buildbot-worker:master"
+    environment:
+        BUILDMASTER: lb
+        BUILDMASTER_PORT: 9989
+        WORKERNAME: example-worker
+        WORKERPASS: pass
+        WORKER_ENVIRONMENT_BLACKLIST: DOCKER_BUILDBOT* BUILDBOT_ENV_* BUILDBOT_1* WORKER_ENVIRONMENT_BLACKLIST
+
+    links:
+        - lb

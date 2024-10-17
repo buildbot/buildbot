@@ -380,7 +380,7 @@ class ExpectUploadFile(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectUploadFile({repr(self.args['workdir'])},{repr(self.args['workersrc'])})"
+        return f"ExpectUploadFile({self.args['workdir']!r},{self.args['workersrc']!r})"
 
 
 class ExpectUploadDirectory(Expect):
@@ -415,7 +415,7 @@ class ExpectUploadDirectory(Expect):
     def upload_tar_file(self, filename, members, error=None, out_writers=None):
         def behavior(command):
             f = BytesIO()
-            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')  # noqa pylint: disable=consider-using-with
+            archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
             for name, content in members.items():
                 content = unicode2bytes(content)
                 archive.addfile(tarfile.TarInfo(name), BytesIO(content))
@@ -435,10 +435,7 @@ class ExpectUploadDirectory(Expect):
         return self
 
     def __repr__(self):
-        return (
-            f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
-            f"{repr(self.args['workersrc'])})"
-        )
+        return f"ExpectUploadDirectory({self.args['workdir']!r}, " f"{self.args['workersrc']!r})"
 
 
 class ExpectDownloadFile(Expect):
@@ -486,10 +483,7 @@ class ExpectDownloadFile(Expect):
         return self
 
     def __repr__(self):
-        return (
-            f"ExpectUploadDirectory({repr(self.args['workdir'])}, "
-            f"{repr(self.args['workerdest'])})"
-        )
+        return f"ExpectUploadDirectory({self.args['workdir']!r}, " f"{self.args['workerdest']!r})"
 
 
 class ExpectMkdir(Expect):
@@ -501,7 +495,7 @@ class ExpectMkdir(Expect):
         super().__init__('mkdir', args)
 
     def __repr__(self):
-        return f"ExpectMkdir({repr(self.args['dir'])})"
+        return f"ExpectMkdir({self.args['dir']!r})"
 
 
 class ExpectRmdir(Expect):
@@ -517,7 +511,7 @@ class ExpectRmdir(Expect):
         super().__init__('rmdir', args)
 
     def __repr__(self):
-        return f"ExpectRmdir({repr(self.args['dir'])})"
+        return f"ExpectRmdir({self.args['dir']!r})"
 
 
 class ExpectCpdir(Expect):
@@ -533,7 +527,7 @@ class ExpectCpdir(Expect):
         super().__init__('cpdir', args)
 
     def __repr__(self):
-        return f"ExpectCpdir({repr(self.args['fromdir'])}, {repr(self.args['todir'])})"
+        return f"ExpectCpdir({self.args['fromdir']!r}, {self.args['todir']!r})"
 
 
 class ExpectGlob(Expect):
@@ -551,7 +545,7 @@ class ExpectGlob(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectGlob({repr(self.args['path'])})"
+        return f"ExpectGlob({self.args['path']!r})"
 
 
 class ExpectListdir(Expect):
@@ -567,7 +561,7 @@ class ExpectListdir(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectListdir({repr(self.args['dir'])})"
+        return f"ExpectListdir({self.args['dir']!r})"
 
 
 class ExpectRmfile(Expect):
@@ -579,7 +573,7 @@ class ExpectRmfile(Expect):
         super().__init__('rmfile', args)
 
     def __repr__(self):
-        return f"ExpectRmfile({repr(self.args['path'])})"
+        return f"ExpectRmfile({self.args['path']!r})"
 
 
 def _check_env_is_expected(test, expected_env, env):
@@ -588,7 +582,7 @@ def _check_env_is_expected(test, expected_env, env):
 
     env = env or {}
     for var, value in expected_env.items():
-        test.assertEqual(env.get(var), value, f'Expected environment to have {var} = {repr(value)}')
+        test.assertEqual(env.get(var), value, f'Expected environment to have {var} = {value!r}')
 
 
 class ExpectMasterShell:
@@ -668,9 +662,9 @@ class TestBuildStepMixin:
         if not hasattr(self, 'reactor'):
             raise RuntimeError('Reactor has not yet been setup for step')
 
-        self._interrupt_remote_command_numbers = []
+        self._interrupt_remote_command_numbers: list[int] = []
 
-        self._expected_commands = []
+        self._expected_commands: list[Expect] = []
         self._expected_commands_popped = 0
 
         self.master = fakemaster.make_master(
@@ -681,8 +675,8 @@ class TestBuildStepMixin:
             with_secrets=with_secrets,
         )
 
-        self.patch(runprocess, "create_process", self._patched_create_process)
-        self._master_run_process_expect_env = {}
+        self.patch(runprocess, "create_process", self._patched_create_process)  # type: ignore[attr-defined]
+        self._master_run_process_expect_env: dict[str, str] = {}
 
         self._worker_version = None
         self._worker_env = None
@@ -696,18 +690,18 @@ class TestBuildStepMixin:
 
         # expectations
 
-        self._exp_results = []
-        self.exp_properties = {}
-        self.exp_missing_properties = []
-        self._exp_logfiles = {}
-        self._exp_logfiles_stderr = {}
+        self._exp_results: list[tuple[int, str | None]] = []
+        self.exp_properties: dict[str, tuple[object, str | None]] = {}
+        self.exp_missing_properties: list[str] = []
+        self._exp_logfiles: dict[int, dict[str, bytes]] = {}
+        self._exp_logfiles_stderr: dict[int, dict[str, bytes]] = {}
         self.exp_hidden = False
         self.exp_exception = None
-        self._exp_test_result_sets = []
-        self._exp_test_results = []
-        self._exp_build_data = {}
-        self._exp_result_summaries = []
-        self._exp_build_result_summaries = []
+        self._exp_test_result_sets: list[tuple[str, str, str]] = []
+        self._exp_test_results: list[tuple[int, object, str, str, int, int]] = []
+        self._exp_build_data: dict[str, tuple[object, str]] = {}
+        self._exp_result_summaries: list[str] = []
+        self._exp_build_result_summaries: list[str] = []
 
     def tear_down_test_build_step(self):
         pass

@@ -26,7 +26,9 @@ See https://docs.buildbot.net/current/ for documentation of the current version 
 
 Docker container
 ----------------
-Buildbot comes with a ready to use docker container available at buildbot/buildbot-master
+Buildbot comes with a ready to use docker container available at
+`quay.io/buildbot/buildbot-master <https://quay.io/buildbot/buildbot-master>`_ container repository.
+
 Following environment variables are supported for configuration:
 
 * ``BUILDBOT_CONFIG_URL``: http url to a config tarball.

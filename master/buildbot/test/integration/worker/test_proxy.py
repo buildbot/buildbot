@@ -24,13 +24,13 @@ from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
 
-from .interop import test_commandmixin
-from .interop import test_compositestepmixin
-from .interop import test_integration_secrets
-from .interop import test_interruptcommand
-from .interop import test_setpropertyfromcommand
-from .interop import test_transfer
-from .interop import test_worker_reconnect
+from ..interop import test_commandmixin
+from ..interop import test_compositestepmixin
+from ..interop import test_integration_secrets
+from ..interop import test_interruptcommand
+from ..interop import test_setpropertyfromcommand
+from ..interop import test_transfer
+from ..interop import test_worker_reconnect
 
 # This integration test puts HTTP proxy in between the master and worker.
 
@@ -128,7 +128,7 @@ def run_proxy(queue):
         loop.close()
 
     except BaseException as e:
-        write_to_log(f"Exception Raised: {str(e)}\n", with_traceback=True)
+        write_to_log(f"Exception Raised: {e!s}\n", with_traceback=True)
 
     finally:
         queue.put(get_log_path())
@@ -137,7 +137,7 @@ def run_proxy(queue):
 class RunMasterBehindProxy(RunMasterBase):
     # we need slightly longer timeout for proxy related tests
     timeout = 30
-    debug = False
+    enable_debug = False
 
     def setUp(self):
         write_to_log("setUp\n")
@@ -151,7 +151,7 @@ class RunMasterBehindProxy(RunMasterBase):
         write_to_log("tearDown\n")
         self.proxy_process.terminate()
         self.proxy_process.join()
-        if self.debug:
+        if self.enable_debug:
             print("---- stdout ----")
             with open(get_log_path(), encoding='utf-8') as file:
                 print(file.read())

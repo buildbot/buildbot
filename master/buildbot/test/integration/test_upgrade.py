@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import locale
 import os
@@ -45,7 +45,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # class variables to set in subclasses
 
     # filename of the tarball (sibling to this file)
-    source_tarball = None
+    source_tarball: None | str = None
 
     # set to true in subclasses to set up and use a real DB
     use_real_db = False
@@ -172,7 +172,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     for name in got_names - exp_names:
                         diff.append(
                             f"got unexpected index {name} on table {tbl.name}: "
-                            f"{repr(got_info[name])}"
+                            f"{got_info[name]!r}"
                         )
                     for name in exp_names - got_names:
                         diff.append(f"missing index {name} on table {tbl.name}")
@@ -210,7 +210,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             if "file is encrypted or is not a database" in str(e):
                 self.flushLoggedErrors(sqlite3.DatabaseError)
                 self.flushLoggedErrors(DatabaseError)
-                raise unittest.SkipTest(f"sqlite dump not readable on this machine {str(e)}")
+                raise unittest.SkipTest(f"sqlite dump not readable on this machine {e!s}")
 
     @defer.inlineCallbacks
     def do_test_upgrade(self, pre_callbacks=None):

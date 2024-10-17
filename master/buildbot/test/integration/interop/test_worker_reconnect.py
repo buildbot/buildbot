@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 from twisted.internet import defer
 
@@ -22,7 +22,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class DisconnectingStep(BuildStep):
-    disconnection_list = []
+    disconnection_list: list[DisconnectingStep] = []
 
     def run(self):
         self.disconnection_list.append(self)

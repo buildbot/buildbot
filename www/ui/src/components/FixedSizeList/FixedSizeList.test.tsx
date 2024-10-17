@@ -41,14 +41,13 @@
   SOFTWARE.
 */
 
-import {beforeEach, describe, expect, it, vi} from "vitest";
+import {beforeEach, describe, expect, it, vi, Mock, MockInstance} from "vitest";
 import React, {createRef, memo} from 'react';
 import {createRoot} from 'react-dom/client';
 import renderer from "react-test-renderer";
 import {Simulate} from 'react-dom/test-utils';
 import {FixedSizeList, FixedSizeListProps} from './FixedSizeList';
 import * as domHelpers from './domHelpers';
-import Mock = vi.Mock;
 
 const simulateScroll = (instance: FixedSizeList<any>, scrollOffset: number, direction = 'vertical') => {
   if (direction === 'horizontal') {
@@ -87,7 +86,7 @@ async function renderWithReactDom(children: React.ReactNode) {
 
 describe('FixedSizeList', () => {
   let itemRenderer: Mock;
-  let getScrollbarSize: Mock;
+  let getScrollbarSize: MockInstance;
   let onItemsRendered: Mock;
   let defaultProps: FixedSizeListProps<any>;
 
@@ -746,7 +745,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should receive a data value if itemData is provided', () => {
-      const itemKey = vi.fn(index => index);
+      const itemKey = vi.fn((index, data) => index);
       const itemData = {};
       renderer.create(
         <FixedSizeList

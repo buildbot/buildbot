@@ -16,6 +16,8 @@
 file based provider
 """
 
+from __future__ import annotations
+
 import os
 import stat
 
@@ -28,7 +30,7 @@ class SecretInAFile(SecretProviderBase):
     secret is stored in a separate file under the given directory name
     """
 
-    name = "SecretInAFile"
+    name: str | None = "SecretInAFile"  # type: ignore[assignment]
 
     def checkFileIsReadOnly(self, dirname, secretfile):
         filepath = os.path.join(dirname, secretfile)

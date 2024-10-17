@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -23,7 +25,7 @@ from buildbot.util import httpclientservice
 
 
 class HttpStatusPush(ReporterBase):
-    name = "HttpStatusPush"
+    name: str | None = "HttpStatusPush"  # type: ignore[assignment]
     secrets = ["auth"]
 
     def checkConfig(

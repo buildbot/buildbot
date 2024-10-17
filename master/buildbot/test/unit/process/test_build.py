@@ -361,7 +361,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.getProperties = Mock()
         b.setProperty = Mock()
 
-        b.setupWorkerBuildirProperty(self.workerforbuilder)
+        b.setupWorkerProperties(self.workerforbuilder)
 
         expected_path = '/srv/buildbot/worker/test'
 
@@ -719,6 +719,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             got_properties,
             [
+                (10, 'basedir', '/wrk', 'Worker'),
                 (10, 'branch', None, 'Build'),
                 (10, 'buildnumber', 1, 'Build'),
                 (10, 'codebase', '', 'Build'),

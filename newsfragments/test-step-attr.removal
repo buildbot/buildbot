@@ -1,2 +1,0 @@
-The ``step`` attribute of ``TestBuildStepMixin`` has been deprecated. As a replacement, call
-``TestBuildStepMixin.get_nth_step()``.

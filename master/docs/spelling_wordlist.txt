@@ -129,6 +129,7 @@ buildsystem
 buildtep
 builtin
 bulidslave
+brotli
 bytestring
 bytestrings
 bzip
@@ -318,6 +319,7 @@ errorCb
 et
 eventPathPatterns
 executables
+expander
 explorable
 extensibility
 facto
@@ -1041,5 +1043,6 @@ xvfb
 yaml
 Zope
 zsh
+zstd
 zulip
 Zulip

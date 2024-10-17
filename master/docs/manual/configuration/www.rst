@@ -491,6 +491,7 @@ The available classes are described here:
 
     :param clientId: The client ID of your buildbot application
     :param clientSecret: The client secret of your buildbot application
+    :param boolean ssl_verify: If False disables SSL certificate verification
 
     This class implements an authentication with Google_ single sign-on.
     You can look at the Google_ oauth2 documentation on how to register your Buildbot instance to the Google systems.
@@ -528,6 +529,7 @@ The available classes are described here:
                                user's groups as ``org-name/team-name``.
     :param debug: When ``True`` and using ``apiVersion=4`` show some additional log calls with the
                   GraphQL queries and responses for debugging purposes.
+    :param boolean ssl_verify: If False disables SSL certificate verification
 
     This class implements an authentication with GitHub_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
@@ -596,6 +598,7 @@ The available classes are described here:
     :param instanceUri: The URI of your GitLab instance
     :param clientId: The client ID of your buildbot application
     :param clientSecret: The client secret of your buildbot application
+    :param boolean ssl_verify: If False disables SSL certificate verification
 
     This class implements an authentication with GitLab_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
@@ -624,6 +627,7 @@ The available classes are described here:
 
     :param clientId: The client ID of your buildbot application
     :param clientSecret: The client secret of your buildbot application
+    :param boolean ssl_verify: If False disables SSL certificate verification
 
     This class implements an authentication with Bitbucket_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.

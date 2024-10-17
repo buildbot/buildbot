@@ -13,8 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 import traceback
+from typing import Any
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
@@ -45,8 +50,8 @@ class ValidationErrorCollector:
         res = None
         try:
             res = yield fn(*args, **kwargs)
-        except CollectedValidationError as e:
-            for error_name, e in e.errors.items():
+        except CollectedValidationError as err:
+            for error_name, e in err.errors.items():
                 self.errors[error_name] = e
         except ValueError as e:
             self.errors[name] = str(e)
@@ -85,14 +90,14 @@ class BaseParameter:
     parentName = None
     label = ""
     tablabel = ""
-    type = ""
-    default = ""
+    type: str = ""
+    default: Any = ""
     required = False
     multiple = False
     regex = None
     debug = True
     hide = False
-    maxsize = None
+    maxsize: int | None = None
     autopopulate = None
     tooltip = ""
 
@@ -294,7 +299,7 @@ class ChoiceStringParameter(BaseParameter):
 
     spec_attributes = ["choices", "strict"]
     type = "list"
-    choices = []
+    choices: list[str] = []
     strict = True
 
     def parse_from_arg(self, s):
@@ -421,7 +426,7 @@ class NestedParameter(BaseParameter):
     type = 'nested'
     layout = 'vertical'
     fields = None
-    columns = None
+    columns: int | None = None
 
     def __init__(self, name, fields, **kwargs):
         super().__init__(fields=fields, name=name, **kwargs)
@@ -640,25 +645,26 @@ class ForceScheduler(base.BaseScheduler):
     builds. For example, a web form be populated to trigger a build.
     """
 
-    compare_attrs = base.BaseScheduler.compare_attrs + (
-        'builderNames',
-        'reason',
-        'username',
-        'forcedProperties',
+    compare_attrs: ClassVar[Sequence[str]] = (
+        *base.BaseScheduler.compare_attrs,
+        "builderNames",
+        "reason",
+        "username",
+        "forcedProperties",
     )
 
     def __init__(
         self,
         name,
         builderNames,
-        username=UserNameParameter(),
-        reason=StringParameter(name="reason", default="force build", size=20),
+        username: UserNameParameter | None = None,
+        reason: StringParameter | None = None,
         reasonString="A build was forced by '%(owner)s': %(reason)s",
         buttonName=None,
         codebases=None,
         label=None,
         properties=None,
-        priority=IntParameter(name="priority", default=0),
+        priority: IntParameter | None = None,
     ):
         """
         Initialize a ForceScheduler.
@@ -696,40 +702,44 @@ class ForceScheduler(base.BaseScheduler):
         """
 
         if not self.checkIfType(name, str):
-            config.error(f"ForceScheduler name must be a unicode string: {repr(name)}")
+            config.error(f"ForceScheduler name must be a unicode string: {name!r}")
 
         if not name:
-            config.error(f"ForceScheduler name must not be empty: {repr(name)}")
+            config.error(f"ForceScheduler name must not be empty: {name!r}")
 
         if not identifiers.ident_re.match(name):
-            config.error(f"ForceScheduler name must be an identifier: {repr(name)}")
+            config.error(f"ForceScheduler name must be an identifier: {name!r}")
 
         if not self.checkIfListOfType(builderNames, (str,)):
             config.error(
                 f"ForceScheduler '{name}': builderNames must be a list of strings: "
-                f"{repr(builderNames)}"
+                f"{builderNames!r}"
             )
+
+        if reason is None:
+            reason = StringParameter(name="reason", default="force build", size=20)
 
         if self.checkIfType(reason, BaseParameter):
             self.reason = reason
         else:
-            config.error(
-                f"ForceScheduler '{name}': reason must be a StringParameter: {repr(reason)}"
-            )
+            config.error(f"ForceScheduler '{name}': reason must be a StringParameter: {reason!r}")
 
         if properties is None:
             properties = []
         if not self.checkIfListOfType(properties, BaseParameter):
             config.error(
                 f"ForceScheduler '{name}': properties must be "
-                f"a list of BaseParameters: {repr(properties)}"
+                f"a list of BaseParameters: {properties!r}"
             )
+
+        if username is None:
+            username = UserNameParameter()
 
         if self.checkIfType(username, BaseParameter):
             self.username = username
         else:
             config.error(
-                f"ForceScheduler '{name}': username must be a StringParameter: {repr(username)}"
+                f"ForceScheduler '{name}': username must be a StringParameter: {username!r}"
             )
 
         self.forcedProperties = []
@@ -742,7 +752,7 @@ class ForceScheduler(base.BaseScheduler):
             config.error(
                 f"ForceScheduler '{name}': 'codebases' cannot be empty;"
                 f" use [CodebaseParameter(codebase='', hide=True)] if needed: "
-                f"{repr(codebases)} "
+                f"{codebases!r} "
             )
         elif not isinstance(codebases, list):
             config.error(
@@ -757,7 +767,7 @@ class ForceScheduler(base.BaseScheduler):
             elif not isinstance(codebase, CodebaseParameter):
                 config.error(
                     f"ForceScheduler '{name}': 'codebases' must be a list of strings "
-                    f"or CodebaseParameter objects: {repr(codebases)}"
+                    f"or CodebaseParameter objects: {codebases!r}"
                 )
 
             self.forcedProperties.append(codebase)
@@ -767,12 +777,13 @@ class ForceScheduler(base.BaseScheduler):
             name=name, builderNames=builderNames, properties={}, codebases=codebase_dict
         )
 
+        if priority is None:
+            priority = IntParameter(name="priority", default=0)
+
         if self.checkIfType(priority, IntParameter):
             self.priority = priority
         else:
-            config.error(
-                f"ForceScheduler '{name}': priority must be a IntParameter: {repr(priority)}"
-            )
+            config.error(f"ForceScheduler '{name}': priority must be a IntParameter: {priority!r}")
 
         if properties:
             self.forcedProperties.extend(properties)

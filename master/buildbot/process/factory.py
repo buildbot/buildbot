@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.python import deprecate
 from twisted.python import versions
@@ -53,17 +55,17 @@ class BuildFactory(util.ComparableMixin):
     @type  buildClass: L{buildbot.process.build.Build}
     """
 
-    buildClass = Build
-    useProgress = 1
+    buildClass: type[Build] = Build
+    useProgress = True
     workdir = "build"
-    compare_attrs = ('buildClass', 'steps', 'useProgress', 'workdir')
+    compare_attrs: ClassVar[Sequence[str]] = ('buildClass', 'steps', 'useProgress', 'workdir')
 
     def __init__(self, steps=None):
         self.steps = []
         if steps:
             self.addSteps(steps)
 
-    def newBuild(self, requests, builder: Builder) -> buildClass:
+    def newBuild(self, requests, builder: Builder) -> Build:
         """Create a new Build instance.
 
         @param requests: a list of buildrequest dictionaries describing what is
@@ -144,7 +146,7 @@ class GNUAutoconf(BuildFactory):
             if isinstance(configure, str):
                 if configureFlags:
                     assert " " not in configure  # please use list instead
-                    command = [configure] + configureFlags
+                    command = [configure, *configureFlags]
                 else:
                     command = configure
             else:
@@ -220,7 +222,7 @@ class Trial(BuildFactory):
 
         from buildbot.steps.python_twisted import Trial
 
-        buildcommand = buildpython + ["./setup.py", "build"]
+        buildcommand = [*buildpython, "./setup.py", "build"]
         self.addStep(Compile(command=buildcommand, env=env))
         self.addStep(
             Trial(

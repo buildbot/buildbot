@@ -36,7 +36,13 @@ The return value of the provided function must be a dictionary and is interprete
     :param boolean want_logs: include 'logs' in the steps dictionaries.
         This implies `want_steps=True`.
         This includes only log metadata, for content use ``want_logs_content``.
-    :param boolean want_logs_content: include logs content in the logs dictionaries.
-        This implies `want_logs=True` and `want_steps=True`.
-        This dumps the *full* content of logs and may consume lots of memory and CPU depending on
-        the log size.
+    :param want_logs_content: include logs content in the logs dictionaries.
+        `False` disables log content inclusion. `True` enables log content inclusion for all logs.
+        A list of strings specifies which logs to include. The logs can be included by name; or
+        by step name and log name separated by dot character. If log name is specified, logs with
+        that name will be included regardless of the step it is in. If both step and log names
+        are specified, then logs with that name will be included only from the specific step.
+        `want_logs_content` being not `False` implies `want_logs=True` and `want_steps=True`.
+        Enabling `want_logs_content` dumps the *full* content of logs and may consume lots of
+        memory and CPU depending on the log size.
+    :type want_logs_content: boolean or list[str]

@@ -71,6 +71,7 @@ class TestBuildRequestGenerator(
         g = BuildRequestGenerator(**kwargs)
 
         g.formatter = Mock(spec=g.formatter)
+        g.formatter.want_logs_content = False
         g.formatter.format_message_for_build.return_value = message
 
         return g

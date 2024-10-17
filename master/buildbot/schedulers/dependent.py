@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 
@@ -25,7 +27,7 @@ from buildbot.schedulers import base
 
 
 class Dependent(base.BaseScheduler):
-    compare_attrs = ('upstream_name',)
+    compare_attrs: ClassVar[Sequence[str]] = ('upstream_name',)
 
     def __init__(self, name, upstream, builderNames, **kwargs):
         super().__init__(name, builderNames, **kwargs)

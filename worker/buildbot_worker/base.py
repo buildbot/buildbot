@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import multiprocessing
 import os.path
 import socket
@@ -69,8 +71,10 @@ class ProtocolCommandBase:
 
         try:
             factory = registry.getFactory(command)
-        except KeyError:
-            raise UnknownCommand(f"(command {command_id}): unrecognized WorkerCommand '{command}'")
+        except KeyError as e:
+            raise UnknownCommand(
+                f"(command {command_id}): unrecognized WorkerCommand '{command}'"
+            ) from e
 
         # .command points to a WorkerCommand instance, and is set while the step is running.
         self.command = factory(self, command_id, args)
@@ -159,14 +163,14 @@ class ProtocolCommandBase:
 
 
 class WorkerForBuilderBase(service.Service):
-    ProtocolCommand = ProtocolCommandBase
+    ProtocolCommand: type[ProtocolCommandBase] = ProtocolCommandBase
 
 
 class BotBase(service.MultiService):
     """I represent the worker-side bot."""
 
-    name = "bot"
-    WorkerForBuilder = WorkerForBuilderBase
+    name: str | None = "bot"  # type: ignore[assignment]
+    WorkerForBuilder: type[WorkerForBuilderBase] = WorkerForBuilderBase
 
     os_release_file = "/etc/os-release"
 

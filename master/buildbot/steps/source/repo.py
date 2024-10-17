@@ -16,6 +16,8 @@
 
 import re
 import textwrap
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -37,7 +39,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin):
         re.compile(r"([^ ]+)/([0-9]+/[0-9]+)"),
     )
 
-    compare_attrs = ('names',)
+    compare_attrs: ClassVar[Sequence[str]] = ('names',)
 
     def __init__(self, names):
         self.names = names
@@ -73,7 +75,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin):
 
 @implementer(IRenderable)
 class RepoDownloadsFromChangeSource(util.ComparableMixin):
-    compare_attrs = ('codebase',)
+    compare_attrs: ClassVar[Sequence[str]] = ('codebase',)
 
     def __init__(self, codebase=None):
         self.codebase = codebase
@@ -229,7 +231,7 @@ class Repo(Source):
         self.manifestDownloads = manifest_related_downloads
 
     def _repoCmd(self, command, abandonOnFailure=True, **kwargs):
-        return self._Cmd(["repo"] + command, abandonOnFailure=abandonOnFailure, **kwargs)
+        return self._Cmd(["repo", *command], abandonOnFailure=abandonOnFailure, **kwargs)
 
     @defer.inlineCallbacks
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
@@ -388,7 +390,7 @@ class Repo(Source):
     def doRepoDownloads(self):
         self.repo_downloaded = ""
         for download in self.repoDownloads:
-            command = ['download'] + download.split(' ')
+            command = ["download", *download.split(" ")]
             yield self.stdio_log.addHeader(f"downloading changeset {download}\n")
 
             retry = self.mirror_sync_retry + 1
@@ -450,7 +452,7 @@ class Repo(Source):
     @defer.inlineCallbacks
     def maybeExtractTarball(self):
         if self.tarball:
-            tar = self.computeTarballOptions() + ['-xvf', self.tarball]
+            tar = [*self.computeTarballOptions(), "-xvf", self.tarball]
             res = yield self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase repo dir and tarball
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
@@ -472,7 +474,7 @@ class Repo(Source):
             now_mtime = int(self.lastCommand.stdout)
             age = now_mtime - tarball_mtime
         if res or age > self.updateTarballAge:
-            tar = self.computeTarballOptions() + ['-cvf', self.tarball, ".repo"]
+            tar = [*self.computeTarballOptions(), "-cvf", self.tarball, ".repo"]
             res = yield self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase tarball, but don't fail
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)

@@ -50,7 +50,7 @@ global_defaults = {
     "titleURL": 'http://buildbot.net/',
     "buildbotURL": 'http://localhost:8080/',
     "logCompressionLimit": 4096,
-    "logCompressionMethod": 'gz',
+    "logCompressionMethod": 'zstd',
     "logEncoding": 'utf-8',
     "logMaxTailSize": None,
     "logMaxSize": None,
@@ -453,7 +453,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.cfg.load_global(self.filename, {'logCompressionMethod': 'foo'})
 
         self.assertConfigError(
-            errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'"
+            errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4', 'br' or 'zstd'"
         )
 
     def test_load_global_codebaseGenerator(self):
@@ -1006,7 +1006,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 self.filename, {"services": [MyService(x='a'), MyService(x='b')]}
             )
 
-        self.assertConfigError(errors, f'Duplicate service name {repr(MyService.name)}')
+        self.assertConfigError(errors, f'Duplicate service name {MyService.name!r}')
 
     def test_load_configurators_norminal(self):
         class MyConfigurator(configurators.ConfiguratorBase):

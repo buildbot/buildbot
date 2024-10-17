@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 from unittest import SkipTest
@@ -42,7 +43,11 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         )
 
     @defer.inlineCallbacks
-    def setupPushoverNotifier(self, user_key="1234", api_token=Interpolate("abcd"), **kwargs):
+    def setupPushoverNotifier(
+        self, user_key="1234", api_token: Interpolate | None = None, **kwargs
+    ):
+        if api_token is None:
+            api_token = Interpolate("abcd")
         pn = PushoverNotifier(user_key, api_token, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()

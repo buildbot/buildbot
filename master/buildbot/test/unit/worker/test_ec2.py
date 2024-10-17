@@ -22,23 +22,18 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 try:
-    from moto import mock_aws
-
-    assert mock_aws
     import boto3
-
-    assert boto3
     from botocore.client import ClientError
+    from moto import mock_aws
 except ImportError:
     boto3 = None
-    ec2 = None
     ClientError = None
 
 
 if boto3 is not None:
-    from buildbot.worker import ec2  # pylint: disable=ungrouped-imports
+    from buildbot.worker import ec2
 else:
-    ec2 = None
+    ec2 = None  # type: ignore[assignment]
 
 
 # Current moto (1.3.7) requires dummy credentials to work
@@ -56,7 +51,7 @@ def skip_ec2(f):
 
 
 if boto3 is None:
-    mock_aws = skip_ec2
+    mock_aws = skip_ec2  # type: ignore[assignment]
 
 
 def anyImageId(c):
@@ -129,7 +124,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             )
 
             response['SpotInstanceRequests'][0]['Status']['Code'] = 'fulfilled'
-            response['SpotInstanceRequests'][0]['InstanceId'] = list(instances)[0].id
+            response['SpotInstanceRequests'][0]['InstanceId'] = next(iter(instances)).id
             return response
 
         self.patch(
@@ -357,7 +352,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         )
         instances = list(instances)
         instance = instances[0]
-        sdz = [bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz'][0]
+        sdz = next(bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz')
         self.assertEqual(vol.id, sdz['Ebs']['VolumeId'])
 
     @mock_aws

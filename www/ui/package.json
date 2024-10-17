@@ -5,7 +5,8 @@
   "main": "src/main.ts",
   "exports": {
     ".": "src/main.ts",
-    "./style.css": "dist/style.css"
+    "./style.css": "dist/style.css",
+    "./colors.scss": "dist/colors.scss"
   },
   "type": "module",
   "types": "dist/main.d.ts",

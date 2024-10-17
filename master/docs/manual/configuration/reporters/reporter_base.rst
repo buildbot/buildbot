@@ -52,6 +52,27 @@ This documents frequently used keys within the dictionaries that are passed to t
  - ``builds`` (a list of build dictionaries as reported by the data API)
     A list of builds that the report describes.
 
+    Many message formatters support ``want_steps`` argument. If it is set, then build will contain
+    ``steps`` key with a list of step dictionaries as reported by the data API.
+
+    Many message formatters support ``want_logs`` argument. If it is set, then steps will contain
+    ``logs`` key with a list of logs dictionaries as reported by the data API.
+
+    The logs dictionaries contain the following keys in addition to what the data API provides:
+
+    - ``stepname`` (string) The name of the step that produced the log.
+
+    - ``url`` (string) The URL to the interactive page that displays the log contents
+
+    - ``url_raw`` (string) The URL to the page that downloads the log contents as a file
+
+    - ``url_raw_inline`` (string) The URL to the page that shows the log contents directly in the
+        browser.
+
+    - ``content`` (optional string) The content of the log. The content of the log is attached only
+        if directed by ``want_logs_content`` argument of message formatters or ``add_logs``
+        argument of report generators.
+
  - ``buildset`` (a buildset dictionary as reported by the data API)
     The buildset that is being described.
 
@@ -63,11 +84,8 @@ This documents frequently used keys within the dictionaries that are passed to t
 
  - ``logs`` (a list of dictionaries corresponding to logs as reported by the data API)
     A list of logs produced by the build(s) so far.
-    The following two keys are provided in addition to what the data API provides:
-
-    - ``stepname`` (string) The name of the step that produced the log.
-
-    - ``content`` (string) The content of the log.
+    The log dictionaries have the same enhancements that are described in the ``build`` section
+    above.
 
  - ``extra_info`` (a dictionary of dictionaries with string keys in both)
     A list of additional reporter-specific data to apply.

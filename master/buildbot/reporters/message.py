@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
 
 import jinja2
 from twisted.internet import defer
@@ -381,7 +383,7 @@ Steps:
 {% else %}
 - (no steps)
 {% endif %}
-"""  # noqa pylint: disable=line-too-long
+"""
 
 
 default_body_template_html = """\
@@ -409,18 +411,18 @@ while building {{ projects }}.</p>
     <li>No steps</li>
 {% endif %}
 </ul>
-"""  # noqa pylint: disable=line-too-long
+"""
 
 default_subject_template = """\
 {{ '☠' if result_names[results] == 'failure' else '☺' if result_names[results] == 'success' else '☝' }} \
 Buildbot ({{ buildbot_title }}): {{ build['properties'].get('project', ['whole buildset'])[0] if is_buildset else buildername }} \
 - \
 {{ build['state_string'] }} \
-{{ '(%s)' % (build['properties']['branch'][0] if (build['properties']['branch'] and build['properties']['branch'][0]) else build['properties'].get('got_revision', ['(unknown revision)'])[0]) }}"""  # # noqa pylint: disable=line-too-long
+{{ '(%s)' % (build['properties']['branch'][0] if (build['properties']['branch'] and build['properties']['branch'][0]) else build['properties'].get('got_revision', ['(unknown revision)'])[0]) }}"""
 
 
 class MessageFormatterBaseJinja(MessageFormatterBase):
-    compare_attrs = ['body_template', 'subject_template', 'template_type']
+    compare_attrs: ClassVar[Sequence[str]] = ['body_template', 'subject_template', 'template_type']
     subject_template = None
     template_type = 'plain'
     uses_default_body_template = False
@@ -501,7 +503,7 @@ It last disconnected at {{worker.last_connection}}.
 {% if 'admin' in worker['workerinfo'] %}
 The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.
 {% endif %}
-"""  # noqa pylint: disable=line-too-long
+"""
 
 default_missing_template_html = """\
 <p>The Buildbot worker named {{worker.name}} went away.</p>
@@ -510,7 +512,7 @@ default_missing_template_html = """\
 {% if 'admin' in worker['workerinfo'] %}
 <p>The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.</p>
 {% endif %}
-"""  # noqa pylint: disable=line-too-long
+"""
 
 
 default_missing_worker_subject_template = (

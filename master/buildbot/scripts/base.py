@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import errno
 import os
@@ -172,10 +174,10 @@ class SubcommandOptions(usage.Options):
     # .buildbot/options file.  Note that this *only* works with optParameters,
     # not optFlags.  Example:
     # buildbotOptions = [ [ 'optfile-name', 'parameter-name' ], .. ]
-    buildbotOptions = None
+    buildbotOptions: list[list[str]] | None = None
 
     # set this to options that must have non-None values
-    requiredOptions = []
+    requiredOptions: list[str] = []
 
     def __init__(self, *args):
         # for options in self.buildbotOptions, optParameters, and the options

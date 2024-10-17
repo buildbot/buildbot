@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
 import re
 from urllib.parse import urlparse
@@ -49,7 +51,7 @@ HTTP_CREATED = 201
 
 
 class BitbucketServerStatusPush(ReporterBase):
-    name = "BitbucketServerStatusPush"
+    name: str | None = "BitbucketServerStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,
@@ -173,7 +175,7 @@ class BitbucketServerStatusPush(ReporterBase):
 
 
 class BitbucketServerCoreAPIStatusPush(ReporterBase):
-    name = "BitbucketServerCoreAPIStatusPush"
+    name: str | None = "BitbucketServerCoreAPIStatusPush"  # type: ignore[assignment]
     secrets = ["token", "auth"]
 
     def checkConfig(
@@ -437,7 +439,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
 
 class BitbucketServerPRCommentPush(ReporterBase):
-    name = "BitbucketServerPRCommentPush"
+    name: str | None = "BitbucketServerPRCommentPush"  # type: ignore[assignment]
 
     @defer.inlineCallbacks
     def reconfigService(

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
+
 from twisted.internet import defer
 from zope.interface import implementer
 
@@ -31,7 +34,7 @@ from .utils import BuildStatusGeneratorMixin
 class BuildRequestGenerator(BuildStatusGeneratorMixin):
     wanted_event_keys = [('buildrequests', None, 'new'), ('buildrequests', None, 'cancel')]
 
-    compare_attrs = ['formatter']
+    compare_attrs: ClassVar[Sequence[str]] = ['formatter']
 
     def __init__(
         self,
@@ -42,7 +45,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         add_patch=False,
         formatter=None,
     ):
-        super().__init__('all', tags, builders, schedulers, branches, None, False, add_patch)
+        super().__init__('all', tags, builders, schedulers, branches, None, None, add_patch)
         self.formatter = formatter
         if self.formatter is None:
             self.formatter = MessageFormatterRenderable('Build pending.')

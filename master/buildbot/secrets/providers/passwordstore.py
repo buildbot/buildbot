@@ -16,6 +16,8 @@
 password store based provider
 """
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
@@ -31,7 +33,7 @@ class SecretInPass(SecretProviderBase):
     secret is stored in a password store
     """
 
-    name = "SecretInPass"
+    name: str | None = "SecretInPass"  # type: ignore[assignment]
 
     def checkPassIsInPath(self):
         if not any((Path(p) / "pass").is_file() for p in os.environ["PATH"].split(":")):

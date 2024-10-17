@@ -85,7 +85,7 @@ class FakeWorkerWorker(pb.Referenceable):
         persp.broker.notifyOnDisconnect(fire_deferreds)
 
     def remote_print(self, message):
-        log.msg(f"WORKER-SIDE: remote_print({repr(message)})")
+        log.msg(f"WORKER-SIDE: remote_print({message!r})")
 
     def remote_getWorkerInfo(self):
         return {
@@ -200,7 +200,8 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
             del self.broker
         if self.endpoint:
             del self.endpoint
-        deferreds = self._detach_deferreds + [
+        deferreds = [
+            *self._detach_deferreds,
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
             self.workers.stopService(),

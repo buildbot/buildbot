@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from __future__ import annotations
+
 import datetime
 import json
 import re
@@ -27,8 +29,8 @@ def capitalize(word):
 
 
 class Type:
-    name = None
-    doc = None
+    name: Identifier | String | str | None = None
+    doc: str | None = None
     graphQLType = "unknown"
 
     @property
@@ -115,7 +117,7 @@ class NoneOk(Type):
 
 
 class Instance(Type):
-    types = ()
+    types: tuple[type, ...] = ()
     ramlType = "unknown"
     graphQLType = "unknown"
 
@@ -125,7 +127,7 @@ class Instance(Type):
 
     def validate(self, name, object):
         if not isinstance(object, self.types):
-            yield f"{name} ({repr(object)}) is not a {self.name or repr(self.types)}"
+            yield f"{name} ({object!r}) is not a {self.name or repr(self.types)}"
 
     def toRaml(self):
         return self.ramlType
@@ -215,13 +217,13 @@ class Identifier(Type):
 
     def validate(self, name, object):
         if not isinstance(object, str):
-            yield f"{name} - {repr(object)} - is not a unicode string"
+            yield f"{name} - {object!r} - is not a unicode string"
         elif not self.identRe.match(object):
-            yield f"{name} - {repr(object)} - is not an identifier"
+            yield f"{name} - {object!r} - is not an identifier"
         elif not object:
             yield f"{name} - identifiers cannot be an empty string"
         elif len(object) > self.len:
-            yield f"{name} - {repr(object)} - is longer than {self.len} characters"
+            yield f"{name} - {object!r} - is longer than {self.len} characters"
 
     def toRaml(self):
         return {'type': self.ramlType, 'pattern': self.identRe.pattern}
@@ -241,7 +243,7 @@ class List(Type):
 
     def validate(self, name, object):
         if not isinstance(object, list):  # we want a list, and NOT a subclass
-            yield f"{name} ({repr(object)}) is not a {self.name}"
+            yield f"{name} ({object!r}) is not a {self.name}"
             return
 
         for idx, elt in enumerate(object):
@@ -288,17 +290,17 @@ class SourcedProperties(Type):
             return
         for k, v in object.items():
             if not isinstance(k, str):
-                yield f"{name} property name {repr(k)} is not unicode"
+                yield f"{name} property name {k!r} is not unicode"
             if not isinstance(v, tuple) or len(v) != 2:
                 yield f"{name} property value for '{k}' is not a 2-tuple"
                 return
             propval, propsrc = v
             if not isinstance(propsrc, str):
-                yield f"{name}[{k}] source {repr(propsrc)} is not unicode"
+                yield f"{name}[{k}] source {propsrc!r} is not unicode"
             try:
                 json.loads(bytes2unicode(propval))
             except ValueError:
-                yield f"{name}[{repr(k)}] value is not JSON-able"
+                yield f"{name}[{k!r}] value is not JSON-able"
 
     def toRaml(self):
         return {
@@ -328,7 +330,7 @@ class JsonObject(Type):
 
     def validate(self, name, object):
         if not isinstance(object, dict):
-            yield f"{name} ({repr(object)}) is not a dictionary (got type {type(object)})"
+            yield f"{name} ({object!r}) is not a dictionary (got type {type(object)})"
             return
 
         # make sure JSON can represent it
@@ -348,10 +350,10 @@ class Entity(Type):
     #  * buildsets.Buildset.entityType or
     #  * self.master.data.rtypes.buildsets.entityType
 
-    name = None  # set in constructor
-    graphql_name = None  # set in constructor
-    fields = {}
-    fieldNames = set([])
+    name: Identifier | String | str | None = None  # set in constructor
+    graphql_name: str | None = None  # set in constructor
+    fields: dict[str, Type] = {}
+    fieldNames: set[str] = set([])
 
     def __init__(self, name, graphql_name):
         fields = {}
@@ -366,7 +368,7 @@ class Entity(Type):
     def validate(self, name, object):
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
-            yield f"{name} ({repr(object)}) is not a dictionary (got type {type(object)})"
+            yield f"{name} ({object!r}) is not a dictionary (got type {type(object)})"
             return
 
         gotNames = set(object.keys())
@@ -381,7 +383,7 @@ class Entity(Type):
 
         for k in gotNames & self.fieldNames:
             f = self.fields[k]
-            yield from f.validate(f"{name}[{repr(k)}]", object[k])
+            yield from f.validate(f"{name}[{k!r}]", object[k])
 
     def getSpec(self):
         return {

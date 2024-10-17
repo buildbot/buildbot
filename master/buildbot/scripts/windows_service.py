@@ -257,7 +257,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 )
 
             self.warning(
-                f"BuildBot for directory {repr(bbdir)} terminated with "
+                f"BuildBot for directory {bbdir!r} terminated with "
                 f"exit code {status}.\n{output}"
             )
 
@@ -284,9 +284,7 @@ class BBService(win32serviceutil.ServiceFramework):
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
-                self.warning(
-                    f"BuildBot process at {repr(bbdir)} failed to terminate - " "killing it"
-                )
+                self.warning(f"BuildBot process at {bbdir!r} failed to terminate - " "killing it")
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
@@ -543,7 +541,7 @@ def DetermineRunner(bbdir):
 
     try:
         if 'import BuildSlave' in contents:
-            import buildslave.scripts.runner
+            import buildslave.scripts.runner  # type: ignore[import-not-found]
 
             return buildslave.scripts.runner.run
 

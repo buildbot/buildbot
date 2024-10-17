@@ -171,15 +171,13 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getWorker_connected_not_configured(self):
-        yield self.insert_test_data(
-            self.baseRows
-            + [
-                # the worker is connected to this master, but not configured.
-                # weird, but the DB should represent it.
-                fakedb.Worker(id=32, name='two'),
-                fakedb.ConnectedWorker(workerid=32, masterid=11),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.baseRows,
+            # the worker is connected to this master, but not configured.
+            # weird, but the DB should represent it.
+            fakedb.Worker(id=32, name='two'),
+            fakedb.ConnectedWorker(workerid=32, masterid=11),
+        ])
         workerdict = yield self.db.workers.getWorker(workerid=32)
         self.assertIsInstance(workerdict, workers.WorkerModel)
         self.assertEqual(
@@ -198,20 +196,18 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getWorker_multiple_connections(self):
-        yield self.insert_test_data(
-            self.baseRows
-            + [
-                # the worker is connected to two masters at once.
-                # weird, but the DB should represent it.
-                fakedb.Worker(id=32, name='two'),
-                fakedb.ConnectedWorker(workerid=32, masterid=10),
-                fakedb.ConnectedWorker(workerid=32, masterid=11),
-                fakedb.BuilderMaster(id=24, builderid=20, masterid=10),
-                fakedb.BuilderMaster(id=25, builderid=20, masterid=11),
-                fakedb.ConfiguredWorker(workerid=32, buildermasterid=24),
-                fakedb.ConfiguredWorker(workerid=32, buildermasterid=25),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.baseRows,
+            # the worker is connected to two masters at once.
+            # weird, but the DB should represent it.
+            fakedb.Worker(id=32, name='two'),
+            fakedb.ConnectedWorker(workerid=32, masterid=10),
+            fakedb.ConnectedWorker(workerid=32, masterid=11),
+            fakedb.BuilderMaster(id=24, builderid=20, masterid=10),
+            fakedb.BuilderMaster(id=25, builderid=20, masterid=11),
+            fakedb.ConfiguredWorker(workerid=32, buildermasterid=24),
+            fakedb.ConfiguredWorker(workerid=32, buildermasterid=25),
+        ])
         workerdict = yield self.db.workers.getWorker(workerid=32)
         self.assertIsInstance(workerdict, workers.WorkerModel)
         self.assertEqual(
@@ -252,13 +248,11 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getWorker_not_connected(self):
-        yield self.insert_test_data(
-            self.baseRows
-            + [
-                fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
-                fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.baseRows,
+            fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+            fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
+        ])
         workerdict = yield self.db.workers.getWorker(workerid=30)
         self.assertIsInstance(workerdict, workers.WorkerModel)
         self.assertEqual(
@@ -277,14 +271,12 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getWorker_connected(self):
-        yield self.insert_test_data(
-            self.baseRows
-            + [
-                fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
-                fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
-                fakedb.ConnectedWorker(workerid=30, masterid=10),
-            ]
-        )
+        yield self.insert_test_data([
+            *self.baseRows,
+            fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+            fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
+            fakedb.ConnectedWorker(workerid=30, masterid=10),
+        ])
         workerdict = yield self.db.workers.getWorker(workerid=30)
         self.assertIsInstance(workerdict, workers.WorkerModel)
         self.assertEqual(

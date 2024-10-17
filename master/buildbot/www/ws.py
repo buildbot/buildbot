@@ -108,10 +108,10 @@ class WsProtocol(WebSocketServerProtocol):
         try:
             return meth(**frame)
         except TypeError as e:
-            return self.send_error(error=f"Invalid method argument '{str(e)}'", code=400, _id=_id)
+            return self.send_error(error=f"Invalid method argument '{e!s}'", code=400, _id=_id)
         except Exception as e:
             log.err(e, f"while calling command {cmdmeth}")
-            return self.send_error(error=f"Internal Error '{str(e)}'", code=500, _id=_id)
+            return self.send_error(error=f"Internal Error '{e!s}'", code=500, _id=_id)
 
     # legacy protocol methods
 
@@ -130,9 +130,7 @@ class WsProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def cmd_startConsuming(self, path, _id):
         if not self.isPath(path):
-            yield self.send_json_message(
-                error=f"invalid path format '{str(path)}'", code=400, _id=_id
-            )
+            yield self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
             return
 
         # if it's already subscribed, don't leak a subscription
@@ -158,9 +156,7 @@ class WsProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def cmd_stopConsuming(self, path, _id):
         if not self.isPath(path):
-            yield self.send_json_message(
-                error=f"invalid path format '{str(path)}'", code=400, _id=_id
-            )
+            yield self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
             return
 
         # only succeed if path has been started
@@ -169,9 +165,7 @@ class WsProtocol(WebSocketServerProtocol):
             yield qref.stopConsuming()
             yield self.ack(_id=_id)
             return
-        yield self.send_json_message(
-            error=f"path was not consumed '{str(path)}'", code=400, _id=_id
-        )
+        yield self.send_json_message(error=f"path was not consumed '{path!s}'", code=400, _id=_id)
 
     def cmd_ping(self, _id):
         self.send_json_message(msg="pong", code=200, _id=_id)

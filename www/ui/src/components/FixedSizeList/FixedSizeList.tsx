@@ -523,6 +523,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
         className,
         onScroll: (e) => this._onScrollVertical(e),
         onWheel: (e) => this._onWheel(),
+        // @ts-ignore: type checker gets confused about what is the type of the component.
         ref: (ref: HTMLElement) => this._outerRefSetter(ref),
         style: {
           position: 'relative',

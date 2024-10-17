@@ -26,7 +26,6 @@ import {
   BadgeStatus,
   ConfigContext,
   analyzeStepUrls,
-  buildDurationFormatWithLocks,
   stepDurationFormatWithLocks,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
@@ -52,6 +51,7 @@ import {BuildRequestSummary} from "../BuildRequestSummary/BuildRequestSummary";
 import {Card} from "react-bootstrap";
 import {useScrollToAnchor} from "../../util/AnchorLinks";
 import {AnchorLink} from "../AnchorLink/AnchorLink";
+import {BuildSummaryStepDurationSpan, BuildSummaryBuildDurationSpan} from "./BuildSummaryDurationSpan";
 
 enum DetailLevel {
   None = 0,
@@ -100,11 +100,10 @@ const getStepLogsInDisplayOrder = (logs: DataCollection<Log>) => {
 type BuildSummaryStepLineProps = {
   build: Build;
   step: Step;
-  logs: DataCollection<Log>;
   parentFullDisplay: boolean
 }
 
-const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: BuildSummaryStepLineProps) => {
+const BuildSummaryStepLine = observer(({build, step, parentFullDisplay}: BuildSummaryStepLineProps) => {
   const config = useContext(ConfigContext);
   const now = useCurrentTime();
 
@@ -117,14 +116,16 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
   const [fullDisplay, setFullDisplay] = useStateWithParentTrackingWithDefaultIfNotSet(
     parentFullDisplay, () => !step.complete || (step.results !== SUCCESS));
 
+  const logs = useDataApiQuery(() => step.getLogs());
+
   const renderState = () => {
     if (step.started_at === null) {
       return <></>;
     }
 
     return (
-      <span className="bb-build-summary-time">
-          {stepDurationFormatWithLocks(step, now)}
+      <span className="bb-build-summary-step-details">
+        <BuildSummaryStepDurationSpan step={step} now={now}/>
         &nbsp;
         {step.state_string}
         </span>
@@ -194,7 +195,7 @@ const BuildSummaryStepLine = observer(({build, step, logs, parentFullDisplay}: B
             </li>
           ))}
         </ul>
-        {renderStepLogs()}
+        {fullDisplay ? renderStepLogs() : <></>}
       </div>
     );
   }
@@ -240,7 +241,6 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
     () => parentBuild === null
       ? new DataCollection<Builder>()
       : Builder.getAll(accessor, {id: parentBuild.builderid.toString()}));
-  const logsQuery = useDataApiQuery(() => stepsQuery.getRelated(step => step.getLogs()));
 
   const [detailLevel, setDetailLevel] =
     useState<DetailLevel>(condensed ? DetailLevel.None : DetailLevel.Everything);
@@ -280,11 +280,8 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
 
   const stepElements = stepsToDisplay.map(step => (
     <BuildSummaryStepLine key={step.id} build={build} step={step}
-                          logs={logsQuery.getParentCollectionOrEmpty(step.id)}
                           parentFullDisplay={fullDisplay}/>
   ));
-
-  const durationString = buildDurationFormatWithLocks(build, now);
 
   return (
     <Card className={"bb-build-summary " + results2class(build, null)}>
@@ -307,7 +304,7 @@ export const BuildSummary = observer(({build, parentBuild, parentRelationship,
         }
         {reason !== null ? <span>| {reason}</span> : <></>}
         <div className={"bb-build-summary-details"}>
-          <span>{durationString}&nbsp;</span>
+          <BuildSummaryBuildDurationSpan build={build} now={now}/>&nbsp;
           <span>{build.state_string}&nbsp;</span>
           <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
           {renderParentBuildLink()}

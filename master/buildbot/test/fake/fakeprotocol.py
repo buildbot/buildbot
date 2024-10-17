@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import Any
 
 from twisted.internet import defer
 
@@ -20,7 +22,7 @@ from buildbot.worker.protocols import base
 
 
 class FakeTrivialConnection(base.Connection):
-    info = {}
+    info: dict[str, Any] = {}
 
     def __init__(self):
         super().__init__("Fake")

@@ -19,6 +19,8 @@ import re
 import sys
 import traceback
 import warnings
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.python import failure
 from twisted.python import log
@@ -32,6 +34,7 @@ from buildbot.config.builder import BuilderConfig
 from buildbot.config.errors import ConfigErrors
 from buildbot.config.errors import capture_config_errors
 from buildbot.config.errors import error
+from buildbot.db.compression import ZStdCompressor
 from buildbot.interfaces import IRenderable
 from buildbot.process.project import Project
 from buildbot.revlinks import default_revlink_matcher
@@ -57,6 +60,12 @@ def get_is_in_unit_tests():
     return _in_unit_tests
 
 
+def _default_log_compression_method():
+    if ZStdCompressor.available:
+        return ZStdCompressor.name
+    return 'gz'
+
+
 def loadConfigDict(basedir, configFileName):
     if not os.path.isdir(basedir):
         raise ConfigErrors([f"basedir '{basedir}' does not exist"])
@@ -68,9 +77,9 @@ def loadConfigDict(basedir, configFileName):
         with open(filename, encoding='utf-8'):
             pass
     except OSError as e:
-        raise ConfigErrors([f"unable to open configuration file {repr(filename)}: {e}"]) from e
+        raise ConfigErrors([f"unable to open configuration file {filename!r}: {e}"]) from e
 
-    log.msg(f"Loading configuration from {repr(filename)}")
+    log.msg(f"Loading configuration from {filename!r}")
 
     # execute the config file
     localDict = {
@@ -101,7 +110,7 @@ def loadConfigDict(basedir, configFileName):
 
     if 'BuildmasterConfig' not in localDict:
         error(
-            f"Configuration file {repr(filename)} does not define 'BuildmasterConfig'",
+            f"Configuration file {filename!r} does not define 'BuildmasterConfig'",
             always_raise=True,
         )
 
@@ -110,7 +119,7 @@ def loadConfigDict(basedir, configFileName):
 
 @implementer(interfaces.IConfigLoader)
 class FileLoader(ComparableMixin):
-    compare_attrs = ['basedir', 'configFileName']
+    compare_attrs: ClassVar[Sequence[str]] = ['basedir', 'configFileName']
 
     def __init__(self, basedir, configFileName):
         self.basedir = basedir
@@ -138,7 +147,7 @@ class MasterConfig(util.ComparableMixin):
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
         self.logCompressionLimit = 4 * 1024
-        self.logCompressionMethod = 'gz'
+        self.logCompressionMethod = _default_log_compression_method()
         self.logEncoding = 'utf-8'
         self.logMaxSize = None
         self.logMaxTailSize = None
@@ -224,7 +233,7 @@ class MasterConfig(util.ComparableMixin):
         "workers",
         "messageInfoDir",
     ])
-    compare_attrs = list(_known_config_keys)
+    compare_attrs: ClassVar[Sequence[str]] = list(_known_config_keys)
 
     def preChangeGenerator(self, **kwargs):
         return {
@@ -329,6 +338,7 @@ class MasterConfig(util.ComparableMixin):
             warnings.warn(
                 'WARNING: Title is too long to be displayed. ' + '"Buildbot" will be used instead.',
                 category=ConfigWarning,
+                stacklevel=1,
             )
 
         copy_str_param('messageInfoDir')
@@ -356,25 +366,49 @@ class MasterConfig(util.ComparableMixin):
                     'You can `opt-out` by setting this variable to None.\n'
                     'Or `opt-in` for more information by setting it to "full".\n',
                     category=ConfigWarning,
+                    stacklevel=1,
                 )
         copy_str_or_callable_param('buildbotNetUsageData')
 
         copy_int_param('changeHorizon')
         copy_int_param('logCompressionLimit')
 
-        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
-        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
-            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+        self.logCompressionMethod = config_dict.get(
+            'logCompressionMethod',
+            _default_log_compression_method(),
+        )
+        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4', 'zstd', 'br'):
+            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz', 'lz4', 'br' or 'zstd'")
 
         if self.logCompressionMethod == "lz4":
             try:
                 import lz4  # pylint: disable=import-outside-toplevel
 
-                [lz4]
+                _ = lz4
             except ImportError:
                 error(
                     "To set c['logCompressionMethod'] to 'lz4' "
                     "you must install the lz4 library ('pip install lz4')"
+                )
+        elif self.logCompressionMethod == "zstd":
+            try:
+                import zstandard  # pylint: disable=import-outside-toplevel
+
+                _ = zstandard
+            except ImportError:
+                error(
+                    "To set c['logCompressionMethod'] to 'zstd' "
+                    "you must install the zstandard Buildbot extra ('pip install buildbot[zstd]')"
+                )
+        elif self.logCompressionMethod == "br":
+            try:
+                import brotli  # pylint: disable=import-outside-toplevel
+
+                _ = brotli
+            except ImportError:
+                error(
+                    "To set c['logCompressionMethod'] to 'br' "
+                    "you must install the brotli Buildbot extra ('pip install buildbot[brotli]')"
                 )
 
         copy_int_param('logMaxSize')
@@ -576,7 +610,7 @@ class MasterConfig(util.ComparableMixin):
         def mapper(p):
             if isinstance(p, Project):
                 return p
-            error(f"{repr(p)} is not a project config (in c['projects']")
+            error(f"{p!r} is not a project config (in c['projects']")
             return None
 
         self.projects = [mapper(p) for p in projects]
@@ -597,7 +631,7 @@ class MasterConfig(util.ComparableMixin):
             elif isinstance(b, dict):
                 return BuilderConfig(**b)
             else:
-                error(f"{repr(b)} is not a builder config (in c['builders']")
+                error(f"{b!r} is not a builder config (in c['builders']")
             return None
 
         builders = [mapper(b) for b in builders]
@@ -610,6 +644,7 @@ class MasterConfig(util.ComparableMixin):
                         "Perhaps you meant to specify workerbuilddir instead."
                     ),
                     category=ConfigWarning,
+                    stacklevel=1,
                 )
 
         self.builders = builders
@@ -773,7 +808,7 @@ class MasterConfig(util.ComparableMixin):
                 continue
 
             if _service.name in self.services:
-                error(f'Duplicate service name {repr(_service.name)}')
+                error(f'Duplicate service name {_service.name!r}')
                 continue
 
             self.services[_service.name] = _service

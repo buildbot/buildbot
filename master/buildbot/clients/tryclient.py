@@ -200,7 +200,7 @@ class MercurialExtractor(SourceStampExtractor):
         (stdout, stderr, code) = res
 
         if code:
-            cs = ' '.join(['hg'] + cmd)
+            cs = ' '.join(['hg', *cmd])
             if stderr:
                 stderr = '\n' + stderr.rstrip()
             raise RuntimeError(f"{cs} returned {code} {stderr}")

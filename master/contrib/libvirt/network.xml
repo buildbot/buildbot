@@ -1,0 +1,16 @@
+<network>
+  <name>buildbot-network</name>
+  <bridge name="virbr1" />
+  <forward />
+  <ip address="192.168.201.1" netmask="255.255.255.0">
+    <dhcp>
+      <range start="192.168.201.2" end="192.168.201.254" />
+      <host mac="00:16:3e:77:e2:01" name="minion1" ip="192.168.201.2"/>
+      <host mac="00:16:3e:77:e2:02" name="minion2" ip="192.168.201.3"/>
+      <host mac="00:16:3e:77:e2:03" name="minion3" ip="192.168.201.4"/>
+      <host mac="00:16:3e:77:e2:04" name="minion4" ip="192.168.201.5"/>
+      <host mac="00:16:3e:77:e2:05" name="minion5" ip="192.168.201.6"/>
+      <host mac="00:16:3e:77:e2:06" name="minion6" ip="192.168.201.7"/>
+    </dhcp>
+  </ip>
+</network>

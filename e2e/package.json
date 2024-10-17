@@ -4,7 +4,7 @@
   "description": "smoke tests for buildbot with playwright",
   "main": "index.js",
   "dependencies": {
-    "@playwright/test": "^1.40.1",
+    "@playwright/test": "~1.47.2",
     "qs": "^6.11",
     "request": "^2.88.2",
     "typescript": "^4.4.2"

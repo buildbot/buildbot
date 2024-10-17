@@ -16,12 +16,12 @@ The :bb:step:`Trial` takes the following arguments:
   Will form the start of the argv array that will launch ``trial``.
   If you use this, you should set ``trial`` to an explicit path (like /usr/bin/trial or ./bin/trial).
   Defaults to ``None``, which leaves it out entirely (running 'trial args' instead of python ./bin/trial args').
-  Likely values are ``'python'``, ``['python3.5']``, ``['python', '-Wall']``, etc.
+  Likely values are ``'python'``, ``['python3.8']``, ``['python', '-Wall']``, etc.
 
 ``trial``
   (string, optional) Which 'trial' executable to run
   Defaults to ``'trial'``, which will cause ``$PATH`` to be searched and probably find ``/usr/bin/trial``.
-  If you set ``python``, this should be set to an explicit path (because ``python3.5 trial`` will not work).
+  If you set ``python``, this should be set to an explicit path (because ``python3.8 trial`` will not work).
 
 ``trialMode``
   (list of strings, optional) A list of arguments to pass to trial to set the reporting mode.

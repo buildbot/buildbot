@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
 from urllib.parse import urlparse
 
@@ -39,7 +41,7 @@ _GET_TOKEN_DATA = {'grant_type': 'client_credentials'}
 
 
 class BitbucketStatusPush(ReporterBase):
-    name = "BitbucketStatusPush"
+    name: str | None = "BitbucketStatusPush"  # type: ignore[assignment]
 
     def checkConfig(
         self,

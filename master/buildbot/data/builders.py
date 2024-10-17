@@ -69,12 +69,15 @@ class BuildersEndpoint(base.Endpoint):
         /builders
         /masters/n:masterid/builders
         /projects/n:projectid/builders
+        /workers/n:workerid/builders
     """
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
-            masterid=kwargs.get('masterid', None), projectid=kwargs.get('projectid', None)
+            masterid=kwargs.get('masterid', None),
+            projectid=kwargs.get('projectid', None),
+            workerid=kwargs.get('workerid', None),
         )
         return [_db2data(bd) for bd in bdicts]
 

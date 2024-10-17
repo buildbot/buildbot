@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import ClassVar
+from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -25,7 +27,7 @@ from buildbot.util.eventual import eventually
 if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg
 else:
-    debuglog = lambda m: None  # noqa
+    debuglog = lambda m: None
 
 
 class BaseLock:
@@ -63,7 +65,7 @@ class BaseLock:
         self._claimed_counting = 0
 
         # subscriptions to this lock being released
-        self.release_subs = subscription.SubscriptionPoint(f"{repr(self)} releases")
+        self.release_subs = subscription.SubscriptionPoint(f"{self!r} releases")
 
     def __repr__(self):
         return self.description
@@ -83,7 +85,7 @@ class BaseLock:
 
     def isAvailable(self, requester, access):
         """Return a boolean whether the lock is available for claiming"""
-        debuglog(f"{self} isAvailable({requester}, {access}): self.owners={repr(self.owners)}")
+        debuglog(f"{self} isAvailable({requester}, {access}): self.owners={self.owners!r}")
         num_excl = self._claimed_excl
         num_counting = self._claimed_counting
 
@@ -340,7 +342,7 @@ class LockAccess(util.ComparableMixin):
                   compatibility
     """
 
-    compare_attrs = ('lockid', 'mode', 'count')
+    compare_attrs: ClassVar[Sequence[str]] = ('lockid', 'mode', 'count')
 
     def __init__(self, lockid, mode, count=1):
         self.lockid = lockid
@@ -398,7 +400,7 @@ class MasterLock(BaseLockId):
     workers, for example to limit the load on a common SVN repository.
     """
 
-    compare_attrs = ('name', 'maxCount')
+    compare_attrs: ClassVar[Sequence[str]] = ('name', 'maxCount')
     lockClass = RealMasterLock
 
     def __init__(self, name, maxCount=1):
@@ -426,7 +428,7 @@ class WorkerLock(BaseLockId):
 
     """
 
-    compare_attrs = ('name', 'maxCount', '_maxCountForWorkerList')
+    compare_attrs: ClassVar[Sequence[str]] = ('name', 'maxCount', '_maxCountForWorkerList')
     lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForWorker=None):

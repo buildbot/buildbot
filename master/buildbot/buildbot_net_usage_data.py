@@ -49,7 +49,7 @@ def linux_distribution():
             for line in f:
                 try:
                     k, v = line.strip().split("=")
-                    meta_data[k] = v.strip('""')
+                    meta_data[k] = v.strip('"')
                 except Exception:
                     pass
 
@@ -95,7 +95,7 @@ def getName(obj):
     else:
         klass = type(obj)
     name = ""
-    klasses = (klass,) + inspect.getmro(klass)
+    klasses = (klass, *inspect.getmro(klass))
     for klass in klasses:
         if hasattr(klass, "__module__") and klass.__module__.startswith("buildbot."):
             return sanitize(name + klass.__module__ + "." + klass.__name__)
@@ -193,7 +193,7 @@ def _sendWithUrlib(url, data):
         url, data, {'Content-Type': 'application/json', 'Content-Length': clen}
     )
     try:
-        f = urllib_request.urlopen(req)  # noqa pylint: disable=consider-using-with
+        f = urllib_request.urlopen(req)
     except urllib_error.URLError:
         return None
     res = f.read()
