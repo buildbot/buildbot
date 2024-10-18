@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from buildbot.db.compression.protocol import CompressObjInterface
 from buildbot.db.compression.protocol import CompressorInterface
 
 try:
@@ -36,3 +37,18 @@ class LZ4Compressor(CompressorInterface):
     @staticmethod
     def read(data: bytes) -> bytes:
         return lz4.block.decompress(data)
+
+    # LZ4.block does not have a compress object,
+    # still implement the interface for compatibility
+    class CompressObj(CompressObjInterface):
+        def __init__(self) -> None:
+            self._buffer: list[bytes] = []
+
+        def compress(self, data: bytes) -> bytes:
+            self._buffer.append(data)
+            return b''
+
+        def flush(self) -> bytes:
+            compressed_buffer = LZ4Compressor.dumps(b''.join(self._buffer))
+            self._buffer = []
+            return compressed_buffer
