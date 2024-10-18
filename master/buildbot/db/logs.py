@@ -29,6 +29,7 @@ from buildbot.db.compression import CompressorInterface
 from buildbot.db.compression import GZipCompressor
 from buildbot.db.compression import LZ4Compressor
 from buildbot.db.compression import ZStdCompressor
+from buildbot.db.compression.protocol import CompressObjInterface
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -83,6 +84,13 @@ class RawCompressor(CompressorInterface):
     @staticmethod
     def read(data: bytes) -> bytes:
         return data
+
+    class CompressObj(CompressObjInterface):
+        def compress(self, data: bytes) -> bytes:
+            return data
+
+        def flush(self) -> bytes:
+            return b''
 
 
 class LogsConnectorComponent(base.DBConnectorComponent):
