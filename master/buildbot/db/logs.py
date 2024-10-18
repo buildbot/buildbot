@@ -16,11 +16,14 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
+from twisted.python import threadpool
 
 from buildbot.db import base
 from buildbot.db.compression import BrotliCompressor
@@ -117,6 +120,38 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         compressor.name: (compressor_id, compressor)
         for compressor_id, compressor in COMPRESSION_BYID.items()
     }
+
+    def __init__(self, connector: base.DBConnector):
+        super().__init__(connector)
+
+        max_threads = 1
+        if cpu_count := os.cpu_count():
+            # use at most half cpu available to avoid oversubscribing
+            # the master on other processes
+            max_threads = max(int(cpu_count / 2), max_threads)
+
+        self._compression_pool = threadpool.ThreadPool(
+            minthreads=1,
+            maxthreads=max_threads,
+            name='DBLogCompression',
+        )
+        self._start_compression_pool()
+
+    def _start_compression_pool(self) -> None:
+        # keep a ref on the reactor used to start
+        # so we can schedule shutdown even if
+        # DBConnector was un-parented before
+        _reactor = self.master.reactor
+
+        def _start():
+            self._compression_pool.start()
+            _reactor.addSystemEventTrigger(
+                'during',
+                'shutdown',
+                self._compression_pool.stop,
+            )
+
+        _reactor.callWhenRunning(_start)
 
     def _get_compressor(self, compressor_id: int) -> type[CompressorInterface]:
         compressor = self.COMPRESSION_BYID.get(compressor_id)
@@ -458,6 +493,31 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
                 conn.commit()
 
+        def _thd_recompress_chunks(
+            compressed_chunks: list[tuple[int, bytes]],
+            compress_obj: CompressObjInterface,
+        ) -> tuple[bytes, int]:
+            """This has to run in the compression thread pool"""
+            # decompress this group of chunks. Note that the content is binary bytes.
+            # no need to decode anything as we are going to put in back stored as bytes anyway
+            chunks: list[bytes] = []
+            bytes_saved = 0
+            for idx, (chunk_compress_id, chunk_content) in enumerate(compressed_chunks):
+                bytes_saved += len(chunk_content)
+
+                # trailing line-ending is stripped from chunks
+                # need to add it back, except for the last one
+                if idx != 0:
+                    chunks.append(compress_obj.compress(b'\n'))
+
+                uncompressed_content = self._get_compressor(chunk_compress_id).read(chunk_content)
+                chunks.append(compress_obj.compress(uncompressed_content))
+
+            chunks.append(compress_obj.flush())
+            new_content = b''.join(chunks)
+            bytes_saved -= len(new_content)
+            return new_content, bytes_saved
+
         chunk_groups = await self.db.pool.do(_thd_gather_chunks_to_process)
         if not chunk_groups:
             return 0
@@ -472,23 +532,17 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 first_line=group_first_line,
                 last_line=group_last_line,
             )
-            # decompress this group of chunks. Note that the content is binary bytes.
-            # no need to decode anything as we are going to put in back stored as bytes anyway
-            chunks: list[bytes] = []
-            for idx, (chunk_compress_id, chunk_content) in enumerate(compressed_chunks):
-                total_bytes_saved += len(chunk_content)
 
-                # trailing line-ending is stripped from chunks
-                # need to add it back, except for the last one
-                if idx != 0:
-                    chunks.append(compress_obj.compress(b'\n'))
+            new_content, bytes_saved = await threads.deferToThreadPool(
+                self.master.reactor,
+                self._compression_pool,
+                _thd_recompress_chunks,
+                compressed_chunks=compressed_chunks,
+                compress_obj=compress_obj,
+            )
 
-                uncompressed_content = self._get_compressor(chunk_compress_id).read(chunk_content)
-                chunks.append(compress_obj.compress(uncompressed_content))
+            total_bytes_saved += bytes_saved
 
-            chunks.append(compress_obj.flush())
-            new_content = b''.join(chunks)
-            total_bytes_saved -= len(new_content)
             await self.db.pool.do(
                 _thd_replace_chunks_by_new_grouped_chunk,
                 first_line=group_first_line,
