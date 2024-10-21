@@ -193,6 +193,20 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def get_scheduler_master(self, schedulerid):
+        def thd(conn):
+            q = self.db.model.scheduler_masters.select(
+                self.db.model.scheduler_masters.c.masterid
+            ).where(self.db.model.scheduler_masters.c.schedulerid == schedulerid)
+            r = conn.execute(q)
+            row = r.fetchone()
+            conn.close()
+            if row:
+                return row.masterid
+            return None
+
+        return self.db.pool.do(thd)
+
     @defer.inlineCallbacks
     def getScheduler(self, schedulerid: int):
         sch = yield self.getSchedulers(_schedulerid=schedulerid)

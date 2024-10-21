@@ -190,21 +190,11 @@ class FakeSchedulersComponent(FakeDBComponent):
         self.scheduler_masters[schedulerid] = masterid
         return defer.succeed(None)
 
-    # fake methods
-
-    def fakeScheduler(self, name, schedulerid):
-        self.schedulers[schedulerid] = name
-
-    def fakeSchedulerMaster(self, schedulerid, masterid):
-        if masterid is not None:
-            self.scheduler_masters[schedulerid] = masterid
-        else:
-            del self.scheduler_masters[schedulerid]
+    def get_scheduler_master(self, schedulerid):
+        current_masterid = self.scheduler_masters.get(schedulerid, None)
+        return defer.succeed(current_masterid)
 
     # assertions
-
-    def assertSchedulerMaster(self, schedulerid, masterid):
-        self.t.assertEqual(self.scheduler_masters.get(schedulerid), masterid)
 
     def enable(self, schedulerid, v):
         assert schedulerid in self.schedulers
