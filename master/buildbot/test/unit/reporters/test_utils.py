@@ -41,9 +41,10 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
+    @defer.inlineCallbacks
     def setupDb(self):
         self.db = self.master.db
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
@@ -123,7 +124,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             fakedb.SourceStamp(id=235, patchid=99),
         ])
         for _id in (20, 21):
-            self.db.insert_test_data([
+            yield self.db.insert_test_data([
                 fakedb.BuildProperty(buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
                 fakedb.BuildProperty(buildid=_id, name="owner", value="him"),
@@ -161,7 +162,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_getDetailsForBuildset(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.getDetailsForBuildset(
             self.master, 98, want_properties=True, want_steps=True, want_previous_build=True
         )
@@ -188,7 +189,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_getDetailsForBuild(self):
-        self.setupDb()
+        yield self.setupDb()
         build = yield self.master.data.get(("builds", 21))
         yield utils.getDetailsForBuild(
             self.master,
@@ -204,7 +205,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_getDetailsForBuildWithParent(self):
-        self.setupDb()
+        yield self.setupDb()
         build = yield self.master.data.get(("builds", 22))
         yield utils.getDetailsForBuild(
             self.master,
@@ -220,7 +221,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_getDetailsForBuildsetWithLogs(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.getDetailsForBuildset(
             self.master,
             98,
@@ -240,7 +241,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_get_details_for_buildset_all(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.getDetailsForBuildset(
             self.master,
             98,
@@ -537,27 +538,27 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_getResponsibleUsers(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.getResponsibleUsersForSourceStamp(self.master, 234)
         self.assertEqual(res, ["me@foo"])
 
     @defer.inlineCallbacks
     def test_getResponsibleUsersFromPatch(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.getResponsibleUsersForSourceStamp(self.master, 235)
         self.assertEqual(res, ["him@foo"])
 
     @defer.inlineCallbacks
     def test_getResponsibleUsersForBuild(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
         self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
 
     @defer.inlineCallbacks
     def test_getResponsibleUsersForBuildWithBadOwner(self):
         self.setUpLogging()
-        self.setupDb()
-        self.db.insert_test_data([
+        yield self.setupDb()
+        yield self.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owner", value=["him"]),
         ])
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
@@ -566,8 +567,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_getResponsibleUsersForBuildWithOwners(self):
-        self.setupDb()
-        self.db.insert_test_data([
+        yield self.setupDb()
+        yield self.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owners", value=["him", "her"]),
         ])
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
@@ -575,9 +576,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_get_responsible_users_for_buildset_with_owner(self):
-        self.setupDb()
+        yield self.setupDb()
 
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.BuildsetProperty(
                 buildsetid=98, property_name="owner", property_value='["buildset_owner", "fakedb"]'
             ),
@@ -588,20 +589,20 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def test_get_responsible_users_for_buildset_no_owner(self):
-        self.setupDb()
+        yield self.setupDb()
         res = yield utils.get_responsible_users_for_buildset(self.master, 99)
         self.assertEqual(sorted(res), sorted([]))
 
     @defer.inlineCallbacks
     def test_getPreviousBuild(self):
-        self.setupDb()
+        yield self.setupDb()
         build = yield self.master.data.get(("builds", 21))
         res = yield utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 20)
 
     @defer.inlineCallbacks
     def test_getPreviousBuildWithRetry(self):
-        self.setupDb()
+        yield self.setupDb()
         build = yield self.master.data.get(("builds", 20))
         res = yield utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 18)

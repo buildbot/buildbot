@@ -142,7 +142,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, finalResult):
-        self.insert_test_data(buildResults, finalResult)
+        yield self.insert_test_data(buildResults, finalResult)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         builds = res['builds']
         buildset = res['buildset']
@@ -675,7 +675,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
 
     @defer.inlineCallbacks
     def test_extract_project_revision(self):
-        self.insert_test_data([SUCCESS], SUCCESS)
+        yield self.insert_test_data([SUCCESS], SUCCESS)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         report = {"builds": res["builds"], "buildset": res["buildset"]}
 
@@ -685,8 +685,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
 
     @defer.inlineCallbacks
     def test_extract_project_revision_no_build(self):
-        self.insert_test_data([], SUCCESS)
-        self.db.insert_test_data([
+        yield self.insert_test_data([], SUCCESS)
+        yield self.db.insert_test_data([
             fakedb.BuildsetProperty(
                 buildsetid=98, property_name="event.change.id", property_value='["12345", "fakedb"]'
             ),
