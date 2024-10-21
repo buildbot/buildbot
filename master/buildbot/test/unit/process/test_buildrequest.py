@@ -466,7 +466,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fromBrdict(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insert_test_data([
+        yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -512,7 +512,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fromBrdict_submittedAt_NULL(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insert_test_data([
+        yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -535,9 +535,10 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         # remaining fields assumed to be checked in test_fromBrdict
         self.assertEqual(br.submittedAt, None)
 
+    @defer.inlineCallbacks
     def test_fromBrdict_no_sourcestamps(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insert_test_data([
+        yield master.db.insert_test_data([
             fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
             # buildset has no sourcestamps
@@ -547,14 +548,14 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict: buildrequest.BuildRequest.fromBrdict(master, brdict))
-        return self.assertFailure(d, AssertionError)
+        brdict = yield master.db.buildrequests.getBuildRequest(288)
+        with self.assertRaises(AssertionError):
+            yield buildrequest.BuildRequest.fromBrdict(master, brdict)
 
     @defer.inlineCallbacks
     def test_fromBrdict_multiple_sourcestamps(self):
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insert_test_data([
+        yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -629,7 +630,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         """
         brs = []  # list of buildrequests
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insert_test_data([
+        yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -744,7 +745,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
           Merging requests requires both requests to have the same codebases
         """
         master = fakemaster.make_master(self, wantData=True, wantDb=True)
-        master.db.insert_test_data([
+        yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=238,

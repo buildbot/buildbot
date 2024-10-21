@@ -1081,7 +1081,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(
                 id=self.OBJECTID,
                 name='GerritEventLogPoller:gerrit',

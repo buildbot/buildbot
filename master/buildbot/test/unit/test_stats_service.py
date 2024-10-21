@@ -48,7 +48,7 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=builderid, name=name)
             for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
         ])
@@ -191,8 +191,9 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.routingKey = ("builders", self.BUILDER_IDS[0], "builds", 1, "finished")
         self.master.mq.verifyMessages = False
 
+    @defer.inlineCallbacks
     def setupBuild(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Build(
                 id=1,
                 masterid=1,
@@ -233,7 +234,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_property_capturing(self):
         self.setupFakeStorage([capture.CaptureProperty('builder1', 'test_name')])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
         yield self.end_build_call_consumers()
 
@@ -251,7 +252,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_property_capturing_all_builders(self):
         self.setupFakeStorage([capture.CapturePropertyAllBuilders('test_name')])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
         yield self.end_build_call_consumers()
 
@@ -269,7 +270,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_property_capturing_regex(self):
         self.setupFakeStorage([capture.CaptureProperty('builder1', 'test_n.*', regex=True)])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
         yield self.end_build_call_consumers()
 
@@ -287,7 +288,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_property_capturing_error(self):
         self.setupFakeStorage([capture.CaptureProperty('builder1', 'test')])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
@@ -302,7 +303,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
             return 'test_value'
 
         self.setupFakeStorage([capture.CaptureProperty('builder1', 'test_name', cb)])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
         yield self.end_build_call_consumers()
 
@@ -320,7 +321,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_build_start_time_capturing(self):
         self.setupFakeStorage([capture.CaptureBuildStartTime('builder1')])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual(
@@ -330,7 +331,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_build_start_time_capturing_all_builders(self):
         self.setupFakeStorage([capture.CaptureBuildStartTimeAllBuilders()])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual(
@@ -343,7 +344,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
             return '2015-07-08T01:45:17.391018'
 
         self.setupFakeStorage([capture.CaptureBuildStartTime('builder1', cb)])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual(
@@ -353,7 +354,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_build_end_time_capturing(self):
         self.setupFakeStorage([capture.CaptureBuildEndTime('builder1')])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual('end-time', next(iter(self.fake_storage_service.stored_data[0][0].keys())))
@@ -361,7 +362,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_build_end_time_capturing_all_builders(self):
         self.setupFakeStorage([capture.CaptureBuildEndTimeAllBuilders()])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual('end-time', next(iter(self.fake_storage_service.stored_data[0][0].keys())))
@@ -372,7 +373,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
             return '2015-07-08T01:45:17.391018'
 
         self.setupFakeStorage([capture.CaptureBuildEndTime('builder1', cb)])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual('end-time', next(iter(self.fake_storage_service.stored_data[0][0].keys())))
@@ -382,7 +383,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.setupFakeStorage([
             capture.CaptureBuildDuration('builder1', report_in=time_type, callback=cb)
         ])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
     @defer.inlineCallbacks
@@ -415,7 +416,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_build_duration_capturing_all_builders(self):
         self.setupFakeStorage([capture.CaptureBuildDurationAllBuilders()])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
 
         self.assertEqual('duration', next(iter(self.fake_storage_service.stored_data[0][0].keys())))
@@ -426,7 +427,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
             raise TypeError
 
         self.setupFakeStorage([capture.CaptureBuildStartTime('builder1', cb)])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
@@ -450,7 +451,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_yield_metrics_value(self):
         self.setupFakeStorage([capture.CaptureBuildStartTime('builder1')])
-        self.setupBuild()
+        yield self.setupBuild()
         yield self.end_build_call_consumers()
         yield self.stats_service.yieldMetricsValue('test', {'test': 'test'}, 1)
 
@@ -465,7 +466,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_capture_data(self):
         self.setupFakeStorage([capture.CaptureData('test', 'builder1')])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
@@ -487,7 +488,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def test_capture_data_all_builders(self):
         self.setupFakeStorage([capture.CaptureDataAllBuilders('test')])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
@@ -512,7 +513,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
             return {'test': 'test'}
 
         self.setupFakeStorage([capture.CaptureData('test', 'builder1', cb)])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
@@ -537,7 +538,7 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
             raise TypeError
 
         self.setupFakeStorage([capture.CaptureData('test', 'builder1', cb)])
-        self.setupBuild()
+        yield self.setupBuild()
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 

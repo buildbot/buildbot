@@ -190,6 +190,7 @@ class FakeWorkersComponent(FakeDBComponent):
             if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
 
+    @defer.inlineCallbacks
     def workerConfigured(self, workerid, masterid, builderids):
         buildermasterids = [
             _id
@@ -211,11 +212,10 @@ class FakeWorkersComponent(FakeDBComponent):
         for k, v in list(self.configured.items()):
             if v['buildermasterid'] in allbuildermasterids and v['workerid'] == workerid:
                 del self.configured[k]
-        self.insert_test_data([
+        yield self.insert_test_data([
             ConfiguredWorker(workerid=workerid, buildermasterid=buildermasterid)
             for buildermasterid in buildermasterids
         ])
-        return defer.succeed(None)
 
     def workerDisconnected(self, workerid, masterid):
         del_conn = {"masterid": masterid, "workerid": workerid}

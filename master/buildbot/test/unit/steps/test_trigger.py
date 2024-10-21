@@ -146,7 +146,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                 builderid=builderid,
             )
 
-        m.db.insert_test_data([
+        yield m.db.insert_test_data([
             fakedb.Builder(id=77, name='A'),
             fakedb.Builder(id=78, name='B'),
             fakedb.Builder(id=79, name='C1'),
