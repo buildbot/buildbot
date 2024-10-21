@@ -34,8 +34,7 @@ from buildbot.test.util import logging
 class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     LOGCONTENT = textwrap.dedent("""\
         line zero
-        line 1
-        """)
+        line 1""")
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -238,7 +237,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         )
 
         build1 = res['builds'][0]
-        self.assertEqual(build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
+        self.assertEqual(
+            build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT + "\n"
+        )
         self.assertEqual(
             build1['steps'][0]['logs'][0]['url'],
             'http://localhost:8080/#/builders/80/builds/2/steps/29/logs/stdio',

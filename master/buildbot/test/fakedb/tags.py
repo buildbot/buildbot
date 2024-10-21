@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 
-from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
 
@@ -27,21 +25,3 @@ class Tag(Row):
 
     def __init__(self, id=None, name='some:tag', name_hash=None):
         super().__init__(id=id, name=name, name_hash=name_hash)
-
-
-class FakeTagsComponent(FakeDBComponent):
-    def setUp(self):
-        self.tags = {}
-
-    def insert_test_data(self, rows):
-        for row in rows:
-            if isinstance(row, Tag):
-                self.tags[row.id] = {"id": row.id, "name": row.name}
-
-    def findTagId(self, name):
-        for m in self.tags.values():
-            if m['name'] == name:
-                return defer.succeed(m['id'])
-        id = len(self.tags) + 1
-        self.tags[id] = {"id": id, "name": name}
-        return defer.succeed(id)

@@ -108,6 +108,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get(self):
         changes = yield self.callGet(('changes',))
+        changes = sorted(changes, key=lambda ch: ch['changeid'])
 
         self.validateData(changes[0])
         self.assertEqual(changes[0]['changeid'], 13)
@@ -199,6 +200,10 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changes.Change(self.master)
+
+        yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=99),  # force minimum ID in tests below
+        ])
 
     @defer.inlineCallbacks
     def tearDown(self):

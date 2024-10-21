@@ -437,12 +437,6 @@ class RealTests(Tests):
         self.assertEqual(stepdict.name, name)
 
 
-class TestFakeDB(Tests, unittest.TestCase, connector_component.FakeConnectorComponentMixin):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-
-
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):

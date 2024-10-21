@@ -21,7 +21,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.internet import reactor
 
-from buildbot import config
+from buildbot.config.master import MasterConfig
 from buildbot.data.graphql import GraphQLConnector
 from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
@@ -96,7 +96,7 @@ class FakeMaster(service.MasterService):
         self._master_id = master_id
         self.reactor = reactor
         self.objectids = {}
-        self.config = config.master.MasterConfig()
+        self.config = MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.initLock = defer.DeferredLock()
@@ -167,8 +167,11 @@ def make_master(
         yield master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(testcase, reactor=_reactor)
+        master.db = fakedb.FakeDBConnector(master.basedir, testcase)
+        master.db.configured_url = 'sqlite://'
         yield master.db.setServiceParent(master)
+        yield master.db.setup()
+
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
     if wantGraphql:

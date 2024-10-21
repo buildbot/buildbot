@@ -285,12 +285,6 @@ class Tests(interfaces.InterfaceTests):
         )
 
 
-class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-
-
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
     @defer.inlineCallbacks
     def setUp(self):

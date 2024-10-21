@@ -600,13 +600,13 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(
             buildrequest,
             {
-                'buildrequestid': 1001,
+                'buildrequestid': 83,
                 'complete': False,
                 'waited_for': False,
                 'claimed_at': None,
                 'results': -1,
                 'claimed': False,
-                'buildsetid': 200,
+                'buildsetid': 8823,
                 'complete_at': None,
                 'submitted_at': epoch2datetime(0),
                 'builderid': 77,
@@ -624,7 +624,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(
             buildset,
             {
-                'bsid': 200,
+                'bsid': 8823,
                 'complete_at': None,
                 'submitted_at': 0,
                 'sourcestamps': None,
@@ -662,13 +662,13 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(
             buildrequest,
             {
-                "buildrequestid": 1001,
+                "buildrequestid": 83,
                 "complete": False,
                 "waited_for": False,
                 "claimed_at": None,
                 "results": -1,
                 "claimed": False,
-                "buildsetid": 200,
+                "buildsetid": 8823,
                 "complete_at": None,
                 "submitted_at": epoch2datetime(0),
                 "builderid": 77,
@@ -686,7 +686,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(
             buildset,
             {
-                "bsid": 200,
+                "bsid": 8823,
                 "complete_at": None,
                 "submitted_at": 0,
                 "sourcestamps": None,
@@ -725,13 +725,13 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(
             buildrequest,
             {
-                "buildrequestid": 1001,
+                "buildrequestid": 83,
                 "complete": False,
                 "waited_for": False,
                 "claimed_at": None,
                 "results": -1,
                 "claimed": False,
-                "buildsetid": 200,
+                "buildsetid": 8823,
                 "complete_at": None,
                 "submitted_at": epoch2datetime(0),
                 "builderid": 77,
@@ -749,7 +749,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(
             buildset,
             {
-                "bsid": 200,
+                "bsid": 8823,
                 "complete_at": None,
                 "submitted_at": 0,
                 "sourcestamps": None,

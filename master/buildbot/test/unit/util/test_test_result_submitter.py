@@ -125,7 +125,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             list(results),
             [
                 {
-                    'test_resultid': 1002,
+                    'test_resultid': 1,
                     'builderid': 88,
                     'test_result_setid': setid,
                     'test_name': 'name1',

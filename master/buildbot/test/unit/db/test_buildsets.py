@@ -19,7 +19,6 @@ import json
 from unittest import mock
 
 from twisted.internet import defer
-from twisted.trial import unittest
 
 from buildbot.db import buildsets
 from buildbot.test import fakedb
@@ -630,26 +629,6 @@ class RealTests(Tests):
             self.assertEqual(sorted(rows), [(bsid, brids[1], 1), (bsid, brids[2], 2)])
 
         yield self.db.pool.do(thd)
-
-
-class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-        yield self.setUpTests()
-
-    @defer.inlineCallbacks
-    def test_addBuildset_bad_waited_for(self):
-        # only the fake db asserts on the type of waited_for
-        d = self.db.buildsets.addBuildset(
-            sourcestamps=[234],
-            reason='because',
-            properties={},
-            builderids=[1],
-            external_idstring='extid',
-            waited_for='wat',
-        )
-        yield self.assertFailure(d, AssertionError)
 
 
 class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealTests):

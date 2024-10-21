@@ -98,7 +98,7 @@
       step:
         log:
           logchunks:
-            content: "o line2\no line3\n"
+            content: "o line2\n\no line3\n"
 - query: |
     {
         logchunks(logid: 1, offset:1, limit:2){
@@ -107,7 +107,7 @@
     }
   expected:
     logchunks:
-      content: "o line2\no line3\n"
+      content: "o line2\n\no line3\n"
 - query: |
     {
         sourcestamp(ssid: 1){

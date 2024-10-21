@@ -204,13 +204,6 @@ class RealTests(Tests):
         yield self.db.pool.do(thd)
 
 
-class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-        self.reactor.advance(SOMETIME)
-
-
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):

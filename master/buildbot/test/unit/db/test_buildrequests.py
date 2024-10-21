@@ -672,19 +672,6 @@ class Tests(interfaces.InterfaceTests):
         )
 
 
-class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMixin, Tests):
-    # Compatibility with some checks in the "real" tests.
-
-    class db_engine:
-        class dialect:
-            name = 'buildbot_fake'
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-        yield self.setUpTests()
-
-
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
     @defer.inlineCallbacks
     def setUp(self):

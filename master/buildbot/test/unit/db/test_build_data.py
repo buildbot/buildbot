@@ -258,12 +258,6 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sorted(remaining_names), sorted(exp_remaining_names))
 
 
-class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-
-
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
     @defer.inlineCallbacks
     def setUp(self):
