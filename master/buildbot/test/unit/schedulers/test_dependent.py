@@ -167,7 +167,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             self.assertBuildsetSubscriptions([])
 
         # pretend that the buildset is finished
-        self.db.buildsets.fakeBuildsetCompletion(bsid=44, result=results)
+        yield self.db.buildsets.completeBuildset(bsid=44, results=results)
         self.sendBuildsetMessage(results=results, complete=True)
 
         # and check whether a buildset was added in response

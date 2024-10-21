@@ -278,10 +278,3 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if key in self.buildsets:
             return defer.succeed(self.buildsets[key]['properties'])
         return defer.succeed({})
-
-    # fake methods
-
-    def fakeBuildsetCompletion(self, bsid, result):
-        assert bsid in self.buildsets
-        self.buildsets[bsid]['results'] = result
-        self.completed_bsids.add(bsid)
