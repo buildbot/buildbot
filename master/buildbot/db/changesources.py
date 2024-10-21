@@ -88,6 +88,20 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def get_change_source_master(self, changesourceid):
+        def thd(conn):
+            q = self.db.model.changesource_masters.select(
+                self.db.model.changesource_masters.c.masterid
+            ).where(self.db.model.changesource_masters.c.changesourceid == changesourceid)
+            r = conn.execute(q)
+            row = r.fetchone()
+            conn.close()
+            if row:
+                return row.masterid
+            return None
+
+        return self.db.pool.do(thd)
+
     @defer.inlineCallbacks
     def getChangeSource(self, changesourceid):
         cs = yield self.getChangeSources(_changesourceid=changesourceid)

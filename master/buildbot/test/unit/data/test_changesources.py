@@ -213,5 +213,5 @@ class ChangeSource(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCas
             fakedb.ChangeSourceMaster(changesourceid=14, masterid=22),
         ])
         yield self.rtype._masterDeactivated(22)
-        self.master.db.changesources.assertChangeSourceMaster(13, None)
-        self.master.db.changesources.assertChangeSourceMaster(14, None)
+        self.assertIsNone((yield self.master.db.changesources.get_change_source_master(13)))
+        self.assertIsNone((yield self.master.db.changesources.get_change_source_master(14)))
