@@ -32,9 +32,10 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = schedulers.SchedulerEndpoint
     resourceTypeClass = schedulers.Scheduler
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.Scheduler(id=13, name='some:scheduler'),
@@ -97,9 +98,10 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = schedulers.SchedulersEndpoint
     resourceTypeClass = schedulers.Scheduler
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.Scheduler(id=13, name='some:scheduler'),

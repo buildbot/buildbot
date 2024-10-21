@@ -42,9 +42,10 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     COMPLETE_AT = datetime.datetime(1980, 6, 15, 12, 31, 15, tzinfo=UTC)
     COMPLETE_AT_EPOCH = 329920275
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
             fakedb.Worker(id=13, name='wrk'),
@@ -128,9 +129,10 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     COMPLETE_AT = datetime.datetime(1980, 6, 15, 12, 31, 15, tzinfo=UTC)
     COMPLETE_AT_EPOCH = 329920275
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Builder(id=78, name='ccc'),
             fakedb.Builder(id=79, name='ddd'),
@@ -182,7 +184,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetProperties(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildsetProperty(
                 buildsetid=8822, property_name='prop1', property_value='["one", "fake1"]'
             ),
@@ -315,7 +317,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def testFakeDataClaimBuildRequests(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildRequest(id=44, buildsetid=8822),
             fakedb.BuildRequest(id=55, buildsetid=8822),
         ])
@@ -331,7 +333,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def testClaimBuildRequests(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=123),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=123),
             fakedb.BuildRequest(id=55, buildsetid=8822, builderid=123),
@@ -437,7 +439,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def testUnclaimBuildRequests(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=123),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=123),
         ])
@@ -568,7 +570,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def testRebuildBuildrequest(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
@@ -635,7 +637,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_rebuild_buildrequest_rebuilt_build(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="builder"),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name="wrk"),
@@ -694,7 +696,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_rebuild_buildrequest_repeated_rebuilt_build(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="builder"),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name="wrk"),

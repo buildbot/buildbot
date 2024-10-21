@@ -41,9 +41,10 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
     ]
     log61Lines = [f'{i:08d}' for i in range(100)]
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data(
+        yield self.db.insert_test_data(
             [
                 fakedb.Builder(id=77),
                 fakedb.Worker(id=13, name='wrk'),

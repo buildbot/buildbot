@@ -31,9 +31,10 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = logs.LogEndpoint
     resourceTypeClass = logs.Log
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
@@ -116,9 +117,10 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = logs.LogsEndpoint
     resourceTypeClass = logs.Log
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
