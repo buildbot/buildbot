@@ -45,7 +45,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
-            fakedb.BuildRequest(id=82, buildsetid=8822),
+            fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
             fakedb.Build(
                 id=30, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
             ),
@@ -151,7 +151,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
-            fakedb.BuildRequest(id=82, buildsetid=8822),
+            fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
             fakedb.Build(
                 id=30, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
             ),

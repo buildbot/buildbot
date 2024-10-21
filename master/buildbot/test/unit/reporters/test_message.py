@@ -178,6 +178,9 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             fakedb.Worker(id=13, name='wrkr'),
             fakedb.Buildset(id=98, results=results1, reason="testReason1"),
             fakedb.Buildset(id=99, results=results2, reason="testReason2"),
+            fakedb.SourceStamp(id=1, branch='master', revision='1234abcd'),
+            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=1),
+            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=1),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
             fakedb.BuildRequest(id=12, buildsetid=99, builderid=80),
@@ -296,6 +299,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
     def test_message_success_plain_no_steps(self):
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
+
         self.assertEqual(
             res,
             {
@@ -303,7 +307,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'subject': '☺ Buildbot (Buildbot): Builder1 - test ((unknown revision))',
                 "extra_info": None,
                 'body': textwrap.dedent("""\
-                A passing build has been detected on builder Builder1 while building Buildbot.
+                A passing build has been detected on builder Builder1 while building proj.
 
                 Full details are available at:
                     http://localhost:8080/#/builders/80/builds/1
@@ -338,7 +342,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'subject': '☺ Buildbot (Buildbot): Builder1 - test (abcd1234)',
                 "extra_info": None,
                 'body': textwrap.dedent("""\
-                A passing build has been detected on builder Builder1 while building Buildbot.
+                A passing build has been detected on builder Builder1 while building proj.
 
                 Full details are available at:
                     http://localhost:8080/#/builders/80/builds/1
@@ -379,7 +383,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'body': textwrap.dedent("""\
                 <p>A passing build has been detected on builder
                 <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
-                while building Buildbot.</p>
+                while building proj.</p>
                 <p>Information:</p>
                 <ul>
                     <li>Build state: test</li>
@@ -416,7 +420,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
                 'body': textwrap.dedent("""\
                 <p>A passing build has been detected on builder
                 <a href="http://localhost:8080/#/builders/80/builds/1">Builder1</a>
-                while building Buildbot.</p>
+                while building proj.</p>
                 <p>Information:</p>
                 <ul>
                     <li>Build state: test</li>

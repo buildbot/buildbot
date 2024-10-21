@@ -50,7 +50,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                 fakedb.Worker(id=13, name='wrk'),
                 fakedb.Master(id=88),
                 fakedb.Buildset(id=8822),
-                fakedb.BuildRequest(id=82, buildsetid=8822),
+                fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
                 fakedb.Build(
                     id=13, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=3
                 ),

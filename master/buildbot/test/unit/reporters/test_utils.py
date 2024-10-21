@@ -133,8 +133,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                 fakedb.BuildProperty(buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
                 fakedb.BuildProperty(buildid=_id, name="owner", value="him"),
-                fakedb.Step(id=100 + _id, buildid=_id, name="step1"),
-                fakedb.Step(id=200 + _id, buildid=_id, name="step2"),
+                fakedb.Step(id=100 + _id, number=29, buildid=_id, name="step1"),
+                fakedb.Step(id=200 + _id, number=30, buildid=_id, name="step2"),
                 fakedb.Log(
                     id=60 + _id, stepid=100 + _id, name='stdio', slug='stdio', type='s', num_lines=2
                 ),
@@ -375,7 +375,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                 "locks_acquired_at": None,
                                 'logs': [],
                                 'name': 'step2',
-                                'number': 29,
+                                'number': 30,
                                 'results': None,
                                 'started_at': datetime.datetime(
                                     2011, 5, 1, 15, 3, 42, tzinfo=tzutc()
@@ -501,7 +501,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                 "locks_acquired_at": None,
                                 'logs': [],
                                 'name': 'step2',
-                                'number': 29,
+                                'number': 30,
                                 'results': None,
                                 'started_at': datetime.datetime(
                                     2011, 5, 1, 15, 3, 42, tzinfo=tzutc()

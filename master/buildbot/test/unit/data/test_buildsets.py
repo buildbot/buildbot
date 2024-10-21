@@ -141,6 +141,8 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             ),
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Builder(id=43, name='bldr2'),
+            fakedb.Buildset(id=199, complete=False),
+            fakedb.BuildRequest(id=999, buildsetid=199, builderid=42),
         ])
 
     @defer.inlineCallbacks
@@ -200,6 +202,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         self.master.mq.assertProductions(expectedMessages, orderMatters=False)
 
         buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = [bs for bs in buildsets if bs.bsid != 199]
         self.assertEqual(
             [
                 {
@@ -404,12 +407,11 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
                 id=brid,
                 buildsetid=bsid,
                 builderid=42,
-                complete=buildRequestCompletions.get(brid),
+                complete=buildRequestCompletions.get(brid, False),
                 results=buildRequestResults.get(brid, SUCCESS),
             )
 
         yield self.master.db.insert_test_data([
-            fakedb.Builder(id=42, name='bldr1'),
             fakedb.Buildset(
                 id=72,
                 submitted_at=EARLIER,
