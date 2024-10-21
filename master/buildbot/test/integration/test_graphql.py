@@ -68,7 +68,7 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
     def setUp(self):
         self.setup_test_reactor(use_asyncio=True)
 
-        master = fakemaster.make_master(self)
+        master = yield fakemaster.make_master(self)
         master.db = fakedb.FakeDBConnector(self)
         yield master.db.setServiceParent(master)
 

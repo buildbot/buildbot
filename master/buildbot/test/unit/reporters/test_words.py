@@ -53,7 +53,7 @@ class ContactMixin(TestReactorMixin):
         self.patch(reactor, 'seconds', self.reactor.seconds)
         self.patch(reactor, 'stop', self.reactor.stop)
 
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=builderid, name=name)

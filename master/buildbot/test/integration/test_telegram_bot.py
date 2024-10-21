@@ -105,7 +105,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
             'projects',
         ]
 
-        master = fakemaster.make_master(self, wantRealReactor=True)
+        master = yield fakemaster.make_master(self, wantRealReactor=True)
 
         yield self.setUpRealDatabaseWithConnector(
             master, table_names=table_names, sqlite_memory=False

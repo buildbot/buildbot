@@ -22,11 +22,12 @@ from twisted.web import server
 from buildbot.test.fake import fakemaster
 
 
+@defer.inlineCallbacks
 def fakeMasterForHooks(testcase):
     # testcase must derive from TestReactorMixin and setup_test_reactor()
     # must be called before calling this function.
 
-    master = fakemaster.make_master(testcase, wantData=True)
+    master = yield fakemaster.make_master(testcase, wantData=True)
     master.www = Mock()
     return master
 

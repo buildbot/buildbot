@@ -29,7 +29,7 @@ class TestChangeManager(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantData=True)
         self.cm = manager.ChangeManager()
         self.master.startService()
         yield self.cm.setServiceParent(self.master)

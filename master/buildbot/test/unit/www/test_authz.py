@@ -85,7 +85,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             },
             "eightuser": {"email": "user@eight.com", "groups": ["buildbot-eight-deverlopers"]},
         }
-        self.master = self.make_master(url='h:/a/b/', authz=authzcfg)
+        self.master = yield self.make_master(url='h:/a/b/', authz=authzcfg)
         self.authz = self.master.authz
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="mybuilder"),

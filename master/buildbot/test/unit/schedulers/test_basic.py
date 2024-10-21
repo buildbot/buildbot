@@ -100,9 +100,10 @@ class BaseBasicScheduler(
             assert sched_id == BaseBasicScheduler.SCHEDULERID
             return self.master.db.schedulers.getChangeClassifications(sched_id)
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def tearDown(self):
         self.tearDownScheduler()
@@ -349,9 +350,10 @@ class SingleBranchScheduler(
         yield self.db.insert_test_data([fakedb.Change(**chd)])
         return ch
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def tearDown(self):
         self.tearDownScheduler()
@@ -589,9 +591,10 @@ class AnyBranchScheduler(
     SCHEDULERID = 6
     OBJECTID = 246
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def tearDown(self):
         self.tearDownScheduler()

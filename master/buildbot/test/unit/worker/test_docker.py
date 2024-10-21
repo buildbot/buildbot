@@ -34,7 +34,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
         worker = dockerworker.DockerLatentWorker(*args, **kwargs)
-        master = fakemaster.make_master(self, wantData=True)
+        master = yield fakemaster.make_master(self, wantData=True)
         fakemaster.master = master
         worker.setServiceParent(master)
         yield master.startService()

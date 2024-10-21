@@ -42,23 +42,25 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_render(self):
-        master = self.make_master(url='h:/a/b/')
+        master = yield self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
 
         rv = yield self.render_resource(rsrc, b'/')
 
         self.assertIn(b'api_versions', rv)
 
+    @defer.inlineCallbacks
     def test_versions(self):
-        master = self.make_master(url='h:/a/b/')
+        master = yield self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
         versions = [unicode2bytes(f'v{v}') for v in range(2, self.maxVersion + 1)]
         versions = [unicode2bytes(v) for v in versions]
         versions.append(b'latest')
         self.assertEqual(sorted(rsrc.listNames()), sorted(versions))
 
+    @defer.inlineCallbacks
     def test_versions_limited(self):
-        master = self.make_master(url='h:/a/b/')
+        master = yield self.make_master(url='h:/a/b/')
         master.config.www['rest_minimum_version'] = 2
         rsrc = rest.RestRootResource(master)
         versions = [unicode2bytes(f'v{v}') for v in range(2, self.maxVersion + 1)]
@@ -67,9 +69,10 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='http://server/path/')
+        self.master = yield self.make_master(url='http://server/path/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
@@ -135,9 +138,10 @@ class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/')
+        self.master = yield self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.master.config.www['allowed_origins'] = [b'h://good']
@@ -254,9 +258,10 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
 
 class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/')
+        self.master = yield self.make_master(url='h:/')
         self.master.config.www['debug'] = True
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -746,9 +751,10 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
 
 class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/')
+        self.master = yield self.make_master(url='h:/')
 
         def allow(*args, **kw):
             return

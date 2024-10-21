@@ -158,9 +158,10 @@ class TestMessageFormatting(unittest.TestCase):
 
 
 class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def setup_db(self, results1, results2, with_steps=False, extra_build_properties=None):

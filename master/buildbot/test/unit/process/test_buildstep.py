@@ -738,6 +738,7 @@ class TestBuildStep(
         step.setStatistic('ba', 0.298)
         self.assertEqual(step.getStatistics(), {'rbi': 13, 'ba': 0.298})
 
+    @defer.inlineCallbacks
     def setup_summary_test(self):
         self.patch(NewStyleStep, 'getCurrentSummary', lambda self: defer.succeed({'step': 'C'}))
         self.patch(
@@ -746,59 +747,66 @@ class TestBuildStep(
             lambda self: defer.succeed({'step': 'CS', 'build': 'CB'}),
         )
         step = create_step_from_step_or_factory(NewStyleStep())
-        step.master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        step.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         step.stepid = 13
         step.build = fakebuild.FakeBuild()
         return step
 
+    @defer.inlineCallbacks
     def test_updateSummary_running(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step._running = True
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13], 'C')
 
+    @defer.inlineCallbacks
     def test_updateSummary_running_empty_dict(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step.getCurrentSummary = lambda: {}
         step._running = True
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13], 'finished')
 
+    @defer.inlineCallbacks
     def test_updateSummary_running_not_unicode(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step.getCurrentSummary = lambda: {'step': b'bytestring'}
         step._running = True
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
+    @defer.inlineCallbacks
     def test_updateSummary_running_not_dict(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step.getCurrentSummary = lambda: 'foo!'
         step._running = True
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
+    @defer.inlineCallbacks
     def test_updateSummary_finished(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step._running = False
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13], 'CS')
 
+    @defer.inlineCallbacks
     def test_updateSummary_finished_empty_dict(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step.getResultSummary = lambda: {}
         step._running = False
         step.updateSummary()
         self.reactor.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13], 'finished')
 
+    @defer.inlineCallbacks
     def test_updateSummary_finished_not_dict(self):
-        step = self.setup_summary_test()
+        step = yield self.setup_summary_test()
         step.getResultSummary = lambda: 'foo!'
         step._running = False
         step.updateSummary()
@@ -1080,9 +1088,10 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestFakeItfc(unittest.TestCase, TestBuildStepMixin, TestReactorMixin, InterfaceTests):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setup_test_build_step()
+        yield self.setup_test_build_step()
         self.setup_step(buildstep.BuildStep())
 
 

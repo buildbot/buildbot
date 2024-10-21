@@ -42,8 +42,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
     OTHER_MASTER_ID = 93
 
+    @defer.inlineCallbacks
     def setUpScheduler(self):
-        self.master = fakemaster.make_master(self, wantDb=True, wantMq=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantDb=True, wantMq=True, wantData=True)
 
     def tearDownScheduler(self):
         pass

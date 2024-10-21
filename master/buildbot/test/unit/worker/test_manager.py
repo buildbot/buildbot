@@ -48,7 +48,7 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.workers = workermanager.WorkerManager(self.master)
         yield self.workers.setServiceParent(self.master)

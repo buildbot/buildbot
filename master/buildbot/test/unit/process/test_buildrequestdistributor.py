@@ -45,6 +45,7 @@ def nth_worker(n):
 
 
 class TestBRDBase(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.botmaster = mock.Mock(name='botmaster')
@@ -55,7 +56,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
             # simple sort-by-name by default
             return sorted(builders, key=lambda b1: b1.name)
 
-        self.master = self.botmaster.master = fakemaster.make_master(
+        self.master = self.botmaster.master = yield fakemaster.make_master(
             self, wantData=True, wantDb=True
         )
         self.master.caches = fakemaster.FakeCaches()

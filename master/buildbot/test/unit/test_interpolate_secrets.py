@@ -22,7 +22,7 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMi
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
         self.secretsrv = SecretManager()
@@ -46,9 +46,10 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMi
 
 
 class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         self.build = FakeBuildWithMaster(self.master)
 
     @defer.inlineCallbacks
@@ -64,7 +65,7 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
         password = "bar"
         fakeStorageService.reconfigService(

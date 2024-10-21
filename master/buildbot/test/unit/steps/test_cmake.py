@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config import ConfigErrors
@@ -25,9 +26,10 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setup_test_build_step()
+        yield self.setup_test_build_step()
 
     def tearDown(self):
         self.tear_down_test_build_step()

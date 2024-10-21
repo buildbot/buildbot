@@ -36,9 +36,10 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
     # self.data.rtypes[rtype.type] and self.rtype
     resourceTypeClass: type[base.ResourceType] | None = None
 
+    @defer.inlineCallbacks
     def setUpEndpoint(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data

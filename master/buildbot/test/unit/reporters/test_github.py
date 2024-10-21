@@ -41,7 +41,7 @@ class TestGitHubStatusPush(
         # project must be in the form <owner>/<project>
         self.reporter_test_project = 'buildbot/buildbot'
 
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
@@ -307,7 +307,7 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
         self.reporter_test_project = 'buildbot'
         self.reporter_test_repo = 'https://github.com/buildbot1/buildbot1.git'
 
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getService(

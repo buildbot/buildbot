@@ -28,9 +28,10 @@ from buildbot.www import ws
 
 
 class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor(use_asyncio=True)
-        self.master = master = self.make_master(url="h:/a/b/", wantMq=True, wantGraphql=True)
+        self.master = master = yield self.make_master(url="h:/a/b/", wantMq=True, wantGraphql=True)
         self.skip_graphql = False
         if not self.master.graphql.enabled:
             self.skip_graphql = True

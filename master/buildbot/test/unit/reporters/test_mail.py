@@ -39,10 +39,11 @@ from buildbot.util import ssl
 
 
 class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def setupMailNotifier(self, *args, **kwargs):

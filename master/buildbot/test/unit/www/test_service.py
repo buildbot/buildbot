@@ -60,7 +60,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/a/b/')
+        self.master = yield self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         yield self.svc.setServiceParent(self.master)
 

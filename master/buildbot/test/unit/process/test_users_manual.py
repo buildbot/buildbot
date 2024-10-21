@@ -33,8 +33,9 @@ class ManualUsersMixin:
     user managers located in process.users.manual.
     """
 
+    @defer.inlineCallbacks
     def setUpManualUsers(self):
-        self.master = fakemaster.make_master(self, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
 
 
 class TestUsersBase(unittest.TestCase):

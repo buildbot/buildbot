@@ -58,7 +58,7 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
         worker = openstack.OpenStackLatentWorker(*args, **kwargs)
-        master = fakemaster.make_master(self, wantData=True)
+        master = yield fakemaster.make_master(self, wantData=True)
         fakemaster.master = master
         worker.setServiceParent(master)
         yield master.startService()

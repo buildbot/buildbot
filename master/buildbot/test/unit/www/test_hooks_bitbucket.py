@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 # Copyright Manba Team
 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
@@ -137,13 +137,15 @@ mercurialJsonNoCommitsPayload = b"""{
 class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactorMixin):
     """Unit tests for BitBucket Change Hook"""
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
+        master = yield fakeMasterForHooks(self)
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucket': True}, master=fakeMasterForHooks(self)
+            dialects={'bitbucket': True}, master=master
         )
 
-    @inlineCallbacks
+    @defer.inlineCallbacks
     def testGitWithChange(self):
         change_dict = {b'payload': [gitJsonPayload]}
 
@@ -171,7 +173,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactor
         )
         self.assertEqual(commit['properties']['event'], 'repo:push')
 
-    @inlineCallbacks
+    @defer.inlineCallbacks
     def testGitWithNoCommitsPayload(self):
         change_dict = {b'payload': [gitJsonNoCommitsPayload]}
 
@@ -184,7 +186,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactor
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b'no change found')
 
-    @inlineCallbacks
+    @defer.inlineCallbacks
     def testMercurialWithChange(self):
         change_dict = {b'payload': [mercurialJsonPayload]}
 
@@ -212,7 +214,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactor
         )
         self.assertEqual(commit['properties']['event'], 'repo:push')
 
-    @inlineCallbacks
+    @defer.inlineCallbacks
     def testMercurialWithNoCommitsPayload(self):
         change_dict = {b'payload': [mercurialJsonNoCommitsPayload]}
 
@@ -225,7 +227,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactor
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
         self.assertEqual(request.written, b'no change found')
 
-    @inlineCallbacks
+    @defer.inlineCallbacks
     def testWithNoJson(self):
         request = FakeRequest()
         request.uri = b'/change_hook/bitbucket'
@@ -237,7 +239,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactor
         request.setResponseCode.assert_called_with(500, b'Error processing changes.')
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 
-    @inlineCallbacks
+    @defer.inlineCallbacks
     def testGitWithChangeAndProject(self):
         change_dict = {b'payload': [gitJsonPayload], b'project': [b'project-name']}
 

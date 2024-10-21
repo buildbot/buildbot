@@ -25,8 +25,9 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = root.RootEndpoint
     resourceTypeClass = root.Root
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         self.master.data.rootLinks = [
             {'name': 'abc'},
         ]
@@ -55,7 +56,7 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         # replace fakeConnector with real DataConnector
         self.master.data.disownServiceParent()
         self.master.data = connector.DataConnector()

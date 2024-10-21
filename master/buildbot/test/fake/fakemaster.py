@@ -186,4 +186,4 @@ def make_master(
         # This should be awaited, but no other call to `setServiceParent` are awaited here
         secret_service.setServiceParent(master)
 
-    return master
+    return defer.succeed(master)

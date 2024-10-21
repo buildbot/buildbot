@@ -44,7 +44,7 @@ class TestGitLabStatusPush(
         # repository must be in the form http://gitlab/<owner>/<project>
         self.reporter_test_repo = 'http://gitlab/buildbot/buildbot'
 
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getService(

@@ -17,6 +17,7 @@
 import datetime
 import json
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -29,9 +30,10 @@ from buildbot.www import sse
 
 
 class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = master = self.make_master(url=b'h:/a/b/')
+        self.master = master = yield self.make_master(url=b'h:/a/b/')
         self.sse = sse.EventResource(master)
 
     def test_simpleapi(self):

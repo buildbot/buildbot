@@ -28,7 +28,7 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = self.make_master(url='h:/a/b/')
+        self.master = yield self.make_master(url='h:/a/b/')
         self.db = self.master.db
         self.matcher = self.makeMatcher()
         self.matcher.setAuthz(self.master.authz)

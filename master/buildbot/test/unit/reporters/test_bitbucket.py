@@ -43,7 +43,7 @@ class TestBitbucketStatusPush(
         self.setup_reporter_test()
         self.reporter_test_repo = 'https://example.org/user/repo'
 
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(self.master, self, "")
         self.httpsession = httpclientservice.HTTPSession(
@@ -276,7 +276,7 @@ class TestBitbucketStatusPushProperties(
         self.setup_reporter_test()
         self.reporter_test_repo = 'https://example.org/user/repo'
 
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
@@ -376,7 +376,7 @@ class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         self.bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
         yield self.bsp.setServiceParent(self.master)

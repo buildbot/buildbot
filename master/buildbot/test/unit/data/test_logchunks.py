@@ -43,7 +43,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data(
             [
                 fakedb.Builder(id=77),

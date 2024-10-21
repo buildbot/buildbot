@@ -56,7 +56,7 @@ class TestBitbucketServerStatusPush(
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -221,7 +221,7 @@ class TestBitbucketServerCoreAPIStatusPush(
     def setupReporter(self, token=None, **kwargs):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         def setup_properties(props):
             props.setProperty("buildername", "Builder0", "Builder")
@@ -630,7 +630,7 @@ class TestBitbucketServerPRCommentPush(
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         yield self.master.startService()
 
     @defer.inlineCallbacks

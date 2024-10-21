@@ -50,9 +50,10 @@ class Change(unittest.TestCase, TestReactorMixin):
         fakedb.ChangeUser(changeid=23, uid=27),
     ]
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
         self.change23 = changes.Change(**{  # using **dict(..) forces kwargs
             "category": 'devel',
             "repository": 'git://warner',

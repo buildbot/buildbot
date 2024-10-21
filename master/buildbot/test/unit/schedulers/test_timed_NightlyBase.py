@@ -29,9 +29,10 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
     OBJECTID = 133
     SCHEDULERID = 33
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         return self.attachScheduler(timed.NightlyBase(**kwargs), self.OBJECTID, self.SCHEDULERID)

@@ -27,7 +27,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.SourceStamp(id=13, branch='oak'),
             fakedb.Patch(
@@ -83,7 +83,7 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Buildset(id=30, reason="foo", submitted_at=1300305712, results=-1),
             fakedb.SourceStamp(id=13),

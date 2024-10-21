@@ -44,7 +44,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
@@ -131,7 +131,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Builder(id=78, name='ccc'),
@@ -274,9 +274,10 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
     class dBLayerException(Exception):
         pass
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildrequests.BuildRequest(self.master)
 
     @defer.inlineCallbacks

@@ -32,9 +32,10 @@ class FakeObject(state.StateMixin):
 class TestStateMixin(TestReactorMixin, StateTestMixin, unittest.TestCase):
     OBJECTID = 19
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
         self.object = FakeObject(self.master)
 
     @defer.inlineCallbacks

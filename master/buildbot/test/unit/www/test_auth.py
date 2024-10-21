@@ -31,17 +31,19 @@ from buildbot.www import auth
 
 
 class AuthResourceMixin:
+    @defer.inlineCallbacks
     def setUpAuthResource(self):
-        self.master = self.make_master(url='h:/a/b/')
+        self.master = yield self.make_master(url='h:/a/b/')
         self.auth = self.master.config.www['auth']
         self.master.www.auth = self.auth
         self.auth.master = self.master
 
 
 class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpAuthResource()
+        yield self.setUpAuthResource()
         self.rsrc = auth.AuthRootResource(self.master)
 
     def test_getChild_login(self):
@@ -58,10 +60,11 @@ class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, un
 
 
 class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.auth = auth.AuthBase()
-        self.master = self.make_master(url='h:/a/b/')
+        self.master = yield self.make_master(url='h:/a/b/')
         self.auth.master = self.master
         self.req = self.make_request(b'/')
 
@@ -98,10 +101,11 @@ class NoAuth(unittest.TestCase):
 
 
 class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
-        self.make_master()
+        yield self.make_master()
         self.request = self.make_request(b'/')
 
     @defer.inlineCallbacks
@@ -137,11 +141,12 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.auth = auth.NoAuth()
-        self.make_master()
+        yield self.make_master()
 
     def test_requestAvatar(self):
         realm = auth.AuthRealm(self.master, self.auth)
@@ -157,12 +162,13 @@ class TwistedICredAuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase
     # twisted.web makes it difficult to simulate the authentication process, so
     # this only tests the mechanics of the getLoginResource method.
 
+    @defer.inlineCallbacks
     def test_getLoginResource(self):
         self.auth = auth.TwistedICredAuthBase(
             credentialFactories=[BasicCredentialFactory("buildbot")],
             checkers=[InMemoryUsernamePasswordDatabaseDontUse(good=b'guy')],
         )
-        self.auth.master = self.make_master(url='h:/a/b/')
+        self.auth.master = yield self.make_master(url='h:/a/b/')
         rsrc = self.auth.getLoginResource()
         self.assertIsInstance(rsrc, HTTPAuthSessionWrapper)
 
@@ -200,9 +206,10 @@ class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpAuthResource()
+        yield self.setUpAuthResource()
 
     @defer.inlineCallbacks
     def test_render(self):
@@ -218,9 +225,10 @@ class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unitt
 class PreAuthenticatedLoginResource(
     TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase
 ):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpAuthResource()
+        yield self.setUpAuthResource()
         self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
 
     @defer.inlineCallbacks
@@ -242,9 +250,10 @@ class PreAuthenticatedLoginResource(
 
 
 class LogoutResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpAuthResource()
+        yield self.setUpAuthResource()
         self.rsrc = auth.LogoutResource(self.master)
 
     @defer.inlineCallbacks

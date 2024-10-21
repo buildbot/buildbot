@@ -25,9 +25,10 @@ from buildbot.test.util import scheduler
 class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 928754
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def tearDown(self):
         self.tearDownScheduler()

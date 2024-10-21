@@ -188,7 +188,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         CommonTestCase.setUp(self)
         self.setup_test_reactor()
 
-        master = self.make_master(url='http://a/b/', avatar_methods=[self.userInfoProvider])
+        master = yield self.make_master(url='http://a/b/', avatar_methods=[self.userInfoProvider])
 
         self.rsrc = avatar.AvatarResource(master)
         self.rsrc.reconfigResource(master.config)

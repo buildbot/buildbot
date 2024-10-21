@@ -34,7 +34,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
@@ -100,7 +100,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
@@ -143,9 +143,10 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = schedulers.Scheduler(self.master)
 
     def test_signature_schedulerEnable(self):
