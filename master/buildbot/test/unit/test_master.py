@@ -34,6 +34,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
 from buildbot.test.fake import fakedata
+from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakemq
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.fake.secrets import FakeSecretStorage
@@ -96,6 +97,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         )
         self.master.sendBuildbotNetUsageData = mock.Mock()
         self.master.botmaster = FakeBotMaster()
+        self.master.caches = fakemaster.FakeCaches()
         self.secrets_manager = self.master.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self)
