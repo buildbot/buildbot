@@ -114,7 +114,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_build(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+        fake_change = yield self.db.changes.getChangeFromSSid(144)
 
         mockGetChangeById = mock.Mock(
             spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
@@ -128,7 +128,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_builder(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+        fake_change = yield self.db.changes.getChangeFromSSid(144)
         mockGetChangeById = mock.Mock(
             spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
         )
