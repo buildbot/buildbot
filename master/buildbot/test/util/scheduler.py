@@ -205,7 +205,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
             branch=change.branch,
             category=change.category,
             revlink=change.revlink,
-            properties=change.properties,
+            properties=change.properties.asDict(),
             repository=change.repository,
             codebase=change.codebase,
             project=change.project,
