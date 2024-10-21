@@ -37,6 +37,7 @@ from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import logging
 from buildbot.test.util.git_repository import TestGitRepository
+from buildbot.test.util.state import StateTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.git_credential import GitCredentialOptions
@@ -51,6 +52,7 @@ class TestGitPollerBase(
     changesource.ChangeSourceMixin,
     logging.LoggingMixin,
     TestReactorMixin,
+    StateTestMixin,
     unittest.TestCase,
 ):
     REPOURL = 'git@example.com:~foo/baz.git'
@@ -1833,7 +1835,7 @@ class TestGitPoller(TestGitPollerBase):
     def test_startService_loadLastRev(self):
         yield self.poller.stopService()
 
-        self.master.db.state.set_fake_state(
+        yield self.set_fake_state(
             self.poller, 'lastRev', {"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"}
         )
 

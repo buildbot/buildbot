@@ -26,6 +26,7 @@ from buildbot.schedulers import dependent
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
+from buildbot.test.util.state import StateTestMixin
 
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
@@ -34,7 +35,7 @@ SCHEDULERID = 133
 UPSTREAM_NAME = 'uppy'
 
 
-class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
+class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.setUpScheduler()
@@ -59,8 +60,9 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         return sched
 
+    @defer.inlineCallbacks
     def assertBuildsetSubscriptions(self, bsids=None):
-        self.db.state.assertState(OBJECTID, upstream_bsids=bsids)
+        yield self.assert_state(OBJECTID, upstream_bsids=bsids)
 
     # tests
 
@@ -162,12 +164,12 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:
-            self.assertBuildsetSubscriptions([44])
+            yield self.assertBuildsetSubscriptions([44])
         else:
-            self.assertBuildsetSubscriptions([])
+            yield self.assertBuildsetSubscriptions([])
 
         # pretend that the buildset is finished
-        self.db.buildsets.fakeBuildsetCompletion(bsid=44, result=results)
+        yield self.db.buildsets.completeBuildset(bsid=44, results=results)
         self.sendBuildsetMessage(results=results, complete=True)
 
         # and check whether a buildset was added in response
@@ -222,7 +224,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
         # and check that it wrote the correct value back to the state
-        self.db.state.assertState(OBJECTID, upstream_bsids=[11, 13])
+        yield self.assert_state(OBJECTID, upstream_bsids=[11, 13])
 
     @defer.inlineCallbacks
     def test_enabled_callback(self):

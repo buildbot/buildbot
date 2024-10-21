@@ -70,7 +70,7 @@ class FakeUsersComponent(FakeDBComponent):
                         "attr_data": row.attr_data,
                     })
 
-    def _model_from_uid(self, uid: int) -> UserModel | None:
+    def _model_from_uid(self, uid: int, fetch_attributes: bool = True) -> UserModel | None:
         model = None
         if uid in self.users:
             usdict = self.users[uid]
@@ -81,7 +81,7 @@ class FakeUsersComponent(FakeDBComponent):
                 bb_password=usdict.get('bb_password'),
                 attributes=None,
             )
-            if uid in self.users_info:
+            if fetch_attributes and uid in self.users_info:
                 infos = self.users_info[uid]
                 attributes = {}
                 for attr in infos:
@@ -115,6 +115,12 @@ class FakeUsersComponent(FakeDBComponent):
         if uid in self.users:
             usdict = self._model_from_uid(uid)
         return defer.succeed(usdict)
+
+    def getUsers(self) -> defer.Deferred[list[UserModel]]:
+        return defer.succeed([
+            self._model_from_uid(uid, fetch_attributes=False)
+            for uid in sorted(list(self.users.keys()))
+        ])
 
     def getUserByUsername(self, username) -> defer.Deferred[UserModel | None]:
         usdict = None

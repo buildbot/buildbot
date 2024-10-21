@@ -83,6 +83,11 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     # component methods
 
+    def enable(self, schedulerid, v):
+        assert schedulerid in self.schedulers
+        self.enabled[schedulerid] = v
+        return defer.succeed(None)
+
     def classifyChanges(self, schedulerid, classifications):
         self.classifications.setdefault(schedulerid, {}).update(classifications)
         return defer.succeed(None)
@@ -190,30 +195,6 @@ class FakeSchedulersComponent(FakeDBComponent):
         self.scheduler_masters[schedulerid] = masterid
         return defer.succeed(None)
 
-    # fake methods
-
-    def fakeClassifications(self, schedulerid, classifications):
-        """Set the set of classifications for a scheduler"""
-        self.classifications[schedulerid] = classifications
-
-    def fakeScheduler(self, name, schedulerid):
-        self.schedulers[schedulerid] = name
-
-    def fakeSchedulerMaster(self, schedulerid, masterid):
-        if masterid is not None:
-            self.scheduler_masters[schedulerid] = masterid
-        else:
-            del self.scheduler_masters[schedulerid]
-
-    # assertions
-
-    def assertClassifications(self, schedulerid, classifications):
-        self.t.assertEqual(self.classifications.get(schedulerid, {}), classifications)
-
-    def assertSchedulerMaster(self, schedulerid, masterid):
-        self.t.assertEqual(self.scheduler_masters.get(schedulerid), masterid)
-
-    def enable(self, schedulerid, v):
-        assert schedulerid in self.schedulers
-        self.enabled[schedulerid] = v
-        return defer.succeed((('control', 'schedulers', schedulerid, 'enable'), {'enabled': v}))
+    def get_scheduler_master(self, schedulerid):
+        current_masterid = self.scheduler_masters.get(schedulerid, None)
+        return defer.succeed(current_masterid)

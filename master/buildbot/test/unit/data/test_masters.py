@@ -168,7 +168,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
         # updated checkin time, re-activation
         self.reactor.advance(60)
-        yield self.master.db.masters.markMasterInactive(13)
+        yield self.master.db.masters.setMasterState(13, False)
         yield self.rtype.masterActive('myname', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(
@@ -236,7 +236,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # check after 10 minutes, and see #14 deactivated; #15 gets deactivated
         # by another master, so it's not included here
         self.reactor.advance(600)
-        yield self.master.db.masters.markMasterInactive(15)
+        yield self.master.db.masters.setMasterState(15, False)
         yield self.rtype.expireMasters()
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(

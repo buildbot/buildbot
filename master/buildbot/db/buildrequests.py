@@ -185,6 +185,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         else:
             claimed_at = int(self.master.reactor.seconds())
 
+        yield self._claim_buildrequests_for_master(brids, claimed_at, self.db.master.masterid)
+
+    @defer.inlineCallbacks
+    def _claim_buildrequests_for_master(self, brids, claimed_at, masterid):
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
@@ -193,10 +197,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = tbl.insert()
                 conn.execute(
                     q,
-                    [
-                        {"brid": id, "masterid": self.db.master.masterid, "claimed_at": claimed_at}
-                        for id in brids
-                    ],
+                    [{"brid": id, "masterid": masterid, "claimed_at": claimed_at} for id in brids],
                 )
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()
@@ -206,7 +207,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    def unclaimBuildRequests(self, brids) -> defer.Deferred[None]:
+    @defer.inlineCallbacks
+    def unclaimBuildRequests(self, brids):
+        yield self._unclaim_buildrequests_for_master(brids, self.db.master.masterid)
+
+    @defer.inlineCallbacks
+    def _unclaim_buildrequests_for_master(self, brids, masterid):
         def thd(conn):
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
@@ -223,7 +229,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 try:
                     q = claims_tbl.delete().where(
                         claims_tbl.c.brid.in_(batch),
-                        claims_tbl.c.masterid == self.db.master.masterid,
+                        claims_tbl.c.masterid == masterid,
                     )
                     conn.execute(q)
                 except Exception:
@@ -232,7 +238,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def completeBuildRequests(self, brids, results, complete_at=None):

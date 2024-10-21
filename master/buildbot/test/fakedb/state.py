@@ -90,37 +90,3 @@ class FakeStateComponent(FakeDBComponent):
         value = thd_create_callback()
         self.states[objectid][name] = json.dumps(bytes2unicode(value))
         return defer.succeed(value)
-
-    # fake methods
-
-    def set_fake_state(self, object, name, value):
-        state_key = (object.name, object.__class__.__name__)
-        if state_key in self.objects:
-            id = self.objects[state_key]
-        else:
-            id = self.objects[state_key] = self._newId()
-
-        if id in self.states:
-            self.states[id][name] = json.dumps(value)
-        else:
-            self.states[id] = {name: json.dumps(value)}
-        return id
-
-    # assertions
-
-    def assertState(self, objectid, missing_keys=None, **kwargs):
-        if missing_keys is None:
-            missing_keys = []
-        state = self.states[objectid]
-        for k in missing_keys:
-            self.t.assertFalse(k in state, f"{k} in {state}")
-        for k, v in kwargs.items():
-            self.t.assertIn(k, state)
-            self.t.assertEqual(json.loads(state[k]), v, f"state is {state!r}")
-
-    def assertStateByClass(self, name, class_name, **kwargs):
-        objectid = self.objects[(name, class_name)]
-        state = self.states[objectid]
-        for k, v in kwargs.items():
-            self.t.assertIn(k, state)
-            self.t.assertEqual(json.loads(state[k]), v, f"state is {state!r}")

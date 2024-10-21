@@ -21,6 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.data import changes
 from buildbot.data import resultspec
+from buildbot.db.changes import ChangeModel
 from buildbot.process.users import users
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
@@ -235,8 +236,10 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             (expectedRoutingKey, expectedMessage),
         ])
         # and that the correct data was inserted into the db
-        self.master.db.changes.assertChange(500, expectedRow)
-        self.master.db.changes.assertChangeUsers(500, expectedChangeUsers)
+        change = yield self.master.db.changes.getChange(500)
+        self.assertEqual(change, expectedRow)
+        change_users = yield self.master.db.changes.getChangeUids(500)
+        self.assertEqual(change_users, expectedChangeUsers)
 
     def test_addChange(self):
         # src and codebase are default here
@@ -256,7 +259,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         }
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = self.changeEvent
-        expectedRow = fakedb.Change(
+        expectedRow = ChangeModel(
             changeid=500,
             author='warner',
             committer='david',
@@ -264,12 +267,14 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             branch='warnerdb',
             revision='0e92a098b',
             revlink='http://warner/0e92a098b',
-            when_timestamp=256738404,
+            when_timestamp=epoch2datetime(256738404),
             category='devel',
             repository='git://warner',
             codebase='',
             project='Buildbot',
             sourcestampid=100,
+            files=['master/buildbot/__init__.py'],
+            properties={'foo': (20, 'Change')},
         )
         return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
@@ -323,7 +328,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             },
             # uid
         }
-        expectedRow = fakedb.Change(
+        expectedRow = ChangeModel(
             changeid=500,
             author='warner',
             committer='david',
@@ -331,12 +336,14 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             branch='warnerdb',
             revision='0e92a098b',
             revlink='http://warner/0e92a098b',
-            when_timestamp=256738404,
+            when_timestamp=epoch2datetime(256738404),
             category='devel',
             repository='git://warner',
             codebase='cb',
             project='Buildbot',
             sourcestampid=100,
+            files=['master/buildbot/__init__.py'],
+            properties={'foo': (20, 'Change')},
         )
         yield self.do_test_addChange(
             kwargs, expectedRoutingKey, expectedMessage, expectedRow, expectedChangeUsers=[123]
@@ -394,7 +401,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             },
             # uid
         }
-        expectedRow = fakedb.Change(
+        expectedRow = ChangeModel(
             changeid=500,
             author='warner',
             committer='david',
@@ -402,12 +409,14 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             branch='warnerdb',
             revision='0e92a098b',
             revlink='http://warner/0e92a098b',
-            when_timestamp=256738404,
+            when_timestamp=epoch2datetime(256738404),
             category='devel',
             repository='git://warner',
             codebase='cb-devel',
             project='Buildbot',
             sourcestampid=100,
+            files=['master/buildbot/__init__.py'],
+            properties={'foo': (20, 'Change')},
         )
         return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
@@ -461,7 +470,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             },
             # uid
         }
-        expectedRow = fakedb.Change(
+        expectedRow = ChangeModel(
             changeid=500,
             author='warner',
             committer='david',
@@ -469,11 +478,13 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             branch='warnerdb',
             revision='0e92a098b',
             revlink='foogit://warnerbar0e92a098bbaz',
-            when_timestamp=256738404,
+            when_timestamp=epoch2datetime(256738404),
             category='devel',
             repository='git://warner',
             codebase='',
             project='Buildbot',
             sourcestampid=100,
+            files=['master/buildbot/__init__.py'],
+            properties={'foo': (20, 'Change')},
         )
         return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)

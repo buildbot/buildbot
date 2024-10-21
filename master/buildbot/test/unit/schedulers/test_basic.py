@@ -24,6 +24,7 @@ from buildbot.schedulers import basic
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
+from buildbot.test.util.state import StateTestMixin
 
 
 class CommonStuffMixin:
@@ -77,7 +78,7 @@ class CommonStuffMixin:
 
 
 class BaseBasicScheduler(
-    CommonStuffMixin, scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
+    CommonStuffMixin, scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin, unittest.TestCase
 ):
     OBJECTID = 244
     SCHEDULERID = 4
@@ -120,14 +121,14 @@ class BaseBasicScheduler(
             self.Subclass, treeStableTimer=None, change_filter=cf, fileIsImportant=fII
         )
 
-        self.db.schedulers.fakeClassifications(self.SCHEDULERID, {20: True})
+        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
         yield sched.activate()
 
         # check that the scheduler has started to consume changes, and the
         # classifications *have* been flushed, since they will not be used
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=cf, onlyImportant=False)
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
+        yield self.assert_classifications(self.SCHEDULERID, {})
         yield sched.deactivate()
 
     @defer.inlineCallbacks
@@ -144,7 +145,7 @@ class BaseBasicScheduler(
         cf = mock.Mock()
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
 
-        self.db.schedulers.fakeClassifications(self.SCHEDULERID, {20: True})
+        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
         yield self.master.db.insert_test_data([
             fakedb.Change(changeid=20),
             fakedb.SchedulerChange(schedulerid=self.SCHEDULERID, changeid=20, important=1),
@@ -157,7 +158,7 @@ class BaseBasicScheduler(
         # classification should have been acted on, so the timer should be
         # running
         self.assertConsumingChanges(fileIsImportant=None, change_filter=cf, onlyImportant=False)
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {20: True})
+        yield self.assert_classifications(self.SCHEDULERID, {20: True})
         self.assertTrue(sched.timer_started)
         self.clock.advance(10)
         yield sched.deactivate()
@@ -234,7 +235,7 @@ class BaseBasicScheduler(
         # until 2229
         yield sched.gotChange(self.makeFakeChange(branch='master', number=1, when=2220), True)
         self.assertEqual(self.events, [])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True})
+        yield self.assert_classifications(self.SCHEDULERID, {1: True})
 
         # but another (unimportant) change arrives before then
         self.clock.advance(6)  # to 2226
@@ -242,7 +243,7 @@ class BaseBasicScheduler(
 
         yield sched.gotChange(self.makeFakeChange(branch='master', number=2, when=2226), False)
         self.assertEqual(self.events, [])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True, 2: False})
+        yield self.assert_classifications(self.SCHEDULERID, {1: True, 2: False})
 
         self.clock.advance(3)  # to 2229
         self.assertEqual(self.events, [])
@@ -253,7 +254,7 @@ class BaseBasicScheduler(
         # another important change arrives at 2232
         yield sched.gotChange(self.makeFakeChange(branch='master', number=3, when=2232), True)
         self.assertEqual(self.events, [])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True, 2: False, 3: True})
+        yield self.assert_classifications(self.SCHEDULERID, {1: True, 2: False, 3: True})
 
         self.clock.advance(3)  # to 2235
         self.assertEqual(self.events, [])
@@ -261,7 +262,7 @@ class BaseBasicScheduler(
         # finally, time to start the build!
         self.clock.advance(6)  # to 2241
         self.assertEqual(self.events, ['B[1,2,3]@2241'])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
+        yield self.assert_classifications(self.SCHEDULERID, {})
 
         yield sched.deactivate()
 
@@ -293,7 +294,7 @@ class BaseBasicScheduler(
 
 
 class SingleBranchScheduler(
-    CommonStuffMixin, scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
+    CommonStuffMixin, scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin, unittest.TestCase
 ):
     SCHEDULERID = 245
     OBJECTID = 224455
@@ -446,7 +447,7 @@ class SingleBranchScheduler(
             (yield self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1)), True
         )
 
-        self.db.state.assertState(
+        yield self.assert_state(
             self.OBJECTID,
             lastCodebases={
                 'a': {
@@ -495,7 +496,7 @@ class SingleBranchScheduler(
             (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=10)), True
         )
 
-        self.db.state.assertState(
+        yield self.assert_state(
             self.OBJECTID,
             lastCodebases={
                 'a': {
@@ -608,20 +609,21 @@ class AnyBranchScheduler(
 
         sched.activate()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', number=500)), True)
         yield self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', number=14), False)
-        yield sched.gotChange(mkch(branch='boring', number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', number=501)), False)
+        yield sched.gotChange((yield mkch(branch='boring', number=502)), False)
         yield self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='devel', number=16), True)
+        yield sched.gotChange((yield mkch(branch='devel', number=503)), True)
         yield self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[16]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[503]@15'])
 
         yield sched.deactivate()
 
@@ -634,20 +636,25 @@ class AnyBranchScheduler(
 
         yield sched.activate()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', repository="repo", number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', repository="repo", number=500)), True)
         yield self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', repository="repo", number=14), False)
-        yield sched.gotChange(mkch(branch='master', repository="other_repo", number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', repository="repo", number=501)), False)
+        yield sched.gotChange(
+            (yield mkch(branch='master', repository="other_repo", number=502)), False
+        )
         yield self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='master', repository="other_repo", number=17), True)
+        yield sched.gotChange(
+            (yield mkch(branch='master', repository="other_repo", number=503)), True
+        )
         yield self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
         yield sched.deactivate()
 
@@ -660,20 +667,23 @@ class AnyBranchScheduler(
 
         sched.startService()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', project="proj", number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', project="proj", number=500)), True)
         yield self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', project="proj", number=14), False)
-        yield sched.gotChange(mkch(branch='master', project="other_proj", number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', project="proj", number=501)), False)
+        yield sched.gotChange(
+            (yield mkch(branch='master', project="other_proj", number=502)), False
+        )
         yield self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='master', project="other_proj", number=17), True)
+        yield sched.gotChange((yield mkch(branch='master', project="other_proj", number=503)), True)
         yield self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
         yield sched.deactivate()
 
@@ -686,19 +696,24 @@ class AnyBranchScheduler(
 
         sched.startService()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', codebase="base", number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', codebase="base", number=500)), True)
         self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', codebase="base", number=14), False)
-        yield sched.gotChange(mkch(branch='master', codebase="other_base", number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', codebase="base", number=501)), False)
+        yield sched.gotChange(
+            (yield mkch(branch='master', codebase="other_base", number=502)), False
+        )
         self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='master', codebase="other_base", number=17), True)
+        yield sched.gotChange(
+            (yield mkch(branch='master', codebase="other_base", number=503)), True
+        )
         self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
         yield sched.deactivate()

@@ -175,6 +175,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         when = None
         branch = None
         category = None
+        number = None
         revlink = ''
         properties: dict[str, str] = {}
         repository = ''
@@ -192,6 +193,27 @@ class SchedulerMixin(interfaces.InterfaceTests):
         return ch
 
     @defer.inlineCallbacks
+    def addFakeChange(self, change):
+        old_change_number = change.number
+        change.number = yield self.master.db.changes.addChange(
+            author=change.who,
+            files=change.files,
+            comments=change.comments,
+            revision=change.revision,
+            when_timestamp=change.when,
+            branch=change.branch,
+            category=change.category,
+            revlink=change.revlink,
+            properties=change.properties,
+            repository=change.repository,
+            codebase=change.codebase,
+            project=change.project,
+        )
+        if old_change_number is not None:
+            self.assertEqual(change.number, old_change_number)
+        return change
+
+    @defer.inlineCallbacks
     def _addBuildsetReturnValue(self, builderNames):
         if builderNames is None:
             builderNames = self.sched.builderNames
@@ -207,6 +229,11 @@ class SchedulerMixin(interfaces.InterfaceTests):
         bsid = next(self._bsidGenerator)
         brids = dict(zip(builderids, self._bridGenerator))
         return (bsid, brids)
+
+    @defer.inlineCallbacks
+    def assert_classifications(self, schedulerid, expected_classifications):
+        classifications = yield self.master.db.schedulers.getChangeClassifications(schedulerid)
+        self.assertEqual(classifications, expected_classifications)
 
     def fake_addBuildsetForSourceStampsWithDefaults(
         self,

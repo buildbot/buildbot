@@ -261,5 +261,5 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             fakedb.SchedulerMaster(schedulerid=14, masterid=22),
         ])
         yield self.rtype._masterDeactivated(22)
-        self.master.db.schedulers.assertSchedulerMaster(13, None)
-        self.master.db.schedulers.assertSchedulerMaster(14, None)
+        self.assertIsNone((yield self.master.db.schedulers.get_scheduler_master(13)))
+        self.assertIsNone((yield self.master.db.schedulers.get_scheduler_master(14)))

@@ -101,18 +101,6 @@ class FakeChangeSourcesComponent(FakeDBComponent):
         self.changesource_masters[changesourceid] = masterid
         return defer.succeed(None)
 
-    # fake methods
-
-    def fakeChangeSource(self, name, changesourceid):
-        self.changesources[changesourceid] = name
-
-    def fakeChangeSourceMaster(self, changesourceid, masterid):
-        if masterid is not None:
-            self.changesource_masters[changesourceid] = masterid
-        else:
-            del self.changesource_masters[changesourceid]
-
-    # assertions
-
-    def assertChangeSourceMaster(self, changesourceid, masterid):
-        self.t.assertEqual(self.changesource_masters.get(changesourceid), masterid)
+    def get_change_source_master(self, changesourceid):
+        current_masterid = self.changesource_masters.get(changesourceid, None)
+        return defer.succeed(current_masterid)

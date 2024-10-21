@@ -81,10 +81,3 @@ class FakeMastersComponent(FakeDBComponent):
 
     def getMasters(self) -> defer.Deferred[list[MasterModel]]:
         return defer.succeed(sorted(self.masters.values(), key=lambda x: x.id))
-
-    # test helpers
-
-    def markMasterInactive(self, masterid: int) -> defer.Deferred[None]:
-        if masterid in self.masters:
-            self.masters[masterid].active = False
-        return defer.succeed(None)
