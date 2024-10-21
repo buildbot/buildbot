@@ -59,7 +59,7 @@ class TestedWampConnector(connector.WampConnector):
 class WampConnector(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         master = yield fakemaster.make_master(self)
         self.connector = TestedWampConnector()
 
@@ -68,6 +68,10 @@ class WampConnector(TestReactorMixin, unittest.TestCase):
         yield self.connector.setServiceParent(master)
         yield master.startService()
         yield self.connector.reconfigServiceWithBuildbotConfig(config)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_reconfig_same_config(self):
