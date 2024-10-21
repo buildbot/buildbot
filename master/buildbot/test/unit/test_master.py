@@ -52,9 +52,7 @@ class FailingLoader:
 class DefaultLoader:
     def loadConfig(self):
         master_cfg = MasterConfig()
-        master_cfg.db['db_url'] = Interpolate(
-            "postgresql+psycopg2://buildbot:%(secret:db_pwd)s@localhost:3306/bbtest"
-        )
+        master_cfg.db['db_url'] = Interpolate('sqlite:///path-to-%(secret:db_pwd)s-db-file')
         master_cfg.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
         return master_cfg
 
@@ -156,7 +154,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
 
         self.assertEqual(
             self.master.db.configured_url,
-            'postgresql+psycopg2://buildbot:s3cr3t@localhost:3306/bbtest',
+            'sqlite:///path-to-s3cr3t-db-file',
         )
 
         self.assertTrue(self.master.data.updates.thisMasterActive)
@@ -223,12 +221,12 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = MasterConfig()
-        old.db['db_url'] = Interpolate('%(secret:db_pwd)s')
+        old.db['db_url'] = Interpolate('sqlite:///%(secret:db_pwd)s')
         old.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
         yield self.master.secrets_manager.setup()
         yield self.master.db.setup()
         yield self.master.reconfigServiceWithBuildbotConfig(old)
-        self.assertEqual(self.master.db.configured_url, 's3cr3t')
+        self.assertEqual(self.master.db.configured_url, 'sqlite:///s3cr3t')
 
         new = MasterConfig()
         new.db['db_url'] = old.db['db_url']
