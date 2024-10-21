@@ -31,7 +31,7 @@ boto3==1.35.44
 botocore==1.35.44
 certifi==2024.8.30
 cffi==1.17.1
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
 constantly==23.10.4
 croniter==3.0.3
 cryptography==43.0.1
