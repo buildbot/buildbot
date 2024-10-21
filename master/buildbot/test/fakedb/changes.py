@@ -281,28 +281,6 @@ class FakeChangesComponent(FakeDBComponent):
 
         return model
 
-    # assertions
-
-    def assertChange(self, changeid, row):
-        row_only = self.changes[changeid].copy()
-        del row_only['files']
-        del row_only['properties']
-        del row_only['uids']
-        if not row_only['parent_changeids']:
-            # Convert [] to None
-            # None is the value stored in the DB.
-            # We need this kind of conversion, because for the moment we only support
-            # 1 parent for a change.
-            # When we will support multiple parent for change, then we will have a
-            # table parent_changes with at least 2 col: "changeid", "parent_changeid"
-            # And the col 'parent_changeids' of the table changes will be
-            # dropped
-            row_only['parent_changeids'] = None
-        self.t.assertEqual(row_only, row.values)
-
-    def assertChangeUsers(self, changeid, expectedUids):
-        self.t.assertEqual(self.changes[changeid]['uids'], expectedUids)
-
     # fake methods
 
     def fakeAddChangeInstance(self, change):
