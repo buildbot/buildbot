@@ -66,7 +66,7 @@ class TestPage(Resource):
 
 class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         if txrequests is None:
             raise unittest.SkipTest("Need to install txrequests to test http steps")
 
@@ -89,6 +89,7 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             yield self.site.close_connections()
         finally:
             yield self.tear_down_test_build_step()
+            yield self.tear_down_test_reactor()
 
     def get_connection_string(self):
         return f"http://127.0.0.1:{self.port}"

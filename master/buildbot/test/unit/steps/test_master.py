@@ -36,19 +36,21 @@ _COMSPEC_ENV = 'COMSPEC'
 
 class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         if runtime.platformType == 'win32':
             self.comspec = os.environ.get(_COMSPEC_ENV)
             os.environ[_COMSPEC_ENV] = r'C:\WINDOWS\system32\cmd.exe'
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         if runtime.platformType == 'win32':
             if self.comspec:
                 os.environ[_COMSPEC_ENV] = self.comspec
             else:
                 del os.environ[_COMSPEC_ENV]
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_constr_args(self):
         self.setup_step(
@@ -168,11 +170,13 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
 class TestSetProperty(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_simple(self):
         self.setup_step(
@@ -190,11 +194,13 @@ class TestSetProperty(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestLogRenderable(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_simple(self):
         self.setup_step(
@@ -211,11 +217,13 @@ class TestLogRenderable(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def doOneTest(self, **kwargs):
         # all three tests should create a 'a' property with 'b' value, all with different
@@ -242,11 +250,13 @@ class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
 class TestAssert(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_eq_pass(self):
         self.setup_step(master.Assert(Property("test_prop") == "foo"))

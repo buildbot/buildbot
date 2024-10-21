@@ -40,11 +40,13 @@ class TestShellCommandExecution(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_doStepIf_False(self):
         self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
@@ -180,11 +182,13 @@ class TestShellCommandExecution(
 
 class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_run_success(self):
         self.setup_step(shell.TreeSize())
@@ -216,11 +220,13 @@ class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_constructor_conflict(self):
         with self.assertRaises(config.ConfigErrors):
@@ -349,11 +355,13 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
 class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_new_version_success(self):
         self.setup_step(shell.PerlModuleTest(command="cmd"))
@@ -462,11 +470,13 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class Configure(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_class_attrs(self):
         step = shell.Configure()
@@ -484,11 +494,13 @@ class WarningCountingShellCommand(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_no_warnings(self):
         self.setup_step(shell.WarningCountingShellCommand(workdir='w', command=['make']))
@@ -812,11 +824,13 @@ class WarningCountingShellCommand(
 
 class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_class_args(self):
         # since this step is just a pre-configured WarningCountingShellCommand,
@@ -832,11 +846,13 @@ class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_setTestResults(self):
         step = self.setup_step(shell.Test())
