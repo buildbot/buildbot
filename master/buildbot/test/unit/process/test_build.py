@@ -180,7 +180,7 @@ def makeControllableStepFactory():
 class TestBuild(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         r = FakeRequest()
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
@@ -204,6 +204,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.build.workerforbuilder = self.workerforbuilder
         self.build.text = []
         self.build.buildid = 666
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def assertWorkerPreparationFailure(self, reason):
         states = "".join(self.master.data.updates.stepStateString.values())
@@ -887,7 +891,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self)
         self.builder = FakeBuilder(self.master)
 
@@ -910,6 +914,10 @@ class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):
         r.sources.extend([s1, s2, s3])
 
         self.build = Build([r], self.builder)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_buildReturnSourceStamp(self):
         """
@@ -934,7 +942,7 @@ class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):
 class TestBuildBlameList(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self)
         self.builder = FakeBuilder(self.master)
 
@@ -958,6 +966,10 @@ class TestBuildBlameList(TestReactorMixin, unittest.TestCase):
         self.patchSource.changes = []
         self.patchSource.revision = "67890"
         self.patchSource.patch_info = ("jeff", "jeff's new feature")
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_blamelist_for_changes(self):
         r = FakeRequest()
@@ -983,7 +995,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.props = {}
         self.r = FakeRequest()
         self.r.sources = []
@@ -1003,6 +1015,10 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         self.build.setStepFactories([])
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
@@ -1028,7 +1044,7 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.props = {}
         self.r = FakeRequest()
         self.r.sources = []
@@ -1043,6 +1059,10 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         self.build.setStepFactories([])
         # record properties that will be set
         self.build.properties.setProperty = self.setProperty
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:

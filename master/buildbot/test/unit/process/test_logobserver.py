@@ -45,8 +45,12 @@ class MyLogObserver(logobserver.LogObserver):
 class TestLogObserver(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_sequence(self):
@@ -96,8 +100,12 @@ class MyLogLineObserver(logobserver.LogLineObserver):
 class TestLineConsumerLogObesrver(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_test_sequence(self, consumer):
@@ -169,8 +177,12 @@ class TestLineConsumerLogObesrver(TestReactorMixin, unittest.TestCase):
 class TestLogLineObserver(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_sequence(self):
@@ -209,8 +221,12 @@ class TestLogLineObserver(TestReactorMixin, unittest.TestCase):
 class TestOutputProgressObserver(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_sequence(self):
@@ -229,8 +245,12 @@ class TestOutputProgressObserver(TestReactorMixin, unittest.TestCase):
 class TestBufferObserver(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_test_sequence(self, lo):

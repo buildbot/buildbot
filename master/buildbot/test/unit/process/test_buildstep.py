@@ -115,11 +115,13 @@ class TestBuildStep(
             return SUCCESS
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     # support
 
@@ -1090,9 +1092,13 @@ class InterfaceTests(interfaces.InterfaceTests):
 class TestFakeItfc(unittest.TestCase, TestBuildStepMixin, TestReactorMixin, InterfaceTests):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setup_test_build_step()
         self.setup_step(buildstep.BuildStep())
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
 
 class TestRealItfc(unittest.TestCase, InterfaceTests):
@@ -1114,12 +1120,14 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
 class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setup_test_build_step()
         self.setup_step(CommandMixinExample())
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_runRmdir(self):
@@ -1231,11 +1239,13 @@ class TestShellMixin(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setup_test_build_step(with_secrets={"s3cr3t": "really_safe_string"})
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_setupShellMixin_bad_arg(self):
         mixin = SimpleShellCommand()
