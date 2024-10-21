@@ -35,7 +35,7 @@ class TestGitHubStatusPush(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         self.setup_reporter_test()
         # project must be in the form <owner>/<project>
@@ -58,8 +58,10 @@ class TestGitHubStatusPush(
     def createService(self):
         return GitHubStatusPush(Interpolate('XXYYZZ'))
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.master.stopService()
+        yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_basic(self):
@@ -300,7 +302,7 @@ class TestGitHubStatusPush(
 class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         self.setup_reporter_test()
         # project must be in the form <owner>/<project>
@@ -324,8 +326,10 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
     def createService(self):
         return GitHubStatusPush('XXYYZZ')
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.master.stopService()
+        yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_ssh(self):

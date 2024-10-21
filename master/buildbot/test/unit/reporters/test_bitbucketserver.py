@@ -54,7 +54,7 @@ class TestBitbucketServerStatusPush(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         yield self.master.startService()
@@ -72,6 +72,7 @@ class TestBitbucketServerStatusPush(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build):
@@ -219,7 +220,7 @@ class TestBitbucketServerCoreAPIStatusPush(
 ):
     @defer.inlineCallbacks
     def setupReporter(self, token=None, **kwargs):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
@@ -251,8 +252,10 @@ class TestBitbucketServerCoreAPIStatusPush(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.master and self.master.running:
-            yield self.master.stopService()
+        if self.master:
+            if self.master.running:
+                yield self.master.stopService()
+            yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def _check_start_and_finish_build(self, build, parentPlan=False, epoch=False):
@@ -628,7 +631,7 @@ class TestBitbucketServerPRCommentPush(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         yield self.master.startService()
@@ -666,6 +669,7 @@ class TestBitbucketServerPRCommentPush(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, set_pr=True):
