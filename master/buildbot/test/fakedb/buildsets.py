@@ -285,38 +285,3 @@ class FakeBuildsetsComponent(FakeDBComponent):
         assert bsid in self.buildsets
         self.buildsets[bsid]['results'] = result
         self.completed_bsids.add(bsid)
-
-    # assertions
-
-    def assertBuildsetCompletion(self, bsid, complete):
-        """Assert that the completion state of buildset BSID is COMPLETE"""
-        actual = self.buildsets[bsid]['complete']
-        self.t.assertTrue((actual and complete) or (not actual and not complete))
-
-    def assertBuildset(self, bsid=None, expected_buildset=None):
-        """Assert that the given buildset looks as expected; the ssid parameter
-        of the buildset is omitted.  Properties are converted with asList and
-        sorted.  Attributes complete, complete_at, submitted_at, results, and parent_*
-        are ignored if not specified."""
-        self.t.assertIn(bsid, self.buildsets)
-        buildset = self.buildsets[bsid].copy()
-        del buildset['id']
-
-        # clear out some columns if the caller doesn't care
-        columns = [
-            'complete',
-            'complete_at',
-            'submitted_at',
-            'results',
-            'parent_buildid',
-            'parent_relationship',
-        ]
-        for col in columns:
-            if col not in expected_buildset:
-                del buildset[col]
-
-        if buildset['properties']:
-            buildset['properties'] = sorted(buildset['properties'].items())
-
-        self.t.assertEqual(buildset, expected_buildset)
-        return bsid

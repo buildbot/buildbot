@@ -192,10 +192,21 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
 
         (bsid, brids) = yield self.rtype.addBuildset(**kwargs)
         self.assertEqual((bsid, brids), expectedReturn)
-        # check the correct message was received
+
         self.master.mq.assertProductions(expectedMessages, orderMatters=False)
-        # and that the correct data was inserted into the db
-        self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
+
+        buildsets = yield self.master.db.buildsets.getBuildsets()
+        self.assertEqual(
+            [
+                {
+                    'external_idstring': bs.external_idstring,
+                    'reason': bs.reason,
+                    'rebuilt_buildid': bs.rebuilt_buildid,
+                }
+                for bs in buildsets
+            ],
+            [expectedBuildset],
+        )
 
     def _buildRequestMessageDict(self, brid, bsid, builderid):
         return {
@@ -312,7 +323,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         ]
         expectedBuildset = {
             "reason": 'because',
-            "properties": {},
             "external_idstring": 'extid',
             "rebuilt_buildid": None,
         }
@@ -334,7 +344,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         ]
         expectedBuildset = {
             "reason": 'because',
-            "properties": {},
             "external_idstring": 'extid',
             "rebuilt_buildid": None,
         }
@@ -414,7 +423,11 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
 
         yield self.rtype.maybeBuildsetComplete(72)
 
-        self.master.db.buildsets.assertBuildsetCompletion(72, expectComplete)
+        buildset_ids = [
+            bs.bsid for bs in (yield self.master.db.buildsets.getBuildsets(complete=expectComplete))
+        ]
+        self.assertIn(72, buildset_ids)
+
         if expectMessage:
             self.assertEqual(
                 self.master.mq.productions,
