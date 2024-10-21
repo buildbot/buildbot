@@ -29,8 +29,10 @@ class Log(Row):
     required_columns = ('stepid',)
 
     def __init__(
-        self, id=None, name='log29', slug='log29', stepid=None, complete=0, num_lines=0, type='s'
+        self, id=None, name='log29', slug=None, stepid=None, complete=0, num_lines=0, type='s'
     ):
+        if slug is None:
+            slug = name
         super().__init__(
             id=id,
             name=name,

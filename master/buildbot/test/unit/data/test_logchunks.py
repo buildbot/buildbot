@@ -50,7 +50,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                 fakedb.Worker(id=13, name='wrk'),
                 fakedb.Master(id=88),
                 fakedb.Buildset(id=8822),
-                fakedb.BuildRequest(id=82, buildsetid=8822),
+                fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
                 fakedb.Build(
                     id=13, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=3
                 ),
@@ -225,12 +225,12 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         logchunk = yield self.callGet(path)
         self.validateData(logchunk)
         if logid == 60:
-            expContent = 'Builder: some:builder\nBuild number: 3\nWorker name: wrk\n'
+            expContent = 'Builder: builder-77\nBuild number: 3\nWorker name: wrk\n'
             expContent += ''.join([f"{line[1:]}\n" for line in expLines])
-            expFilename = "some:builder_build_3_step_make_log_stdio"
+            expFilename = "builder-77_build_3_step_make_log_stdio"
         else:
             expContent = '\n'.join(expLines) + '\n'
-            expFilename = "some:builder_build_3_step_make_log_errors"
+            expFilename = "builder-77_build_3_step_make_log_errors"
 
         self.assertEqual(
             logchunk, {'filename': expFilename, 'mime-type': "text/plain", 'raw': expContent}

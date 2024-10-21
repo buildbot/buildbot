@@ -50,6 +50,10 @@ class Patch(Row):
         )
 
 
+class NotSet:
+    pass
+
+
 class SourceStamp(Row):
     table = "sourcestamps"
 
@@ -72,7 +76,7 @@ class SourceStamp(Row):
         self,
         id=None,
         branch='master',
-        revision='abcd',
+        revision=NotSet,
         patchid=None,
         repository='repo',
         codebase='',
@@ -80,6 +84,8 @@ class SourceStamp(Row):
         created_at=89834834,
         ss_hash=None,
     ):
+        if revision is NotSet:
+            revision = f'rev-{id}'
         super().__init__(
             id=id,
             branch=branch,

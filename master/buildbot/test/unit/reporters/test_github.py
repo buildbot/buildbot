@@ -130,7 +130,7 @@ class TestGitHubStatusPush(
             fakedb.Buildset(id=98, results=SUCCESS, reason="test_reason1"),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(
-                id=234, project=None, branch=None, revision=None, repository=None, codebase=None
+                id=234, project='', branch=None, revision=None, repository='repo', codebase='cb'
             ),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=79),
             fakedb.Build(

@@ -31,13 +31,15 @@ class Builder(Row):
     def __init__(
         self,
         id=None,
-        name='some:builder',
+        name=None,
         name_hash=None,
         projectid=None,
         description=None,
         description_format=None,
         description_html=None,
     ):
+        if name is None:
+            name = f'builder-{id}'
         super().__init__(
             id=id,
             name=name,

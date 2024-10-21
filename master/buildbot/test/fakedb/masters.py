@@ -29,7 +29,9 @@ class Master(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='some:master', name_hash=None, active=1, last_active=9998999):
+    def __init__(self, id=None, name=None, name_hash=None, active=1, last_active=9998999):
+        if name is None:
+            name = f'master-{id}'
         super().__init__(
             id=id, name=name, name_hash=name_hash, active=active, last_active=last_active
         )

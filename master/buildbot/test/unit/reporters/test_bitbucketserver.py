@@ -501,14 +501,14 @@ class TestBitbucketServerCoreAPIStatusPush(
     def test_with_no_repo(self):
         yield self.setupReporter()
 
-        self.reporter_test_repo = None
+        self.reporter_test_repo = ''
         build = yield self.insert_build_finished(SUCCESS)
 
         self.setUpLogging()
         # we don't expect any request
         build['complete'] = False
         yield self.sp._got_event(('builds', 20, 'new'), build)
-        self.assertLogged("Unable to parse repository info from 'None' for SSID: 234")
+        self.assertLogged("Unable to parse repository info from '' for SSID: 234")
 
     @defer.inlineCallbacks
     def test_with_renderers(self):

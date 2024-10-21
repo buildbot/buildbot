@@ -81,7 +81,10 @@ class SchedulerMixin(interfaces.InterfaceTests):
             fakedb.Scheduler(id=schedulerid, name=scheduler.name),
         ]
         if createBuilderDB is True:
-            rows.extend([fakedb.Builder(name=bname) for bname in scheduler.builderNames])
+            rows.extend([
+                fakedb.Builder(id=300 + i, name=bname)
+                for i, bname in enumerate(scheduler.builderNames)
+            ])
 
         yield db.insert_test_data(rows)
 
@@ -205,10 +208,11 @@ class SchedulerMixin(interfaces.InterfaceTests):
             branch=change.branch,
             category=change.category,
             revlink=change.revlink,
-            properties=change.properties,
+            properties=change.properties.asDict(),
             repository=change.repository,
             codebase=change.codebase,
             project=change.project,
+            _test_changeid=change.number,
         )
         if old_change_number is not None:
             self.assertEqual(change.number, old_change_number)

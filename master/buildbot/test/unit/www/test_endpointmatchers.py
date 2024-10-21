@@ -50,12 +50,14 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def insertData(self):
         yield self.db.insert_test_data([
+            fakedb.Builder(id=21, name="builder"),
             fakedb.SourceStamp(id=13, branch='secret'),
+            fakedb.Master(id=1),
+            fakedb.Worker(id=2, name='worker'),
             fakedb.Build(id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
-            fakedb.BuildRequest(id=16, buildsetid=17),
+            fakedb.BuildRequest(id=16, buildsetid=17, builderid=21),
             fakedb.Buildset(id=17),
             fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
-            fakedb.Builder(id=21, name="builder"),
         ])
 
 

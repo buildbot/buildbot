@@ -129,6 +129,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         codebase: str = '',
         project: str = '',
         uid: int | None = None,
+        _test_changeid: int | None = None,
     ):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -179,24 +180,26 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             transaction = conn.begin()
 
-            r = conn.execute(
-                ch_tbl.insert(),
-                {
-                    "author": author,
-                    "committer": committer,
-                    "comments": comments,
-                    "branch": branch,
-                    "revision": revision,
-                    "revlink": revlink,
-                    "when_timestamp": datetime2epoch(when_timestamp),
-                    "category": category,
-                    "repository": repository,
-                    "codebase": codebase,
-                    "project": project,
-                    "sourcestampid": ssid,
-                    "parent_changeids": parent_changeid,
-                },
-            )
+            insert_value = {
+                "author": author,
+                "committer": committer,
+                "comments": comments,
+                "branch": branch,
+                "revision": revision,
+                "revlink": revlink,
+                "when_timestamp": datetime2epoch(when_timestamp),
+                "category": category,
+                "repository": repository,
+                "codebase": codebase,
+                "project": project,
+                "sourcestampid": ssid,
+                "parent_changeids": parent_changeid,
+            }
+
+            if _test_changeid is not None:
+                insert_value['changeid'] = _test_changeid
+
+            r = conn.execute(ch_tbl.insert(), [insert_value])
             changeid = r.inserted_primary_key[0]
             if files:
                 tbl = self.db.model.change_files

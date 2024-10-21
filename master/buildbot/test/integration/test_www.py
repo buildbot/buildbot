@@ -163,8 +163,8 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_masters(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
-            fakedb.Master(id=8, name='other:master', active=1, last_active=OTHERTIME),
+            fakedb.Master(id=7, active=0, last_active=SOMETIME),
+            fakedb.Master(id=8, active=1, last_active=OTHERTIME),
         ])
 
         res = yield self.apiGet(self.link(b'masters'))
@@ -175,13 +175,13 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                     {
                         'active': False,
                         'masterid': 7,
-                        'name': 'some:master',
+                        'name': 'master-7',
                         'last_active': SOMETIME,
                     },
                     {
                         'active': True,
                         'masterid': 8,
-                        'name': 'other:master',
+                        'name': 'master-8',
                         'last_active': OTHERTIME,
                     },
                 ],
@@ -199,7 +199,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                     {
                         'active': False,
                         'masterid': 7,
-                        'name': 'some:master',
+                        'name': 'master-7',
                         'last_active': SOMETIME,
                     },
                 ],
@@ -213,7 +213,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         decompress_fn: Callable[[bytes], bytes],
     ) -> None:
         await self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
+            fakedb.Master(id=7, active=0, last_active=SOMETIME),
         ])
 
         pg = await self.agent.request(
@@ -238,7 +238,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                     {
                         'active': False,
                         'masterid': 7,
-                        'name': 'some:master',
+                        'name': 'master-7',
                         'last_active': SOMETIME,
                     },
                 ],

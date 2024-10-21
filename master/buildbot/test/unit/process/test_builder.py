@@ -515,7 +515,7 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin, unittest.TestCase
         yield self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
-        master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
+        master_id = fakedb.FakeDBConnector.MASTER_ID
         self.base_rows = [
             fakedb.SourceStamp(id=21),
             fakedb.Buildset(id=11, reason='because'),
@@ -564,7 +564,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
         yield self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
-        master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
+        master_id = fakedb.FakeDBConnector.MASTER_ID
         self.base_rows = [
             fakedb.SourceStamp(id=21),
             fakedb.Buildset(id=11, reason='because'),
@@ -609,7 +609,7 @@ class TestGetHighestPriority(TestReactorMixin, BuilderMixin, unittest.TestCase):
         yield self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
-        master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
+        master_id = fakedb.FakeDBConnector.MASTER_ID
         self.base_rows = [
             fakedb.SourceStamp(id=21),
             fakedb.Buildset(id=11, reason='because'),

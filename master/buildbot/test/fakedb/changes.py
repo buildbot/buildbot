@@ -156,14 +156,16 @@ class FakeChangesComponent(FakeDBComponent):
         codebase: str = '',
         project: str = '',
         uid: int | None = None,
+        _test_changeid: int | None = None,
     ):
         if properties is None:
             properties = {}
 
-        if self.changes:
-            changeid = max(list(self.changes)) + 1
-        else:
-            changeid = 500
+        if _test_changeid is None:
+            if self.changes:
+                _test_changeid = max(list(self.changes)) + 1
+            else:
+                _test_changeid = 500
 
         ssid = yield self.db.sourcestamps.findSourceStampId(
             revision=revision,
@@ -175,8 +177,8 @@ class FakeChangesComponent(FakeDBComponent):
 
         parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
 
-        self.changes[changeid] = ch = {
-            "changeid": changeid,
+        self.changes[_test_changeid] = ch = {
+            "changeid": _test_changeid,
             "parent_changeids": parent_changeids,
             "author": author,
             "committer": committer,
@@ -198,7 +200,7 @@ class FakeChangesComponent(FakeDBComponent):
         if uid:
             ch['uids'].append(uid)
 
-        return changeid
+        return _test_changeid
 
     def getLatestChangeid(self) -> defer.Deferred[int | None]:
         if self.changes:

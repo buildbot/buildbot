@@ -46,7 +46,7 @@ class Tests(interfaces.InterfaceTests):
 
     def setUpTests(self):
         # set up a sourcestamp and buildset for use below
-        self.MASTER_ID = fakedb.FakeBuildRequestsComponent.MASTER_ID
+        self.MASTER_ID = fakedb.FakeDBConnector.MASTER_ID
         self.OTHER_MASTER_ID = self.MASTER_ID + 1111
         self.db.master.masterid = self.MASTER_ID
 

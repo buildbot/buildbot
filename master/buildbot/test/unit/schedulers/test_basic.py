@@ -148,11 +148,10 @@ class BaseBasicScheduler(
         cf = mock.Mock()
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
 
-        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
         yield self.master.db.insert_test_data([
             fakedb.Change(changeid=20),
-            fakedb.SchedulerChange(schedulerid=self.SCHEDULERID, changeid=20, important=1),
         ])
+        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
         yield sched.activate()
 

@@ -91,7 +91,7 @@ class FakeMaster(service.MasterService):
     data: fakedata.FakeDataConnector
     graphql: GraphQLConnector
 
-    def __init__(self, reactor, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+    def __init__(self, reactor, master_id=fakedb.FakeDBConnector.MASTER_ID):
         super().__init__()
         self._master_id = master_id
         self.reactor = reactor

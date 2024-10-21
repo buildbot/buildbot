@@ -58,16 +58,9 @@ class TestStateMixin(TestReactorMixin, StateTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getState_KeyError(self):
         yield self.set_fake_state(self.object, 'fav_color', ['red', 'purple'])
-        d = self.object.getState('fav_book')
-
-        def cb(_):
-            self.fail("should not succeed")
-
-        def check_exc(f):
-            f.trap(KeyError)
-
-        d.addCallbacks(cb, check_exc)
-        yield d
+        with self.assertRaises(KeyError):
+            yield self.object.getState('fav_book')
+        self.flushLoggedErrors(KeyError)
 
     @defer.inlineCallbacks
     def test_setState(self):

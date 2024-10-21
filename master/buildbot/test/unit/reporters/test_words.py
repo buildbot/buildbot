@@ -187,7 +187,7 @@ class ContactMixin(TestReactorMixin):
             fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
             fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
             fakedb.ConfiguredWorker(id=14013, workerid=2, buildermasterid=4012),
-            fakedb.ConfiguredWorker(id=14013, workerid=1, buildermasterid=4013),
+            fakedb.ConfiguredWorker(id=14014, workerid=1, buildermasterid=4013),
         ])
 
 
@@ -459,8 +459,8 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
     def test_command_status_online(self):
         # we are online and we have some finished builds
         yield self.setup_multi_builders()
+        yield self.master.db.workers.workerConfigured(1, 4013, [])
         yield self.master.db.insert_test_data([
-            fakedb.ConfiguredWorker(id=14012, workerid=1, buildermasterid=4013),
             fakedb.ConnectedWorker(id=114, masterid=13, workerid=1),
         ])
         yield self.setupSomeBuilds()

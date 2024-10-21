@@ -47,7 +47,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
-            fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(
@@ -82,9 +82,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['waited_for'], True)
         self.assertEqual(buildrequest['claimed_at'], self.CLAIMED_AT)
         self.assertEqual(buildrequest['results'], 75)
-        self.assertEqual(
-            buildrequest['claimed_by_masterid'], fakedb.FakeBuildRequestsComponent.MASTER_ID
-        )
+        self.assertEqual(buildrequest['claimed_by_masterid'], fakedb.FakeDBConnector.MASTER_ID)
         self.assertEqual(buildrequest['claimed'], True)
         self.assertEqual(buildrequest['submitted_at'], self.SUBMITTED_AT)
         self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT)
@@ -136,7 +134,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Builder(id=78, name='ccc'),
             fakedb.Builder(id=79, name='ddd'),
-            fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(
@@ -149,6 +147,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
             fakedb.BuildRequest(id=45, buildsetid=8822, builderid=77),
             fakedb.BuildRequest(id=46, buildsetid=8822, builderid=78),
+            fakedb.SourceStamp(id=100),
+            fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=100),
         ])
 
     def tearDown(self):
@@ -240,15 +240,13 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         getBuildRequestsMock = mock.Mock(return_value={})
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         f1 = resultspec.Filter('claimed', 'eq', [True])
-        f2 = resultspec.Filter(
-            'claimed_by_masterid', 'eq', [fakedb.FakeBuildRequestsComponent.MASTER_ID]
-        )
+        f2 = resultspec.Filter('claimed_by_masterid', 'eq', [fakedb.FakeDBConnector.MASTER_ID])
         yield self.callGet(('buildrequests',), resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
         getBuildRequestsMock.assert_called_with(
             builderid=None,
             bsid=None,
             complete=None,
-            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
+            claimed=fakedb.FakeDBConnector.MASTER_ID,
             resultSpec=resultspec.ResultSpec(filters=[f1]),
         )
 
@@ -323,8 +321,10 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
     @defer.inlineCallbacks
     def testFakeDataClaimBuildRequests(self):
         yield self.master.db.insert_test_data([
-            fakedb.BuildRequest(id=44, buildsetid=8822),
-            fakedb.BuildRequest(id=55, buildsetid=8822),
+            fakedb.Builder(id=123),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=44, builderid=123, buildsetid=8822),
+            fakedb.BuildRequest(id=55, builderid=123, buildsetid=8822),
         ])
         res = yield self.master.data.updates.claimBuildRequests(
             [44, 55], claimed_at=self.CLAIMED_AT
@@ -340,6 +340,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
     def testClaimBuildRequests(self):
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=123),
+            fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=123),
             fakedb.BuildRequest(id=55, buildsetid=8822, builderid=123),
         ])
@@ -650,7 +651,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             fakedb.SourceStamp(id=234),
             fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=123, buildrequestid=82),
+            fakedb.Build(id=123, builderid=77, buildrequestid=82, masterid=88),
         ])
         buildrequest = yield self.master.data.get(("buildrequests", 82))
         new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)
@@ -712,8 +713,8 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),
             fakedb.BuildRequest(id=81, buildsetid=8821, builderid=77),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=122, buildrequestid=81),
-            fakedb.Build(id=123, buildrequestid=82),
+            fakedb.Build(id=122, builderid=77, buildrequestid=81, masterid=88),
+            fakedb.Build(id=123, builderid=77, buildrequestid=82, masterid=88),
         ])
         buildrequest = yield self.master.data.get(("buildrequests", 82))
         new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)

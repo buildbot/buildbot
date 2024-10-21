@@ -133,11 +133,12 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
     @defer.inlineCallbacks
     def test_setBuildProperties(self):
         yield self.master.db.insert_test_data([
+            fakedb.Builder(id=1),
             fakedb.Buildset(id=28),
-            fakedb.BuildRequest(id=5, buildsetid=28),
+            fakedb.BuildRequest(id=5, builderid=1, buildsetid=28),
             fakedb.Master(id=3),
             fakedb.Worker(id=42, name="Friday"),
-            fakedb.Build(id=1234, buildrequestid=5, masterid=3, workerid=42),
+            fakedb.Build(id=1234, builderid=1, buildrequestid=5, masterid=3, workerid=42),
         ])
 
         self.master.db.builds.setBuildProperty = mock.Mock(

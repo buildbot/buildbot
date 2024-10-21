@@ -85,6 +85,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 codebase='cbsvn',
                 project='world-domination',
                 sourcestampid=133,
+                when_timestamp=1000000,
             ),
             fakedb.SourceStamp(id=144),
             fakedb.Change(
@@ -95,6 +96,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 codebase='cbsvn',
                 project='world-domination',
                 sourcestampid=144,
+                when_timestamp=1000001,
             ),
             fakedb.Builder(id=1, name='builder'),
             fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1, number=1),
@@ -114,7 +116,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_build(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+        fake_change = yield self.db.changes.getChangeFromSSid(144)
 
         mockGetChangeById = mock.Mock(
             spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
@@ -128,7 +130,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_builder(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(ssid=144)
+        fake_change = yield self.db.changes.getChangeFromSSid(144)
         mockGetChangeById = mock.Mock(
             spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
         )
@@ -149,7 +151,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChangesOtherOrder(self):
-        resultSpec = resultspec.ResultSpec(limit=1, order=('-when_time_stamp',))
+        resultSpec = resultspec.ResultSpec(limit=1, order=('-when_timestamp',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         self.assertEqual(len(changes), 1)
@@ -249,6 +251,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_addChange(self):
         # src and codebase are default here
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
@@ -289,6 +292,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
@@ -364,6 +368,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = lambda change: f"cb-{(change['category'])}"
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
@@ -430,6 +435,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.revlink = lambda rev, repo: f'foo{repo}bar{rev}baz'
         # revlink is default here
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',

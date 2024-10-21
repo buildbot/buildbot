@@ -34,7 +34,7 @@ class Build(Row):
     def __init__(
         self,
         id=None,
-        number=29,
+        number=None,
         buildrequestid=None,
         builderid=None,
         workerid=-1,
@@ -44,6 +44,8 @@ class Build(Row):
         state_string="test",
         results=None,
     ):
+        if number is None:
+            number = id
         super().__init__(
             id=id,
             number=number,

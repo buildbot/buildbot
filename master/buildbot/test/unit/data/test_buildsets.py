@@ -141,6 +141,8 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             ),
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Builder(id=43, name='bldr2'),
+            fakedb.Buildset(id=199, complete=False),
+            fakedb.BuildRequest(id=999, buildsetid=199, builderid=42),
         ])
 
     @defer.inlineCallbacks
@@ -200,6 +202,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         self.master.mq.assertProductions(expectedMessages, orderMatters=False)
 
         buildsets = yield self.master.db.buildsets.getBuildsets()
+        buildsets = [bs for bs in buildsets if bs.bsid != 199]
         self.assertEqual(
             [
                 {
@@ -399,29 +402,28 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
 
         self.reactor.advance(A_TIMESTAMP)
 
-        def mkbr(brid, bsid=72):
+        def mkbr(brid, bsid):
             return fakedb.BuildRequest(
                 id=brid,
                 buildsetid=bsid,
                 builderid=42,
-                complete=buildRequestCompletions.get(brid),
+                complete=buildRequestCompletions.get(brid, False),
                 results=buildRequestResults.get(brid, SUCCESS),
             )
 
         yield self.master.db.insert_test_data([
-            fakedb.Builder(id=42, name='bldr1'),
             fakedb.Buildset(
                 id=72,
                 submitted_at=EARLIER,
                 complete=buildsetComplete,
                 complete_at=A_TIMESTAMP if buildsetComplete else None,
             ),
-            mkbr(42),
-            mkbr(43),
-            mkbr(44),
+            mkbr(42, 72),
+            mkbr(43, 72),
+            mkbr(44, 72),
             fakedb.BuildsetSourceStamp(buildsetid=72, sourcestampid=234),
             fakedb.Buildset(id=73, complete=False),
-            mkbr(45, bsid=73),
+            mkbr(45, 73),
             fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
         ])
 
