@@ -15,11 +15,6 @@
 
 from __future__ import annotations
 
-from twisted.internet import defer
-
-from buildbot.db.test_result_sets import TestResultSetAlreadyCompleted
-from buildbot.db.test_result_sets import TestResultSetModel
-from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
 
@@ -55,91 +50,3 @@ class TestResultSet(Row):
             tests_failed=tests_failed,
             complete=complete,
         )
-
-
-class FakeTestResultSetsComponent(FakeDBComponent):
-    def setUp(self):
-        self.result_sets = {}
-
-    def insert_test_data(self, rows):
-        for row in rows:
-            if isinstance(row, TestResultSet):
-                self.result_sets[row.id] = row.values.copy()
-
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
-        id = Row.nextId()
-        self.result_sets[id] = {
-            'id': id,
-            'builderid': builderid,
-            'buildid': buildid,
-            'stepid': stepid,
-            'description': description,
-            'category': category,
-            'value_unit': value_unit,
-            'tests_failed': None,
-            'tests_passed': None,
-            'complete': False,
-        }
-        return defer.succeed(id)
-
-    def _model_from_row(self, row):
-        return TestResultSetModel(
-            id=row['id'],
-            builderid=row['builderid'],
-            buildid=row['buildid'],
-            stepid=row['stepid'],
-            description=row['description'],
-            category=row['category'],
-            value_unit=row['value_unit'],
-            tests_passed=row['tests_passed'],
-            tests_failed=row['tests_failed'],
-            complete=bool(row['complete']),
-        )
-
-    def getTestResultSet(self, test_result_setid: int) -> defer.Deferred[TestResultSetModel | None]:
-        if test_result_setid not in self.result_sets:
-            return defer.succeed(None)
-        return defer.succeed(self._model_from_row(self.result_sets[test_result_setid]))
-
-    def getTestResultSets(
-        self,
-        builderid: int,
-        buildid: int | None = None,
-        stepid: int | None = None,
-        complete: bool | None = None,
-        result_spec=None,
-    ) -> defer.Deferred[list[TestResultSetModel]]:
-        ret = []
-        for row in self.result_sets.values():
-            if row['builderid'] != builderid:
-                continue
-            if buildid is not None and row['buildid'] != buildid:
-                continue
-            if stepid is not None and row['stepid'] != stepid:
-                continue
-            if complete is not None and row['complete'] != complete:
-                continue
-            ret.append(self._model_from_row(row))
-
-        if result_spec is not None:
-            ret = self.applyResultSpec(ret, result_spec)
-
-        return defer.succeed(ret)
-
-    # returns a Deferred
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
-        if test_result_setid not in self.result_sets:
-            raise TestResultSetAlreadyCompleted(
-                f'Test result set {test_result_setid} is already completed or does not exist'
-            )
-        row = self.result_sets[test_result_setid]
-        if row['complete'] != 0:
-            raise TestResultSetAlreadyCompleted(
-                f'Test result set {test_result_setid} is already completed or does not exist'
-            )
-        row['complete'] = 1
-        if tests_passed is not None:
-            row['tests_passed'] = tests_passed
-        if tests_failed is not None:
-            row['tests_failed'] = tests_failed
-        return defer.succeed(None)

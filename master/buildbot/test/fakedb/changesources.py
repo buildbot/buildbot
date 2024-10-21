@@ -14,10 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-
-from buildbot.db import changesources
-from buildbot.test.fakedb.base import FakeDBComponent
 from buildbot.test.fakedb.row import Row
 
 
@@ -39,68 +35,3 @@ class ChangeSourceMaster(Row):
 
     def __init__(self, changesourceid=None, masterid=None):
         super().__init__(changesourceid=changesourceid, masterid=masterid)
-
-
-class FakeChangeSourcesComponent(FakeDBComponent):
-    def setUp(self):
-        self.changesources = {}
-        self.changesource_masters = {}
-        self.states = {}
-
-    def insert_test_data(self, rows):
-        for row in rows:
-            if isinstance(row, ChangeSource):
-                self.changesources[row.id] = row.name
-            if isinstance(row, ChangeSourceMaster):
-                self.changesource_masters[row.changesourceid] = row.masterid
-
-    # component methods
-
-    def findChangeSourceId(self, name):
-        for cs_id, cs_name in self.changesources.items():
-            if cs_name == name:
-                return defer.succeed(cs_id)
-        new_id = (max(self.changesources) + 1) if self.changesources else 1
-        self.changesources[new_id] = name
-        return defer.succeed(new_id)
-
-    def getChangeSource(self, changesourceid):
-        if changesourceid in self.changesources:
-            return defer.succeed(
-                changesources.ChangeSourceModel(
-                    id=changesourceid,
-                    name=self.changesources[changesourceid],
-                    masterid=self.changesource_masters.get(changesourceid),
-                )
-            )
-        return None
-
-    def getChangeSources(self, active=None, masterid=None):
-        d = defer.DeferredList([self.getChangeSource(id) for id in self.changesources])
-
-        @d.addCallback
-        def filter(results):
-            # filter off the DeferredList results (we know it's good)
-            results = [r[1] for r in results]
-            # filter for masterid
-            if masterid is not None:
-                results = [r for r in results if r.masterid == masterid]
-            # filter for active or inactive if necessary
-            if active:
-                results = [r for r in results if r.masterid is not None]
-            elif active is not None:
-                results = [r for r in results if r.masterid is None]
-            return results
-
-        return d
-
-    def setChangeSourceMaster(self, changesourceid, masterid):
-        current_masterid = self.changesource_masters.get(changesourceid)
-        if current_masterid and masterid is not None and current_masterid != masterid:
-            return defer.fail(changesources.ChangeSourceAlreadyClaimedError())
-        self.changesource_masters[changesourceid] = masterid
-        return defer.succeed(None)
-
-    def get_change_source_master(self, changesourceid):
-        current_masterid = self.changesource_masters.get(changesourceid, None)
-        return defer.succeed(current_masterid)

@@ -154,7 +154,8 @@ class Row:
                 if key is not None:
                     val = yield accessors[foreign_key](key)
                     t.assertTrue(
-                        val is not None, f"foreign key {foreign_key}:{key!r} does not exit"
+                        val is not None,
+                        f"in {self!r} foreign key {foreign_key}:{key!r} does not exit",
                     )
             else:
                 raise ValueError("warning, unsupported foreign key", foreign_key, self.table)

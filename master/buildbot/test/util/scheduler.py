@@ -77,7 +77,6 @@ class SchedulerMixin(interfaces.InterfaceTests):
         scheduler.setServiceParent(self.master)
 
         rows = [
-            fakedb.Object(id=objectid, name=scheduler.name, class_name='SomeScheduler'),
             fakedb.Scheduler(id=schedulerid, name=scheduler.name),
         ]
         if createBuilderDB is True:

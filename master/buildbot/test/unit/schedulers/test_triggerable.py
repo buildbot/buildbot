@@ -217,7 +217,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         def fired(xxx_todo_changeme):
             (result, brids) = xxx_todo_changeme
             self.assertEqual(result, 3)  # from sendCompletionMessage
-            self.assertEqual(brids, {77: 1000})
+            self.assertEqual(brids, {77: 1})
             self.fired = True
 
         d.addErrback(log.err)
@@ -296,7 +296,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
         d.addCallback(
             lambda res_brids: self.assertEqual(res_brids[0], 11)
-            and self.assertEqual(res_brids[1], {77: 1000})
+            and self.assertEqual(res_brids[1], {77: 1})
         )
 
         waited_for = True
@@ -318,7 +318,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
         d.addCallback(
             lambda res_brids1: self.assertEqual(res_brids1[0], 22)
-            and self.assertEqual(res_brids1[1], {77: 1001})
+            and self.assertEqual(res_brids1[1], {77: 2})
         )
 
         # check that the scheduler has subscribed to buildset changes

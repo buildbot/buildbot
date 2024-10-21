@@ -108,6 +108,7 @@ class FakeBuilder:
     def __init__(self, master):
         self.config = Mock()
         self.config.workerbuilddir = 'wbd'
+        self.config.description = 'builder-description'
         self.name = 'fred'
         self.master = master
         self.botmaster = master.botmaster
