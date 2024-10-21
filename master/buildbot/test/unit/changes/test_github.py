@@ -180,7 +180,7 @@ class TestGitHubPullrequestPoller(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpChangeSource()
 
         fake_storage_service = FakeSecretStorage()
@@ -197,6 +197,7 @@ class TestGitHubPullrequestPoller(
     def tearDown(self):
         yield self.master.stopService()
         yield self.tearDownChangeSource()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def newChangeSource(self, owner, repo, endpoint='https://api.github.com', **kwargs):

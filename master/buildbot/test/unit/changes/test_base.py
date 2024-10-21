@@ -32,11 +32,13 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpChangeSource()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownChangeSource()
+        yield self.tearDownChangeSource()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_activation(self):
@@ -82,14 +84,16 @@ class TestReconfigurablePollingChangeSource(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         yield self.setUpChangeSource()
 
         yield self.attachChangeSource(self.Subclass(name="DummyCS"))
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownChangeSource()
+        yield self.tearDownChangeSource()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def runClockFor(self, secs):

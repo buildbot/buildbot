@@ -40,11 +40,16 @@ class TestPBChangeSource(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setUpPBChangeSource()
         yield self.setUpChangeSource()
 
         self.master.pbmanager = self.pbmanager
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tearDownChangeSource()
+        yield self.tear_down_test_reactor()
 
     def test_registration_no_workerport(self):
         return self._test_registration(None, exp_ConfigErrors=True, user='alice', passwd='sekrit')
@@ -212,8 +217,12 @@ class TestPBChangeSource(
 class TestChangePerspective(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
+
+        @defer.inlineCallbacks
+        def tearDown(self):
+            yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_addChange_noprefix(self):
