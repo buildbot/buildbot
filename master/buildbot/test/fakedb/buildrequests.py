@@ -217,11 +217,3 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     def _modelFromRow(self, row):
         return buildrequests.BuildRequestsConnectorComponent._modelFromRow(row)
-
-    # assertions
-
-    def assertMyClaims(self, claimed_brids):
-        self.t.assertEqual(
-            [id for (id, brc) in self.claims.items() if brc.masterid == self.MASTER_ID],
-            claimed_brids,
-        )
