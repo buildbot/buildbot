@@ -274,7 +274,7 @@ class TestBitbucketPullrequestPoller(
     changesource.ChangeSourceMixin, TestReactorMixin, LoggingMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setUpLogging()
 
         # create pull requests
@@ -304,8 +304,10 @@ class TestBitbucketPullrequestPoller(
 
         return self.setUpChangeSource()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownChangeSource()
+        yield self.tearDownChangeSource()
+        yield self.tear_down_test_reactor()
 
     def _fakeGetPage(self, result):
         # Install a fake getPage that puts the requested URL in self.getPage_got_url

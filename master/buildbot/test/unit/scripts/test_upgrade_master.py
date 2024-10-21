@@ -114,13 +114,15 @@ class TestUpgradeMasterFunctions(
     unittest.TestCase,
 ):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         self.tearDownDirs()
+        yield self.tear_down_test_reactor()
 
     def writeFile(self, path, contents):
         with open(path, "w", encoding='utf-8') as f:

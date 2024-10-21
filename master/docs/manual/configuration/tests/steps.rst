@@ -16,12 +16,15 @@ TestBuildStepMixin
 
         class RemovePYCs(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
+            @defer.inlineCallbacks
             def setUp(self):
-                self.setup_test_reactor()
-                return self.setup_test_build_step()
+                yield self.setup_test_reactor(auto_tear_down=False)
+                yield self.setup_test_build_step()
 
+            @defer.inlineCallbacks
             def tearDown(self):
-                return self.tear_down_test_build_step()
+                yield self.tear_down_test_build_step()
+                yield self.tear_down_test_reactor()
 
             @defer.inlineCallbacks
             def test_run_ok(self):
@@ -32,7 +35,7 @@ TestBuildStepMixin
                     .exit(0)
                 )
                 self.expect_outcome(result=SUCCESS, state_string='remove .pycs')
-                return self.run_step()
+                yield self.run_step()
 
     Basic workflow is as follows:
 

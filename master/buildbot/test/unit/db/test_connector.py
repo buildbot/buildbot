@@ -34,7 +34,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpRealDatabase(
             table_names=[
                 'changes',
@@ -65,6 +65,7 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase)
             yield self.db.stopService()
 
         yield self.tearDownRealDatabase()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def startService(self, check_version=False):

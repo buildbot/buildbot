@@ -51,7 +51,11 @@ class Utils(unittest.TestCase):
 
 class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):
@@ -84,7 +88,11 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def get_react_base_path(self):
         path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))

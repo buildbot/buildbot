@@ -32,9 +32,13 @@ from buildbot.www import sse
 class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = master = yield self.make_master(url=b'h:/a/b/')
         self.sse = sse.EventResource(master)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_simpleapi(self):
         self.render_resource(self.sse, b'/changes/*/*')

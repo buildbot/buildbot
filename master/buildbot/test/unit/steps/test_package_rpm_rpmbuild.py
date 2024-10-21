@@ -30,11 +30,13 @@ from buildbot.test.steps import TestBuildStepMixin
 
 class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_no_specfile(self):
         with self.assertRaises(config.ConfigErrors):

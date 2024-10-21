@@ -47,7 +47,7 @@ class FakeWorker2(FakeWorker):
 class TestWorkerManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.workers = workermanager.WorkerManager(self.master)
@@ -61,8 +61,10 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
         self.new_config = mock.Mock()
         self.workers.startService()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.workers.stopService()
+        yield self.workers.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_reconfigServiceWorkers_add_remove(self):

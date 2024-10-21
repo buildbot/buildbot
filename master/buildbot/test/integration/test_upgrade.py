@@ -111,11 +111,13 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setUpUpgradeTest()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownUpgradeTest()
+        yield self.tearDownUpgradeTest()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def assertModelMatches(self):

@@ -15,6 +15,7 @@
 
 from unittest import mock
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -23,7 +24,11 @@ from buildbot.util.watchdog import Watchdog
 
 class TestWatchdog(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_not_started_no_calls(self):
         m = mock.Mock()

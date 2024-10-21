@@ -25,7 +25,7 @@ class FakeServiceUsingSecrets(BuildbotService):
 class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage(secretdict={"foo": "bar", "other": "value"})
         self.secretsrv = SecretManager()
@@ -38,6 +38,7 @@ class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_secret_rendered(self):

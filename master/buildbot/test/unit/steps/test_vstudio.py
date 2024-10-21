@@ -228,11 +228,13 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_default_config(self):
         vs = vstudio.VisualStudio()
@@ -349,11 +351,13 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
         include = [
@@ -447,11 +451,13 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
         include = [
@@ -582,11 +588,13 @@ class VC8ExpectedEnvMixin:
 
 class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_args(self):
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', arch='arch'))
@@ -643,11 +651,13 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
 
 class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_args(self):
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg', project='pj'))
@@ -700,11 +710,13 @@ class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, 
 
 class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_installdir(self):
         self.setup_step(vstudio.VC9(projectfile='pf', config='cfg', project='pj'))
@@ -721,11 +733,13 @@ class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
 
 class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_installdir(self):
         self.setup_step(vstudio.VC10(projectfile='pf', config='cfg', project='pj'))
@@ -742,11 +756,13 @@ class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unitte
 
 class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_installdir(self):
         self.setup_step(vstudio.VC11(projectfile='pf', config='cfg', project='pj'))
@@ -763,11 +779,13 @@ class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unitte
 
 class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_no_platform(self):
@@ -865,11 +883,13 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_no_platform(self):
@@ -985,11 +1005,13 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_version_range_is_correct(self):
         self.setup_step(
@@ -1012,11 +1034,13 @@ class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestMsBuild17(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_version_range_is_correct(self):
         self.setup_step(

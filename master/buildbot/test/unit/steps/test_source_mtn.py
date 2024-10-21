@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -41,11 +42,13 @@ class TestMonotone(
     MTN_VER = 'monotone 1.0 (base revision: UNKNOWN_REV)'
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setUpSourceStep()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownSourceStep()
+        yield self.tearDownSourceStep()
+        yield self.tear_down_test_reactor()
 
     def test_mode_full_clean(self):
         self.setup_step(

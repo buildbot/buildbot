@@ -108,7 +108,7 @@ class FakeLatentWorker(AbstractLatentWorker):
 class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         # a collection of rows that would otherwise clutter up every test
         yield self.setUpBuilderMixin()
         self.base_rows = [
@@ -116,6 +116,10 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
         ]
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
@@ -480,8 +484,12 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpBuilderMixin()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_getBuilderId(self):
@@ -503,7 +511,7 @@ class TestGetBuilderId(TestReactorMixin, BuilderMixin, unittest.TestCase):
 class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -524,6 +532,10 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin, unittest.TestCase
             fakedb.BuildRequest(id=555, submitted_at=2800, builderid=182, buildsetid=11),
         ]
         yield self.db.insert_test_data(self.base_rows)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_gort_unclaimed(self):
@@ -548,7 +560,7 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin, unittest.TestCase
 class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -574,6 +586,10 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
         yield self.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
+
+    @defer.inlineCallbacks
     def test_gnct_completed(self):
         yield self.makeBuilder(name='bldr1')
         rqtime = yield self.bldr.getNewestCompleteTime()
@@ -589,7 +605,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
 class TestGetHighestPriority(TestReactorMixin, BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpBuilderMixin()
 
         # a collection of rows that would otherwise clutter up every test
@@ -613,6 +629,10 @@ class TestGetHighestPriority(TestReactorMixin, BuilderMixin, unittest.TestCase):
         yield self.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
+
+    @defer.inlineCallbacks
     def test_ghp_unclaimed(self):
         yield self.makeBuilder(name='bldr1')
         priority = yield self.bldr.get_highest_priority()
@@ -630,13 +650,17 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpBuilderMixin()
 
         yield self.db.insert_test_data([
             fakedb.Project(id=301, name='old_project'),
             fakedb.Project(id=302, name='new_project'),
         ])
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_reconfig(self):

@@ -30,11 +30,15 @@ from buildbot.test.reactor import TestReactorMixin
 class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True)
         self.botmaster = BotMaster()
         yield self.botmaster.setServiceParent(self.master)
         self.botmaster.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def assertReactorStopped(self, _=None):
         self.assertTrue(self.reactor.stop_called)
@@ -152,7 +156,7 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
 class TestBotMaster(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.master.botmaster.disownServiceParent()
@@ -161,8 +165,10 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
         self.new_config = mock.Mock()
         self.botmaster.startService()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.botmaster.stopService()
+        yield self.botmaster.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):

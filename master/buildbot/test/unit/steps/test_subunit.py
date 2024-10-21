@@ -17,6 +17,7 @@ import io
 import re
 import sys
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -55,11 +56,13 @@ class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         if TestProtocolClient is None:
             raise unittest.SkipTest("Need to install python-subunit to test subunit step")
 
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_empty(self):
         self.setup_step(subunit.SubunitShellCommand(command='test'))

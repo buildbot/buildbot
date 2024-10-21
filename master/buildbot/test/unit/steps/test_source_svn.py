@@ -121,11 +121,13 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                             </info>"""
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setUpSourceStep()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownSourceStep()
+        yield self.tearDownSourceStep()
+        yield self.tear_down_test_reactor()
 
     def patch_workerVersionIsOlderThan(self, result):
         self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)

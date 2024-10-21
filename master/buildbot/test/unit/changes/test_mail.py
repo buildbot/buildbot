@@ -29,7 +29,7 @@ class TestMaildirSource(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.maildir = os.path.abspath("maildir")
 
         yield self.setUpChangeSource()
@@ -56,6 +56,7 @@ class TestMaildirSource(
     def tearDown(self):
         yield self.tearDownDirs()
         yield self.tearDownChangeSource()
+        yield self.tear_down_test_reactor()
 
     # tests
 

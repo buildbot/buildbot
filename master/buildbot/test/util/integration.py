@@ -85,11 +85,13 @@ def getMaster(case, reactor, config_dict):
 
 class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setupDebugIntegrationLogs()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict):

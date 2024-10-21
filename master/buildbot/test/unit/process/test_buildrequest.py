@@ -30,7 +30,7 @@ from buildbot.test.reactor import TestReactorMixin
 class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.botmaster = mock.Mock(name='botmaster')
         self.master.botmaster.builders = {}
@@ -53,8 +53,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
         return bldr
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        pass
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_request_collapse(self, rows, brids, exp):
@@ -461,7 +462,11 @@ class TestSourceStamp(unittest.TestCase):
 
 class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_fromBrdict(self):

@@ -27,11 +27,13 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpScheduler()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         self.tearDownScheduler()
+        yield self.tear_down_test_reactor()
 
     class Subclass(timed.Timed):
         def getNextBuildTime(self, lastActuation):

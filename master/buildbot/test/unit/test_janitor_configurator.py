@@ -68,12 +68,14 @@ class LogChunksJanitorTests(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         yield self.setup_test_build_step()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_basic(self):

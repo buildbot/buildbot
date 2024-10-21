@@ -26,7 +26,11 @@ from buildbot.test.util import endpoint
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def makeResourceTypeSubclass(self, **attributes):
         attributes.setdefault('name', 'thing')

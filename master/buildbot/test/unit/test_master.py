@@ -80,7 +80,7 @@ class InitTests(unittest.SynchronousTestCase):
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         yield self.setUpDirs(self.basedir)
@@ -107,8 +107,10 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
         yield self.data.setServiceParent(self.master)
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownDirs()
+        yield self.tearDownDirs()
+        yield self.tear_down_test_reactor()
 
     # tests
     @defer.inlineCallbacks

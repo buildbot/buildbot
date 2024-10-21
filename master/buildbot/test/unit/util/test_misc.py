@@ -86,8 +86,12 @@ class deferredLocked(unittest.TestCase):
 
 class TestCancelAfter(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.d = defer.Deferred()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_succeeds(self):
         d = misc.cancelAfter(10, self.d, self.reactor)

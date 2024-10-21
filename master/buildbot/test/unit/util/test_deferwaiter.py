@@ -76,7 +76,11 @@ class WaiterTests(unittest.TestCase):
 
 class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_does_not_add_action_on_start(self):
@@ -428,7 +432,11 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
 
 class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_does_not_add_action_on_start(self):

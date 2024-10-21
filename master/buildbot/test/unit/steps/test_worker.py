@@ -42,11 +42,13 @@ from buildbot.test.steps import TestBuildStepMixin
 
 class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_simple(self):
         self.setup_step(
@@ -81,11 +83,13 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.Te
 
 class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_found(self):
         self.setup_step(worker.FileExists(file="x"))
@@ -123,11 +127,13 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_success(self):
         self.setup_step(worker.CopyDirectory(src="s", dest="d"))
@@ -166,11 +172,13 @@ class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_success(self):
         self.setup_step(worker.RemoveDirectory(dir="d"))
@@ -194,11 +202,13 @@ class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
 class TestMakeDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_success(self):
         self.setup_step(worker.MakeDirectory(dir="d"))
@@ -235,11 +245,13 @@ class CompositeUser(buildstep.BuildStep, worker.CompositeStepMixin):
 
 class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         return self.setup_test_build_step()
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tear_down_test_build_step()
+        yield self.tear_down_test_build_step()
+        yield self.tear_down_test_reactor()
 
     def test_runRemoteCommand(self):
         cmd_args = ('foo', {'bar': False})

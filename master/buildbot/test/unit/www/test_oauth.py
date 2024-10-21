@@ -60,7 +60,7 @@ class FakeResponse:
 class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
@@ -112,6 +112,10 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         secret_service.services = [fake_storage_service]
         yield secret_service.setServiceParent(self._master)
         self.githubAuth_secret.reconfigAuth(master, master.config)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
@@ -553,7 +557,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
@@ -584,6 +588,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         for reader in reactor.getReaders():
             if isinstance(reader, Server):
                 reader.connectionLost(f)
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_E2E(self):

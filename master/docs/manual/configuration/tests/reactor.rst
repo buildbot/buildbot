@@ -15,8 +15,17 @@ TestReactorMixin
 
     For more information see the documentation of `twisted.internet.task.Clock <https://twistedmatrix.com/documents/current/api/twisted.internet.task.Clock.html>`_.
 
-    .. py:method:: setup_test_reactor(use_asyncio=False)
+    .. py:method:: setup_test_reactor(use_asyncio=False, auto_tear_down=True)
 
-        :param bool use_asyncio Whether to enable asyncio integration.
+        :param bool use_asyncio: Whether to enable asyncio integration.
+        :param bool auto_tear_down: Whether to automatically tear down the test reactor. This
+            option is deprecated in favor of ``tear_down_test_reactor()`` as the automatic tear
+            down can only run before ``tearDown()`` and thus in many tests the test reactor is
+            shut down prematurely.
 
         Call this function in the ``setUp()`` of the test case to setup fake reactor.
+
+    .. py:method:: tear_down_test_reactor()
+
+        Call this function in the ``tearDown()`` of the test case to tear down fake reactor.
+        The function returns a ``Deferred``.
