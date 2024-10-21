@@ -55,8 +55,10 @@ class ContactMixin(TestReactorMixin):
 
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
-        for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):
-            self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
+        self.master.db.insert_test_data([
+            fakedb.Builder(id=builderid, name=name)
+            for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
+        ])
 
         self.bot = self.botClass(notify_events={'success': 1, 'failure': 1})
         self.bot.channelClass = self.channelClass

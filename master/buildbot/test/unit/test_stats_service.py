@@ -48,8 +48,10 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
-        for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):
-            self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
+        self.master.db.insert_test_data([
+            fakedb.Builder(id=builderid, name=name)
+            for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
+        ])
 
         self.stats_service = stats_service.StatsService(
             storage_backends=[fakestats.FakeStatsStorageService()], name="FakeStatsService"

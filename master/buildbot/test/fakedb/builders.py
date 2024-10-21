@@ -159,13 +159,6 @@ class FakeBuildersComponent(FakeDBComponent):
 
         return defer.succeed(rv)
 
-    def addTestBuilder(self, builderid, name=None):
-        if name is None:
-            name = f"SomeBuilder-{builderid}"
-        self.db.insert_test_data([
-            Builder(id=builderid, name=name),
-        ])
-
     @defer.inlineCallbacks
     def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
