@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from twisted.internet import defer
 
 from buildbot.db import base
+from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
 
 
@@ -52,7 +53,7 @@ class ProjectModel:
 
 class ProjectsConnectorComponent(base.DBConnectorComponent):
     def find_project_id(self, name: str, auto_create: bool = True) -> defer.Deferred[int | None]:
-        name_hash = self.hashColumns(name)
+        name_hash = hash_columns(name)
         return self.findSomethingId(
             tbl=self.db.model.projects,
             whereclause=(self.db.model.projects.c.name_hash == name_hash),

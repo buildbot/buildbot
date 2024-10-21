@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -236,3 +237,14 @@ def _column_value_kwargs(values: Sequence[tuple[sa.Column, Any]]) -> dict[str, A
 
 def _column_values_where_clause(values: Sequence[tuple[sa.Column, Any]]) -> ColumnElement[bool]:
     return BooleanClauseList.and_(*[c == v for (c, v) in values])
+
+
+def hash_columns(*args):
+    def encode(x):
+        if x is None:
+            return b'\xf5'
+        elif isinstance(x, str):
+            return x.encode('utf-8')
+        return str(x).encode('utf-8')
+
+    return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()

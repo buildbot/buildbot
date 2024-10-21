@@ -29,6 +29,7 @@ from buildbot.db import base
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import unicode2bytes
+from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -172,7 +173,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
         patchid = yield self.db.pool.do(thd)
 
-        ss_hash = self.hashColumns(branch, revision, repository, project, codebase, patchid)
+        ss_hash = hash_columns(branch, revision, repository, project, codebase, patchid)
         sourcestampid, found = yield self.findOrCreateSomethingId(
             tbl=tbl,
             whereclause=tbl.c.ss_hash == ss_hash,

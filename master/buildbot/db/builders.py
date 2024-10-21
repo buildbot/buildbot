@@ -23,6 +23,7 @@ import sqlalchemy as sa
 from twisted.internet import defer
 
 from buildbot.db import base
+from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
 
 
@@ -57,7 +58,7 @@ class BuilderModel:
 class BuildersConnectorComponent(base.DBConnectorComponent):
     def findBuilderId(self, name, autoCreate=True):
         tbl = self.db.model.builders
-        name_hash = self.hashColumns(name)
+        name_hash = hash_columns(name)
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),

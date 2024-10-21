@@ -24,6 +24,7 @@ from twisted.python import versions
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -67,7 +68,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
     def findMasterId(self, name: str) -> defer.Deferred[int]:
         tbl = self.db.model.masters
-        name_hash = self.hashColumns(name)
+        name_hash = hash_columns(name)
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),

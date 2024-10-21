@@ -13,17 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 
-from buildbot.db import base
-from buildbot.util.sautils import hash_columns
+from twisted.trial import unittest
+
+from buildbot.util import sautils
 
 
-class TagsConnectorComponent(base.DBConnectorComponent):
-    def findTagId(self, name):
-        tbl = self.db.model.tags
-        name_hash = hash_columns(name)
-        return self.findSomethingId(
-            tbl=tbl,
-            whereclause=(tbl.c.name_hash == name_hash),
-            insert_values={"name": name, "name_hash": name_hash},
-        )
+class TestSaUtils(unittest.TestCase):
+    def _sha1(self, s):
+        return hashlib.sha1(s).hexdigest()
+
+    def test_hash_columns_single(self):
+        self.assertEqual(sautils.hash_columns('master'), self._sha1(b'master'))
+
+    def test_hash_columns_multiple(self):
+        self.assertEqual(sautils.hash_columns('a', None, 'b', 1), self._sha1(b'a\0\xf5\x00b\x001'))
+
+    def test_hash_columns_None(self):
+        self.assertEqual(sautils.hash_columns(None), self._sha1(b'\xf5'))
+
+    def test_hash_columns_integer(self):
+        self.assertEqual(sautils.hash_columns(11), self._sha1(b'11'))
