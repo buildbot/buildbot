@@ -755,8 +755,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         sched = yield self.makeScheduler(name='n', builderNames=names)
 
         yield self.master.db.insert_test_data([
-            fakedb.Builder(id=1, name='a'),
-            fakedb.Builder(id=2, name='b'),
             fakedb.Builder(id=3, name='c'),
             fakedb.SourceStamp(id=98, branch='stable'),
             fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
