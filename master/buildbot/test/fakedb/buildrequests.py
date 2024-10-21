@@ -173,25 +173,30 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return rv
 
     def claimBuildRequests(self, brids, claimed_at=None):
-        for brid in brids:
-            if brid not in self.reqs or brid in self.claims:
-                raise buildrequests.AlreadyClaimedError
-
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
             claimed_at = int(self.reactor.seconds())
 
-        # now that we've thrown any necessary exceptions, get started
+        return self._claim_buildrequests_for_master(brids, claimed_at, self.MASTER_ID)
+
+    def _claim_buildrequests_for_master(self, brids, claimed_at, masterid):
+        for brid in brids:
+            if brid not in self.reqs or brid in self.claims:
+                raise buildrequests.AlreadyClaimedError
+
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(
-                brid=brid, masterid=self.MASTER_ID, claimed_at=claimed_at
+                brid=brid, masterid=masterid, claimed_at=claimed_at
             )
         return defer.succeed(None)
 
     def unclaimBuildRequests(self, brids):
+        self._unclaim_buildrequests_for_master(brids, self.db.master.masterid)
+
+    def _unclaim_buildrequests_for_master(self, brids, masterid):
         for brid in brids:
-            if brid in self.claims and self.claims[brid].masterid == self.db.master.masterid:
+            if brid in self.claims and self.claims[brid].masterid == masterid:
                 self.claims.pop(brid)
 
     def completeBuildRequests(self, brids, results, complete_at=None):
@@ -212,18 +217,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     def _modelFromRow(self, row):
         return buildrequests.BuildRequestsConnectorComponent._modelFromRow(row)
-
-    # fake methods
-
-    def fakeClaimBuildRequest(self, brid, claimed_at=None, masterid=None):
-        if masterid is None:
-            masterid = self.MASTER_ID
-        self.claims[brid] = BuildRequestClaim(
-            brid=brid, masterid=masterid, claimed_at=self.reactor.seconds()
-        )
-
-    def fakeUnclaimBuildRequest(self, brid):
-        del self.claims[brid]
 
     # assertions
 

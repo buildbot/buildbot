@@ -732,8 +732,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             self.master.db.buildrequests.claimBuildRequests = old_claimBuildRequests
             # claim brid 10 for some other master
             assert 10 in brids
-            self.master.db.buildrequests.fakeClaimBuildRequest(
-                10, 136000, masterid=9999
+            self.master.db.buildrequests._claim_buildrequests_for_master(
+                [10], 136000, 9999
             )  # some other masterid
             # ..and fail
             return defer.fail(buildrequests.AlreadyClaimedError())
