@@ -34,9 +34,10 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = changes.ChangeEndpoint
     resourceTypeClass = changes.Change
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(
                 changeid=13,
@@ -70,9 +71,10 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = changes.ChangesEndpoint
     resourceTypeClass = changes.Change
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.SourceStamp(id=133),
             fakedb.Change(
                 changeid=13,

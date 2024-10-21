@@ -41,8 +41,9 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             self.started_build = True
             return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
-        sched = self.attachScheduler(self.Subclass(**kwargs), self.OBJECTID)
+        sched = yield self.attachScheduler(self.Subclass(**kwargs), self.OBJECTID)
         self.clock = sched._reactor = task.Clock()
         return sched
 

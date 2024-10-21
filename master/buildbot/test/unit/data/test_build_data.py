@@ -30,9 +30,10 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = build_data.BuildDataNoValueEndpoint
     resourceTypeClass = build_data.BuildData
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Buildset(id=20),
             fakedb.Builder(id=88, name='b1'),
@@ -137,9 +138,10 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = build_data.BuildDataEndpoint
     resourceTypeClass = build_data.BuildData
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Buildset(id=20),
             fakedb.Builder(id=88, name='b1'),
@@ -259,9 +261,10 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = build_data.BuildDatasNoValueEndpoint
     resourceTypeClass = build_data.BuildData
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Buildset(id=20),
             fakedb.Builder(id=88, name='b1'),

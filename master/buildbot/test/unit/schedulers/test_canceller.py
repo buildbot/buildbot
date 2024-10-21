@@ -388,7 +388,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 
-        self.insert_test_data()
+        yield self.insert_test_data()
         self._cancelled_build_ids = []
 
         yield self.master.startService()
@@ -406,8 +406,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
             'branch': branch,
         }
 
+    @defer.inlineCallbacks
     def insert_test_data(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='builder1'),
@@ -513,7 +514,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         ss_dict = self.create_ss_dict('project1', 'codebase1', 'repository1', None)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
             fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
             fakedb.SourceStamp(
@@ -542,7 +543,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         ss_dict = self.create_ss_dict('project1', 'codebase1', 'repository1', 'branch1')
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
             fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
             fakedb.SourceStamp(
@@ -565,7 +566,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.reactor.advance(1)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=100, results=None, reason='reason100'),
             fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=241),
             fakedb.SourceStamp(
@@ -606,7 +607,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         ss_dict = self.create_ss_dict(
             'project2', 'codebase2', 'repository2', 'refs/changes/10/12310/3'
         )
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
             fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
             fakedb.SourceStamp(
@@ -629,7 +630,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.reactor.advance(1)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=100, results=None, reason='reason100'),
             fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=241),
             fakedb.SourceStamp(
@@ -671,7 +672,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         yield self.canceller.reconfigService('canceller', [])
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=99, results=None, reason='reason99'),
             fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=235),
             fakedb.SourceStamp(
@@ -694,7 +695,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.reactor.advance(1)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=100, results=None, reason='reason100'),
             fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=240),
             fakedb.SourceStamp(

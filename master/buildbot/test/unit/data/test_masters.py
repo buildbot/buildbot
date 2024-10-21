@@ -37,10 +37,11 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = masters.MasterEndpoint
     resourceTypeClass = masters.Master
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
         self.master.name = "myname"
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=13, name='some:master', active=False, last_active=SOMETIME),
             fakedb.Master(id=14, name='other:master', active=False, last_active=SOMETIME),
             fakedb.Builder(id=23, name='bldr1'),
@@ -88,10 +89,11 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = masters.MastersEndpoint
     resourceTypeClass = masters.Master
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
         self.master.name = "myname"
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=13, name='some:master', active=False, last_active=SOMETIME),
             fakedb.Master(id=14, name='other:master', active=True, last_active=OTHERTIME),
             fakedb.Builder(id=22),
@@ -144,7 +146,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_masterActive(self):
         self.reactor.advance(60)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=13, name='myname', active=0, last_active=0),
             fakedb.Master(id=14, name='other', active=1, last_active=0),
             fakedb.Master(id=15, name='other2', active=1, last_active=0),
@@ -192,7 +194,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_masterStopped(self):
         self.reactor.advance(60)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=13, name='aname', active=1, last_active=self.reactor.seconds()),
         ])
 
@@ -204,7 +206,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_masterStopped_already(self):
         self.reactor.advance(60)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=13, name='aname', active=0, last_active=0),
         ])
 
@@ -224,7 +226,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_expireMasters(self):
         self.reactor.advance(60)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=14, name='other', active=1, last_active=0),
             fakedb.Master(id=15, name='other', active=1, last_active=0),
         ])
@@ -244,7 +246,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masterDeactivated(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=14, name='other', active=0, last_active=0),
             # set up a running build with some steps
             fakedb.Builder(id=77, name='b1'),

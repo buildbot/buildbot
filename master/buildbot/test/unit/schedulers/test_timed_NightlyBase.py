@@ -48,9 +48,10 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
                 got_ep, expected_ep, f"{lastActuated} -> {time.localtime(got_ep)} != {expected}"
             )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_hourly(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'])
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'])
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 0, 0), (2011, 1, 1, 4, 0, 0)),
             ((2011, 1, 1, 3, 15, 0), (2011, 1, 1, 4, 0, 0)),
@@ -61,18 +62,20 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 1, 1, 23, 59, 0), (2011, 1, 2, 0, 0, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_minutes_single(self):
         # basically the same as .._hourly
-        sched = self.makeScheduler(name='test', builderNames=['test'], minute=4)
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], minute=4)
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 0, 0), (2011, 1, 1, 3, 4, 0)),
             ((2011, 1, 1, 3, 15, 0), (2011, 1, 1, 4, 4, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_minutes_multiple(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], minute=[4, 34])
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], minute=[4, 34])
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 0, 0), (2011, 1, 1, 3, 4, 0)),
             ((2011, 1, 1, 3, 15, 0), (2011, 1, 1, 3, 34, 0)),
@@ -80,26 +83,29 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 1, 1, 3, 59, 1), (2011, 1, 1, 4, 4, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_minutes_star(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], minute='*')
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], minute='*')
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 11, 30), (2011, 1, 1, 3, 12, 0)),
             ((2011, 1, 1, 3, 12, 0), (2011, 1, 1, 3, 13, 0)),
             ((2011, 1, 1, 3, 59, 0), (2011, 1, 1, 4, 0, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_hours_single(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], hour=4)
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], hour=4)
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 0), (2011, 1, 1, 4, 0)),
             ((2011, 1, 1, 13, 0), (2011, 1, 2, 4, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_hours_multiple(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], hour=[7, 19])
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], hour=[7, 19])
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 0), (2011, 1, 1, 7, 0)),
             ((2011, 1, 1, 7, 1), (2011, 1, 1, 19, 0)),
@@ -107,27 +113,30 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 1, 1, 19, 59), (2011, 1, 2, 7, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_hours_minutes(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], hour=13, minute=19)
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], hour=13, minute=19)
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 1, 3, 11), (2011, 1, 1, 13, 19)),
             ((2011, 1, 1, 13, 19), (2011, 1, 2, 13, 19)),
             ((2011, 1, 1, 23, 59), (2011, 1, 2, 13, 19)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_month_single(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], month=3)
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], month=3)
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 2, 27, 3, 11), (2011, 3, 1, 0, 0)),
             # still hourly!
             ((2011, 3, 1, 1, 11), (2011, 3, 1, 2, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_month_multiple(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], month=[4, 6])
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], month=[4, 6])
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 3, 30, 3, 11), (2011, 4, 1, 0, 0)),
             # still hourly!
@@ -135,19 +144,21 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 5, 29, 3, 11), (2011, 6, 1, 0, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_month_dayOfMonth(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], month=[3, 6], dayOfMonth=[15]
         )
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 2, 12, 3, 11), (2011, 3, 15, 0, 0)),
             ((2011, 3, 12, 3, 11), (2011, 3, 15, 0, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfMonth_single(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], dayOfMonth=10)
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], dayOfMonth=10)
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 9, 3, 0), (2011, 1, 10, 0, 0)),
             # still hourly!
@@ -156,9 +167,12 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 12, 30, 11, 0), (2012, 1, 10, 0, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfMonth_multiple(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], dayOfMonth=[10, 20, 30])
-        return self.do_getNextBuildTime_test(
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], dayOfMonth=[10, 20, 30]
+        )
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 9, 22, 0), (2011, 1, 10, 0, 0)),
             ((2011, 1, 19, 22, 0), (2011, 1, 20, 0, 0)),
@@ -167,44 +181,48 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 2, 29, 22, 0), (2011, 3, 10, 0, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfMonth_hours_minutes(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], dayOfMonth=15, hour=20, minute=30
         )
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 13, 22, 19), (2011, 1, 15, 20, 30)),
             ((2011, 1, 15, 19, 19), (2011, 1, 15, 20, 30)),
             ((2011, 1, 15, 20, 29), (2011, 1, 15, 20, 30)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfWeek_single(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], dayOfWeek=1
         )  # Tuesday (2011-1-1 was a Saturday)
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 3, 22, 19), (2011, 1, 4, 0, 0)),
             # still hourly!
             ((2011, 1, 4, 19, 19), (2011, 1, 4, 20, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfWeek_single_as_string(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], dayOfWeek="1"
         )  # Tuesday (2011-1-1 was a Saturday)
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 3, 22, 19), (2011, 1, 4, 0, 0)),
             # still hourly!
             ((2011, 1, 4, 19, 19), (2011, 1, 4, 20, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfWeek_multiple_as_string(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], dayOfWeek="tue,3"
         )  # Tuesday, Thursday (2011-1-1 was a Saturday)
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 3, 22, 19), (2011, 1, 4, 0, 0)),
             # still hourly!
@@ -214,21 +232,25 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ((2011, 1, 6, 19, 19), (2011, 1, 6, 20, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfWeek_multiple_hours(self):
         # Tuesday, Thursday (2011-1-1 was a Saturday)
-        sched = self.makeScheduler(name='test', builderNames=['test'], dayOfWeek=[1, 3], hour=1)
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], dayOfWeek=[1, 3], hour=1
+        )
 
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             ((2011, 1, 3, 22, 19), (2011, 1, 4, 1, 0)),
             ((2011, 1, 4, 22, 19), (2011, 1, 6, 1, 0)),
         )
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_dayOfWeek_dayOfMonth(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], dayOfWeek=[1, 4], dayOfMonth=5, hour=1
         )
-        return self.do_getNextBuildTime_test(
+        yield self.do_getNextBuildTime_test(
             sched,
             # Tues
             ((2011, 1, 3, 22, 19), (2011, 1, 4, 1, 0)),

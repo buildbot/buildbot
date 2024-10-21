@@ -32,7 +32,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 
-        self.insert_test_data()
+        yield self.insert_test_data()
         self._cancelled_build_ids = []
 
         yield self.master.startService()
@@ -40,8 +40,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         return self.master.stopService()
 
+    @defer.inlineCallbacks
     def insert_test_data(self):
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=100, name='builder1'),

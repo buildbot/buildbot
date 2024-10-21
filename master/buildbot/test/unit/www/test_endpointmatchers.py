@@ -25,13 +25,14 @@ from buildbot.www.authz import endpointmatchers
 
 
 class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.master = self.make_master(url='h:/a/b/')
         self.db = self.master.db
         self.matcher = self.makeMatcher()
         self.matcher.setAuthz(self.master.authz)
-        self.insertData()
+        yield self.insertData()
 
     def makeMatcher(self):
         raise NotImplementedError()
@@ -42,8 +43,9 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def assertNotMatch(self, match):
         self.assertTrue(match is None)
 
+    @defer.inlineCallbacks
     def insertData(self):
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.SourceStamp(id=13, branch='secret'),
             fakedb.Build(id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
             fakedb.BuildRequest(id=16, buildsetid=17),
@@ -128,8 +130,9 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def makeMatcher(self):
         return endpointmatchers.ForceBuildEndpointMatcher(builder="builder", role="owner")
 
+    @defer.inlineCallbacks
     def insertData(self):
-        super().insertData()
+        yield super().insertData()
         self.master.allSchedulers = lambda: [
             ForceScheduler(name="sched1", builderNames=["builder"])
         ]

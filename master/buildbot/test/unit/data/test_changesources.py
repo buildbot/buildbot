@@ -33,10 +33,11 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = changesources.ChangeSourceEndpoint
     resourceTypeClass = changesources.ChangeSource
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
 
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.ChangeSource(id=13, name='some:changesource'),
@@ -100,9 +101,10 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = changesources.ChangeSourcesEndpoint
     resourceTypeClass = changesources.ChangeSource
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Master(id=33, active=1),
             fakedb.ChangeSource(id=13, name='some:changesource'),

@@ -30,9 +30,10 @@ class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = test_results.TestResultsEndpoint
     resourceTypeClass = test_results.TestResult
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpEndpoint()
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Buildset(id=20),
             fakedb.Builder(id=88, name='b1'),

@@ -101,12 +101,11 @@ class FakeDBConnector(AbstractDBConnector):
         yield super().setup()
         self.is_setup = True
 
+    @defer.inlineCallbacks
     def insert_test_data(self, rows):
-        """Insert a list of Row instances into the database; this method can be
-        called synchronously or asynchronously (it completes immediately)"""
+        """Insert a list of Row instances into the database"""
         for row in rows:
             if self.checkForeignKeys:
                 row.checkForeignKeys(self, self.t)
             for comp in self._components:
-                comp.insert_test_data([row])
-        return defer.succeed(None)
+                yield comp.insert_test_data([row])

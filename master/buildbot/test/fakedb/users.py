@@ -96,6 +96,7 @@ class FakeUsersComponent(FakeDBComponent):
 
     # component methods
 
+    @defer.inlineCallbacks
     def findUserByAttr(self, identifier, attr_type, attr_data):
         for uid, attrs in self.users_info.items():
             for attr in attrs:
@@ -103,9 +104,11 @@ class FakeUsersComponent(FakeDBComponent):
                     return defer.succeed(uid)
 
         uid = self.nextId()
-        self.db.insert_test_data([User(uid=uid, identifier=identifier)])
-        self.db.insert_test_data([UserInfo(uid=uid, attr_type=attr_type, attr_data=attr_data)])
-        return defer.succeed(uid)
+        yield self.db.insert_test_data([User(uid=uid, identifier=identifier)])
+        yield self.db.insert_test_data([
+            UserInfo(uid=uid, attr_type=attr_type, attr_data=attr_data)
+        ])
+        return uid
 
     def getUser(self, uid) -> defer.Deferred[UserModel | None]:
         usdict = None

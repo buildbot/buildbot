@@ -160,7 +160,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 )
             )
 
-        self.db.buildrequests.insert_test_data(br_rows)
+        yield self.db.buildrequests.insert_test_data(br_rows)
 
         # make up a row and keep its dictionary, with the properties tacked on
         bsrow = Buildset(

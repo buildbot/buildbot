@@ -41,7 +41,7 @@ class ReporterTestMixin:
 
     @defer.inlineCallbacks
     def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
-        self.insert_test_data(
+        yield self.insert_test_data(
             [results],
             results,
             insertSS=insert_ss,
@@ -55,7 +55,7 @@ class ReporterTestMixin:
     def insert_buildset_no_builds(
         self, results, insert_ss=True, parent_plan=False, insert_patch=False
     ):
-        self.insert_test_data(
+        yield self.insert_test_data(
             [], results, insertSS=insert_ss, parentPlan=parent_plan, insert_patch=insert_patch
         )
         buildset = yield self.master.data.get(("buildsets", 98))
@@ -72,7 +72,7 @@ class ReporterTestMixin:
     @defer.inlineCallbacks
     def insert_buildrequest_new(self, insert_patch=False, **kwargs):
         self.db = self.master.db
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -83,7 +83,7 @@ class ReporterTestMixin:
 
         patchid = 99 if insert_patch else None
 
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(
                 id=234,
@@ -106,11 +106,12 @@ class ReporterTestMixin:
         request = yield self.master.data.get(("buildrequests", 11))
         return request
 
+    @defer.inlineCallbacks
     def insert_test_data(
         self, buildResults, finalResult, insertSS=True, parentPlan=False, insert_patch=False
     ):
         self.db = self.master.db
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -134,7 +135,7 @@ class ReporterTestMixin:
         ])
 
         if parentPlan:
-            self.db.insert_test_data([
+            yield self.db.insert_test_data([
                 fakedb.Worker(id=12, name='wrk_parent'),
                 fakedb.Builder(id=78, name='Builder_parent'),
                 fakedb.Buildset(id=97, results=finalResult, reason="testReason0"),
@@ -154,7 +155,7 @@ class ReporterTestMixin:
         if insertSS:
             patchid = 99 if insert_patch else None
 
-            self.db.insert_test_data([
+            yield self.db.insert_test_data([
                 fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
                 fakedb.SourceStamp(
                     id=234,
@@ -178,7 +179,7 @@ class ReporterTestMixin:
         for i, results in enumerate(buildResults):
             started_at = 10000001
             complete_at = None if results is None else 10000005
-            self.db.insert_test_data([
+            yield self.db.insert_test_data([
                 fakedb.BuildRequest(id=11 + i, buildsetid=98, builderid=79 + i),
                 fakedb.Build(
                     id=20 + i,
@@ -210,7 +211,9 @@ class ReporterTestMixin:
                 fakedb.BuildProperty(buildid=20 + i, name="scheduler", value="checkin"),
             ])
             for k, v in self.reporter_test_props.items():
-                self.db.insert_test_data([fakedb.BuildProperty(buildid=20 + i, name=k, value=v)])
+                yield self.db.insert_test_data([
+                    fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
+                ])
 
         self.setup_fake_get_changes_for_build()
 
