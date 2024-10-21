@@ -85,6 +85,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 codebase='cbsvn',
                 project='world-domination',
                 sourcestampid=133,
+                when_timestamp=1000000,
             ),
             fakedb.SourceStamp(id=144),
             fakedb.Change(
@@ -95,6 +96,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 codebase='cbsvn',
                 project='world-domination',
                 sourcestampid=144,
+                when_timestamp=1000001,
             ),
             fakedb.Builder(id=1, name='builder'),
             fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1, number=1),
@@ -149,7 +151,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChangesOtherOrder(self):
-        resultSpec = resultspec.ResultSpec(limit=1, order=('-when_time_stamp',))
+        resultSpec = resultspec.ResultSpec(limit=1, order=('-when_timestamp',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         self.assertEqual(len(changes), 1)
