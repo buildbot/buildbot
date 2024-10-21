@@ -537,7 +537,7 @@ class Model(base.DBConnectorComponent):
         metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         # hash of the branch, revision, patchid, repository, codebase, and
-        # project, using hashColumns.
+        # project, using hash_columns.
         sa.Column('ss_hash', sa.String(hash_length), nullable=False),
         # the branch to check out.  When branch is NULL, that means
         # the main branch (trunk, master, etc.)

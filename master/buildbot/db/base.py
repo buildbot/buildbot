@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 
 from buildbot.util import unicode2bytes
+from buildbot.util.sautils import hash_columns
 
 if TYPE_CHECKING:
     from buildbot.db.connector import DBConnector
@@ -127,14 +128,7 @@ class DBConnectorComponent:
         return self.db.pool.do(thd)
 
     def hashColumns(self, *args):
-        def encode(x):
-            if x is None:
-                return b'\xf5'
-            elif isinstance(x, str):
-                return x.encode('utf-8')
-            return str(x).encode('utf-8')
-
-        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
+        return hash_columns(*args)
 
     def doBatch(self, batch, batch_n=500):
         iterator = iter(batch)

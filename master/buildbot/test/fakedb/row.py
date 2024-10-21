@@ -15,12 +15,12 @@
 
 from __future__ import annotations
 
-import hashlib
 from typing import Sequence
 
 from twisted.internet import defer
 
 from buildbot.util import unicode2bytes
+from buildbot.util.sautils import hash_columns
 
 
 class Row:
@@ -87,7 +87,7 @@ class Row:
             self.values[col] = unicode2bytes(self.values[col])
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
-            self.values[hash_col] = self.hashColumns(*(self.values[c] for c in src_cols))
+            self.values[hash_col] = hash_columns(*(self.values[c] for c in src_cols))
 
         # make the values appear as attributes
         self.__dict__.update(self.values)
@@ -130,17 +130,6 @@ class Row:
         id = Row._next_id if Row._next_id is not None else 1
         Row._next_id = id + 1
         return id
-
-    def hashColumns(self, *args):
-        # copied from master/buildbot/db/base.py
-        def encode(x):
-            if x is None:
-                return b'\xf5'
-            elif isinstance(x, str):
-                return x.encode('utf-8')
-            return str(x).encode('utf-8')
-
-        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):

@@ -68,24 +68,6 @@ class TestBase(unittest.TestCase):
         # run that again since the method gets stubbed out
         self.comp.checkLength(self.tbl.c.str32, "long string" * 5)
 
-    def _sha1(self, s):
-        return hashlib.sha1(s).hexdigest()
-
-    def test_hashColumns_single(self):
-        self.assertEqual(self.comp.hashColumns('master'), self._sha1(b'master'))
-
-    def test_hashColumns_multiple(self):
-        self.assertEqual(self.comp.hashColumns('a', None, 'b', 1), self._sha1(b'a\0\xf5\x00b\x001'))
-
-    def test_hashColumns_None(self):
-        self.assertEqual(self.comp.hashColumns(None), self._sha1(b'\xf5'))
-
-    def test_hashColumns_integer(self):
-        self.assertEqual(self.comp.hashColumns(11), self._sha1(b'11'))
-
-    def test_hashColumns_unicode_ascii_match(self):
-        self.assertEqual(self.comp.hashColumns('master'), self.comp.hashColumns('master'))
-
 
 class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.ConnectorComponentMixin):
     @defer.inlineCallbacks

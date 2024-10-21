@@ -23,6 +23,7 @@ from twisted.internet import defer
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -146,7 +147,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     def findSchedulerId(self, name: str) -> int:
         tbl = self.db.model.schedulers
-        name_hash = self.hashColumns(name)
+        name_hash = hash_columns(name)
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name_hash == name_hash),
