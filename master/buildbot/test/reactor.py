@@ -15,6 +15,7 @@
 
 import asyncio
 
+from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import threadpool
 
@@ -30,7 +31,7 @@ class TestReactorMixin:
     at the end
     """
 
-    def setup_test_reactor(self, use_asyncio=False):
+    def setup_test_reactor(self, use_asyncio=False, auto_tear_down=True):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
         self.reactor.set_test_case(self)
@@ -44,21 +45,32 @@ class TestReactorMixin:
 
         self.patch(threads, 'deferToThread', deferToThread)
 
-        # During shutdown sequence we must first stop the reactor and only then
-        # set unset the reactor used for eventually() because any callbacks
-        # that are run during reactor.stop() may use eventually() themselves.
-        self.addCleanup(_setReactor, None)
-        self.addCleanup(self.reactor.assert_no_remaining_calls)
-        self.addCleanup(self.reactor.stop)
-
+        self._reactor_use_asyncio = use_asyncio
         if use_asyncio:
             self.asyncio_loop = AsyncIOLoopWithTwisted(self.reactor)
             asyncio.set_event_loop(self.asyncio_loop)
             self.asyncio_loop.start()
 
-            def stop():
-                self.asyncio_loop.stop()
-                self.asyncio_loop.close()
-                asyncio.set_event_loop(None)
+        if auto_tear_down:
+            self.addCleanup(self.tear_down_test_reactor)
+        self._reactor_tear_down_called = False
 
-            self.addCleanup(stop)
+    def tear_down_test_reactor(self):
+        if self._reactor_tear_down_called:
+            return
+
+        self._reactor_tear_down_called = True
+
+        if self._reactor_use_asyncio:
+            self.asyncio_loop.stop()
+            self.asyncio_loop.close()
+            asyncio.set_event_loop(None)
+
+        # During shutdown sequence we must first stop the reactor and only then set unset the
+        # reactor used for eventually() because any callbacks that are run during reactor.stop()
+        # may use eventually() themselves.
+        self.reactor.stop()
+        self.reactor.assert_no_remaining_calls()
+        _setReactor(None)
+
+        return defer.succeed(None)
