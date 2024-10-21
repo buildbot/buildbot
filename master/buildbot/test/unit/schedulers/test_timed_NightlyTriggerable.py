@@ -22,9 +22,12 @@ from buildbot.schedulers import timed
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
+from buildbot.test.util.state import StateTestMixin
 
 
-class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
+class NightlyTriggerable(
+    scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unittest.TestCase
+):
     SCHEDULERID = 327
     OBJECTID = 1327
 
@@ -414,8 +417,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.Te
         )
 
         yield d
-
-        self.db.state.assertState(
+        yield self.assert_state(
             self.SCHEDULERID,
             lastTrigger=[
                 [
@@ -464,8 +466,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.Te
         self.clock.advance(60 * 60)  # Run for 1h
 
         yield d
-
-        self.db.state.assertState(self.SCHEDULERID, lastTrigger=None)
+        yield self.assert_state(self.SCHEDULERID, lastTrigger=None)
 
     @defer.inlineCallbacks
     def test_triggerProperties(self):
@@ -495,7 +496,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.Te
             properties.Properties(testprop='test'),
         )
 
-        self.db.state.assertState(
+        yield self.assert_state(
             self.SCHEDULERID,
             lastTrigger=[
                 [

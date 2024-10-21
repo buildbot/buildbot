@@ -24,6 +24,7 @@ from buildbot.schedulers import basic
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
+from buildbot.test.util.state import StateTestMixin
 
 
 class CommonStuffMixin:
@@ -77,7 +78,7 @@ class CommonStuffMixin:
 
 
 class BaseBasicScheduler(
-    CommonStuffMixin, scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
+    CommonStuffMixin, scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin, unittest.TestCase
 ):
     OBJECTID = 244
     SCHEDULERID = 4
@@ -293,7 +294,7 @@ class BaseBasicScheduler(
 
 
 class SingleBranchScheduler(
-    CommonStuffMixin, scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
+    CommonStuffMixin, scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin, unittest.TestCase
 ):
     SCHEDULERID = 245
     OBJECTID = 224455
@@ -446,7 +447,7 @@ class SingleBranchScheduler(
             (yield self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1)), True
         )
 
-        self.db.state.assertState(
+        yield self.assert_state(
             self.OBJECTID,
             lastCodebases={
                 'a': {
@@ -495,7 +496,7 @@ class SingleBranchScheduler(
             (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=10)), True
         )
 
-        self.db.state.assertState(
+        yield self.assert_state(
             self.OBJECTID,
             lastCodebases={
                 'a': {
