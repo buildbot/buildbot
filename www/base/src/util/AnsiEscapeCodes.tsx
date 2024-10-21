@@ -75,7 +75,7 @@ export function stripAnsiSgrEntry(ansiEntry: string): string {
 
 export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: string]: boolean}) {
   if (ansiClasses.length === 0) {
-    return cssClasses;
+    return {};
   }
 
   const fgbg: {[key: string]: string} = {'38': 'fg', '48': 'bg'};
