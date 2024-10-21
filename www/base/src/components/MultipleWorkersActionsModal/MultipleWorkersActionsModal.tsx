@@ -80,6 +80,8 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
           {workers.length !== 1 ?
             <Select<SelectOption, true>
               isMulti
+              closeMenuOnSelect={false}
+              autoFocus
               defaultValue={selectedWorkers.map(workerToSelectOption)}
               onChange={(newValue: MultiValue<SelectOption>, _actionMeta: ActionMeta<SelectOption>) => {
                 setSelectedWorkers(newValue.map(v => v.value));
