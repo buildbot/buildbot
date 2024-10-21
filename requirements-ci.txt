@@ -10,7 +10,7 @@ coverage==7.6.1; python_version < "3.9" # pyup: ignore
 docker==7.1.0
 hvac==2.3.0
 ldap3==2.9.1
-mypy==1.11.2
+mypy==1.12.1
 mypy-zope==1.0.6
 graphql-core==3.3.0a6; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.4; python_version < "3.12"
