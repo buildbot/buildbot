@@ -185,6 +185,7 @@ class Change(base.ResourceType):
         codebase=None,
         project='',
         src=None,
+        _test_changeid=None,
     ):
         metrics.MetricCountEvent.log("added_changes", 1)
 
@@ -258,6 +259,7 @@ class Change(base.ResourceType):
             codebase=codebase,
             project=project,
             uid=uid,
+            _test_changeid=_test_changeid,
         )
 
         # get the change and munge the result for the notification

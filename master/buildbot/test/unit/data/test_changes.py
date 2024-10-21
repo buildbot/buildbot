@@ -251,6 +251,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     def test_addChange(self):
         # src and codebase are default here
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
@@ -291,6 +292,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
@@ -366,6 +368,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = lambda change: f"cb-{(change['category'])}"
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
@@ -432,6 +435,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.revlink = lambda rev, repo: f'foo{repo}bar{rev}baz'
         # revlink is default here
         kwargs = {
+            "_test_changeid": 500,
             "author": 'warner',
             "committer": 'david',
             "branch": 'warnerdb',
