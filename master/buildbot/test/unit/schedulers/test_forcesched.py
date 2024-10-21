@@ -186,7 +186,7 @@ class TestForceScheduler(
         )
 
         # only one builder forced, so there should only be one brid
-        self.assertEqual(res, (500, {1000: 100}))
+        self.assertEqual(res, (500, {300: 100}))
         self.assertEqual(
             self.addBuildsetCalls,
             [
@@ -274,7 +274,7 @@ class TestForceScheduler(
             repository='d',
             project='p',
         )
-        self.assertEqual(res, (500, {1000: 100, 1001: 101}))
+        self.assertEqual(res, (500, {300: 100, 301: 101}))
         self.assertEqual(
             self.addBuildsetCalls,
             [
@@ -316,7 +316,7 @@ class TestForceScheduler(
             repository='d',
             project='p',
         )
-        self.assertEqual(res, (500, {1000: 100, 1001: 101}))
+        self.assertEqual(res, (500, {300: 100, 301: 101}))
         self.assertEqual(
             self.addBuildsetCalls,
             [
@@ -583,7 +583,7 @@ class TestForceScheduler(
             self.fail("expectKind is wrong type!")
 
         # only forced on 'a'
-        self.assertEqual((bsid, brids), (500, {1000: 100}))
+        self.assertEqual((bsid, brids), (500, {300: 100}))
         self.assertEqual(
             self.addBuildsetCalls,
             [

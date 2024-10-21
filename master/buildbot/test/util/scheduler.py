@@ -81,7 +81,10 @@ class SchedulerMixin(interfaces.InterfaceTests):
             fakedb.Scheduler(id=schedulerid, name=scheduler.name),
         ]
         if createBuilderDB is True:
-            rows.extend([fakedb.Builder(name=bname) for bname in scheduler.builderNames])
+            rows.extend([
+                fakedb.Builder(id=300 + i, name=bname)
+                for i, bname in enumerate(scheduler.builderNames)
+            ])
 
         yield db.insert_test_data(rows)
 
