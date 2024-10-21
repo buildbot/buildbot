@@ -521,8 +521,8 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         ss_dict = self.create_ss_dict('project1', 'codebase1', 'repository1', None)
 
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=99, results=None, reason='reason99'),
-            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
+            fakedb.Buildset(id=199, results=None, reason='reason99'),
+            fakedb.BuildsetSourceStamp(buildsetid=199, sourcestampid=240),
             fakedb.SourceStamp(
                 id=240,
                 revision='revision1',
@@ -531,13 +531,13 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
                 repository='repository1',
                 branch=None,
             ),
-            fakedb.BuildRequest(id=14, buildsetid=99, builderid=79),
+            fakedb.BuildRequest(id=14, buildsetid=199, builderid=79),
         ])
 
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '14', 'new'),
-            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 99},
+            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 199},
         )
         self.assert_cancelled([])
 
@@ -550,46 +550,46 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         ss_dict = self.create_ss_dict('project1', 'codebase1', 'repository1', 'branch1')
 
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=99, results=None, reason='reason99'),
-            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
+            fakedb.Buildset(id=199, results=None, reason='reason99'),
+            fakedb.BuildsetSourceStamp(buildsetid=199, sourcestampid=240),
             fakedb.SourceStamp(
                 id=240,
-                revision='revision1',
+                revision='revision240',
                 project='project1',
                 codebase='codebase1',
                 repository='repository1',
                 branch='branch1',
             ),
-            fakedb.BuildRequest(id=14, buildsetid=99, builderid=79),
+            fakedb.BuildRequest(id=14, buildsetid=199, builderid=79),
         ])
 
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '14', 'new'),
-            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 99},
+            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 199},
         )
         self.assert_cancelled([10])
 
         self.reactor.advance(1)
 
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=100, results=None, reason='reason100'),
-            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=241),
+            fakedb.Buildset(id=200, results=None, reason='reason100'),
+            fakedb.BuildsetSourceStamp(buildsetid=200, sourcestampid=241),
             fakedb.SourceStamp(
                 id=241,
-                revision='revision1',
+                revision='revision241',
                 project='project1',
                 codebase='codebase1',
                 repository='repository1',
                 branch='branch1',
             ),
-            fakedb.BuildRequest(id=15, buildsetid=100, builderid=79),
+            fakedb.BuildRequest(id=15, buildsetid=200, builderid=79),
         ])
 
         self.master.mq.callConsumer(('changes', '124', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '15', 'new'),
-            {'buildrequestid': 15, 'builderid': 79, 'buildsetid': 100},
+            {'buildrequestid': 15, 'builderid': 79, 'buildsetid': 200},
         )
         self.assert_cancelled([14])
 
@@ -614,45 +614,45 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
             'project2', 'codebase2', 'repository2', 'refs/changes/10/12310/3'
         )
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=99, results=None, reason='reason99'),
-            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=240),
+            fakedb.Buildset(id=199, results=None, reason='reason99'),
+            fakedb.BuildsetSourceStamp(buildsetid=199, sourcestampid=240),
             fakedb.SourceStamp(
                 id=240,
-                revision='revision2',
+                revision='revision240',
                 project='project2',
                 codebase='codebase2',
                 repository='repository2',
                 branch='refs/changes/10/12310/3',
             ),
-            fakedb.BuildRequest(id=14, buildsetid=99, builderid=81),
+            fakedb.BuildRequest(id=14, buildsetid=199, builderid=81),
         ])
 
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '14', 'new'),
-            {'buildrequestid': 14, 'builderid': 81, 'buildsetid': 99},
+            {'buildrequestid': 14, 'builderid': 81, 'buildsetid': 199},
         )
         self.assert_cancelled([12])
 
         self.reactor.advance(1)
 
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=100, results=None, reason='reason100'),
-            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=241),
+            fakedb.Buildset(id=200, results=None, reason='reason100'),
+            fakedb.BuildsetSourceStamp(buildsetid=200, sourcestampid=241),
             fakedb.SourceStamp(
                 id=241,
-                revision='revision2',
+                revision='revision241',
                 project='project2',
                 codebase='codebase2',
                 repository='repository2',
                 branch='refs/changes/10/12310/3',
             ),
-            fakedb.BuildRequest(id=15, buildsetid=100, builderid=81),
+            fakedb.BuildRequest(id=15, buildsetid=200, builderid=81),
         ])
         self.master.mq.callConsumer(('changes', '124', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '15', 'new'),
-            {'buildrequestid': 15, 'builderid': 81, 'buildsetid': 100},
+            {'buildrequestid': 15, 'builderid': 81, 'buildsetid': 200},
         )
         self.assert_cancelled([14])
 
@@ -679,45 +679,45 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         yield self.canceller.reconfigService('canceller', [])
 
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=99, results=None, reason='reason99'),
-            fakedb.BuildsetSourceStamp(buildsetid=99, sourcestampid=235),
+            fakedb.Buildset(id=199, results=None, reason='reason99'),
+            fakedb.BuildsetSourceStamp(buildsetid=199, sourcestampid=242),
             fakedb.SourceStamp(
-                id=235,
-                revision='revision1',
+                id=242,
+                revision='revision242',
                 project='project1',
                 codebase='codebase1',
                 repository='repository1',
                 branch='branch1',
             ),
-            fakedb.BuildRequest(id=14, buildsetid=99, builderid=79),
+            fakedb.BuildRequest(id=14, buildsetid=199, builderid=79),
         ])
 
         self.master.mq.callConsumer(('changes', '123', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '14', 'new'),
-            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 99},
+            {'buildrequestid': 14, 'builderid': 79, 'buildsetid': 199},
         )
         self.assert_cancelled([10])
 
         self.reactor.advance(1)
 
         yield self.master.db.insert_test_data([
-            fakedb.Buildset(id=100, results=None, reason='reason100'),
-            fakedb.BuildsetSourceStamp(buildsetid=100, sourcestampid=240),
+            fakedb.Buildset(id=200, results=None, reason='reason100'),
+            fakedb.BuildsetSourceStamp(buildsetid=200, sourcestampid=240),
             fakedb.SourceStamp(
                 id=240,
-                revision='revision1',
+                revision='revision240',
                 project='project1',
                 codebase='codebase1',
                 repository='repository1',
                 branch='branch1',
             ),
-            fakedb.BuildRequest(id=15, buildsetid=100, builderid=79),
+            fakedb.BuildRequest(id=15, buildsetid=200, builderid=79),
         ])
         self.master.mq.callConsumer(('changes', '124', 'new'), ss_dict)
         self.master.mq.callConsumer(
             ('buildrequests', '15', 'new'),
-            {'buildrequestid': 15, 'builderid': 79, 'buildsetid': 100},
+            {'buildrequestid': 15, 'builderid': 79, 'buildsetid': 200},
         )
         self.assert_cancelled([])
 
