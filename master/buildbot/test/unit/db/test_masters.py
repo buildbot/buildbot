@@ -32,7 +32,7 @@ class Tests(interfaces.InterfaceTests):
     # common sample data
 
     master_row = [
-        fakedb.Master(id=7, name="some:master", active=1, last_active=SOMETIME),
+        fakedb.Master(id=7, active=1, last_active=SOMETIME),
     ]
 
     # tests
@@ -59,11 +59,11 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_new(self):
-        id = yield self.db.masters.findMasterId('some:master')
+        id = yield self.db.masters.findMasterId('master-7')
         masterdict = yield self.db.masters.getMaster(id)
         self.assertEqual(
             masterdict,
-            masters.MasterModel(id=id, name='some:master', active=False, last_active=SOMETIME_DT),
+            masters.MasterModel(id=id, name='master-7', active=False, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -94,65 +94,65 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setMasterState_true_when_active(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=1, last_active=OTHERTIME),
+            fakedb.Master(id=7, active=1, last_active=OTHERTIME),
         ])
         activated = yield self.db.masters.setMasterState(masterid=7, active=True)
         self.assertFalse(activated)  # it was already active
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
             masterdict,
-            masters.MasterModel(id=7, name='some:master', active=True, last_active=SOMETIME_DT),
+            masters.MasterModel(id=7, name='master-7', active=True, last_active=SOMETIME_DT),
         )  # timestamp updated
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_inactive(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=0, last_active=OTHERTIME),
+            fakedb.Master(id=7, active=0, last_active=OTHERTIME),
         ])
         activated = yield self.db.masters.setMasterState(masterid=7, active=True)
         self.assertTrue(activated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
             masterdict,
-            masters.MasterModel(id=7, name='some:master', active=True, last_active=SOMETIME_DT),
+            masters.MasterModel(id=7, name='master-7', active=True, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_active(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=1, last_active=OTHERTIME),
+            fakedb.Master(id=7, active=1, last_active=OTHERTIME),
         ])
         deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
         self.assertTrue(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
             masterdict,
-            masters.MasterModel(id=7, name='some:master', active=False, last_active=OTHERTIME_DT),
+            masters.MasterModel(id=7, name='master-7', active=False, last_active=OTHERTIME_DT),
         )
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_inactive(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=0, last_active=OTHERTIME),
+            fakedb.Master(id=7, active=0, last_active=OTHERTIME),
         ])
         deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
         self.assertFalse(deactivated)
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(
             masterdict,
-            masters.MasterModel(id=7, name='some:master', active=False, last_active=OTHERTIME_DT),
+            masters.MasterModel(id=7, name='master-7', active=False, last_active=OTHERTIME_DT),
         )
 
     @defer.inlineCallbacks
     def test_getMaster(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
+            fakedb.Master(id=7, active=0, last_active=SOMETIME),
         ])
         masterdict = yield self.db.masters.getMaster(7)
         self.assertIsInstance(masterdict, masters.MasterModel)
         self.assertEqual(
             masterdict,
-            masters.MasterModel(id=7, name='some:master', active=False, last_active=SOMETIME_DT),
+            masters.MasterModel(id=7, name='master-7', active=False, last_active=SOMETIME_DT),
         )
 
     @defer.inlineCallbacks
@@ -163,8 +163,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getMasters(self):
         yield self.insert_test_data([
-            fakedb.Master(id=7, name='some:master', active=0, last_active=SOMETIME),
-            fakedb.Master(id=8, name='other:master', active=1, last_active=OTHERTIME),
+            fakedb.Master(id=7, active=0, last_active=SOMETIME),
+            fakedb.Master(id=8, active=1, last_active=OTHERTIME),
         ])
         masterlist = yield self.db.masters.getMasters()
         for masterdict in masterlist:
@@ -175,8 +175,8 @@ class Tests(interfaces.InterfaceTests):
 
         expected = sorted(
             [
-                masters.MasterModel(id=7, name='some:master', active=0, last_active=SOMETIME_DT),
-                masters.MasterModel(id=8, name='other:master', active=1, last_active=OTHERTIME_DT),
+                masters.MasterModel(id=7, name='master-7', active=0, last_active=SOMETIME_DT),
+                masters.MasterModel(id=8, name='master-8', active=1, last_active=OTHERTIME_DT),
             ],
             key=masterKey,
         )

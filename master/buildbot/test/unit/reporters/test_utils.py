@@ -247,6 +247,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     @defer.inlineCallbacks
     def test_get_details_for_buildset_all(self):
         yield self.setupDb()
+        self.maxDiff = None
         res = yield utils.getDetailsForBuildset(
             self.master,
             98,
@@ -295,7 +296,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                     'patch': None,
                                     'project': 'proj',
                                     'repository': 'repo',
-                                    'revision': 'abcd',
+                                    'revision': 'rev-234',
                                     'ssid': 234,
                                 }
                             ],
@@ -421,7 +422,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                                     'patch': None,
                                     'project': 'proj',
                                     'repository': 'repo',
-                                    'revision': 'abcd',
+                                    'revision': 'rev-234',
                                     'ssid': 234,
                                 }
                             ],
@@ -532,7 +533,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
                             'patch': None,
                             'project': 'proj',
                             'repository': 'repo',
-                            'revision': 'abcd',
+                            'revision': 'rev-234',
                             'ssid': 234,
                         }
                     ],

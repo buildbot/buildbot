@@ -4,7 +4,7 @@
     {masters{name, builders(name:"runtests1"){name, builds(limit:1){number}}}}
   expected:
     masters:
-    - name: some:master
+    - name: master-1
       builders:
       - name: runtests1
         builds:
@@ -13,7 +13,7 @@
     {masters{name, builders(name:"runtests1"){name, builds(limit:10){number}}}}
   expected:
     masters:
-    - name: some:master
+    - name: master-1
       builders:
       - name: runtests1
         builds:

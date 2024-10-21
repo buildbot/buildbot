@@ -42,8 +42,8 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.setUpEndpoint()
         self.master.name = "myname"
         yield self.db.insert_test_data([
-            fakedb.Master(id=13, name='some:master', active=False, last_active=SOMETIME),
-            fakedb.Master(id=14, name='other:master', active=False, last_active=SOMETIME),
+            fakedb.Master(id=13, active=False, last_active=SOMETIME),
+            fakedb.Master(id=14, active=False, last_active=SOMETIME),
             fakedb.Builder(id=23, name='bldr1'),
             fakedb.BuilderMaster(builderid=23, masterid=13),
             fakedb.Builder(id=24, name='bldr2'),
@@ -57,14 +57,14 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         master = yield self.callGet(('masters', 14))
 
         self.validateData(master)
-        self.assertEqual(master['name'], 'other:master')
+        self.assertEqual(master['name'], 'master-14')
 
     @defer.inlineCallbacks
     def test_get_builderid_existing(self):
         master = yield self.callGet(('builders', 23, 'masters', 13))
 
         self.validateData(master)
-        self.assertEqual(master['name'], 'some:master')
+        self.assertEqual(master['name'], 'master-13')
 
     @defer.inlineCallbacks
     def test_get_builderid_no_match(self):
@@ -94,8 +94,8 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.setUpEndpoint()
         self.master.name = "myname"
         yield self.db.insert_test_data([
-            fakedb.Master(id=13, name='some:master', active=False, last_active=SOMETIME),
-            fakedb.Master(id=14, name='other:master', active=True, last_active=OTHERTIME),
+            fakedb.Master(id=13, active=False, last_active=SOMETIME),
+            fakedb.Master(id=14, active=True, last_active=OTHERTIME),
             fakedb.Builder(id=22),
             fakedb.BuilderMaster(masterid=13, builderid=22),
         ])
@@ -152,21 +152,25 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.reactor.advance(60)
 
         yield self.master.db.insert_test_data([
-            fakedb.Master(id=13, name='myname', active=0, last_active=0),
-            fakedb.Master(id=14, name='other', active=1, last_active=0),
-            fakedb.Master(id=15, name='other2', active=1, last_active=0),
+            fakedb.Master(id=13, active=0, last_active=0),
+            fakedb.Master(id=14, active=1, last_active=0),
+            fakedb.Master(id=15, active=1, last_active=0),
         ])
 
         # initial checkin
-        yield self.rtype.masterActive(name='myname', masterid=13)
+        yield self.rtype.masterActive(name='master-13', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(
-            master, MasterModel(id=13, name='myname', active=True, last_active=epoch2datetime(60))
+            master,
+            MasterModel(id=13, name='master-13', active=True, last_active=epoch2datetime(60)),
         )
         self.assertEqual(
             self.master.mq.productions,
             [
-                (('masters', '13', 'started'), {"masterid": 13, "name": 'myname', "active": True}),
+                (
+                    ('masters', '13', 'started'),
+                    {"masterid": 13, "name": 'master-13', "active": True},
+                ),
             ],
         )
         self.master.mq.productions = []
@@ -174,15 +178,19 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # updated checkin time, re-activation
         self.reactor.advance(60)
         yield self.master.db.masters.setMasterState(13, False)
-        yield self.rtype.masterActive('myname', masterid=13)
+        yield self.rtype.masterActive('master-13', masterid=13)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(
-            master, MasterModel(id=13, name='myname', active=True, last_active=epoch2datetime(120))
+            master,
+            MasterModel(id=13, name='master-13', active=True, last_active=epoch2datetime(120)),
         )
         self.assertEqual(
             self.master.mq.productions,
             [
-                (('masters', '13', 'started'), {"masterid": 13, "name": 'myname', "active": True}),
+                (
+                    ('masters', '13', 'started'),
+                    {"masterid": 13, "name": 'master-13', "active": True},
+                ),
             ],
         )
         self.master.mq.productions = []
@@ -232,8 +240,8 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.reactor.advance(60)
 
         yield self.master.db.insert_test_data([
-            fakedb.Master(id=14, name='other', active=1, last_active=0),
-            fakedb.Master(id=15, name='other', active=1, last_active=0),
+            fakedb.Master(id=14, active=1, last_active=0),
+            fakedb.Master(id=15, active=1, last_active=0),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
@@ -245,9 +253,10 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.expireMasters()
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(
-            master, MasterModel(id=14, name='other', active=False, last_active=epoch2datetime(0))
+            master,
+            MasterModel(id=14, name='master-14', active=False, last_active=epoch2datetime(0)),
         )
-        self.rtype._masterDeactivated.assert_called_with(14, 'other')
+        self.rtype._masterDeactivated.assert_called_with(14, 'master-14')
 
     @defer.inlineCallbacks
     def test_masterDeactivated(self):

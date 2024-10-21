@@ -169,7 +169,7 @@ class Tests(interfaces.InterfaceTests):
             builderdict,
             builders.BuilderModel(
                 id=7,
-                name='some:builder',
+                name='builder-7',
                 masterids=[9, 10],
             ),
         )
@@ -188,7 +188,7 @@ class Tests(interfaces.InterfaceTests):
             builderdict,
             builders.BuilderModel(
                 id=7,
-                name='some:builder',
+                name='builder-7',
                 masterids=[9],
             ),
         )
@@ -197,8 +197,8 @@ class Tests(interfaces.InterfaceTests):
     def test_removeBuilderMaster(self):
         yield self.insert_test_data([
             fakedb.Builder(id=7),
-            fakedb.Master(id=9, name='some:master'),
-            fakedb.Master(id=10, name='other:master'),
+            fakedb.Master(id=9),
+            fakedb.Master(id=10),
             fakedb.BuilderMaster(builderid=7, masterid=9),
             fakedb.BuilderMaster(builderid=7, masterid=10),
         ])
@@ -208,7 +208,7 @@ class Tests(interfaces.InterfaceTests):
             builderdict,
             builders.BuilderModel(
                 id=7,
-                name='some:builder',
+                name='builder-7',
                 masterids=[10],
             ),
         )
@@ -216,21 +216,21 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuilder_no_masters(self):
         yield self.insert_test_data([
-            fakedb.Builder(id=7, name='some:builder'),
+            fakedb.Builder(id=7),
         ])
         builderdict = yield self.db.builders.getBuilder(7)
         self.assertEqual(
             builderdict,
             builders.BuilderModel(
                 id=7,
-                name='some:builder',
+                name='builder-7',
             ),
         )
 
     @defer.inlineCallbacks
     def test_getBuilder_with_masters(self):
         yield self.insert_test_data([
-            fakedb.Builder(id=7, name='some:builder'),
+            fakedb.Builder(id=7),
             fakedb.Master(id=3, name='m1'),
             fakedb.Master(id=4, name='m2'),
             fakedb.BuilderMaster(builderid=7, masterid=3),
@@ -241,7 +241,7 @@ class Tests(interfaces.InterfaceTests):
             builderdict,
             builders.BuilderModel(
                 id=7,
-                name='some:builder',
+                name='builder-7',
                 masterids=[3, 4],
             ),
         )
