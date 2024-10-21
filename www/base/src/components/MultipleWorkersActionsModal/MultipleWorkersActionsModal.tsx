@@ -19,7 +19,7 @@ import {observer} from "mobx-react";
 import {useState} from "react";
 import {Button, Modal} from "react-bootstrap";
 import {Worker} from "buildbot-data-js";
-import Select, { ActionMeta, MultiValue } from 'react-select';
+import Select, { ActionMeta, MultiValue, InputActionMeta  } from 'react-select';
 
 type MultipleWorkersActionsModalProps = {
   workers: Worker[];
@@ -44,6 +44,7 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
   const [errors, setErrors] = useState<string|null>(null);
   const [reasonText, setReasonText] = useState<string>("");
   const [selectedWorkers, setSelectedWorkers] = useState<Worker[]>(preselectedWorkers);
+  const [menuIsOpen, setMenuIsOpen] = useState<boolean>();
 
   const stopDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.connected_to.length === 0)
   const pauseDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.paused)
@@ -64,6 +65,18 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
       onClose();
     }
   }
+
+  const onInputChange = (
+    inputValue: string,
+    { action, prevInputValue }: InputActionMeta
+  ) => {
+    if (action === 'input-change') return inputValue;
+    if (action === 'menu-close') {
+      if (prevInputValue) setMenuIsOpen(true);
+      else setMenuIsOpen(undefined);
+    }
+    return prevInputValue;
+  };
 
   return (
     <Modal size="lg" show={true} onHide={() => onClose()}>
@@ -86,6 +99,7 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
               onChange={(newValue: MultiValue<SelectOption>, _actionMeta: ActionMeta<SelectOption>) => {
                 setSelectedWorkers(newValue.map(v => v.value));
               }}
+              onInputChange={onInputChange}
               options={workers.map(workerToSelectOption)}
             />
             : <></>
