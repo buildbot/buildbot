@@ -23,9 +23,24 @@ if TYPE_CHECKING:
     from typing import ClassVar
 
 
+class CompressObjInterface(Protocol):
+    def __init__(self) -> None:
+        pass
+
+    @abstractmethod
+    def compress(self, data: bytes) -> bytes:
+        raise NotImplementedError
+
+    @abstractmethod
+    def flush(self) -> bytes:
+        raise NotImplementedError
+
+
 class CompressorInterface(Protocol):
     name: ClassVar[str]
     available: ClassVar[bool] = True
+
+    CompressObj: ClassVar[type[CompressObjInterface]]
 
     @staticmethod
     @abstractmethod
