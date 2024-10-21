@@ -608,20 +608,21 @@ class AnyBranchScheduler(
 
         sched.activate()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', number=500)), True)
         yield self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', number=14), False)
-        yield sched.gotChange(mkch(branch='boring', number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', number=501)), False)
+        yield sched.gotChange((yield mkch(branch='boring', number=502)), False)
         yield self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='devel', number=16), True)
+        yield sched.gotChange((yield mkch(branch='devel', number=503)), True)
         yield self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[16]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[503]@15'])
 
         yield sched.deactivate()
 
@@ -634,20 +635,25 @@ class AnyBranchScheduler(
 
         yield sched.activate()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', repository="repo", number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', repository="repo", number=500)), True)
         yield self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', repository="repo", number=14), False)
-        yield sched.gotChange(mkch(branch='master', repository="other_repo", number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', repository="repo", number=501)), False)
+        yield sched.gotChange(
+            (yield mkch(branch='master', repository="other_repo", number=502)), False
+        )
         yield self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='master', repository="other_repo", number=17), True)
+        yield sched.gotChange(
+            (yield mkch(branch='master', repository="other_repo", number=503)), True
+        )
         yield self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
         yield sched.deactivate()
 
@@ -660,20 +666,23 @@ class AnyBranchScheduler(
 
         sched.startService()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', project="proj", number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', project="proj", number=500)), True)
         yield self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', project="proj", number=14), False)
-        yield sched.gotChange(mkch(branch='master', project="other_proj", number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', project="proj", number=501)), False)
+        yield sched.gotChange(
+            (yield mkch(branch='master', project="other_proj", number=502)), False
+        )
         yield self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='master', project="other_proj", number=17), True)
+        yield sched.gotChange((yield mkch(branch='master', project="other_proj", number=503)), True)
         yield self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
         yield sched.deactivate()
 
@@ -686,19 +695,24 @@ class AnyBranchScheduler(
 
         sched.startService()
 
+        @defer.inlineCallbacks
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChangeInstance(ch)
+            ch = yield self.addFakeChange(ch)
             return ch
 
-        yield sched.gotChange(mkch(branch='master', codebase="base", number=13), True)
+        yield sched.gotChange((yield mkch(branch='master', codebase="base", number=500)), True)
         self.clock.advance(1)  # time is now 1
-        yield sched.gotChange(mkch(branch='master', codebase="base", number=14), False)
-        yield sched.gotChange(mkch(branch='master', codebase="other_base", number=15), False)
+        yield sched.gotChange((yield mkch(branch='master', codebase="base", number=501)), False)
+        yield sched.gotChange(
+            (yield mkch(branch='master', codebase="other_base", number=502)), False
+        )
         self.clock.pump([1] * 4)  # time is now 5
-        yield sched.gotChange(mkch(branch='master', codebase="other_base", number=17), True)
+        yield sched.gotChange(
+            (yield mkch(branch='master', codebase="other_base", number=503)), True
+        )
         self.clock.pump([1] * 10)  # time is now 15
 
-        self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
+        self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
         yield sched.deactivate()

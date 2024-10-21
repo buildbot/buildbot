@@ -43,9 +43,10 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
         self.db = self.master.db
         self.object = FakeObject(self.master, self.codebases)
 
+    @defer.inlineCallbacks
     def mkch(self, **kwargs):
         ch = self.makeFakeChange(**kwargs)
-        self.master.db.changes.fakeAddChangeInstance(ch)
+        ch = yield self.addFakeChange(ch)
         return ch
 
     @defer.inlineCallbacks
@@ -82,7 +83,11 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
     @defer.inlineCallbacks
     def test_recordChange(self):
         yield self.object.recordChange(
-            self.mkch(codebase='a', repository='A', revision='1234:abc', branch='master', number=10)
+            (
+                yield self.mkch(
+                    codebase='a', repository='A', revision='1234:abc', branch='master', number=500
+                )
+            )
         )
         self.db.state.assertStateByClass(
             'fake-name',
@@ -92,7 +97,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                     'repository': 'A',
                     'revision': '1234:abc',
                     'branch': 'master',
-                    'lastChange': 10,
+                    'lastChange': 500,
                 }
             },
         )
@@ -107,13 +112,17 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                     'repository': 'A',
                     'revision': '2345:bcd',
                     'branch': 'master',
-                    'lastChange': 20,
+                    'lastChange': 510,
                 }
             },
         )
         yield self.object.getCodebaseDict('a')
         yield self.object.recordChange(
-            self.mkch(codebase='a', repository='A', revision='1234:abc', branch='master', number=10)
+            (
+                yield self.mkch(
+                    codebase='a', repository='A', revision='1234:abc', branch='master', number=500
+                )
+            )
         )
         self.db.state.assertStateByClass(
             'fake-name',
@@ -123,7 +132,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                     'repository': 'A',
                     'revision': '2345:bcd',
                     'branch': 'master',
-                    'lastChange': 20,
+                    'lastChange': 510,
                 }
             },
         )
@@ -138,14 +147,18 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                     'repository': 'A',
                     'revision': '1234:abc',
                     'branch': 'master',
-                    'lastChange': 10,
+                    'lastChange': 490,
                 }
             },
         )
 
         yield self.object.getCodebaseDict('a')
         yield self.object.recordChange(
-            self.mkch(codebase='a', repository='A', revision='2345:bcd', branch='master', number=20)
+            (
+                yield self.mkch(
+                    codebase='a', repository='A', revision='2345:bcd', branch='master', number=500
+                )
+            )
         )
         self.db.state.assertStateByClass(
             'fake-name',
@@ -155,7 +168,7 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin,
                     'repository': 'A',
                     'revision': '2345:bcd',
                     'branch': 'master',
-                    'lastChange': 20,
+                    'lastChange': 500,
                 }
             },
         )

@@ -175,6 +175,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         when = None
         branch = None
         category = None
+        number = None
         revlink = ''
         properties: dict[str, str] = {}
         repository = ''
@@ -190,6 +191,27 @@ class SchedulerMixin(interfaces.InterfaceTests):
         ch.properties = Properties()
         ch.properties.update(properties, "Change")
         return ch
+
+    @defer.inlineCallbacks
+    def addFakeChange(self, change):
+        old_change_number = change.number
+        change.number = yield self.master.db.changes.addChange(
+            author=change.who,
+            files=change.files,
+            comments=change.comments,
+            revision=change.revision,
+            when_timestamp=change.when,
+            branch=change.branch,
+            category=change.category,
+            revlink=change.revlink,
+            properties=change.properties,
+            repository=change.repository,
+            codebase=change.codebase,
+            project=change.project,
+        )
+        if old_change_number is not None:
+            self.assertEqual(change.number, old_change_number)
+        return change
 
     @defer.inlineCallbacks
     def _addBuildsetReturnValue(self, builderNames):

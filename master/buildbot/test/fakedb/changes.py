@@ -280,33 +280,3 @@ class FakeChangesComponent(FakeDBComponent):
             model.parent_changeids = row['parent_changeids']
 
         return model
-
-    # fake methods
-
-    def fakeAddChangeInstance(self, change):
-        if not hasattr(change, 'number') or not change.number:
-            if self.changes:
-                changeid = max(list(self.changes)) + 1
-            else:
-                changeid = 500
-        else:
-            changeid = change.number
-
-        # make a row from the change
-        row = {
-            "changeid": changeid,
-            "author": change.who,
-            "files": change.files,
-            "comments": change.comments,
-            "revision": change.revision,
-            "when_timestamp": change.when,
-            "branch": change.branch,
-            "category": change.category,
-            "revlink": change.revlink,
-            "properties": change.properties,
-            "repository": change.repository,
-            "codebase": change.codebase,
-            "project": change.project,
-            "uids": [],
-        }
-        self.changes[changeid] = row
