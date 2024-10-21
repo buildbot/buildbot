@@ -230,6 +230,11 @@ class SchedulerMixin(interfaces.InterfaceTests):
         brids = dict(zip(builderids, self._bridGenerator))
         return (bsid, brids)
 
+    @defer.inlineCallbacks
+    def assert_classifications(self, schedulerid, expected_classifications):
+        classifications = yield self.master.db.schedulers.getChangeClassifications(schedulerid)
+        self.assertEqual(classifications, expected_classifications)
+
     def fake_addBuildsetForSourceStampsWithDefaults(
         self,
         reason,

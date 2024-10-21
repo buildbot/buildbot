@@ -120,14 +120,14 @@ class BaseBasicScheduler(
             self.Subclass, treeStableTimer=None, change_filter=cf, fileIsImportant=fII
         )
 
-        self.db.schedulers.fakeClassifications(self.SCHEDULERID, {20: True})
+        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
         yield sched.activate()
 
         # check that the scheduler has started to consume changes, and the
         # classifications *have* been flushed, since they will not be used
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=cf, onlyImportant=False)
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
+        yield self.assert_classifications(self.SCHEDULERID, {})
         yield sched.deactivate()
 
     @defer.inlineCallbacks
@@ -144,7 +144,7 @@ class BaseBasicScheduler(
         cf = mock.Mock()
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
 
-        self.db.schedulers.fakeClassifications(self.SCHEDULERID, {20: True})
+        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
         yield self.master.db.insert_test_data([
             fakedb.Change(changeid=20),
             fakedb.SchedulerChange(schedulerid=self.SCHEDULERID, changeid=20, important=1),
@@ -157,7 +157,7 @@ class BaseBasicScheduler(
         # classification should have been acted on, so the timer should be
         # running
         self.assertConsumingChanges(fileIsImportant=None, change_filter=cf, onlyImportant=False)
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {20: True})
+        yield self.assert_classifications(self.SCHEDULERID, {20: True})
         self.assertTrue(sched.timer_started)
         self.clock.advance(10)
         yield sched.deactivate()
@@ -234,7 +234,7 @@ class BaseBasicScheduler(
         # until 2229
         yield sched.gotChange(self.makeFakeChange(branch='master', number=1, when=2220), True)
         self.assertEqual(self.events, [])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True})
+        yield self.assert_classifications(self.SCHEDULERID, {1: True})
 
         # but another (unimportant) change arrives before then
         self.clock.advance(6)  # to 2226
@@ -242,7 +242,7 @@ class BaseBasicScheduler(
 
         yield sched.gotChange(self.makeFakeChange(branch='master', number=2, when=2226), False)
         self.assertEqual(self.events, [])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True, 2: False})
+        yield self.assert_classifications(self.SCHEDULERID, {1: True, 2: False})
 
         self.clock.advance(3)  # to 2229
         self.assertEqual(self.events, [])
@@ -253,7 +253,7 @@ class BaseBasicScheduler(
         # another important change arrives at 2232
         yield sched.gotChange(self.makeFakeChange(branch='master', number=3, when=2232), True)
         self.assertEqual(self.events, [])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True, 2: False, 3: True})
+        yield self.assert_classifications(self.SCHEDULERID, {1: True, 2: False, 3: True})
 
         self.clock.advance(3)  # to 2235
         self.assertEqual(self.events, [])
@@ -261,7 +261,7 @@ class BaseBasicScheduler(
         # finally, time to start the build!
         self.clock.advance(6)  # to 2241
         self.assertEqual(self.events, ['B[1,2,3]@2241'])
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
+        yield self.assert_classifications(self.SCHEDULERID, {})
 
         yield sched.deactivate()
 

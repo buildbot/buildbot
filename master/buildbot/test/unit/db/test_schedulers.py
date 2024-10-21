@@ -438,9 +438,9 @@ class TestFakeDB(unittest.TestCase, connector_component.FakeConnectorComponentMi
     def setUp(self):
         yield self.setUpConnectorComponent()
 
+    @defer.inlineCallbacks
     def addClassifications(self, schedulerid, *classifications):
-        self.db.schedulers.fakeClassifications(schedulerid, dict(classifications))
-        return defer.succeed(None)
+        yield self.db.schedulers.classifyChanges(schedulerid, dict(classifications))
 
 
 class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealTests):

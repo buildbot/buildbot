@@ -192,10 +192,6 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClassifications(self, schedulerid, classifications):
-        """Set the set of classifications for a scheduler"""
-        self.classifications[schedulerid] = classifications
-
     def fakeScheduler(self, name, schedulerid):
         self.schedulers[schedulerid] = name
 
@@ -206,9 +202,6 @@ class FakeSchedulersComponent(FakeDBComponent):
             del self.scheduler_masters[schedulerid]
 
     # assertions
-
-    def assertClassifications(self, schedulerid, classifications):
-        self.t.assertEqual(self.classifications.get(schedulerid, {}), classifications)
 
     def assertSchedulerMaster(self, schedulerid, masterid):
         self.t.assertEqual(self.scheduler_masters.get(schedulerid), masterid)

@@ -225,13 +225,13 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
         # add a change classification
-        self.db.schedulers.fakeClassifications(self.SCHEDULERID, {19: True})
+        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {19: True})
 
         yield sched.activate()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
+        yield self.assert_classifications(self.SCHEDULERID, {})
 
         self.reactor.advance(0)
         while self.reactor.seconds() < self.time_offset + 30 * 60:
