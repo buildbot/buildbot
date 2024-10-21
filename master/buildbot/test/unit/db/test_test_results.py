@@ -223,12 +223,6 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(path_dicts, ['path116', 'path117'])
 
 
-class TestFakeDB(Tests, connector_component.FakeConnectorComponentMixin, unittest.TestCase):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent()
-
-
 class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
     @defer.inlineCallbacks
     def setUp(self):

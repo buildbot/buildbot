@@ -93,6 +93,9 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         parent_relationship=None,
         priority=0,
     ):
+        # We've gotten this wrong a couple times.
+        assert isinstance(waited_for, bool), f'waited_for should be boolean: {waited_for!r}'
+
         if submitted_at is not None:
             submitted_at = datetime2epoch(submitted_at)
         else:
