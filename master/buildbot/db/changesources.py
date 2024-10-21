@@ -91,9 +91,9 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
     def get_change_source_master(self, changesourceid):
         def thd(conn):
-            q = self.db.model.changesource_masters.select(
-                self.db.model.changesource_masters.c.masterid
-            ).where(self.db.model.changesource_masters.c.changesourceid == changesourceid)
+            q = sa.select(self.db.model.changesource_masters.c.masterid).where(
+                self.db.model.changesource_masters.c.changesourceid == changesourceid
+            )
             r = conn.execute(q)
             row = r.fetchone()
             conn.close()
