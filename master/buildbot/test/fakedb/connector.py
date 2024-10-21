@@ -48,6 +48,8 @@ class FakeDBConnector(AbstractDBConnector):
     see their documentation for more.
     """
 
+    MASTER_ID = 824
+
     def __init__(self, testcase, reactor=None):
         if reactor is None:
             reactor = testcase.reactor
