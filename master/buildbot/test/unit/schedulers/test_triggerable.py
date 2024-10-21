@@ -67,12 +67,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         bsid, brids = yield idsDeferred
         properties.update({'scheduler': ('n', 'Scheduler')})
 
-        self.assertEqual(
-            self.master.db.buildsets.buildsets[bsid]['properties'],
-            properties,
-        )
-
         buildset = yield self.master.db.buildsets.getBuildset(bsid)
+        got_properties = yield self.master.db.buildsets.getBuildsetProperties(bsid)
+        self.assertEqual(got_properties, properties)
 
         from datetime import datetime
 
@@ -120,6 +117,8 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
                     waited_for=waited_for,
                 ),
             )
+
+        return bsid
 
     def sendCompletionMessage(self, bsid, results=3):
         self.master.mq.callConsumer(
@@ -193,7 +192,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         idsDeferred, d = sched.trigger(waited_for, sourcestamps=[ss], set_props=set_props)
         self.reactor.advance(0)  # let the debounced function fire
 
-        self.assertTriggeredBuildset(
+        bsid = yield self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
             properties={'pr': ('op', 'test')},
@@ -251,7 +250,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
-        self.sendCompletionMessage(200)
+        self.sendCompletionMessage(bsid)
         self.reactor.advance(0)  # let the debounced function fire
 
         # scheduler should have reacted
@@ -279,7 +278,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         # trigger the scheduler the first time
         idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev1')])  # triggers bsid 200
-        self.assertTriggeredBuildset(
+        bsid1 = yield self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
             sourcestamps=[
@@ -301,7 +300,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         # and the second time
         idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev2')])  # triggers bsid 201
         self.reactor.advance(0)  # let the debounced function fire
-        self.assertTriggeredBuildset(
+        bsid2 = yield self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
             sourcestamps=[
@@ -333,9 +332,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         # let a few buildsets complete
         self.sendCompletionMessage(29, results=3)
-        self.sendCompletionMessage(201, results=22)
+        self.sendCompletionMessage(bsid2, results=22)
         self.sendCompletionMessage(9, results=3)
-        self.sendCompletionMessage(200, results=11)
+        self.sendCompletionMessage(bsid1, results=11)
         self.reactor.advance(0)  # let the debounced function fire
 
         # both should have triggered with appropriate results, and the
