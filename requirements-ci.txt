@@ -13,7 +13,7 @@ mypy==1.12.1
 mypy-zope==1.0.7
 graphql-core==3.3.0a6; python_version >= "3.12" # pyup: ignore (temporary switch to PRE-RELEASE version; remove this once 3.3.0 or newer is released as RELEASE version)
 graphql-core==3.2.5; python_version < "3.12"
-psutil==6.0.0
+psutil==6.1.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
