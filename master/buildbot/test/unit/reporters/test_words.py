@@ -459,8 +459,8 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
     def test_command_status_online(self):
         # we are online and we have some finished builds
         yield self.setup_multi_builders()
+        yield self.master.db.workers.workerConfigured(1, 4013, [])
         yield self.master.db.insert_test_data([
-            fakedb.ConfiguredWorker(id=14012, workerid=1, buildermasterid=4013),
             fakedb.ConnectedWorker(id=114, masterid=13, workerid=1),
         ])
         yield self.setupSomeBuilds()
