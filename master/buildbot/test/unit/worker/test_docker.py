@@ -47,7 +47,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         return self._client
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         self.patch(dockerworker, 'docker', docker)
 
@@ -60,6 +60,10 @@ class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMi
         self.build2 = Properties(image='busybox:latest', builder='docker_worker2', distro='wheezy')
         docker.Client.containerCreated = False
         docker.Client.start_exception = None
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_constructor_noimage_nodockerfile(self):

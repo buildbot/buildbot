@@ -29,10 +29,11 @@ from buildbot.worker.marathon import MarathonLatentWorker
 
 class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.build = Properties(image="busybox:latest", builder="docker_worker")
         self.worker = None
 
+    @defer.inlineCallbacks
     def tearDown(self):
         if self.worker is not None:
 
@@ -40,8 +41,9 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 code = 200
 
             self._http.delete = lambda _: defer.succeed(FakeResult())
-            self.worker.master.stopService()
+            yield self.worker.master.stopService()
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
+        yield self.tear_down_test_reactor()
 
     def test_constructor_normal(self):
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo', 'bar', 'debian:wheezy')
