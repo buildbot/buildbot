@@ -88,6 +88,20 @@ class BrDict(BuildRequestModel):
 
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
+    def _simple_sa_select_query(self):
+        reqs_tbl = self.db.model.buildrequests
+        claims_tbl = self.db.model.buildrequest_claims
+        builder_tbl = self.db.model.builders
+
+        from_clause = reqs_tbl.outerjoin(claims_tbl, reqs_tbl.c.id == claims_tbl.c.brid)
+        from_clause = from_clause.join(builder_tbl, reqs_tbl.c.builderid == builder_tbl.c.id)
+
+        return sa.select(
+            reqs_tbl,
+            claims_tbl,
+            builder_tbl.c.name.label('buildername'),
+        ).select_from(from_clause)
+
     def _saSelectQuery(self):
         reqs_tbl = self.db.model.buildrequests
         claims_tbl = self.db.model.buildrequest_claims
@@ -114,7 +128,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def getBuildRequest(self, brid) -> defer.Deferred[BuildRequestModel | None]:
         def thd(conn) -> BuildRequestModel | None:
             reqs_tbl = self.db.model.buildrequests
-            q = self._saSelectQuery()
+            q = self._simple_sa_select_query()
             q = q.where(reqs_tbl.c.id == brid)
             res = conn.execute(q)
             row = res.fetchone()
