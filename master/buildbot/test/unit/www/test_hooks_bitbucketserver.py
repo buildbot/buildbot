@@ -709,7 +709,7 @@ def _prepare_request(payload, headers=None, change_dict=None):
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         master = yield fakeMasterForHooks(self)
         self.change_hook = change_hook.ChangeHookResource(
             dialects={
@@ -719,6 +719,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
             },
             master=master,
         )
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def assertDictSubset(self, expected_dict, response_dict):
         expected = {}

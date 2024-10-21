@@ -32,7 +32,11 @@ class TestAvatar(avatar.AvatarBase):
 
 class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_default(self):
@@ -530,7 +534,7 @@ github_commit_search_not_found_reply = {"total_count": 0, "incomplete_results": 
 class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         master = yield self.make_master(
             url='http://a/b/',
@@ -558,6 +562,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_username(self):
@@ -732,7 +737,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
 
         avatar_method = avatar.AvatarGitHub(client_id="oauth_id", client_secret="oauth_secret")
         master = yield self.make_master(
@@ -760,6 +765,7 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
+        yield self.tear_down_test_reactor()
 
     def test_incomplete_credentials(self):
         with self.assertRaises(config.ConfigErrors):
