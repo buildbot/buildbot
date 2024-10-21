@@ -48,9 +48,13 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
         self.setUpDirs('workdir')
         self.addCleanup(self.tearDownDirs)
 
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.spawned_process = mock.Mock()
         self.reactor.spawnProcess = mock.Mock(return_value=self.spawned_process)
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_start(self):
         lw = MockedLogWatcher('workdir/test.log', _reactor=self.reactor)

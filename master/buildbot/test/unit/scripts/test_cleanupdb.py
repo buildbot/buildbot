@@ -78,7 +78,7 @@ class TestCleanupDb(
     misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write(
@@ -90,8 +90,10 @@ class TestCleanupDb(
         self.setUpStdoutAssertions()
         self.ensureNoSqliteMemory()
 
+    @defer.inlineCallbacks
     def tearDown(self):
         self.tearDownDirs()
+        yield self.tear_down_test_reactor()
 
     def ensureNoSqliteMemory(self):
         # test may use mysql or pg if configured in env
