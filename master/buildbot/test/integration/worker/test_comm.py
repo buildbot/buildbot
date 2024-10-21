@@ -161,7 +161,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
         # set the worker port to a loopback address with unspecified
@@ -195,6 +195,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         self.server_connection_string = "tcp:0:interface=127.0.0.1"
         self.client_connection_string_tpl = "tcp:host=127.0.0.1:port={port}"
 
+    @defer.inlineCallbacks
     def tearDown(self):
         if self.broker:
             del self.broker
@@ -211,7 +212,8 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         if self.buildworker and self.buildworker.detach_d:
             deferreds.append(self.buildworker.detach_d)
 
-        return defer.gatherResults(deferreds)
+        yield defer.gatherResults(deferreds)
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def addWorker(self, **kwargs):
