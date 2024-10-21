@@ -515,32 +515,6 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         self.assertEqual(br.bsid, 539)
 
     @defer.inlineCallbacks
-    def test_fromBrdict_submittedAt_NULL(self):
-        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
-        yield master.db.insert_test_data([
-            fakedb.Builder(id=77, name='bldr'),
-            fakedb.SourceStamp(
-                id=234,
-                branch='trunk',
-                revision='9284',
-                repository='svn://...',
-                project='world-domination',
-            ),
-            fakedb.Buildset(id=539, reason='triggered'),
-            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
-            fakedb.BuildRequest(
-                id=288, buildsetid=539, builderid=77, priority=13, submitted_at=None
-            ),
-        ])
-        # use getBuildRequest to minimize the risk from changes to the format
-        # of the brdict
-        brdict = yield master.db.buildrequests.getBuildRequest(288)
-        br = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
-
-        # remaining fields assumed to be checked in test_fromBrdict
-        self.assertEqual(br.submittedAt, None)
-
-    @defer.inlineCallbacks
     def test_fromBrdict_no_sourcestamps(self):
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
