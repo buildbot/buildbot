@@ -63,7 +63,7 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
         self.db.pool = self.db_pool
         self.db.upsert = get_upsert_method(self.db_engine)
         self.db.has_native_upsert = self.db.upsert != get_upsert_method(None)
-        self.db.master = fakemaster.make_master(self)
+        self.db.master = yield fakemaster.make_master(self)
         self.db.model = model.Model(self.db)
         self.db._engine = types.SimpleNamespace(dialect=types.SimpleNamespace(name=dialect_name))
 
@@ -79,11 +79,10 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
 class FakeConnectorComponentMixin(TestReactorMixin):
     # Just like ConnectorComponentMixin, but for working with fake database
 
+    @defer.inlineCallbacks
     def setUpConnectorComponent(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insert_test_data = self.db.insert_test_data
-
-        return defer.succeed(None)

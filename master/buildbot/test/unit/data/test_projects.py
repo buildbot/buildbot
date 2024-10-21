@@ -35,7 +35,7 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
             fakedb.Project(id=2, name='project2'),
@@ -77,7 +77,7 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
             fakedb.Project(id=2, name='project2'),
@@ -116,7 +116,7 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = projects.Project(self.master)
         yield self.master.db.insert_test_data([
             fakedb.Project(id=13, name="fake_project"),

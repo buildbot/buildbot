@@ -46,9 +46,10 @@ class TestForceScheduler(
     SCHEDULERID = 9
     maxDiff = None
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def tearDown(self):
         self.tearDownScheduler()

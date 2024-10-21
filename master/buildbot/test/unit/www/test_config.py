@@ -60,7 +60,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
-        master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions)
+        master = yield self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions)
         rsrc = config.ConfigResource(master)
         rsrc.reconfigResource(master.config)
 
@@ -130,7 +130,9 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
-        master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={})
+        master = yield self.make_master(
+            url='h:/a/b/', auth=_auth, versions=custom_versions, plugins={}
+        )
         if user_info is not None:
             master.session.user_info = user_info
 

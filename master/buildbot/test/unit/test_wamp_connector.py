@@ -60,7 +60,7 @@ class WampConnector(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        master = fakemaster.make_master(self)
+        master = yield fakemaster.make_master(self)
         self.connector = TestedWampConnector()
 
         config = FakeConfig({'type': 'wamp', 'router_url': "wss://foo", 'realm': "bb"})

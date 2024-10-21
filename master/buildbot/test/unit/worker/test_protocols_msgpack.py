@@ -30,9 +30,10 @@ from buildbot.worker.protocols import msgpack
 
 
 class TestListener(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
 
     def test_constructor(self):
         listener = msgpack.Listener(self.master)
@@ -81,16 +82,18 @@ class TestListener(TestReactorMixin, unittest.TestCase):
 class TestConnectionApi(
     util_protocols.ConnectionInterfaceTest, TestReactorMixin, unittest.TestCase
 ):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         self.conn = msgpack.Connection(self.master, mock.Mock(), mock.Mock())
 
 
 class TestConnection(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         self.protocol = mock.Mock()
         self.worker = mock.Mock()
         self.worker.workername = 'test_worker'

@@ -36,12 +36,13 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
     OBJECTID = 33
     SCHEDULERID = 13
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         # Necessary to get an assertable submitted_at time.
         self.reactor.advance(946684799)
 
-        self.setUpScheduler()
+        yield self.setUpScheduler()
         self.subscription = None
 
     def tearDown(self):

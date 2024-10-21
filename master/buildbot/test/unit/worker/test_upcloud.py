@@ -88,7 +88,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
         worker = upcloud.UpcloudLatentWorker(
             *args, api_username='test-api-user', api_password='test-api-password', **kwargs
         )
-        master = fakemaster.make_master(self, wantData=True)
+        master = yield fakemaster.make_master(self, wantData=True)
         self._http = worker.client = yield fakehttpclientservice.HTTPClientService.getService(
             master,
             self,

@@ -38,11 +38,12 @@ class TestException(Exception):
 class TestReporterBase(
     ConfigErrorsMixin, TestReactorMixin, LoggingMixin, unittest.TestCase, ReporterTestMixin
 ):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.setUpLogging()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def setupNotifier(self, generators):

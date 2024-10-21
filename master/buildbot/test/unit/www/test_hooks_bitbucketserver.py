@@ -707,15 +707,17 @@ def _prepare_request(payload, headers=None, change_dict=None):
 
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
+        master = yield fakeMasterForHooks(self)
         self.change_hook = change_hook.ChangeHookResource(
             dialects={
                 'bitbucketserver': {
                     'bitbucket_property_whitelist': ["bitbucket.*"],
                 }
             },
-            master=fakeMasterForHooks(self),
+            master=master,
         )
 
     def assertDictSubset(self, expected_dict, response_dict):

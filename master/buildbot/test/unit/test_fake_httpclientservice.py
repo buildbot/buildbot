@@ -46,7 +46,7 @@ class Test(unittest.TestCase, TestReactorMixin):
         yield self.setup_test_reactor()
 
         baseurl = 'http://127.0.0.1:8080'
-        master = fakemaster.make_master(self)
+        master = yield fakemaster.make_master(self)
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(master, self, baseurl)
         self.tested = myTestedService(baseurl)

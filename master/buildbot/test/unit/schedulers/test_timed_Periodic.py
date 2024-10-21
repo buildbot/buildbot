@@ -31,9 +31,10 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 23
     SCHEDULERID = 3
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     @defer.inlineCallbacks
     def makeScheduler(self, firstBuildDuration=0, firstBuildError=False, exp_branch=None, **kwargs):

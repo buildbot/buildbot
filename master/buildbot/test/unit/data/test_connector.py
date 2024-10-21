@@ -110,9 +110,10 @@ class Tests(interfaces.InterfaceTests):
 
 
 class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.data = self.master.data
 
 
@@ -120,7 +121,7 @@ class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True)
         self.data = connector.DataConnector()
         yield self.data.setServiceParent(self.master)
 
@@ -131,7 +132,7 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
         self.data = connector.DataConnector()

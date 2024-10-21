@@ -35,9 +35,10 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     SCHEDULERID = 9
     exp_bsid_brids = (123, {'b': 456})
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.setUpScheduler()
+        yield self.setUpScheduler()
 
     def tearDown(self):
         self.tearDownScheduler()

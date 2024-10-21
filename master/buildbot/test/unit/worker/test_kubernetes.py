@@ -75,7 +75,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         worker = kubernetes.KubeLatentWorker(
             *args, masterFQDN="buildbot-master", kube_config=config, **kwargs
         )
-        self.master = fakemaster.make_master(self, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantData=True)
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "https://kube.example.com"
         )

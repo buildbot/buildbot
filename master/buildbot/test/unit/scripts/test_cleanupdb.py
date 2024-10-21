@@ -167,7 +167,7 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
             'workers',
         ]
 
-        self.master = fakemaster.make_master(self, wantRealReactor=True)
+        self.master = yield fakemaster.make_master(self, wantRealReactor=True)
         yield self.setUpRealDatabaseWithConnector(self.master, table_names=table_names)
 
     @defer.inlineCallbacks

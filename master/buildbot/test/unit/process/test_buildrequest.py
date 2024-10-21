@@ -31,7 +31,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.botmaster = mock.Mock(name='botmaster')
         self.master.botmaster.builders = {}
         self.builders = {}
@@ -465,7 +465,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict(self):
-        master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
@@ -511,7 +511,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict_submittedAt_NULL(self):
-        master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
@@ -537,7 +537,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict_no_sourcestamps(self):
-        master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
@@ -554,7 +554,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fromBrdict_multiple_sourcestamps(self):
-        master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
@@ -629,7 +629,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
         """
         brs = []  # list of buildrequests
-        master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
@@ -744,7 +744,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         Merge cannot be performed and raises error:
           Merging requests requires both requests to have the same codebases
         """
-        master = fakemaster.make_master(self, wantData=True, wantDb=True)
+        master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(

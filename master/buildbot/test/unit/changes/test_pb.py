@@ -210,9 +210,10 @@ class TestPBChangeSource(
 
 
 class TestChangePerspective(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantDb=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
 
     @defer.inlineCallbacks
     def test_addChange_noprefix(self):

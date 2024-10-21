@@ -11,8 +11,10 @@ from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.base import BaseHookHandler
 
 
+@defer.inlineCallbacks
 def _prepare_base_change_hook(testcase, **options):
-    return ChangeHookResource(dialects={'base': options}, master=fakeMasterForHooks(testcase))
+    master = yield fakeMasterForHooks(testcase)
+    return ChangeHookResource(dialects={'base': options}, master=master)
 
 
 def _prepare_request(payload, headers=None):
@@ -35,9 +37,10 @@ def _prepare_request(payload, headers=None):
 
 
 class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.changeHook = _prepare_base_change_hook(self)
+        self.changeHook = yield _prepare_base_change_hook(self)
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):
@@ -77,7 +80,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
         return self._check_base_with_change({})
 
     def test_base_with_changes(self):
-        self._check_base_with_change({
+        return self._check_base_with_change({
             b'revision': [b'1234badcaca5678'],
             b'branch': [b'master'],
             b'comments': [b'Fix foo bar'],
@@ -93,6 +96,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
 
 
 class TestChangeHookConfiguredWithCustomBase(unittest.TestCase, TestReactorMixin):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
 
@@ -107,7 +111,7 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase, TestReactorMixin
                 }
                 return ([chdict], None)
 
-        self.changeHook = _prepare_base_change_hook(self, custom_class=CustomBase)
+        self.changeHook = yield _prepare_base_change_hook(self, custom_class=CustomBase)
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):

@@ -552,10 +552,11 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     URL = 'https://api.telegram.org/bot12345:secret'
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
-        self.master = fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         self.http = None
 
     @defer.inlineCallbacks

@@ -97,13 +97,13 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             self.bitbucketAuth,
             self.githubAuthEnt_v4,
         ]:
-            self._master = master = self.make_master(url='h:/a/b/', auth=auth)
+            self._master = master = yield self.make_master(url='h:/a/b/', auth=auth)
             auth.reconfigAuth(master, master.config)
 
         self.githubAuth_secret = oauth2.GitHubAuth(
             Secret("client-id"), Secret("client-secret"), apiVersion=4
         )
-        self._master = master = self.make_master(url='h:/a/b/', auth=auth)
+        self._master = master = yield self.make_master(url='h:/a/b/', auth=auth)
         fake_storage_service = FakeSecretStorage()
         fake_storage_service.reconfigService(
             secretdict={"client-id": "secretClientId", "client-secret": "secretClientSecret"}
@@ -551,6 +551,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
     def _instantiateAuth(self, cls, config):
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
 
@@ -571,7 +572,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
         # 5000 has to be hardcoded, has oauth clientids are bound to a fully
         # classified web site
-        master = self.make_master(url='http://localhost:5000/', auth=self.auth)
+        master = yield self.make_master(url='http://localhost:5000/', auth=self.auth)
         self.auth.reconfigAuth(master, master.config)
 
     def tearDown(self):

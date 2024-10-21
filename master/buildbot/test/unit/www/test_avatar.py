@@ -36,7 +36,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_default(self):
-        master = self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[])
+        master = yield self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[])
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
@@ -45,7 +45,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_gravatar(self):
-        master = self.make_master(
+        master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGravatar()]
         )
         rsrc = avatar.AvatarResource(master)
@@ -62,7 +62,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_avatar_call(self):
-        master = self.make_master(
+        master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()]
         )
         rsrc = avatar.AvatarResource(master)
@@ -73,7 +73,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_custom_size(self):
-        master = self.make_master(
+        master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()]
         )
         rsrc = avatar.AvatarResource(master)
@@ -84,7 +84,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_invalid_size(self):
-        master = self.make_master(
+        master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()]
         )
         rsrc = avatar.AvatarResource(master)
@@ -100,7 +100,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             def getUserAvatar(self, email, username, size, defaultAvatarUrl):
                 return defer.succeed(None)
 
-        master = self.make_master(
+        master = yield self.make_master(
             url=b'http://a/b/',
             auth=auth.NoAuth(),
             avatar_methods=[CustomAvatar(), avatar.AvatarGravatar()],
@@ -532,7 +532,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
-        master = self.make_master(
+        master = yield self.make_master(
             url='http://a/b/',
             auth=auth.NoAuth(),
             avatar_methods=[avatar.AvatarGitHub(token="abcd")],
@@ -735,7 +735,7 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
         self.setup_test_reactor()
 
         avatar_method = avatar.AvatarGitHub(client_id="oauth_id", client_secret="oauth_secret")
-        master = self.make_master(
+        master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar_method]
         )
 

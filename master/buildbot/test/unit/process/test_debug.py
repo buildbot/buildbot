@@ -38,7 +38,7 @@ class TestDebugServices(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_manhole(self):
-        master = fakemaster.make_master(self)
+        master = yield fakemaster.make_master(self)
         ds = debug.DebugServices()
         yield ds.setServiceParent(master)
         yield master.startService()

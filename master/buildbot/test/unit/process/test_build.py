@@ -178,6 +178,7 @@ def makeControllableStepFactory():
 
 
 class TestBuild(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         r = FakeRequest()
@@ -186,7 +187,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         r.sources[0].revision = "12345"
 
         self.request = r
-        self.master = fakemaster.make_master(self, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantData=True)
 
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
@@ -884,9 +885,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
 
 class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         self.builder = FakeBuilder(self.master)
 
         r = FakeRequest()
@@ -930,9 +932,10 @@ class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):
 
 
 class TestBuildBlameList(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         self.builder = FakeBuilder(self.master)
 
         self.sourceByMe = FakeSource()
@@ -978,6 +981,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
     initialized properly
     """
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.props = {}
@@ -994,7 +998,7 @@ class TestSetupProperties_MultipleSources(TestReactorMixin, unittest.TestCase):
         self.r.sources[1].repository = "http://svn-repo-B"
         self.r.sources[1].codebase = "B"
         self.r.sources[1].revision = "34567"
-        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
+        self.builder = FakeBuilder((yield fakemaster.make_master(self, wantData=True)))
         self.build = Build([self.r], self.builder)
         self.build.setStepFactories([])
         # record properties that will be set
@@ -1022,6 +1026,7 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
     initialized properly
     """
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.props = {}
@@ -1033,7 +1038,7 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         self.r.sources[0].codebase = "A"
         self.r.sources[0].branch = "develop"
         self.r.sources[0].revision = "12345"
-        self.builder = FakeBuilder(fakemaster.make_master(self, wantData=True))
+        self.builder = FakeBuilder((yield fakemaster.make_master(self, wantData=True)))
         self.build = Build([self.r], self.builder)
         self.build.setStepFactories([])
         # record properties that will be set

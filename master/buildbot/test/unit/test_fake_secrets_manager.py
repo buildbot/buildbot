@@ -9,9 +9,10 @@ from buildbot.test.reactor import TestReactorMixin
 
 
 class TestSecretsManager(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self)
+        self.master = yield fakemaster.make_master(self)
         self.master.config.secretsProviders = [
             FakeSecretStorage(secretdict={"foo": "bar", "other": "value"})
         ]

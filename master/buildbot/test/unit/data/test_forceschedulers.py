@@ -188,8 +188,9 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = forceschedulers.ForceScheduler
     maxDiff = None
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         scheds = [ForceScheduler(name="defaultforce", builderNames=["builder"])]
         self.master.allSchedulers = lambda: scheds
 
@@ -213,8 +214,9 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = forceschedulers.ForceScheduler
     maxDiff = None
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         scheds = [ForceScheduler(name="defaultforce", builderNames=["builder"])]
         self.master.allSchedulers = lambda: scheds
 

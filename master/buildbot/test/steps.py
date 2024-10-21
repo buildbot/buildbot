@@ -652,6 +652,7 @@ class TestBuildStepMixin:
     @ivar properties: build properties (L{Properties} instance)
     """
 
+    @defer.inlineCallbacks
     def setup_test_build_step(
         self,
         want_data=True,
@@ -667,7 +668,7 @@ class TestBuildStepMixin:
         self._expected_commands: list[Expect] = []
         self._expected_commands_popped = 0
 
-        self.master = fakemaster.make_master(
+        self.master = yield fakemaster.make_master(
             self,
             wantData=want_data,
             wantDb=want_db,

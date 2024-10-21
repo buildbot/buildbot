@@ -27,9 +27,10 @@ from buildbot.test.util import interfaces
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantData=True)
 
     @defer.inlineCallbacks
     def makeLog(self, type, logEncoding='utf-8'):

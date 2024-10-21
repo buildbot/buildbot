@@ -37,7 +37,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(
@@ -74,7 +74,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setUpEndpoint()
+        yield self.setUpEndpoint()
         yield self.db.insert_test_data([
             fakedb.SourceStamp(id=133),
             fakedb.Change(
@@ -192,9 +192,10 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         # uid
     }
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
-        self.master = fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changes.Change(self.master)
 
     def test_signature_addChange(self):
