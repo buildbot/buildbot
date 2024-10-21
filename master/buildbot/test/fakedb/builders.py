@@ -114,12 +114,12 @@ class FakeBuildersComponent(FakeDBComponent):
         }
         return defer.succeed(id)
 
+    @defer.inlineCallbacks
     def addBuilderMaster(self, builderid=None, masterid=None):
         if (builderid, masterid) not in list(self.builder_masters.values()):
-            self.insert_test_data([
+            yield self.insert_test_data([
                 BuilderMaster(builderid=builderid, masterid=masterid),
             ])
-        return defer.succeed(None)
 
     def removeBuilderMaster(self, builderid=None, masterid=None):
         for id, tup in self.builder_masters.items():
