@@ -102,17 +102,22 @@ install:
   - title: pip installs for backward compat
     cmd: |
       # pip installs for backward compat
+      set -e
+      pkg_ver=""
       if [ ! -z "$TREQ" ]; then
-        /tmp/bbvenv/bin/pip install treq==$TREQ
+        pkg_ver="${pkg_ver} treq==$TREQ"
       fi
-      if [ $TWISTED = trunk ]; then
-          /tmp/bbvenv/bin/pip install git+https://github.com/twisted/twisted
+      if [ "$TWISTED" = "trunk" ]; then
+        pkg_ver="${pkg_ver} git+https://github.com/twisted/twisted"
+      elif [ ! -z "$TWISTED" -a "$TWISTED" != "latest" ]; then
+        pkg_ver="${pkg_ver} Twisted==$TWISTED"
       fi
-      if [ $TWISTED != latest -a  $TWISTED != trunk ]; then
-        /tmp/bbvenv/bin/pip install Twisted==$TWISTED
+      if [ ! -z "$SQLALCHEMY" -a "$SQLALCHEMY" != "latest" ]; then
+        pkg_ver="${pkg_ver} sqlalchemy==$SQLALCHEMY"
       fi
-      if [ $SQLALCHEMY != latest ]; then
-        /tmp/bbvenv/bin/pip install sqlalchemy==$SQLALCHEMY
+
+      if [ ! -z "$pkg_ver" ]; then
+        /tmp/bbvenv/bin/python -m pip install ${pkg_ver}
       fi
   - step: !ShellCommand
         command: "/tmp/bbvenv/bin/pip check"
