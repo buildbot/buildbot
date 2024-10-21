@@ -187,7 +187,7 @@ class ContactMixin(TestReactorMixin):
             fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
             fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
             fakedb.ConfiguredWorker(id=14013, workerid=2, buildermasterid=4012),
-            fakedb.ConfiguredWorker(id=14013, workerid=1, buildermasterid=4013),
+            fakedb.ConfiguredWorker(id=14014, workerid=1, buildermasterid=4013),
         ])
 
 
