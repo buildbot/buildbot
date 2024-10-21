@@ -1,2 +1,2 @@
 buildbot[bundle]==4.1.0
-psycopg2cffi-compat
+psycopg2cffi-compat==1.1
