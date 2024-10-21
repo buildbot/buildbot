@@ -209,6 +209,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
             repository=change.repository,
             codebase=change.codebase,
             project=change.project,
+            _test_changeid=change.number,
         )
         if old_change_number is not None:
             self.assertEqual(change.number, old_change_number)
