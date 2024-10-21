@@ -31,7 +31,7 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
             raise RuntimeError('oh noes')
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = mock.Mock()
         self.master.reactor = self.reactor
 
@@ -39,9 +39,11 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         self.calls = 0
         self.fail_after_running = False
 
+    @defer.inlineCallbacks
     def tearDown(self):
         poll.reset_poll_methods()
         self.assertEqual(self.reactor.getDelayedCalls(), [])
+        yield self.tear_down_test_reactor()
 
     def test_call_not_started_does_nothing(self):
         self.reactor.advance(100)
@@ -190,7 +192,7 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
             raise RuntimeError('oh noes')
 
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = mock.Mock()
         self.master.reactor = self.reactor
 
@@ -200,8 +202,10 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.duration = 1
         self.fail_after_running = False
 
+    @defer.inlineCallbacks
     def tearDown(self):
         poll.reset_poll_methods()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_call_when_started_forces_run(self):
