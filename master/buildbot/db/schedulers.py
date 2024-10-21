@@ -196,9 +196,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     def get_scheduler_master(self, schedulerid):
         def thd(conn):
-            q = self.db.model.scheduler_masters.select(
-                self.db.model.scheduler_masters.c.masterid
-            ).where(self.db.model.scheduler_masters.c.schedulerid == schedulerid)
+            q = sa.select(self.db.model.scheduler_masters.c.masterid).where(
+                self.db.model.scheduler_masters.c.schedulerid == schedulerid
+            )
             r = conn.execute(q)
             row = r.fetchone()
             conn.close()
