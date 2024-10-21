@@ -126,7 +126,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor()
+        self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.Buildset(self.master)
         yield self.master.db.insert_test_data([
@@ -142,6 +142,10 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             fakedb.Builder(id=42, name='bldr1'),
             fakedb.Builder(id=43, name='bldr2'),
         ])
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     SS234_DATA = {
         'branch': 'br',
