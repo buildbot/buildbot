@@ -16,10 +16,11 @@
 */
 
 import {observer} from "mobx-react";
-import {useState} from "react";
+import {useState, useRef} from "react";
 import {Button, Modal} from "react-bootstrap";
 import {Worker} from "buildbot-data-js";
-import Select, { ActionMeta, MultiValue, InputActionMeta  } from 'react-select';
+import Select, { ActionMeta, MultiValue, InputActionMeta, SelectInstance, components } from 'react-select';
+import { BsRegex } from "react-icons/bs";
 
 type MultipleWorkersActionsModalProps = {
   workers: Worker[];
@@ -36,6 +37,42 @@ const workerToSelectOption = (worker: Worker): SelectOption => {
   return { value: worker, label: worker.name }
 }
 
+const Control = (props: any) => {
+  const { useRegexSearch, handleToggleClick, selectRef } = props;
+
+  const iconStyle = {
+    backgroundColor: useRegexSearch ? "lightgrey" : "",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: "5px",
+    cursor: "pointer"
+  };
+
+  return (
+    <components.Control {...props}>
+      <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+        {props.children[0]}
+        <div
+          style={iconStyle}
+          onMouseDown={(e) => {
+            handleToggleClick(e);
+            if (selectRef && selectRef.current) {
+              setTimeout(() => {
+                selectRef.current.focus();
+              }, 0);
+            }
+          }}
+          title="Toggle Regex Search"
+        >
+          <BsRegex size={20} />
+        </div>
+        {props.children[1]}
+      </div>
+    </components.Control>
+  );
+};
+
 export const MultipleWorkersActionsModal = observer(({workers, preselectedWorkers, onClose}: MultipleWorkersActionsModalProps) => {
   if (workers.length === 1) {
     preselectedWorkers = [...workers];
@@ -45,6 +82,8 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
   const [reasonText, setReasonText] = useState<string>("");
   const [selectedWorkers, setSelectedWorkers] = useState<Worker[]>(preselectedWorkers);
   const [menuIsOpen, setMenuIsOpen] = useState<boolean>();
+  const [useRegexSearch, setUseRegexSearch] = useState(false);
+  const selectRef = useRef<SelectInstance<SelectOption, true> | null>(null);
 
   const stopDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.connected_to.length === 0)
   const pauseDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.paused)
@@ -78,6 +117,32 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
     return prevInputValue;
   };
 
+  const handleToggleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setUseRegexSearch((prev) => !prev);
+  };
+
+  const filterOption = (option: { data: SelectOption }, inputValue: string) => {
+    if (useRegexSearch) {
+      try {
+        const regex = new RegExp(inputValue, 'i');
+        return regex.test(option.data.label);
+      } catch (e) {
+        return false;
+      }
+    } else {
+      return option.data.label.toLowerCase().includes(inputValue.toLowerCase());
+    }
+  };
+
+  const refocusSelect = () => {
+    if (selectRef.current) {
+      setTimeout(() => {
+        selectRef.current?.focus();
+      }, 0);
+    }
+  };
+
   return (
     <Modal size="lg" show={true} onHide={() => onClose()}>
       <Modal.Header closeButton>
@@ -92,15 +157,28 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
           }
           {workers.length !== 1 ?
             <Select<SelectOption, true>
+              ref={selectRef}
               isMulti
               closeMenuOnSelect={false}
               autoFocus
               defaultValue={selectedWorkers.map(workerToSelectOption)}
               onChange={(newValue: MultiValue<SelectOption>, _actionMeta: ActionMeta<SelectOption>) => {
                 setSelectedWorkers(newValue.map(v => v.value));
+                refocusSelect();
               }}
               onInputChange={onInputChange}
               options={workers.map(workerToSelectOption)}
+              filterOption={filterOption}
+              components={{
+                Control: (controlProps) => (
+                  <Control
+                    {...controlProps}
+                    useRegexSearch={useRegexSearch}
+                    handleToggleClick={handleToggleClick}
+                    selectRef={selectRef}
+                  />
+                )
+              }}
             />
             : <></>
           }
