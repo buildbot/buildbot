@@ -58,8 +58,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
             dbBuilder = []
             builderid = 0
             for builderName in builderNames:
-                builderid += 1
-                dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
+                if isinstance(builderName, str):
+                    builderid += 1
+                    dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
 
             yield self.master.db.insert_test_data(dbBuilder)
 
