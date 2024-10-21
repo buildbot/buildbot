@@ -48,6 +48,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
     def tearDownScheduler(self):
         pass
 
+    @defer.inlineCallbacks
     def attachScheduler(
         self, scheduler, objectid, schedulerid, overrideBuildsetMethods=False, createBuilderDB=False
     ):
@@ -81,7 +82,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         if createBuilderDB is True:
             rows.extend([fakedb.Builder(name=bname) for bname in scheduler.builderNames])
 
-        db.insert_test_data(rows)
+        yield db.insert_test_data(rows)
 
         if overrideBuildsetMethods:
             self.assertArgSpecMatches(

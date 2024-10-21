@@ -53,10 +53,11 @@ class TestForceScheduler(
     def tearDown(self):
         self.tearDownScheduler()
 
+    @defer.inlineCallbacks
     def makeScheduler(self, name='testsched', builderNames=None, **kw):
         if builderNames is None:
             builderNames = ['a', 'b']
-        sched = self.attachScheduler(
+        sched = yield self.attachScheduler(
             ForceScheduler(name=name, builderNames=builderNames, **kw),
             self.OBJECTID,
             self.SCHEDULERID,
@@ -169,7 +170,7 @@ class TestForceScheduler(
 
     @defer.inlineCallbacks
     def test_basicForce(self):
-        sched = self.makeScheduler()
+        sched = yield self.makeScheduler()
 
         res = yield sched.force(
             'user',
@@ -214,7 +215,7 @@ class TestForceScheduler(
     @defer.inlineCallbacks
     def test_basicForce_reasonString(self):
         """Same as above, but with a reasonString"""
-        sched = self.makeScheduler(reasonString='%(owner)s wants it %(reason)s')
+        sched = yield self.makeScheduler(reasonString='%(owner)s wants it %(reason)s')
 
         res = yield sched.force(
             'user',
@@ -260,7 +261,7 @@ class TestForceScheduler(
 
     @defer.inlineCallbacks
     def test_force_allBuilders(self):
-        sched = self.makeScheduler()
+        sched = yield self.makeScheduler()
 
         res = yield sched.force(
             'user',
@@ -301,7 +302,7 @@ class TestForceScheduler(
 
     @defer.inlineCallbacks
     def test_force_someBuilders(self):
-        sched = self.makeScheduler(builderNames=['a', 'b', 'c'])
+        sched = yield self.makeScheduler(builderNames=['a', 'b', 'c'])
 
         res = yield sched.force(
             'user',
@@ -380,7 +381,7 @@ class TestForceScheduler(
 
     @defer.inlineCallbacks
     def test_good_codebases(self):
-        sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
+        sched = yield self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
         yield sched.force(
             'user',
             builderNames=['a'],
@@ -433,7 +434,7 @@ class TestForceScheduler(
 
     @defer.inlineCallbacks
     def test_codebase_with_patch(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             codebases=['foo', CodebaseParameter('bar', patch=PatchParameter())]
         )
         yield sched.force(
@@ -550,7 +551,7 @@ class TestForceScheduler(
                     print("Note: for quick fix, pip install xerox")
             self.assertEqual(gotSpec, expectSpec)
 
-        sched = self.makeScheduler(properties=[prop])
+        sched = yield self.makeScheduler(properties=[prop])
 
         if not req:
             req = {name: value, 'reason': 'because'}

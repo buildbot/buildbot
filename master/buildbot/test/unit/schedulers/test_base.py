@@ -42,6 +42,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     def tearDown(self):
         self.tearDownScheduler()
 
+    @defer.inlineCallbacks
     def makeScheduler(self, name='testsched', builderNames=None, properties=None, codebases=None):
         if builderNames is None:
             builderNames = ['a', 'b']
@@ -57,9 +58,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
                 builderid += 1
                 dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
 
-            self.master.db.insert_test_data(dbBuilder)
+            yield self.master.db.insert_test_data(dbBuilder)
 
-        sched = self.attachScheduler(
+        sched = yield self.attachScheduler(
             base.BaseScheduler(
                 name=name, builderNames=builderNames, properties=properties, codebases=codebases
             ),
@@ -75,57 +76,66 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     # tests
 
+    @defer.inlineCallbacks
     def test_constructor_builderNames(self):
         with self.assertRaises(config.ConfigErrors):
-            self.makeScheduler(builderNames='xxx')
+            yield self.makeScheduler(builderNames='xxx')
 
+    @defer.inlineCallbacks
     def test_constructor_builderNames_unicode(self):
-        self.makeScheduler(builderNames=['a'])
+        yield self.makeScheduler(builderNames=['a'])
 
+    @defer.inlineCallbacks
     def test_constructor_builderNames_renderable(self):
         @properties.renderer
         def names(props):
             return ['a']
 
-        self.makeScheduler(builderNames=names)
+        yield self.makeScheduler(builderNames=names)
 
+    @defer.inlineCallbacks
     def test_constructor_codebases_valid(self):
         codebases = {"codebase1": {"repository": "", "branch": "", "revision": ""}}
-        self.makeScheduler(codebases=codebases)
+        yield self.makeScheduler(codebases=codebases)
 
+    @defer.inlineCallbacks
     def test_constructor_codebases_valid_list(self):
         codebases = ['codebase1']
-        self.makeScheduler(codebases=codebases)
+        yield self.makeScheduler(codebases=codebases)
 
+    @defer.inlineCallbacks
     def test_constructor_codebases_invalid(self):
         # scheduler only accepts codebases with at least repository set
         codebases = {"codebase1": {"dictionary": "", "that": "", "fails": ""}}
         with self.assertRaises(config.ConfigErrors):
-            self.makeScheduler(codebases=codebases)
+            yield self.makeScheduler(codebases=codebases)
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
-        sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
+        sched = yield self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
         cbd = yield sched.getCodebaseDict('lib')
         self.assertEqual(cbd, {'repository': 'librepo'})
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_constructedFromList(self):
-        sched = self.makeScheduler(codebases=['lib', 'lib2'])
+        sched = yield self.makeScheduler(codebases=['lib', 'lib2'])
         cbd = yield sched.getCodebaseDict('lib')
         self.assertEqual(cbd, {})
 
+    @defer.inlineCallbacks
     def test_getCodebaseDict_not_found(self):
-        sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
-        return self.assertFailure(sched.getCodebaseDict('app'), KeyError)
+        sched = yield self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
+        with self.assertRaises(KeyError):
+            yield sched.getCodebaseDict('app')
 
+    @defer.inlineCallbacks
     def test_listBuilderNames(self):
-        sched = self.makeScheduler(builderNames=['x', 'y'])
+        sched = yield self.makeScheduler(builderNames=['x', 'y'])
         self.assertEqual(sched.listBuilderNames(), ['x', 'y'])
 
     @defer.inlineCallbacks
     def test_startConsumingChanges_fileIsImportant_check(self):
-        sched = self.makeScheduler()
+        sched = yield self.makeScheduler()
         try:
             yield sched.startConsumingChanges(fileIsImportant="maybe")
         except AssertionError:
@@ -135,7 +145,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_enabled_callback(self):
-        sched = self.makeScheduler()
+        sched = yield self.makeScheduler()
         expectedValue = not sched.enabled
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
@@ -150,7 +160,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
         # (expected_result should be True (important), False (unimportant), or
         # None (ignore the change))
-        sched = self.makeScheduler()
+        sched = yield self.makeScheduler()
         sched.startService()
         self.addCleanup(sched.stopService)
 
@@ -269,7 +279,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_activation(self):
-        sched = self.makeScheduler(name='n', builderNames=['a'])
+        sched = yield self.makeScheduler(name='n', builderNames=['a'])
         sched.clock = task.Clock()
         sched.activate = mock.Mock(return_value=defer.succeed(None))
         sched.deactivate = mock.Mock(return_value=defer.succeed(None))
@@ -302,8 +312,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         self.assertTrue(sched.deactivate.called)
         self.assertFalse(sched.isActive())
 
+    @defer.inlineCallbacks
     def test_activation_claim_raises(self):
-        sched = self.makeScheduler(name='n', builderNames=['a'])
+        sched = yield self.makeScheduler(name='n', builderNames=['a'])
         sched.clock = task.Clock()
 
         # set the schedulerid, and claim the scheduler on another master
@@ -313,8 +324,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertFalse(sched.isActive())
 
+    @defer.inlineCallbacks
     def test_activation_activate_fails(self):
-        sched = self.makeScheduler(name='n', builderNames=['a'])
+        sched = yield self.makeScheduler(name='n', builderNames=['a'])
         sched.clock = task.Clock()
 
         def activate():
@@ -327,7 +339,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def do_addBuildsetForSourceStampsWithDefaults(self, codebases, sourcestamps, exp_sourcestamps):
-        sched = self.makeScheduler(name='n', builderNames=['b'], codebases=codebases)
+        sched = yield self.makeScheduler(name='n', builderNames=['b'], codebases=codebases)
         bsid, brids = yield sched.addBuildsetForSourceStampsWithDefaults(
             reason='power', sourcestamps=sourcestamps, waited_for=False
         )
@@ -427,8 +439,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
-        sched = self.makeScheduler(name='n', builderNames=['b'])
-        self.db.insert_test_data([
+        sched = yield self.makeScheduler(name='n', builderNames=['b'])
+        yield self.db.insert_test_data([
             fakedb.Change(changeid=13, sourcestampid=234),
         ])
         bsid, brids = yield sched.addBuildsetForChanges(
@@ -450,8 +462,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties(self):
-        sched = self.makeScheduler(name='n', builderNames=['c'])
-        self.db.insert_test_data([
+        sched = yield self.makeScheduler(name='n', builderNames=['c'])
+        yield self.db.insert_test_data([
             fakedb.Change(changeid=14, sourcestampid=234),
         ])
         bsid, brids = yield sched.addBuildsetForChanges(
@@ -473,12 +485,12 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties_with_virtual_builders(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='n',
             builderNames=['c'],
             properties={'virtual_builder_name': Interpolate("myproject-%(src::branch)s")},
         )
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
             fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
         ])
@@ -504,11 +516,11 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     def test_addBuildsetForChanges_multiple_changes_same_codebase(self):
         # This is a test for backwards compatibility
         # Changes from different repositories come together in one build
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='n', builderNames=['b', 'c'], codebases={'cb': {'repository': 'http://repo'}}
         )
         # No codebaseGenerator means all changes have codebase == ''
-        self.db.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Change(changeid=13, codebase='cb', sourcestampid=12),
             fakedb.Change(changeid=14, codebase='cb', sourcestampid=11),
             fakedb.Change(changeid=15, codebase='cb', sourcestampid=10),
@@ -543,8 +555,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         }
         # Scheduler gets codebases that can be used to create extra sourcestamps
         # for repositories that have no changes
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'], codebases=codebases)
-        self.db.insert_test_data([
+        sched = yield self.makeScheduler(name='n', builderNames=['b', 'c'], codebases=codebases)
+        yield self.db.insert_test_data([
             fakedb.Change(changeid=12, codebase='cbA', sourcestampid=912),
             fakedb.Change(changeid=13, codebase='cbA', sourcestampid=913),
             fakedb.Change(changeid=14, codebase='cbA', sourcestampid=914),
@@ -593,7 +605,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp(self):
-        sched = self.makeScheduler(name='n', builderNames=['b'])
+        sched = yield self.makeScheduler(name='n', builderNames=['b'])
         sourcestamps = [91, {'sourcestamp': True}]
         bsid, brids = yield sched.addBuildsetForSourceStamps(
             reason='whynot', waited_for=False, sourcestamps=sourcestamps
@@ -614,7 +626,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_explicit_builderNames(self):
-        sched = self.makeScheduler(name='n', builderNames=['b', 'x', 'y'])
+        sched = yield self.makeScheduler(name='n', builderNames=['b', 'x', 'y'])
         bsid, brids = yield sched.addBuildsetForSourceStamps(
             reason='whynot',
             waited_for=True,
@@ -638,7 +650,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_properties(self):
         props = properties.Properties(xxx="yyy")
-        sched = self.makeScheduler(name='n', builderNames=['b'])
+        sched = yield self.makeScheduler(name='n', builderNames=['b'])
         bsid, brids = yield sched.addBuildsetForSourceStamps(
             reason='whynot', waited_for=False, sourcestamps=[91], properties=props
         )
@@ -656,9 +668,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_combine_change_properties(self):
-        sched = self.makeScheduler()
+        sched = yield self.makeScheduler()
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=98, branch='stable'),
             fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
             fakedb.ChangeProperty(
@@ -691,9 +703,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
                 return ['a', 'b']
             return None
 
-        sched = self.makeScheduler(name='n', builderNames=names)
+        sched = yield self.makeScheduler(name='n', builderNames=names)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=1, name='a'),
             fakedb.Builder(id=2, name='b'),
             fakedb.Builder(id=3, name='c'),
@@ -736,9 +748,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_list_of_renderable_builderNames(self):
         names = ['a', 'b', properties.Interpolate('%(prop:extra_builder)s')]
-        sched = self.makeScheduler(name='n', builderNames=names)
+        sched = yield self.makeScheduler(name='n', builderNames=names)
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=1, name='a'),
             fakedb.Builder(id=2, name='b'),
             fakedb.Builder(id=3, name='c'),
@@ -764,8 +776,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
             priority=0,
         )
 
+    @defer.inlineCallbacks
     def test_signature_addBuildsetForChanges(self):
-        sched = self.makeScheduler(builderNames=['xxx'])
+        sched = yield self.makeScheduler(builderNames=['xxx'])
 
         @self.assertArgSpecMatches(
             sched.addBuildsetForChanges,  # Real
@@ -784,8 +797,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         ):
             pass
 
+    @defer.inlineCallbacks
     def test_signature_addBuildsetForSourceStamps(self):
-        sched = self.makeScheduler(builderNames=['xxx'])
+        sched = yield self.makeScheduler(builderNames=['xxx'])
 
         @self.assertArgSpecMatches(
             sched.addBuildsetForSourceStamps,  # Real
@@ -804,8 +818,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         ):
             pass
 
+    @defer.inlineCallbacks
     def test_signature_addBuildsetForSourceStampsWithDefaults(self):
-        sched = self.makeScheduler(builderNames=['xxx'])
+        sched = yield self.makeScheduler(builderNames=['xxx'])
 
         @self.assertArgSpecMatches(
             sched.addBuildsetForSourceStampsWithDefaults,  # Real

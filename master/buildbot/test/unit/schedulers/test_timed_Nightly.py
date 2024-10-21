@@ -43,12 +43,13 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     long_ago_time = 86400
 
+    @defer.inlineCallbacks
     def makeScheduler(self, **kwargs):
-        sched = self.attachScheduler(
+        sched = yield self.attachScheduler(
             timed.Nightly(**kwargs), self.OBJECTID, self.SCHEDULERID, overrideBuildsetMethods=True
         )
 
-        self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])
         ])
 
@@ -100,6 +101,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         ss.update(kwargs)
         return ss
 
+    @defer.inlineCallbacks
     def mkch(self, **kwargs):
         # create changeset and insert in database.
         chd = {"branch": 'master', "project": '', "repository": ''}
@@ -108,7 +110,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # fakedb.Change requires changeid instead of number
         chd['changeid'] = chd['number']
         del chd['number']
-        self.db.insert_test_data([fakedb.Change(**chd)])
+        yield self.db.insert_test_data([fakedb.Change(**chd)])
         return ch
 
     def setUp(self):
@@ -123,18 +125,21 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     # Tests
 
+    @defer.inlineCallbacks
     def test_constructor_no_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         self.assertEqual(sched.reason, "The Nightly scheduler named 'test' triggered this build")
 
+    @defer.inlineCallbacks
     def test_constructor_reason(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', reason="hourly"
         )
         self.assertEqual(sched.reason, "hourly")
 
+    @defer.inlineCallbacks
     def test_constructor_change_filter(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
             branch=None,
@@ -142,32 +147,40 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
         assert sched.change_filter
 
+    @defer.inlineCallbacks
     def test_constructor_month(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', month='1')
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', month='1'
+        )
         self.assertEqual(sched.month, "1")
 
+    @defer.inlineCallbacks
     def test_constructor_priority_none(self):
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=None
         )
         self.assertEqual(sched.priority, None)
 
+    @defer.inlineCallbacks
     def test_constructor_priority_int(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', priority=8)
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', priority=8
+        )
         self.assertEqual(sched.priority, 8)
 
+    @defer.inlineCallbacks
     def test_constructor_priority_function(self):
         def sched_priority(builderNames, changesByCodebase):
             return 0
 
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=sched_priority
         )
         self.assertEqual(sched.priority, sched_priority)
 
     @defer.inlineCallbacks
     def test_enabled_callback(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         expectedValue = not sched.enabled
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
@@ -177,7 +190,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_disabled_activate(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
         r = yield sched.activate()
@@ -185,7 +198,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_disabled_deactivate(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
         r = yield sched.deactivate()
@@ -193,7 +206,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_disabled_start_build(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
         r = yield sched.startBuild()
@@ -207,7 +220,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # starts at midnight UTC, so be careful not to use times that are
         # timezone dependent -- stick to minutes-past-the-half-hour, as some
         # timezones are multiples of 30 minutes off from UTC
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch=None, minute=[10, 20, 21, 40, 50, 51]
         )
 
@@ -266,9 +279,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
         yield sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_simple_with_branch(self):
         # see timezone warning above
-        sched = self.makeScheduler(
+        sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='master', minute=[5, 35]
         )
 
@@ -296,14 +310,14 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
         self.db.state.assertStateByClass('test', 'Nightly', last_build=300 + self.time_offset)
 
-        d = sched.deactivate()
-        return d
+        yield sched.deactivate()
 
+    @defer.inlineCallbacks
     def do_test_iterations_onlyIfChanged(
         self, changes_at, last_only_if_changed, is_new_scheduler=False, **kwargs
     ):
         fII = mock.Mock(name='fII')
-        self.makeScheduler(
+        yield self.makeScheduler(
             name='test',
             builderNames=['test'],
             branch=None,
@@ -680,7 +694,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         # Test createAbsoluteSourceStamps=True when only one codebase has changed,
         # but the other was previously changed
         fII = mock.Mock(name='fII')
-        self.makeScheduler(
+        yield self.makeScheduler(
             name='test',
             builderNames=['test'],
             branch=None,
