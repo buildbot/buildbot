@@ -319,7 +319,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         if last_only_if_changed is not None:
             self.db.state.set_fake_state(self.sched, 'last_only_if_changed', last_only_if_changed)
 
-        return self.do_test_iterations_onlyIfChanged_test(fII, changes_at)
+        return (yield self.do_test_iterations_onlyIfChanged_test(fII, changes_at))
 
     @defer.inlineCallbacks
     def do_test_iterations_onlyIfChanged_test(self, fII, changes_at):
