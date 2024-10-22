@@ -77,6 +77,14 @@ The DB Connector and Components
     If you are adding a new connector component, import its module and create
     an instance of it in this class's constructor.
 
+    .. py:method:: run_db_task(deferred_task: defer.Deferred) -> None
+
+        For use when the deferred resulting from a DB operation is not awaited.
+        If a function that will run DB operation is not awaited, a shutdown of the master could
+        sever the connection to the database before the function completes.
+        To avoid this issue, register the deferred to the connector so it can properly await it's
+        completion in such cases.
+
 .. py:module:: buildbot.db.base
 
 .. py:class:: DBConnectorComponent

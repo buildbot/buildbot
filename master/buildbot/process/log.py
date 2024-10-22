@@ -124,6 +124,7 @@ class Log:
         # it to complete
         d = self.master.data.updates.compressLog(self.logid)
         d.addErrback(log.err, f"while compressing log {self.logid} (ignored)")
+        self.master.db.run_db_task(d)
         self._finishing = False
 
 
