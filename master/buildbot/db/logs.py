@@ -37,9 +37,15 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from typing import Callable
     from typing import Literal
+    from typing import TypeVar
 
     from sqlalchemy.engine import Connection as SAConnection
+    from typing_extensions import ParamSpec
+
+    _T = TypeVar('_T')
+    _P = ParamSpec('_P')
 
     LogType = Literal['s', 't', 'h', 'd']
 
@@ -152,6 +158,16 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             )
 
         _reactor.callWhenRunning(_start)
+
+    def _defer_to_compression_pool(
+        self,
+        callable: Callable[_P, _T],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> defer.Deferred[_T]:
+        return threads.deferToThreadPool(
+            self.master.reactor, self._compression_pool, callable, *args, **kwargs
+        )
 
     def _get_compressor(self, compressor_id: int) -> type[CompressorInterface]:
         compressor = self.COMPRESSION_BYID.get(compressor_id)
@@ -533,9 +549,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 last_line=group_last_line,
             )
 
-            new_content, bytes_saved = await threads.deferToThreadPool(
-                self.master.reactor,
-                self._compression_pool,
+            new_content, bytes_saved = await self._defer_to_compression_pool(
                 _thd_recompress_chunks,
                 compressed_chunks=compressed_chunks,
                 compress_obj=compress_obj,
