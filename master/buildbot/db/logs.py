@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import dataclasses
+import io
 import os
 from typing import TYPE_CHECKING
 
@@ -37,7 +38,9 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from typing import AsyncGenerator
     from typing import Callable
+    from typing import Generator
     from typing import Literal
     from typing import TypeVar
 
@@ -217,38 +220,98 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thdGetLogs)
 
-    def getLogLines(self, logid: int, first_line: int, last_line: int) -> defer.Deferred[str]:
-        def thdGetLogLines(conn) -> str:
-            # get a set of chunks that completely cover the requested range
+    async def iter_log_lines(
+        self,
+        logid: int,
+        first_line: int = 0,
+        last_line: int | None = None,
+    ) -> AsyncGenerator[str, None]:
+        def _thd_get_chunks(
+            conn: SAConnection,
+            first_line: int,
+            last_line: int | None,
+            batch: int,
+        ) -> list[tuple[int, int, int, bytes]]:
             tbl = self.db.model.logchunks
             q = sa.select(tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed)
             q = q.where(tbl.c.logid == logid)
-            q = q.where(tbl.c.first_line <= last_line)
+            if last_line is not None:
+                q = q.where(tbl.c.first_line <= last_line)
             q = q.where(tbl.c.last_line >= first_line)
+
             q = q.order_by(tbl.c.first_line)
-            rv = []
-            for row in conn.execute(q):
-                # Retrieve associated "reader" and extract the data
-                # Note that row.content is stored as bytes, and our caller expects unicode
-                data = self._get_compressor(row.compressed).read(row.content)
-                content = data.decode('utf-8')
+            if batch > 0:
+                q = q.limit(batch)
 
-                if row.first_line < first_line:
-                    idx = -1
-                    count = first_line - row.first_line
-                    for _ in range(count):
-                        idx = content.index('\n', idx + 1)
-                    content = content[idx + 1 :]
-                if row.last_line > last_line:
-                    idx = len(content) + 1
-                    count = row.last_line - last_line
-                    for _ in range(count):
-                        idx = content.rindex('\n', 0, idx)
-                    content = content[:idx]
-                rv.append(content)
-            return '\n'.join(rv) + '\n' if rv else ''
+            return [
+                (row.first_line, row.last_line, row.compressed, row.content)
+                for row in conn.execute(q)
+            ]
 
-        return self.db.pool.do(thdGetLogLines)
+        async def _iter_chunks_batched():
+            CHUNK_BATCH_SIZE = 100
+            batch_first_line = first_line
+            while chunks := await self.db.pool.do(
+                _thd_get_chunks,
+                batch_first_line,
+                last_line,
+                CHUNK_BATCH_SIZE,
+            ):
+                for chunk in chunks:
+                    yield chunk
+
+                _, chunk_last_line, _, _ = chunks[-1]
+                batch_first_line = max(batch_first_line, chunk_last_line) + 1
+
+        def _iter_uncompress_lines(
+            chunk_first_line: int,
+            compressed: int,
+            content: bytes,
+        ) -> Generator[str, None, None]:
+            # Retrieve associated "reader" and extract the data
+            # Note that row.content is stored as bytes, and our caller expects unicode
+            data = self._get_compressor(compressed).read(content)
+            # NOTE: we need a streaming decompression interface
+            with io.BytesIO(data) as data_buffer, io.TextIOWrapper(
+                data_buffer,
+                encoding='utf-8',
+            ) as reader:
+                # last line-ending is stripped from chunk on insert
+                # add it back here to simplify handling after
+                data_buffer.seek(0, os.SEEK_END)
+                data_buffer.write(b'\n')
+                data_buffer.seek(0, os.SEEK_SET)
+
+                line_idx = chunk_first_line
+
+                # need to skip some lines
+                while line_idx < first_line and reader.readline():
+                    line_idx += 1
+
+                while (last_line is None or line_idx <= last_line) and (line := reader.readline()):
+                    yield line
+                    line_idx += 1
+
+        async for chunk_first_line, _, compressed, content in _iter_chunks_batched():
+            for line in await self._defer_to_compression_pool(
+                _iter_uncompress_lines,
+                chunk_first_line,
+                compressed,
+                content,
+            ):
+                yield line
+
+    @async_to_deferred
+    async def getLogLines(self, logid: int, first_line: int, last_line: int) -> str:
+        lines: list[str] = []
+        async for line in self.iter_log_lines(
+            logid=logid,
+            first_line=first_line,
+            last_line=last_line,
+        ):
+            lines.append(line)
+
+        return ''.join(lines)
 
     def addLog(self, stepid: int, name: str, slug: str, type: LogType) -> defer.Deferred[int]:
         assert type in 'tsh', "Log type must be one of t, s, or h"
