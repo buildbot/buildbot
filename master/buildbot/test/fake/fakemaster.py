@@ -171,6 +171,7 @@ def make_master(
         master.db.configured_url = 'sqlite://'
         yield master.db.setServiceParent(master)
         yield master.db.setup()
+        testcase.addCleanup(master.db._shutdown)
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)

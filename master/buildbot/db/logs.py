@@ -16,11 +16,14 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
+from twisted.python import threadpool
 
 from buildbot.db import base
 from buildbot.db.compression import BrotliCompressor
@@ -29,10 +32,14 @@ from buildbot.db.compression import CompressorInterface
 from buildbot.db.compression import GZipCompressor
 from buildbot.db.compression import LZ4Compressor
 from buildbot.db.compression import ZStdCompressor
+from buildbot.db.compression.protocol import CompressObjInterface
+from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from typing import Literal
+
+    from sqlalchemy.engine import Connection as SAConnection
 
     LogType = Literal['s', 't', 'h', 'd']
 
@@ -84,6 +91,13 @@ class RawCompressor(CompressorInterface):
     def read(data: bytes) -> bytes:
         return data
 
+    class CompressObj(CompressObjInterface):
+        def compress(self, data: bytes) -> bytes:
+            return data
+
+        def flush(self) -> bytes:
+            return b''
+
 
 class LogsConnectorComponent(base.DBConnectorComponent):
     # Postgres and MySQL will both allow bigger sizes than this.  The limit
@@ -106,6 +120,38 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         compressor.name: (compressor_id, compressor)
         for compressor_id, compressor in COMPRESSION_BYID.items()
     }
+
+    def __init__(self, connector: base.DBConnector):
+        super().__init__(connector)
+
+        max_threads = 1
+        if cpu_count := os.cpu_count():
+            # use at most half cpu available to avoid oversubscribing
+            # the master on other processes
+            max_threads = max(int(cpu_count / 2), max_threads)
+
+        self._compression_pool = threadpool.ThreadPool(
+            minthreads=1,
+            maxthreads=max_threads,
+            name='DBLogCompression',
+        )
+        self._start_compression_pool()
+
+    def _start_compression_pool(self) -> None:
+        # keep a ref on the reactor used to start
+        # so we can schedule shutdown even if
+        # DBConnector was un-parented before
+        _reactor = self.master.reactor
+
+        def _start():
+            self._compression_pool.start()
+            _reactor.addSystemEventTrigger(
+                'during',
+                'shutdown',
+                self._compression_pool.stop,
+            )
+
+        _reactor.callWhenRunning(_start)
 
     def _get_compressor(self, compressor_id: int) -> type[CompressorInterface]:
         compressor = self.COMPRESSION_BYID.get(compressor_id)
@@ -214,17 +260,12 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thdAddLog)
 
-    def thdCompressChunk(self, chunk: bytes) -> tuple[bytes, int]:
+    def _get_configured_compressor(self) -> tuple[int, type[CompressorInterface]]:
         compress_method: str = self.master.config.logCompressionMethod
-        # unknown compression method
-        if compress_method not in self.COMPRESSION_MODE:
-            return chunk, self.NO_COMPRESSION_ID
+        return self.COMPRESSION_MODE.get(compress_method, (self.NO_COMPRESSION_ID, RawCompressor))
 
-        compressed_id, compressor = self.COMPRESSION_MODE[compress_method]
-        # compression method is not available (missing dependency most likely)
-        if not compressor.available or compressed_id == self.NO_COMPRESSION_ID:
-            return chunk, self.NO_COMPRESSION_ID
-
+    def thdCompressChunk(self, chunk: bytes) -> tuple[bytes, int]:
+        compressed_id, compressor = self._get_configured_compressor()
         compressed_chunk = compressor.dumps(chunk)
         # Is it useful to compress the chunk?
         if len(chunk) <= len(compressed_chunk):
@@ -329,104 +370,188 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do_with_transaction(thdfinishLog)
 
-    def compressLog(self, logid: int, force: bool = False) -> defer.Deferred[int]:
-        def thdcompressLog(conn) -> int:
-            tbl = self.db.model.logchunks
-            q = sa.select(
-                tbl.c.first_line,
-                tbl.c.last_line,
-                sa.func.length(tbl.c.content),
-                tbl.c.compressed,
+    @async_to_deferred
+    async def compressLog(self, logid: int, force: bool = False) -> int:
+        """
+        returns the size (in bytes) saved.
+        """
+        tbl = self.db.model.logchunks
+
+        def _thd_gather_chunks_to_process(conn: SAConnection) -> list[tuple[int, int]]:
+            """
+            returns the total size of chunks and a list of chunks to group.
+            chunks list is empty if not force, and no chunks would be grouped.
+            """
+            q = (
+                sa.select(
+                    tbl.c.first_line,
+                    tbl.c.last_line,
+                    sa.func.length(tbl.c.content),
+                )
+                .where(tbl.c.logid == logid)
+                .order_by(tbl.c.first_line)
             )
-            q = q.where(tbl.c.logid == logid)
-            q = q.order_by(tbl.c.first_line)
 
             rows = conn.execute(q)
-            todo_gather_list = []
-            numchunks = 0
-            totlength = 0
-            todo_numchunks = 0
-            todo_first_line = 0
-            todo_last_line = 0
-            todo_length = 0
+
+            # get the first chunk to seed new_chunks list
+            first_chunk = next(rows, None)
+            if first_chunk is None:
+                # no chunks in log, early out
+                return []
+
+            grouped_chunks: list[tuple[int, int]] = [
+                (first_chunk.first_line, first_chunk.last_line)
+            ]
+
+            # keep track of how many chunks we use now
+            # to compare with grouped chunks and
+            # see if we need to do some work
+            # start at 1 since we already queries one above
+            current_chunk_count = 1
+
+            current_group_new_size = first_chunk.length_1
             # first pass, we fetch the full list of chunks (without content) and find out
             # the chunk groups which could use some gathering.
             for row in rows:
-                if (
-                    todo_length + row.length_1 > self.MAX_CHUNK_SIZE
-                    or (row.last_line - todo_first_line) > self.MAX_CHUNK_LINES
-                ):
-                    if todo_numchunks > 1 or (force and todo_numchunks):
-                        # this group is worth re-compressing
-                        todo_gather_list.append((todo_first_line, todo_last_line))
-                    todo_first_line = row.first_line
-                    todo_length = 0
-                    todo_numchunks = 0
+                current_chunk_count += 1
 
-                todo_last_line = row.last_line
-                # note that we count the compressed size for efficiency reason
-                # unlike to the on-the-flow chunk splitter
-                todo_length += row.length_1
-                totlength += row.length_1
-                todo_numchunks += 1
-                numchunks += 1
+                chunk_first_line: int = row.first_line
+                chunk_last_line: int = row.last_line
+                chunk_size: int = row.length_1
+
+                group_first_line, _group_last_line = grouped_chunks[-1]
+
+                can_merge_chunks = (
+                    # note that we count the compressed size for efficiency reason
+                    # unlike to the on-the-flow chunk splitter
+                    current_group_new_size + chunk_size <= self.MAX_CHUNK_SIZE
+                    and (chunk_last_line - group_first_line) <= self.MAX_CHUNK_LINES
+                )
+                if can_merge_chunks:
+                    # merge chunks, since we ordered the query by 'first_line'
+                    # and we assume that chunks are contiguous, it's pretty easy
+                    grouped_chunks[-1] = (group_first_line, chunk_last_line)
+                    current_group_new_size += chunk_size
+                else:
+                    grouped_chunks.append((chunk_first_line, chunk_last_line))
+                    current_group_new_size = chunk_size
+
             rows.close()
 
-            if totlength == 0:
-                # empty log
-                return 0
+            if not force and current_chunk_count <= len(grouped_chunks):
+                return []
 
-            if todo_numchunks > 1 or (force and todo_numchunks):
-                # last chunk group
-                todo_gather_list.append((todo_first_line, todo_last_line))
-            for todo_first_line, todo_last_line in todo_gather_list:
-                # decompress this group of chunks. Note that the content is binary bytes.
-                # no need to decode anything as we are going to put in back stored as bytes anyway
-                q = sa.select(tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed)
-                q = q.where(tbl.c.logid == logid)
-                q = q.where(tbl.c.first_line >= todo_first_line)
-                q = q.where(tbl.c.last_line <= todo_last_line)
-                q = q.order_by(tbl.c.first_line)
-                rows = conn.execute(q)
-                chunks: list[bytes] = []
-                for row in rows:
-                    compressed_chunk = self._get_compressor(row.compressed).read(row.content)
-                    if compressed_chunk:
-                        chunks.append(compressed_chunk)
-                rows.close()
+            return grouped_chunks
 
+        def _thd_get_chunks_content(
+            conn: SAConnection,
+            first_line: int,
+            last_line: int,
+        ) -> list[tuple[int, bytes]]:
+            q = (
+                sa.select(tbl.c.content, tbl.c.compressed)
+                .where(tbl.c.logid == logid)
+                .where(tbl.c.first_line >= first_line)
+                .where(tbl.c.last_line <= last_line)
+                .order_by(tbl.c.first_line)
+            )
+            rows = conn.execute(q)
+            content = [(row.compressed, row.content) for row in rows]
+            rows.close()
+            return content
+
+        def _thd_replace_chunks_by_new_grouped_chunk(
+            conn: SAConnection,
+            first_line: int,
+            last_line: int,
+            new_compressed_id: int,
+            new_content: bytes,
+        ) -> None:
+            # Transaction is necessary so that readers don't see disappeared chunks
+            with conn.begin():
                 # we remove the chunks that we are compressing
-                d = tbl.delete()
-                d = d.where(tbl.c.logid == logid)
-                d = d.where(tbl.c.first_line >= todo_first_line)
-                d = d.where(tbl.c.last_line <= todo_last_line)
+                deletion_query = (
+                    tbl.delete()
+                    .where(tbl.c.logid == logid)
+                    .where(tbl.c.first_line >= first_line)
+                    .where(tbl.c.last_line <= last_line)
+                )
+                conn.execute(deletion_query).close()
 
-                # Transaction is necessary so that readers don't see disappeared chunks
-                with conn.begin_nested():
-                    conn.execute(d).close()
-
-                    # and we recompress them in one big chunk
-                    chunk, compressed_id = self.thdCompressChunk(b'\n'.join(chunks))
-                    conn.execute(
-                        tbl.insert(),
-                        {
-                            "logid": logid,
-                            "first_line": todo_first_line,
-                            "last_line": todo_last_line,
-                            "content": chunk,
-                            "compressed": compressed_id,
-                        },
-                    ).close()
+                # and we recompress them in one big chunk
+                conn.execute(
+                    tbl.insert(),
+                    {
+                        "logid": logid,
+                        "first_line": first_line,
+                        "last_line": last_line,
+                        "content": new_content,
+                        "compressed": new_compressed_id,
+                    },
+                ).close()
 
                 conn.commit()
 
-            # calculate how many bytes we saved
-            q = sa.select(sa.func.sum(sa.func.length(tbl.c.content)))
-            q = q.where(tbl.c.logid == logid)
-            newsize = conn.execute(q).fetchone()[0]
-            return totlength - newsize
+        def _thd_recompress_chunks(
+            compressed_chunks: list[tuple[int, bytes]],
+            compress_obj: CompressObjInterface,
+        ) -> tuple[bytes, int]:
+            """This has to run in the compression thread pool"""
+            # decompress this group of chunks. Note that the content is binary bytes.
+            # no need to decode anything as we are going to put in back stored as bytes anyway
+            chunks: list[bytes] = []
+            bytes_saved = 0
+            for idx, (chunk_compress_id, chunk_content) in enumerate(compressed_chunks):
+                bytes_saved += len(chunk_content)
 
-        return self.db.pool.do(thdcompressLog)
+                # trailing line-ending is stripped from chunks
+                # need to add it back, except for the last one
+                if idx != 0:
+                    chunks.append(compress_obj.compress(b'\n'))
+
+                uncompressed_content = self._get_compressor(chunk_compress_id).read(chunk_content)
+                chunks.append(compress_obj.compress(uncompressed_content))
+
+            chunks.append(compress_obj.flush())
+            new_content = b''.join(chunks)
+            bytes_saved -= len(new_content)
+            return new_content, bytes_saved
+
+        chunk_groups = await self.db.pool.do(_thd_gather_chunks_to_process)
+        if not chunk_groups:
+            return 0
+
+        total_bytes_saved: int = 0
+
+        compressed_id, compressor = self._get_configured_compressor()
+        compress_obj = compressor.CompressObj()
+        for group_first_line, group_last_line in chunk_groups:
+            compressed_chunks = await self.db.pool.do(
+                _thd_get_chunks_content,
+                first_line=group_first_line,
+                last_line=group_last_line,
+            )
+
+            new_content, bytes_saved = await threads.deferToThreadPool(
+                self.master.reactor,
+                self._compression_pool,
+                _thd_recompress_chunks,
+                compressed_chunks=compressed_chunks,
+                compress_obj=compress_obj,
+            )
+
+            total_bytes_saved += bytes_saved
+
+            await self.db.pool.do(
+                _thd_replace_chunks_by_new_grouped_chunk,
+                first_line=group_first_line,
+                last_line=group_last_line,
+                new_compressed_id=compressed_id,
+                new_content=new_content,
+            )
+
+        return total_bytes_saved
 
     def deleteOldLogChunks(self, older_than_timestamp: int) -> defer.Deferred[int]:
         def thddeleteOldLogs(conn) -> int:
