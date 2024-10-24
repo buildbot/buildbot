@@ -55,6 +55,17 @@ Logs connector
 
         Get all logs within the given step.
 
+    .. py:method:: iter_log_lines(logid, first_line, last_line)
+
+        :param integer logid: ID of the log
+        :param first_line: first line to return
+        :param last_line: last line to return
+        :returns: an AsyncGenerator of the chunks content (as str)
+
+        Get a subset of lines for a logfile.
+
+        yield lines (including line-ending).
+
     .. py:method:: getLogLines(logid, first_line, last_line)
 
         :param integer logid: ID of the log
