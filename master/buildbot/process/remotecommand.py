@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import log
@@ -29,6 +31,10 @@ from buildbot.process.results import SUCCESS
 from buildbot.util import lineboundaries
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
+
+if TYPE_CHECKING:
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.worker.protocols.base import Connection
 
 
 class RemoteException(Exception):
@@ -71,13 +77,13 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.args = args
         self.ignore_updates = ignore_updates
         self.decodeRC = decodeRC
-        self.conn = None
+        self.conn: Connection | None = None
         self._is_conn_test_fake = False
         self.worker = None
-        self.step = None
-        self.builder_name = None
+        self.step: BuildStep | None = None
+        self.builder_name: str | None = None
         self.commandID = None
-        self.deferred = None
+        self.deferred: defer.Deferred[RemoteCommand] | None = None
         self.interrupted = False
         # a lock to make sure that only one log-handling method runs at a time.
         # This is really only a problem with old-style steps, which do not
@@ -99,7 +105,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         cmd_id = cls._commandCounter - 1
         return f"{cmd_id}"
 
-    def run(self, step, conn, builder_name):
+    def run(self, step: BuildStep, conn: Connection, builder_name: str):
         self.active = True
         self.step = step
         self.conn = conn
