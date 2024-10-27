@@ -136,14 +136,16 @@ class Tests(interfaces.InterfaceTests):
             'another line',
             'yet another line',
         ]
+
+        def _join_lines(lines: list[str]):
+            return ''.join(e + '\n' for e in lines)
+
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
                 got_lines = yield self.db.logs.getLogLines(201, first_line, last_line)
-                self.assertEqual(got_lines, "\n".join(expLines[first_line : last_line + 1] + [""]))
+                self.assertEqual(got_lines, _join_lines(expLines[first_line : last_line + 1]))
         # check overflow
-        self.assertEqual(
-            (yield self.db.logs.getLogLines(201, 5, 20)), "\n".join(expLines[5:7] + [""])
-        )
+        self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)), _join_lines(expLines[5:7]))
 
     # signature tests
 
