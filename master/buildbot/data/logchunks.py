@@ -41,29 +41,19 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         self,
         log_dict: LogModel,
         log_prefix: str,
-        lines_batch: int = 1000,
     ) -> AsyncGenerator[str, None]:
         if log_prefix:
             yield log_prefix
 
-        lastline = max(0, log_dict.num_lines)
-        lines_batch = max(lines_batch, 1)
+        is_stdio_log = log_dict.type == 's'
 
-        for idx in range(0, lastline, lines_batch):
-            line_start = idx
-            line_end = min(lastline - 1, idx + lines_batch)
-            # TODO: Add a new API to db.logs that yield lines
-            lines: str = await self.master.db.logs.getLogLines(log_dict.id, line_start, line_end)
-
-            if log_dict.type == 's':
+        async for line in self.master.db.logs.iter_log_lines(log_dict.id):
+            if is_stdio_log:
                 # for stdio logs, the first char is the stream type
                 # ref: https://buildbot.readthedocs.io/en/latest/developer/raml/logchunk.html#logchunk
-                for line in lines.splitlines(keepends=True):
-                    yield line[1:]
+                line = line[1:]
 
-                continue
-
-            yield lines
+            yield line
 
     @defer.inlineCallbacks
     def get_log_lines_raw_data(self, kwargs):

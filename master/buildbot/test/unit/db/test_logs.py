@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import textwrap
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -136,14 +137,16 @@ class Tests(interfaces.InterfaceTests):
             'another line',
             'yet another line',
         ]
+
+        def _join_lines(lines: list[str]):
+            return ''.join(e + '\n' for e in lines)
+
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
                 got_lines = yield self.db.logs.getLogLines(201, first_line, last_line)
-                self.assertEqual(got_lines, "\n".join(expLines[first_line : last_line + 1] + [""]))
+                self.assertEqual(got_lines, _join_lines(expLines[first_line : last_line + 1]))
         # check overflow
-        self.assertEqual(
-            (yield self.db.logs.getLogLines(201, 5, 20)), "\n".join(expLines[5:7] + [""])
-        )
+        self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)), _join_lines(expLines[5:7]))
 
     # signature tests
 
@@ -414,24 +417,71 @@ class RealTests(Tests):
             },
         )
 
-    @defer.inlineCallbacks
-    def test_addLogLines_huge_lines(self):
-        yield self.insert_test_data(self.backgroundData + self.testLogLines)
-        line = 'xy' * 70000 + '\n'
-        yield self.db.logs.appendLog(201, line * 3)
-        for lineno in 7, 8, 9:
-            line = yield self.db.logs.getLogLines(201, lineno, lineno)
-            self.assertEqual(len(line), 65537)
+    async def _base_appendLog_truncate(self, content: str):
+        LOG_ID = 201
+        await self.insert_test_data([
+            *self.backgroundData,
+            fakedb.Log(
+                id=LOG_ID,
+                stepid=101,
+                name='stdio',
+                slug='stdio',
+                complete=0,
+                num_lines=0,
+                type='s',
+            ),
+        ])
+        await self.db.logs.appendLog(LOG_ID, content)
 
-    def test_splitBigChunk_unicode_misalignment(self):
-        unaligned = ('a ' + '\N{SNOWMAN}' * 30000 + '\n').encode('utf-8')
-        # the first 65536 bytes of that line are not valid utf-8
-        with self.assertRaises(UnicodeDecodeError):
-            unaligned[:65536].decode('utf-8')
-        chunk, _ = self.db.logs._splitBigChunk(unaligned, 1)
-        # see that it was truncated by two bytes, and now properly decodes
-        self.assertEqual(len(chunk), 65534)
-        chunk.decode('utf-8')
+        def _thd(conn: sa.engine.Connection) -> list[dict]:
+            tbl = self.db.model.logchunks
+            res = conn.execute(
+                tbl.select().where(tbl.c.logid == LOG_ID).order_by(tbl.c.first_line)
+            ).mappings()
+            rows = [dict(row) for row in res]
+            res.close()
+            return rows
+
+        return await self.db.pool.do(_thd)
+
+    @async_to_deferred
+    async def test_appendLog_no_truncate_compressable_chunks(self):
+        content = 'a ' + '\N{SNOWMAN}' * 100000 + '\n'
+        assert len(content) > self.db.logs.MAX_CHUNK_SIZE
+        self.db.master.config.logCompressionMethod = "gz"
+        rows = await self._base_appendLog_truncate(content)
+        self.assertEqual(
+            [
+                {
+                    'compressed': 1,
+                    'content': self.db.logs._get_compressor(1).dumps(content[:-1].encode('utf-8')),
+                    'first_line': 0,
+                    'last_line': 0,
+                    'logid': 201,
+                }
+            ],
+            rows,
+        )
+
+    @async_to_deferred
+    async def test_appendLog_truncate_chunk(self):
+        self.maxDiff = None
+        content = 'a ' + '\N{SNOWMAN}' * 100000 + '\n'
+        assert len(content) > self.db.logs.MAX_CHUNK_SIZE
+        self.db.master.config.logCompressionMethod = "raw"
+        rows = await self._base_appendLog_truncate(content)
+        self.assertTrue(len(rows[0].pop('content')) <= self.db.logs.MAX_CHUNK_SIZE)
+        self.assertEqual(
+            [
+                {
+                    'compressed': 0,
+                    'first_line': 0,
+                    'last_line': 0,
+                    'logid': 201,
+                }
+            ],
+            rows,
+        )
 
     @defer.inlineCallbacks
     def test_no_compress_small_chunk(self):
@@ -455,7 +505,7 @@ class RealTests(Tests):
 
     async def _test_compress_big_chunk(
         self,
-        dumps: Callable[[bytes], bytes],
+        compressor: compression.CompressorInterface,
         compressed_id: int,
     ) -> None:
         await self.insert_test_data(self.backgroundData + self.testLogLines)
@@ -471,31 +521,33 @@ class RealTests(Tests):
             return dict(row)
 
         newRow = await self.db.pool.do(thd)
+        self.assertEqual(compressor.read(newRow.pop('content')), unicode2bytes(line))
         self.assertEqual(
             newRow,
             {
                 'logid': 201,
                 'first_line': 7,
                 'last_line': 7,
-                'content': dumps(unicode2bytes(line)),
                 'compressed': compressed_id,
             },
         )
 
     @async_to_deferred
     async def test_raw_compress_big_chunk(self):
+        fake_raw_compressor = mock.Mock(spec=compression.CompressorInterface)
+        fake_raw_compressor.read = lambda d: d
         self.db.master.config.logCompressionMethod = "raw"
-        await self._test_compress_big_chunk(lambda d: d, 0)
+        await self._test_compress_big_chunk(fake_raw_compressor, 0)
 
     @async_to_deferred
     async def test_gz_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "gz"
-        await self._test_compress_big_chunk(compression.GZipCompressor.dumps, 1)
+        await self._test_compress_big_chunk(compression.GZipCompressor, 1)
 
     @async_to_deferred
     async def test_bz2_compress_big_chunk(self):
         self.db.master.config.logCompressionMethod = "bz2"
-        await self._test_compress_big_chunk(compression.BZipCompressor.dumps, 2)
+        await self._test_compress_big_chunk(compression.BZipCompressor, 2)
 
     @async_to_deferred
     async def test_lz4_compress_big_chunk(self):
@@ -505,7 +557,7 @@ class RealTests(Tests):
             raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
         self.db.master.config.logCompressionMethod = "lz4"
-        await self._test_compress_big_chunk(compression.LZ4Compressor.dumps, 3)
+        await self._test_compress_big_chunk(compression.LZ4Compressor, 3)
 
     @async_to_deferred
     async def test_zstd_compress_big_chunk(self):
@@ -515,7 +567,7 @@ class RealTests(Tests):
             raise unittest.SkipTest("zstandard not installed, skip the test") from e
 
         self.db.master.config.logCompressionMethod = "zstd"
-        await self._test_compress_big_chunk(compression.ZStdCompressor.dumps, 4)
+        await self._test_compress_big_chunk(compression.ZStdCompressor, 4)
 
     @async_to_deferred
     async def test_br_compress_big_chunk(self):
@@ -525,7 +577,7 @@ class RealTests(Tests):
             raise unittest.SkipTest("brotli not installed, skip the test") from e
 
         self.db.master.config.logCompressionMethod = "br"
-        await self._test_compress_big_chunk(compression.BrotliCompressor.dumps, 5)
+        await self._test_compress_big_chunk(compression.BrotliCompressor, 5)
 
     @defer.inlineCallbacks
     def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
