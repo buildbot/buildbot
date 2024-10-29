@@ -15,12 +15,13 @@
   Copyright Buildbot Team Members
 */
 
+import './MultipleWorkersActionsModal.scss'
 import {observer} from "mobx-react";
 import {useState, useRef} from "react";
 import {Button, Modal} from "react-bootstrap";
 import {Worker} from "buildbot-data-js";
 import Select, { ActionMeta, MultiValue, InputActionMeta, SelectInstance, components } from 'react-select';
-import { BsRegex } from "react-icons/bs";
+import { BsRegex, BsCheckAll } from "react-icons/bs";
 
 type MultipleWorkersActionsModalProps = {
   workers: Worker[];
@@ -38,23 +39,43 @@ const workerToSelectOption = (worker: Worker): SelectOption => {
 }
 
 const Control = (props: any) => {
-  const { useRegexSearch, handleToggleClick, selectRef } = props;
+  const { useRegexSearch, handleToggleClick, handleSelectAllClick, selectRef } = props;
 
-  const iconStyle = {
-    backgroundColor: useRegexSearch ? "lightgrey" : "",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: "5px",
-    cursor: "pointer"
-  };
+  const [ isHoveredRegexSearch, setIsHoveredRegexSearch ] = useState(false);
+
+  const [isHoveredSelectAll, setIsHoveredSelectAll] = useState(false);
+  const [isActiveSelectAll, setIsActiveSelectAll] = useState(false);
 
   return (
     <components.Control {...props}>
-      <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+      <div className="flex-container">
         {props.children[0]}
         <div
-          style={iconStyle}
+          className={`icon-button ${isHoveredSelectAll ? 'hovered' : ''} ${isActiveSelectAll ? 'active' : ''}`}
+          onMouseEnter={() => setIsHoveredSelectAll(true)}
+          onMouseLeave={() => {
+            setIsHoveredSelectAll(false);
+            setIsActiveSelectAll(false);
+          }}
+          onMouseDown={(e) => {
+            setIsActiveSelectAll(true);
+            handleSelectAllClick(e);
+            if (selectRef && selectRef.current) {
+              setTimeout(() => {
+                selectRef.current.focus();
+              }, 0);
+            }
+          }}
+          onMouseUp={() => setIsActiveSelectAll(false)}
+          title="Select All Filtered"
+        >
+          <BsCheckAll size={20} />
+        </div>
+
+        <div
+          className={`icon-button ${isHoveredRegexSearch ? 'hovered' : ''} ${useRegexSearch ? 'active' : ''}`}
+          onMouseEnter={() => setIsHoveredRegexSearch(true)}
+          onMouseLeave={() => setIsHoveredRegexSearch(false)}
           onMouseDown={(e) => {
             handleToggleClick(e);
             if (selectRef && selectRef.current) {
@@ -67,7 +88,7 @@ const Control = (props: any) => {
         >
           <BsRegex size={20} />
         </div>
-        {props.children[1]}
+        {props.children.slice(1)}
       </div>
     </components.Control>
   );
@@ -122,6 +143,25 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
     setUseRegexSearch((prev) => !prev);
   };
 
+  const handleSelectAllClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    const currentInputValue = selectRef.current?.inputRef?.value || '';
+    const filteredWorkers = workers.filter(worker => {
+      const option = workerToSelectOption(worker);
+      return filterOption({ data: option }, currentInputValue);
+    });
+
+    setSelectedWorkers(prevSelectedWorkers => {
+      const existingWorkerNames = new Set(prevSelectedWorkers.map(w => w.name));
+
+      const newWorkers = filteredWorkers.filter(w => !existingWorkerNames.has(w.name));
+
+      return [...prevSelectedWorkers, ...newWorkers];
+    });
+    refocusSelect();
+  };
+
   const filterOption = (option: { data: SelectOption }, inputValue: string) => {
     if (useRegexSearch) {
       try {
@@ -161,7 +201,7 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
               isMulti
               closeMenuOnSelect={false}
               autoFocus
-              defaultValue={selectedWorkers.map(workerToSelectOption)}
+              value={selectedWorkers.map(workerToSelectOption)}
               onChange={(newValue: MultiValue<SelectOption>, _actionMeta: ActionMeta<SelectOption>) => {
                 setSelectedWorkers(newValue.map(v => v.value));
                 refocusSelect();
@@ -175,6 +215,7 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
                     {...controlProps}
                     useRegexSearch={useRegexSearch}
                     handleToggleClick={handleToggleClick}
+                    handleSelectAllClick={handleSelectAllClick}
                     selectRef={selectRef}
                   />
                 )
