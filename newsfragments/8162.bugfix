@@ -1,0 +1,1 @@
+Fixes an `Access is denied` error on WIN32 when calling `AssignProcessToJobObject`. (:issue:`8162`)

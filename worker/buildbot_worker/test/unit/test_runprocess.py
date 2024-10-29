@@ -554,6 +554,21 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s._spawnAsBatch(s.pp, s.command, "args", tempEnviron, "path", False)
         return d
 
+    @defer.inlineCallbacks
+    @compat.skipUnlessPlatformIs("win32")
+    def test_assign_exited_process(self):
+        s = runprocess.RunProcess(
+            0,
+            ["cmd.exe", "/c", "exit"],
+            self.basedir,
+            'utf-8',
+            self.send_update,
+        )
+        yield s.start()
+
+        # Assert that the process completed successfully
+        self.assertTrue(('rc', 0) in self.updates, self.show())
+
     def test_spawnAsBatchCommandString(self):
         return self._test_spawnAsBatch("dir c:/", "cmd.exe")
 
