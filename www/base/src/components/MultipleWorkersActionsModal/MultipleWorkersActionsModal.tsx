@@ -20,7 +20,7 @@ import {observer} from "mobx-react";
 import {useState, useRef} from "react";
 import {Button, Modal} from "react-bootstrap";
 import {Worker} from "buildbot-data-js";
-import Select, { ActionMeta, MultiValue, InputActionMeta, SelectInstance, components } from 'react-select';
+import Select, { ActionMeta, MultiValue, InputActionMeta, SelectInstance, components, ControlProps } from 'react-select';
 import { BsRegex, BsCheckAll } from "react-icons/bs";
 
 type MultipleWorkersActionsModalProps = {
@@ -38,8 +38,15 @@ const workerToSelectOption = (worker: Worker): SelectOption => {
   return { value: worker, label: worker.name }
 }
 
-const Control = (props: any) => {
-  const { useRegexSearch, handleToggleClick, handleSelectAllClick, selectRef } = props;
+interface FilterControlPanelProps<OptionType> extends ControlProps<OptionType, true> {
+  toggleRegexSearch: boolean;
+  handleToggleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  handleSelectAllClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  selectRef: React.RefObject<SelectInstance<OptionType, true>>;
+}
+
+const FilterControlPanel = <OptionType,>(props: FilterControlPanelProps<OptionType>) => {
+  const { toggleRegexSearch, handleToggleClick, handleSelectAllClick, selectRef } = props;
 
   const [ isHoveredRegexSearch, setIsHoveredRegexSearch ] = useState(false);
 
@@ -48,8 +55,8 @@ const Control = (props: any) => {
 
   return (
     <components.Control {...props}>
-      <div className="flex-container">
-        {props.children[0]}
+      <div className="bb-workers-actions-modal-control-container">
+        {Array.isArray(props.children) && props.children[0]}
         <div
           className={`icon-button ${isHoveredSelectAll ? 'hovered' : ''} ${isActiveSelectAll ? 'active' : ''}`}
           onMouseEnter={() => setIsHoveredSelectAll(true)}
@@ -62,7 +69,7 @@ const Control = (props: any) => {
             handleSelectAllClick(e);
             if (selectRef && selectRef.current) {
               setTimeout(() => {
-                selectRef.current.focus();
+                selectRef?.current?.focus();
               }, 0);
             }
           }}
@@ -73,14 +80,14 @@ const Control = (props: any) => {
         </div>
 
         <div
-          className={`icon-button ${isHoveredRegexSearch ? 'hovered' : ''} ${useRegexSearch ? 'active' : ''}`}
+          className={`icon-button ${isHoveredRegexSearch ? 'hovered' : ''} ${toggleRegexSearch ? 'active' : ''}`}
           onMouseEnter={() => setIsHoveredRegexSearch(true)}
           onMouseLeave={() => setIsHoveredRegexSearch(false)}
           onMouseDown={(e) => {
             handleToggleClick(e);
-            if (selectRef && selectRef.current) {
+            if (selectRef?.current) {
               setTimeout(() => {
-                selectRef.current.focus();
+                selectRef.current?.focus();
               }, 0);
             }
           }}
@@ -88,7 +95,7 @@ const Control = (props: any) => {
         >
           <BsRegex size={20} />
         </div>
-        {props.children.slice(1)}
+        {Array.isArray(props.children) && props.children.slice(1)}
       </div>
     </components.Control>
   );
@@ -103,7 +110,7 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
   const [reasonText, setReasonText] = useState<string>("");
   const [selectedWorkers, setSelectedWorkers] = useState<Worker[]>(preselectedWorkers);
   const [menuIsOpen, setMenuIsOpen] = useState<boolean>();
-  const [useRegexSearch, setUseRegexSearch] = useState(false);
+  const [toggleRegexSearch, setToggleRegexSearch] = useState(false);
   const selectRef = useRef<SelectInstance<SelectOption, true> | null>(null);
 
   const stopDisabled = selectedWorkers.length <= 0 || selectedWorkers.every(w => w.connected_to.length === 0)
@@ -130,17 +137,18 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
     inputValue: string,
     { action, prevInputValue }: InputActionMeta
   ) => {
-    if (action === 'input-change') return inputValue;
+    if (action === 'input-change') {
+      return inputValue;
+    }
     if (action === 'menu-close') {
-      if (prevInputValue) setMenuIsOpen(true);
-      else setMenuIsOpen(undefined);
+      setMenuIsOpen(prevInputValue ? true : undefined);
     }
     return prevInputValue;
   };
 
   const handleToggleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setUseRegexSearch((prev) => !prev);
+    setToggleRegexSearch((prev) => !prev);
   };
 
   const handleSelectAllClick = (e: React.MouseEvent) => {
@@ -163,7 +171,7 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
   };
 
   const filterOption = (option: { data: SelectOption }, inputValue: string) => {
-    if (useRegexSearch) {
+    if (toggleRegexSearch) {
       try {
         const regex = new RegExp(inputValue, 'i');
         return regex.test(option.data.label);
@@ -211,9 +219,9 @@ export const MultipleWorkersActionsModal = observer(({workers, preselectedWorker
               filterOption={filterOption}
               components={{
                 Control: (controlProps) => (
-                  <Control
+                  <FilterControlPanel
                     {...controlProps}
-                    useRegexSearch={useRegexSearch}
+                    toggleRegexSearch={toggleRegexSearch}
                     handleToggleClick={handleToggleClick}
                     handleSelectAllClick={handleSelectAllClick}
                     selectRef={selectRef}
