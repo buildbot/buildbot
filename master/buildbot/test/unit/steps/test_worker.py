@@ -74,7 +74,7 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.Te
     def test_case_folding(self):
         self.setup_step(worker.SetPropertiesFromEnv(variables=["eNv"], source="me"))
         self.worker.worker_environ = {"ENV": 'EE'}
-        self.worker.worker_system = 'win32'
+        self.worker.worker_system = 'nt'
         self.expect_outcome(result=SUCCESS, state_string="Set")
         self.expect_property('eNv', 'EE', source='me')
         self.expect_log_file("properties", "eNv = 'EE'")
