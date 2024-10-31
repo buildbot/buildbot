@@ -1,0 +1,2 @@
+Improve logs compression operation performance with zstd.
+Logs compression/decompression tasks now re-use ``zstandard``'s ``ZstdCompressor`` and ``ZstdDecompressor`` objects, as advised in the documentation.
