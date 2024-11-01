@@ -17,6 +17,7 @@ import builtins
 import os
 import re
 import textwrap
+from importlib.util import find_spec
 from unittest import mock
 
 from parameterized import parameterized
@@ -45,12 +46,14 @@ from buildbot.util import service
 from buildbot.warnings import ConfigWarning
 from buildbot.warnings import DeprecatedApiWarning
 
+HAS_ZSTD = find_spec('zstandard') is not None
+
 global_defaults = {
     "title": 'Buildbot',
     "titleURL": 'http://buildbot.net/',
     "buildbotURL": 'http://localhost:8080/',
     "logCompressionLimit": 4096,
-    "logCompressionMethod": 'zstd',
+    "logCompressionMethod": 'zstd' if HAS_ZSTD else 'gz',
     "logEncoding": 'utf-8',
     "logMaxTailSize": None,
     "logMaxSize": None,
