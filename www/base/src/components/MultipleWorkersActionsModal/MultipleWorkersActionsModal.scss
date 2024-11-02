@@ -1,0 +1,31 @@
+
+.icon-button {
+  position: relative;
+  padding: 8px;
+  align-content: center;
+  color: rgb(204, 204, 204);
+  background-color: transparent;
+  background-clip: content-box;
+  z-index: 0;
+
+  &.hovered {
+    color: rgb(153, 153, 153);
+  }
+
+  &.active {
+    color: white;
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      background-color: #007bff;
+      z-index: -1;
+      border-radius: inherit;
+    }
+  }
+}
+
+.bb-workers-actions-modal-control-container {
+  display: flex;
+  width: 100%;
+}
