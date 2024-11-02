@@ -156,7 +156,7 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
                 rows_queue.task_done()
 
     def thd_read(conn):
-        q = sa.select([sa.sql.func.count()]).select_from(table)
+        q = sa.select(sa.sql.func.count()).select_from(table)
         total_count[0] = conn.execute(q).scalar()
 
         result = conn.execute(sa.select(table))
