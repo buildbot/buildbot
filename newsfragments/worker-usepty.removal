@@ -1,0 +1,2 @@
+``Worker.__init__`` no longer accepts ``usePTY`` argument. It has been deprecated for a long time
+and no other values than ``None`` were accepted.
