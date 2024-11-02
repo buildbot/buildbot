@@ -52,7 +52,7 @@
     "react-virtualized-auto-sizer": "^1.0.7",
     "resolve": "1.18.1",
     "ts-pnp": "1.2.0",
-    "typescript": "~5.5.0",
+    "typescript": "~5.6.3",
     "underscore": "^1.13.4"
   },
   "scripts": {
