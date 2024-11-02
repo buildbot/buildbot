@@ -37,6 +37,7 @@ from buildbot.process.results import statusToString
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.sandboxed_worker import SandboxedWorker
+from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.local import LocalWorker
 
 Worker: type | None = None
@@ -81,6 +82,75 @@ def getMaster(case, reactor, config_dict):
     case.addCleanup(master.stopService)
 
     return master
+
+
+def print_test_log(log, out):
+    print(" " * 8 + f"*********** LOG: {log['name']} *********", file=out)
+    if log['type'] == 's':
+        for line in log['contents']['content'].splitlines():
+            linetype = line[0]
+            line = line[1:]
+            if linetype == 'h':
+                # cyan
+                line = "\x1b[36m" + line + "\x1b[0m"
+            if linetype == 'e':
+                # red
+                line = "\x1b[31m" + line + "\x1b[0m"
+            print(" " * 8 + line)
+    else:
+        print("" + log['contents']['content'], file=out)
+    print(" " * 8 + "********************************", file=out)
+
+
+@async_to_deferred
+async def enrich_build(
+    build, master: BuildMaster, want_steps=False, want_properties=False, want_logs=False
+):
+    # enrich the build result, with the step results
+    if want_steps:
+        build["steps"] = await master.data.get(("builds", build['buildid'], "steps"))
+        # enrich the step result, with the logs results
+        if want_logs:
+            build["steps"] = list(build["steps"])
+            for step in build["steps"]:
+                step['logs'] = await master.data.get(("steps", step['stepid'], "logs"))
+                step["logs"] = list(step['logs'])
+                for log in step["logs"]:
+                    log['contents'] = await master.data.get((
+                        "logs",
+                        log['logid'],
+                        "contents",
+                    ))
+
+    if want_properties:
+        build["properties"] = await master.data.get((
+            "builds",
+            build['buildid'],
+            "properties",
+        ))
+
+
+@async_to_deferred
+async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=False):
+    # helper for debugging: print a build
+    await enrich_build(build, master, want_steps=True, want_properties=True, want_logs=True)
+    print(
+        f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
+        f"({statusToString(build['results'])})",
+        file=out,
+    )
+    for step in build['steps']:
+        print(
+            f"    *** STEP {step['name']} *** ==> {step['state_string']} "
+            f"({statusToString(step['results'])})",
+            file=out,
+        )
+        for url in step['urls']:
+            print(f"       url:{url['name']} ({url['url']})", file=out)
+        for log in step['logs']:
+            print(f"        log:{log['name']} ({log['num_lines']})", file=out)
+            if step['results'] != SUCCESS or with_logs:
+                print_test_log(log, out)
 
 
 class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
@@ -282,7 +352,7 @@ class RunMasterBase(unittest.TestCase):
                 print("FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:
-                    yield self.printBuild(build, dump, withLogs=True)
+                    yield print_build(build, self.master, dump, with_logs=True)
 
                 raise self.failureException(dump.getvalue())
 
@@ -345,55 +415,8 @@ class RunMasterBase(unittest.TestCase):
         # We return the last build
         build = builds[-1]
         finishedConsumer.stopConsuming()
-        yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
+        yield enrich_build(build, self.master, wantSteps, wantProperties, wantLogs)
         return build
-
-    @defer.inlineCallbacks
-    def enrichBuild(self, build, wantSteps=False, wantProperties=False, wantLogs=False):
-        # enrich the build result, with the step results
-        if wantSteps:
-            build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
-            # enrich the step result, with the logs results
-            if wantLogs:
-                build["steps"] = list(build["steps"])
-                for step in build["steps"]:
-                    step['logs'] = yield self.master.data.get(("steps", step['stepid'], "logs"))
-                    step["logs"] = list(step['logs'])
-                    for log in step["logs"]:
-                        log['contents'] = yield self.master.data.get((
-                            "logs",
-                            log['logid'],
-                            "contents",
-                        ))
-
-        if wantProperties:
-            build["properties"] = yield self.master.data.get((
-                "builds",
-                build['buildid'],
-                "properties",
-            ))
-
-    @defer.inlineCallbacks
-    def printBuild(self, build, out=sys.stdout, withLogs=False):
-        # helper for debugging: print a build
-        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print(
-            f"*** BUILD {build['buildid']} *** ==> {build['state_string']} "
-            f"({statusToString(build['results'])})",
-            file=out,
-        )
-        for step in build['steps']:
-            print(
-                f"    *** STEP {step['name']} *** ==> {step['state_string']} "
-                f"({statusToString(step['results'])})",
-                file=out,
-            )
-            for url in step['urls']:
-                print(f"       url:{url['name']} ({url['url']})", file=out)
-            for log in step['logs']:
-                print(f"        log:{log['name']} ({log['num_lines']})", file=out)
-                if step['results'] != SUCCESS or withLogs:
-                    self.printLog(log, out)
 
     def _match_patterns_consume(self, text, patterns, is_regex):
         for pattern in patterns[:]:
@@ -414,7 +437,9 @@ class RunMasterBase(unittest.TestCase):
                 'The expectedLog argument must be either string or a list of strings'
             )
 
-        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
+        yield enrich_build(
+            build, self.master, want_steps=True, want_properties=True, want_logs=True
+        )
         for step in build['steps']:
             for log in step['logs']:
                 for line in log['contents']['content'].splitlines():
@@ -424,20 +449,3 @@ class RunMasterBase(unittest.TestCase):
         if expectedLog:
             print(f"{expectedLog} not found in logs")
         return len(expectedLog) == 0
-
-    def printLog(self, log, out):
-        print(" " * 8 + f"*********** LOG: {log['name']} *********", file=out)
-        if log['type'] == 's':
-            for line in log['contents']['content'].splitlines():
-                linetype = line[0]
-                line = line[1:]
-                if linetype == 'h':
-                    # cyan
-                    line = "\x1b[36m" + line + "\x1b[0m"
-                if linetype == 'e':
-                    # red
-                    line = "\x1b[31m" + line + "\x1b[0m"
-                print(" " * 8 + line)
-        else:
-            print("" + log['contents']['content'], file=out)
-        print(" " * 8 + "********************************", file=out)

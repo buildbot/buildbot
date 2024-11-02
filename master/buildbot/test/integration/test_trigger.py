@@ -19,6 +19,7 @@ from io import StringIO
 from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
+from buildbot.test.util.integration import print_build
 
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
@@ -96,7 +97,7 @@ class TriggeringMaster(RunMasterBase):
         self.assertEqual(len(builds), 2)
         dump = StringIO()
         for b in builds:
-            yield self.printBuild(b, dump)
+            yield print_build(b, self.master, dump)
         # depending on the environment the number of lines is different between
         # test hosts
         loglines = builds[1]['steps'][1]['logs'][0]['num_lines']
