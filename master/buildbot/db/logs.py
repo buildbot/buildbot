@@ -308,6 +308,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 ),
                 reactor=self.master.reactor,
                 provider_threadpool=self._compression_pool,
+                # disable limit as we process one chunk at a time
+                max_backlog=0,
             ):
                 yield line
 
@@ -486,6 +488,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             ),
             reactor=self.master.reactor,
             provider_threadpool=self._compression_pool,
+            # In theory, memory usage could grow to:
+            # MAX_CHUNK_SIZE * max_backlog PER thread (capped by _compression_pool.maxthreads)
+            # with:
+            #   - MAX_CHUNK_SIZE = 64KB
+            #   - max_backlog = 100
+            # ~6MB per thread
+            max_backlog=100,
         ):
             last_line = chunk_first_line + chunk_lines_count - 1
 
