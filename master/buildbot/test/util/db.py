@@ -204,7 +204,7 @@ class RealDatabaseMixin:
 
     @defer.inlineCallbacks
     def setUpRealDatabase(
-        self, table_names=None, basedir='basedir', want_pool=True, sqlite_memory=True
+        self, table_names=None, basedir='basedir', want_pool=True, sqlite_memory=True, db_url=None
     ):
         """
 
@@ -224,11 +224,12 @@ class RealDatabaseMixin:
         self.__want_pool = want_pool
 
         default_sqlite = 'sqlite://'
-        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
-        if not sqlite_memory and self.db_url == default_sqlite:
-            self.db_url = "sqlite:///tmp.sqlite"
+        if db_url is None:
+            db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
+            if not sqlite_memory and db_url == default_sqlite:
+                db_url = "sqlite:///tmp.sqlite"
 
-        self.db_url = resolve_test_index_in_db_url(self.db_url)
+        self.db_url = resolve_test_index_in_db_url(db_url)
 
         if not os.path.exists(basedir):
             os.makedirs(basedir)
@@ -289,9 +290,17 @@ class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
 
     @defer.inlineCallbacks
     def setUpRealDatabaseWithConnector(
-        self, master, table_names=None, basedir='basedir', want_pool=True, sqlite_memory=True
+        self,
+        master,
+        table_names=None,
+        basedir='basedir',
+        want_pool=True,
+        sqlite_memory=True,
+        db_url=None,
     ):
-        yield self.setUpRealDatabase(table_names, basedir, want_pool, sqlite_memory)
+        yield self.setUpRealDatabase(
+            table_names, basedir, want_pool=want_pool, sqlite_memory=sqlite_memory, db_url=db_url
+        )
         master.config.db['db_url'] = self.db_url
         master.db = DBConnector(self.basedir)
         yield master.db.setServiceParent(master)
