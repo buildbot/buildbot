@@ -60,20 +60,6 @@ def mkconfig(**kwargs):
     return config
 
 
-def patch_environ(case, key, value):
-    """
-    Add an environment variable for the duration of a test.
-    """
-    old_environ = os.environ.copy()
-
-    def cleanup():
-        os.environ.clear()
-        os.environ.update(old_environ)
-
-    os.environ[key] = value
-    case.addCleanup(cleanup)
-
-
 class TestCleanupDb(
     misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
 ):
@@ -88,25 +74,21 @@ class TestCleanupDb(
             """)
             )
         self.setUpStdoutAssertions()
-        self.ensureNoSqliteMemory()
 
     @defer.inlineCallbacks
     def tearDown(self):
         self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
-    def ensureNoSqliteMemory(self):
+    def resolve_db_url(self):
         # test may use mysql or pg if configured in env
         envkey = "BUILDBOT_TEST_DB_URL"
         if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
-            patch_environ(
-                self,
-                envkey,
-                "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite")),
-            )
+            return "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite"))
+        return os.environ[envkey]
 
     def createMasterCfg(self, extraconfig=""):
-        db_url = db.resolve_test_index_in_db_url(os.environ["BUILDBOT_TEST_DB_URL"])
+        db_url = db.resolve_test_index_in_db_url(self.resolve_db_url())
 
         with open(os.path.join('basedir', 'master.cfg'), "w", encoding='utf-8') as f:
             f.write(
@@ -170,7 +152,9 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
         ]
 
         self.master = yield fakemaster.make_master(self, wantRealReactor=True)
-        yield self.setUpRealDatabaseWithConnector(self.master, table_names=table_names)
+        yield self.setUpRealDatabaseWithConnector(
+            self.master, table_names=table_names, db_url=self.resolve_db_url()
+        )
 
     @defer.inlineCallbacks
     def tearDown(self):
