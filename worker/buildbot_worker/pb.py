@@ -643,7 +643,6 @@ class Worker(WorkerBase):
         passwd,
         basedir,
         keepalive,
-        usePTY=None,
         keepaliveTimeout=None,
         umask=None,
         maxdelay=None,
@@ -657,7 +656,6 @@ class Worker(WorkerBase):
         delete_leftover_dirs=False,
         proxy_connection_string=None,
     ):
-        assert usePTY is None, "worker-side usePTY is not supported anymore"
         assert connection_string is None or (buildmaster_host, port) == (
             None,
             None,
