@@ -135,6 +135,17 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
+    it('with empty reset code', () => {
+      // code sequence from protractor
+      const ret = parseEscapeCodesToSimple("\x1b[32m.\x1b[m\x1b[31mF\x1b[m\x1b[32m.\x1b[39m\x1b[32m.\x1b[m");
+      expect(ret).toEqual([
+        {class: "ansi32", text: "."},
+        {class: "ansi32 ansi31", text: "F"},
+        {class: "ansi32 ansi31", text: "."},
+        {class: "ansi32", text: "."},
+      ]);
+    });
+
     it('256 colors', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;71mDEBUG \x1b[38;5;72m[plugin]: \x1b[39mLoading plugin karma-jasmine.");
