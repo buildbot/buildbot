@@ -32,7 +32,9 @@ if TYPE_CHECKING:
     _P = ParamSpec('_P')
 
 
-def async_to_deferred(fn: Callable[_P, Coroutine[Any, Any, _T]]):
+def async_to_deferred(
+    fn: Callable[_P, Coroutine[Any, Any, _T]],
+) -> Callable[_P, defer.Deferred[_T]]:
     @wraps(fn)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> defer.Deferred[_T]:
         try:
