@@ -81,7 +81,7 @@ typing_extensions==4.12.2
 unidiff==0.7.5
 # botocore depends on urllib3<1.27
 urllib3==1.26.19  # pyup: ignore
-Werkzeug==3.0.4
+Werkzeug==3.0.6
 xmltodict==0.14.2
 zope.event==5.0
 zope.interface==7.1.0
