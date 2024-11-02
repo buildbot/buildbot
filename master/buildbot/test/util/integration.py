@@ -63,16 +63,15 @@ class TestedMaster:
         self.is_master_shutdown = False
 
     @async_to_deferred
-    async def create_master(self, case, reactor, config_dict):
+    async def create_master(self, case, reactor, config_dict, basedir=None):
         """
         Create a started ``BuildMaster`` with the given configuration.
         """
-        basedir = FilePath(case.mktemp())
-        basedir.createDirectory()
+        if basedir is None:
+            basedir = case.mktemp()
+        os.makedirs(basedir, exist_ok=True)
         config_dict['buildbotNetUsageData'] = None
-        self.master = BuildMaster(
-            basedir.path, reactor=reactor, config_loader=DictLoader(config_dict)
-        )
+        self.master = BuildMaster(basedir, reactor=reactor, config_loader=DictLoader(config_dict))
 
         if 'db_url' not in config_dict:
             config_dict['db_url'] = 'sqlite://'
@@ -278,6 +277,7 @@ class TestedRealMaster(TestedMaster):
         reactor,
         config_dict,
         proto='null',
+        basedir=None,
         start_worker=True,
         **worker_kwargs,
     ):
@@ -308,7 +308,7 @@ class TestedRealMaster(TestedMaster):
             ]
             config_dict['protocols'] = config_protocols
 
-        await self.create_master(case, reactor, config_dict)
+        await self.create_master(case, reactor, config_dict, basedir=basedir)
         self.master_config_dict = config_dict
         case.assertFalse(stop.called, "startService tried to stop the reactor; check logs")
 
@@ -393,10 +393,16 @@ class RunMasterBase(unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
-    def setup_master(self, config_dict, startWorker=True, **worker_kwargs):
+    def setup_master(self, config_dict, startWorker=True, basedir=None, **worker_kwargs):
         self.tested_master = TestedRealMaster()
         yield self.tested_master.setup_master(
-            self, reactor, config_dict, proto=self.proto, start_worker=startWorker, **worker_kwargs
+            self,
+            reactor,
+            config_dict,
+            proto=self.proto,
+            basedir=basedir,
+            start_worker=startWorker,
+            **worker_kwargs,
         )
         self.master = self.tested_master.master
         self.master_config_dict = self.tested_master.master_config_dict
