@@ -37,6 +37,7 @@ from buildbot.process.results import statusToString
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.sandboxed_worker import SandboxedWorker
+from buildbot.util.twisted import any_to_async
 from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.local import LocalWorker
 
@@ -56,32 +57,46 @@ class DictLoader:
         return MasterConfig.loadFromDict(self.config_dict, '<dict>')
 
 
-@defer.inlineCallbacks
-def getMaster(case, reactor, config_dict):
-    """
-    Create a started ``BuildMaster`` with the given configuration.
-    """
-    basedir = FilePath(case.mktemp())
-    basedir.createDirectory()
-    config_dict['buildbotNetUsageData'] = None
-    master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+class TestedMaster:
+    def __init__(self):
+        self.master: BuildMaster | None = None
+        self.is_master_shutdown = False
 
-    if 'db_url' not in config_dict:
-        config_dict['db_url'] = 'sqlite://'
+    @async_to_deferred
+    async def create_master(self, case, reactor, config_dict):
+        """
+        Create a started ``BuildMaster`` with the given configuration.
+        """
+        basedir = FilePath(case.mktemp())
+        basedir.createDirectory()
+        config_dict['buildbotNetUsageData'] = None
+        self.master = BuildMaster(
+            basedir.path, reactor=reactor, config_loader=DictLoader(config_dict)
+        )
 
-    # TODO: Allow BuildMaster to transparently upgrade the database, at least
-    # for tests.
-    master.config.db['db_url'] = config_dict['db_url']
-    yield master.db.setup(check_version=False)
-    yield master.db.model.upgrade()
-    master.db.setup = lambda: None
+        if 'db_url' not in config_dict:
+            config_dict['db_url'] = 'sqlite://'
 
-    yield master.startService()
+        # TODO: Allow BuildMaster to transparently upgrade the database, at least
+        # for tests.
+        self.master.config.db['db_url'] = config_dict['db_url']
+        await self.master.db.setup(check_version=False)
+        await self.master.db.model.upgrade()
+        self.master.db.setup = lambda: None
 
-    case.addCleanup(master.db.pool.shutdown)
-    case.addCleanup(master.stopService)
+        await self.master.startService()
 
-    return master
+        case.addCleanup(self.shutdown)
+
+        return self.master
+
+    @async_to_deferred
+    async def shutdown(self):
+        if self.is_master_shutdown:
+            return
+        await self.master.stopService()
+        await self.master.db.pool.shutdown()
+        self.is_master_shutdown = True
 
 
 def print_test_log(log, out):
@@ -165,7 +180,8 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict):
-        self.master = yield getMaster(self, self.reactor, config_dict)
+        self.tested_master = TestedMaster()
+        self.master = yield self.tested_master.create_master(self, self.reactor, config_dict)
 
     @defer.inlineCallbacks
     def reconfig_master(self, config_dict=None):
@@ -249,6 +265,123 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
         yield consumer.stopConsuming()
 
 
+class TestedRealMaster(TestedMaster):
+    def __init__(self):
+        super().__init__()
+        self.case: unittest.TestCase | None = None
+        self.worker: Worker | None = None
+
+    @async_to_deferred
+    async def setup_master(
+        self,
+        case: unittest.TestCase,
+        reactor,
+        config_dict,
+        proto='null',
+        start_worker=True,
+        **worker_kwargs,
+    ):
+        """
+        Setup and start a master configured by config_dict
+        """
+
+        self.case = case
+
+        # mock reactor.stop (which trial *really* doesn't like test code to call!)
+        stop = mock.create_autospec(reactor.stop)
+        case.patch(reactor, 'stop', stop)
+
+        if start_worker:
+            if proto == 'pb':
+                config_protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+                workerclass = worker.Worker
+            elif proto == 'msgpack':
+                config_protocols = {"msgpack_experimental_v7": {"port": 0}}
+                workerclass = worker.Worker
+            elif proto == 'null':
+                config_protocols = {"null": {}}
+                workerclass = worker.LocalWorker
+            else:
+                raise RuntimeError(f"{proto} protocol is not supported.")
+            config_dict['workers'] = [
+                workerclass("local1", password=Interpolate("localpw"), missing_timeout=0)
+            ]
+            config_dict['protocols'] = config_protocols
+
+        await self.create_master(case, reactor, config_dict)
+        self.master_config_dict = config_dict
+        case.assertFalse(stop.called, "startService tried to stop the reactor; check logs")
+
+        if not start_worker:
+            return
+
+        if proto in ('pb', 'msgpack'):
+            sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
+            if proto == 'pb':
+                protocol = 'pb'
+                dispatcher = next(iter(self.master.pbmanager.dispatchers.values()))
+            else:
+                protocol = 'msgpack_experimental_v7'
+                dispatcher = next(iter(self.master.msgmanager.dispatchers.values()))
+
+                # We currently don't handle connection closing cleanly.
+                dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
+
+            worker_port = dispatcher.port.getHost().port
+
+            # create a worker, and attach it to the master, it will be started, and stopped
+            # along with the master
+            worker_dir = FilePath(case.mktemp())
+            worker_dir.createDirectory()
+            if sandboxed_worker_path is None:
+                self.worker = Worker(
+                    "127.0.0.1",
+                    worker_port,
+                    "local1",
+                    "localpw",
+                    worker_dir.path,
+                    False,
+                    protocol=protocol,
+                    **worker_kwargs,
+                )
+            else:
+                self.worker = SandboxedWorker(
+                    "127.0.0.1",
+                    worker_port,
+                    "local1",
+                    "localpw",
+                    worker_dir.path,
+                    sandboxed_worker_path,
+                    protocol=protocol,
+                    **worker_kwargs,
+                )
+
+        if self.worker is not None:
+            await any_to_async(self.worker.setServiceParent(self.master))
+
+        case.addCleanup(self.dump_data_if_failed)
+
+    @async_to_deferred
+    async def shutdown(self):
+        if self.is_master_shutdown:
+            return
+
+        if isinstance(self.worker, SandboxedWorker):
+            await self.worker.shutdownWorker()
+        await super().shutdown()
+
+    @async_to_deferred
+    async def dump_data_if_failed(self):
+        if self.case is not None and not self.case._passed:
+            dump = StringIO()
+            print("FAILED! dumping build db for debug", file=dump)
+            builds = await self.master.data.get(("builds",))
+            for build in builds:
+                await print_build(build, self.master, dump, with_logs=True)
+
+            raise self.case.failureException(dump.getvalue())
+
+
 class RunMasterBase(unittest.TestCase):
     proto = "null"
 
@@ -261,102 +394,12 @@ class RunMasterBase(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict, startWorker=True, **worker_kwargs):
-        """
-        Setup and start a master configured
-        by the function configFunc defined in the test module.
-        @type config_dict: dict
-        @param configFunc: The BuildmasterConfig dictionary.
-        """
-        # mock reactor.stop (which trial *really* doesn't
-        # like test code to call!)
-        stop = mock.create_autospec(reactor.stop)
-        self.patch(reactor, 'stop', stop)
-
-        if startWorker:
-            if self.proto == 'pb':
-                proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
-                workerclass = worker.Worker
-            elif self.proto == 'msgpack':
-                proto = {"msgpack_experimental_v7": {"port": 0}}
-                workerclass = worker.Worker
-            elif self.proto == 'null':
-                proto = {"null": {}}
-                workerclass = worker.LocalWorker
-            else:
-                raise RuntimeError(f"{self.proto} protocol is not supported.")
-            config_dict['workers'] = [
-                workerclass("local1", password=Interpolate("localpw"), missing_timeout=0)
-            ]
-            config_dict['protocols'] = proto
-
-        m = yield getMaster(self, reactor, config_dict)
-        self.master_config_dict = config_dict
-        self.master = m
-        self.assertFalse(stop.called, "startService tried to stop the reactor; check logs")
-
-        if not startWorker:
-            return
-
-        if self.proto in ('pb', 'msgpack'):
-            sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
-            if self.proto == 'pb':
-                protocol = 'pb'
-                dispatcher = next(iter(m.pbmanager.dispatchers.values()))
-            else:
-                protocol = 'msgpack_experimental_v7'
-                dispatcher = next(iter(m.msgmanager.dispatchers.values()))
-
-                # We currently don't handle connection closing cleanly.
-                dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
-
-            workerPort = dispatcher.port.getHost().port
-
-            # create a worker, and attach it to the master, it will be started, and stopped
-            # along with the master
-            worker_dir = FilePath(self.mktemp())
-            worker_dir.createDirectory()
-            if sandboxed_worker_path is None:
-                self.w = Worker(
-                    "127.0.0.1",
-                    workerPort,
-                    "local1",
-                    "localpw",
-                    worker_dir.path,
-                    False,
-                    protocol=protocol,
-                    **worker_kwargs,
-                )
-            else:
-                self.w = SandboxedWorker(
-                    "127.0.0.1",
-                    workerPort,
-                    "local1",
-                    "localpw",
-                    worker_dir.path,
-                    sandboxed_worker_path,
-                    protocol=protocol,
-                    **worker_kwargs,
-                )
-                self.addCleanup(self.w.shutdownWorker)
-
-        elif self.proto == 'null':
-            self.w = None
-
-        if self.w is not None:
-            yield self.w.setServiceParent(m)
-
-        @defer.inlineCallbacks
-        def dump():
-            if not self._passed:
-                dump = StringIO()
-                print("FAILED! dumping build db for debug", file=dump)
-                builds = yield self.master.data.get(("builds",))
-                for build in builds:
-                    yield print_build(build, self.master, dump, with_logs=True)
-
-                raise self.failureException(dump.getvalue())
-
-        self.addCleanup(dump)
+        self.tested_master = TestedRealMaster()
+        yield self.tested_master.setup_master(
+            self, reactor, config_dict, proto=self.proto, start_worker=startWorker, **worker_kwargs
+        )
+        self.master = self.tested_master.master
+        self.master_config_dict = self.tested_master.master_config_dict
 
     @defer.inlineCallbacks
     def doForceBuild(
