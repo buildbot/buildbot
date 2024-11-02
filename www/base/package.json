@@ -27,7 +27,7 @@
     "eslint-plugin-react-hooks": "^4.2.0",
     "eslint-plugin-testing-library": "^3.9.2",
     "jquery": "^3.6.0",
-    "mobx": "^6.6.1",
+    "mobx": "^6.13.4",
     "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "outdated-browser-rework": "^3.0.1",
