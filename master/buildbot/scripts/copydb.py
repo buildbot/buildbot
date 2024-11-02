@@ -55,12 +55,19 @@ def _copy_database_in_reactor(config):
     ):
         config_file = base.getConfigFileFromTac(config['basedir'])
 
+    if not config_file:
+        return 1
+
     with base.captureErrors(
         config_module.ConfigErrors, f"Unable to load '{config_file}' from '{config['basedir']}':"
     ):
         master_src_cfg = base.loadConfig(config, config_file)
         master_dst_cfg = base.loadConfig(config, config_file)
-        master_dst_cfg.db["db_url"] = config["destination_url"]
+
+    if not master_src_cfg or not master_dst_cfg:
+        return 1
+
+    master_dst_cfg.db["db_url"] = config["destination_url"]
 
     print_log(f"Copying database ({master_src_cfg.db['db_url']}) to ({config['destination_url']})")
 
