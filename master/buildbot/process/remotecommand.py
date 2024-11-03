@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
@@ -81,7 +82,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.collectStderr: bool = collectStderr
         self.stdout = ''
         self.stderr = ''
-        self.updates: dict[str, list[Any]] = {}
+        self.updates: defaultdict[str, list[Any]] = defaultdict(list)
         self.stdioLogName: str = stdioLogName
         self._startTime: float | None = None
         self._remoteElapsed: float | None = None
@@ -102,7 +103,10 @@ class RemoteCommand(base.RemoteCommandImpl):
         # This is really only a problem with old-style steps, which do not
         # wait for the Deferred from one method before invoking the next.
         self.loglock = defer.DeferredLock()
-        self._line_boundary_finders: dict[str, LineBoundaryFinder] = {}
+        self._line_boundary_finders: defaultdict[
+            str,
+            LineBoundaryFinder,
+        ] = defaultdict(LineBoundaryFinder)
 
     def __repr__(self) -> str:
         return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
@@ -259,11 +263,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             self._finished(Failure())
 
     def split_line(self, stream: str, text: str) -> str | None:
-        try:
-            return self._line_boundary_finders[stream].append(text)
-        except KeyError:
-            lbf = self._line_boundary_finders[stream] = LineBoundaryFinder()
-            return lbf.append(text)
+        return self._line_boundary_finders[stream].append(text)
 
     def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
         """
@@ -417,8 +417,6 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         # TODO: these should be handled at the RemoteCommand level
         if key not in ('stdout', 'stderr', 'header', 'rc', "failure_reason"):
-            if key not in self.updates:
-                self.updates[key] = []
             self.updates[key].append(value)
 
     @async_to_deferred
