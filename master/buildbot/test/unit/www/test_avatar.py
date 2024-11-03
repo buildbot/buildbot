@@ -555,7 +555,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             avatar.AvatarGitHub.DEFAULT_GITHUB_API_URL,
             headers=headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -758,7 +758,7 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
             avatar.AvatarGitHub.DEFAULT_GITHUB_API_URL,
             headers=headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
