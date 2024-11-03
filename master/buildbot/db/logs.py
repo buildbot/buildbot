@@ -851,7 +851,7 @@ async def _async_iter_on_pool(
             for item in generator_sync():
                 with condition:
                     condition.wait_for(_can_put_in_queue)
-                queue.put(item)
+                reactor.callFromThread(queue.put, item)
         finally:
             if wait_backlog_consuption:
                 with condition:
