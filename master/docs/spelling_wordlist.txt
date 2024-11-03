@@ -1041,6 +1041,7 @@ Xen
 xf
 xvfb
 yaml
+yarnpkg
 Zope
 zsh
 zstd

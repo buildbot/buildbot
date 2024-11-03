@@ -76,19 +76,20 @@ Prerequisites
 
 .. note::
 
-  Buildbot UI requires at least node 14.18 or newer and yarn.
+  Buildbot UI requires at least node 14.18 or newer and yarn 1.x.
 
 * Install LTS release of node.js.
 
   http://nodejs.org/ is a good start for Windows and OSX.
 
-  For modern Linux distributions, you can often just install the distribution-provided node version if it's recent enough.
-  You can use yarn from the same source.
+  For modern Linux distributions, you can often just install the distribution-provided packages if
+  they are recent enough. Note, that on Debian-based distributions yarn is available as yarnpkg.
+
   The below method has been tested on Debian Bookworm.
 
   .. code-block:: none
 
-    sudo apt install nodejs yarn
+    sudo apt install nodejs yarnpkg
 
   In other cases, use https://deb.nodesource.com and https://classic.yarnpkg.com/lang/en/docs/install.
 
@@ -155,7 +156,3 @@ To run unit tests within all frontend packages within Buildbot, do the following
 .. code-block:: none
 
     make frontend_tests
-
-.. note::
-
-   You need to have Chrome-based browser installed in order to run unit tests in the default configuration.
