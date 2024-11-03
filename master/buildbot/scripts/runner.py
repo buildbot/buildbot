@@ -766,6 +766,7 @@ class CopyDBOptions(base.BasedirMixin, base.SubcommandOptions):
 
     optFlags = [
         ('quiet', 'q', "Don't display error messages or tracebacks"),
+        ('ignore-fk-error-rows', None, 'Ignore rows that have foreign key constraint errors'),
     ]
 
     def getSynopsis(self):
