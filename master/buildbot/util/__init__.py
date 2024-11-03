@@ -27,6 +27,7 @@ import time
 from typing import TYPE_CHECKING
 from typing import ClassVar
 from typing import Sequence
+from typing import overload
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 
@@ -43,6 +44,9 @@ from ._notifier import Notifier
 if TYPE_CHECKING:
     from typing import ClassVar
     from typing import Sequence
+    from typing import TypeVar
+
+    _T = TypeVar('_T')
 
 
 def naturalSort(array):
@@ -262,13 +266,29 @@ def none_or_str(x):
     return x
 
 
+@overload
+def unicode2bytes(x: str, encoding='utf-8', errors='strict') -> bytes: ...
+
+
+@overload
+def unicode2bytes(x: _T, encoding='utf-8', errors='strict') -> _T: ...
+
+
 def unicode2bytes(x, encoding='utf-8', errors='strict'):
     if isinstance(x, str):
         x = x.encode(encoding, errors)
     return x
 
 
-def bytes2unicode(x, encoding='utf-8', errors='strict'):
+@overload
+def bytes2unicode(x: None, encoding='utf-8', errors='strict') -> None: ...
+
+
+@overload
+def bytes2unicode(x: bytes | str, encoding='utf-8', errors='strict') -> str: ...
+
+
+def bytes2unicode(x: str | bytes | None, encoding='utf-8', errors='strict') -> str | None:
     if isinstance(x, (str, type(None))):
         return x
     return str(x, encoding, errors)
