@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import inspect
 from functools import wraps
 from typing import TYPE_CHECKING
 
@@ -43,3 +44,10 @@ def async_to_deferred(
             return defer.fail(e)
 
     return wrapper
+
+
+async def any_to_async(value: Coroutine[Any, Any, _T] | defer.Deferred[_T] | _T) -> _T:
+    if inspect.isawaitable(value):
+        # defer.Deferred is awaitable too
+        return await value
+    return value
