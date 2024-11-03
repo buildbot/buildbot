@@ -621,7 +621,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
             'https://api.github.com',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -899,7 +899,7 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
             'https://api.github.com',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -949,7 +949,7 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
             'https://api.github.com',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -1000,7 +1000,7 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
             'https://api.github.com',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
 
         fake_storage = FakeSecretStorage()
@@ -1050,7 +1050,7 @@ class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase, TestReac
             'https://api.github.com',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -1143,7 +1143,7 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
             'https://api.github.com',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -1261,7 +1261,7 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase, TestReactorMi
             'https://black.magic.io',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 
@@ -1305,7 +1305,7 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase, TestR
             'https://black.magic.io',
             headers=fake_headers,
             debug=False,
-            verify=False,
+            verify=True,
         )
         yield self.master.startService()
 

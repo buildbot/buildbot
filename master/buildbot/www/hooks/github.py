@@ -53,7 +53,7 @@ class GitHubEventHandler(PullRequestMixin):
         pullrequest_ref=None,
         token=None,
         debug=False,
-        verify=False,
+        verify=True,
     ):
         if github_property_whitelist is None:
             github_property_whitelist = []
@@ -402,7 +402,7 @@ class GitHubHandler(BaseHookHandler):
             'pullrequest_ref': options.get('pullrequest_ref', None) or 'merge',
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
-            'verify': options.get('verify', None) or False,
+            'verify': options.get('verify', None) or True,
         }
         handler = klass(options.get('secret', None), options.get('strict', False), **klass_kwargs)
         self.handler = handler

@@ -1006,6 +1006,7 @@ wasn
 webapp
 webdav
 webhook
+webhooks
 webpack
 webserver
 websocket

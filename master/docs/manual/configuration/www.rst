@@ -77,7 +77,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'avatar_methods': [util.AvatarGitHub()]
         }
 
-    .. py:class:: AvatarGitHub(github_api_endpoint=None, token=None, debug=False, verify=False)
+    .. py:class:: AvatarGitHub(github_api_endpoint=None, token=None, debug=False, verify=True)
 
         :param string github_api_endpoint: specify the github api endpoint if you work with GitHub Enterprise
         :param string token: a GitHub API token to execute all requests to the API authenticated. It is strongly recommended to use a API token since it increases GitHub API rate limits significantly

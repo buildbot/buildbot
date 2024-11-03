@@ -49,7 +49,7 @@ class AvatarGitHub(AvatarBase):
         client_id=None,
         client_secret=None,
         debug=False,
-        verify=False,
+        verify=True,
     ):
         self.github_api_endpoint = github_api_endpoint
         if github_api_endpoint is None:
