@@ -92,7 +92,15 @@ def _copy_database_in_reactor(config):
 
 
 @defer.inlineCallbacks
-def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_buildid, print_log):
+def _copy_single_table(
+    src_db,
+    dst_db,
+    table,
+    table_name,
+    buildset_to_parent_buildid,
+    buildset_to_rebuilt_buildid,
+    print_log,
+):
     column_keys = table.columns.keys()
 
     rows_queue = queue.Queue(32)
@@ -139,6 +147,13 @@ def _copy_single_table(src_db, dst_db, table, table_name, buildset_to_parent_bui
                             ))
                         row_dict["parent_buildid"] = None
 
+                        if row_dict['rebuilt_buildid'] is not None:
+                            buildset_to_rebuilt_buildid.append((
+                                row_dict['id'],
+                                row_dict['rebuilt_buildid'],
+                            ))
+                        row_dict['rebuilt_buildid'] = None
+
             except queue.Empty:
                 continue
 
@@ -179,8 +194,8 @@ def _copy_database_with_db(src_db, dst_db, print_log):
     # Tables need to be specified in correct order so that tables that other tables depend on are
     # copied first.
     table_names = [
-        # Note that buildsets.parent_buildid introduces circular dependency.
-        # It is handled separately
+        # Note that buildsets.parent_buildid and rebuilt_buildid introduce circular dependency.
+        # They are handled separately
         "buildsets",
         "buildset_properties",
         "projects",
@@ -227,11 +242,18 @@ def _copy_database_with_db(src_db, dst_db, print_log):
 
     # Not a dict so that the values are inserted back in predictable order
     buildset_to_parent_buildid = []
+    buildset_to_rebuilt_buildid = []
 
     for table_name in table_names:
         table = metadata.tables[table_name]
         yield _copy_single_table(
-            src_db, dst_db, table, table_name, buildset_to_parent_buildid, print_log
+            src_db,
+            dst_db,
+            table,
+            table_name,
+            buildset_to_parent_buildid,
+            buildset_to_rebuilt_buildid,
+            print_log,
         )
 
     def thd_write_buildset_parent_buildid(conn):
@@ -256,5 +278,28 @@ def _copy_database_with_db(src_db, dst_db, print_log):
             )
 
     yield dst_db.pool.do(thd_write_buildset_parent_buildid)
+
+    def thd_write_buildset_rebuilt_buildid(conn):
+        written_count = 0
+        for rows in misc.chunkify_list(buildset_to_rebuilt_buildid, 10000):
+            q = model.Model.buildsets.update()
+            q = q.where(model.Model.buildsets.c.id == sa.bindparam('_id'))
+            q = q.values({'rebuilt_buildid': sa.bindparam('rebuilt_buildid')})
+
+            written_count += len(rows)
+            print_log(
+                f"Copying {len(rows)} items ({written_count}/{len(buildset_to_rebuilt_buildid)}) "
+                f"for buildset.rebuilt_buildid field"
+            )
+
+            conn.execute(
+                q,
+                [
+                    {'_id': buildset_id, 'rebuilt_buildid': rebuilt_buildid}
+                    for buildset_id, rebuilt_buildid in rows
+                ],
+            )
+
+    yield dst_db.pool.do(thd_write_buildset_rebuilt_buildid)
 
     print_log("Copy complete")
