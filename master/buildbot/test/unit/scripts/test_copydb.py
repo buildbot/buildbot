@@ -110,7 +110,7 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
 
     def setUp(self):
         self.setUpDirs('basedir')
-        # self.setUpStdoutAssertions()  # comment out to see stdout from script
+        self.setUpStdoutAssertions()  # comment out to see stdout from script
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
 
     def tearDown(self):
