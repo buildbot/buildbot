@@ -382,7 +382,7 @@ class TestedRealMaster(TestedMaster):
 
     @async_to_deferred
     async def dump_data_if_failed(self):
-        if self.case is not None and not self.case._passed:
+        if self.case is not None and not self.case._passed and not self.is_master_shutdown:
             dump = StringIO()
             print("FAILED! dumping build db for debug", file=dump)
             builds = await self.master.data.get(("builds",))
