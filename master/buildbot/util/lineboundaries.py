@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import re
 
@@ -32,11 +33,11 @@ class LineBoundaryFinder:
     # and ugly \b+ (use of backspace to implement progress bar)
     newline_re = re.compile(r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)')
 
-    def __init__(self, callback=None):
-        self.partialLine = None
-        self.warned = False
+    def __init__(self, callback=None) -> None:
+        self.partialLine: str | None = None
+        self.warned: bool = False
 
-    def adjust_line(self, text):
+    def adjust_line(self, text: str) -> str | None:
         if self.partialLine:
             if len(self.partialLine) > self.MAX_LINELENGTH:
                 if not self.warned:
@@ -74,10 +75,10 @@ class LineBoundaryFinder:
             return text
         return None
 
-    def append(self, text):
+    def append(self, text: str) -> str | None:
         return self.adjust_line(text)
 
-    def flush(self):
+    def flush(self) -> str | None:
         if self.partialLine is not None:
             return self.append('\n')
         return None
