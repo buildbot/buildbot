@@ -85,5 +85,5 @@ Werkzeug==3.1.1;  python_version >= "3.9"
 Werkzeug==3.0.6;  python_version < "3.9" # pyup: ignore
 xmltodict==0.14.2
 zope.event==5.0
-zope.interface==7.1.0
+zope.interface==7.1.1
 zope.schema==7.0.1
