@@ -187,7 +187,9 @@ def _copy_single_table(
                             seq_name = f"{table_name}_{autoincrement_foreign_key_column}_seq"
                             transaction = conn.begin()
                             conn.execute(
-                                f"ALTER SEQUENCE {seq_name} RESTART WITH {max_column_id + 1}"
+                                sa.text(
+                                    f"ALTER SEQUENCE {seq_name} RESTART WITH {max_column_id + 1}"
+                                )
                             )
                             transaction.commit()
 
