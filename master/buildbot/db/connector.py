@@ -141,7 +141,7 @@ class DBConnector(AbstractDBConnector):
 
     @defer.inlineCallbacks
     def setup(self, check_version=True, verbose=True):
-        super().setup()
+        yield super().setup()
         db_url = self.configured_url
 
         log.msg(f"Setting up database with URL {util.stripUrlPassword(db_url)!r}")
