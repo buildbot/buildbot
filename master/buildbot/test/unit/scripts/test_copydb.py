@@ -110,7 +110,7 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
 
     def setUp(self):
         self.setUpDirs('basedir')
-        # self.setUpStdoutAssertions()  # comment out to see stdout from script
+        self.setUpStdoutAssertions()  # comment out to see stdout from script
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
 
     def tearDown(self):
@@ -161,8 +161,8 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
 
     def drop_database_tables(self, db_url):
         engine = enginestrategy.create_engine(db_url, basedir='basedir')
-        conn = engine.connect()
-        db.thd_clean_database(conn)
+        with engine.connect() as conn:
+            db.thd_clean_database(conn)
 
     @async_to_deferred
     async def test_full(self):

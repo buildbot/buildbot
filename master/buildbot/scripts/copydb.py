@@ -166,6 +166,8 @@ def _copy_single_table(
                 ids.add(getattr(row, column.name))
         return ids
 
+    got_error = False
+
     def thd_write(conn):
         max_column_id = 0
 
@@ -226,6 +228,16 @@ def _copy_single_table(
 
             except queue.Empty:
                 continue
+            except Exception:
+                nonlocal got_error
+                got_error = True
+                # unblock queue
+                try:
+                    rows_queue.get(timeout=1)
+                    rows_queue.task_done()
+                except queue.Empty:
+                    pass
+                raise
 
             try:
                 written_count[0] += len(rows)
@@ -246,7 +258,7 @@ def _copy_single_table(
         total_count[0] = conn.execute(q).scalar()
 
         result = conn.execute(sa.select(table))
-        while True:
+        while not got_error:
             chunk = result.fetchmany(10000)
             if not chunk:
                 break
@@ -254,10 +266,18 @@ def _copy_single_table(
 
         rows_queue.put(None)
 
+    error: Exception | None = None
     tasks = [src_db.pool.do(thd_read), dst_db.pool.do(thd_write)]
-    yield defer.gatherResults(tasks)
+    for d in tasks:
+        try:
+            yield d
+        except Exception as e:
+            error = e
 
     rows_queue.join()
+
+    if error is not None:
+        raise error
 
 
 @defer.inlineCallbacks
