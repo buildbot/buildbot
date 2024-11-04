@@ -135,14 +135,14 @@ There are several common arguments for schedulers, although not all are availabl
 ``properties`` (optional)
 
     This is a dictionary specifying properties that will be transmitted to all builds started by this scheduler.
-    The ``owner`` property may be of particular interest, as its contents (list) will be added to the list of "interested users" (:ref:`Doing-Things-With-Users`) for each triggered build.
+    The ``owner`` property may be of particular interest, as its content (string) will be added to the list of "interested users" (:ref:`Doing-Things-With-Users`) for each triggered build.
     For example:
 
     .. code-block:: python
 
         sched = Scheduler(...,
             properties = {
-                'owner': ['zorro@example.com', 'silver@example.com']
+                'owner': 'zorro@example.com'
             })
 
 .. _Scheduler-Attr-Codebases:
