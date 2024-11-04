@@ -22,6 +22,7 @@ from unittest import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import log
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
@@ -93,8 +94,14 @@ class TestedMaster:
     async def shutdown(self):
         if self.is_master_shutdown:
             return
-        await self.master.stopService()
-        await self.master.db.pool.shutdown()
+        try:
+            await self.master.stopService()
+        except Exception as e:
+            log.err(e)
+        try:
+            await self.master.db.pool.shutdown()
+        except Exception as e:
+            log.err(e)
         self.is_master_shutdown = True
 
 
@@ -367,7 +374,10 @@ class TestedRealMaster(TestedMaster):
             return
 
         if isinstance(self.worker, SandboxedWorker):
-            await self.worker.shutdownWorker()
+            try:
+                await self.worker.shutdownWorker()
+            except Exception as e:
+                log.err(e)
         await super().shutdown()
 
     @async_to_deferred
