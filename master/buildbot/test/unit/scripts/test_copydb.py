@@ -21,6 +21,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.config import BuilderConfig
+from buildbot.db import enginestrategy
 from buildbot.plugins import schedulers
 from buildbot.process.factory import BuildFactory
 from buildbot.scripts import copydb
@@ -158,6 +159,11 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
             return "sqlite:///" + os.path.abspath(os.path.join("basedir", "dest.sqlite"))
         return os.environ[envkey]
 
+    def drop_database_tables(self, db_url):
+        engine = enginestrategy.create_engine(db_url, basedir='basedir')
+        conn = engine.connect()
+        db.thd_clean_database(conn)
+
     @async_to_deferred
     async def test_full(self):
         await self.create_master_config()
@@ -171,6 +177,9 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
         self.create_master_config_file(self.INITIAL_DB_URL)
 
         dest_db_url = db.resolve_test_index_in_db_url(self.resolve_db_url())
+
+        self.drop_database_tables(dest_db_url)
+        self.addCleanup(lambda: self.drop_database_tables(dest_db_url))
 
         script_config = get_script_config(destination_url=dest_db_url)
         res = await copydb._copy_database_in_reactor(script_config)
