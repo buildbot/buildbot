@@ -38,6 +38,7 @@ def get_script_config(destination_url='sqlite://', **kwargs):
         "quiet": False,
         "basedir": os.path.abspath('basedir'),
         'destination_url': destination_url,
+        'ignore-fk-error-rows': True,
     }
     config.update(kwargs)
     return config
