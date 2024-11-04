@@ -98,10 +98,10 @@ class TestedMaster:
         self.is_master_shutdown = True
 
 
-def print_test_log(log, out):
-    print(" " * 8 + f"*********** LOG: {log['name']} *********", file=out)
-    if log['type'] == 's':
-        for line in log['contents']['content'].splitlines():
+def print_test_log(l, out):
+    print(" " * 8 + f"*********** LOG: {l['name']} *********", file=out)
+    if l['type'] == 's':
+        for line in l['contents']['content'].splitlines():
             linetype = line[0]
             line = line[1:]
             if linetype == 'h':
@@ -112,7 +112,7 @@ def print_test_log(log, out):
                 line = "\x1b[31m" + line + "\x1b[0m"
             print(" " * 8 + line)
     else:
-        print("" + log['contents']['content'], file=out)
+        print("" + l['contents']['content'], file=out)
     print(" " * 8 + "********************************", file=out)
 
 
@@ -129,10 +129,10 @@ async def enrich_build(
             for step in build["steps"]:
                 step['logs'] = await master.data.get(("steps", step['stepid'], "logs"))
                 step["logs"] = list(step['logs'])
-                for log in step["logs"]:
-                    log['contents'] = await master.data.get((
+                for l in step["logs"]:
+                    l['contents'] = await master.data.get((
                         "logs",
-                        log['logid'],
+                        l['logid'],
                         "contents",
                     ))
 
@@ -161,10 +161,10 @@ async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=Fals
         )
         for url in step['urls']:
             print(f"       url:{url['name']} ({url['url']})", file=out)
-        for log in step['logs']:
-            print(f"        log:{log['name']} ({log['num_lines']})", file=out)
+        for l in step['logs']:
+            print(f"        log:{l['name']} ({l['num_lines']})", file=out)
             if step['results'] != SUCCESS or with_logs:
-                print_test_log(log, out)
+                print_test_log(l, out)
 
 
 class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
@@ -211,19 +211,19 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
     def assertLogs(self, build_id, exp_logs):
         got_logs = {}
         data_logs = yield self.master.data.get(('builds', build_id, 'steps', 1, 'logs'))
-        for log in data_logs:
-            self.assertTrue(log['complete'])
+        for l in data_logs:
+            self.assertTrue(l['complete'])
             log_contents = yield self.master.data.get((
                 'builds',
                 build_id,
                 'steps',
                 1,
                 'logs',
-                log['slug'],
+                l['slug'],
                 'contents',
             ))
 
-            got_logs[log['name']] = log_contents['content']
+            got_logs[l['name']] = log_contents['content']
 
         self.assertEqual(got_logs, exp_logs)
 
@@ -490,8 +490,8 @@ class RunMasterBase(unittest.TestCase):
             build, self.master, want_steps=True, want_properties=True, want_logs=True
         )
         for step in build['steps']:
-            for log in step['logs']:
-                for line in log['contents']['content'].splitlines():
+            for l in step['logs']:
+                for line in l['contents']['content'].splitlines():
                     if onlyStdout and line[0] != 'o':
                         continue
                     expectedLog = self._match_patterns_consume(line, expectedLog, is_regex=regex)
