@@ -83,6 +83,7 @@ class Git(Source, GitStepMixin):
     def __init__(
         self,
         repourl=None,
+        port=22,
         branch='HEAD',
         mode='incremental',
         method=None,
@@ -111,6 +112,7 @@ class Git(Source, GitStepMixin):
         self.branch = branch
         self.method = method
         self.repourl = repourl
+        self.port = port
         self.reference = reference
         self.retryFetch = retryFetch
         self.submodules = submodules
@@ -617,6 +619,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         self,
         workdir=None,
         repourl=None,
+        port=22,
         branch=None,
         force=False,
         env=None,
@@ -632,6 +635,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     ):
         self.workdir = workdir
         self.repourl = repourl
+        self.port = port
         self.branch = branch
         self.force = force
         self.env = env
@@ -723,6 +727,7 @@ class GitTag(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
         # These attributes are required for GitStepMixin but not useful to tag
         self.repourl = " "
+        self.port = None
 
         super().__init__(**kwargs)
 
@@ -804,6 +809,7 @@ class GitCommit(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
         # The repourl attribute is required by
         # GitStepMixin, but isn't needed by git add and commit operations
         self.repourl = " "
+        self.port = None
 
         super().__init__(**kwargs)
 

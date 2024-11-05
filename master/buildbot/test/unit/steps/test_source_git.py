@@ -123,12 +123,12 @@ class TestGit(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean(self):
-        self.setup_step(
-            self.stepClass(
-                repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'
-            )
-        )
+    @parameterized.expand([
+        ('url', 'ssh://github.com/test/test.git', 'ssh://github.com/test/test.git'),
+        ('ssh_host_and_path', 'host:path/to/git', 'ssh://host:22/path/to/git'),
+    ])
+    def test_mode_full_clean(self, name, url, pull_url):
+        self.setup_step(self.stepClass(repourl=url, mode='full', method='clean'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -143,7 +143,7 @@ class TestGit(
                     'fetch',
                     '-f',
                     '--progress',
-                    'http://github.com/buildbot/buildbot.git',
+                    pull_url,
                     'HEAD',
                 ],
             ).exit(0),
@@ -4189,15 +4189,17 @@ class TestGitPush(
     def tearDown(self):
         return self.tear_down_test_build_step()
 
-    def test_push_simple(self):
-        url = 'ssh://github.com/test/test.git'
-
+    @parameterized.expand([
+        ('url', 'ssh://github.com/test/test.git', 'ssh://github.com/test/test.git'),
+        ('host_path', 'host:path/to/git', 'ssh://host:22/path/to/git'),
+    ])
+    def test_push_simple(self, name, url, push_url):
         self.setup_step(self.stepClass(workdir='wkdir', repourl=url, branch='testbranch'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')
             .exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'push', url, 'testbranch']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'push', push_url, 'testbranch']).exit(0),
         )
         self.expect_outcome(result=SUCCESS)
         return self.run_step()

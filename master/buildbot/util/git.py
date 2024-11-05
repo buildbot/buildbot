@@ -66,6 +66,14 @@ def getSshCommand(keyPath, knownHostsPath):
     return ' '.join(command)
 
 
+def scp_style_to_url_syntax(address, port=22, scheme='ssh'):
+    if any(['://' in address, ':\\' in address, ':' not in address]):
+        # the address already has a URL syntax or is a local path
+        return address
+    host, path = address.split(':')
+    return f'{scheme}://{host}:{port}/{path}'
+
+
 def check_ssh_config(
     logname: str,
     ssh_private_key: IRenderable | None,
@@ -175,6 +183,9 @@ class GitStepMixin(GitMixin):
 
         if not hasattr(self, '_git_auth'):
             self._git_auth = GitStepAuth(self)
+
+        # Use standard URL syntax to enable the use of a dedicated SSH port
+        self.repourl = scp_style_to_url_syntax(self.repourl, self.port)
 
     def setup_git_auth(
         self,

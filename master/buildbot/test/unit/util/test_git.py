@@ -22,6 +22,7 @@ from buildbot.util.git import check_ssh_config
 from buildbot.util.git import ensureSshKeyNewline
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
+from buildbot.util.git import scp_style_to_url_syntax
 
 
 class TestEscapeShellArgIfNeeded(unittest.TestCase):
@@ -187,3 +188,14 @@ base64encodedkeydata
         self.assertEqual(
             self.sshGoodPrivateKey, ensureSshKeyNewline(self.sshMissingNewlinePrivateKey)
         )
+
+
+class TestScpStyleToUrlSyntax(unittest.TestCase):
+    @parameterized.expand([
+        ('normal_url', 'ssh://path/to/git', 'ssh://path/to/git'),
+        ('unix_path', '/path/to/git', '/path/to/git'),
+        ('windows_path', 'C:\\path\\to\\git', 'C:\\path\\to\\git'),
+        ('scp_path', 'host:path/to/git', 'ssh://host:23/path/to/git'),
+    ])
+    def test(self, name, url, expected):
+        self.assertEqual(scp_style_to_url_syntax(url, port=23), expected)
