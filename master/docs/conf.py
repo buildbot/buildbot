@@ -324,7 +324,7 @@ for raml_typename, raml_type in sorted(raml_spec.types.items()):
 try:
     import enchant  # noqa: F401
 except ImportError as ex:
-    print("enchant module import failed:\n" f"{ex}\n" "Spell checking disabled.", file=sys.stderr)
+    print(f"enchant module import failed:\n{ex}\nSpell checking disabled.", file=sys.stderr)
 
 else:
     extensions.append('sphinxcontrib.spelling')

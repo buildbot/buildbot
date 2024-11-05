@@ -470,7 +470,7 @@ class TelegramContact(Contact):
                 sched = next(iter(forceschedulers))
             else:
                 raise UsageError(
-                    "Try '/force' and follow the instructions" f" (no force scheduler {sched})"
+                    f"Try '/force' and follow the instructions (no force scheduler {sched})"
                 )
         scheduler = forceschedulers[sched]
 

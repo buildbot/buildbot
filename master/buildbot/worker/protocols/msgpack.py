@@ -253,8 +253,7 @@ class Connection(base.Connection):
 
         if paths_to_rmdir:
             log.msg(
-                f"Deleting directory '{paths_to_rmdir}' that is not being "
-                "used by the buildmaster."
+                f"Deleting directory '{paths_to_rmdir}' that is not being used by the buildmaster."
             )
 
             # remove leftover directories from worker

@@ -121,7 +121,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def addService(self, service):
         if service.name is not None:
             if service.name in self.namedServices:
-                raise RuntimeError("cannot have two services with same name" f" '{service.name}'")
+                raise RuntimeError(f"cannot have two services with same name '{service.name}'")
             self.namedServices[service.name] = service
         self.services.append(service)
         if self.running:
@@ -493,8 +493,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
 
         if removed_names or added_names:
             log.msg(
-                f"adding {len(added_names)} new {self.config_attr}, "
-                f"removing {len(removed_names)}"
+                f"adding {len(added_names)} new {self.config_attr}, removing {len(removed_names)}"
             )
 
             for n in removed_names:

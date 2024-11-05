@@ -92,8 +92,7 @@ class BuildbotSession(server.Session):
         except jwt.exceptions.InvalidSignatureError as e:
             log.msg(
                 e,
-                "Web request has been rejected."
-                "Signature verification failed while decoding JWT.",
+                "Web request has been rejected.Signature verification failed while decoding JWT.",
             )
             raise KeyError(str(e)) from e
         except Exception as e:

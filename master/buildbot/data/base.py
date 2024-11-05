@@ -157,8 +157,7 @@ class Endpoint:
                 parentid = rtype.keyField
             else:
                 raise NotImplementedError(
-                    "Collection endpoint should implement "
-                    "get_kwargs_from_graphql or parentMapping"
+                    "Collection endpoint should implement get_kwargs_from_graphql or parentMapping"
                 )
         else:
             parentid = self.parentMapping[parent_type]

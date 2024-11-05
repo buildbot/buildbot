@@ -241,8 +241,7 @@ class Channel(service.AsyncService):
     def list_notified_events(self):
         if self.notify_events:
             yield self.send(
-                'The following events are being notified: '
-                f'{", ".join(sorted(self.notify_events))}.'
+                f'The following events are being notified: {", ".join(sorted(self.notify_events))}.'
             )
         else:
             yield self.send("No events are being notified.")
@@ -633,7 +632,7 @@ class Contact:
 
         if not args:
             raise UsageError(
-                "Try " f"'{self.bot.commandPrefix}list [all|N] builders|workers|changes'."
+                f"Try '{self.bot.commandPrefix}list [all|N] builders|workers|changes'."
             )
 
         if args[0] == 'builders':
@@ -1041,8 +1040,7 @@ class Contact:
             self.send("No usage info for " + ' '.join([f"'{arg}'" for arg in args]))
 
     command_HELP.usage = (  # type: ignore[attr-defined]
-        "help [_command_ _arg_ [_subarg_ ...]] - "
-        "Give help for _command_ or one of it's arguments"
+        "help [_command_ _arg_ [_subarg_ ...]] - Give help for _command_ or one of it's arguments"
     )
 
     def command_SOURCE(self, args, **kwargs):

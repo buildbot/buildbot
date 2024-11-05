@@ -403,8 +403,7 @@ class BotPbLike(BotBase):
                 if dir not in wanted_dirs:
                     if self.delete_leftover_dirs:
                         log.msg(
-                            f"Deleting directory '{dir}' that is not being "
-                            "used by the buildmaster"
+                            f"Deleting directory '{dir}' that is not being used by the buildmaster"
                         )
                         try:
                             shutil.rmtree(dir)

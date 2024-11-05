@@ -201,8 +201,7 @@ class CreateWorkerOptions(MakerBase):
 
     def getSynopsis(self):
         return (
-            "Usage:    buildbot-worker create-worker "
-            "[options] <basedir> <master> <name> <passwd>"
+            "Usage:    buildbot-worker create-worker [options] <basedir> <master> <name> <passwd>"
         )
 
     def parseArgs(self, *args):

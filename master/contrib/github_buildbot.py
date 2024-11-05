@@ -323,7 +323,7 @@ def setup_options():
     parser.add_option(
         "-p",
         "--port",
-        help="Port the HTTP server listens to for the GitHub " "Service Hook [default: %default]",
+        help="Port the HTTP server listens to for the GitHub Service Hook [default: %default]",
         default=9001,
         type=int,
         dest="port",
@@ -332,7 +332,7 @@ def setup_options():
     parser.add_option(
         "-m",
         "--buildmaster",
-        help="Buildbot Master host and port. ie: localhost:9989 " "[default: %default]",
+        help="Buildbot Master host and port. ie: localhost:9989 [default: %default]",
         default="localhost:9989",
         dest="buildmaster",
     )
@@ -373,7 +373,7 @@ def setup_options():
     parser.add_option(
         "-L",
         "--level",
-        help="The logging level: debug, info, warn, error, " "fatal [default: %default]",
+        help="The logging level: debug, info, warn, error, fatal [default: %default]",
         default='warn',
         dest="level",
         choices=("debug", "info", "warn", "error", "fatal"),
@@ -404,7 +404,7 @@ def setup_options():
 
     parser.add_option(
         "--filter-push-branch",
-        help="Only trigger builds for pushes to a given " "branch name.",
+        help="Only trigger builds for pushes to a given branch name.",
         default=None,
         dest="filter_push_branch",
     )

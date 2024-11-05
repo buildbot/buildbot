@@ -668,7 +668,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                 repl = None
             except ValueError:
                 config.error(
-                    "Must specify both codebase and attribute for " f"src Interpolation '{arg}'"
+                    f"Must specify both codebase and attribute for src Interpolation '{arg}'"
                 )
                 return {}, None, None
 
@@ -763,8 +763,7 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
             truePart, falsePart = self._splitBalancedParen(delim, repl[1:])
         except ValueError:
             config.error(
-                f"invalid Interpolate ternary expression '{repl[1:]}' "
-                f"with delimiter '{repl[0]}'"
+                f"invalid Interpolate ternary expression '{repl[1:]}' with delimiter '{repl[0]}'"
             )
             return None
         return _Lookup(

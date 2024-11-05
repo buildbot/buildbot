@@ -231,9 +231,9 @@ class DBThreadPool:
             try:
                 try:
                     rv = callable(arg, *args, **kwargs)
-                    assert not isinstance(
-                        rv, self.forbidded_callable_return_type
-                    ), "do not return ResultProxy objects!"
+                    assert not isinstance(rv, self.forbidded_callable_return_type), (
+                        "do not return ResultProxy objects!"
+                    )
                 except sa.exc.OperationalError as e:
                     if not self.engine.should_retry(e):
                         log.err(e, 'Got fatal OperationalError on DB')

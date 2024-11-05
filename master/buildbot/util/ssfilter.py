@@ -36,7 +36,7 @@ def extract_filter_values(values, filter_name):
 def extract_filter_values_branch(values, filter_name):
     if not isinstance(values, (list, str, type(None))):
         raise ValueError(
-            f"Values of filter {filter_name} must be list of strings, " "a string or None"
+            f"Values of filter {filter_name} must be list of strings, a string or None"
         )
     if isinstance(values, (str, type(None))):
         values = [values]
@@ -50,7 +50,7 @@ def extract_filter_values_branch(values, filter_name):
 def extract_filter_values_regex(values, filter_name):
     if not isinstance(values, (list, str, re.Pattern)):
         raise ValueError(
-            f"Values of filter {filter_name} must be list of strings, " "a string or regex"
+            f"Values of filter {filter_name} must be list of strings, a string or regex"
         )
     if isinstance(values, (str, re.Pattern)):
         values = [values]

@@ -29,8 +29,7 @@ def check_param_length(value, name, max_length):
         shortest_value = value.fmtstring % interpolations
         if len(shortest_value) > max_length:
             error(
-                f"{name} '{value}' (shortest interpolation) exceeds maximum length of "
-                f"{max_length}"
+                f"{name} '{value}' (shortest interpolation) exceeds maximum length of {max_length}"
             )
 
 

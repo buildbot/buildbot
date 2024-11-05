@@ -167,7 +167,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
                     _, __ = volume_string.split(":", 1)
                 except ValueError:
                     config.error(
-                        "Invalid volume definition for docker " f"{volume_string}. Skipping..."
+                        f"Invalid volume definition for docker {volume_string}. Skipping..."
                     )
                     continue
 
@@ -224,9 +224,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             try:
                 _, volume = volume_string.split(":", 1)
             except ValueError:
-                config.error(
-                    "Invalid volume definition for docker " f"{volume_string}. Skipping..."
-                )
+                config.error(f"Invalid volume definition for docker {volume_string}. Skipping...")
                 continue
 
             if volume.endswith(':ro') or volume.endswith(':rw'):

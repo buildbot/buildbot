@@ -125,8 +125,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.proto.sendMessage,
             {
                 "id": None,
-                "message": "missing 'type' in websocket frame when already started using "
-                "graphql",
+                "message": "missing 'type' in websocket frame when already started using graphql",
                 "type": "error",
             },
         )

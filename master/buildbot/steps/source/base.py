@@ -178,16 +178,16 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
             source = self.__class__.__name__
 
         if self.codebase != '':
-            assert not isinstance(
-                self.getProperty(name, None), str
-            ), f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
+            assert not isinstance(self.getProperty(name, None), str), (
+                f"Sourcestep {self.name} has a codebase, other sourcesteps don't"
+            )
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
             super().setProperty(name, property_dict, source)
         else:
-            assert not isinstance(
-                self.getProperty(name, None), dict
-            ), f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
+            assert not isinstance(self.getProperty(name, None), dict), (
+                f"Sourcestep {self.name} does not have a codebase, other sourcesteps do"
+            )
             super().setProperty(name, value, source)
 
     def computeSourceRevision(self, changes):
@@ -296,7 +296,7 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
                 log.msg(f"No sourcestamp found in build for codebase '{self.codebase}'")
                 self.descriptionDone = f"Codebase {self.codebase} not in build"
                 yield self.addCompleteLog(
-                    "log", "No sourcestamp found in build for " f"codebase '{self.codebase}'"
+                    "log", f"No sourcestamp found in build for codebase '{self.codebase}'"
                 )
                 return FAILURE
 

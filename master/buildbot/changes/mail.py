@@ -55,7 +55,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         self.repository = repository
         if prefix and not prefix.endswith("/"):
             log.msg(
-                f"MaildirSource: you probably want your prefix=('{prefix}') to end with " "a slash"
+                f"MaildirSource: you probably want your prefix=('{prefix}') to end with a slash"
             )
 
     def describe(self):

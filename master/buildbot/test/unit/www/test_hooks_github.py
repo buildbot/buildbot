@@ -584,9 +584,9 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     request.method = b"GET"
     request.received_headers = {_HEADER_EVENT: event}
 
-    assert isinstance(
-        payload, (bytes, list)
-    ), f"payload can only be bytes or list, not {type(payload)}"
+    assert isinstance(payload, (bytes, list)), (
+        f"payload can only be bytes or list, not {type(payload)}"
+    )
 
     if isinstance(payload, bytes):
         request.content = BytesIO(payload)

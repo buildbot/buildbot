@@ -434,11 +434,11 @@ def parse_options():
     )
     parser.add_option("-p", "--project", action="store", type="string", help="Project to send.")
     parser.add_option("--codebase", action="store", type="string", help="Codebase to send.")
-    encoding_help = "Encoding to use when converting strings to " f"unicode. Default is {encoding}."
+    encoding_help = f"Encoding to use when converting strings to unicode. Default is {encoding}."
     parser.add_option("-e", "--encoding", action="store", type="string", help=encoding_help)
-    username_help = "Username used in PB connection auth, defaults to " f"{username}."
+    username_help = f"Username used in PB connection auth, defaults to {username}."
     parser.add_option("-u", "--username", action="store", type="string", help=username_help)
-    auth_help = "Password used in PB connection auth, defaults to " f"{auth}."
+    auth_help = f"Password used in PB connection auth, defaults to {auth}."
     # 'a' instead of 'p' due to collisions with the project short option
     parser.add_option("-a", "--auth", action="store", type="string", help=auth_help)
     first_parent_help = "If set, don't trigger builds for merged in commits"

@@ -407,7 +407,7 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     # if dry run, stop.
     if _is_true(config, DRYRUN_KEY):
         bzrlib.trace.note(
-            "bzr_buildbot DRY RUN " "(*not* sending changes to %s:%d on %s)", server, port, hook
+            "bzr_buildbot DRY RUN (*not* sending changes to %s:%d on %s)", server, port, hook
         )
         keys = sorted(change.keys())
         for k in keys:

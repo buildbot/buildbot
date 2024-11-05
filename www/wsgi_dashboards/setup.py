@@ -29,7 +29,7 @@ except ImportError:
 
 setup_www_plugin(
     name='buildbot-wsgi-dashboards',
-    description='Buildbot plugin to integrate flask or bottle' 'dashboards to buildbot UI (React)',
+    description='Buildbot plugin to integrate flask or bottledashboards to buildbot UI (React)',
     author='Buildbot maintainers',
     author_email='devel@buildbot.net',
     url='http://buildbot.net/',

@@ -101,8 +101,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         creds = os.environ.get('TEST_PUSHOVER_CREDENTIALS')
         if creds is None:
             raise SkipTest(
-                "real pushover test runs only if the variable "
-                "TEST_PUSHOVER_CREDENTIALS is defined"
+                "real pushover test runs only if the variable TEST_PUSHOVER_CREDENTIALS is defined"
             )
         user, token = creds.split(':')
         _http = httpclientservice.HTTPSession(self.master.httpservice, 'https://api.pushover.net')

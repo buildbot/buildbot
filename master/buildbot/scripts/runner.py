@@ -625,7 +625,7 @@ class UserOptions(base.SubcommandOptions):
             for attr_type in user:
                 if attr_type not in valid:
                     raise usage.UsageError(
-                        "Type not a valid attr_type, must be in: " f"{', '.join(valid)}"
+                        f"Type not a valid attr_type, must be in: {', '.join(valid)}"
                     )
 
     def postOptions(self):
@@ -637,7 +637,7 @@ class UserOptions(base.SubcommandOptions):
         if not op:
             raise usage.UsageError("you must specify an operation: add, remove, update, get")
         if op not in ['add', 'remove', 'update', 'get']:
-            raise usage.UsageError(f"bad op {op!r}, use 'add', 'remove', 'update', " "or 'get'")
+            raise usage.UsageError(f"bad op {op!r}, use 'add', 'remove', 'update', or 'get'")
 
         if not self.get('username') or not self.get('passwd'):
             raise usage.UsageError("A username and password must be given")
@@ -665,8 +665,7 @@ class UserOptions(base.SubcommandOptions):
                 for user in info:
                     if 'identifier' not in user:
                         raise usage.UsageError(
-                            "no ids found in update info; "
-                            "use: --info=id:type=value,type=value,.."
+                            "no ids found in update info; use: --info=id:type=value,type=value,.."
                         )
             if op == 'add':
                 for user in info:
