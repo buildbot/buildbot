@@ -83,6 +83,7 @@ class Git(Source, GitStepMixin):
     def __init__(
         self,
         repourl=None,
+        port=22,
         branch='HEAD',
         mode='incremental',
         method=None,
@@ -111,6 +112,7 @@ class Git(Source, GitStepMixin):
         self.branch = branch
         self.method = method
         self.repourl = repourl
+        self.port = port
         self.reference = reference
         self.retryFetch = retryFetch
         self.submodules = submodules
