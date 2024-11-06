@@ -186,8 +186,7 @@ class TestBuildStep(
         updateBuildSummaryPolicy raise ConfigError in case of bad type
         """
         with self.assertRaisesConfigError(
-            "BuildStep updateBuildSummaryPolicy must be "
-            "a list of result ids or boolean but it is 2"
+            "BuildStep updateBuildSummaryPolicy must be a list of result ids or boolean but it is 2"
         ):
             buildstep.BuildStep(updateBuildSummaryPolicy=FAILURE)
 

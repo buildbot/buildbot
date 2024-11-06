@@ -712,8 +712,7 @@ class ForceScheduler(base.BaseScheduler):
 
         if not self.checkIfListOfType(builderNames, (str,)):
             config.error(
-                f"ForceScheduler '{name}': builderNames must be a list of strings: "
-                f"{builderNames!r}"
+                f"ForceScheduler '{name}': builderNames must be a list of strings: {builderNames!r}"
             )
 
         if reason is None:

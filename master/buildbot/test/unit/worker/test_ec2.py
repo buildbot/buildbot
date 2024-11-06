@@ -86,8 +86,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             r.create_key_pair(KeyName=name)
         except NotImplementedError as e:
             raise unittest.SkipTest(
-                "KeyPairs.create_key_pair not implemented"
-                " in this version of moto, please update."
+                "KeyPairs.create_key_pair not implemented in this version of moto, please update."
             ) from e
         r.create_security_group(GroupName=name, Description='the security group')
         instance = r.create_instances(ImageId=anyImageId(c), MinCount=1, MaxCount=1)[0]
@@ -600,8 +599,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
             r.create_key_pair(KeyName='test_keypair')
         except NotImplementedError as e:
             raise unittest.SkipTest(
-                "KeyPairs.create_key_pair not implemented"
-                " in this version of moto, please update."
+                "KeyPairs.create_key_pair not implemented in this version of moto, please update."
             ) from e
         r.create_security_group(GroupName='latent_buildbot_slave', Description='the security group')
         r.create_security_group(GroupName='test_security_group', Description='other security group')

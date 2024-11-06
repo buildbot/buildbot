@@ -239,8 +239,7 @@ class Trigger(BuildStep):
                         num = build.number
                         url = getURLForBuild(self.master, builderid, num)
                         yield self.addURL(
-                            f'{statusToString(build.results)}: '
-                            f'{builderNames[builderid]} #{num}',
+                            f'{statusToString(build.results)}: {builderNames[builderid]} #{num}',
                             url,
                         )
 

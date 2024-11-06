@@ -173,8 +173,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:
                         diff.append(
-                            f"got unexpected index {name} on table {tbl.name}: "
-                            f"{got_info[name]!r}"
+                            f"got unexpected index {name} on table {tbl.name}: {got_info[name]!r}"
                         )
                     for name in exp_names - got_names:
                         diff.append(f"missing index {name} on table {tbl.name}")
@@ -242,7 +241,7 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise unittest.SkipTest(
-                "Cannot encode weird unicode " f"on this platform with {os_encoding}"
+                f"Cannot encode weird unicode on this platform with {os_encoding}"
             ) from e
 
         yield self.db.model.upgrade()

@@ -299,9 +299,7 @@ class V2RootResource(resource.Resource):
     ):
         self._write_rest_error(
             request=request,
-            msg=(
-                f"not found while getting from {ep!r} with " f"arguments {rspec!r} and {kwargs!s}"
-            ),
+            msg=(f"not found while getting from {ep!r} with arguments {rspec!r} and {kwargs!s}"),
         )
 
     async def _render_raw(

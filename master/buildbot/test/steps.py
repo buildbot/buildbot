@@ -435,7 +435,7 @@ class ExpectUploadDirectory(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectUploadDirectory({self.args['workdir']!r}, " f"{self.args['workersrc']!r})"
+        return f"ExpectUploadDirectory({self.args['workdir']!r}, {self.args['workersrc']!r})"
 
 
 class ExpectDownloadFile(Expect):
@@ -483,7 +483,7 @@ class ExpectDownloadFile(Expect):
         return self
 
     def __repr__(self):
-        return f"ExpectUploadDirectory({self.args['workdir']!r}, " f"{self.args['workerdest']!r})"
+        return f"ExpectUploadDirectory({self.args['workdir']!r}, {self.args['workerdest']!r})"
 
 
 class ExpectMkdir(Expect):

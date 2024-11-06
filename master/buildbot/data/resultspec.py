@@ -30,10 +30,7 @@ if TYPE_CHECKING:
 class NotSupportedFieldTypeError(TypeError):
     def __init__(self, data, *args: object) -> None:
         super().__init__(
-            (
-                f"Unsupported data type '{type(data)}': "
-                "must be an instance of Dict or a Dataclass."
-            ),
+            (f"Unsupported data type '{type(data)}': must be an instance of Dict or a Dataclass."),
             *args,
         )
 
@@ -429,9 +426,9 @@ class ResultSpec:
             # item collection
             if isinstance(data, base.ListResult):
                 # if pagination was applied, then fields, etc. must be empty
-                assert (
-                    not fields and not order and not filters
-                ), "endpoint must apply fields, order, and filters if it performs pagination"
+                assert not fields and not order and not filters, (
+                    "endpoint must apply fields, order, and filters if it performs pagination"
+                )
                 offset = data.offset
                 total = data.total
                 limit = data.limit

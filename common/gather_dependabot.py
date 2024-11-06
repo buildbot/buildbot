@@ -27,7 +27,7 @@ def main():
             print(pr['number'], pr['title'])
             pr_text += f"#{pr['number']}: {pr['title']}\n"
             os.system(
-                "git fetch https://github.com/buildbot/buildbot " f"refs/pull/{pr['number']}/head"
+                f"git fetch https://github.com/buildbot/buildbot refs/pull/{pr['number']}/head"
             )
             os.system("git cherry-pick FETCH_HEAD")
 

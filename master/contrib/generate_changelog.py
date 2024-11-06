@@ -37,7 +37,7 @@ def usage():
     Prints out usage information to stderr.
     """
     print_err(f'Usage: {sys.argv[0]} git-binary since')
-    print_err(f'Example: {sys.argv[0]} /usr/bin/git f5067523dfae9c7cdefc82' '8721ec593ac7be62db')
+    print_err(f'Example: {sys.argv[0]} /usr/bin/git f5067523dfae9c7cdefc828721ec593ac7be62db')
 
 
 def main(args):
@@ -60,7 +60,7 @@ def main(args):
         return 1
 
     # Open a pipe and force the format
-    pipe = os.popen(git_bin + ' log --pretty="format:%ad  %ae%n' '  * %s" ' + since + '..')
+    pipe = os.popen(git_bin + ' log --pretty="format:%ad  %ae%n  * %s" ' + since + '..')
     print(pipe.read())
     pipe.close()
     return 0

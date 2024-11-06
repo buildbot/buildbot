@@ -150,8 +150,7 @@ class GitLabStatusPush(ReporterBase):
             proj = yield response.json()
             if response.code not in (200,):
                 log.msg(
-                    'Unknown (or hidden) gitlab project'
-                    f'{project_full_name}: {proj.get("message")}'
+                    f'Unknown (or hidden) gitlab project{project_full_name}: {proj.get("message")}'
                 )
                 return None
             self.project_ids[project_full_name] = proj['id']
@@ -223,8 +222,5 @@ class GitLabStatusPush(ReporterBase):
             except Exception as e:
                 log.err(
                     e,
-                    (
-                        f'Failed to send status "{state}" for '
-                        f'{sourcestamp["repository"]} at {sha}'
-                    ),
+                    (f'Failed to send status "{state}" for {sourcestamp["repository"]} at {sha}'),
                 )

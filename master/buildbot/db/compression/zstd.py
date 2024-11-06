@@ -129,19 +129,19 @@ class ZStdCompressor(CompressorInterface):
                 self._compressor = ZStdCompressor._compressor_pool.acquire()
                 self._compressobj = self._compressor.compressobj()
             else:
-                assert (
-                    self._compressobj is not None
-                ), "Programming error: _compressobj is None when _compressor is not"
+                assert self._compressobj is not None, (
+                    "Programming error: _compressobj is None when _compressor is not"
+                )
 
             return self._compressobj.compress(data)
 
         def flush(self) -> bytes:
-            assert (
-                self._compressor is not None
-            ), "Programming error: Flush called without previous compress"
-            assert (
-                self._compressobj is not None
-            ), "Programming error: _compressobj is None when _compressor is not"
+            assert self._compressor is not None, (
+                "Programming error: Flush called without previous compress"
+            )
+            assert self._compressobj is not None, (
+                "Programming error: _compressobj is None when _compressor is not"
+            )
 
             try:
                 return self._compressobj.flush(flush_mode=zstandard.COMPRESSOBJ_FLUSH_FINISH)

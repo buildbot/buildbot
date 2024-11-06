@@ -160,8 +160,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     masters = ui.configlist('hgbuildbot', 'master')
     if not masters:
         ui.write(
-            '* You must add a [hgbuildbot] section to .hg/hgrc in '
-            'order to use the Buildbot hook\n'
+            '* You must add a [hgbuildbot] section to .hg/hgrc in order to use the Buildbot hook\n'
         )
         return
 

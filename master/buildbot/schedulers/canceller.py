@@ -181,8 +181,7 @@ class _OldBuildrequestTracker:
             br_dict = self.br_by_ss.get(ss_tuple, None)
             if br_dict is None:
                 raise KeyError(
-                    f'{self.__class__.__name__}: Could not find finished builds '
-                    f'by tuple {ss_tuple}'
+                    f'{self.__class__.__name__}: Could not find finished builds by tuple {ss_tuple}'
                 )
 
             del br_dict[tracked_br.brid]

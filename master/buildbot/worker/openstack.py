@@ -234,9 +234,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
             snap = nova.volume_snapshots.get(source_uuid)
             return snap.size
         else:
-            unknown_source = (
-                f"The source type '{source_type}' for UUID '{source_uuid}' is " "unknown"
-            )
+            unknown_source = f"The source type '{source_type}' for UUID '{source_uuid}' is unknown"
             raise ValueError(unknown_source)
         return None
 

@@ -3974,9 +3974,7 @@ class TestGit(
                     'approve',
                 ],
                 initial_stdin=(
-                    "url=https://example.com/test/test.git\n"
-                    "username=username\n"
-                    "password=token\n"
+                    "url=https://example.com/test/test.git\nusername=username\npassword=token\n"
                 ),
             ).exit(0),
             ExpectListdir(dir='wkdir').files(['.git']).exit(0),
@@ -4048,9 +4046,7 @@ class TestGit(
                     'approve',
                 ],
                 initial_stdin=(
-                    "url=https://example.com/test/test.git\n"
-                    "username=username\n"
-                    "password=token\n"
+                    "url=https://example.com/test/test.git\nusername=username\npassword=token\n"
                 ),
             ).exit(0),
             ExpectListdir(dir='wkdir').files(['.git']).exit(0),
@@ -4579,9 +4575,7 @@ class TestGitPush(
                     'approve',
                 ],
                 initial_stdin=(
-                    "url=https://example.com/test/test.git\n"
-                    "username=username\n"
-                    "password=token\n"
+                    "url=https://example.com/test/test.git\nusername=username\npassword=token\n"
                 ),
             ).exit(0),
             ExpectShell(
@@ -4642,9 +4636,7 @@ class TestGitPush(
                     'approve',
                 ],
                 initial_stdin=(
-                    "url=https://example.com/test/test.git\n"
-                    "username=username\n"
-                    "password=token\n"
+                    "url=https://example.com/test/test.git\nusername=username\npassword=token\n"
                 ),
             ).exit(0),
             ExpectShell(

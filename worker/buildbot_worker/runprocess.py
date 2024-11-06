@@ -390,7 +390,7 @@ class RunProcess:
                 if v is not None:
                     if not isinstance(v, str):
                         raise RuntimeError(
-                            "'env' values must be strings or " f"lists; key '{key}' is incorrect"
+                            f"'env' values must be strings or lists; key '{key}' is incorrect"
                         )
                     newenv[key] = p.sub(subst, v)
 

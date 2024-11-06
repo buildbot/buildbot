@@ -130,7 +130,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         self.project = bytes2unicode(project)
 
     def describe(self):
-        return "GitHubPullrequestPoller watching the " f"GitHub repository {self.owner}/{self.repo}"
+        return f"GitHubPullrequestPoller watching the GitHub repository {self.owner}/{self.repo}"
 
     @defer.inlineCallbacks
     def _getPullInformation(self, pull_number):

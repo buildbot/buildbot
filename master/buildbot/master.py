@@ -392,7 +392,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # longer on larger installations and may take a while.
         self.reconfig_notifier = task.LoopingCall(
             lambda: log.msg(
-                "reconfig is ongoing for " f"{self.reactor.seconds() - self.reconfig_active:.3f} s"
+                f"reconfig is ongoing for {self.reactor.seconds() - self.reconfig_active:.3f} s"
             )
         )
         self.reconfig_notifier.start(10, now=False)

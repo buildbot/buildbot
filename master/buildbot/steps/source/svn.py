@@ -301,10 +301,7 @@ class SVN(Source):
             try:
                 revision = stdout_xml.getElementsByTagName('commit')[0].attributes['revision'].value
             except (KeyError, IndexError):
-                msg = (
-                    "SVN.parseGotRevision unable to detect Last Changed Rev in"
-                    " output of svn info"
-                )
+                msg = "SVN.parseGotRevision unable to detect Last Changed Rev in output of svn info"
                 log.msg(msg)
                 # fall through and try to get 'Revision' instead
 

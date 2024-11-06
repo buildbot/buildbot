@@ -152,8 +152,7 @@ def main():
     parser.add_option(
         "-p",
         "--port",
-        help="Port the HTTP server listens to for the Bitbucket Service Hook"
-        " [default: %default]",
+        help="Port the HTTP server listens to for the Bitbucket Service Hook [default: %default]",
         default=4000,
         type=int,
         dest="port",
@@ -168,14 +167,14 @@ def main():
     parser.add_option(
         "-l",
         "--log",
-        help="The absolute path, including filename, to save the log to" " [default: %default]",
+        help="The absolute path, including filename, to save the log to [default: %default]",
         default=tempfile.gettempdir() + "/bitbucket_buildbot.log",
         dest="log",
     )
     parser.add_option(
         "-L",
         "--level",
-        help="The logging level: debug, info, warn, error, fatal [default:" " %default]",
+        help="The logging level: debug, info, warn, error, fatal [default: %default]",
         default='warn',
         dest="level",
     )

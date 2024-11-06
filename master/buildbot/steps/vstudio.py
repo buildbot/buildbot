@@ -198,7 +198,7 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
             return {"step": results.statusToString(self.results)}
 
         description = (
-            f'compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} ' 'files'
+            f'compile {self.logobserver.nbProjects} projects {self.logobserver.nbFiles} files'
         )
 
         if self.logobserver.nbWarnings > 0:

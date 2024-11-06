@@ -1047,7 +1047,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_outcome(
             result=FAILURE,
-            state_string=f"downloading to {os.path.basename(self.destfile)} " "(failure)",
+            state_string=f"downloading to {os.path.basename(self.destfile)} (failure)",
         )
         self.expect_log_file('stderr', "File 'not existing file' not available at master")
         yield self.run_step()

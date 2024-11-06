@@ -118,7 +118,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     def newConnection(self, conn, workerName):
         if workerName in self.connections:
             log.msg(
-                f"Got duplication connection from '{workerName}'" " starting arbitration procedure"
+                f"Got duplication connection from '{workerName}' starting arbitration procedure"
             )
             old_conn = self.connections[workerName]
             try:

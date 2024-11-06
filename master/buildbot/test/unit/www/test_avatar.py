@@ -332,8 +332,7 @@ github_commit_search_reply = {
                 "git/trees{/sha}",
                 "statuses_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "statuses/{sha}",
-                "languages_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "languages",
+                "languages_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/languages",
                 "stargazers_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "stargazers",
                 "contributors_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
@@ -357,18 +356,15 @@ github_commit_search_reply = {
                 "merges_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/merges",
                 "archive_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "{archive_format}{/ref}",
-                "downloads_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "downloads",
+                "downloads_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/downloads",
                 "issues_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "issues{/number}",
-                "pulls_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "pulls{/number}",
+                "pulls_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/pulls{/number}",
                 "milestones_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "milestones{/number}",
                 "notifications_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "notifications{?since,all,participating}",
-                "labels_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "labels{/name}",
+                "labels_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/labels{/name}",
                 "releases_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "releases{/id}",
                 "deployments_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
@@ -481,8 +477,7 @@ github_commit_search_no_user_reply = {
                 "git/trees{/sha}",
                 "statuses_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "statuses/{sha}",
-                "languages_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "languages",
+                "languages_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/languages",
                 "stargazers_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "stargazers",
                 "contributors_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
@@ -506,18 +501,15 @@ github_commit_search_no_user_reply = {
                 "merges_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/merges",
                 "archive_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "{archive_format}{/ref}",
-                "downloads_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "downloads",
+                "downloads_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/downloads",
                 "issues_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "issues{/number}",
-                "pulls_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "pulls{/number}",
+                "pulls_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/pulls{/number}",
                 "milestones_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "milestones{/number}",
                 "notifications_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "notifications{?since,all,participating}",
-                "labels_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
-                "labels{/name}",
+                "labels_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/labels{/name}",
                 "releases_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
                 "releases{/id}",
                 "deployments_url": "https://api.github.com/repos/defunkt-org/defunkt-repo/"
@@ -646,8 +638,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json'},
         )
         commit_search_endpoint = (
-            '/search/commits?'
-            'per_page=1&q=author-email%3Adefunkt%40defunkt.com&sort=committer-date'
+            '/search/commits?per_page=1&q=author-email%3Adefunkt%40defunkt.com&sort=committer-date'
         )
         self._http.expect(
             'get',
@@ -672,8 +663,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json'},
         )
         commit_search_endpoint = (
-            '/search/commits?'
-            'per_page=1&q=author-email%3Adefunkt%40defunkt.com&sort=committer-date'
+            '/search/commits?per_page=1&q=author-email%3Adefunkt%40defunkt.com&sort=committer-date'
         )
         self._http.expect(
             'get',
@@ -696,8 +686,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             headers={'Accept': 'application/vnd.github.v3+json'},
         )
         commit_search_endpoint = (
-            '/search/commits?'
-            'per_page=1&q=author-email%3Anotfound%40defunkt.com&sort=committer-date'
+            '/search/commits?per_page=1&q=author-email%3Anotfound%40defunkt.com&sort=committer-date'
         )
         self._http.expect(
             'get',

@@ -150,9 +150,9 @@ class EC2LatentWorker(AbstractLatentWorker):
         else:
             self.placement = None
         if identifier is None:
-            assert (
-                secret_identifier is None
-            ), 'supply both or neither of identifier, secret_identifier'
+            assert secret_identifier is None, (
+                'supply both or neither of identifier, secret_identifier'
+            )
             if aws_id_file_path is None:
                 home = os.environ['HOME']
                 default_path = os.path.join(home, '.ec2', 'aws_id')
@@ -168,9 +168,9 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'if you supply the identifier and secret_identifier, '
                 'do not specify the aws_id_file_path'
             )
-            assert (
-                secret_identifier is not None
-            ), 'supply both or neither of identifier, secret_identifier'
+            assert secret_identifier is not None, (
+                'supply both or neither of identifier, secret_identifier'
+            )
 
         region_found = None
 
@@ -413,8 +413,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if instance.state['Name'] not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
             log.msg(
-                f'{self.__class__.__name__} {self.workername} terminating instance '
-                f'{instance.id}'
+                f'{self.__class__.__name__} {self.workername} terminating instance {instance.id}'
             )
         duration = 0
         interval = self._poll_resolution

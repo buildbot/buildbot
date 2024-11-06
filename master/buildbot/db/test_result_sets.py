@@ -145,8 +145,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             conn.commit()
             if res.rowcount == 0:
                 raise TestResultSetAlreadyCompleted(
-                    f'Test result set {test_result_setid} '
-                    f'is already completed or does not exist'
+                    f'Test result set {test_result_setid} is already completed or does not exist'
                 )
 
         return self.db.pool.do(thd)
