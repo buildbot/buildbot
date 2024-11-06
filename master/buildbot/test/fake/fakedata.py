@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 
 from twisted.internet import defer
@@ -23,6 +25,7 @@ from buildbot.data import resultspec
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import service
+from buildbot.util.twisted import async_to_deferred
 
 
 class FakeUpdates(service.AsyncService):
@@ -149,8 +152,8 @@ class FakeUpdates(service.AsyncService):
     def expireMasters(self, forceHouseKeeping=False):
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def addBuildset(
+    @async_to_deferred
+    async def addBuildset(
         self,
         waited_for,
         scheduler=None,
@@ -163,7 +166,7 @@ class FakeUpdates(service.AsyncService):
         parent_buildid=None,
         parent_relationship=None,
         priority=0,
-    ):
+    ) -> tuple[int, dict[int, int]]:
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
@@ -187,7 +190,7 @@ class FakeUpdates(service.AsyncService):
 
         # call through to the db layer, since many scheduler tests expect to
         # find the buildset in the db later - TODO fix this!
-        bsid, brids = yield self.master.db.buildsets.addBuildset(
+        bsid, brids = await self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps,
             reason=reason,
             properties=properties,
@@ -204,8 +207,8 @@ class FakeUpdates(service.AsyncService):
         self.maybeBuildsetCompleteCalls += 1
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def claimBuildRequests(self, brids, claimed_at=None):
+    @async_to_deferred
+    async def claimBuildRequests(self, brids, claimed_at=None) -> bool:
         validation.verifyType(
             self.testcase, 'brids', brids, validation.ListValidator(validation.IntValidator())
         )
@@ -218,7 +221,7 @@ class FakeUpdates(service.AsyncService):
         if not brids:
             return True
         try:
-            yield self.master.db.buildrequests.claimBuildRequests(
+            await self.master.db.buildrequests.claimBuildRequests(
                 brids=brids, claimed_at=claimed_at
             )
         except AlreadyClaimedError:
@@ -226,14 +229,14 @@ class FakeUpdates(service.AsyncService):
         self.claimedBuildRequests.update(set(brids))
         return True
 
-    @defer.inlineCallbacks
-    def unclaimBuildRequests(self, brids):
+    @async_to_deferred
+    async def unclaimBuildRequests(self, brids) -> None:
         validation.verifyType(
             self.testcase, 'brids', brids, validation.ListValidator(validation.IntValidator())
         )
         self.claimedBuildRequests.difference_update(set(brids))
         if brids:
-            yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+            await self.master.db.buildrequests.unclaimBuildRequests(brids)
 
     def completeBuildRequests(self, brids, results, complete_at=None):
         validation.verifyType(
@@ -251,16 +254,16 @@ class FakeUpdates(service.AsyncService):
     def rebuildBuildrequest(self, buildrequest):
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def update_project_info(
+    @async_to_deferred
+    async def update_project_info(
         self,
         projectid,
         slug,
         description,
         description_format,
         description_html,
-    ):
-        yield self.master.db.projects.update_project_info(
+    ) -> None:
+        await self.master.db.projects.update_project_info(
             projectid, slug, description, description_format, description_html
         )
 
@@ -275,11 +278,11 @@ class FakeUpdates(service.AsyncService):
         self.builderNames = builderNames
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def updateBuilderInfo(
+    @async_to_deferred
+    async def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
-    ):
-        yield self.master.db.builders.updateBuilderInfo(
+    ) -> None:
+        await self.master.db.builders.updateBuilderInfo(
             builderid, description, description_format, description_html, projectid, tags
         )
 
@@ -364,11 +367,11 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'source', source, validation.StringValidator())
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def setBuildProperties(self, buildid, properties):
+    @async_to_deferred
+    async def setBuildProperties(self, buildid, properties) -> None:
         for k, v, s in properties.getProperties().asList():
             self.properties.append((buildid, k, v, s))
-            yield self.setBuildProperty(buildid, k, v, s)
+            await self.setBuildProperty(buildid, k, v, s)
 
     def addStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
@@ -477,17 +480,19 @@ class FakeUpdates(service.AsyncService):
         return self.master.db.workers.set_worker_graceful(workerid, graceful)
 
     # methods form BuildData resource
-    @defer.inlineCallbacks
-    def setBuildData(self, buildid, name, value, source):
+    @async_to_deferred
+    async def setBuildData(self, buildid, name, value, source) -> None:
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
         validation.verifyType(self.testcase, 'value', value, validation.BinaryValidator())
         validation.verifyType(self.testcase, 'source', source, validation.StringValidator())
-        yield self.master.db.build_data.setBuildData(buildid, name, value, source)
+        await self.master.db.build_data.setBuildData(buildid, name, value, source)
 
     # methods from TestResultSet resource
-    @defer.inlineCallbacks
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+    @async_to_deferred
+    async def addTestResultSet(
+        self, builderid, buildid, stepid, description, category, value_unit
+    ) -> int:
         validation.verifyType(self.testcase, 'builderid', builderid, validation.IntValidator())
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
@@ -497,13 +502,15 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'category', category, validation.StringValidator())
         validation.verifyType(self.testcase, 'value_unit', value_unit, validation.StringValidator())
 
-        test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
+        test_result_setid = await self.master.db.test_result_sets.addTestResultSet(
             builderid, buildid, stepid, description, category, value_unit
         )
         return test_result_setid
 
-    @defer.inlineCallbacks
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
+    @async_to_deferred
+    async def completeTestResultSet(
+        self, test_result_setid, tests_passed=None, tests_failed=None
+    ) -> None:
         validation.verifyType(
             self.testcase, 'test_result_setid', test_result_setid, validation.IntValidator()
         )
@@ -520,14 +527,14 @@ class FakeUpdates(service.AsyncService):
             validation.NoneOk(validation.IntValidator()),
         )
 
-        yield self.master.db.test_result_sets.completeTestResultSet(
+        await self.master.db.test_result_sets.completeTestResultSet(
             test_result_setid, tests_passed, tests_failed
         )
 
     # methods from TestResult resource
-    @defer.inlineCallbacks
-    def addTestResults(self, builderid, test_result_setid, result_values):
-        yield self.master.db.test_results.addTestResults(
+    @async_to_deferred
+    async def addTestResults(self, builderid, test_result_setid, result_values) -> None:
+        await self.master.db.test_results.addTestResults(
             builderid, test_result_setid, result_values
         )
 
