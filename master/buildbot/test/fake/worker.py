@@ -99,15 +99,17 @@ class SeverWorkerConnectionMixin:
     _connection_severed = False
     _severed_deferreds = None
 
-    def disconnect_worker(self):
+    def disconnect_worker(self) -> defer.Deferred[None]:
         if not self._connection_severed:
-            return
+            return defer.succeed(None)
 
         if self._severed_deferreds is not None:
             for d in self._severed_deferreds:
                 d.errback(pb.PBConnectionLost('lost connection'))
 
         self._connection_severed = False
+
+        return defer.succeed(None)
 
     def sever_connection(self):
         # stubs the worker connection so that it appears that the TCP connection
