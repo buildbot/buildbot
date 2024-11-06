@@ -222,22 +222,22 @@ class AbstractLatentWorker(AbstractWorker):
                 ).format(action_str, self)
             )
 
-    def start_instance(self, build):
+    def start_instance(self, build) -> defer.Deferred[bool]:
         # responsible for starting instance that will try to connect with this
         # master.  Should return deferred with either True (instance started)
         # or False (instance not started, so don't run a build here).  Problems
         # should use an errback.
         raise NotImplementedError
 
-    def stop_instance(self, fast=False):
+    def stop_instance(self, fast=False) -> defer.Deferred[bool]:
         # responsible for shutting down instance.
         raise NotImplementedError
 
-    def check_instance(self):
+    def check_instance(self) -> tuple[bool, str]:
         return (True, "")
 
     @property
-    def substantiated(self):
+    def substantiated(self) -> bool:
         return self.state == States.SUBSTANTIATED and self.conn is not None
 
     def substantiate(self, wfb: Any, build: Any) -> defer.Deferred[bool]:
