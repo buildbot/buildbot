@@ -28,6 +28,7 @@ from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
 
 log = Logger()
 
@@ -89,8 +90,8 @@ class HTTPClientService(service.SharedService):
         self._session.update_headers(headers)
 
     @classmethod
-    @defer.inlineCallbacks
-    def getService(cls, master, case, *args, **kwargs):
+    @async_to_deferred
+    async def getService(cls, master, case, *args, **kwargs):
         def assertNotCalled(self, *_args, **_kwargs):
             case.fail(
                 f"HTTPClientService called with *{_args!r}, **{_kwargs!r} "
@@ -99,7 +100,7 @@ class HTTPClientService(service.SharedService):
 
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
 
-        service = yield super().getService(master, *args, **kwargs)
+        service = await super().getService(master, *args, **kwargs)
         service.case = case
         case.addCleanup(service.assertNoOutstanding)
 
@@ -152,8 +153,8 @@ class HTTPClientService(service.SharedService):
             0, len(self._expected), f"expected more http requests:\n {self._expected!r}"
         )
 
-    @defer.inlineCallbacks
-    def _do_request(
+    @async_to_deferred
+    async def _do_request(
         self,
         session,
         method,
@@ -170,7 +171,7 @@ class HTTPClientService(service.SharedService):
         cert=None,
         allow_redirects=None,  # checks are not implemented
         proxies=None,  # checks are not implemented
-    ):
+    ) -> IHttpResponse:
         if ep.startswith('http://') or ep.startswith('https://'):
             pass
         else:
@@ -262,7 +263,7 @@ class HTTPClientService(service.SharedService):
             )
 
         if processing_delay_s is not None:
-            yield util.asyncSleep(1, reactor=self.master.reactor)
+            await util.asyncSleep(1, reactor=self.master.reactor)
 
         return ResponseWrapper(expect['code'], expect['content'])
 
