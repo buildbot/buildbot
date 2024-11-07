@@ -110,3 +110,11 @@ warnings.filterwarnings(
     r"which properly escapes HTML. instead",
     category=DeprecationWarning,
 )
+
+# Warnings comes form ldap3. See https://github.com/cannatag/ldap3/issues/1159
+# builtins.DeprecationWarning: typeMap is deprecated. Please use TYPE_MAP instead.
+warnings.filterwarnings(
+    "ignore",
+    r".* is deprecated\. Please use .* instead\.",
+    category=DeprecationWarning,
+)
