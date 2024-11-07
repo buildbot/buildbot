@@ -57,6 +57,51 @@
       color: #60fdff;
     }
   }
+  .ansi40 {
+    background-color: #000000;
+  }
+  .ansi41 {
+    background-color: #c91b00;
+  }
+  .ansi42 {
+    background-color: #00c200;
+  }
+  .ansi43 {
+    background-color: #c7c400;
+  }
+  .ansi44 {
+    background-color: #0225c7;
+  }
+  .ansi45 {
+    background-color: #ca30c7;
+  }
+  .ansi46 {
+    background-color: #00c5c7;
+  }
+  // bright colors
+  .ansi1 {
+    &.ansi40 {
+      background-color: #ffffff;
+    }
+    &.ansi41 {
+      background-color: #ff6e67;
+    }
+    &.ansi42 {
+      background-color: #5ffa68;
+    }
+    &.ansi43 {
+      background-color: #fffc67;
+    }
+    &.ansi44 {
+      background-color: #6871ff;
+    }
+    &.ansi45 {
+      background-color: #f075f0;
+    }
+    &.ansi47 {
+      background-color: #60fdff;
+    }
+  }
 }
 
 .bb-logviewer-text-row {
