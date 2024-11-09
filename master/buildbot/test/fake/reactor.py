@@ -36,6 +36,8 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from zope.interface import implementer
 
+from buildbot.util.twisted import async_to_deferred
+
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295
 # https://twistedmatrix.com/trac/ticket/8296
@@ -291,12 +293,10 @@ class TestReactor(ProcessReactor, NonReactor, CoreReactor, Clock):
 
         self._pendingCurrentCalls = False
 
-    @defer.inlineCallbacks
-    def _catchPrintExceptions(self, what, *a, **kw):
+    @async_to_deferred
+    async def _catchPrintExceptions(self, what, *a, **kw) -> None:
         try:
-            r = what(*a, **kw)
-            if isinstance(r, defer.Deferred):
-                yield r
+            await defer.maybeDeferred(what, *a, **kw)
         except Exception as e:
             log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise

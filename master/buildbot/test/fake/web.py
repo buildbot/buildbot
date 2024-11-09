@@ -20,14 +20,15 @@ from twisted.internet import defer
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
+from buildbot.util.twisted import async_to_deferred
 
 
-@defer.inlineCallbacks
-def fakeMasterForHooks(testcase):
+@async_to_deferred
+async def fakeMasterForHooks(testcase) -> fakemaster.FakeMaster:
     # testcase must derive from TestReactorMixin and setup_test_reactor()
     # must be called before calling this function.
 
-    master = yield fakemaster.make_master(testcase, wantData=True)
+    master = await fakemaster.make_master(testcase, wantData=True)
     master.www = Mock()
     return master
 

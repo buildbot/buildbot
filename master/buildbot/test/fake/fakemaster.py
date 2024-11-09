@@ -35,6 +35,7 @@ from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.fake.machine import FakeMachineManager
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.util import service
+from buildbot.util.twisted import async_to_deferred
 
 
 class FakeCache:
@@ -137,8 +138,8 @@ class FakeMaster(service.MasterService):
 # Leave this alias, in case we want to add more behavior later
 
 
-@defer.inlineCallbacks
-def make_master(
+@async_to_deferred
+async def make_master(
     testcase,
     wantMq=False,
     wantDb=False,
@@ -148,7 +149,7 @@ def make_master(
     with_secrets: dict | None = None,
     url=None,
     **kwargs,
-):
+) -> FakeMaster:
     if wantRealReactor:
         _reactor = reactor
     else:
@@ -164,20 +165,20 @@ def make_master(
     if wantMq:
         assert testcase is not None, "need testcase for wantMq"
         master.mq = fakemq.FakeMQConnector(testcase)
-        yield master.mq.setServiceParent(master)
+        await master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
         master.db = fakedb.FakeDBConnector(master.basedir, testcase)
         master.db.configured_url = 'sqlite://'
-        yield master.db.setServiceParent(master)
-        yield master.db.setup()
+        await master.db.setServiceParent(master)
+        await master.db.setup()
         testcase.addCleanup(master.db._shutdown)
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
     if wantGraphql:
         master.graphql = GraphQLConnector()
-        yield master.graphql.setServiceParent(master)
+        await master.graphql.setServiceParent(master)
         master.graphql.data = master.data.realConnector
         master.data._scanModule(endpoint)
         master.config.www = {'graphql': {"debug": True}}
@@ -189,6 +190,6 @@ def make_master(
         secret_service = SecretManager()
         secret_service.services = [FakeSecretStorage(secretdict=with_secrets)]
         # This should be awaited, but no other call to `setServiceParent` are awaited here
-        yield secret_service.setServiceParent(master)
+        await secret_service.setServiceParent(master)
 
     return master

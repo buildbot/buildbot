@@ -15,7 +15,6 @@
 
 import asyncio
 
-from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import threadpool
 
@@ -55,7 +54,7 @@ class TestReactorMixin:
             self.addCleanup(self.tear_down_test_reactor)
         self._reactor_tear_down_called = False
 
-    def tear_down_test_reactor(self):
+    def tear_down_test_reactor(self) -> None:
         if self._reactor_tear_down_called:
             return
 
@@ -72,5 +71,3 @@ class TestReactorMixin:
         self.reactor.stop()
         self.reactor.assert_no_remaining_calls()
         _setReactor(None)
-
-        return defer.succeed(None)

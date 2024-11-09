@@ -21,6 +21,7 @@ from buildbot.test.util import validation
 from buildbot.util import deferwaiter
 from buildbot.util import service
 from buildbot.util import tuplematch
+from buildbot.util.twisted import async_to_deferred
 
 
 class FakeMQConnector(service.AsyncMultiService, base.MQBase):
@@ -39,10 +40,10 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.qrefs = []
         self._deferwaiter = deferwaiter.DeferWaiter()
 
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield self._deferwaiter.wait()
-        yield super().stopService()
+    @async_to_deferred
+    async def stopService(self) -> None:
+        await self._deferwaiter.wait()
+        await super().stopService()
 
     def setup(self):
         self.setup_called = True
@@ -102,10 +103,10 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
             self.testcase.assertEqual(sorted(self.productions), sorted(exp))
         self.productions = []
 
-    @defer.inlineCallbacks
-    def wait_consumed(self):
+    @async_to_deferred
+    async def wait_consumed(self) -> None:
         # waits until all messages have been consumed
-        yield self._deferwaiter.wait()
+        await self._deferwaiter.wait()
 
 
 class FakeQueueRef:
