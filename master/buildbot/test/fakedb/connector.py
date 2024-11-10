@@ -18,6 +18,7 @@ import json
 from twisted.internet import defer
 
 from buildbot.db.connector import DBConnector
+from buildbot.test.util.db import thd_clean_database
 from buildbot.util.sautils import hash_columns
 
 from .build_data import BuildData
@@ -83,6 +84,7 @@ class FakeDBConnector(DBConnector):
     def setup(self):
         if self.auto_upgrade:
             yield super().setup(check_version=False)
+            yield self.pool.do(thd_clean_database)
             yield self.model.upgrade()
         else:
             yield super().setup()
