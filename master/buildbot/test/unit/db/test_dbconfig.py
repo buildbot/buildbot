@@ -18,21 +18,21 @@ from twisted.internet import threads
 from twisted.trial import unittest
 
 from buildbot.db import dbconfig
-from buildbot.test.util import db
+from buildbot.test.fake import fakemaster
 
 
-class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
+class TestDbConfig(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         # as we will open the db twice, we can't use in memory sqlite
-        yield self.setUpRealDatabase(table_names=['objects', 'object_state'], sqlite_memory=False)
+        self.master = yield fakemaster.make_master(
+            self, wantRealReactor=True, wantDb=True, sqlite_memory=False
+        )
+        self.db_url = self.master.db.configured_url
         yield threads.deferToThread(self.createDbConfig)
 
     def createDbConfig(self):
-        self.dbConfig = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
-
-    def tearDown(self):
-        return self.tearDownRealDatabase()
+        self.dbConfig = dbconfig.DbConfig({"db_url": self.db_url}, self.master.basedir)
 
     def test_basic(self):
         def thd():
@@ -59,30 +59,29 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
 
     # supports the 3 different ways to declare db_url in the master.cfg
     def test_init1(self):
-        obj = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
+        obj = dbconfig.DbConfig({"db_url": self.db_url}, self.master.basedir)
         self.assertEqual(obj.db_url, self.db_url)
 
     def test_init2(self):
-        obj = dbconfig.DbConfig({"db": {"db_url": self.db_url}}, self.basedir)
+        obj = dbconfig.DbConfig({"db": {"db_url": self.db_url}}, self.master.basedir)
         self.assertEqual(obj.db_url, self.db_url)
 
     def test_init3(self):
-        obj = dbconfig.DbConfig({}, self.basedir)
+        obj = dbconfig.DbConfig({}, self.master.basedir)
         self.assertEqual(obj.db_url, "sqlite:///state.sqlite")
 
 
-class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
+class TestDbConfigNotInitialized(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         # as we will open the db twice, we can't use in memory sqlite
-        yield self.setUpRealDatabase(table_names=[], sqlite_memory=False)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownRealDatabase()
+        self.master = yield fakemaster.make_master(
+            self, wantRealReactor=True, wantDb=True, sqlite_memory=False
+        )
+        self.db_url = self.master.db.configured_url
 
     def createDbConfig(self, db_url=None):
-        return dbconfig.DbConfig({"db_url": db_url or self.db_url}, self.basedir)
+        return dbconfig.DbConfig({"db_url": db_url or self.db_url}, self.master.basedir)
 
     def test_default(self):
         def thd():
