@@ -98,16 +98,8 @@ class TestCleanupDb(
         self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
-    def resolve_db_url(self):
-        # test may use mysql or pg if configured in env
-        envkey = "BUILDBOT_TEST_DB_URL"
-        if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
-            return "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite"))
-        return os.environ[envkey]
-
     def createMasterCfg(self, extraconfig=""):
-        db_url = db.resolve_test_index_in_db_url(self.resolve_db_url())
-        write_master_cfg(os.path.join('basedir', 'master.cfg'), db_url, extraconfig)
+        write_master_cfg(os.path.join('basedir', 'master.cfg'), 'sqlite://', extraconfig)
 
     @async_to_deferred
     async def test_cleanup_not_basedir(self):
@@ -131,19 +123,20 @@ class TestCleanupDb(
         # complain
         self.flushLoggedErrors()
 
-    def assertDictAlmostEqual(self, d1, d2):
-        # The test shows each methods return different size
-        # but we still make a fuzzy comparison to resist if underlying libraries
-        # improve efficiency
-        self.assertEqual(len(d1), len(d2))
-        for k in d2.keys():
-            self.assertApproximates(d1[k], d2[k], 10)
 
-
-class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
+class TestCleanupDbRealDb(
+    db.RealDatabaseWithConnectorMixin,
+    misc.StdoutAssertionsMixin,
+    dirs.DirsMixin,
+    TestReactorMixin,
+    unittest.TestCase,
+):
     @defer.inlineCallbacks
     def setUp(self):
-        yield super().setUp()
+        self.setup_test_reactor(auto_tear_down=False)
+        self.setUpDirs('basedir')
+        write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
+        self.setUpStdoutAssertions()
 
         table_names = [
             'logs',
@@ -166,6 +159,19 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.tearDownRealDatabaseWithConnector()
+        self.tearDownDirs()
+        yield self.tear_down_test_reactor()
+
+    def resolve_db_url(self):
+        # test may use mysql or pg if configured in env
+        envkey = "BUILDBOT_TEST_DB_URL"
+        if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
+            return "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite"))
+        return os.environ[envkey]
+
+    def createMasterCfg(self, extraconfig=""):
+        db_url = db.resolve_test_index_in_db_url(self.resolve_db_url())
+        write_master_cfg(os.path.join('basedir', 'master.cfg'), db_url, extraconfig)
 
     @async_to_deferred
     async def test_cleanup(self):
@@ -222,3 +228,11 @@ class TestCleanupDbRealDb(db.RealDatabaseWithConnectorMixin, TestCleanupDb):
                 'br': 14,
             },
         )
+
+    def assertDictAlmostEqual(self, d1, d2):
+        # The test shows each methods return different size
+        # but we still make a fuzzy comparison to resist if underlying libraries
+        # improve efficiency
+        self.assertEqual(len(d1), len(d2))
+        for k in d2.keys():
+            self.assertApproximates(d1[k], d2[k], 10)
