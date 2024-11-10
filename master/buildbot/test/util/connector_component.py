@@ -75,19 +75,3 @@ class ConnectorComponentMixin(TestReactorMixin, db.RealDatabaseMixin):
         del self.db.model
         del self.db
         yield self.tear_down_test_reactor()
-
-
-class FakeConnectorComponentMixin(TestReactorMixin):
-    # Just like ConnectorComponentMixin, but for working with fake database
-
-    @defer.inlineCallbacks
-    def setUpConnectorComponent(self):
-        self.setup_test_reactor(auto_tear_down=False)
-        self.master = yield fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
-        self.db.checkForeignKeys = True
-        self.insert_test_data = self.db.insert_test_data
-
-    @defer.inlineCallbacks
-    def tearDownConnectorComponent(self):
-        yield self.tear_down_test_reactor()
