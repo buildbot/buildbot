@@ -60,19 +60,37 @@ def mkconfig(**kwargs):
     return config
 
 
+def write_buildbot_tac(path):
+    with open(path, "w", encoding='utf-8') as f:
+        f.write(
+            textwrap.dedent("""
+            from twisted.application import service
+            application = service.Application('buildmaster')
+        """)
+        )
+
+
+def write_master_cfg(path, db_url, extraconfig):
+    with open(path, "w", encoding='utf-8') as f:
+        f.write(
+            textwrap.dedent(f"""
+            from buildbot.plugins import *
+            c = BuildmasterConfig = dict()
+            c['db_url'] = {db_url!r}
+            c['buildbotNetUsageData'] = None
+            c['multiMaster'] = True  # don't complain for no builders
+            {extraconfig}
+        """)
+        )
+
+
 class TestCleanupDb(
     misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
         self.setup_test_reactor(auto_tear_down=False)
         self.setUpDirs('basedir')
-        with open(os.path.join('basedir', 'buildbot.tac'), "w", encoding='utf-8') as f:
-            f.write(
-                textwrap.dedent("""
-                from twisted.application import service
-                application = service.Application('buildmaster')
-            """)
-            )
+        write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
         self.setUpStdoutAssertions()
 
     @defer.inlineCallbacks
@@ -89,18 +107,7 @@ class TestCleanupDb(
 
     def createMasterCfg(self, extraconfig=""):
         db_url = db.resolve_test_index_in_db_url(self.resolve_db_url())
-
-        with open(os.path.join('basedir', 'master.cfg'), "w", encoding='utf-8') as f:
-            f.write(
-                textwrap.dedent(f"""
-                from buildbot.plugins import *
-                c = BuildmasterConfig = dict()
-                c['db_url'] = {db_url!r}
-                c['buildbotNetUsageData'] = None
-                c['multiMaster'] = True  # don't complain for no builders
-                {extraconfig}
-            """)
-            )
+        write_master_cfg(os.path.join('basedir', 'master.cfg'), db_url, extraconfig)
 
     @async_to_deferred
     async def test_cleanup_not_basedir(self):
