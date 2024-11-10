@@ -110,6 +110,7 @@ class DBConnector(AbstractDBConnector):
         self._engine = None  # set up in reconfigService
         self.pool = None  # set up in reconfigService
         self.upsert = get_upsert_method(None)  # set up in reconfigService
+        self.has_native_upsert = False
 
     @defer.inlineCallbacks
     def setServiceParent(self, p):
@@ -149,6 +150,7 @@ class DBConnector(AbstractDBConnector):
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
         self.upsert = get_upsert_method(self._engine)
+        self.has_native_upsert = self.upsert != get_upsert_method(None)
         self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
         self._db_tasks_waiter = DeferWaiter()
 
