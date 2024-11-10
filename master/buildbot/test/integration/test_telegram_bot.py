@@ -30,7 +30,7 @@ from buildbot.reporters import telegram
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.test.util import db
+from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
@@ -59,7 +59,7 @@ class BytesProducer:
         pass
 
 
-class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unittest.TestCase):
+class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
     master = None
 
     _commands = [
@@ -93,22 +93,9 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
     @defer.inlineCallbacks
     def setUp(self):
-        table_names = [
-            'objects',
-            'object_state',
-            'masters',
-            'workers',
-            'configured_workers',
-            'connected_workers',
-            'builder_masters',
-            'builders',
-            'projects',
-        ]
-
-        master = yield fakemaster.make_master(self, wantRealReactor=True)
-
-        yield self.setUpRealDatabaseWithConnector(
-            master, table_names=table_names, sqlite_memory=False
+        self.setUpDirs('basedir')
+        master = yield fakemaster.make_master(
+            self, wantDb=True, sqlite_memory=False, wantRealReactor=True
         )
 
         master.data = dataconnector.DataConnector()
@@ -169,10 +156,10 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
     @defer.inlineCallbacks
     def tearDown(self):
+        self.tearDownDirs()
         if self.master:
             yield self.master.www.stopService()
             yield self.master.mq.stopService()
-        yield self.tearDownRealDatabaseWithConnector()
 
     @defer.inlineCallbacks
     def testWebhook(self):
@@ -219,7 +206,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
         tboid = yield self.master.db.state.getObjectId(
             'testbot', 'buildbot.reporters.telegram.TelegramWebhookBot'
         )
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.ObjectState(
                 objectid=tboid,
                 name='notify_events',
@@ -266,7 +253,7 @@ class TelegramBot(db.RealDatabaseWithConnectorMixin, www.RequiresWwwMixin, unitt
 
     @defer.inlineCallbacks
     def testMissingWorker(self):
-        yield self.insert_test_data([fakedb.Worker(id=1, name='local1')])
+        yield self.master.db.insert_test_data([fakedb.Worker(id=1, name='local1')])
 
         tb = self.master.config.services['TelegramBot']
         channel = tb.bot.getChannel(-123456)
