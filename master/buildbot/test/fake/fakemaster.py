@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import os
 import weakref
 from unittest import mock
 
@@ -178,6 +179,9 @@ async def make_master(
 
         if db_url == 'sqlite://' and not sqlite_memory:
             db_url = 'sqlite:///tmp.sqlite'
+            if not os.path.exists(master.basedir):
+                os.makedirs(master.basedir)
+
         master.db.configured_url = db_url
         await master.db.setServiceParent(master)
         await master.db.setup()
