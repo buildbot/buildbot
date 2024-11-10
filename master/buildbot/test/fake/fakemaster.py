@@ -148,6 +148,7 @@ async def make_master(
     wantGraphql=False,
     with_secrets: dict | None = None,
     url=None,
+    sqlite_memory=True,
     **kwargs,
 ) -> FakeMaster:
     if wantRealReactor:
@@ -168,8 +169,8 @@ async def make_master(
         await master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(master.basedir, testcase)
-        master.db.configured_url = 'sqlite://'
+        master.db = fakedb.FakeDBConnector(master.basedir, testcase, auto_upgrade=True)
+        master.db.configured_url = 'sqlite://' if sqlite_memory else 'sqlite:///tmp.sqlite'
         await master.db.setServiceParent(master)
         await master.db.setup()
         testcase.addCleanup(master.db._shutdown)
