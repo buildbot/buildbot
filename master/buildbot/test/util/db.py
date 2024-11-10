@@ -34,7 +34,7 @@ def skip_for_dialect(dialect):
 
     def dec(fn):
         def wrap(self, *args, **kwargs):
-            if self.db_engine.dialect.name == dialect:
+            if self.master.db._engine.dialect.name == dialect:
                 raise unittest.SkipTest(f"Not supported on dialect '{dialect}'")
             return fn(self, *args, **kwargs)
 
