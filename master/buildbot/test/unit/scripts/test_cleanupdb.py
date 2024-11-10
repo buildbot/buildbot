@@ -24,7 +24,6 @@ from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.unit.db import test_logs
-from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.util.twisted import async_to_deferred
@@ -125,11 +124,7 @@ class TestCleanupDb(
 
 
 class TestCleanupDbRealDb(
-    db.RealDatabaseWithConnectorMixin,
-    misc.StdoutAssertionsMixin,
-    dirs.DirsMixin,
-    TestReactorMixin,
-    unittest.TestCase,
+    misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self):
@@ -138,50 +133,31 @@ class TestCleanupDbRealDb(
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
         self.setUpStdoutAssertions()
 
-        table_names = [
-            'logs',
-            'logchunks',
-            'steps',
-            'builds',
-            'projects',
-            'builders',
-            'masters',
-            'buildrequests',
-            'buildsets',
-            'workers',
-        ]
-
-        self.master = yield fakemaster.make_master(self, wantRealReactor=True)
-        yield self.setUpRealDatabaseWithConnector(
-            self.master, table_names=table_names, db_url=self.resolve_db_url()
+        self.master = yield fakemaster.make_master(
+            self, wantDb=True, wantRealReactor=True, sqlite_memory=False
         )
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownRealDatabaseWithConnector()
         self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
-    def resolve_db_url(self):
-        # test may use mysql or pg if configured in env
-        envkey = "BUILDBOT_TEST_DB_URL"
-        if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
-            return "sqlite:///" + os.path.abspath(os.path.join("basedir", "state.sqlite"))
-        return os.environ[envkey]
-
-    def createMasterCfg(self, extraconfig=""):
-        db_url = db.resolve_test_index_in_db_url(self.resolve_db_url())
+    def createMasterCfg(self, db_url, extraconfig=""):
         write_master_cfg(os.path.join('basedir', 'master.cfg'), db_url, extraconfig)
 
     @async_to_deferred
     async def test_cleanup(self):
         # we reuse the fake db background data from db.logs unit tests
-        await self.insert_test_data(test_logs.Tests.backgroundData)
+        await self.master.db.insert_test_data(test_logs.Tests.backgroundData)
 
         # insert a log with lots of redundancy
         LOGDATA = "xx\n" * 2000
         logid = await self.master.db.logs.addLog(102, "x", "x", "s")
         await self.master.db.logs.appendLog(logid, LOGDATA)
+
+        db_url = self.master.db.configured_url
+
+        await self.master.db._shutdown()
 
         # test all methods
         lengths = {}
@@ -199,7 +175,7 @@ class TestCleanupDbRealDb(
                 lengths["br"] = 14
                 continue
             # create a master.cfg with different compression method
-            self.createMasterCfg(f"c['logCompressionMethod'] = '{mode}'")
+            self.createMasterCfg(db_url, f"c['logCompressionMethod'] = '{mode}'")
             res = await cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 
