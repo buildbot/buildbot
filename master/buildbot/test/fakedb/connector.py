@@ -65,8 +65,7 @@ from .workers import Worker
 class FakeDBConnector(DBConnector):
     """
     A stand-in for C{master.db} that operates without an actual database
-    backend.  This also implements a test-data interface similar to the
-    L{buildbot.test.util.db.RealDatabaseMixin.insert_test_data} method.
+    backend.
 
     The child classes implement various useful assertions and faking methods;
     see their documentation for more.
