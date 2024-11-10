@@ -74,11 +74,12 @@ class FakeDBConnector(DBConnector):
 
     MASTER_ID = 824
 
-    def __init__(self, basedir, testcase, auto_upgrade=False):
+    def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True):
         super().__init__(basedir)
         self.testcase = testcase
         self.checkForeignKeys = False
         self.auto_upgrade = auto_upgrade
+        self.check_version = check_version
 
     @defer.inlineCallbacks
     def setup(self):
@@ -87,7 +88,7 @@ class FakeDBConnector(DBConnector):
             yield self.pool.do(thd_clean_database)
             yield self.model.upgrade()
         else:
-            yield super().setup()
+            yield super().setup(check_version=self.check_version)
 
     def _match_rows(self, rows, type):
         matched_rows = [r for r in rows if isinstance(r, type)]
