@@ -18,7 +18,8 @@ from twisted.trial import unittest
 
 from buildbot.db import projects
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 
 
@@ -26,7 +27,17 @@ def project_key(builder):
     return builder.id
 
 
-class Tests(interfaces.InterfaceTests):
+class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor(auto_tear_down=False)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
+
     def test_signature_find_project_id(self):
         @self.assertArgSpecMatches(self.db.projects.find_project_id)
         def find_project_id(self, name, auto_create=True):
@@ -56,7 +67,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_update_project_info(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
         ])
 
@@ -100,7 +111,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_find_project_id_exists(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project'),
         ])
         id = yield self.db.projects.find_project_id('fake_project')
@@ -108,7 +119,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_project(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project'),
         ])
         dbdict = yield self.db.projects.get_project(7)
@@ -132,7 +143,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_projects(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Project(id=7, name="fake_project7"),
             fakedb.Project(id=8, name="fake_project8"),
             fakedb.Project(id=9, name="fake_project9"),
@@ -180,7 +191,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_active_projects(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Project(id=1, name='fake_project1'),
             fakedb.Project(id=2, name='fake_project2'),
             fakedb.Project(id=3, name='fake_project3'),
@@ -205,24 +216,3 @@ class Tests(interfaces.InterfaceTests):
                 )
             ],
         )
-
-
-class RealTests(Tests):
-    # tests that only "real" implementations will pass
-
-    pass
-
-
-class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=["projects", "builders", "masters", "builder_masters"]
-        )
-
-        self.db.projects = projects.ProjectsConnectorComponent(self.db)
-        self.master = self.db.master
-        self.master.db = self.db
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
