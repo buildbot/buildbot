@@ -19,11 +19,12 @@ from twisted.trial import unittest
 
 from buildbot.db import schedulers
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 
 
-class Tests(interfaces.InterfaceTests):
+class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     # test data
 
     ss92 = fakedb.SourceStamp(id=92)
@@ -40,7 +41,15 @@ class Tests(interfaces.InterfaceTests):
     master14 = fakedb.Master(id=14, name='m2', active=0)
     scheduler25master = fakedb.SchedulerMaster(schedulerid=25, masterid=14)
 
-    # tests
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor(auto_tear_down=False)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     def test_signature_enable(self):
         @self.assertArgSpecMatches(self.db.schedulers.enable)
@@ -49,7 +58,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_enable(self):
-        yield self.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
+        yield self.db.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
         self.assertEqual(
@@ -77,7 +86,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_classifyChanges(self):
-        yield self.insert_test_data([self.ss92, self.change3, self.change4, self.scheduler24])
+        yield self.db.insert_test_data([self.ss92, self.change3, self.change4, self.scheduler24])
         yield self.db.schedulers.classifyChanges(24, {3: False, 4: True})
         res = yield self.db.schedulers.getChangeClassifications(24)
         self.assertEqual(res, {3: False, 4: True})
@@ -87,7 +96,7 @@ class Tests(interfaces.InterfaceTests):
         # test reclassifying changes, which may happen during some timing
         # conditions.  It's important that this test uses multiple changes,
         # only one of which already exists
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.ss92,
             self.change3,
             self.change4,
@@ -107,7 +116,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_flushChangeClassifications(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.ss92,
             self.change3,
             self.change4,
@@ -123,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_flushChangeClassifications_less_than(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.ss92,
             self.change3,
             self.change4,
@@ -144,7 +153,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeClassifications(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.ss92,
             self.change3,
             self.change4,
@@ -158,7 +167,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeClassifications_branch(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.ss92,
             self.change3,
             self.change4,
@@ -194,14 +203,14 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_fresh(self):
-        yield self.insert_test_data([self.scheduler24, self.master13])
+        yield self.db.insert_test_data([self.scheduler24, self.master13])
         yield self.db.schedulers.setSchedulerMaster(24, 13)
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertEqual(sch.masterid, 13)
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.master13,
             self.scheduler25,
             self.master14,
@@ -212,7 +221,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked_to_this_master(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler25,
             self.master14,
             self.scheduler25master,
@@ -221,7 +230,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_active(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -231,7 +240,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_None(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler25,
             self.master14,
             self.scheduler25master,
@@ -242,7 +251,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_None_unowned(self):
-        yield self.insert_test_data([self.scheduler25])
+        yield self.db.insert_test_data([self.scheduler25])
         yield self.db.schedulers.setSchedulerMaster(25, None)
         sch = yield self.db.schedulers.getScheduler(25)
         self.assertEqual(sch.masterid, None)
@@ -254,7 +263,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getScheduler(self):
-        yield self.insert_test_data([self.scheduler24])
+        yield self.db.insert_test_data([self.scheduler24])
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
         self.assertEqual(
@@ -268,7 +277,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getScheduler_active(self):
-        yield self.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
+        yield self.db.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
         self.assertEqual(
@@ -277,7 +286,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getScheduler_inactive_but_linked(self):
-        yield self.insert_test_data([self.scheduler25, self.master14, self.scheduler25master])
+        yield self.db.insert_test_data([self.scheduler25, self.master14, self.scheduler25master])
         sch = yield self.db.schedulers.getScheduler(25)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
         self.assertEqual(
@@ -291,7 +300,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSchedulers(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -319,7 +328,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSchedulers_masterid(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -339,7 +348,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSchedulers_active(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -359,7 +368,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSchedulers_active_masterid(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -386,7 +395,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSchedulers_inactive(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -406,7 +415,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getSchedulers_inactive_masterid(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
             self.scheduler24master,
@@ -425,32 +434,6 @@ class Tests(interfaces.InterfaceTests):
             self.assertIsInstance(sch, schedulers.SchedulerModel)
 
         self.assertEqual(sorted(schlist), [])  # always returns [] by spec!
-
-
-class RealTests(Tests):
-    # tests that only "real" implementations will pass
-    pass
-
-
-class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=[
-                'changes',
-                'schedulers',
-                'masters',
-                'sourcestamps',
-                'patches',
-                'scheduler_masters',
-                'scheduler_changes',
-            ]
-        )
-
-        self.db.schedulers = schedulers.SchedulersConnectorComponent(self.db)
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
 
     @defer.inlineCallbacks
     def addClassifications(self, schedulerid, *classifications):
