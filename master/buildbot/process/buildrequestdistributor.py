@@ -166,9 +166,10 @@ class BuildChooserBase:
 
     def _getUnclaimedBuildRequests(self):
         # Retrieve the list of BuildRequest objects for all unclaimed builds
-        return defer.gatherResults([
-            self._getBuildRequestForBrdict(brdict) for brdict in self.unclaimedBrdicts
-        ])
+        return defer.gatherResults(
+            [self._getBuildRequestForBrdict(brdict) for brdict in self.unclaimedBrdicts],
+            consumeErrors=True,
+        )
 
 
 class BasicBuildChooser(BuildChooserBase):

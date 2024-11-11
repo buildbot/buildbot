@@ -437,7 +437,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         e = eBuild.startBuild(eWorker)
         c = cBuild.startBuild(cWorker)
-        d = defer.DeferredList([e, c])
+        d = defer.DeferredList([e, c], consumeErrors=True)
 
         real_lock.release(b3, b3_access)
 

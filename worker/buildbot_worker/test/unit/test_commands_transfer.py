@@ -260,7 +260,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         interrupt_d.addCallback(do_interrupt)
 
-        yield defer.DeferredList([d, interrupt_d])
+        yield defer.DeferredList([d, interrupt_d], consumeErrors=True)
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -593,6 +593,6 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         interrupt_d.addCallback(do_interrupt)
 
-        yield defer.DeferredList([d, interrupt_d])
+        yield defer.DeferredList([d, interrupt_d], consumeErrors=True)
 
         self.assertUpdates(['read(s)', 'close', ('rc', 1)])

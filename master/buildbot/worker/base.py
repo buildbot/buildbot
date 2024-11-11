@@ -588,7 +588,7 @@ class AbstractWorker(service.BuildbotService):
             if b:
                 d1 = self.attachBuilder(b)
                 dl.append(d1)
-        yield defer.DeferredList(dl)
+        yield defer.DeferredList(dl, consumeErrors=True)
 
     def attachBuilder(self, builder):
         return builder.attached(self, self.worker_commands)

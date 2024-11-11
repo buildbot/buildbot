@@ -476,7 +476,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
             d.addCallback(self.check_result, short(c))
             return d
 
-        yield defer.gatherResults([check(c, self.lru.get(c)) for c in chars])
+        yield defer.gatherResults([check(c, self.lru.get(c)) for c in chars], consumeErrors=True)
 
         self.assertEqual(misses[0], 26)
         self.assertEqual(self.lru.misses, 26)
@@ -502,7 +502,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
             reactor.callLater(0.02 * i, do_get, d, 'x')
             ds.append(d)
 
-        yield defer.gatherResults(ds)
+        yield defer.gatherResults(ds, consumeErrors=True)
 
         self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
 

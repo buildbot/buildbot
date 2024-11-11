@@ -212,7 +212,7 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         if self.buildworker and self.buildworker.detach_d:
             deferreds.append(self.buildworker.detach_d)
 
-        yield defer.gatherResults(deferreds)
+        yield defer.gatherResults(deferreds, consumeErrors=True)
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

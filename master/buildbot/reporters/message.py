@@ -234,11 +234,14 @@ class MessageFormatterBase(util.ComparableMixin):
         yield self.buildAdditionalContext(master, context)
         context.update(self.context)
 
-        body, subject, extra_info = yield defer.gatherResults([
-            defer.maybeDeferred(self.render_message_body, context),
-            defer.maybeDeferred(self.render_message_subject, context),
-            defer.maybeDeferred(self.render_message_extra_info, context),
-        ])
+        body, subject, extra_info = yield defer.gatherResults(
+            [
+                defer.maybeDeferred(self.render_message_body, context),
+                defer.maybeDeferred(self.render_message_subject, context),
+                defer.maybeDeferred(self.render_message_extra_info, context),
+            ],
+            consumeErrors=True,
+        )
 
         return {
             "body": body,

@@ -501,7 +501,7 @@ class _Lookup(util.ComparableMixin):
     def getRenderingFor(self, build):
         value = build.render(self.value)
         index = build.render(self.index)
-        value, index = yield defer.gatherResults([value, index])
+        value, index = yield defer.gatherResults([value, index], consumeErrors=True)
         if index not in value:
             rv = yield build.render(self.default)
         else:
@@ -947,7 +947,7 @@ class _ListRenderer:
         self.value = value
 
     def getRenderingFor(self, build):
-        return defer.gatherResults([build.render(e) for e in self.value])
+        return defer.gatherResults([build.render(e) for e in self.value], consumeErrors=True)
 
 
 registerAdapter(_ListRenderer, list, IRenderable)
@@ -963,7 +963,7 @@ class _TupleRenderer:
         self.value = value
 
     def getRenderingFor(self, build):
-        d = defer.gatherResults([build.render(e) for e in self.value])
+        d = defer.gatherResults([build.render(e) for e in self.value], consumeErrors=True)
         d.addCallback(tuple)
         return d
 

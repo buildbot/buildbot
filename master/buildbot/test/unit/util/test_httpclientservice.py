@@ -467,7 +467,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
             return d
 
         dl = [oneReq() for i in range(self.NUM_PARALLEL)]
-        yield defer.gatherResults(dl)
+        yield defer.gatherResults(dl, consumeErrors=True)
 
 
 class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):

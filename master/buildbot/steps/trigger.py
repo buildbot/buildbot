@@ -329,7 +329,7 @@ class Trigger(BuildStep):
         self.triggeredNames = triggeredNames
 
         if self.waitForFinish:
-            self.waitForFinishDeferred = defer.DeferredList(dl, consumeErrors=1)
+            self.waitForFinishDeferred = defer.DeferredList(dl, consumeErrors=True)
             try:
                 rclist = yield self.waitForFinishDeferred
             except defer.CancelledError:

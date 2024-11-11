@@ -509,14 +509,17 @@ class BuildStep(
                         raise BuildStepCancelled
 
                     locks_acquired_at = int(self.master.reactor.seconds())
-                    yield defer.DeferredList([
-                        self.master.data.updates.set_step_locks_acquired_at(
-                            self.stepid, locks_acquired_at=locks_acquired_at
-                        ),
-                        self.master.data.updates.add_build_locks_duration(
-                            self.build.buildid, duration_s=locks_acquired_at - started_at
-                        ),
-                    ])
+                    yield defer.DeferredList(
+                        [
+                            self.master.data.updates.set_step_locks_acquired_at(
+                                self.stepid, locks_acquired_at=locks_acquired_at
+                            ),
+                            self.master.data.updates.add_build_locks_duration(
+                                self.build.buildid, duration_s=locks_acquired_at - started_at
+                            ),
+                        ],
+                        consumeErrors=True,
+                    )
                 else:
                     yield self.master.data.updates.set_step_locks_acquired_at(
                         self.stepid, locks_acquired_at=started_at
@@ -619,7 +622,7 @@ class BuildStep(
             d = self.build.render(getattr(self, renderable))
             d.addCallback(setRenderable, renderable)
             dl.append(d)
-        yield defer.gatherResults(dl)
+        yield defer.gatherResults(dl, consumeErrors=True)
         self.rendered = True
 
     def setBuildData(self, name, value, source):

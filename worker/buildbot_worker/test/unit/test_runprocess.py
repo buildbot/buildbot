@@ -715,7 +715,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             self.assertDead(self.pid)
 
         runproc_d.addCallback(check_dead)
-        return defer.gatherResults([pidfile_d, runproc_d])
+        return defer.gatherResults([pidfile_d, runproc_d], consumeErrors=True)
 
     def test_sigterm(self, interruptSignal=None):
         # Tests that the process will receive SIGTERM if sigtermTimeout
@@ -762,7 +762,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             self.assertDead(self.pid)
 
         runproc_d.addCallback(check_dead)
-        return defer.gatherResults([pidfile_d, runproc_d])
+        return defer.gatherResults([pidfile_d, runproc_d], consumeErrors=True)
 
     def test_pgroup_usePTY(self):
         return self.do_test_pgroup(usePTY=True)
@@ -797,7 +797,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # wait for both processes to start up, then call s.kill
         parent_pidfile_d = self.waitForPidfile(parent_pidfile)
         child_pidfile_d = self.waitForPidfile(child_pidfile)
-        pidfiles_d = defer.gatherResults([parent_pidfile_d, child_pidfile_d])
+        pidfiles_d = defer.gatherResults([parent_pidfile_d, child_pidfile_d], consumeErrors=True)
 
         def got_pids(pids):
             self.parent_pid, self.child_pid = pids
@@ -810,7 +810,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfiles_d.addCallback(kill)
 
         # check that both processes are dead after RunProcess is done
-        yield defer.gatherResults([pidfiles_d, runproc_d])
+        yield defer.gatherResults([pidfiles_d, runproc_d], consumeErrors=True)
 
         self.assertDead(self.parent_pid)
         if expectChildSurvival:
@@ -853,7 +853,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # wait for both processes to start up, then call s.kill
         parent_pidfile_d = self.waitForPidfile(parent_pidfile)
         child_pidfile_d = self.waitForPidfile(child_pidfile)
-        pidfiles_d = defer.gatherResults([parent_pidfile_d, child_pidfile_d])
+        pidfiles_d = defer.gatherResults([parent_pidfile_d, child_pidfile_d], consumeErrors=True)
 
         def got_pids(pids):
             self.parent_pid, self.child_pid = pids
@@ -866,7 +866,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfiles_d.addCallback(kill)
 
         # check that both processes are dead after RunProcess is done
-        yield defer.gatherResults([pidfiles_d, runproc_d])
+        yield defer.gatherResults([pidfiles_d, runproc_d], consumeErrors=True)
 
         self.assertDead(self.parent_pid)
         if expectChildSurvival:

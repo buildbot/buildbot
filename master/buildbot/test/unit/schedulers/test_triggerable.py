@@ -91,9 +91,10 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ),
         )
 
-        actual_sourcestamps = yield defer.gatherResults([
-            self.master.db.sourcestamps.getSourceStamp(ssid) for ssid in buildset.sourcestamps
-        ])
+        actual_sourcestamps = yield defer.gatherResults(
+            [self.master.db.sourcestamps.getSourceStamp(ssid) for ssid in buildset.sourcestamps],
+            consumeErrors=True,
+        )
 
         self.assertEqual(len(sourcestamps), len(actual_sourcestamps))
         for expected_ss, actual_ss in zip(sourcestamps, actual_sourcestamps):
