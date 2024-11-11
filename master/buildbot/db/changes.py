@@ -323,7 +323,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def _getDataFromRow(self, row):
         return row.changeid
 
-    def getChanges(self, resultSpec=None) -> defer.Deferred[Iterable[int]]:
+    @defer.inlineCallbacks
+    def getChanges(self, resultSpec=None):
         def thd(conn) -> Iterable[int]:
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
@@ -338,14 +339,13 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             rp.close()
             return list(changeids)
 
-        d = self.db.pool.do(thd)
+        changeids = yield self.db.pool.do(thd)
 
-        # then turn those into changes, using the cache
-        @d.addCallback
-        def get_changes(changeids):
-            return defer.gatherResults([self.getChange(changeid) for changeid in changeids])
+        changes = yield defer.gatherResults(
+            [self.getChange(changeid) for changeid in changeids], consumeErrors=True
+        )
 
-        return d
+        return changes
 
     def getChangesCount(self) -> defer.Deferred[int]:
         def thd(conn) -> int:

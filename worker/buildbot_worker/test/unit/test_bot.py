@@ -176,7 +176,7 @@ VERSION_ID="1"
         d2 = self.bot.callRemote("shutdown")
         # don't return until both the shutdown method has returned, and
         # reactor.stop has been called
-        return defer.gatherResults([d1, d2])
+        return defer.gatherResults([d1, d2], consumeErrors=True)
 
 
 class FakeStep:

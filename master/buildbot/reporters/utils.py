@@ -69,11 +69,11 @@ def getDetailsForBuildset(
             ('buildrequests',), filters=[resultspec.Filter('buildsetid', 'eq', [bsid])]
         ),
     ]
-    (buildset, breqs) = yield defer.gatherResults(dl)
+    (buildset, breqs) = yield defer.gatherResults(dl, consumeErrors=True)
     # next, get the bdictlist for each build request
     dl = [master.data.get(("buildrequests", breq['buildrequestid'], 'builds')) for breq in breqs]
 
-    builds = yield defer.gatherResults(dl)
+    builds = yield defer.gatherResults(dl, consumeErrors=True)
     builds = flatten(builds, types=(list, UserList))
     if builds:
         yield getDetailsForBuilds(
@@ -171,21 +171,24 @@ def getDetailsForBuilds(
 ):
     builderids = {build['builderid'] for build in builds}
 
-    builders = yield defer.gatherResults([master.data.get(("builders", _id)) for _id in builderids])
+    builders = yield defer.gatherResults(
+        [master.data.get(("builders", _id)) for _id in builderids], consumeErrors=True
+    )
 
     buildersbyid = {builder['builderid']: builder for builder in builders}
 
     if want_properties:
-        buildproperties = yield defer.gatherResults([
-            master.data.get(("builds", build['buildid'], 'properties')) for build in builds
-        ])
+        buildproperties = yield defer.gatherResults(
+            [master.data.get(("builds", build['buildid'], 'properties')) for build in builds],
+            consumeErrors=True,
+        )
     else:  # we still need a list for the big zip
         buildproperties = list(range(len(builds)))
 
     if want_previous_build:
-        prev_builds = yield defer.gatherResults([
-            getPreviousBuild(master, build) for build in builds
-        ])
+        prev_builds = yield defer.gatherResults(
+            [getPreviousBuild(master, build) for build in builds], consumeErrors=True
+        )
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 
@@ -202,9 +205,10 @@ def getDetailsForBuilds(
         want_steps = True
 
     if want_steps:  # pylint: disable=too-many-nested-blocks
-        buildsteps = yield defer.gatherResults([
-            master.data.get(("builds", build['buildid'], 'steps')) for build in builds
-        ])
+        buildsteps = yield defer.gatherResults(
+            [master.data.get(("builds", build['buildid'], 'steps')) for build in builds],
+            consumeErrors=True,
+        )
         if want_logs:
             for build, build_steps in zip(builds, buildsteps):
                 for s in build_steps:
@@ -244,7 +248,7 @@ def getDetailsForBuilds(
 def getResponsibleUsersForSourceStamp(master, sourcestampid):
     changesd = master.data.get(("sourcestamps", sourcestampid, "changes"))
     sourcestampd = master.data.get(("sourcestamps", sourcestampid))
-    changes, sourcestamp = yield defer.gatherResults([changesd, sourcestampd])
+    changes, sourcestamp = yield defer.gatherResults([changesd, sourcestampd], consumeErrors=True)
     blamelist = set()
     # normally, we get only one, but just assume there might be several
     for c in changes:
@@ -264,7 +268,7 @@ def getResponsibleUsersForBuild(master, buildid):
         master.data.get(("builds", buildid, "changes")),
         master.data.get(("builds", buildid, 'properties')),
     ]
-    changes, properties = yield defer.gatherResults(dl)
+    changes, properties = yield defer.gatherResults(dl, consumeErrors=True)
     blamelist = set()
 
     # add users from changes

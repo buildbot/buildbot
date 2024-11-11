@@ -400,10 +400,13 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             return SKIPPED
 
         if self.glob:
-            results = yield defer.gatherResults([
-                self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
-                for source in sources
-            ])
+            results = yield defer.gatherResults(
+                [
+                    self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
+                    for source in sources
+                ],
+                consumeErrors=True,
+            )
             sources = [self.workerPathToMasterPath(p) for p in flatten(results)]
 
         log.msg(f"MultipleFileUpload started, from worker {sources!r} to master {masterdest!r}")

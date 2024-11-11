@@ -302,7 +302,7 @@ class MailNotifier(ReporterBase):
                 dl = []
                 for u in users:
                     dl.append(defer.maybeDeferred(self.lookup.getAddress, u))
-                users = yield defer.gatherResults(dl)
+                users = yield defer.gatherResults(dl, consumeErrors=True)
 
             for r in users:
                 if r is None:  # getAddress didn't like this address

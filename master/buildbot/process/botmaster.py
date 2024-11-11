@@ -77,9 +77,10 @@ class LockRetrieverMixin:
     @defer.inlineCallbacks
     def getLockFromLockAccesses(self, accesses, config_version):
         # converts locks to their real forms
-        locks = yield defer.gatherResults([
-            self.getLockFromLockAccess(access, config_version) for access in accesses
-        ])
+        locks = yield defer.gatherResults(
+            [self.getLockFromLockAccess(access, config_version) for access in accesses],
+            consumeErrors=True,
+        )
         return zip(locks, accesses)
 
 
@@ -194,7 +195,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 log.msg("No running jobs, starting shutdown immediately")
             else:
                 log.msg(f"Waiting for {len(dl)} build(s) to finish")
-                yield defer.DeferredList(dl)
+                yield defer.DeferredList(dl, consumeErrors=True)
 
             # Check that there really aren't any running builds
             n = 0

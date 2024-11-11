@@ -509,4 +509,6 @@ class Try_Userpass(TryBase):
         if not self.enabled:
             return
 
-        yield defer.gatherResults([reg.unregister() for reg in self.registrations])
+        yield defer.gatherResults(
+            [reg.unregister() for reg in self.registrations], consumeErrors=True
+        )

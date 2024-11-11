@@ -339,13 +339,16 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addURL_race(self):
         yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield defer.gatherResults([
-            # only a tiny sleep is required to see the problem.
-            self.db.steps.addURL(
-                stepid=72, name='foo', url='bar', _racehook=lambda: time.sleep(0.01)
-            ),
-            self.db.steps.addURL(stepid=72, name='foo2', url='bar2'),
-        ])
+        yield defer.gatherResults(
+            [
+                # only a tiny sleep is required to see the problem.
+                self.db.steps.addURL(
+                    stepid=72, name='foo', url='bar', _racehook=lambda: time.sleep(0.01)
+                ),
+                self.db.steps.addURL(stepid=72, name='foo2', url='bar2'),
+            ],
+            consumeErrors=True,
+        )
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 
@@ -364,10 +367,13 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addURL_no_duplicate(self):
         yield self.insert_test_data([*self.backgroundData, self.stepRows[2]])
-        yield defer.gatherResults([
-            self.db.steps.addURL(stepid=72, name='foo', url='bar'),
-            self.db.steps.addURL(stepid=72, name='foo', url='bar'),
-        ])
+        yield defer.gatherResults(
+            [
+                self.db.steps.addURL(stepid=72, name='foo', url='bar'),
+                self.db.steps.addURL(stepid=72, name='foo', url='bar'),
+            ],
+            consumeErrors=True,
+        )
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 

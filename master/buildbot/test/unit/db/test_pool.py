@@ -155,7 +155,7 @@ class Stress(unittest.TestCase):
         d2.addCallback(lambda _: self.pool.do(write2))
         reactor.callLater(0.1, d2.callback, None)
 
-        yield defer.DeferredList([d1, d2])
+        yield defer.DeferredList([d1, d2], consumeErrors=True)
 
     # don't run this test, since it takes 30s
     del test_inserts

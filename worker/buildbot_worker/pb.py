@@ -389,9 +389,13 @@ class BotPbLike(BotBase):
         # disown any builders no longer desired
         to_remove = list(set(self.builders.keys()) - wanted_names)
         if to_remove:
-            yield defer.gatherResults([
-                defer.maybeDeferred(self.builders[name].disownServiceParent) for name in to_remove
-            ])
+            yield defer.gatherResults(
+                [
+                    defer.maybeDeferred(self.builders[name].disownServiceParent)
+                    for name in to_remove
+                ],
+                consumeErrors=True,
+            )
 
         # and *then* remove them from the builder list
         for name in to_remove:
