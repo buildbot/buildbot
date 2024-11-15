@@ -79,26 +79,68 @@ export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: st
     // which is a color reset code
     return {};
   }
+  let newCssClasses: { [key: string]: boolean } = {};
+  let background = "";
+  let foreground = "";
+  let resetForeground = false;
+  let resetBackground = false;
+  const ansiForegroundCodeList = ['30', '31', '32', '33', '34', '35', '36', '37'];
+  const ansiBackgroundCodeList = ['40', '41', '42', '43', '44', '45', '46', '47'];
 
-  const fgbg: {[key: string]: string} = {'38': 'fg', '48': 'bg'};
-  if (ansiClasses[0] in fgbg) {
-    if (ansiClasses.length !== 3) {
-      return {};
+  for (let i = 0; i < ansiClasses.length; i += 1) {
+    if (ansiClasses[i] == '0') { // "all attributes off" code
+      foreground = "";
+      background = "";
+      resetBackground = true;
+      resetForeground = true;
     }
-    if (ansiClasses[1] === '5') {
-      cssClasses = { }; // (simplification) always reset color
-      cssClasses[`ansi${fgbg[ansiClasses[0]]}-${ansiClasses[2]}`] = true;
+    else if (ansiClasses[i] == '39') { // "color reset" code for foreground
+      foreground = "";
+      resetForeground = true;
     }
-  } else {
-    for (let i of ansiClasses) {
-      if ((i === '39') || (i === '0')) { // "color reset" code and "all attributes off" code
-        cssClasses = {};
-      } else {
-        cssClasses[`ansi${i}`] = true;
+    else if (ansiClasses[i] == '49') { // "color reset" code for background
+      background = ""
+      resetBackground = true;
+    }
+    // update background and foreground, each time newer one is detected in ansiClasses
+    else if (ansiClasses[i] == '38') {
+      if (ansiClasses[i + 1] == '5') {  // 256 mode
+        foreground = `ansifg-${ansiClasses[i + 2]}`;
+        i += 2; // consumes whole triplet as a unit
       }
     }
+    else if (ansiClasses[i] == '48') {
+      if (ansiClasses[i + 1] == '5') {  // 256 mode
+        background = `ansibg-${ansiClasses[i + 2]}`;
+        i += 2; // consumes whole triplet as a unit
+      }
+    }
+    else if (ansiForegroundCodeList.includes(ansiClasses[i])) {
+      foreground = `ansi${ansiClasses[i]}`;  // simple SGR mode
+    }
+    else if (ansiBackgroundCodeList.includes(ansiClasses[i])) {
+      background = `ansi${ansiClasses[i]}`;  // simple SGR mode
+    }
+    else {
+      newCssClasses[`ansi${ansiClasses[i]}`] = true;  // other modes not including colors
+    }
   }
-  return cssClasses;
+
+  if (background) {
+    newCssClasses[background] = true;
+  }
+  if (foreground) {
+    newCssClasses[foreground] = true;
+  }
+
+  for (const key in cssClasses) {
+    // only add background and foreground color if it is missing in newCssClasses
+    if (((key.includes('ansi3') || key.includes('ansifg')) && !foreground &&  !resetForeground) ||
+      ((key.includes('ansi4') || key.includes('ansibg')) && !background) && !resetBackground){
+      newCssClasses[key] = true;
+    }
+  }
+  return newCssClasses;
 }
 
 export function lineContainsEscapeCodes(line: string) {
