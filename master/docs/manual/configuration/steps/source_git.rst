@@ -25,7 +25,10 @@ The Git step takes the following arguments:
 ``repourl`` (required)
    The URL of the upstream Git repository.
 
-``branch`` (optional)
+``port`` (optional, default: ``22``)
+   The SSH port of the Git server.
+
+``branch`` (optional, default: ``HEAD``)
    This specifies the name of the branch or the tag to use when a Build does not provide one of its own.
    If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and the branch specified in this parameter is used.
