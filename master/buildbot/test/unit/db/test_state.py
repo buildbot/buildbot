@@ -15,14 +15,14 @@
 
 
 from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import state
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
-from buildbot.test.util import db
 
 
-class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, db.TestCase):
+class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(table_names=['objects', 'object_state'])

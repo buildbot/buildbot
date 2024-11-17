@@ -16,11 +16,11 @@
 from __future__ import annotations
 
 from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import changesources
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
-from buildbot.test.util import db
 from buildbot.test.util import interfaces
 
 
@@ -298,7 +298,7 @@ class RealTests(Tests):
     pass
 
 
-class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealTests):
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(
