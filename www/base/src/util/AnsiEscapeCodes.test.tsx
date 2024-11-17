@@ -146,43 +146,99 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256 colors', () => {
+    it('256 colors reset only fg last instruction', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;71mDEBUG \x1b[38;5;72m[plugin]: \x1b[39mLoading plugin karma-jasmine.");
       expect(ret).toEqual([
         {class: 'ansibg-71', text: 'DEBUG '},
-        {class: 'ansifg-72', text: '[plugin]: '},
+        {class: 'ansifg-72 ansibg-71', text: '[plugin]: '},
+        {class: 'ansibg-71', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('reset previous fg256 bg256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[48;5;71;38;5;72;33;45mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansi45 ansi33', text: 'DEBUG [plugin]: '},
         {class: '', text: 'Loading plugin karma-jasmine.'}]);
     });
 
-    it('SGRbg-SGRbg', () => {
+    it('reset previous bg256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[48;5;71;43mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansi43', text: 'DEBUG [plugin]: '},
+        {class: '', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('reset previous fg256 bg256 with another 256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[48;5;71;38;5;72;48;5;81;38;5;82mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansibg-81 ansifg-82', text: 'DEBUG [plugin]: '},
+        {class: '', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('reset previous fg bg with 256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[33;45;48;5;81;38;5;82mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansibg-81 ansifg-82', text: 'DEBUG [plugin]: '},
+        {class: '', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('reset previous fg with 256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[33;38;5;82mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansifg-82', text: 'DEBUG [plugin]: '},
+        {class: '', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('reset previous fg with 256 add bg256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[33;38;5;82;48;5;81mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansibg-81 ansifg-82', text: 'DEBUG [plugin]: '},
+        {class: '', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('reset previous fg with 0 add bg256 same instruction', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[33;0;48;5;81mDEBUG [plugin]: \x1b[0mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: 'ansibg-81', text: 'DEBUG [plugin]: '},
+        {class: '', text: 'Loading plugin karma-jasmine.'}]);
+    });
+
+    it('SGRbg SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42', text: 'TEXT1 '},
-        {class: 'ansi42 ansi43', text: 'TEXT2 '},
+        {class: 'ansi43', text: 'TEXT2 '},
         ]);
     });
 
-    it('SGRbg-SGRfg', () => {
+    it('SGRbg SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[31mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42', text: 'TEXT1 '},
-        {class: 'ansi42 ansi31', text: 'TEXT2 '},
+        {class: 'ansi31 ansi42', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRbg-SGRboth', () => {
+    it('SGRbg SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[43;31mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42', text: 'TEXT1 '},
-        {class: 'ansi42 ansi43 ansi31', text: 'TEXT2 '},
+        {class: 'ansi43 ansi31', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRbg-256bg', () => {
+    it('SGRbg 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[48;5;34mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -191,25 +247,25 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRbg-256fg', () => {
+    it('SGRbg 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42', text: 'TEXT1 '},
-        {class: 'ansifg-226', text: 'TEXT2 '},
+        {class: 'ansifg-226 ansi42', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRbg-256both', () => {
+    it('SGRbg 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[48;5;164;38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRbg-reset0m', () => {
+    it('SGRbg reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -218,7 +274,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRbg-resetm', () => {
+    it('SGRbg resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -227,43 +283,43 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRfg-SGRbg', () => {
+    it('SGRfg SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[31mTEXT1 \x1b[42mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi31', text: 'TEXT1 '},
-        {class: 'ansi31 ansi42', text: 'TEXT2 '},
+        {class: 'ansi42 ansi31', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRfg-SGRfg', () => {
+    it('SGRfg SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[31mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi31', text: 'TEXT1 '},
-        {class: 'ansi31 ansi32', text: 'TEXT2 '},
+        {class: 'ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRfg-SGRboth', () => {
+    it('SGRfg SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
-        "\x1b[31mTEXT1 \x1b[42;32mTEXT2 \x1b[0m"); // pridėti kitą bg spalvą¸kad parodytų, kaip permuša? Nebent vėliau permušantis testas bus
+        "\x1b[31mTEXT1 \x1b[42;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi31', text: 'TEXT1 '},
-        {class: 'ansi31 ansi42 ansi32', text: 'TEXT2 '},
+        {class: 'ansi42 ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRfg-256bg', () => {
+    it('SGRfg 256bg', () => {
       const ret = parseEscapeCodesToSimple(
-        "\x1b[31mTEXT1 \x1b[48;5;34mTEXT2 \x1b[0m"); // pridėta pirmojo bg permušanti spalva
+        "\x1b[31mTEXT1 \x1b[48;5;34mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi31', text: 'TEXT1 '},
-        {class: 'ansibg-34', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansi31', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRfg-256fg', () => {
+    it('SGRfg 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[31mTEXT1 \x1b[38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -272,16 +328,16 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRfg-256both', () => {
+    it('SGRfg 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[31mTEXT1 \x1b[48;5;164;38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi31', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRfg-reset0m', () => {
+    it('SGRfg reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[31mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -290,7 +346,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRfg-resetm', () => {
+    it('SGRfg resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[31mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -299,61 +355,61 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRboth-SGRbg', () => {
+    it('SGRboth SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42 ansi31', text: 'TEXT1 '},
-        {class: 'ansi42 ansi31 ansi43', text: 'TEXT2 '},
+        {class: 'ansi43 ansi31', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRboth-SGRfg', () => {
+    it('SGRboth SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42 ansi31', text: 'TEXT1 '},
-        {class: 'ansi42 ansi31 ansi32', text: 'TEXT2 '},
+        {class: 'ansi32 ansi42', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRboth-SGRboth', () => {
+    it('SGRboth SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[43;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42 ansi31', text: 'TEXT1 '},
-        {class: 'ansi42 ansi31 ansi43 ansi32', text: 'TEXT2 '},
+        {class: 'ansi43 ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRboth-256bg', () => {
+    it('SGRboth 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[48;5;34mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42 ansi31', text: 'TEXT1 '},
-        {class: 'ansibg-34', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansi31', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRboth-256fg', () => {
+    it('SGRboth 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42 ansi31', text: 'TEXT1 '},
-        {class: 'ansifg-226', text: 'TEXT2 '},
+        {class: 'ansifg-226 ansi42', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRboth-256both', () => {
+    it('SGRboth 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[48;5;164;38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansi42 ansi31', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('SGRboth-reset0m', () => {
+    it('SGRboth reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -362,7 +418,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('SGRboth-resetm', () => {
+    it('SGRboth resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[42;31mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -371,34 +427,34 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256bg-SGRbg', () => {
+    it('256bg SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansibg-34', text: 'TEXT1 '},
-        {class: 'ansibg-34 ansi43', text: 'TEXT2 '},
+        {class: 'ansi43', text: 'TEXT2 '},
       ]);
     });
 
-    it('256bg-SGRfg', () => {
+    it('256bg SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansibg-34', text: 'TEXT1 '},
-        {class: 'ansibg-34 ansi32', text: 'TEXT2 '},
+        {class: 'ansi32 ansibg-34', text: 'TEXT2 '},
       ]);
     });
 
-    it('256bg-SGRboth', () => {
+    it('256bg SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[43;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansibg-34', text: 'TEXT1 '},
-        {class: 'ansibg-34 ansi43 ansi32', text: 'TEXT2 '},
+        {class: 'ansi43 ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('256bg-256bg', () => {
+    it('256bg 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[48;5;36mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -407,25 +463,25 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256bg-256fg', () => {
+    it('256bg 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansibg-34', text: 'TEXT1 '},
-        {class: 'ansifg-226', text: 'TEXT2 '},
+        {class: 'ansifg-226 ansibg-34', text: 'TEXT2 '},
       ]);
     });
 
-    it('256bg-256both', () => {
+    it('256bg 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[48;5;164;38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansibg-34', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('256bg-reset0m', () => {
+    it('256bg reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -434,7 +490,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256bg-resetm', () => {
+    it('256bg resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -443,43 +499,43 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256fg-SGRbg', () => {
+    it('256fg SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansifg-196', text: 'TEXT1 '},
-        {class: 'ansifg-196 ansi43', text: 'TEXT2 '},
+        {class: 'ansi43 ansifg-196', text: 'TEXT2 '},
       ]);
     });
 
-    it('256fg-SGRfg', () => {
+    it('256fg SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansifg-196', text: 'TEXT1 '},
-        {class: 'ansifg-196 ansi32', text: 'TEXT2 '},
+        {class: 'ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('256fg-SGRboth', () => {
+    it('256fg SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[43;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansifg-196', text: 'TEXT1 '},
-        {class: 'ansifg-196 ansi43 ansi32', text: 'TEXT2 '},
+        {class: 'ansi43 ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('256fg-256bg', () => {
+    it('256fg 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[48;5;36mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansifg-196', text: 'TEXT1 '},
-        {class: 'ansibg-36', text: 'TEXT2 '},
+        {class: 'ansibg-36 ansifg-196', text: 'TEXT2 '},
       ]);
     });
 
-    it('256fg-256fg', () => {
+    it('256fg 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -488,16 +544,16 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256fg-256both', () => {
+    it('256fg 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[48;5;164;38;5;226mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: 'ansifg-196', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('256fg-reset0m', () => {
+    it('256fg reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -506,7 +562,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256fg-resetm', () => {
+    it('256fg resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[38;5;196mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -515,79 +571,79 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('256both-SGRbg', () => {
+    it('256both SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
-        {class: 'ansi43', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
+        {class: 'ansi43 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-SGRfg', () => {
+    it('256both SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
-        {class: 'ansi32', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
+        {class: 'ansi32 ansibg-34', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-SGRboth', () => {
+    it('256both SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[43;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
         {class: 'ansi43 ansi32', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-256bg', () => {
+    it('256both 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[48;5;36mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
-        {class: 'ansibg-36', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
+        {class: 'ansibg-36 ansifg-226', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-256fg', () => {
+    it('256both 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[38;5;228mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
-        {class: 'ansifg-228', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
+        {class: 'ansifg-228 ansibg-34', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-256both', () => {
+    it('256both 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[48;5;164;38;5;228mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
+        {class: 'ansibg-164 ansifg-228', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-reset0m', () => {
+    it('256both reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
         {class: '', text: 'TEXT2 '},
       ]);
     });
 
-    it('256both-resetm', () => {
+    it('256both resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;34;38;5;226mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
-        {class: '', text: 'TEXT1 '},
+        {class: 'ansibg-34 ansifg-226', text: 'TEXT1 '},
         {class: '', text: 'TEXT2 '},
       ]);
     });
 
-    it('reset0m-SGRbg', () => {
+    it('reset0m SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -596,7 +652,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('reset0m-SGRfg', () => {
+    it('reset0m SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -605,7 +661,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('reset0m-SGRboth', () => {
+    it('reset0m SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[43;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -614,7 +670,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('reset0m-256bg', () => {
+    it('reset0m 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[48;5;36mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -623,7 +679,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('reset0m-256fg', () => {
+    it('reset0m 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[38;5;228mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -632,16 +688,16 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('reset0m-256both', () => {
+    it('reset0m 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[48;5;164;38;5;228mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: '', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-228', text: 'TEXT2 '},
       ]);
     });
 
-    it('reset0m-reset0m', () => {
+    it('reset0m reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -650,7 +706,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('reset0m-resetm', () => {
+    it('reset0m resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[0mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -659,7 +715,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-SGRbg', () => {
+    it('resetm SGRbg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[43mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -668,7 +724,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-SGRfg', () => {
+    it('resetm SGRfg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -677,7 +733,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-SGRboth', () => {
+    it('resetm SGRboth', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[43;32mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -686,7 +742,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-256bg', () => {
+    it('resetm 256bg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[48;5;36mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -695,7 +751,7 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-256fg', () => {
+    it('resetm 256fg', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[38;5;228mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -704,16 +760,16 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-256both', () => {
+    it('resetm 256both', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[48;5;164;38;5;228mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: '', text: 'TEXT1 '},
-        {class: '', text: 'TEXT2 '},
+        {class: 'ansibg-164 ansifg-228', text: 'TEXT2 '},
       ]);
     });
 
-    it('resetm-reset0m', () => {
+    it('resetm reset0m', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[0mTEXT2 \x1b[0m");
       expect(ret).toEqual([
@@ -722,12 +778,45 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
-    it('resetm-resetm', () => {
+    it('resetm resetm', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[mTEXT1 \x1b[mTEXT2 \x1b[0m");
       expect(ret).toEqual([
         {class: '', text: 'TEXT1 '},
         {class: '', text: 'TEXT2 '},
+      ]);
+    });
+
+    it('reset0m reset0m no text no spaces', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[0m\x1b[0m\x1b[0m");
+      expect(ret).toEqual([]);
+    });
+
+    it('reset0m resetm no text no spaces', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[0m\x1b[m\x1b[0m");
+      expect(ret).toEqual([]);
+    });
+
+    it('resetm reset0m no text no spaces', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[m\x1b[0m\x1b[0m");
+      expect(ret).toEqual([]);
+    });
+
+    it('resetm resetm no text no spaces', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[m\x1b[m\x1b[0m");
+      expect(ret).toEqual([]);
+    });
+
+    it('resetm resetm no text spaces', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[m \x1b[m \x1b[0m");
+      expect(ret).toEqual([
+        {class: '', text: ' '},
+        {class: '', text: ' '},
       ]);
     });
 
