@@ -867,9 +867,12 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             ],
         )
 
+    @defer.inlineCallbacks
     def test_handleJobFile_with_invalid_try_properties(self):
-        d = self.call_handleJobFile(lambda f: self.makeSampleParsedJob(properties=['foo', 'bar']))
-        return self.assertFailure(d, AttributeError)
+        with self.assertRaises(AttributeError):
+            yield self.call_handleJobFile(
+                lambda f: self.makeSampleParsedJob(properties=['foo', 'bar'])
+            )
 
 
 class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):

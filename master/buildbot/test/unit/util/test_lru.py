@@ -506,6 +506,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
         self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
 
+    @defer.inlineCallbacks
     def test_slow_failure(self):
         def slow_fail_miss_fn(k):
             d = defer.Deferred()
@@ -516,9 +517,12 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
         @defer.inlineCallbacks
         def do_get(test_d, k):
-            d = self.lru.get(k)
-            yield self.assertFailure(d, RuntimeError)
-            d.addCallbacks(test_d.callback, test_d.errback)
+            try:
+                with self.assertRaises(RuntimeError):
+                    yield self.lru.get(k)
+                test_d.callback(None)
+            except Exception as e:
+                test_d.errback(failure.Failure(e))
 
         ds = []
         for i in range(8):
@@ -526,8 +530,8 @@ class AsyncLRUCacheTest(unittest.TestCase):
             reactor.callLater(0.02 * i, do_get, d, 'x')
             ds.append(d)
 
-        d = defer.gatherResults(ds)
-        return d
+        for d in ds:
+            yield d
 
     @defer.inlineCallbacks
     def test_set_max_size(self):

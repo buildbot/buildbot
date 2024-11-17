@@ -119,4 +119,5 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
 
         conn = mock.Mock()
         conn.remoteGetWorkerInfo = mock.Mock(return_value=defer.fail(Error()))
-        yield self.assertFailure(self.workers.newConnection(conn, "worker"), Error)
+        with self.assertRaises(Error):
+            yield self.workers.newConnection(conn, "worker")

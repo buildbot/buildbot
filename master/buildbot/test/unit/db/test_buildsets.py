@@ -19,11 +19,11 @@ import json
 from unittest import mock
 
 from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import buildsets
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
-from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
@@ -355,15 +355,17 @@ class Tests(interfaces.InterfaceTests):
             ],
         )
 
+    @defer.inlineCallbacks
     def test_completeBuildset_already_completed(self):
-        d = self.insert_test_getBuildsets_data()
-        d.addCallback(lambda _: self.db.buildsets.completeBuildset(bsid=92, results=6))
-        return self.assertFailure(d, buildsets.AlreadyCompleteError)
+        yield self.insert_test_getBuildsets_data()
+        with self.assertRaises(buildsets.AlreadyCompleteError):
+            yield self.db.buildsets.completeBuildset(bsid=92, results=6)
 
+    @defer.inlineCallbacks
     def test_completeBuildset_missing(self):
-        d = self.insert_test_getBuildsets_data()
-        d.addCallback(lambda _: self.db.buildsets.completeBuildset(bsid=93, results=6))
-        return self.assertFailure(d, buildsets.AlreadyCompleteError)
+        yield self.insert_test_getBuildsets_data()
+        with self.assertRaises(buildsets.AlreadyCompleteError):
+            yield self.db.buildsets.completeBuildset(bsid=93, results=6)
 
     @defer.inlineCallbacks
     def test_completeBuildset(self):
@@ -631,7 +633,7 @@ class RealTests(Tests):
         yield self.db.pool.do(thd)
 
 
-class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealTests):
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(

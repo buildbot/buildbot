@@ -111,7 +111,8 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
         self.assertFalse(d.called)
         self.d.errback(RuntimeError("oh noes"))
         self.assertTrue(d.called)
-        yield self.assertFailure(d, RuntimeError)
+        with self.assertRaises(RuntimeError):
+            yield d
 
     @defer.inlineCallbacks
     def test_timeout_succeeds(self):
@@ -120,7 +121,8 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(11)
         d.callback("result")  # ignored
         self.assertTrue(d.called)
-        yield self.assertFailure(d, defer.CancelledError)
+        with self.assertRaises(defer.CancelledError):
+            yield d
 
     @defer.inlineCallbacks
     def test_timeout_fails(self):
@@ -129,7 +131,8 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(11)
         self.d.errback(RuntimeError("oh noes"))  # ignored
         self.assertTrue(d.called)
-        yield self.assertFailure(d, defer.CancelledError)
+        with self.assertRaises(defer.CancelledError):
+            yield d
 
 
 class TestChunkifyList(unittest.TestCase):

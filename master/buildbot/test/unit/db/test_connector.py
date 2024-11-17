@@ -94,11 +94,12 @@ class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase)
         self.db._doCleanup()
         self.assertTrue(self.db.changes.pruneChanges.called)
 
+    @defer.inlineCallbacks
     def test_setup_check_version_bad(self):
         if self.db_url == 'sqlite://':
             raise unittest.SkipTest('sqlite in-memory model is always upgraded at connection')
-        d = self.startService(check_version=True)
-        return self.assertFailure(d, exceptions.DatabaseNotReadyError)
+        with self.assertRaises(exceptions.DatabaseNotReadyError):
+            yield self.startService(check_version=True)
 
     def test_setup_check_version_good(self):
         self.db.model.is_current = lambda: defer.succeed(True)

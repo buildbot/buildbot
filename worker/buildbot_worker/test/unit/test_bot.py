@@ -356,7 +356,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         def do_start():
             return self.wfb.callRemote("startCommand", FakeRemote(st), "13", "shell", {})
 
-        yield self.assertFailure(do_start(), KeyError)
+        with self.assertRaises(KeyError):
+            yield do_start()
 
     @defer.inlineCallbacks
     def test_startCommand_invalid_command(self):
@@ -366,9 +367,11 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         def do_start():
             return self.wfb.callRemote("startCommand", FakeRemote(st), "13", "invalid command", {})
 
-        unknownCommand = yield self.assertFailure(do_start(), base.UnknownCommand)
+        with self.assertRaises(base.UnknownCommand) as e:
+            yield do_start()
         self.assertEqual(
-            str(unknownCommand), "(command 13): unrecognized WorkerCommand 'invalid command'"
+            e.exception.args,
+            ("(command 13): unrecognized WorkerCommand 'invalid command'",),
         )
 
 

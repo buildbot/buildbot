@@ -16,11 +16,11 @@
 from __future__ import annotations
 
 from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import changesources
 from buildbot.test import fakedb
 from buildbot.test.util import connector_component
-from buildbot.test.util import db
 from buildbot.test.util import interfaces
 
 
@@ -81,25 +81,25 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_inactive_but_linked(self):
         """Inactive changesource but already claimed by an active master"""
-        d = self.insert_test_data([
+        yield self.insert_test_data([
             self.cs87,
             self.master13,
             self.master14,
             self.cs87master14,
         ])
-        d.addCallback(lambda _: self.db.changesources.setChangeSourceMaster(87, 13))
-        yield self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
+        with self.assertRaises(changesources.ChangeSourceAlreadyClaimedError):
+            yield self.db.changesources.setChangeSourceMaster(87, 13)
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_active(self):
         """Active changesource already claimed by an active master"""
-        d = self.insert_test_data([
+        yield self.insert_test_data([
             self.cs42,
             self.master13,
             self.cs42master13,
         ])
-        d.addCallback(lambda _: self.db.changesources.setChangeSourceMaster(42, 14))
-        yield self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
+        with self.assertRaises(changesources.ChangeSourceAlreadyClaimedError):
+            yield self.db.changesources.setChangeSourceMaster(42, 14)
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None(self):
@@ -298,7 +298,7 @@ class RealTests(Tests):
     pass
 
 
-class TestRealDB(db.TestCase, connector_component.ConnectorComponentMixin, RealTests):
+class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpConnectorComponent(

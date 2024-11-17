@@ -439,7 +439,8 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads("[{}]"),
         )
         yield self.startChangeSource()
-        yield self.assertFailure(self.changesource.poll(), KeyError)
+        with self.assertRaises(KeyError):
+            yield self.changesource.poll()
 
     @defer.inlineCallbacks
     def test_failFiles(self):
@@ -465,7 +466,8 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads("[{}]"),
         )
         yield self.startChangeSource()
-        yield self.assertFailure(self.changesource.poll(), KeyError)
+        with self.assertRaises(KeyError):
+            yield self.changesource.poll()
 
     @defer.inlineCallbacks
     def test_wrongRepoLink(self):

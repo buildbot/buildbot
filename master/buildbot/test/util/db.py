@@ -300,15 +300,3 @@ class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
 
     def tearDownRealDatabaseWithConnector(self):
         return self.tearDownRealDatabase()
-
-
-class TestCase(unittest.TestCase):
-    @defer.inlineCallbacks
-    def assertFailure(self, d, excp):
-        exception = None
-        try:
-            yield d
-        except Exception as e:
-            exception = e
-        self.assertIsInstance(exception, excp)
-        self.flushLoggedErrors(excp)

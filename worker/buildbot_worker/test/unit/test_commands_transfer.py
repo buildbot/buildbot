@@ -223,7 +223,8 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.assertFailure(self.run_command(), RuntimeError)
+        with self.assertRaises(RuntimeError):
+            yield self.run_command()
 
         self.assertUpdates([
             ('header', f'sending {self.datafile}\n'),
@@ -383,7 +384,8 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             },
         )
 
-        yield self.assertFailure(self.run_command(), RuntimeError)
+        with self.assertRaises(RuntimeError):
+            yield self.run_command()
 
         self.assertUpdates([
             ('header', f'sending {self.datadir}\n'),

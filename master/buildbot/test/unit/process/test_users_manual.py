@@ -261,13 +261,15 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUser
     def tearDown(self):
         yield self.tear_down_test_reactor()
 
+    @defer.inlineCallbacks
     def test_no_userpass(self):
-        d = defer.maybeDeferred(manual.CommandlineUserManager)
-        return self.assertFailure(d, AssertionError)
+        with self.assertRaises(AssertionError):
+            yield defer.maybeDeferred(manual.CommandlineUserManager)
 
+    @defer.inlineCallbacks
     def test_no_port(self):
-        d = defer.maybeDeferred(manual.CommandlineUserManager, username="x", passwd="y")
-        return self.assertFailure(d, AssertionError)
+        with self.assertRaises(AssertionError):
+            yield manual.CommandlineUserManager(username="x", passwd="y")
 
     @defer.inlineCallbacks
     def test_service(self):

@@ -1,5 +1,3 @@
-import gc
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -43,10 +41,8 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMi
     @defer.inlineCallbacks
     def test_secret_not_found(self):
         command = Interpolate("echo %(secret:fuo)s")
-        yield self.assertFailure(self.build.render(command), defer.FirstError)
-        gc.collect()
-        self.flushLoggedErrors(defer.FirstError)
-        self.flushLoggedErrors(KeyError)
+        with self.assertRaises(defer.FirstError):
+            yield self.build.render(command)
 
 
 class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
@@ -63,10 +59,8 @@ class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, Confi
     @defer.inlineCallbacks
     def test_secret(self):
         command = Interpolate("echo %(secret:fuo)s")
-        yield self.assertFailure(self.build.render(command), defer.FirstError)
-        gc.collect()
-        self.flushLoggedErrors(defer.FirstError)
-        self.flushLoggedErrors(KeyError)
+        with self.assertRaises(defer.FirstError):
+            yield self.build.render(command)
 
 
 class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
