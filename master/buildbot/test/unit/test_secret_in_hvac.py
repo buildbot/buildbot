@@ -205,9 +205,8 @@ class TestSecretInHashiCorpVaultKvSecretProvider(ConfigErrorsMixin, unittest.Tes
     @patch("hvac.Client", side_effect=mock_vault)
     def test_thd_hvac_wrap_read_unauthorized(self, mock_vault):
         self.provider.client.token = None
-        yield self.assertFailure(
-            self.provider.thd_hvac_wrap_read("some/path"), hvac.exceptions.Unauthorized
-        )
+        with self.assertRaises(hvac.exceptions.Unauthorized):
+            yield self.provider.thd_hvac_wrap_read("some/path")
 
     def test_thd_hvac_get_reauthorize(self):
         """

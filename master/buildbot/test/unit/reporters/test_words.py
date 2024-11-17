@@ -208,7 +208,8 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
         self.assertEqual(self.sent, ["The following events are being notified: started."])
         yield self.do_test_command('notify', args="off started")
         self.assertEqual(self.sent, ['No events are being notified.'])
-        yield self.assertFailure(self.do_test_command('notify', args="off finished"), KeyError)
+        with self.assertRaises(KeyError):
+            yield self.do_test_command('notify', args="off finished")
         yield self.do_test_command('notify', args="list")
         self.assertEqual(self.sent, ['No events are being notified.'])
 

@@ -64,8 +64,8 @@ class TestAbsoluteSourceStampsMixin(
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_not_found(self):
-        d = self.object.getCodebaseDict('c')
-        yield self.assertFailure(d, KeyError)
+        with self.assertRaises(KeyError):
+            yield self.object.getCodebaseDict('c')
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_existing(self):

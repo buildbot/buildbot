@@ -87,9 +87,11 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
 
         yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def test_getState_missing(self):
-        d = self.db.state.getState(10, 'nosuch')
-        return self.assertFailure(d, KeyError)
+        with self.assertRaises(KeyError):
+            yield self.db.state.getState(10, 'nosuch')
+        self.flushLoggedErrors(KeyError)
 
     @defer.inlineCallbacks
     def test_getState_missing_default(self):
@@ -113,13 +115,15 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
 
         self.assertEqual(val, [1, 2])
 
+    @defer.inlineCallbacks
     def test_getState_badjson(self):
-        d = self.insert_test_data([
+        yield self.insert_test_data([
             fakedb.Object(id=10, name='x', class_name='y'),
             fakedb.ObjectState(objectid=10, name='x', value_json='ff[1'),
         ])
-        d.addCallback(lambda _: self.db.state.getState(10, 'x'))
-        return self.assertFailure(d, TypeError)
+        with self.assertRaises(TypeError):
+            yield self.db.state.getState(10, 'x')
+        self.flushLoggedErrors(TypeError)
 
     @defer.inlineCallbacks
     def test_setState(self):
@@ -137,12 +141,14 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
 
         yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def test_setState_badjson(self):
-        d = self.insert_test_data([
+        yield self.insert_test_data([
             fakedb.Object(id=10, name='x', class_name='y'),
         ])
-        d.addCallback(lambda _: self.db.state.setState(10, 'x', self))  # self is not JSON-able..
-        return self.assertFailure(d, TypeError)
+        with self.assertRaises(TypeError):
+            yield self.db.state.setState(10, 'x', self)  # self is not JSON-able..
+        self.flushLoggedErrors(TypeError)
 
     @defer.inlineCallbacks
     def test_setState_existing(self):
@@ -218,5 +224,6 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, d
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
 
-        d = self.db.state.atomicCreateState(10, 'x', object)
-        yield self.assertFailure(d, TypeError)
+        with self.assertRaises(TypeError):
+            yield self.db.state.atomicCreateState(10, 'x', object)
+        self.flushLoggedErrors(TypeError)

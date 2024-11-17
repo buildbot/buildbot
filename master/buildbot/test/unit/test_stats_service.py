@@ -294,9 +294,8 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
         cap = self.fake_storage_service.captures[0]
-        yield self.assertFailure(
-            cap.consume(self.routingKey, self.get_dict(build)), CaptureCallbackError
-        )
+        with self.assertRaises(CaptureCallbackError):
+            yield cap.consume(self.routingKey, self.get_dict(build))
 
     @defer.inlineCallbacks
     def test_property_capturing_alt_callback(self):
@@ -433,21 +432,20 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
         cap = self.fake_storage_service.captures[0]
-        yield self.assertFailure(
-            cap.consume(self.routingKey, self.get_dict(build)), CaptureCallbackError
-        )
+        with self.assertRaises(CaptureCallbackError):
+            yield cap.consume(self.routingKey, self.get_dict(build))
 
         self.setupFakeStorage([capture.CaptureBuildEndTime('builder1', cb)])
         cap = self.fake_storage_service.captures[0]
-        yield self.assertFailure(
-            cap.consume(self.routingKey, self.get_dict(build)), CaptureCallbackError
-        )
+
+        with self.assertRaises(CaptureCallbackError):
+            yield cap.consume(self.routingKey, self.get_dict(build))
 
         self.setupFakeStorage([capture.CaptureBuildDuration('builder1', callback=cb)])
         cap = self.fake_storage_service.captures[0]
-        yield self.assertFailure(
-            cap.consume(self.routingKey, self.get_dict(build)), CaptureCallbackError
-        )
+
+        with self.assertRaises(CaptureCallbackError):
+            yield cap.consume(self.routingKey, self.get_dict(build))
 
     @defer.inlineCallbacks
     def test_yield_metrics_value(self):
@@ -547,4 +545,5 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         cap = self.fake_storage_service.captures[0]
-        yield self.assertFailure(cap.consume(routingKey, msg), CaptureCallbackError)
+        with self.assertRaises(CaptureCallbackError):
+            yield cap.consume(routingKey, msg)

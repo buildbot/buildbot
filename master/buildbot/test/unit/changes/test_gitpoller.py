@@ -250,7 +250,8 @@ class TestGitPoller(TestGitPollerBase):
             ExpectMasterShell(['git', '--version']).stdout(b'Command not found'),
         )
 
-        yield self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
+        with self.assertRaises(EnvironmentError):
+            yield self.poller._checkGitFeatures()
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
@@ -318,6 +319,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assert_all_commands_ran()
         yield self.assert_last_rev(None)
 
+    @defer.inlineCallbacks
     def test_poll_failInit(self):
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
@@ -325,10 +327,10 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        d = self.assertFailure(self.poller.poll(), EnvironmentError)
+        with self.assertRaises(EnvironmentError):
+            yield self.poller.poll()
 
-        d.addCallback(lambda _: self.assert_all_commands_ran())
-        return d
+        yield self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_poll_branch_do_not_exist(self):
@@ -2068,7 +2070,8 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
         )
 
-        yield self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
+        with self.assertRaises(EnvironmentError):
+            yield self.poller._checkGitFeatures()
 
         self.assert_all_commands_ran()
 
@@ -2210,7 +2213,8 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
         )
 
         self.poller.doPoll.running = True
-        yield self.assertFailure(self.poller.poll(), EnvironmentError)
+        with self.assertRaises(EnvironmentError):
+            yield self.poller.poll()
 
         self.assert_all_commands_ran()
 

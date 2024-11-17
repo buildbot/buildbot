@@ -233,7 +233,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         lw = yield self.setupWorker(
             'bot', 'pass', flavor=1, block_devices=block_devices, **self.os_auth
         )
-        yield self.assertFailure(lw.start_instance(self.build), novaclient.NotFound)
+        with self.assertRaises(novaclient.NotFound):
+            yield lw.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_constructor_no_image(self):
@@ -287,7 +288,8 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
     def test_start_instance_already_exists(self):
         bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        yield self.assertFailure(bs.start_instance(self.build), ValueError)
+        with self.assertRaises(ValueError):
+            yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_start_instance_first_fetch_fail(self):
@@ -295,27 +297,24 @@ class TestOpenStackWorker(TestReactorMixin, unittest.TestCase):
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
         self.patch(novaclient.Servers, 'gets_until_disappears', 0)
-        yield self.assertFailure(
-            bs.start_instance(self.build), interfaces.LatentWorkerFailedToSubstantiate
-        )
+        with self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate):
+            yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
         bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
-        yield self.assertFailure(
-            bs.start_instance(self.build), interfaces.LatentWorkerFailedToSubstantiate
-        )
+        with self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate):
+            yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_start_instance_fail_to_start(self):
         bs = yield self.setupWorker('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
-        yield self.assertFailure(
-            bs.start_instance(self.build), interfaces.LatentWorkerFailedToSubstantiate
-        )
+        with self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate):
+            yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
     def test_start_instance_success(self):

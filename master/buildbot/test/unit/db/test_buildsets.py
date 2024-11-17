@@ -355,15 +355,17 @@ class Tests(interfaces.InterfaceTests):
             ],
         )
 
+    @defer.inlineCallbacks
     def test_completeBuildset_already_completed(self):
-        d = self.insert_test_getBuildsets_data()
-        d.addCallback(lambda _: self.db.buildsets.completeBuildset(bsid=92, results=6))
-        return self.assertFailure(d, buildsets.AlreadyCompleteError)
+        yield self.insert_test_getBuildsets_data()
+        with self.assertRaises(buildsets.AlreadyCompleteError):
+            yield self.db.buildsets.completeBuildset(bsid=92, results=6)
 
+    @defer.inlineCallbacks
     def test_completeBuildset_missing(self):
-        d = self.insert_test_getBuildsets_data()
-        d.addCallback(lambda _: self.db.buildsets.completeBuildset(bsid=93, results=6))
-        return self.assertFailure(d, buildsets.AlreadyCompleteError)
+        yield self.insert_test_getBuildsets_data()
+        with self.assertRaises(buildsets.AlreadyCompleteError):
+            yield self.db.buildsets.completeBuildset(bsid=93, results=6)
 
     @defer.inlineCallbacks
     def test_completeBuildset(self):

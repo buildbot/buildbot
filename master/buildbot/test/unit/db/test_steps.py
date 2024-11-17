@@ -188,8 +188,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getStep_invalid(self):
-        d = self.db.steps.getStep(buildid=30)
-        yield self.assertFailure(d, RuntimeError)
+        with self.assertRaises(RuntimeError):
+            yield self.db.steps.getStep(buildid=30)
 
     @defer.inlineCallbacks
     def test_getSteps(self):

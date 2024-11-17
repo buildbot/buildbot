@@ -119,9 +119,10 @@ class TestPropertyMap(unittest.TestCase):
     def testSimpleEmpty(self):
         return self.doTestSimpleWithProperties('%(prop_empty)s', '')
 
+    @defer.inlineCallbacks
     def testSimpleUnset(self):
-        d = self.build.render(WithProperties('%(prop_nosuch)s'))
-        return self.assertFailure(d, KeyError)
+        with self.assertRaises(KeyError):
+            yield self.build.render(WithProperties('%(prop_nosuch)s'))
 
     def testColonMinusSet(self):
         return self.doTestSimpleWithProperties('%(prop_str:-missing)s', 'a-string')

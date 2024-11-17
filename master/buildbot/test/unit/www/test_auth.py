@@ -221,8 +221,8 @@ class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         result_good = yield self.auth.checkers[0].requestAvatarId(cred_good)
         self.assertEqual(result_good, 'fellow')
         cred_bad = UsernamePassword('bandid', 'incorrect')
-        defer_bad = self.auth.checkers[0].requestAvatarId(cred_bad)
-        yield self.assertFailure(defer_bad, UnauthorizedLogin)
+        with self.assertRaises(UnauthorizedLogin):
+            yield self.auth.checkers[0].requestAvatarId(cred_bad)
 
 
 class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
