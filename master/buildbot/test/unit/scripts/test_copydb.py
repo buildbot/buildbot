@@ -163,6 +163,7 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
         engine = enginestrategy.create_engine(db_url, basedir='basedir')
         with engine.connect() as conn:
             db.thd_clean_database(conn)
+        engine.dispose()
 
     @async_to_deferred
     async def test_full(self):
