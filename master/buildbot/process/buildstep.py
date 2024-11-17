@@ -298,7 +298,7 @@ class BuildStep(
         self._start_unhandled_deferreds = None
         self._interrupt_deferwaiter = deferwaiter.DeferWaiter()
         self._update_summary_debouncer = debounce.Debouncer(
-            1.0, self._update_summary_impl, lambda: self.master.reactor
+            1.0, self._update_summary_impl, lambda: self.master.reactor, until_idle=False
         )
         self._test_result_submitters = {}
 

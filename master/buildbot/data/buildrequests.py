@@ -200,9 +200,12 @@ class BuildRequest(base.ResourceType):
 
     @defer.inlineCallbacks
     def generateEvent(self, brids, event):
+        events = []
         for brid in brids:
             # get the build and munge the result for the notification
             br = yield self.master.data.get(('buildrequests', str(brid)))
+            events.append(br)
+        for br in events:
             self.produceEvent(br, event)
 
     @defer.inlineCallbacks
