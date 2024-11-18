@@ -42,6 +42,7 @@ Here are the list of configuration variable for the buildbot/buildbot-worker ima
 
 - BUILDMASTER: the dns or IP address of the master to connect to
 - BUILDMASTER_PORT: the port of the worker protocol
+- BUILDMASTER_PROTOCOL: the protocol to use (pb or msgpack_experimental_v7)
 - WORKERNAME: the name of the worker as declared in the master configuration
 - WORKERPASS: the password of the worker as declared in the master configuration
 - WORKER_ENVIRONMENT_BLACKLIST: the worker environment variable to remove before starting the worker

@@ -18,6 +18,7 @@ application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 # and worker on the same process!
 buildmaster_host = os.environ.get("BUILDMASTER", 'localhost')
 port = int(os.environ.get("BUILDMASTER_PORT", 9989))
+protocol = int(os.environ.get("BUILDMASTER_PROTOCOL", 'pb'))
 workername = os.environ.get("WORKERNAME", 'docker')
 passwd = os.environ.get("WORKERPASS")
 
@@ -36,7 +37,7 @@ maxretries = 10
 delete_leftover_dirs = False
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
-           keepalive, umask=umask, maxdelay=maxdelay,
+           keepalive, umask=umask, maxdelay=maxdelay, protocol=protocol,
            allow_shutdown=allow_shutdown, maxRetries=maxretries,
            delete_leftover_dirs=delete_leftover_dirs)
 s.setServiceParent(application)

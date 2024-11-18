@@ -60,7 +60,9 @@ def _handle_stream_line(line):
 
 
 class DockerBaseWorker(AbstractLatentWorker):
-    def checkConfig(self, name, password=None, image=None, masterFQDN=None, **kwargs):
+    def checkConfig(
+        self, name, password=None, image=None, masterFQDN=None, master_protocol='pb', **kwargs
+    ):
         # Set build_wait_timeout to 0 if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
         if 'build_wait_timeout' not in kwargs:
@@ -71,7 +73,9 @@ class DockerBaseWorker(AbstractLatentWorker):
 
         super().checkConfig(name, password, **kwargs)
 
-    def reconfigService(self, name, password=None, image=None, masterFQDN=None, **kwargs):
+    def reconfigService(
+        self, name, password=None, image=None, masterFQDN=None, master_protocol='pb', **kwargs
+    ):
         # Set build_wait_timeout to 0 if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
         if 'build_wait_timeout' not in kwargs:
@@ -81,6 +85,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         if masterFQDN is None:
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
+        self.master_protocol = master_protocol
         self.image = image
         masterName = unicode2bytes(self.master.name)
         self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
@@ -98,6 +103,7 @@ class DockerBaseWorker(AbstractLatentWorker):
     def createEnvironment(self, build=None):
         result = {
             "BUILDMASTER": self.masterFQDN,
+            'BUILDMASTER_PROTOCOL': self.master_protocol,
             "WORKERNAME": self.name,
             "WORKERPASS": self.password,
         }
@@ -136,6 +142,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         tls=None,
         followStartupLogs=False,
         masterFQDN=None,
+        master_protocol='pb',
         hostconfig=None,
         autopull=False,
         alwaysPull=False,
@@ -145,7 +152,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         hostname=None,
         **kwargs,
     ):
-        super().checkConfig(name, password, image, masterFQDN, **kwargs)
+        super().checkConfig(
+            name, password, image, masterFQDN=masterFQDN, master_protocol=master_protocol, **kwargs
+        )
 
         if docker_py_version < parse_version("4.0.0"):
             config.error("The python module 'docker>=4.0' is needed to use a DockerLatentWorker")
@@ -185,6 +194,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         tls=None,
         followStartupLogs=False,
         masterFQDN=None,
+        master_protocol='pb',
         hostconfig=None,
         autopull=False,
         alwaysPull=False,
@@ -195,7 +205,9 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         hostname=None,
         **kwargs,
     ):
-        yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
+        yield super().reconfigService(
+            name, password, image, masterFQDN=masterFQDN, master_protocol=master_protocol, **kwargs
+        )
         self.docker_host = docker_host
         self.volumes = volumes or []
         self.followStartupLogs = followStartupLogs

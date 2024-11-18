@@ -511,33 +511,49 @@ with the same results.
 
 .. bb:cfg:: protocols
 
-.. _Setting-the-PB-Port-for-Workers:
+Configuring worker protocols
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Setting the PB Port for Workers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``protocols`` key defines how buildmaster listens to connections from workers. The value of
+the key is dictionary with keys being protocol names and values being per-protocol configuration.
+
+The following protocols are supported:
+
+- ``pb`` - Perspective Broker protocol. This protocol supports not only connections from workers,
+  but also remote Change Sources, status clients and debug tools. It supports the following
+  configuration:
+
+    - ``port`` - specifies the listening port configuration. This may be a numeric port, or
+      a *connection string*, as defined in the ConnectionStrings_ guide.
+
+- ``msgpack_experimental_v7`` - (experimental) MessagePack-based protocol. It supports the
+  following configuration:
+
+    - ``port`` - specifies the listening port configuration. This may be a numeric port, or
+      a *connection string*, as defined in the ConnectionStrings_ guide.
+
+.. note::
+
+    Note, that the master host must be visible to all workers that would attempt to connect to it.
+    The firewall (if any) must be configured to allow external connections. Additionally, the
+    configured listen port must be larger than 1024 in most cases, as lower ports are usually
+    restricted to root processes only.
+
+The following is a minimal example of protocol configuration:
 
 .. code-block:: python
 
     c['protocols'] = {"pb": {"port": 10000}}
 
-The buildmaster will listen on a TCP port of your choosing for connections from workers.
-It can also use this port for connections from remote Change Sources, status clients, and debug tools.
-This port should be visible to the outside world, and you'll need to tell your worker admins about your choice.
-
-It does not matter which port you pick, as long it is externally visible; however, you should probably use something larger than 1024, since most operating systems don't allow non-root processes to bind to low-numbered ports.
-If your buildmaster is behind a firewall or a NAT box of some sort, you may have to configure your firewall to permit inbound connections to this port.
-
-``c['protocols']['pb']['port']`` can also be used as a *connection string*, as defined in the ConnectionStrings_ guide.
-
-This means that you can have the buildmaster listen on a localhost-only port by doing:
+The following example only allows connections from localhost. This might be useful in cases workers
+are run on the same machine as master (e.g. in very small Buildbot installations). The workers would
+need to be configured to contact the buildmaster at ``localhost:10000``.
 
 .. code-block:: python
 
-   c['protocols'] = {"pb": {"port": "tcp:10000:interface=127.0.0.1"}}
+    c['protocols'] = {"pb": {"port": "tcp:10000:interface=127.0.0.1"}}
 
-This might be useful if you only run workers on the same machine, and they are all configured to contact the buildmaster at ``localhost:10000``.
-
-*connection strings* can also be used to configure workers connecting over TLS. The syntax is then
+The following example shows how to configure worker connections via TLS:
 
 .. code-block:: python
 

@@ -96,6 +96,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
+                    'BUILDMASTER_PROTOCOL': 'pb',
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",
@@ -133,6 +134,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
+                    'BUILDMASTER_PROTOCOL': 'pb',
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",
@@ -166,6 +168,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
+                    'BUILDMASTER_PROTOCOL': 'pb',
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",
@@ -206,6 +209,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
+                    'BUILDMASTER_PROTOCOL': 'pb',
                     'BUILDMASTER_PORT': '1234',
                     'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",

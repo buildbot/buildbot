@@ -102,6 +102,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "image": image,
                     "env": [
                         {"name": "BUILDMASTER", "value": "buildbot-master"},
+                        {"name": "BUILDMASTER_PROTOCOL", "value": "pb"},
                         {"name": "WORKERNAME", "value": "worker"},
                         {"name": "WORKERPASS", "value": "random_pw"},
                         {"name": "BUILDMASTER_PORT", "value": "1234"},
@@ -339,6 +340,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
                     "image": "rendered:buildbot/buildbot-worker",
                     "env": [
                         {"name": "BUILDMASTER", "value": "buildbot-master"},
+                        {"name": "BUILDMASTER_PROTOCOL", "value": "pb"},
                         {"name": "WORKERNAME", "value": "worker"},
                         {"name": "WORKERPASS", "value": "random_pw"},
                         {"name": "BUILDMASTER_PORT", "value": "1234"},
