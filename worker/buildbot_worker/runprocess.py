@@ -37,7 +37,6 @@ from twisted.internet import error
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import task
-from twisted.python import failure
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
@@ -464,7 +463,7 @@ class RunProcess:
         try:
             self._startCommand()
         except Exception as e:
-            log.err(failure.Failure(), "error in RunProcess._startCommand")
+            log.err(e, "error in RunProcess._startCommand")
             self.send_update([('stderr', f"error in RunProcess._startCommand ({e!s})\n")])
 
             self.send_update([('stderr', traceback.format_exc())])

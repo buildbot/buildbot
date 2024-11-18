@@ -19,7 +19,6 @@ from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import TransportLost
 from twisted.internet import defer
-from twisted.python import failure
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
@@ -115,8 +114,8 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         service = yield self.getService()
         try:
             ret = yield service.publish(topic, data, options=options)
-        except TransportLost:
-            log.err(failure.Failure(), "while publishing event " + topic)
+        except TransportLost as e:
+            log.err(e, "while publishing event " + topic)
             return None
         return ret
 

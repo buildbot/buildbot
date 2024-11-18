@@ -22,7 +22,6 @@ import warnings
 from typing import ClassVar
 from typing import Sequence
 
-from twisted.python import failure
 from twisted.python import log
 from twisted.python.compat import execfile
 from zope.interface import implementer
@@ -99,8 +98,8 @@ def loadConfigDict(basedir, configFileName):
                 f"encountered a SyntaxError while parsing config file:\n{traceback.format_exc()} ",
                 always_raise=True,
             )
-        except Exception:
-            log.err(failure.Failure(), 'error while parsing config file:')
+        except Exception as e:
+            log.err(e, 'error while parsing config file:')
             error(
                 f"error while parsing config file: {sys.exc_info()[1]} (traceback in logfile)",
                 always_raise=True,

@@ -18,7 +18,6 @@ from typing import ClassVar
 from typing import Sequence
 
 from twisted.internet import defer
-from twisted.python import failure
 from twisted.python import log
 from zope.interface import implementer
 
@@ -228,8 +227,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                 important = fileIsImportant(change)
                 if not important and onlyImportant:
                     return
-            except Exception:
-                log.err(failure.Failure(), f'in fileIsImportant check for {change}')
+            except Exception as e:
+                log.err(e, f'in fileIsImportant check for {change}')
                 return
         else:
             important = True
