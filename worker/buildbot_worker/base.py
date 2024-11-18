@@ -24,7 +24,6 @@ import time
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.python import failure
 from twisted.python import log
 from twisted.spread import pb
 
@@ -237,8 +236,8 @@ class BotBase(service.MultiService):
                     with open(filename) as fin:
                         try:
                             files[f] = bytes2unicode(fin.read())
-                        except UnicodeDecodeError:
-                            log.err(failure.Failure(), f'error while reading file: {filename}')
+                        except UnicodeDecodeError as e:
+                            log.err(e, f'error while reading file: {filename}')
 
         self._read_os_release(self.os_release_file, files)
 

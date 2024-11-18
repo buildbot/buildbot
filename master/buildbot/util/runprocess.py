@@ -20,7 +20,6 @@ import subprocess
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
-from twisted.python import failure
 from twisted.python import log
 from twisted.python import runtime
 
@@ -137,7 +136,7 @@ class RunProcess:
         try:
             self._start_command()
         except Exception as e:
-            self.deferred.errback(failure.Failure(e))
+            self.deferred.errback(e)
         return self.deferred
 
     def _start_command(self):

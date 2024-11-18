@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.python import failure
 from twisted.python import log
 
 from buildbot.util import deferwaiter
@@ -66,8 +65,8 @@ class QueueRef:
 
         try:
             x = self.callback(routing_key, data)
-        except Exception:
-            log.err(failure.Failure(), f'while invoking {self.callback!r}')
+        except Exception as e:
+            log.err(e, f'while invoking {self.callback!r}')
             return None
         if isinstance(x, defer.Deferred):
             x.addErrback(log.err, f'while invoking {self.callback!r}')

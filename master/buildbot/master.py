@@ -22,7 +22,6 @@ from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.internet import threads
-from twisted.python import failure
 from twisted.python import log
 
 import buildbot
@@ -260,8 +259,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 log.msg("Halting master.")
                 self.reactor.stop()
                 return
-            except Exception:
-                log.err(failure.Failure(), 'while starting BuildMaster')
+            except Exception as e:
+                log.err(e, 'while starting BuildMaster')
                 self.reactor.stop()
                 return
 
@@ -323,9 +322,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             # send the statistics to buildbot.net, without waiting
             self.sendBuildbotNetUsageData()
             startup_succeed = True
-        except Exception:
-            f = failure.Failure()
-            log.err(f, 'while starting BuildMaster')
+        except Exception as e:
+            log.err(e, 'while starting BuildMaster')
             self.reactor.stop()
 
         finally:
@@ -436,8 +434,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 log.msg(msg)
             failed = True
 
-        except Exception:
-            log.err(failure.Failure(), 'during reconfig:')
+        except Exception as e:
+            log.err(e, 'during reconfig:')
             failed = True
 
         finally:
