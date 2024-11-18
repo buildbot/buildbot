@@ -104,7 +104,8 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 .. option:: --protocol
 
     This is a string representing a protocol to be used when creating master-worker connection.
-    The default option is Perspective Broker (``pb``).
+    The default option is Perspective Broker (``pb``). Additionally, there is an experimental
+    MessagePack-based protocol (``msgpack_experimental_v7``).
 
 .. option:: --no-logrotate
 
