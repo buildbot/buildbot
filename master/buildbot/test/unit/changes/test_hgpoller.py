@@ -25,7 +25,6 @@ from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
 
-ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 LINESEP_BYTES = os.linesep.encode("ascii")
 PATHSEP_BYTES = os.pathsep.encode("ascii")
 
@@ -43,10 +42,6 @@ class TestHgPollerBase(
         self.setup_master_run_process()
         yield self.setUpChangeSource()
 
-        # To test that environment variables get propagated to subprocesses
-        # (See #2116)
-        os.environ[ENVIRON_2116_KEY] = 'TRUE'
-        yield self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
         self.remote_hgweb = 'http://example.com/foo/baz/rev/{}'
         self.repo_ready = True
@@ -277,7 +272,6 @@ class TestHgPollerBookmarks(TestHgPollerBase):
 
 class TestHgPoller(TestHgPollerBase):
     def tearDown(self):
-        del os.environ[ENVIRON_2116_KEY]
         return self.tearDownChangeSource()
 
     def gpoFullcommandPattern(self, commandName, *expected_args):
@@ -312,10 +306,6 @@ class TestHgPoller(TestHgPollerBase):
     @defer.inlineCallbacks
     def test_poll_initial(self):
         self.repo_ready = False
-        # Test that environment variables get propagated to subprocesses
-        # (See #2116)
-        expected_env = {ENVIRON_2116_KEY: 'TRUE'}
-        self.add_run_process_expect_env(expected_env)
         self.expect_commands(
             ExpectMasterShell(['hg', 'init', '/some/dir']),
             ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
