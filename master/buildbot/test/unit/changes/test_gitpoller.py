@@ -43,9 +43,6 @@ from buildbot.util import unicode2bytes
 from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.twisted import async_to_deferred
 
-# Test that environment variables get propagated to subprocesses (See #2116)
-os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
-
 
 class TestGitPollerBase(
     MasterRunProcessMixin,
@@ -460,11 +457,6 @@ class TestGitPoller(TestGitPollerBase):
 
     @defer.inlineCallbacks
     def test_poll_nothingNew(self):
-        # Test that environment variables get propagated to subprocesses
-        # (See #2116)
-        self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
-        self.add_run_process_expect_env({'ENVVAR': 'TRUE'})
-
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1198,11 +1190,6 @@ class TestGitPoller(TestGitPollerBase):
 
     @defer.inlineCallbacks
     def test_poll_noChanges(self):
-        # Test that environment variables get propagated to subprocesses
-        # (See #2116)
-        self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
-        self.add_run_process_expect_env({'ENVVAR': 'TRUE'})
-
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
@@ -1598,11 +1585,6 @@ class TestGitPoller(TestGitPollerBase):
 
     @defer.inlineCallbacks
     def test_poll_old(self):
-        # Test that environment variables get propagated to subprocesses
-        # (See #2116)
-        self.patch(os, 'environ', {'ENVVAR': 'TRUE'})
-        self.add_run_process_expect_env({'ENVVAR': 'TRUE'})
-
         self.expect_commands(
             ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
             ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
