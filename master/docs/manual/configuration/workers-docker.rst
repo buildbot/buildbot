@@ -231,6 +231,11 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     Address of the master the worker should connect to. Use if you master machine does not have proper fqdn.
     This value is passed to the docker image via environment variable ``BUILDMASTER``
 
+``master_protocol``
+    (optional, default to ``pb``)
+    Protocol that the worker should use when connecting to master. Supported values are ``pb`` and
+    ``msgpack_experimental_v7``.
+
 ``hostconfig``
     (renderable dictionary, optional)
     Extra host configuration parameters passed as a dictionary used to create HostConfig object.
@@ -361,6 +366,11 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ku
     Address of the master the worker should connect to. Put the service master service name if you want to place a load-balancer between the workers and the masters.
     The default behaviour is to compute address IP of the master. This option works out-of-the box inside kubernetes but don't leverage the load-balancing through service.
     You can pass any callable, such as ``KubeLatentWorker.get_fqdn`` that will set ``masterFQDN=socket.getfqdn()``.
+
+``master_protocol``
+    (optional, default to ``pb``)
+    Protocol that the worker should use when connecting to master. Supported values are ``pb`` and
+    ``msgpack_experimental_v7``.
 
 For more customization, you can subclass :class:`KubeLatentWorker` and override following methods.
 All those methods can optionally return a deferred.

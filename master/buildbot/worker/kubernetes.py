@@ -108,10 +108,11 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         image='buildbot/buildbot-worker',
         namespace=None,
         masterFQDN=None,
+        master_protocol='pb',
         kube_config=None,
         **kwargs,
     ):
-        super().checkConfig(name, None, **kwargs)
+        super().checkConfig(name, None, master_protocol=master_protocol, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(
@@ -120,6 +121,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         image='buildbot/buildbot-worker',
         namespace=None,
         masterFQDN=None,
+        master_protocol='pb',
         kube_config=None,
         **kwargs,
     ):
@@ -147,7 +149,9 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
 
         self._namespace = namespace or kube_config.getConfig()['namespace']
 
-        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
+        yield super().reconfigService(
+            name, image=image, masterFQDN=masterFQDN, master_protocol=master_protocol, **kwargs
+        )
 
     @defer.inlineCallbacks
     def startService(self):
