@@ -15,6 +15,38 @@ exports[`AnsiEscapeCodes > ansi2html > simple 1`] = `
 </DocumentFragment>
 `;
 
+exports[`AnsiEscapeCodes > escapeClassesToHtml > only reset0m reset0m esc sequences 1`] = `
+<DocumentFragment>
+  <span>
+    [0m[0m[0m
+  </span>
+</DocumentFragment>
+`;
+
+exports[`AnsiEscapeCodes > escapeClassesToHtml > only reset0m resetm esc sequences 1`] = `
+<DocumentFragment>
+  <span>
+    [0m[m[0m
+  </span>
+</DocumentFragment>
+`;
+
+exports[`AnsiEscapeCodes > escapeClassesToHtml > only resetm reset0m esc sequences 1`] = `
+<DocumentFragment>
+  <span>
+    [m[0m[0m
+  </span>
+</DocumentFragment>
+`;
+
+exports[`AnsiEscapeCodes > escapeClassesToHtml > only resetm resetm esc sequences 1`] = `
+<DocumentFragment>
+  <span>
+    [m[m[0m
+  </span>
+</DocumentFragment>
+`;
+
 exports[`AnsiEscapeCodes > generateStyleElement > simple 1`] = `
 <DocumentFragment>
   <style>
