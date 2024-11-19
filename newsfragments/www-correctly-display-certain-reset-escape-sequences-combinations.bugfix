@@ -1,0 +1,1 @@
+Fix certain combinations of ANSI reset escape sequences not displayed correctly. (:issue:`8216`)
