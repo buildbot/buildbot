@@ -210,8 +210,14 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
 // Both line substring and the parsed line information must exclude trailing newline character.
 export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: number,
                                     cssClassesWithText: [string | null, LineCssClasses[] | null] | undefined) {
-  if (cssClassesWithText === undefined || cssClassesWithText[1] === null ||
-      cssClassesWithText[1].length === 0) {
+  // no css classes to apply to text, no text, only css style reseting escape sequences
+  if (cssClassesWithText !== undefined && cssClassesWithText[1] !== null && cssClassesWithText[1].length === 0) {
+    return [
+      <span key={1}></span>
+    ]
+  }
+  // no css classes to apply to text
+  if (cssClassesWithText === undefined || cssClassesWithText[1] === null) {
     return [
       <span key={1}>{text.slice(lineStart, lineEnd)}</span>
     ]

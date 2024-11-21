@@ -17,7 +17,7 @@
 
 import {describe, expect, it} from "vitest";
 import {
-  ansi2html,
+  ansi2html, escapeClassesToHtml,
   generateStyleElement,
   parseAnsiSgrEntry,
   parseEscapeCodesToClasses, stripAnsiSgrEntry, stripLineEscapeCodes,
@@ -839,6 +839,36 @@ describe('AnsiEscapeCodes', () => {
   describe('ansi2html', () => {
     it('simple', () => {
       const generated = ansi2html("\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.");
+      const component = render(<>{generated}</>);
+      expect(component.asFragment()).toMatchSnapshot();
+    });
+  });
+
+  describe('escapeClassesToHtml', () => {
+    const escapeClassesToHtmlFromLine = (line: string) => {
+      return escapeClassesToHtml(line, 0, line.length, ['', []]);
+    }
+
+    it('only reset0m reset0m esc sequences', () => {
+      const generated = escapeClassesToHtmlFromLine("\x1b[0m\x1b[0m\x1b[0m");
+      const component = render(<>{generated}</>);
+      expect(component.asFragment()).toMatchSnapshot();
+    });
+
+    it('only resetm reset0m esc sequences', () => {
+      const generated = escapeClassesToHtmlFromLine("\x1b[m\x1b[0m\x1b[0m");
+      const component = render(<>{generated}</>);
+      expect(component.asFragment()).toMatchSnapshot();
+    });
+
+    it('only reset0m resetm esc sequences', () => {
+      const generated =  escapeClassesToHtmlFromLine("\x1b[0m\x1b[m\x1b[0m");
+      const component = render(<>{generated}</>);
+      expect(component.asFragment()).toMatchSnapshot();
+    });
+
+    it('only resetm resetm esc sequences', () => {
+      const generated = escapeClassesToHtmlFromLine("\x1b[m\x1b[m\x1b[0m");
       const component = render(<>{generated}</>);
       expect(component.asFragment()).toMatchSnapshot();
     });
