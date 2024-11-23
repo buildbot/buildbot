@@ -65,6 +65,12 @@ class ContentTypeParser:
         return bytes2unicode(self.typeheader).split(';', 1)[0]
 
 
+def _is_request_finished(request: server.Request) -> bool:
+    # In case of lost connection, request is not marked as finished
+    # detect this case with `channel` being None
+    return bool(request.finished) or request.channel is None
+
+
 URL_ENCODED = b"application/x-www-form-urlencoded"
 JSON_ENCODED = b"application/json"
 
@@ -333,9 +339,7 @@ class V2RootResource(resource.Resource):
             return
 
         async for chunk in data['raw']:
-            if request.finished or request.channel is None:
-                # In case of lost connection, request is not marked as finished
-                # detect this case with `channel` being None
+            if _is_request_finished(request):
                 return
             request.write(unicode2bytes(chunk))
 
@@ -355,6 +359,9 @@ class V2RootResource(resource.Resource):
             data = yield ep.get(rspec, kwargs)
             if data is None:
                 self._write_not_found_rest_error(request, ep, rspec=rspec, kwargs=kwargs)
+                return
+
+            if _is_request_finished(request):
                 return
 
             # post-process any remaining parts of the resultspec
@@ -405,11 +412,17 @@ class V2RootResource(resource.Resource):
             else:
                 encoder.indent = 2
 
-            content_length = sum(len(unicode2bytes(chunk)) for chunk in encoder.iterencode(data))
+            content_length = 0
+            for chunk in encoder.iterencode(data):
+                if _is_request_finished(request):
+                    return
+                content_length += len(unicode2bytes(chunk))
             request.setHeader(b"content-length", unicode2bytes(str(content_length)))
 
             if request.method != b"HEAD":
                 for chunk in encoder.iterencode(data):
+                    if _is_request_finished(request):
+                        return
                     request.write(unicode2bytes(chunk))
 
     def reconfigResource(self, new_config):
