@@ -34,6 +34,7 @@ from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.fake.machine import FakeMachineManager
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.util.db import resolve_test_db_url
 from buildbot.util import service
 from buildbot.util.twisted import async_to_deferred
 
@@ -148,6 +149,7 @@ async def make_master(
     wantGraphql=False,
     with_secrets: dict | None = None,
     url=None,
+    sqlite_memory=True,
     **kwargs,
 ) -> FakeMaster:
     if wantRealReactor:
@@ -168,8 +170,8 @@ async def make_master(
         await master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(master.basedir, testcase)
-        master.db.configured_url = 'sqlite://'
+        master.db = fakedb.FakeDBConnector(master.basedir, testcase, auto_upgrade=True)
+        master.db.configured_url = resolve_test_db_url(None, sqlite_memory)
         await master.db.setServiceParent(master)
         await master.db.setup()
         testcase.addCleanup(master.db._shutdown)
