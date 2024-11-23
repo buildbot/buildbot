@@ -79,6 +79,16 @@ def resolve_test_index_in_db_url(db_url):
     return db_url
 
 
+def resolve_test_db_url(db_url, sqlite_memory):
+    default_sqlite = 'sqlite://'
+    if db_url is None:
+        db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
+        if not sqlite_memory and db_url == default_sqlite:
+            db_url = "sqlite:///tmp.sqlite"
+
+    return resolve_test_index_in_db_url(db_url)
+
+
 def thd_clean_database(conn):
     # In general it's nearly impossible to do "bullet proof" database cleanup with SQLAlchemy
     # that will work on a range of databases and they configurations.
@@ -215,13 +225,7 @@ class RealDatabaseMixin:
             table_names = []
         self.__want_pool = want_pool
 
-        default_sqlite = 'sqlite://'
-        if db_url is None:
-            db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
-            if not sqlite_memory and db_url == default_sqlite:
-                db_url = "sqlite:///tmp.sqlite"
-
-        self.db_url = resolve_test_index_in_db_url(db_url)
+        self.db_url = resolve_test_db_url(db_url, sqlite_memory)
 
         if not os.path.exists(basedir):
             os.makedirs(basedir)
