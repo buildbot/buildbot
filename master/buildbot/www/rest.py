@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from twisted.internet import defer
+from twisted.internet import threads
 from twisted.internet.error import ConnectionDone
 from twisted.python import log
 from twisted.web.error import Error
@@ -412,18 +413,7 @@ class V2RootResource(resource.Resource):
             else:
                 encoder.indent = 2
 
-            content_length = 0
-            for chunk in encoder.iterencode(data):
-                if _is_request_finished(request):
-                    return
-                content_length += len(unicode2bytes(chunk))
-            request.setHeader(b"content-length", unicode2bytes(str(content_length)))
-
-            if request.method != b"HEAD":
-                for chunk in encoder.iterencode(data):
-                    if _is_request_finished(request):
-                        return
-                    request.write(unicode2bytes(chunk))
+            yield threads.deferToThread(V2RootResource._write_json_data, request, encoder, data)
 
     def reconfigResource(self, new_config):
         # buildbotURL may contain reverse proxy path, Origin header is just
@@ -501,6 +491,25 @@ class V2RootResource(resource.Resource):
             raise Error(400, b"invalid HTTP method")
 
         return res
+
+    @staticmethod
+    def _write_json_data(
+        request: server.Request,
+        encoder: json.encoder.JSONEncoder,
+        data: Any,
+    ) -> None:
+        content_length = 0
+        for chunk in encoder.iterencode(data):
+            if _is_request_finished(request):
+                return
+            content_length += len(unicode2bytes(chunk))
+        request.setHeader(b"content-length", unicode2bytes(str(content_length)))
+
+        if request.method != b"HEAD":
+            for chunk in encoder.iterencode(data):
+                if _is_request_finished(request):
+                    return
+                request.write(unicode2bytes(chunk))
 
 
 RestRootResource.addApiVersion(2, V2RootResource)
