@@ -69,7 +69,7 @@ class Resource(resource.Resource):
         if writeError is None:
             writeError = writeErrorDefault
         try:
-            d = _callable(request)
+            d = defer.maybeDeferred(_callable, request)
         except Exception as e:
             d = defer.fail(e)
 

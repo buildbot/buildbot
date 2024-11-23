@@ -40,7 +40,7 @@ Resources
         :param callable: the render function
         :param writeError: optional callable for rendering errors
 
-        This method will call ``callable``, which can return a Deferred, with the given ``request``.
+        This method will call ``callable``, which can be async or a Deferred, with the given ``request``.
         The value returned from this callable will be converted to an HTTP response.
         Exceptions, including ``Error`` subclasses, are handled properly.
         If the callable raises :py:class:`Redirect`, the response will be a suitable HTTP 302 redirect.
