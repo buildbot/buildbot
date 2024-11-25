@@ -829,6 +829,10 @@ class GerritChangeSource(GerritChangeSourceBase):
             filtered_events.append((ts, event))
         return filtered_events
 
+    def _debug_log_polled_event(self, event):
+        line = json.dumps(event, sort_keys=True)
+        log.msg(f"{self.change_source.name} accepted polled event: {line}")
+
     @defer.inlineCallbacks
     def _lines_received_poll(self, lines):
         if self._is_synchronized and not self._stream_messages_timeout:
@@ -881,6 +885,8 @@ class GerritChangeSource(GerritChangeSourceBase):
 
             for ts, event in events:
                 self._record_last_second_event(event, ts)
+                if self.debug:
+                    self._debug_log_polled_event(event)
                 yield self.eventReceived(event)
 
             yield self._update_last_event_ts()
@@ -898,6 +904,8 @@ class GerritChangeSource(GerritChangeSourceBase):
         for ts, event in events:
             if ts <= first_queued_ts:
                 self._record_last_second_event(event, ts)
+                if self.debug:
+                    self._debug_log_polled_event(event)
                 yield self.eventReceived(event)
 
         i = 0
