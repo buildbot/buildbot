@@ -61,6 +61,7 @@ import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
 import {Tab, Table, Tabs} from "react-bootstrap";
 import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
 import {BuildViewDebugTab} from "./BuildViewDebugTab";
+import {LoadingSpan} from '../../components/LoadingSpan/LoadingSpan';
 
 const buildTopbarActions = (
   build: Build | null,
@@ -116,7 +117,7 @@ const buildTopbarActions = (
 }
 
 const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
-                             changesQuery: DataCollection<Change>) => {
+                             changesAuthors: Set<string>) => {
   const responsibleUsers: {[name: string]: string | null} = {};
   if (getPropertyValueOrDefault(propertiesQuery.properties, "scheduler", "") === "force") {
     const owner = getPropertyValueOrDefault(propertiesQuery.properties, "owner", "");
@@ -130,14 +131,59 @@ const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
     }
   }
 
-  for (const change of changesQuery.array) {
-    const [name, email] = parseChangeAuthorNameAndEmail(change.author);
+  for (const author of changesAuthors) {
+    const [name, email] = parseChangeAuthorNameAndEmail(author);
     if (email !== null || !(name in responsibleUsers)) {
       responsibleUsers[name] = email;
     }
   }
 
   return responsibleUsers;
+}
+
+type TabWidgetProps = {
+  build: Build | null;
+}
+
+const ChangesTabWidget = ({build}: TabWidgetProps) => {
+  const changesQuery = useDataApiSingleElementQuery(build, [], b => b.getChanges());
+  if (!changesQuery.isResolved()) {
+    return <LoadingSpan />
+  }
+
+  return <ChangesTable changes={changesQuery} fetchLimit={0} onLoadMore={null}/>
+}
+
+type ResponsibleUsersTabWidgetProps = {
+  propertiesQuery: DataPropertiesCollection;
+} & TabWidgetProps;
+
+const ResponsibleUsersTabWidget = ({build, propertiesQuery}: ResponsibleUsersTabWidgetProps) => {
+  const changesQuery = useDataApiSingleElementQuery(
+    build, [],
+    b => b.getChanges({subscribe: false, query: {field: 'author'}})
+  );
+
+  if (!propertiesQuery.isResolved() || !changesQuery.isResolved()) {
+    return <LoadingSpan />
+  }
+
+  const responsibleUsers = computed(() => getResponsibleUsers(
+    propertiesQuery,
+    new Set(changesQuery.array.map(c => c.author))
+  )).get();
+
+  return (
+    <ul className="list-group">
+      {
+        Object.entries(responsibleUsers).map(([author, email], index) => (
+          <li key={index} className="list-group-item">
+            <ChangeUserAvatar name={author} email={email} showName={true}/>
+          </li>
+        ))
+      }
+    </ul>
+  );
 }
 
 const BuildView = observer(() => {
@@ -167,7 +213,6 @@ const BuildView = observer(() => {
   const build = findOrNull(buildsArray, b => b.number === buildnumber);
   const nextBuild = findOrNull(buildsArray, b => b.number === buildnumber + 1);
 
-  const changesQuery = useDataApiSingleElementQuery(build, [], b => b.getChanges());
   const buildrequestsQuery = useDataApiSingleElementQuery(build, [],
     b => b.buildrequestid === null
       ? new DataCollection<Buildrequest>()
@@ -243,7 +288,6 @@ const BuildView = observer(() => {
     }
   }, [builderid, navigate, shouldNavigateToBuilder]);
 
-  const responsibleUsers = computed(() => getResponsibleUsers(propertiesQuery, changesQuery)).get();
   /*
     $window.document.title = $state.current.data.pageTitle({builder: builder['name'], build: buildnumber});
    */
@@ -359,14 +403,6 @@ const BuildView = observer(() => {
     ));
   }
 
-  const renderResponsibleUsers = () => {
-    return Object.entries(responsibleUsers).map(([author, email], index) => (
-      <li key={index} className="list-group-item">
-        <ChangeUserAvatar name={author} email={email} showName={true}/>
-      </li>
-    ));
-  };
-
   return (
     <div className="container bb-build-view">
       <AlertNotification text={errorMsg}/>
@@ -396,15 +432,10 @@ const BuildView = observer(() => {
           </Table>
         </Tab>
         <Tab eventKey="responsible" title="Responsible Users">
-          <ul className="list-group">
-            {renderResponsibleUsers()}
-          </ul>
+          <ResponsibleUsersTabWidget build={build} propertiesQuery={propertiesQuery} />
         </Tab>
         <Tab eventKey="changes" title="Changes">
-          {build !== null
-            ? <ChangesTable changes={changesQuery} fetchLimit={0} onLoadMore={null}/>
-            : <></>
-          }
+          <ChangesTabWidget build={build} />
         </Tab>
         <Tab eventKey="debug" title="Debug">
           <BuildViewDebugTab build={build} buildrequest={buildrequest} buildset={buildset}/>
