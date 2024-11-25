@@ -590,6 +590,10 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         # Events are received from stream event source continuously. If HTTP API is not available,
         # GerritChangeSource is always in this state.
+        #
+        # This variable is used to synchronize between concurrent data ingestion from poll or
+        # stream event sources. If _is_synchronized == True, then polling data is discarded.
+        # Otherwise, data from stream data source goes into _queued_stream_events.
         self._is_synchronized = True
 
         # True if SSH stream did not get events for a long time. It is unclear whether the
@@ -872,8 +876,8 @@ class GerritChangeSource(GerritChangeSourceBase):
             needs_stream_restart = True
 
         if not self._queued_stream_events or max_event_ts <= self._queued_stream_events[0][0]:
-            # The events from stream source has not caught up - process all events and leave
-            # _is_synchronized as False.
+            # The events from poll source has not caught up to stream events - process all events
+            # and leave _is_synchronized as False.
 
             for ts, event in events:
                 self._record_last_second_event(event, ts)
