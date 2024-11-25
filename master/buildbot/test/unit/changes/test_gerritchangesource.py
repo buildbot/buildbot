@@ -777,6 +777,9 @@ class TestGerritChangeSource(
         # This is what triggers process startup above
         self.reactor.process_done(0, None)
 
+        # Stream should not be made primary until there are messages flowing
+        self.assertFalse(s._is_synchronized)
+
         self.reactor.advance(2)
 
         # Poll after messages below

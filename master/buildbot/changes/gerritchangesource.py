@@ -911,7 +911,8 @@ class GerritChangeSource(GerritChangeSourceBase):
             i += 1
 
         self._queued_stream_events.clear()
-        self._is_synchronized = True
+        if not needs_stream_restart:
+            self._is_synchronized = True
         yield self._update_last_event_ts()
         if needs_stream_restart:
             self._deferwaiter.add(self._stream_connector.restart())
