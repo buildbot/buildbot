@@ -590,6 +590,10 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         # Events are received from stream event source continuously. If HTTP API is not available,
         # GerritChangeSource is always in this state.
+        #
+        # This variable is used to synchronize between concurrent data ingestion from poll or
+        # stream event sources. If _is_synchronized == True, then polling data is discarded.
+        # Otherwise, data from stream data source goes into _queued_stream_events.
         self._is_synchronized = True
 
         # True if SSH stream did not get events for a long time. It is unclear whether the
@@ -825,6 +829,10 @@ class GerritChangeSource(GerritChangeSourceBase):
             filtered_events.append((ts, event))
         return filtered_events
 
+    def _debug_log_polled_event(self, event):
+        line = json.dumps(event, sort_keys=True)
+        log.msg(f"{self.change_source.name} accepted polled event: {line}")
+
     @defer.inlineCallbacks
     def _lines_received_poll(self, lines):
         if self._is_synchronized and not self._stream_messages_timeout:
@@ -872,11 +880,13 @@ class GerritChangeSource(GerritChangeSourceBase):
             needs_stream_restart = True
 
         if not self._queued_stream_events or max_event_ts <= self._queued_stream_events[0][0]:
-            # The events from stream source has not caught up - process all events and leave
-            # _is_synchronized as False.
+            # The events from poll source has not caught up to stream events - process all events
+            # and leave _is_synchronized as False.
 
             for ts, event in events:
                 self._record_last_second_event(event, ts)
+                if self.debug:
+                    self._debug_log_polled_event(event)
                 yield self.eventReceived(event)
 
             yield self._update_last_event_ts()
@@ -894,6 +904,8 @@ class GerritChangeSource(GerritChangeSourceBase):
         for ts, event in events:
             if ts <= first_queued_ts:
                 self._record_last_second_event(event, ts)
+                if self.debug:
+                    self._debug_log_polled_event(event)
                 yield self.eventReceived(event)
 
         i = 0
@@ -907,7 +919,8 @@ class GerritChangeSource(GerritChangeSourceBase):
             i += 1
 
         self._queued_stream_events.clear()
-        self._is_synchronized = True
+        if not needs_stream_restart:
+            self._is_synchronized = True
         yield self._update_last_event_ts()
         if needs_stream_restart:
             self._deferwaiter.add(self._stream_connector.restart())
