@@ -21,7 +21,7 @@ import {FaSpinner} from "react-icons/fa";
 import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
 import {useEffect, useState} from "react";
 import {Link, NavigateFunction, useNavigate, useParams} from "react-router-dom";
-import {buildbotSetupPlugin} from "buildbot-plugin-support";
+import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
 import {
   Build,
   Buildrequest,
@@ -54,6 +54,7 @@ import {
   useFavIcon,
   useTopbarItems,
   useTopbarActions,
+  useLoadMoreItemsState,
 } from "buildbot-ui";
 import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
 import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
@@ -146,12 +147,23 @@ type TabWidgetProps = {
 }
 
 const ChangesTabWidget = ({build}: TabWidgetProps) => {
-  const changesQuery = useDataApiSingleElementQuery(build, [], b => b.getChanges());
+  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
+  const [changesFetchLimit, onLoadMoreChanges] = useLoadMoreItemsState(
+    initialChangesFetchLimit, initialChangesFetchLimit
+  );
+
+  const changesQuery = useDataApiSingleElementQuery(
+    build, [changesFetchLimit],
+    b => b.getChanges({query: {limit: changesFetchLimit, field: ['changeid']}})
+  );
   if (!changesQuery.isResolved()) {
     return <LoadingSpan />
   }
 
-  return <ChangesTable changes={changesQuery} fetchLimit={0} onLoadMore={null}/>
+  return <ChangesTable
+    changes={changesQuery}
+    fetchLimit={changesFetchLimit} onLoadMore={onLoadMoreChanges}
+  />
 }
 
 type ResponsibleUsersTabWidgetProps = {
