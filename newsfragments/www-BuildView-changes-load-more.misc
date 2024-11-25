@@ -1,0 +1,1 @@
+BuildView's 'Changes' tab (`builders/:builderid/builds/:buildnumber`) now only load a limited number of changes, with the option to load more.
