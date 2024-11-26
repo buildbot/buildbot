@@ -36,41 +36,44 @@ async def doCleanupDatabase(config, master_cfg) -> None:
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
     db = master.db
-    await db.setup(check_version=False, verbose=not config['quiet'])
-    res = await db.logs.getLogs()
-    percent = 0
-    saved = 0
-    for i, log in enumerate(res, start=1):
-        saved += await db.logs.compressLog(log.id, force=config['force'])
-        if not config['quiet'] and percent != int(i * 100 / len(res)):
-            percent = int(i * 100 / len(res))
-            print(f" {percent}%  {saved} saved", flush=True)
-            saved = 0
+    try:
+        await db.setup(check_version=False, verbose=not config['quiet'])
+        res = await db.logs.getLogs()
+        percent = 0
+        saved = 0
+        for i, log in enumerate(res, start=1):
+            saved += await db.logs.compressLog(log.id, force=config['force'])
+            if not config['quiet'] and percent != int(i * 100 / len(res)):
+                percent = int(i * 100 / len(res))
+                print(f" {percent}%  {saved} saved", flush=True)
+                saved = 0
 
-    assert master.db._engine is not None
-    vacuum_stmt = {
-        # https://www.postgresql.org/docs/current/sql-vacuum.html
-        'postgresql': f'VACUUM FULL {master.db.model.logchunks.name};',
-        # https://dev.mysql.com/doc/refman/5.7/en/optimize-table.html
-        'mysql': f'OPTIMIZE TABLE {master.db.model.logchunks.name};',
-        # https://www.sqlite.org/lang_vacuum.html
-        'sqlite': 'vacuum;',
-    }.get(master.db._engine.dialect.name)
+        assert master.db._engine is not None
+        vacuum_stmt = {
+            # https://www.postgresql.org/docs/current/sql-vacuum.html
+            'postgresql': f'VACUUM FULL {master.db.model.logchunks.name};',
+            # https://dev.mysql.com/doc/refman/5.7/en/optimize-table.html
+            'mysql': f'OPTIMIZE TABLE {master.db.model.logchunks.name};',
+            # https://www.sqlite.org/lang_vacuum.html
+            'sqlite': 'vacuum;',
+        }.get(master.db._engine.dialect.name)
 
-    if vacuum_stmt is not None:
+        if vacuum_stmt is not None:
 
-        def thd(conn: Connection) -> None:
-            if not config['quiet']:
-                print(f"executing vacuum operation '{vacuum_stmt}'...", flush=True)
+            def thd(conn: Connection) -> None:
+                if not config['quiet']:
+                    print(f"executing vacuum operation '{vacuum_stmt}'...", flush=True)
 
-            # vacuum operation cannot be done in a transaction
-            # https://github.com/sqlalchemy/sqlalchemy/discussions/6959#discussioncomment-1251681
-            with conn.execution_options(isolation_level='AUTOCOMMIT'):
-                conn.exec_driver_sql(vacuum_stmt).close()
+                # vacuum operation cannot be done in a transaction
+                # https://github.com/sqlalchemy/sqlalchemy/discussions/6959#discussioncomment-1251681
+                with conn.execution_options(isolation_level='AUTOCOMMIT'):
+                    conn.exec_driver_sql(vacuum_stmt).close()
 
-            conn.commit()
+                conn.commit()
 
-        await db.pool.do(thd)
+            await db.pool.do(thd)
+    finally:
+        await db.pool.stop()
 
 
 @in_reactor
