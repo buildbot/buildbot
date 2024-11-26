@@ -111,7 +111,7 @@ class ReporterTestMixin:
         self, buildResults, finalResult, insertSS=True, parentPlan=False, insert_patch=False
     ):
         self.db = self.master.db
-        yield self.db.insert_test_data([
+        rows = [
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -122,20 +122,10 @@ class ReporterTestMixin:
                 reason="testReason1",
                 parent_buildid=19 if parentPlan else None,
             ),
-            fakedb.Change(
-                changeid=13,
-                branch=self.reporter_test_branch,
-                revision='9283',
-                author='me@foo',
-                repository=self.reporter_test_repo,
-                codebase=self.reporter_test_codebase,
-                project='world-domination',
-                sourcestampid=234,
-            ),
-        ])
+        ]
 
         if parentPlan:
-            yield self.db.insert_test_data([
+            rows += [
                 fakedb.Worker(id=12, name='wrk_parent'),
                 fakedb.Builder(id=78, name='Builder_parent'),
                 fakedb.Buildset(id=97, results=finalResult, reason="testReason0"),
@@ -150,12 +140,12 @@ class ReporterTestMixin:
                     results=finalResult,
                     state_string="buildText",
                 ),
-            ])
+            ]
 
         if insertSS:
             patchid = 99 if insert_patch else None
 
-            yield self.db.insert_test_data([
+            rows += [
                 fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
                 fakedb.SourceStamp(
                     id=234,
@@ -174,12 +164,22 @@ class ReporterTestMixin:
                     subdir='/foo',
                     patchlevel=3,
                 ),
-            ])
+                fakedb.Change(
+                    changeid=13,
+                    branch=self.reporter_test_branch,
+                    revision='9283',
+                    author='me@foo',
+                    repository=self.reporter_test_repo,
+                    codebase=self.reporter_test_codebase,
+                    project='world-domination',
+                    sourcestampid=234,
+                ),
+            ]
 
         for i, results in enumerate(buildResults):
             started_at = 10000001
             complete_at = None if results is None else 10000005
-            yield self.db.insert_test_data([
+            rows += [
                 fakedb.BuildRequest(id=11 + i, buildsetid=98, builderid=79 + i),
                 fakedb.Build(
                     id=20 + i,
@@ -209,11 +209,11 @@ class ReporterTestMixin:
                 fakedb.BuildProperty(buildid=20 + i, name="buildername", value="Builder0"),
                 fakedb.BuildProperty(buildid=20 + i, name="buildnumber", value=f"{i}"),
                 fakedb.BuildProperty(buildid=20 + i, name="scheduler", value="checkin"),
-            ])
+            ]
             for k, v in self.reporter_test_props.items():
-                yield self.db.insert_test_data([
-                    fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
-                ])
+                rows += [fakedb.BuildProperty(buildid=20 + i, name=k, value=v)]
+
+        yield self.db.insert_test_data(rows)
 
         self.setup_fake_get_changes_for_build()
 
