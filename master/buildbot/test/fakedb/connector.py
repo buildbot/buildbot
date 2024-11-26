@@ -169,7 +169,7 @@ class FakeDBConnector(DBConnector):
                         'buildsetid': row.buildsetid,
                         'builderid': row.builderid,
                         'priority': row.priority,
-                        'complete': row.complete,
+                        'complete': row_bool_to_int(row.complete),
                         'results': row.results,
                         'submitted_at': row.submitted_at,
                         'complete_at': row.complete_at,
@@ -244,7 +244,7 @@ class FakeDBConnector(DBConnector):
                         'external_idstring': row.external_idstring,
                         'reason': row.reason,
                         'submitted_at': row.submitted_at,
-                        'complete': row.complete,
+                        'complete': row_bool_to_int(row.complete),
                         'complete_at': row.complete_at,
                         'results': row.results,
                         'parent_buildid': None,
@@ -429,7 +429,7 @@ class FakeDBConnector(DBConnector):
                         'id': row.id,
                         'name': row.name,
                         'name_hash': hash_columns(row.name),
-                        'active': row.active,
+                        'active': row_bool_to_int(row.active),
                         'last_active': row.last_active,
                     }
                 ],
@@ -593,7 +593,7 @@ class FakeDBConnector(DBConnector):
                         'state_string': row.state_string,
                         'results': row.results,
                         'urls_json': row.urls_json,
-                        'hidden': row.hidden,
+                        'hidden': row_bool_to_int(row.hidden),
                     }
                 ],
             )
@@ -630,7 +630,7 @@ class FakeDBConnector(DBConnector):
                         'value_unit': row.value_unit,
                         'tests_passed': row.tests_passed,
                         'tests_failed': row.tests_failed,
-                        'complete': row.complete,
+                        'complete': row_bool_to_int(row.complete),
                     }
                 ],
             )
