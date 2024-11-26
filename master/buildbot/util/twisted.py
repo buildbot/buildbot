@@ -20,6 +20,8 @@ from functools import wraps
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import threadpool
 
 if TYPE_CHECKING:
     from typing import Any
@@ -51,3 +53,23 @@ async def any_to_async(value: Coroutine[Any, Any, _T] | defer.Deferred[_T] | _T)
         # defer.Deferred is awaitable too
         return await value
     return value
+
+
+class ThreadPool(threadpool.ThreadPool):
+    # This thread pool ensures that it stops on reactor shutdown
+
+    _stop_event = None  # if not None, then pool is running
+
+    def start(self):
+        if self._stop_event:
+            return
+
+        super().start()
+        self._stop_event = reactor.addSystemEventTrigger('during', 'shutdown', self.stop)
+
+    def stop(self):
+        if not self._stop_event:
+            return
+        super().stop()
+        reactor.removeSystemEventTrigger(self._stop_event)
+        self._stop_event = None
