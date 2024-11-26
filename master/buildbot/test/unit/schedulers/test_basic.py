@@ -110,6 +110,22 @@ class BaseBasicScheduler(
         self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
+    @defer.inlineCallbacks
+    def mkch(self, **kwargs):
+        # create changeset and insert in database.
+        chd = {"branch": 'master', "project": '', "repository": ''}
+        chd.update(kwargs)
+        ch = self.makeFakeChange(**chd)
+        # fakedb.Change requires changeid instead of number
+        chd['changeid'] = chd['number']
+        sourcestampid = chd['number'] + 100
+        del chd['number']
+        yield self.db.insert_test_data([
+            fakedb.Change(sourcestampid=sourcestampid, **chd),
+            fakedb.SourceStamp(id=sourcestampid),
+        ])
+        return ch
+
     # tests
 
     def test_constructor_positional_exception(self):
@@ -123,6 +139,11 @@ class BaseBasicScheduler(
         sched = yield self.makeScheduler(
             self.Subclass, treeStableTimer=None, change_filter=cf, fileIsImportant=fII
         )
+
+        yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
+            fakedb.Change(changeid=20),
+        ])
 
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
@@ -149,6 +170,7 @@ class BaseBasicScheduler(
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
 
         yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
             fakedb.Change(changeid=20),
         ])
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
@@ -171,7 +193,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), False)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), False)
 
         self.assertEqual(self.events, [])
 
@@ -183,7 +205,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), True)
 
         self.assertEqual(self.events, ['B[13]@0'])
 
@@ -195,7 +217,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), False)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), False)
 
         self.assertEqual(self.events, [])
         self.clock.advance(10)
@@ -209,7 +231,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), True)
         self.clock.advance(10)
 
         self.assertEqual(self.events, ['B[13]@10'])
@@ -220,6 +242,7 @@ class BaseBasicScheduler(
     def test_gotChange_treeStableTimer_sequence(self):
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=9, branch='master')
         yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
             fakedb.Change(changeid=1, branch='master', when_timestamp=1110),
             fakedb.ChangeFile(changeid=1, filename='readme.txt'),
             fakedb.Change(changeid=2, branch='master', when_timestamp=2220),
@@ -347,8 +370,12 @@ class SingleBranchScheduler(
         ch = self.makeFakeChange(**chd)
         # fakedb.Change requires changeid instead of number
         chd['changeid'] = chd['number']
+        sourcestampid = chd['number'] + 100
         del chd['number']
-        yield self.db.insert_test_data([fakedb.Change(**chd)])
+        yield self.db.insert_test_data([
+            fakedb.Change(sourcestampid=sourcestampid, **chd),
+            fakedb.SourceStamp(id=sourcestampid),
+        ])
         return ch
 
     @defer.inlineCallbacks
@@ -421,7 +448,8 @@ class SingleBranchScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
+        change = yield self.mkch(branch='master', number=13)
+        yield sched.gotChange(change, True)
         self.clock.advance(10)
 
         self.assertEqual(self.events, ['B[13]@10'])

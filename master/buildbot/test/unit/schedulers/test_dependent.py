@@ -162,8 +162,10 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
                 results=-1,
             ),
             fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
+            fakedb.Object(id=OBJECTID),
         ])
         self.sendBuildsetMessage(scheduler_name=scheduler_name, complete=False)
+        yield self.master.mq._deferwaiter.wait()
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:
