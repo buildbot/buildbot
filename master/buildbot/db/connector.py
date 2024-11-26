@@ -174,6 +174,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.upsert = get_upsert_method(self._engine)
         self.has_native_upsert = self.upsert != get_upsert_method(None)
         self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
+        self.pool.start()
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
@@ -199,7 +200,10 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
     @defer.inlineCallbacks
     def stopService(self):
         yield self._shutdown()
-        yield super().stopService()
+        try:
+            yield super().stopService()
+        finally:
+            yield self.pool.stop()
 
     def _doCleanup(self):
         """

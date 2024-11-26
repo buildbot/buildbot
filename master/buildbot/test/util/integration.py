@@ -99,7 +99,7 @@ class TestedMaster:
         except Exception as e:
             log.err(e)
         try:
-            await self.master.db.pool.shutdown()
+            await self.master.db.pool.stop()
         except Exception as e:
             log.err(e)
         self.is_master_shutdown = True
