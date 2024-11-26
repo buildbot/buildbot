@@ -138,6 +138,11 @@ class FakeMaster(service.MasterService):
         pass
 
     @defer.inlineCallbacks
+    def stopService(self):
+        yield super().stopService()
+        yield self.test_shutdown()
+
+    @defer.inlineCallbacks
     def test_shutdown(self):
         if self._test_did_shutdown:
             return
