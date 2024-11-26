@@ -221,6 +221,17 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = steps.Step(self.master)
 
+        yield self.master.db.insert_test_data([
+            fakedb.Worker(id=47, name='linux'),
+            fakedb.Builder(id=77, name='builder77'),
+            fakedb.Master(id=88),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
+            fakedb.Build(
+                id=10, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
+            ),
+        ])
+
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.tear_down_test_reactor()

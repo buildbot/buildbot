@@ -146,9 +146,12 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=78, name='builder78'),
             fakedb.Builder(id=79, name='builder79'),
             fakedb.Master(id=88),
-            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Worker(id=12, name='wrk'),
+            fakedb.Worker(id=13, name='wrk2'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
+            fakedb.BuildRequest(id=83, builderid=77, buildsetid=8822),
+            fakedb.BuildRequest(id=84, builderid=77, buildsetid=8822),
             fakedb.Build(
                 id=13, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=3
             ),
@@ -350,6 +353,7 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             fakedb.Worker(id=20, name='wrk'),
             fakedb.Buildset(id=999),
             fakedb.BuildRequest(id=499, buildsetid=999, builderid=10),
+            fakedb.BuildRequest(id=13, buildsetid=999, builderid=10),
             fakedb.Build(
                 id=99, builderid=10, masterid=824, workerid=20, buildrequestid=499, number=42
             ),

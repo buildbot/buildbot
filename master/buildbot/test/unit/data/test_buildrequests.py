@@ -321,6 +321,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
     @defer.inlineCallbacks
     def testFakeDataClaimBuildRequests(self):
         yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=123),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=44, builderid=123, buildsetid=8822),
@@ -447,6 +448,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
     def testUnclaimBuildRequests(self):
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=123),
+            fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=123),
         ])
         unclaimBuildRequestsMock = mock.Mock(return_value=defer.succeed(None))
@@ -651,7 +653,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             fakedb.SourceStamp(id=234),
             fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=123, builderid=77, buildrequestid=82, masterid=88),
+            fakedb.Build(id=123, builderid=77, workerid=13, buildrequestid=82, masterid=88),
         ])
         buildrequest = yield self.master.data.get(("buildrequests", 82))
         new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)
@@ -713,8 +715,8 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),
             fakedb.BuildRequest(id=81, buildsetid=8821, builderid=77),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=122, builderid=77, buildrequestid=81, masterid=88),
-            fakedb.Build(id=123, builderid=77, buildrequestid=82, masterid=88),
+            fakedb.Build(id=122, builderid=77, workerid=13, buildrequestid=81, masterid=88),
+            fakedb.Build(id=123, builderid=77, workerid=13, buildrequestid=82, masterid=88),
         ])
         buildrequest = yield self.master.data.get(("buildrequests", 82))
         new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)
