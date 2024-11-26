@@ -74,12 +74,13 @@ class FakeDBConnector(DBConnector):
 
     MASTER_ID = 824
 
-    def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True):
+    def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True, auto_clean=True):
         super().__init__(basedir)
         self.testcase = testcase
         self.checkForeignKeys = False
         self.auto_upgrade = auto_upgrade
         self.check_version = check_version
+        self.auto_clean = auto_clean
 
     @defer.inlineCallbacks
     def setup(self):
@@ -89,6 +90,8 @@ class FakeDBConnector(DBConnector):
             yield self.model.upgrade()
         else:
             yield super().setup(check_version=self.check_version)
+            if self.auto_clean:
+                yield self.pool.do(thd_clean_database)
 
     @async_to_deferred
     async def _shutdown(self) -> None:

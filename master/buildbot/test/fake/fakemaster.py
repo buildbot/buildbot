@@ -169,6 +169,7 @@ async def make_master(
     auto_upgrade=True,
     auto_shutdown=True,
     check_version=True,
+    auto_clean=True,
     **kwargs,
 ) -> FakeMaster:
     if wantRealReactor:
@@ -190,7 +191,11 @@ async def make_master(
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
         master.db = fakedb.FakeDBConnector(
-            master.basedir, testcase, auto_upgrade=auto_upgrade, check_version=check_version
+            master.basedir,
+            testcase,
+            auto_upgrade=auto_upgrade,
+            check_version=check_version,
+            auto_clean=auto_clean,
         )
         master._test_want_db = True
 
