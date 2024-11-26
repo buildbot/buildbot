@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.db.connector import DBConnector
 from buildbot.test.util.db import thd_clean_database
 from buildbot.util.sautils import hash_columns
+from buildbot.util.twisted import async_to_deferred
 
 from .build_data import BuildData
 from .builders import Builder
@@ -88,6 +89,11 @@ class FakeDBConnector(DBConnector):
             yield self.model.upgrade()
         else:
             yield super().setup(check_version=self.check_version)
+
+    @async_to_deferred
+    async def _shutdown(self) -> None:
+        await super()._shutdown()
+        await self.pool.stop()
 
     def _match_rows(self, rows, type):
         matched_rows = [r for r in rows if isinstance(r, type)]
