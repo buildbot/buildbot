@@ -19,27 +19,20 @@ from twisted.trial import unittest
 
 from buildbot.db import users
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 
 
-class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, unittest.TestCase):
+class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=[
-                'users',
-                'users_info',
-                'changes',
-                'change_users',
-                'sourcestamps',
-                'patches',
-            ]
-        )
+        self.setup_test_reactor(auto_tear_down=False)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
 
-        self.db.users = users.UsersConnectorComponent(self.db)
-
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownConnectorComponent()
+        yield self.tear_down_test_reactor()
 
     # sample user data
 
@@ -110,7 +103,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_addUser_existing(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
         uid = yield self.db.users.findUserByAttr(
             identifier='soapy', attr_type='IPv9', attr_data='0578cc6.8db024'
         )
@@ -134,7 +127,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_findUser_existing(self):
-        yield self.insert_test_data(self.user1_rows + self.user2_rows + self.user3_rows)
+        yield self.db.insert_test_data(self.user1_rows + self.user2_rows + self.user3_rows)
         uid = yield self.db.users.findUserByAttr(
             identifier='lye', attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'
         )
@@ -208,7 +201,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
     @defer.inlineCallbacks
     def test_addUser_existing_identifier(self):
         # see http://trac.buildbot.net/ticket/2587
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
         uid = yield self.db.users.findUserByAttr(
             identifier='soap',  # same identifier
             attr_type='IPv9',
@@ -236,7 +229,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUser(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         usdict = yield self.db.users.getUser(1)
 
@@ -244,7 +237,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUser_bb(self):
-        yield self.insert_test_data(self.user3_rows)
+        yield self.db.insert_test_data(self.user3_rows)
 
         usdict = yield self.db.users.getUser(3)
 
@@ -252,7 +245,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUser_multi_attr(self):
-        yield self.insert_test_data(self.user2_rows)
+        yield self.db.insert_test_data(self.user2_rows)
 
         usdict = yield self.db.users.getUser(2)
 
@@ -260,7 +253,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUser_no_match(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         none = yield self.db.users.getUser(3)
 
@@ -274,7 +267,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUsers(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         res = yield self.db.users.getUsers()
 
@@ -282,7 +275,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUsers_multiple(self):
-        yield self.insert_test_data(self.user1_rows + self.user2_rows)
+        yield self.db.insert_test_data(self.user1_rows + self.user2_rows)
 
         res = yield self.db.users.getUsers()
 
@@ -293,7 +286,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUserByUsername(self):
-        yield self.insert_test_data(self.user3_rows)
+        yield self.db.insert_test_data(self.user3_rows)
 
         res = yield self.db.users.getUserByUsername("marla")
 
@@ -301,7 +294,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getUserByUsername_no_match(self):
-        yield self.insert_test_data(self.user3_rows)
+        yield self.db.insert_test_data(self.user3_rows)
 
         none = yield self.db.users.getUserByUsername("tyler")
 
@@ -309,7 +302,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_updateUser_existing_type(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=1, attr_type='IPv9', attr_data='abcd.1234')
 
@@ -320,7 +313,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_updateUser_new_type(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=1, attr_type='IPv4', attr_data='123.134.156.167')
 
@@ -332,7 +325,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_updateUser_identifier(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=1, identifier='lye')
 
@@ -343,7 +336,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_updateUser_bb(self):
-        yield self.insert_test_data(self.user3_rows)
+        yield self.db.insert_test_data(self.user3_rows)
 
         yield self.db.users.updateUser(uid=3, bb_username='boss', bb_password='fired')
 
@@ -355,7 +348,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_updateUser_all(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(
             uid=1,
@@ -416,7 +409,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
                 race_condition_committed.append(False)
                 # scope variable, we modify a list so that modification is visible in parent scope
 
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(
             uid=1, attr_type='IPv4', attr_data='123.134.156.167', _race_hook=race_thd
@@ -436,7 +429,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_update_NoMatch_identifier(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=3, identifier='abcd')
 
@@ -446,7 +439,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_update_NoMatch_attribute(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=3, attr_type='abcd', attr_data='efgh')
 
@@ -456,7 +449,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_update_NoMatch_bb(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=3, attr_type='marla', attr_data='cancer')
 
@@ -466,7 +459,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_removeUser_uid(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.removeUser(1)
 
@@ -479,7 +472,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_removeNoMatch(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.removeUser(uid=3)
 
@@ -491,7 +484,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_identifierToUid_match(self):
-        yield self.insert_test_data(self.user1_rows)
+        yield self.db.insert_test_data(self.user1_rows)
 
         res = yield self.db.users.identifierToUid(identifier="soap")
 

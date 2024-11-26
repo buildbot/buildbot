@@ -18,6 +18,7 @@ import json
 from twisted.internet import defer
 
 from buildbot.db.connector import DBConnector
+from buildbot.test.util.db import thd_clean_database
 from buildbot.util.sautils import hash_columns
 
 from .build_data import BuildData
@@ -64,8 +65,7 @@ from .workers import Worker
 class FakeDBConnector(DBConnector):
     """
     A stand-in for C{master.db} that operates without an actual database
-    backend.  This also implements a test-data interface similar to the
-    L{buildbot.test.util.db.RealDatabaseMixin.insert_test_data} method.
+    backend.
 
     The child classes implement various useful assertions and faking methods;
     see their documentation for more.
@@ -73,19 +73,21 @@ class FakeDBConnector(DBConnector):
 
     MASTER_ID = 824
 
-    def __init__(self, basedir, testcase, auto_upgrade=False):
+    def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True):
         super().__init__(basedir)
         self.testcase = testcase
         self.checkForeignKeys = False
         self.auto_upgrade = auto_upgrade
+        self.check_version = check_version
 
     @defer.inlineCallbacks
     def setup(self):
         if self.auto_upgrade:
             yield super().setup(check_version=False)
+            yield self.pool.do(thd_clean_database)
             yield self.model.upgrade()
         else:
-            yield super().setup()
+            yield super().setup(check_version=self.check_version)
 
     def _match_rows(self, rows, type):
         matched_rows = [r for r in rows if isinstance(r, type)]
@@ -744,17 +746,23 @@ class FakeDBConnector(DBConnector):
 
         def thd_insert_rows(conn):
             remaining = rows
+            remaining = self._thd_maybe_insert_master(conn, remaining)
             remaining = self._thd_maybe_insert_build_data(conn, remaining)
             remaining = self._thd_maybe_insert_builder(conn, remaining)
+            remaining = self._thd_maybe_insert_tag(conn, remaining)
+            remaining = self._thd_maybe_insert_worker(conn, remaining)
+            remaining = self._thd_maybe_insert_patch(conn, remaining)
+            remaining = self._thd_maybe_insert_sourcestamp(conn, remaining)
             remaining = self._thd_maybe_insert_builder_master(conn, remaining)
             remaining = self._thd_maybe_insert_builder_tags(conn, remaining)
+            remaining = self._thd_maybe_insert_buildset(conn, remaining)
+            remaining = self._thd_maybe_insert_buildset_property(conn, remaining)
+            remaining = self._thd_maybe_insert_buildset_sourcestamp(conn, remaining)
             remaining = self._thd_maybe_insert_buildrequest(conn, remaining)
             remaining = self._thd_maybe_insert_buildrequest_claim(conn, remaining)
             remaining = self._thd_maybe_insert_build(conn, remaining)
             remaining = self._thd_maybe_insert_build_properties(conn, remaining)
-            remaining = self._thd_maybe_insert_buildset(conn, remaining)
-            remaining = self._thd_maybe_insert_buildset_property(conn, remaining)
-            remaining = self._thd_maybe_insert_buildset_sourcestamp(conn, remaining)
+            remaining = self._thd_maybe_insert_step(conn, remaining)
             remaining = self._thd_maybe_insert_change(conn, remaining)
             remaining = self._thd_maybe_insert_change_file(conn, remaining)
             remaining = self._thd_maybe_insert_change_property(conn, remaining)
@@ -763,24 +771,18 @@ class FakeDBConnector(DBConnector):
             remaining = self._thd_maybe_insert_changesource_master(conn, remaining)
             remaining = self._thd_maybe_insert_log(conn, remaining)
             remaining = self._thd_maybe_insert_log_chunk(conn, remaining)
-            remaining = self._thd_maybe_insert_master(conn, remaining)
             remaining = self._thd_maybe_insert_project(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler_change(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler_master(conn, remaining)
-            remaining = self._thd_maybe_insert_patch(conn, remaining)
-            remaining = self._thd_maybe_insert_sourcestamp(conn, remaining)
             remaining = self._thd_maybe_insert_object(conn, remaining)
             remaining = self._thd_maybe_insert_object_state(conn, remaining)
-            remaining = self._thd_maybe_insert_step(conn, remaining)
-            remaining = self._thd_maybe_insert_tag(conn, remaining)
             remaining = self._thd_maybe_insert_test_result_set(conn, remaining)
             remaining = self._thd_maybe_insert_test_name(conn, remaining)
             remaining = self._thd_maybe_insert_test_code_path(conn, remaining)
             remaining = self._thd_maybe_insert_test_result(conn, remaining)
             remaining = self._thd_maybe_insert_user(conn, remaining)
             remaining = self._thd_maybe_insert_user_info(conn, remaining)
-            remaining = self._thd_maybe_insert_worker(conn, remaining)
             remaining = self._thd_maybe_insert_configured_worker(conn, remaining)
             remaining = self._thd_maybe_insert_connected_worker(conn, remaining)
 

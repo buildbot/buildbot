@@ -17,20 +17,21 @@
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.db import state
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 
 
-class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, unittest.TestCase):
+class TestStateConnectorComponent(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpConnectorComponent(table_names=['objects', 'object_state'])
+        self.setup_test_reactor(auto_tear_down=False)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
 
-        self.db.state = state.StateConnectorComponent(self.db)
-
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.tearDownConnectorComponent()
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_getObjectId_new(self):
@@ -49,7 +50,9 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getObjectId_existing(self):
-        yield self.insert_test_data([fakedb.Object(id=19, name='someobj', class_name='someclass')])
+        yield self.db.insert_test_data([
+            fakedb.Object(id=19, name='someobj', class_name='someclass')
+        ])
         objectid = yield self.db.state.getObjectId('someobj', 'someclass')
 
         self.assertEqual(objectid, 19)
@@ -107,7 +110,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getState_present(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='x', class_name='y'),
             fakedb.ObjectState(objectid=10, name='x', value_json='[1,2]'),
         ])
@@ -117,7 +120,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_getState_badjson(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='x', class_name='y'),
             fakedb.ObjectState(objectid=10, name='x', value_json='ff[1'),
         ])
@@ -127,7 +130,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_setState(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
         yield self.db.state.setState(10, 'x', [1, 2])
@@ -143,7 +146,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_setState_badjson(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='x', class_name='y'),
         ])
         with self.assertRaises(TypeError):
@@ -152,7 +155,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_setState_existing(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='-', class_name='-'),
             fakedb.ObjectState(objectid=10, name='x', value_json='99'),
         ])
@@ -177,7 +180,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
         self.db.state._test_timing_hook = hook
 
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
         yield self.db.state.setState(10, 'x', [1, 2])
@@ -191,7 +194,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_atomicCreateState(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
         res = yield self.db.state.atomicCreateState(10, 'x', lambda: [1, 2])
@@ -201,7 +204,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_atomicCreateState_conflict(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
 
@@ -220,7 +223,7 @@ class TestStateConnectorComponent(connector_component.ConnectorComponentMixin, u
 
     @defer.inlineCallbacks
     def test_atomicCreateState_nojsonable(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
 

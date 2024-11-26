@@ -84,6 +84,13 @@ def withoutSqliteForeignKeys(connection: Connection):
         yield
         return
 
+    res = connection.exec_driver_sql('pragma foreign_keys')
+    foreign_keys_enabled = res.fetchone()[0]
+    res.close()
+    if not foreign_keys_enabled:
+        yield
+        return
+
     # This context is not re-entrant. Ensure it.
     assert not getattr(connection.engine, 'fk_disabled', False)
     connection.fk_disabled = True  # type: ignore[attr-defined]

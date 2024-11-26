@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import os
 import weakref
 from unittest import mock
 
@@ -92,7 +93,7 @@ class FakeMaster(service.MasterService):
     data: fakedata.FakeDataConnector
     graphql: GraphQLConnector
 
-    def __init__(self, reactor, master_id=fakedb.FakeDBConnector.MASTER_ID):
+    def __init__(self, reactor, basedir='basedir', master_id=fakedb.FakeDBConnector.MASTER_ID):
         super().__init__()
         self._master_id = master_id
         self.reactor = reactor
@@ -101,7 +102,7 @@ class FakeMaster(service.MasterService):
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.initLock = defer.DeferredLock()
-        self.basedir = 'basedir'
+        self.basedir = basedir
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
         self.name = 'fake:/master'
@@ -148,6 +149,10 @@ async def make_master(
     wantGraphql=False,
     with_secrets: dict | None = None,
     url=None,
+    db_url='sqlite://',
+    sqlite_memory=True,
+    auto_upgrade=True,
+    check_version=True,
     **kwargs,
 ) -> FakeMaster:
     if wantRealReactor:
@@ -168,8 +173,16 @@ async def make_master(
         await master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(master.basedir, testcase)
-        master.db.configured_url = 'sqlite://'
+        master.db = fakedb.FakeDBConnector(
+            master.basedir, testcase, auto_upgrade=auto_upgrade, check_version=check_version
+        )
+
+        if db_url == 'sqlite://' and not sqlite_memory:
+            db_url = 'sqlite:///tmp.sqlite'
+            if not os.path.exists(master.basedir):
+                os.makedirs(master.basedir)
+
+        master.db.configured_url = db_url
         await master.db.setServiceParent(master)
         await master.db.setup()
         testcase.addCleanup(master.db._shutdown)

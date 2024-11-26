@@ -20,14 +20,15 @@ from twisted.trial import unittest
 
 from buildbot.db import buildrequests
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
 
-class Tests(interfaces.InterfaceTests):
+class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     # test that the datetime translations are done correctly by specifying
     # the epoch timestamp and datetime objects explicitly.  These should
     # pass regardless of the local timezone used while running tests!
@@ -44,13 +45,18 @@ class Tests(interfaces.InterfaceTests):
     MASTER_ID = "set in setUp"
     OTHER_MASTER_ID = "set in setUp"
 
-    def setUpTests(self):
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor(auto_tear_down=False)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+
         # set up a sourcestamp and buildset for use below
         self.MASTER_ID = fakedb.FakeDBConnector.MASTER_ID
         self.OTHER_MASTER_ID = self.MASTER_ID + 1111
-        self.db.master.masterid = self.MASTER_ID
+        self.master.masterid = self.MASTER_ID
+        self.db = self.master.db
 
-        return self.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Master(id=self.MASTER_ID, name="fake master"),
             fakedb.Master(id=self.OTHER_MASTER_ID, name="other"),
@@ -61,11 +67,13 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildsetSourceStamp(buildsetid=self.BSID, sourcestampid=234),
         ])
 
-    # tests
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_getBuildRequest(self):
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildRequest(
                 id=44,
                 buildsetid=self.BSID,
@@ -109,7 +117,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_claim_args(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             # 50: claimed by this master
             fakedb.BuildRequest(id=50, buildsetid=self.BSID, builderid=self.BLDRID1),
             fakedb.BuildRequestClaim(
@@ -144,7 +152,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_buildername_arg(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             # 8: 'bb'
             fakedb.BuildRequest(id=8, buildsetid=self.BSID, builderid=self.BLDRID1),
             # 9: 'cc'
@@ -159,7 +167,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_complete_arg(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             # 70: incomplete
             fakedb.BuildRequest(
                 id=70, buildsetid=self.BSID, builderid=self.BLDRID1, complete=0, complete_at=None
@@ -200,7 +208,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildRequests_bsid_arg(self):
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             # the buildset that we are *not* looking for
             fakedb.Buildset(id=self.BSID + 1),
             fakedb.BuildRequest(
@@ -223,7 +231,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getBuildRequests_combo(self):
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             # 44: everything we want
             fakedb.BuildRequest(
                 id=44,
@@ -303,7 +311,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def do_test_getBuildRequests_branch_arg(self, **kwargs):
         expected = kwargs.pop('expected')
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=self.BSID + 1),
             fakedb.BuildRequest(id=70, buildsetid=self.BSID + 1, builderid=self.BLDRID1),
             fakedb.SourceStamp(id=self.BSID + 1, branch='branch_A'),
@@ -361,7 +369,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(now)
 
         try:
-            yield self.insert_test_data(rows)
+            yield self.master.db.insert_test_data(rows)
             yield self.db.buildrequests.claimBuildRequests(brids=brids, claimed_at=claimed_at)
             results = yield self.db.buildrequests.getBuildRequests()
 
@@ -466,7 +474,7 @@ class Tests(interfaces.InterfaceTests):
         now = 120350934
         self.reactor.advance(now)
 
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
             fakedb.BuildRequest(id=45, buildsetid=self.BSID, builderid=self.BLDRID1),
         ])
@@ -485,7 +493,7 @@ class Tests(interfaces.InterfaceTests):
         self.reactor.advance(now)
 
         try:
-            yield self.insert_test_data(rows)
+            yield self.master.db.insert_test_data(rows)
             yield self.db.buildrequests.completeBuildRequests(
                 brids=brids, results=7, complete_at=complete_at
             )
@@ -605,7 +613,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def do_test_unclaimMethod(self, method, expected):
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             # 44: a complete build (should not be unclaimed)
             fakedb.BuildRequest(
                 id=44,
@@ -670,32 +678,3 @@ class Tests(interfaces.InterfaceTests):
         return self.do_test_unclaimMethod(
             lambda: self.db.buildrequests.unclaimBuildRequests(to_unclaim), [45, 47, 48]
         )
-
-
-class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=[
-                'patches',
-                'changes',
-                'builders',
-                'buildsets',
-                'buildset_properties',
-                'buildrequests',
-                'buildset_sourcestamps',
-                'masters',
-                'buildrequest_claims',
-                'sourcestamps',
-                'sourcestampsets',
-                'builds',
-                'workers',
-                "projects",
-            ]
-        )
-
-        self.db.buildrequests = buildrequests.BuildRequestsConnectorComponent(self.db)
-        yield self.setUpTests()
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
