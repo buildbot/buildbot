@@ -474,10 +474,10 @@ class SingleBranchScheduler(
         yield sched.activate()
 
         yield sched.gotChange(
-            (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=0)), True
+            (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=1)), True
         )
         yield sched.gotChange(
-            (yield self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1)), True
+            (yield self.mkch(codebase='b', revision='2345:bcd', repository='B', number=2)), True
         )
 
         yield self.assert_state(
@@ -487,13 +487,13 @@ class SingleBranchScheduler(
                     "branch": 'master',
                     "repository": 'A',
                     "revision": '1234:abc',
-                    "lastChange": 0,
+                    "lastChange": 1,
                 },
                 'b': {
                     "branch": 'master',
                     "repository": 'B',
                     "revision": '2345:bcd',
-                    "lastChange": 1,
+                    "lastChange": 2,
                 },
             },
         )
