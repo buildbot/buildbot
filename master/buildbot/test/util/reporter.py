@@ -228,6 +228,8 @@ class ReporterTestMixin:
 
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
+            if ch is None:
+                return []
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
