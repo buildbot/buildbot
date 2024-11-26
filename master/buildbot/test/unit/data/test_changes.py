@@ -76,6 +76,8 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpEndpoint()
         yield self.db.insert_test_data([
+            fakedb.Master(id=1),
+            fakedb.Worker(id=1, name='wrk'),
             fakedb.SourceStamp(id=133),
             fakedb.Change(
                 changeid=13,
@@ -99,6 +101,8 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 when_timestamp=1000001,
             ),
             fakedb.Builder(id=1, name='builder'),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=1, builderid=1, buildsetid=8822),
             fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1, number=1),
         ])
 
@@ -293,6 +297,10 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_addChange_src_codebase(self):
+        yield self.master.db.insert_test_data([
+            fakedb.User(uid=123),
+        ])
+
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)

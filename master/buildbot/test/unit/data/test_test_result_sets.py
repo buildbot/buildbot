@@ -160,6 +160,31 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
     def setUp(self):
         self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=1),
+            fakedb.Worker(id=1, name='example-worker'),
+            fakedb.Builder(id=1),
+            fakedb.Buildset(id=1),
+            fakedb.BuildRequest(
+                id=1,
+                buildsetid=1,
+                builderid=1,
+            ),
+            fakedb.Build(
+                id=2,
+                number=1,
+                buildrequestid=1,
+                builderid=1,
+                workerid=1,
+                masterid=1,
+            ),
+            fakedb.Step(
+                id=3,
+                number=1,
+                name='step1',
+                buildid=2,
+            ),
+        ])
         self.rtype = test_result_sets.TestResultSet(self.master)
 
     @defer.inlineCallbacks
