@@ -48,10 +48,15 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
-        yield self.master.db.insert_test_data([
-            fakedb.Builder(id=builderid, name=name)
-            for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
-        ])
+        yield self.master.db.insert_test_data(
+            [
+                fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            ]
+            + [
+                fakedb.Builder(id=builderid, name=name)
+                for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
+            ]
+        )
 
         self.stats_service = stats_service.StatsService(
             storage_backends=[fakestats.FakeStatsStorageService()], name="FakeStatsService"
@@ -195,9 +200,16 @@ class TestStatsServicesConsumers(TestBuildStepMixin, TestStatsServicesBase):
     @defer.inlineCallbacks
     def setupBuild(self):
         yield self.master.db.insert_test_data([
+            fakedb.Worker(id=1, name='wrk'),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(
+                id=1,
+                buildsetid=8822,
+                builderid=self.BUILDER_IDS[0],
+            ),
             fakedb.Build(
                 id=1,
-                masterid=1,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
                 workerid=1,
                 builderid=self.BUILDER_IDS[0],
                 buildrequestid=1,
