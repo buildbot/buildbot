@@ -62,30 +62,7 @@ upgrade_message = textwrap.dedent("""\
     """).strip()
 
 
-class AbstractDBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    def __init__(self) -> None:
-        super().__init__()
-        self.configured_url = None
-
-    @defer.inlineCallbacks
-    def setup(self):
-        if self.configured_url is None:
-            self.configured_url = yield self.master.get_db_url(self.master.config)
-
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        new_db_url = yield self.master.get_db_url(new_config)
-        if self.configured_url is None:
-            self.configured_url = new_db_url
-        elif self.configured_url != new_db_url:
-            config.error(
-                "Cannot change c['db']['db_url'] after the master has started",
-            )
-
-        return (yield super().reconfigServiceWithBuildbotConfig(new_config))
-
-
-class DBConnector(AbstractDBConnector):
+class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
@@ -111,6 +88,18 @@ class DBConnector(AbstractDBConnector):
         self.pool = None  # set up in reconfigService
         self.upsert = get_upsert_method(None)  # set up in reconfigService
         self.has_native_upsert = False
+
+    @defer.inlineCallbacks
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        new_db_url = yield self.master.get_db_url(new_config)
+        if self.configured_url is None:
+            self.configured_url = new_db_url
+        elif self.configured_url != new_db_url:
+            config.error(
+                "Cannot change c['db']['db_url'] after the master has started",
+            )
+
+        return (yield super().reconfigServiceWithBuildbotConfig(new_config))
 
     @defer.inlineCallbacks
     def setServiceParent(self, p):
@@ -142,7 +131,9 @@ class DBConnector(AbstractDBConnector):
 
     @defer.inlineCallbacks
     def setup(self, check_version=True, verbose=True):
-        yield super().setup()
+        if self.configured_url is None:
+            self.configured_url = yield self.master.get_db_url(self.master.config)
+
         db_url = self.configured_url
 
         log.msg(f"Setting up database with URL {util.stripUrlPassword(db_url)!r}")
