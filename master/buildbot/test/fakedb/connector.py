@@ -244,11 +244,21 @@ class FakeDBConnector(DBConnector):
                         'complete': row.complete,
                         'complete_at': row.complete_at,
                         'results': row.results,
-                        'parent_buildid': row.parent_buildid,
+                        'parent_buildid': None,
                         'parent_relationship': row.parent_relationship,
-                        'rebuilt_buildid': row.rebuilt_buildid,
+                        'rebuilt_buildid': None,
                     }
                 ],
+            )
+        return rows  # filtered by _thd_maybe_insert_buildset_fk_columns
+
+    def _thd_maybe_insert_buildset_fk_columns(self, conn, rows):
+        matched_rows, non_matched_rows = self._match_rows(rows, Buildset)
+        for row in matched_rows:
+            conn.execute(
+                self.model.buildsets.update()
+                .where(self.model.buildsets.c.id == row.id)
+                .values(rebuilt_buildid=row.rebuilt_buildid, parent_buildid=row.parent_buildid)
             )
         return non_matched_rows
 
@@ -753,10 +763,11 @@ class FakeDBConnector(DBConnector):
         def thd_insert_rows(conn):
             remaining = rows
             remaining = self._thd_maybe_insert_master(conn, remaining)
-            remaining = self._thd_maybe_insert_build_data(conn, remaining)
+            remaining = self._thd_maybe_insert_project(conn, remaining)
             remaining = self._thd_maybe_insert_builder(conn, remaining)
             remaining = self._thd_maybe_insert_tag(conn, remaining)
             remaining = self._thd_maybe_insert_worker(conn, remaining)
+            remaining = self._thd_maybe_insert_user(conn, remaining)
             remaining = self._thd_maybe_insert_patch(conn, remaining)
             remaining = self._thd_maybe_insert_sourcestamp(conn, remaining)
             remaining = self._thd_maybe_insert_builder_master(conn, remaining)
@@ -767,6 +778,7 @@ class FakeDBConnector(DBConnector):
             remaining = self._thd_maybe_insert_buildrequest(conn, remaining)
             remaining = self._thd_maybe_insert_buildrequest_claim(conn, remaining)
             remaining = self._thd_maybe_insert_build(conn, remaining)
+            remaining = self._thd_maybe_insert_build_data(conn, remaining)
             remaining = self._thd_maybe_insert_build_properties(conn, remaining)
             remaining = self._thd_maybe_insert_step(conn, remaining)
             remaining = self._thd_maybe_insert_change(conn, remaining)
@@ -777,9 +789,8 @@ class FakeDBConnector(DBConnector):
             remaining = self._thd_maybe_insert_changesource_master(conn, remaining)
             remaining = self._thd_maybe_insert_log(conn, remaining)
             remaining = self._thd_maybe_insert_log_chunk(conn, remaining)
-            remaining = self._thd_maybe_insert_project(conn, remaining)
-            remaining = self._thd_maybe_insert_scheduler_change(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler(conn, remaining)
+            remaining = self._thd_maybe_insert_scheduler_change(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler_master(conn, remaining)
             remaining = self._thd_maybe_insert_object(conn, remaining)
             remaining = self._thd_maybe_insert_object_state(conn, remaining)
@@ -787,10 +798,10 @@ class FakeDBConnector(DBConnector):
             remaining = self._thd_maybe_insert_test_name(conn, remaining)
             remaining = self._thd_maybe_insert_test_code_path(conn, remaining)
             remaining = self._thd_maybe_insert_test_result(conn, remaining)
-            remaining = self._thd_maybe_insert_user(conn, remaining)
             remaining = self._thd_maybe_insert_user_info(conn, remaining)
             remaining = self._thd_maybe_insert_configured_worker(conn, remaining)
             remaining = self._thd_maybe_insert_connected_worker(conn, remaining)
+            remaining = self._thd_maybe_insert_buildset_fk_columns(conn, remaining)
 
             self.testcase.assertEqual(remaining, [])
 

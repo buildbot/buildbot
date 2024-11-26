@@ -36,6 +36,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
@@ -830,6 +831,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetUrlForVirtualBuilder(self):
         # Let's fake a virtual builder
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Builder(id=108, name='wilma'),
+        ])
         self.builder._builders['wilma'] = 108
         self.build.setProperty('virtual_builder_name', 'wilma', 'Build')
         self.build.setProperty('virtual_builder_tags', ['_virtual_'])

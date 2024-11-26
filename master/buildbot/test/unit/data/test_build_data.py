@@ -335,6 +335,14 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = build_data.BuildData(self.master)
+        yield self.master.db.insert_test_data([
+            fakedb.Worker(id=47, name='linux'),
+            fakedb.Buildset(id=20),
+            fakedb.Builder(id=88, name='b1'),
+            fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
+            fakedb.Master(id=88),
+            fakedb.Build(id=2, buildrequestid=41, masterid=88, builderid=88, workerid=47),
+        ])
 
     @defer.inlineCallbacks
     def tearDown(self):
