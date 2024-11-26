@@ -8,7 +8,6 @@ label_mapping:
   latest: l
   PYTHON: py
   TESTS: t
-  DB_TYPE: db
   WORKER_PYTHON: wp
 env:
   global:
@@ -62,9 +61,9 @@ matrix:
     # (by default in other tests in-memory SQLite database is used which is
     # recreated for each test).
     # Helps to detect issues with incorrect database setup/cleanup in tests.
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db{TEST_ID}.sqlite DB_TYPE=sqlite
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db{TEST_ID}.sqlite
     # Configuration that runs tests with real MySQL database
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID} DB_TYPE=mysql
+    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}?storage_engine=InnoDB
 
     # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
