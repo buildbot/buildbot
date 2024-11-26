@@ -109,6 +109,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def tearDown(self):
+        if self.db.pool is not None:
+            yield self.db.pool.stop()
         yield self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
