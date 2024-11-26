@@ -96,6 +96,7 @@ class ContactMixin(TestReactorMixin):
 
     @defer.inlineCallbacks
     def tearDown(self):
+        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def patch_send(self):
