@@ -101,7 +101,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.secrets_manager = self.master.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self.basedir, self, auto_upgrade=True)
-        yield self.db.setServiceParent(self.master)
+        yield self.db.set_master(self.master)
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
         yield self.mq.setServiceParent(self.master)
         self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)

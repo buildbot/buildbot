@@ -183,7 +183,7 @@ async def make_master(
                 os.makedirs(master.basedir)
 
         master.db.configured_url = db_url
-        await master.db.setServiceParent(master)
+        await master.db.set_master(master)
         await master.db.setup()
         testcase.addCleanup(master.db._shutdown)
 

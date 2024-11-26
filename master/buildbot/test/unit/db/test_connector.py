@@ -40,9 +40,9 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
         )
         self.master.config = MasterConfig()
         self.db_url = self.master.db.configured_url
-        yield self.master.db.disownServiceParent()
+        yield self.master.db._shutdown()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
-        yield self.db.setServiceParent(self.master)
+        yield self.db.set_master(self.master)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -52,7 +52,7 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
     def startService(self, check_version=False):
         self.master.config.db['db_url'] = self.db_url
         yield self.db.setup(check_version=check_version)
-        self.db.startService()
+        yield self.db.startService()
         yield self.db.reconfigServiceWithBuildbotConfig(self.master.config)
 
     # tests

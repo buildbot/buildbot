@@ -108,9 +108,9 @@ def upgradeDatabase(config, master_cfg):
 
         master = BuildMaster(config['basedir'])
         master.config = master_cfg
-        master.db.disownServiceParent()
+        yield master.db._shutdown()
         db = connector.DBConnector(basedir=config['basedir'])
-        yield db.setServiceParent(master)
+        yield db.set_master(master)
         yield master.secrets_manager.setup()
         yield db.setup(check_version=False, verbose=not config['quiet'])
         yield db.model.upgrade()

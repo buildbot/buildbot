@@ -69,6 +69,10 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
     # Most of the interesting operations available via the connector are
     # implemented in connector components, available as attributes of this
     # object, and listed below.
+    #
+    # DBConnector is not usual Buildbot service because it is not child of the
+    # master service. This is because DBConnector must start before all other
+    # services and must stop after all other services that may be using it.
 
     # Period, in seconds, of the cleanup task.  This master will perform
     # periodic cleanup actions on this schedule.
@@ -89,6 +93,14 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.upsert = get_upsert_method(None)  # set up in reconfigService
         self.has_native_upsert = False
 
+        self._master = None
+
+        self._db_tasks_waiter = DeferWaiter()
+
+    @property
+    def master(self):
+        return self._master
+
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         new_db_url = yield self.master.get_db_url(new_config)
@@ -102,8 +114,8 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         return (yield super().reconfigServiceWithBuildbotConfig(new_config))
 
     @defer.inlineCallbacks
-    def setServiceParent(self, p):
-        yield super().setServiceParent(p)
+    def set_master(self, master):
+        self._master = master
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.changesources = changesources.ChangeSourcesConnectorComponent(self)
@@ -143,7 +155,6 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.upsert = get_upsert_method(self._engine)
         self.has_native_upsert = self.upsert != get_upsert_method(None)
         self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
-        self._db_tasks_waiter = DeferWaiter()
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
