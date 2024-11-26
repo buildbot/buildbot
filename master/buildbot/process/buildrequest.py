@@ -75,7 +75,7 @@ class BuildRequestCollapser:
             # Get the Collapse BuildRequest function (from the configuration)
             collapseRequestsFn = bldr.getCollapseRequestsFn()
             unclaim_brs = yield self._getUnclaimedBrs(builderid)
-
+            print('unk', [u['buildrequestid'] for u in unclaim_brs])
             # short circuit if there is no merging to do
             if not collapseRequestsFn or not unclaim_brs:
                 continue
@@ -86,11 +86,13 @@ class BuildRequestCollapser:
 
                 canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
+                    print('add', unclaim_br['buildrequestid'])
                     brids_to_collapse.add(unclaim_br['buildrequestid'])
 
         collapsed_brids = []
         for brid in brids_to_collapse:
             claimed = yield self.master.data.updates.claimBuildRequests([brid])
+            print('claim', brid, claimed)
             if claimed:
                 yield self.master.data.updates.completeBuildRequests([brid], SKIPPED)
                 collapsed_brids.append(brid)
@@ -277,6 +279,7 @@ class BuildRequest:
     @staticmethod
     @defer.inlineCallbacks
     def canBeCollapsed(master, new_br, old_br):
+        print('ccb', new_br['buildrequestid'], old_br['buildrequestid'])
         """
         Returns true if both buildrequest can be merged, via Deferred.
 
@@ -284,12 +287,14 @@ class BuildRequest:
         """
         # short-circuit: if these are for the same buildset, collapse away
         if new_br['buildsetid'] == old_br['buildsetid']:
+            print('y1')
             return True
 
         # the new buildrequest must actually be newer than the old build request, otherwise we
         # may end up with situations where two build requests submitted at the same time will
         # cancel each other.
         if new_br['buildrequestid'] < old_br['buildrequestid']:
+            print('n2')
             return False
 
         # get the buildsets for each buildrequest
@@ -302,21 +307,28 @@ class BuildRequest:
 
         # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
+            print('n3')
+
             return False
 
         for c, selfSS in selfSources.items():
             otherSS = otherSources[c]
             if selfSS['repository'] != otherSS['repository']:
+                print('n4')
+
                 return False
 
             if selfSS['branch'] != otherSS['branch']:
+                print('n5')
                 return False
 
             if selfSS['project'] != otherSS['project']:
+                print('n6')
                 return False
 
             # anything with a patch won't be collapsed
             if selfSS['patch'] or otherSS['patch']:
+                print('n7')
                 return False
             # get changes & compare
             selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
@@ -326,13 +338,17 @@ class BuildRequest:
                 continue
 
             if selfChanges and not otherChanges:
+                print('n8')
+
                 return False
 
             if not selfChanges and otherChanges:
+                print('n9')
                 return False
 
             # else check revisions
             if selfSS['revision'] != otherSS['revision']:
+                print('n10')
                 return False
 
         # don't collapse build requests if the properties injected by the scheduler differ
@@ -342,7 +358,10 @@ class BuildRequest:
         new_bs_props = BuildRequest.filter_buildset_props_for_collapsing(new_bs_props)
         old_bs_props = BuildRequest.filter_buildset_props_for_collapsing(old_bs_props)
         if new_bs_props != old_bs_props:
+            print('n11')
+
             return False
+        print('y2')
 
         return True
 
