@@ -244,11 +244,21 @@ class FakeDBConnector(DBConnector):
                         'complete': row.complete,
                         'complete_at': row.complete_at,
                         'results': row.results,
-                        'parent_buildid': row.parent_buildid,
+                        'parent_buildid': None,
                         'parent_relationship': row.parent_relationship,
-                        'rebuilt_buildid': row.rebuilt_buildid,
+                        'rebuilt_buildid': None,
                     }
                 ],
+            )
+        return rows  # filtered by _thd_maybe_insert_buildset_fk_columns
+
+    def _thd_maybe_insert_buildset_fk_columns(self, conn, rows):
+        matched_rows, non_matched_rows = self._match_rows(rows, Buildset)
+        for row in matched_rows:
+            conn.execute(
+                self.model.buildsets.update()
+                .where(self.model.buildsets.c.id == row.id)
+                .values(rebuilt_buildid=row.rebuilt_buildid, parent_buildid=row.parent_buildid)
             )
         return non_matched_rows
 
@@ -791,6 +801,7 @@ class FakeDBConnector(DBConnector):
             remaining = self._thd_maybe_insert_user_info(conn, remaining)
             remaining = self._thd_maybe_insert_configured_worker(conn, remaining)
             remaining = self._thd_maybe_insert_connected_worker(conn, remaining)
+            remaining = self._thd_maybe_insert_buildset_fk_columns(conn, remaining)
 
             self.testcase.assertEqual(remaining, [])
 
