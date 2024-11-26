@@ -150,9 +150,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             maxthreads=max_threads,
             name='DBLogCompression',
         )
-        self._start_compression_pool()
 
-    def _start_compression_pool(self) -> None:
+    @defer.inlineCallbacks
+    def startService(self):
+        yield super().startService()
+
         # keep a ref on the reactor used to start
         # so we can schedule shutdown even if
         # DBConnector was un-parented before
