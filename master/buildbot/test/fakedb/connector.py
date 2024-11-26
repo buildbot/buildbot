@@ -430,7 +430,7 @@ class FakeDBConnector(DBConnector):
                         'name': row.name,
                         'name_hash': hash_columns(row.name),
                         'active': row_bool_to_int(row.active),
-                        'last_active': row.last_active,
+                        'last_active': int(row.last_active),
                     }
                 ],
             )
