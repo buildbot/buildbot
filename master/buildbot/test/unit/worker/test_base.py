@@ -330,8 +330,9 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         # we create a fake builder, and associate to the master
         self.botmaster.builders['bot'] = [FakeBuilder()]
         yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=1, name='builder'),
-            fakedb.BuilderMaster(builderid=1, masterid=824),
+            fakedb.BuilderMaster(builderid=1, masterid=fakedb.FakeDBConnector.MASTER_ID),
         ])
         # on reconfig, the db should see the builder configured for this worker
         yield old.reconfigServiceWithSibling(new)
