@@ -77,20 +77,28 @@ def _copy_database_in_reactor(config):
     if not master_src_cfg or not master_dst_cfg:
         return 1
 
-    master_src = BuildMaster(config['basedir'])
-    master_src.config = master_src_cfg
+    master_src = None
+    master_dst = None
     try:
-        yield master_src.db.setup(check_version=True, verbose=not config["quiet"])
-    except exceptions.DatabaseNotReadyError:
-        for l in connector.upgrade_message.format(basedir=config['basedir']).split('\n'):
-            print(l)
-        return 1
+        master_src = BuildMaster(config['basedir'])
+        master_src.config = master_src_cfg
+        try:
+            yield master_src.db.setup(check_version=True, verbose=not config["quiet"])
+        except exceptions.DatabaseNotReadyError:
+            for l in connector.upgrade_message.format(basedir=config['basedir']).split('\n'):
+                print(l)
+            return 1
 
-    master_dst = BuildMaster(config['basedir'])
-    master_dst.config = master_dst_cfg
-    yield master_dst.db.setup(check_version=False, verbose=not config["quiet"])
-    yield master_dst.db.model.upgrade()
-    yield _copy_database_with_db(master_src.db, master_dst.db, ignore_fk_error_rows, print_log)
+        master_dst = BuildMaster(config['basedir'])
+        master_dst.config = master_dst_cfg
+        yield master_dst.db.setup(check_version=False, verbose=not config["quiet"])
+        yield master_dst.db.model.upgrade()
+        yield _copy_database_with_db(master_src.db, master_dst.db, ignore_fk_error_rows, print_log)
+    finally:
+        for master in (master_src, master_dst):
+            if master is not None and master.db.pool is not None:
+                yield master.db.pool.stop()
+
     return 0
 
 
