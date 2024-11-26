@@ -167,6 +167,7 @@ async def make_master(
     db_url='sqlite://',
     sqlite_memory=True,
     auto_upgrade=True,
+    auto_shutdown=True,
     check_version=True,
     **kwargs,
 ) -> FakeMaster:
@@ -201,7 +202,8 @@ async def make_master(
         master.db.configured_url = db_url
         await master.db.set_master(master)
         await master.db.setup()
-        testcase.addCleanup(master.test_shutdown)
+        if auto_shutdown:
+            testcase.addCleanup(master.test_shutdown)
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
