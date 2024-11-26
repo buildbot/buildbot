@@ -228,6 +228,8 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
+        yield sched.deactivate()
+
     @defer.inlineCallbacks
     def test_disabled_activate(self):
         sched = yield self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=13)

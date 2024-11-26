@@ -32,6 +32,7 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         self.setup_test_reactor(auto_tear_down=False)
         self.build = Properties(image="busybox:latest", builder="docker_worker")
         self.worker = None
+        self.master = None
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -41,7 +42,9 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 code = 200
 
             self._http.delete = lambda _: defer.succeed(FakeResult())
-            yield self.worker.master.stopService()
+        if self.master is not None:
+            yield self.master.stopService()
+            yield self.master.test_shutdown()
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         yield self.tear_down_test_reactor()
 
@@ -55,13 +58,13 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
-        master = yield fakemaster.make_master(self, wantData=True)
+        self.master = yield fakemaster.make_master(self, wantData=True, auto_shutdown=False)
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            master, self, 'tcp://marathon.local', auth=kwargs.get('auth')
+            self.master, self, 'tcp://marathon.local', auth=kwargs.get('auth')
         )
-        yield worker.setServiceParent(master)
+        yield worker.setServiceParent(self.master)
         worker.reactor = self.reactor
-        yield master.startService()
+        yield self.master.startService()
         worker.masterhash = "masterhash"
         return worker
 
