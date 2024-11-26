@@ -92,6 +92,8 @@ class FakeMaster(service.MasterService):
     mq: fakemq.FakeMQConnector
     data: fakedata.FakeDataConnector
     graphql: GraphQLConnector
+    _test_want_db: bool = False
+    _test_did_shutdown: bool = False
 
     def __init__(self, reactor, basedir='basedir', master_id=fakedb.FakeDBConnector.MASTER_ID):
         super().__init__()
@@ -135,6 +137,14 @@ class FakeMaster(service.MasterService):
     def subscribeToBuildRequests(self, callback):
         pass
 
+    @defer.inlineCallbacks
+    def test_shutdown(self):
+        if self._test_did_shutdown:
+            return
+        self._test_did_shutdown = True
+        if self._test_want_db:
+            yield self.db._shutdown()
+
 
 # Leave this alias, in case we want to add more behavior later
 
@@ -176,6 +186,7 @@ async def make_master(
         master.db = fakedb.FakeDBConnector(
             master.basedir, testcase, auto_upgrade=auto_upgrade, check_version=check_version
         )
+        master._test_want_db = True
 
         if db_url == 'sqlite://' and not sqlite_memory:
             db_url = 'sqlite:///tmp.sqlite'
@@ -185,7 +196,7 @@ async def make_master(
         master.db.configured_url = db_url
         await master.db.set_master(master)
         await master.db.setup()
-        testcase.addCleanup(master.db._shutdown)
+        testcase.addCleanup(master.test_shutdown)
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
