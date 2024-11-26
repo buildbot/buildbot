@@ -297,8 +297,8 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_list_changes_long(self):
         yield self.master.db.workers.db.insert_test_data(
-            [fakedb.SourceStamp(id=i) for i in range(200)]
-            + [fakedb.Change(changeid=i, sourcestampid=i) for i in range(200)]
+            [fakedb.SourceStamp(id=i) for i in range(1, 200)]
+            + [fakedb.Change(changeid=i, sourcestampid=i) for i in range(1, 200)]
         )
         yield self.do_test_command('list', args='all changes')
         self.assertIn('reply_markup', self.sent[1][2])

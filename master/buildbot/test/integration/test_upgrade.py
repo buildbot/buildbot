@@ -85,6 +85,7 @@ class UpgradeTestMixin(TestReactorMixin):
             sqlite_memory=False,
             auto_upgrade=False,
             check_version=False,
+            auto_clean=False,
         )
 
         self._sql_log_handler = querylog.start_log_queries()

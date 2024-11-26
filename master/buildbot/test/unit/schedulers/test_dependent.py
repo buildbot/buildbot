@@ -139,6 +139,11 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
             a new buildset in response
         """
 
+        yield self.master.db.insert_test_data([
+            fakedb.ObjectState(objectid=OBJECTID, name='upstream_bsids', value_json='[]'),
+            fakedb.Object(id=OBJECTID),
+        ])
+
         sched = yield self.makeScheduler()
         sched.activate()
 
@@ -162,7 +167,6 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
                 results=-1,
             ),
             fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
-            fakedb.Object(id=OBJECTID),
         ])
         self.sendBuildsetMessage(scheduler_name=scheduler_name, complete=False)
         yield self.master.mq._deferwaiter.wait()

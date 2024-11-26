@@ -169,6 +169,7 @@ async def make_master(
     auto_upgrade=True,
     auto_shutdown=True,
     check_version=True,
+    auto_clean=True,
     **kwargs,
 ) -> FakeMaster:
     if wantRealReactor:
@@ -190,7 +191,11 @@ async def make_master(
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
         master.db = fakedb.FakeDBConnector(
-            master.basedir, testcase, auto_upgrade=auto_upgrade, check_version=check_version
+            master.basedir,
+            testcase,
+            auto_upgrade=auto_upgrade,
+            check_version=check_version,
+            auto_clean=auto_clean,
         )
         master._test_want_db = True
 
@@ -199,11 +204,14 @@ async def make_master(
             if not os.path.exists(master.basedir):
                 os.makedirs(master.basedir)
 
+        if auto_shutdown:
+            # Add before setup so that failed database setup would still be closed and wouldn't
+            # affect further tests
+            testcase.addCleanup(master.test_shutdown)
+
         master.db.configured_url = db_url
         await master.db.set_master(master)
         await master.db.setup()
-        if auto_shutdown:
-            testcase.addCleanup(master.test_shutdown)
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
