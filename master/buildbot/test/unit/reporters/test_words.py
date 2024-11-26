@@ -55,10 +55,16 @@ class ContactMixin(TestReactorMixin):
 
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
-        yield self.master.db.insert_test_data([
-            fakedb.Builder(id=builderid, name=name)
-            for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
-        ])
+        yield self.master.db.insert_test_data(
+            [
+                fakedb.Master(id=88),
+                fakedb.Worker(id=13, name='w13'),
+            ]
+            + [
+                fakedb.Builder(id=builderid, name=name)
+                for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
+            ]
+        )
 
         self.bot = self.botClass(notify_events={'success': 1, 'failure': 1})
         self.bot.channelClass = self.channelClass
@@ -142,6 +148,8 @@ class ContactMixin(TestReactorMixin):
     def setupSomeBuilds(self):
         yield self.master.db.insert_test_data([
             # Three builds on builder#0, One build on builder#1
+            fakedb.Buildset(id=82),
+            fakedb.BuildRequest(id=82, buildsetid=82, builderid=self.BUILDER_IDS[0]),
             fakedb.Build(
                 id=13,
                 masterid=88,
@@ -150,6 +158,8 @@ class ContactMixin(TestReactorMixin):
                 buildrequestid=82,
                 number=3,
             ),
+            fakedb.Buildset(id=83),
+            fakedb.BuildRequest(id=83, buildsetid=83, builderid=self.BUILDER_IDS[0]),
             fakedb.Build(
                 id=14,
                 masterid=88,
@@ -158,6 +168,8 @@ class ContactMixin(TestReactorMixin):
                 buildrequestid=83,
                 number=4,
             ),
+            fakedb.Buildset(id=84),
+            fakedb.BuildRequest(id=84, buildsetid=84, builderid=self.BUILDER_IDS[1]),
             fakedb.Build(
                 id=15,
                 masterid=88,
@@ -166,6 +178,8 @@ class ContactMixin(TestReactorMixin):
                 buildrequestid=84,
                 number=5,
             ),
+            fakedb.Buildset(id=85),
+            fakedb.BuildRequest(id=85, buildsetid=85, builderid=self.BUILDER_IDS[0]),
             fakedb.Build(
                 id=16,
                 masterid=88,
@@ -182,6 +196,7 @@ class ContactMixin(TestReactorMixin):
         # Make first builder configured, but not connected
         # Make second builder configured and connected
         yield self.master.db.insert_test_data([
+            fakedb.Master(id=13),
             fakedb.Worker(id=1, name='linux1', info={}),  # connected one
             fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
             fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
@@ -426,7 +441,10 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
-        yield self.master.db.workers.db.insert_test_data([fakedb.Change()])
+        yield self.master.db.workers.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
+            fakedb.Change(sourcestampid=92),
+        ])
         yield self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 1)
 

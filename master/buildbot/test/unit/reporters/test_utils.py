@@ -51,6 +51,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         yield self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
+            fakedb.Buildset(id=97, results=SUCCESS, reason="testReason0"),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason2", parent_buildid=21),
             fakedb.Builder(id=80, name='Builder1'),
