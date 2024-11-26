@@ -204,11 +204,14 @@ async def make_master(
             if not os.path.exists(master.basedir):
                 os.makedirs(master.basedir)
 
+        if auto_shutdown:
+            # Add before setup so that failed database setup would still be closed and wouldn't
+            # affect further tests
+            testcase.addCleanup(master.test_shutdown)
+
         master.db.configured_url = db_url
         await master.db.set_master(master)
         await master.db.setup()
-        if auto_shutdown:
-            testcase.addCleanup(master.test_shutdown)
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
