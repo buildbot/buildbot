@@ -28,6 +28,7 @@ from buildbot.test.reactor import TestReactorMixin
 
 class Change(unittest.TestCase, TestReactorMixin):
     change23_rows = [
+        fakedb.SourceStamp(id=92),
         fakedb.Change(
             changeid=23,
             author="dustin",
@@ -47,6 +48,7 @@ class Change(unittest.TestCase, TestReactorMixin):
         fakedb.ChangeProperty(
             changeid=23, property_name='notest', property_value='["no","Change"]'
         ),
+        fakedb.User(uid=27),
         fakedb.ChangeUser(changeid=23, uid=27),
     ]
 
