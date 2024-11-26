@@ -32,11 +32,11 @@ class TestResultSet(Row):
         buildid=None,
         stepid=None,
         description=None,
-        category=None,
-        value_unit=None,
+        category='cat',
+        value_unit='unit',
         tests_passed=None,
         tests_failed=None,
-        complete=None,
+        complete=1,
     ):
         super().__init__(
             id=id,
