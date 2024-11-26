@@ -170,7 +170,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         yield self.user_manager.setServiceParent(self)
 
         self.db = dbconnector.DBConnector(self.basedir)
-        yield self.db.setServiceParent(self)
+        yield self.db.set_master(self)
 
         self.wamp = wampconnector.WampConnector()
         yield self.wamp.setServiceParent(self)
@@ -274,6 +274,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.reactor.stop()
                 return
 
+            yield self.db.startService()
+
             yield self.mq.setup()
 
             # the buildbot scripts send the SIGHUP signal to reconfig master
@@ -373,6 +375,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self._master_initialized = False
         finally:
             yield self.initLock.release()
+            if self.db.running:
+                yield self.db.stopService()
 
     @defer.inlineCallbacks
     def reconfig(self):
@@ -451,13 +455,16 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         log.msg(f"{msg} (took {(self.reactor.seconds() - time_started):.3f} seconds)")
 
+    @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.config.mq['type'] != new_config.mq['type']:
             raise config.ConfigErrors([
                 "Cannot change c['mq']['type'] after the master has started",
             ])
 
-        return super().reconfigServiceWithBuildbotConfig(new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
+        # db must come later so that it has access to newly configured services
+        yield self.db.reconfigServiceWithBuildbotConfig(new_config)
 
     # informational methods
     def allSchedulers(self):

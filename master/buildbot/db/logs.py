@@ -30,6 +30,7 @@ from twisted.python import log
 from twisted.python import threadpool
 from twisted.python.failure import Failure
 
+from buildbot import util
 from buildbot.config.master import get_is_in_unit_tests
 from buildbot.db import base
 from buildbot.db.compression import BrotliCompressor
@@ -145,28 +146,21 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # the master on other processes
             max_threads = max(int(cpu_count / 2), max_threads)
 
-        self._compression_pool = threadpool.ThreadPool(
+        self._compression_pool = util.twisted.ThreadPool(
             minthreads=1,
             maxthreads=max_threads,
             name='DBLogCompression',
         )
-        self._start_compression_pool()
 
-    def _start_compression_pool(self) -> None:
-        # keep a ref on the reactor used to start
-        # so we can schedule shutdown even if
-        # DBConnector was un-parented before
-        _reactor = self.master.reactor
+    @defer.inlineCallbacks
+    def startService(self):
+        yield super().startService()
+        self._compression_pool.start()
 
-        def _start():
-            self._compression_pool.start()
-            _reactor.addSystemEventTrigger(
-                'during',
-                'shutdown',
-                self._compression_pool.stop,
-            )
-
-        _reactor.callWhenRunning(_start)
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield super().stopService()
+        self._compression_pool.stop()
 
     def _defer_to_compression_pool(
         self,

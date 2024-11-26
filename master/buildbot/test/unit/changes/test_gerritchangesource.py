@@ -106,7 +106,7 @@ class TestGerritChangeSource(
     @defer.inlineCallbacks
     def tearDown(self):
         if self.master.running:
-            yield self.master.stopService()
+            yield self.stopChangeSource()
         yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
@@ -528,14 +528,14 @@ class TestGerritChangeSource(
 
         self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         self.reactor.process_send_stderr(0, b"test stderr\n")
         self.reactor.process_send_stdout(0, b'{"type":"dropped-output", "eventCreatedOn": 123}\n')
 
         self.reactor.expect_process_signalProcess(0, "KILL")
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(0, None)
         yield d
 
@@ -545,7 +545,7 @@ class TestGerritChangeSource(
 
         self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         pid = 0
@@ -566,6 +566,8 @@ class TestGerritChangeSource(
             self.reactor.process_done(pid, None)
             pid += 1
             self.reactor.advance(0.05)
+
+        yield self.stopChangeSource()
 
     def _build_messages_to_bytes(self, timestamps):
         messages = [
@@ -625,7 +627,7 @@ class TestGerritChangeSource(
             processing_delay_s=1,
         )
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         # Poll after timeout
@@ -682,7 +684,7 @@ class TestGerritChangeSource(
 
         self.assertTrue(s._is_synchronized)
 
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(1, None)
         yield d
 
@@ -726,7 +728,7 @@ class TestGerritChangeSource(
             content=b"",
         )
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         self.reactor.advance(2)
@@ -810,7 +812,7 @@ class TestGerritChangeSource(
 
         self.assertTrue(s._is_synchronized)
 
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(1, None)
         yield d
 
@@ -852,7 +854,7 @@ class TestGerritChangeSource(
             content=b"",
         )
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         self.reactor.advance(2)
@@ -923,7 +925,7 @@ class TestGerritChangeSource(
 
         self.assertTrue(s._is_synchronized)
 
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(0, None)
         yield d
 
