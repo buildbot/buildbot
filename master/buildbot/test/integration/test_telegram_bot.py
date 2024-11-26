@@ -95,7 +95,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
     def setUp(self):
         self.setUpDirs('basedir')
         master = yield fakemaster.make_master(
-            self, wantDb=True, sqlite_memory=False, wantRealReactor=True
+            self, wantDb=True, sqlite_memory=False, wantRealReactor=True, auto_shutdown=False
         )
 
         master.data = dataconnector.DataConnector()
@@ -160,6 +160,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
         if self.master:
             yield self.master.www.stopService()
             yield self.master.mq.stopService()
+            yield self.master.test_shutdown()
 
     @defer.inlineCallbacks
     def testWebhook(self):
