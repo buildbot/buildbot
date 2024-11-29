@@ -100,6 +100,8 @@ def upgradeDatabase(config, master_cfg):
         print(msg.format(signum))
 
     prev_handlers = {}
+    db = None
+
     try:
         for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP", "SIGUSR1", "SIGUSR2", "SIGBREAK"):
             if hasattr(signal, signame):
@@ -108,7 +110,6 @@ def upgradeDatabase(config, master_cfg):
 
         master = BuildMaster(config['basedir'])
         master.config = master_cfg
-        yield master.db._shutdown()
         db = connector.DBConnector(basedir=config['basedir'])
         yield db.set_master(master)
         yield master.secrets_manager.setup()
@@ -120,6 +121,9 @@ def upgradeDatabase(config, master_cfg):
         # restore previous signal handlers
         for signum, handler in prev_handlers.items():
             signal.signal(signum, handler)
+
+        if db is not None and db.pool is not None:
+            yield db.pool.stop()
 
 
 @in_reactor
