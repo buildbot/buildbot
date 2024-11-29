@@ -57,6 +57,9 @@ def resolve_test_index_in_db_url(db_url):
     test_id = get_trial_parallel_from_cwd(os.getcwd())
 
     if "{TEST_ID}" in db_url:
+        if test_id is None:
+            raise RuntimeError("Database tests are run in parallel, but test index is unknown")
+
         return db_url.replace("{TEST_ID}", str(test_id or 0))
 
     if db_url == 'sqlite://':
