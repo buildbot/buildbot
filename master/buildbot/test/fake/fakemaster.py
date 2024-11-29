@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import weakref
 from unittest import mock
 
@@ -149,6 +150,8 @@ class FakeMaster(service.MasterService):
         self._test_did_shutdown = True
         if self._test_want_db:
             yield self.db._shutdown()
+        if os.path.isdir(self.basedir):
+            shutil.rmtree(self.basedir)
 
 
 # Leave this alias, in case we want to add more behavior later

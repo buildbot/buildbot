@@ -17,7 +17,6 @@ from __future__ import annotations
 import locale
 import os
 import pprint
-import shutil
 import sqlite3
 import tarfile
 
@@ -92,9 +91,6 @@ class UpgradeTestMixin(TestReactorMixin):
 
     def tearDownUpgradeTest(self):
         querylog.stop_log_queries(self._sql_log_handler)
-
-        if self.basedir:
-            shutil.rmtree(self.basedir)
 
     # save subclasses the trouble of calling our setUp and tearDown methods
 

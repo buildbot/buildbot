@@ -69,7 +69,12 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
     def setUp(self):
         # set up a full master serving HTTP
         master = yield fakemaster.make_master(
-            self, wantRealReactor=True, wantDb=True, wantData=True, sqlite_memory=False
+            self,
+            wantRealReactor=True,
+            wantDb=True,
+            wantData=True,
+            sqlite_memory=False,
+            auto_shutdown=False,
         )
 
         master.config.www = {
@@ -113,6 +118,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
             yield self.pool.closeCachedConnections()
         if self.master:
             yield self.master.www.stopService()
+        yield self.master.test_shutdown()
 
     @defer.inlineCallbacks
     def apiGet(self, url, expect200=True):
