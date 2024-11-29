@@ -127,19 +127,25 @@ def upgradeMaster(config):
     if not base.checkBasedir(config):
         return defer.succeed(1)
 
-    os.chdir(config['basedir'])
+    orig_cwd = os.getcwd()
 
     try:
-        configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError):
-        print(f"Unable to load 'buildbot.tac' from '{config['basedir']}':", file=sys.stderr)
-        e = traceback.format_exc()
-        print(e, file=sys.stderr)
-        return defer.succeed(1)
-    master_cfg = base.loadConfig(config, configFile)
-    if not master_cfg:
-        return defer.succeed(1)
-    return _upgradeMaster(config, master_cfg)
+        os.chdir(config['basedir'])
+
+        try:
+            configFile = base.getConfigFileFromTac(config['basedir'])
+        except (SyntaxError, ImportError):
+            print(f"Unable to load 'buildbot.tac' from '{config['basedir']}':", file=sys.stderr)
+            e = traceback.format_exc()
+            print(e, file=sys.stderr)
+            return defer.succeed(1)
+        master_cfg = base.loadConfig(config, configFile)
+        if not master_cfg:
+            return defer.succeed(1)
+        return _upgradeMaster(config, master_cfg)
+
+    finally:
+        os.chdir(orig_cwd)
 
 
 @defer.inlineCallbacks
