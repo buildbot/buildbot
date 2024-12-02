@@ -36,6 +36,7 @@ from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.fake.machine import FakeMachineManager
 from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.test.util.db import resolve_test_db_url
 from buildbot.util import service
 from buildbot.util.twisted import async_to_deferred
 
@@ -167,7 +168,7 @@ async def make_master(
     wantGraphql=False,
     with_secrets: dict | None = None,
     url=None,
-    db_url='sqlite://',
+    db_url=None,
     sqlite_memory=True,
     auto_upgrade=True,
     auto_shutdown=True,
@@ -202,17 +203,14 @@ async def make_master(
         )
         master._test_want_db = True
 
-        if db_url == 'sqlite://' and not sqlite_memory:
-            db_url = 'sqlite:///tmp.sqlite'
-            if not os.path.exists(master.basedir):
-                os.makedirs(master.basedir)
-
         if auto_shutdown:
             # Add before setup so that failed database setup would still be closed and wouldn't
             # affect further tests
             testcase.addCleanup(master.test_shutdown)
 
-        master.db.configured_url = db_url
+        master.db.configured_url = resolve_test_db_url(db_url, sqlite_memory)
+        if not os.path.exists(master.basedir):
+            os.makedirs(master.basedir)
         await master.db.set_master(master)
         await master.db.setup()
 
