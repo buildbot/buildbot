@@ -71,16 +71,18 @@ class UpgradeTestMixin(TestReactorMixin):
             # get the top-level dir from the tarball
             assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
             self.basedir = prefixes.pop()
+            db_url = 'sqlite:///' + os.path.abspath(os.path.join(self.basedir, 'state.sqlite'))
         else:
             if not os.path.exists("basedir"):
                 os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
+            db_url = None
 
         self.master = yield fakemaster.make_master(
             self,
             basedir=self.basedir,
             wantDb=True,
-            db_url='sqlite:///' + os.path.abspath(os.path.join(self.basedir, 'state.sqlite')),
+            db_url=db_url,
             sqlite_memory=False,
             auto_upgrade=False,
             check_version=False,
