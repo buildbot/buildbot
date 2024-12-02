@@ -67,7 +67,7 @@ pytz==2024.2
 PyYAML==6.0.2
 requests==2.32.3
 responses==0.25.3
-ruff==0.7.4
+ruff==0.8.1
 s3transfer==0.10.3
 service-identity==24.2.0
 setuptools-trial==0.6.0
