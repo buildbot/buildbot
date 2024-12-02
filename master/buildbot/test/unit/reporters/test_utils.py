@@ -31,6 +31,10 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import logging
 
 
+def sort_builds(builds):
+    return sorted(builds, key=lambda key: key['buildid'])
+
+
 class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     LOGCONTENT = textwrap.dedent("""\
         line zero
@@ -174,6 +178,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             self.master, 98, want_properties=True, want_steps=True, want_previous_build=True
         )
         self.assertEqual(len(res['builds']), 2)
+
+        res['builds'] = sort_builds(res['builds'])
+
         build1 = res['builds'][0]
         build2 = res['builds'][1]
         buildset = res['buildset']
@@ -239,7 +246,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             want_logs_content=True,
         )
 
-        build1 = res['builds'][0]
+        build1 = sort_builds(res['builds'])[0]
         self.assertEqual(
             build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT + "\n"
         )
@@ -261,6 +268,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             want_logs=True,
             want_logs_content=True,
         )
+
+        res['builds'] = sort_builds(res['builds'])
 
         self.assertEqual(
             res,

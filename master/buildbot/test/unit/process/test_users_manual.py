@@ -139,8 +139,8 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'h@c', 'git': 'hi <h@c>'}]
         )
-        yield self.call_perspective_commandline('remove', None, None, ['x'], None)
-        res = yield self.master.db.users.getUser('x')
+        yield self.call_perspective_commandline('remove', None, None, ['h@c'], None)
+        res = yield self.master.db.users.getUser(1)
         self.assertEqual(res, None)
 
     @defer.inlineCallbacks
