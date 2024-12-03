@@ -38,8 +38,8 @@ function pushTickValue(ticks: number[], y: WaterfallYScale, value: number) {
   }
 }
 
-function link(formatter) {
-  function linkImpl(this: d3.BaseType, d: unknown) {
+function link(formatter: (b: any) => string) {
+  function linkImpl(this: d3.BaseType, d: any) {
     const el = this as Element;
     if (el.parentNode === null) {
       return;
