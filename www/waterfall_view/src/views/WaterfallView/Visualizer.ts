@@ -48,9 +48,9 @@ function link(formatter: (b: any) => string) {
     const a = p.append('a')
       .attr('xlink:href', formatter(d));
     a.node()?.appendChild(el);
-  };
+  }
   return linkImpl;
-};
+}
 
 
 export class Visualizer {
