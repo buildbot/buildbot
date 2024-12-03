@@ -38,8 +38,8 @@ function pushTickValue(ticks: number[], y: WaterfallYScale, value: number) {
   }
 }
 
-function link(formatter) {
-  function linkImpl(this: d3.BaseType, d: unknown) {
+function link(formatter: (b: any) => string) {
+  function linkImpl(this: d3.BaseType, d: any) {
     const el = this as Element;
     if (el.parentNode === null) {
       return;
@@ -48,9 +48,9 @@ function link(formatter) {
     const a = p.append('a')
       .attr('xlink:href', formatter(d));
     a.node()?.appendChild(el);
-  };
+  }
   return linkImpl;
-};
+}
 
 
 export class Visualizer {
@@ -427,7 +427,7 @@ export class Visualizer {
     }
 
     const e = d3.select(node);
-    const mouse = d3.mouse(node);
+    const pointer = d3.pointer(node);
     this.setExtraTicksForBuild(build);
     this.drawYAxis();
 
@@ -443,7 +443,7 @@ export class Visualizer {
     let height = 40;
     const tooltip = e.append('g')
       .attr('class', 'svg-tooltip')
-      .attr('transform', `translate(${mouse[0]}, ${mouse[1]})`)
+      .attr('transform', `translate(${pointer[0]}, ${pointer[1]})`)
       .append('g')
       .attr('class', 'tooltip-content')
       .attr('transform', `translate(${tooltipOnRight ? 5 : -175}, ${- height / 2})`);
@@ -461,9 +461,9 @@ export class Visualizer {
     const e = d3.select(node);
 
     // Move the tooltip to the mouse position
-    const mouse = d3.mouse(node);
+    const pointer = d3.pointer(node);
     e.select('.svg-tooltip')
-      .attr('transform', `translate(${mouse[0]}, ${mouse[1]})`);
+      .attr('transform', `translate(${pointer[0]}, ${pointer[1]})`);
   }
 
   mouseOut(node: d3.ContainerElement) {
@@ -539,7 +539,7 @@ export class Visualizer {
 
     // Add event listeners
     builds
-      .on('mouseover', function(this: d3.ContainerElement, build: Build) {
+      .on('mouseover', function(this: d3.ContainerElement, event: any, build: Build) {
         self.mouseOver(this, build);
       })
       .on('mousemove', function(this: d3.ContainerElement) { self.mouseMove(this); })
