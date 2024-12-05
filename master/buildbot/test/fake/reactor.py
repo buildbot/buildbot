@@ -72,7 +72,9 @@ class CoreReactor:
     def callWhenRunning(self, callable: Callable[..., Any], *args, **kwargs):
         callable(*args, **kwargs)
 
-    def resolve(self, name: str, timeout: Sequence[int]) -> defer.Deferred[str]:
+    def resolve(self, name: str, timeout: Sequence[int]) -> defer.Deferred[str]:  # type: ignore
+        # Twisted 24.11 changed the default value of timeout, thus to support
+        # both versions typing is disabled
         raise NotImplementedError("resolve() is not implemented in this reactor")
 
     def stop(self) -> None:
