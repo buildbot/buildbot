@@ -92,7 +92,7 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     def test_signature_get_test_result_sets(self):
         @self.assertArgSpecMatches(self.db.test_result_sets.getTestResultSets)
         def getTestResultSets(
-            self, builderid, buildid=None, stepid=None, complete=None, result_spec=None
+            self, builderid=None, buildid=None, stepid=None, complete=None, result_spec=None
         ):
             pass
 
@@ -196,11 +196,13 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             ),
         ])
 
-        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88)
-        self.assertEqual([d.id for d in set_dicts], [91, 93, 94, 95])
+        set_dicts = yield self.db.test_result_sets.getTestResultSets()
+        self.assertEqual([d.id for d in set_dicts], [91, 92, 93, 94, 95])
         for d in set_dicts:
             self.assertIsInstance(d, test_result_sets.TestResultSetModel)
 
+        set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88)
+        self.assertEqual([d.id for d in set_dicts], [91, 93, 94, 95])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=89)
         self.assertEqual([d.id for d in set_dicts], [92])
         set_dicts = yield self.db.test_result_sets.getTestResultSets(builderid=88, buildid=30)
