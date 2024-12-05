@@ -157,8 +157,6 @@ class TestCleanupDbRealDb(
 
         db_url = self.master.db.configured_url
 
-        await self.master.db._shutdown()
-
         # test all methods
         lengths = {}
         for mode in self.master.db.logs.COMPRESSION_MODE:
