@@ -421,13 +421,13 @@ export class Visualizer {
       .text((step, i) => `${i + 1}. ${step.name} ${duration(step)}`);
   }
 
-  mouseOver(node: d3.ContainerElement, build: Build) {
+  mouseOver(node: d3.ContainerElement, build: Build, event: any) {
     if (node.parentElement === null) {
       return;
     }
 
     const e = d3.select(node);
-    const pointer = d3.pointer(node);
+    const pointer = d3.pointer(event, node);
     this.setExtraTicksForBuild(build);
     this.drawYAxis();
 
@@ -457,11 +457,11 @@ export class Visualizer {
     this.setHoveredBuildId(build.buildid);
   }
 
-  mouseMove(node: d3.ContainerElement) {
+  mouseMove(node: d3.ContainerElement, event: any) {
     const e = d3.select(node);
 
     // Move the tooltip to the mouse position
-    const pointer = d3.pointer(node);
+    const pointer = d3.pointer(event, node);
     e.select('.svg-tooltip')
       .attr('transform', `translate(${pointer[0]}, ${pointer[1]})`);
   }
@@ -540,9 +540,9 @@ export class Visualizer {
     // Add event listeners
     builds
       .on('mouseover', function(this: d3.ContainerElement, event: any, build: Build) {
-        self.mouseOver(this, build);
+        self.mouseOver(this, build, event);
       })
-      .on('mousemove', function(this: d3.ContainerElement) { self.mouseMove(this); })
+      .on('mousemove', function(this: d3.ContainerElement, event: any) { self.mouseMove(this, event); })
       .on('mouseout', function(this: d3.ContainerElement) { self.mouseOut(this); })
   }
 
