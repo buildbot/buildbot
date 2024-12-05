@@ -154,7 +154,7 @@ const ChangesTabWidget = ({build}: TabWidgetProps) => {
 
   const changesQuery = useDataApiSingleElementQuery(
     build, [changesFetchLimit],
-    b => b.getChanges({query: {limit: changesFetchLimit, field: ['changeid']}})
+    b => b.getChanges({query: {limit: changesFetchLimit}})
   );
   if (!changesQuery.isResolved()) {
     return <LoadingSpan />
