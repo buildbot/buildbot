@@ -714,10 +714,7 @@ class Worker(WorkerBase):
             if connection_string is None:
                 ws_conn_string = f"ws://{buildmaster_host}:{port}"
             else:
-                from urllib.parse import urlparse
-
-                parsed_url = urlparse(connection_string)
-                ws_conn_string = f"ws://{parsed_url.hostname}:{parsed_url.port}"
+                ws_conn_string = util.twisted_connection_string_to_ws_url(connection_string)
 
             if path is not None:
                 if not path.startswith('/'):

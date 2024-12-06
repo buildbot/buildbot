@@ -133,3 +133,32 @@ def rewrap(text, width=None):
         wrapped_text += paragraph
 
     return wrapped_text
+
+
+def twisted_connection_string_to_ws_url(description):
+    from twisted.internet.endpoints import _parse
+
+    args, kwargs = _parse(description)
+    protocol = args.pop(0).upper()
+
+    host = kwargs.get('host', None)
+    port = kwargs.get('port', None)
+
+    if protocol == 'TCP':
+        port = kwargs.get('port', 80)
+
+        if len(args) == 2:
+            host = args[0]
+            port = args[1]
+        elif len(args) == 1:
+            if "host" in kwargs:
+                host = kwargs['host']
+                port = args[0]
+            else:
+                host = args[0]
+                port = kwargs.get('port', port)
+
+    if host is None or host == '' or port is None:
+        raise ValueError('Host and port must be specified in connection string')
+
+    return f"ws://{host}:{port}"
