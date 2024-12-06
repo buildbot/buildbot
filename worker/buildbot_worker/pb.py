@@ -657,6 +657,7 @@ class Worker(WorkerBase):
         allow_shutdown=None,
         maxRetries=None,
         connection_string=None,
+        path=None,
         delete_leftover_dirs=False,
         proxy_connection_string=None,
     ):
@@ -717,6 +718,11 @@ class Worker(WorkerBase):
 
                 parsed_url = urlparse(connection_string)
                 ws_conn_string = f"ws://{parsed_url.hostname}:{parsed_url.port}"
+
+            if path is not None:
+                if not path.startswith('/'):
+                    ws_conn_string += '/'
+                ws_conn_string += path
 
             bf = self.bf = BuildbotWebSocketClientFactory(ws_conn_string)
             bf.protocol = BuildbotWebSocketClientProtocol
