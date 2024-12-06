@@ -65,11 +65,20 @@ class ThreadPool(threadpool.ThreadPool):
             return
 
         super().start()
-        self._stop_event = reactor.addSystemEventTrigger('during', 'shutdown', self.stop)
+        self._stop_event = reactor.addSystemEventTrigger(
+            'during', 'shutdown', self._stop_on_shutdown
+        )
+
+    def _stop_on_shutdown(self):
+        self._stop_impl(remove_trigger=False)
 
     def stop(self):
+        self._stop_impl(remove_trigger=True)
+
+    def _stop_impl(self, remove_trigger):
         if not self._stop_event:
             return
         super().stop()
-        reactor.removeSystemEventTrigger(self._stop_event)
+        if remove_trigger:
+            reactor.removeSystemEventTrigger(self._stop_event)
         self._stop_event = None
