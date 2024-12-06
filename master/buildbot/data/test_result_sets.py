@@ -45,6 +45,7 @@ class Db2DataMixin:
 class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
+        /test_result_sets
         /builders/n:builderid/test_result_sets
         /builders/s:buildername/test_result_sets
         /builds/n:buildid/test_result_sets
@@ -75,11 +76,14 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
                 result_spec=resultSpec,
             )
 
-        else:
-            # The following is true: 'buildername' in kwargs or 'builderid' in kwargs:
+        elif 'buildername' in kwargs or 'builderid' in kwargs:
             builderid = yield self.getBuilderId(kwargs)
             sets = yield self.master.db.test_result_sets.getTestResultSets(
                 builderid, complete=complete, result_spec=resultSpec
+            )
+        else:
+            sets = yield self.master.db.test_result_sets.getTestResultSets(
+                complete=complete, result_spec=resultSpec
             )
 
         return [self.db2data(model) for model in sets]

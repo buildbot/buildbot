@@ -104,7 +104,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
 
     def getTestResultSets(
         self,
-        builderid: int,
+        builderid: int | None = None,
         buildid: int | None = None,
         stepid: int | None = None,
         complete: bool | None = None,
@@ -112,7 +112,9 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
     ) -> defer.Deferred[list[TestResultSetModel]]:
         def thd(conn) -> list[TestResultSetModel]:
             sets_table = self.db.model.test_result_sets
-            q = sets_table.select().where(sets_table.c.builderid == builderid)
+            q = sets_table.select()
+            if builderid is not None:
+                q = q.where(sets_table.c.builderid == builderid)
             if buildid is not None:
                 q = q.where(sets_table.c.buildid == buildid)
             if stepid is not None:

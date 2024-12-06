@@ -127,6 +127,13 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     @defer.inlineCallbacks
+    def test_get_result_sets_all(self):
+        results = yield self.callGet(('test_result_sets',))
+        for result in results:
+            self.validateData(result)
+        self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
+
+    @defer.inlineCallbacks
     def test_get_result_sets_builders_builderid(self):
         results = yield self.callGet(('builders', 88, 'test_result_sets'))
         for result in results:
