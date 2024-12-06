@@ -278,7 +278,8 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
 
     def lostRemoteStep(self, remotestep):
         log.msg("lost remote step")
-        self.protocol_command.command_ref = None
+        if self.protocol_command:
+            self.protocol_command.command_ref = None
         if self.stopCommandOnShutdown:
             self.stopCommand()
 
