@@ -45,9 +45,6 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildsetProperty(buildsetid=14),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_properties(self):
         props = yield self.callGet(('buildsets', 14, 'properties'))
@@ -72,9 +69,6 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildProperty(buildid=786, name="year", value=1651, source="Wikipedia"),
             fakedb.BuildProperty(buildid=786, name="island_name", value="despair", source="Book"),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_properties(self):

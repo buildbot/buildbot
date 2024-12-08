@@ -106,9 +106,6 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpEndpoint()
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     def test_sets_master(self):
         self.assertIdentical(self.master, self.ep.master)
 

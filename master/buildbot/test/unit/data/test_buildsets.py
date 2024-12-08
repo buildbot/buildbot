@@ -49,9 +49,6 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Buildset(id=14, reason='no sourcestamps'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         buildset = yield self.callGet(('buildsets', 13))
@@ -87,9 +84,6 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
             fakedb.BuildsetSourceStamp(buildsetid=14, sourcestampid=92),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

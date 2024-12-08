@@ -49,9 +49,6 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=24, name='bldr2'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         master = yield self.callGet(('masters', 14))
@@ -99,9 +96,6 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=22),
             fakedb.BuilderMaster(masterid=13, builderid=22),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

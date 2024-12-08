@@ -73,9 +73,6 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME4, hidden=True),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         step = yield self.callGet(('steps', 72))
@@ -182,9 +179,6 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME4),
             fakedb.Step(id=73, number=0, name='otherbuild', buildid=31, started_at=TIME3),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_buildid(self):

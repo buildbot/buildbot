@@ -51,9 +51,6 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         change = yield self.callGet(('changes', '13'))
@@ -105,9 +102,6 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildRequest(id=1, builderid=1, buildsetid=8822),
             fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1, number=1),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

@@ -45,9 +45,6 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing_build_data_by_build_id(self):
         result = yield self.callGet(('builds', 30, 'data', 'name1'))
@@ -152,9 +149,6 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     def validateData(self, data):
         self.assertIsInstance(data['raw'], bytes)
@@ -285,9 +279,6 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildData(id=92, buildid=30, name='name2', value=b'value2', source='source2'),
             fakedb.BuildData(id=93, buildid=31, name='name3', value=b'value3', source='source3'),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @parameterized.expand([
         ('multiple_values', 7, ['name1', 'name2']),

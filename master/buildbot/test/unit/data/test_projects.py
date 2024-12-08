@@ -41,9 +41,6 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Project(id=2, name='project2'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing_id(self):
         project = yield self.callGet(('projects', 2))
@@ -87,9 +84,6 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=201, projectid=3),
             fakedb.BuilderMaster(id=300, builderid=200, masterid=100),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @parameterized.expand([
         ('no_filter', None, [1, 2, 3]),

@@ -55,9 +55,6 @@ class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing_result_set(self):
         result = yield self.callGet(('test_result_sets', 13))
@@ -122,9 +119,6 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 complete=1,
             ),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_result_sets_all(self):

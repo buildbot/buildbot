@@ -45,9 +45,6 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.SchedulerMaster(schedulerid=15, masterid=33),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         scheduler = yield self.callGet(('schedulers', 14))
@@ -111,9 +108,6 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Scheduler(id=16, name='wholenother:scheduler'),
             fakedb.SchedulerMaster(schedulerid=16, masterid=33),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

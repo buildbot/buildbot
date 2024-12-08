@@ -127,9 +127,6 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.setUpEndpoint()
         yield self.db.insert_test_data(testData)
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         worker = yield self.callGet(('workers', 2))
@@ -213,9 +210,6 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpEndpoint()
         yield self.db.insert_test_data(testData)
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

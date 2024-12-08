@@ -47,9 +47,6 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.ChangeSourceMaster(changesourceid=15, masterid=33),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         """get an existing changesource by id"""
@@ -114,9 +111,6 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.ChangeSource(id=16, name='wholenother:changesource'),
             fakedb.ChangeSourceMaster(changesourceid=16, masterid=33),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

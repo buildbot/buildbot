@@ -56,9 +56,6 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         build = yield self.callGet(('builds', 14))
@@ -180,9 +177,6 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 buildid=13, name='reason', value='"force build"', source="Force Build Form"
             ),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_all(self):

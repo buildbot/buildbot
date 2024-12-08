@@ -66,9 +66,6 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def testGetExisting(self):
         self.db.buildrequests.claimBuildRequests([44], claimed_at=self.CLAIMED_AT)
@@ -150,9 +147,6 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.SourceStamp(id=100),
             fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=100),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def testGetAll(self):
