@@ -46,7 +46,6 @@ class TestDownloadFileSecretToWorkerCommand(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def testBasic(self):
@@ -90,7 +89,6 @@ class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin, TestReactorMixin, 
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def testBasic(self):
@@ -132,7 +130,6 @@ class TestRemoveFileSecretToWorkerCommand(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def testBasic(self):

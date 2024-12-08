@@ -47,7 +47,6 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.Te
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_simple(self):
@@ -88,7 +87,6 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_found(self):
@@ -132,7 +130,6 @@ class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_success(self):
@@ -177,7 +174,6 @@ class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_success(self):
@@ -207,7 +203,6 @@ class TestMakeDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_success(self):
@@ -250,7 +245,6 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_runRemoteCommand(self):

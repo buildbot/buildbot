@@ -38,11 +38,8 @@ class TestOneShellCommand(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor(auto_tear_down=True)
         return self.setup_test_build_step()
-
-    def tearDown(self):
-        return self.tear_down_test_build_step()
 
     def testShellArgInput(self):
         with self.assertRaisesConfigError("the 'command' parameter of ShellArg must not be None"):

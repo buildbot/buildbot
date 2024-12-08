@@ -37,7 +37,6 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def setup_deferred_mock(self):
@@ -175,7 +174,6 @@ class TestSourceDescription(TestBuildStepMixin, TestReactorMixin, unittest.TestC
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_constructor_args_strings(self):
@@ -213,7 +211,6 @@ class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin, unittes
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_attrgroup_hasattr(self):

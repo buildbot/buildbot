@@ -88,7 +88,6 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             yield self.site.stopFactory()
             yield self.site.close_connections()
         finally:
-            yield self.tear_down_test_build_step()
             yield self.tear_down_test_reactor()
 
     def get_connection_string(self):

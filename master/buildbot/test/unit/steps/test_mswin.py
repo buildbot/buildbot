@@ -40,7 +40,6 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def _run_simple_test(

@@ -49,7 +49,6 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
                 os.environ[_COMSPEC_ENV] = self.comspec
             else:
                 del os.environ[_COMSPEC_ENV]
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_constr_args(self):
@@ -175,7 +174,6 @@ class TestSetProperty(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_simple(self):
@@ -199,7 +197,6 @@ class TestLogRenderable(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_simple(self):
@@ -222,7 +219,6 @@ class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def doOneTest(self, **kwargs):
@@ -255,7 +251,6 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_eq_pass(self):

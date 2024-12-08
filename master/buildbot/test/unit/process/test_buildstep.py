@@ -120,7 +120,6 @@ class TestBuildStep(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     # support
@@ -1125,7 +1124,6 @@ class TestCommandMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -1243,7 +1241,6 @@ class TestShellMixin(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_setupShellMixin_bad_arg(self):

@@ -53,7 +53,6 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def testConstructorModeType(self):
@@ -323,7 +322,6 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def testBasic(self):
@@ -509,7 +507,6 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def testEmpty(self):
@@ -953,7 +950,6 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
 
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_init_workerdest_keyword(self):
@@ -1060,7 +1056,6 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     # check that ConfigErrors is raised on invalid 'mode' argument
@@ -1170,7 +1165,6 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -1273,7 +1267,6 @@ class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

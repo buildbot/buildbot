@@ -36,7 +36,7 @@ class SourceStepMixin(TestBuildStepMixin):
         return super().setup_test_build_step()
 
     def tearDownSourceStep(self):
-        return super().tear_down_test_build_step()
+        return None
 
     # utilities
 

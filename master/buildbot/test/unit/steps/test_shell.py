@@ -45,7 +45,6 @@ class TestShellCommandExecution(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_doStepIf_False(self):
@@ -187,7 +186,6 @@ class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_run_success(self):
@@ -225,7 +223,6 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_constructor_conflict(self):
@@ -360,7 +357,6 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_new_version_success(self):
@@ -475,7 +471,6 @@ class Configure(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_class_attrs(self):
@@ -499,7 +494,6 @@ class WarningCountingShellCommand(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_no_warnings(self):
@@ -829,7 +823,6 @@ class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_class_args(self):
@@ -851,7 +844,6 @@ class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, 
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_setTestResults(self):

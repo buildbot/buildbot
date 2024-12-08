@@ -36,7 +36,6 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_new(self):
@@ -496,7 +495,6 @@ class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_new(self):
@@ -649,7 +647,6 @@ class TestUbuPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_no_distribution(self):
@@ -703,7 +700,6 @@ class TestUbuCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tear_down_test_build_step()
         yield self.tear_down_test_reactor()
 
     def test_no_distribution(self):
