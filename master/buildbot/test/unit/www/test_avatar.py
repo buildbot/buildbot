@@ -550,10 +550,10 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -750,10 +750,10 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def test_incomplete_credentials(self):

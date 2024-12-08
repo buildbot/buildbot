@@ -47,6 +47,8 @@ class TestGitLabStatusPush(
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
+
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
             self,
@@ -70,7 +72,6 @@ class TestGitLabStatusPush(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

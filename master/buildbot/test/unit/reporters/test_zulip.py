@@ -36,10 +36,15 @@ class TestZulipStatusPush(
             testcase=self, wantData=True, wantDb=True, wantMq=True
         )
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.master.running:
+                yield self.master.stopService()
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.master.running:
-            yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

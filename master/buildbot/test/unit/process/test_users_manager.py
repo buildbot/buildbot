@@ -32,11 +32,9 @@ class TestUserManager(unittest.TestCase):
         self.master = mock.Mock()
         self.umm = manager.UserManagerManager(self.master)
         self.umm.startService()
+        self.addCleanup(self.umm.stopService)
 
         self.config = MasterConfig()
-
-    def tearDown(self):
-        self.umm.stopService()
 
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):

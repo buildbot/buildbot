@@ -59,13 +59,11 @@ VERSION_ID="1"
         self.real_bot = pb.BotPbLike(self.basedir, False)
         self.real_bot.setOsReleaseFile(f"{self.basedir}/test-release-file")
         self.real_bot.startService()
+        self.addCleanup(self.real_bot.stopService)
 
         self.bot = FakeRemote(self.real_bot)
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        if self.real_bot and self.real_bot.running:
-            yield self.real_bot.stopService()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
@@ -214,6 +212,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         self.bot = FakeBot(self.basedir, False)
         self.bot.startService()
+        self.addCleanup(self.bot.stopService)
 
         # get a WorkerForBuilder object from the bot and wrap it as a fake
         # remote
@@ -222,10 +221,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         self.setUpCommand()
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        if self.bot and self.bot.running:
-            yield self.bot.stopService()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 

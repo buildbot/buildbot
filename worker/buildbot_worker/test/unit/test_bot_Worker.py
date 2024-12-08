@@ -86,8 +86,6 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
     def tearDown(self):
         if self.realm:
             yield self.realm.shutdown()
-        if self.worker and self.worker.running:
-            yield self.worker.stopService()
         if self.listeningport:
             yield self.listeningport.stopListening()
         if os.path.exists(self.basedir):
@@ -209,6 +207,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
             protocol='pb',
         )
         self.worker.startService()
+        self.addCleanup(self.worker.stopService)
 
         # and wait for the result of the print
         return d
@@ -290,6 +289,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         )
 
         self.worker.startService()
+        self.addCleanup(self.worker.stopService)
 
         def check(ign):
             self.assertEqual(called, [('shutdown',)])

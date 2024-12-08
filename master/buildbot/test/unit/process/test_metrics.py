@@ -36,10 +36,15 @@ class TestMetricBase(TestReactorMixin, unittest.TestCase):
         self.observer.startService()
         self.observer.reconfigServiceWithBuildbotConfig(self.master.config)
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.observer.running:
+                yield self.observer.stopService()
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.observer.running:
-            yield self.observer.stopService()
         yield self.tear_down_test_reactor()
 
 

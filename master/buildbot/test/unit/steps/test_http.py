@@ -72,23 +72,23 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         # ignore 'http_proxy' environment variable when running tests
         session = http.getSession()
+        self.addCleanup(http.closeSession)
         session.trust_env = False
 
         # port 0 means random unused port
         self.site = SiteWithClose(TestPage())
+        self.addCleanup(self.site.stopFactory)
+        self.addCleanup(self.site.close_connections)
+
         self.listener = reactor.listenTCP(0, self.site)
+        self.addCleanup(self.listener.stopListening)
+
         self.port = self.listener.getHost().port
         return self.setup_test_build_step()
 
     @defer.inlineCallbacks
     def tearDown(self):
-        http.closeSession()
-        try:
-            yield self.listener.stopListening()
-            yield self.site.stopFactory()
-            yield self.site.close_connections()
-        finally:
-            yield self.tear_down_test_reactor()
+        yield self.tear_down_test_reactor()
 
     def get_connection_string(self):
         return f"http://127.0.0.1:{self.port}"

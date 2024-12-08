@@ -60,10 +60,10 @@ class TestWorkerManager(TestReactorMixin, unittest.TestCase):
 
         self.new_config = mock.Mock()
         self.workers.startService()
+        self.addCleanup(self.workers.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.workers.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

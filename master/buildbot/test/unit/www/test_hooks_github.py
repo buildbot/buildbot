@@ -624,10 +624,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def assertDictSubset(self, expected_dict, response_dict):
@@ -902,10 +902,10 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -952,10 +952,10 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -1009,12 +1009,12 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
         yield secret_service.setServiceParent(self.master)
 
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
         fake_storage.reconfigService(secretdict={self.secret_name: self.secret_value})
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -1053,10 +1053,10 @@ class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase, TestReac
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -1146,10 +1146,10 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def assertDictSubset(self, expected_dict, response_dict):
@@ -1264,10 +1264,10 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase, TestReactorMi
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -1308,10 +1308,10 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase, TestR
             verify=True,
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

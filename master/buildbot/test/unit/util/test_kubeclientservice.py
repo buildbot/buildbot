@@ -112,10 +112,10 @@ class KubeClientServiceTestKubeHardcodedConfig(
             self.master, self, "http://localhost:8001"
         )
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def test_basic(self):
@@ -206,13 +206,16 @@ class KubeClientServiceTest(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.parent = service.BuildbotService(name="parent")
+
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.parent.running:
+                yield self.parent.stopService()
+
+        self.addCleanup(cleanup)
+
         self.client = kubeclientservice.KubeClientService()
         yield self.client.setServiceParent(self.parent)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.parent.running:
-            yield self.parent.stopService()
 
     @defer.inlineCallbacks
     def test_stopped(self):

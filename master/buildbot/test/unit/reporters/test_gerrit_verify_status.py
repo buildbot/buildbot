@@ -46,6 +46,7 @@ class TestGerritVerifyStatusPush(
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def createGerritStatus(self, **kwargs):
@@ -59,7 +60,6 @@ class TestGerritVerifyStatusPush(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

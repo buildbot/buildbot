@@ -32,10 +32,15 @@ class SimpleMQ(TestReactorMixin, unittest.TestCase):
         self.mq.setServiceParent(self.master)
         yield self.mq.startService()
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.mq.running:
+                yield self.mq.stopService()
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.mq.running:
-            yield self.mq.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

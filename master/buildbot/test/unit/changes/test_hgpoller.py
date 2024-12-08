@@ -61,10 +61,10 @@ class TestHgPollerBase(
         self.poller._isRepositoryReady = _isRepositoryReady
 
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

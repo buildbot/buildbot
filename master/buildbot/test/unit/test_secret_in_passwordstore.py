@@ -41,10 +41,10 @@ class TestSecretInPass(
             self.srvpass = SecretInPass("password", self.tmp_dir)
             yield self.srvpass.setServiceParent(self.master)
             yield self.master.startService()
+            self.addCleanup(self.srvpass.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.srvpass.stopService()
         yield self.tear_down_test_reactor()
 
     def create_temp_dir(self, dirname):

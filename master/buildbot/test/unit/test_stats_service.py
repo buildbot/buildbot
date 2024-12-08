@@ -63,10 +63,10 @@ class TestStatsServicesBase(TestReactorMixin, unittest.TestCase):
         )
         yield self.stats_service.setServiceParent(self.master)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
 

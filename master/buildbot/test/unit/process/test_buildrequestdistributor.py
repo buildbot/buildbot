@@ -65,6 +65,13 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
         self.brd.parent = self.botmaster
         self.brd.startService()
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.brd.running:
+                yield self.brd.stopService()
+
+        self.addCleanup(cleanup)
+
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
@@ -76,8 +83,6 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.brd.running:
-            yield self.brd.stopService()
         yield self.tear_down_test_reactor()
 
     def make_workers(self, worker_count):

@@ -42,9 +42,6 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
                 code = 200
 
             self._http.delete = lambda _: defer.succeed(FakeResult())
-        if self.master is not None:
-            yield self.master.stopService()
-            yield self.master.test_shutdown()
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         yield self.tear_down_test_reactor()
 
@@ -58,13 +55,15 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
-        self.master = yield fakemaster.make_master(self, wantData=True, auto_shutdown=False)
+        self.master = yield fakemaster.make_master(self, wantData=True)
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'tcp://marathon.local', auth=kwargs.get('auth')
         )
         yield worker.setServiceParent(self.master)
         worker.reactor = self.reactor
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
+
         worker.masterhash = "masterhash"
         return worker
 

@@ -28,6 +28,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor(auto_tear_down=False)
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -43,7 +44,6 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

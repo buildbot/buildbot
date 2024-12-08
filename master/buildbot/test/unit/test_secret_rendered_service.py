@@ -34,10 +34,10 @@ class TestRenderSecrets(TestReactorMixin, unittest.TestCase):
         self.srvtest = FakeServiceUsingSecrets()
         yield self.srvtest.setServiceParent(self.master)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

@@ -103,22 +103,18 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
 
         self.master = master
 
+        self.addCleanup(self.master.test_shutdown)
+        self.addCleanup(self.master.www.stopService)
+
         # build an HTTP agent, using an explicit connection pool if Twisted
         # supports it (Twisted 13.0.0 and up)
         if hasattr(client, 'HTTPConnectionPool'):
             self.pool = client.HTTPConnectionPool(reactor)
             self.agent = client.Agent(reactor, pool=self.pool)
+            self.addCleanup(self.pool.closeCachedConnections)
         else:
             self.pool = None
             self.agent = client.Agent(reactor)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.pool:
-            yield self.pool.closeCachedConnections()
-        if self.master:
-            yield self.master.www.stopService()
-        yield self.master.test_shutdown()
 
     @defer.inlineCallbacks
     def apiGet(self, url, expect200=True):

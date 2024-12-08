@@ -93,12 +93,9 @@ class GraphQL(unittest.TestCase, TestReactorMixin):
         self.master.allSchedulers = lambda: scheds
 
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
         yield self.insert_initial_data()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
 
     @defer.inlineCallbacks
     def insert_initial_data(self):

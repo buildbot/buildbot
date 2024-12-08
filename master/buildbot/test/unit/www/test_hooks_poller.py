@@ -48,6 +48,8 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
         )
         master.www = www
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
+
         self.changeHook = change_hook.ChangeHookResource(
             dialects={'poller': options}, master=master
         )
@@ -68,7 +70,6 @@ class TestPollingChangeHook(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

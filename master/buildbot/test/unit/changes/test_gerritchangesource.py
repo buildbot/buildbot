@@ -1053,10 +1053,10 @@ class TestGerritEventLogPoller(
         self.setup_test_reactor(auto_tear_down=False)
         yield self.setUpChangeSource()
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

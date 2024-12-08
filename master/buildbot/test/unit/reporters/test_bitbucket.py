@@ -58,10 +58,10 @@ class TestBitbucketStatusPush(
         self.bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
         yield self.bsp.setServiceParent(self.master)
         yield self.bsp.startService()
+        self.addCleanup(self.bsp.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.bsp.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -307,10 +307,10 @@ class TestBitbucketStatusPushProperties(
         )
         yield self.bsp.setServiceParent(self.master)
         yield self.bsp.startService()
+        self.addCleanup(self.bsp.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.bsp.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -383,10 +383,10 @@ class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
         self.bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
         yield self.bsp.setServiceParent(self.master)
         yield self.bsp.startService()
+        self.addCleanup(self.bsp.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.bsp.stopService()
         yield self.tear_down_test_reactor()
 
     def parse(self, repourl):

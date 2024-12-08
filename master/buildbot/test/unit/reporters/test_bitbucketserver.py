@@ -68,10 +68,10 @@ class TestBitbucketServerStatusPush(
             "serv", Interpolate("username"), Interpolate("passwd"), **kwargs
         )
         yield self.sp.setServiceParent(self.master)
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -247,14 +247,19 @@ class TestBitbucketServerCoreAPIStatusPush(
         yield self.sp.setServiceParent(self.master)
         yield self.master.startService()
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.master.running:
+                yield self.master.stopService()
+
+        self.addCleanup(cleanup)
+
     def setUp(self):
         self.master = None
 
     @defer.inlineCallbacks
     def tearDown(self):
         if self.master:
-            if self.master.running:
-                yield self.master.stopService()
             yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -635,6 +640,7 @@ class TestBitbucketServerPRCommentPush(
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def setupReporter(self, verbose=True, generator_class=BuildStatusGenerator, **kwargs):
@@ -668,7 +674,6 @@ class TestBitbucketServerPRCommentPush(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

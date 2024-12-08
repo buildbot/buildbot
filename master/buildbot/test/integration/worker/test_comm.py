@@ -195,24 +195,29 @@ class TestWorkerComm(unittest.TestCase, TestReactorMixin):
         self.server_connection_string = "tcp:0:interface=127.0.0.1"
         self.client_connection_string_tpl = "tcp:host=127.0.0.1:port={port}"
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.broker:
+                del self.broker
+            if self.endpoint:
+                del self.endpoint
+            deferreds = [
+                *self._detach_deferreds,
+                self.pbmanager.stopService(),
+                self.botmaster.stopService(),
+                self.workers.stopService(),
+            ]
+
+            # if the worker is still attached, wait for it to detach, too
+            if self.buildworker and self.buildworker.detach_d:
+                deferreds.append(self.buildworker.detach_d)
+
+            yield defer.gatherResults(deferreds, consumeErrors=True)
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.broker:
-            del self.broker
-        if self.endpoint:
-            del self.endpoint
-        deferreds = [
-            *self._detach_deferreds,
-            self.pbmanager.stopService(),
-            self.botmaster.stopService(),
-            self.workers.stopService(),
-        ]
-
-        # if the worker is still attached, wait for it to detach, too
-        if self.buildworker and self.buildworker.detach_d:
-            deferreds.append(self.buildworker.detach_d)
-
-        yield defer.gatherResults(deferreds, consumeErrors=True)
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

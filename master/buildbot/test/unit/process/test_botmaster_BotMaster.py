@@ -164,10 +164,10 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
         yield self.botmaster.setServiceParent(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()
+        self.addCleanup(self.botmaster.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.botmaster.stopService()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

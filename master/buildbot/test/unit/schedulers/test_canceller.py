@@ -396,10 +396,10 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self._cancelled_build_ids = []
 
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def create_ss_dict(self, project, codebase, repository, branch):

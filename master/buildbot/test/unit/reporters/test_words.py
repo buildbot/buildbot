@@ -93,10 +93,10 @@ class ContactMixin(TestReactorMixin):
         self.contact = self.contactClass(user=self.USER, channel=self.bot.getChannel(self.CHANNEL))
         yield self.contact.channel.setServiceParent(self.master)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
         yield self.tear_down_test_reactor()
 
     def patch_send(self):
