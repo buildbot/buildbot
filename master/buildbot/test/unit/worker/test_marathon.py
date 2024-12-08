@@ -34,14 +34,18 @@ class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
         self.worker = None
         self.master = None
 
+        def cleanup():
+            if self.worker is not None:
+
+                class FakeResult:
+                    code = 200
+
+                self._http.delete = lambda _: defer.succeed(FakeResult())
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.worker is not None:
-
-            class FakeResult:
-                code = 200
-
-            self._http.delete = lambda _: defer.succeed(FakeResult())
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         yield self.tear_down_test_reactor()
 
