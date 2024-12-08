@@ -179,9 +179,13 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegratio
         self.setup_test_reactor(auto_tear_down=False)
         self.setupDebugIntegrationLogs()
 
+        def cleanup():
+            self.assertFalse(self.master.running, "master is still running!")
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        self.assertFalse(self.master.running, "master is still running!")
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

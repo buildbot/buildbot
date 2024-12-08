@@ -39,10 +39,14 @@ class TestPollerSync(TestReactorMixin, unittest.TestCase):
         self.calls = 0
         self.fail_after_running = False
 
+        def cleanup():
+            poll.reset_poll_methods()
+            self.assertEqual(self.reactor.getDelayedCalls(), [])
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        poll.reset_poll_methods()
-        self.assertEqual(self.reactor.getDelayedCalls(), [])
         yield self.tear_down_test_reactor()
 
     def test_call_not_started_does_nothing(self):
@@ -202,9 +206,10 @@ class TestPollerAsync(TestReactorMixin, unittest.TestCase):
         self.duration = 1
         self.fail_after_running = False
 
+        self.addCleanup(poll.reset_poll_methods)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        poll.reset_poll_methods()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
