@@ -224,8 +224,6 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownCommand()
-
         if self.bot and self.bot.running:
             yield self.bot.stopService()
         if os.path.exists(self.basedir):

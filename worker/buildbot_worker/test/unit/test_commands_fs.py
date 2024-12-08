@@ -34,9 +34,6 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_simple_real(self):
         file_path = os.path.join(self.basedir, 'workdir')
@@ -176,9 +173,6 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_simple(self):
         from_path = os.path.join(self.basedir, 'workdir')
@@ -214,9 +208,6 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
 class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
-
-    def tearDown(self):
-        self.tearDownCommand()
 
     @defer.inlineCallbacks
     def test_empty_paths(self):
@@ -270,9 +261,6 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_non_existent(self):
         path = os.path.join(self.basedir, 'no-such-file')
@@ -321,9 +309,6 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_non_existent(self):
         self.make_command(fs.GlobPath, {'path': os.path.join(self.basedir, 'no-*-file')}, True)
@@ -371,9 +356,6 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_non_existent(self):
         path = os.path.join(self.basedir, 'no-such-dir')
@@ -414,9 +396,6 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
 class TestRemoveFile(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
-
-    def tearDown(self):
-        self.tearDownCommand()
 
     @defer.inlineCallbacks
     def test_simple(self):
