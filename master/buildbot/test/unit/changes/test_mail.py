@@ -54,7 +54,6 @@ class TestMaildirSource(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownDirs()
         yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 

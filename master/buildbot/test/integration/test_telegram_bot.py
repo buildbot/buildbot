@@ -156,7 +156,6 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownDirs()
         if self.master:
             yield self.master.www.stopService()
             yield self.master.mq.stopService()

@@ -101,9 +101,6 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         self.tmpdir = os.path.join(self.jobdir, 'tmp')
         self.setUpDirs(self.jobdir, self.newdir, self.curdir, self.tmpdir)
 
-    def tearDown(self):
-        self.tearDownDirs()
-
     def test_messageReceived(self):
         # stub out svc.scheduler.handleJobFile and .jobdir
         scheduler = mock.Mock()

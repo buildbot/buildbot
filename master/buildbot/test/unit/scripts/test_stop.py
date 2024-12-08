@@ -37,9 +37,6 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.setUpDirs('basedir')
         self.setUpStdoutAssertions()
 
-    def tearDown(self):
-        self.tearDownDirs()
-
     # tests
 
     def do_test_stop(self, config, kill_sequence, is_running=True, **kwargs):

@@ -64,7 +64,6 @@ class TestCopyDb(misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, u
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
     def create_master_cfg(self, db_url='sqlite://', extraconfig=""):
@@ -112,9 +111,6 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
         self.setUpDirs('basedir')
         self.setUpStdoutAssertions()  # comment out to see stdout from script
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
-
-    def tearDown(self):
-        self.tearDownDirs()
 
     @defer.inlineCallbacks
     def create_master_config(self):

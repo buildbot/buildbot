@@ -46,7 +46,6 @@ class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
 
     def setUp(self):
         self.setUpDirs('workdir')
-        self.addCleanup(self.tearDownDirs)
 
         self.setup_test_reactor(auto_tear_down=False)
         self.spawned_process = mock.Mock()

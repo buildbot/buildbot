@@ -55,7 +55,6 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
 
     @defer.inlineCallbacks
     def tearDownMigrateTest(self):
-        self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

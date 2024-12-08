@@ -94,7 +94,6 @@ class TestCleanupDb(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
     def createMasterCfg(self, extraconfig=""):
@@ -139,7 +138,6 @@ class TestCleanupDbRealDb(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
     def createMasterCfg(self, db_url, extraconfig=""):

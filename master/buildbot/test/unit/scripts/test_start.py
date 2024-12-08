@@ -65,9 +65,6 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             f.write(fake_master_tac)
         self.setUpStdoutAssertions()
 
-    def tearDown(self):
-        self.tearDownDirs()
-
     # tests
 
     def test_start_not_basedir(self):

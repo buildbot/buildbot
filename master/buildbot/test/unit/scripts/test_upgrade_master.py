@@ -121,7 +121,6 @@ class TestUpgradeMasterFunctions(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownDirs()
         yield self.tear_down_test_reactor()
 
     def writeFile(self, path, contents):
