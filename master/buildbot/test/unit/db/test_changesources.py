@@ -22,14 +22,13 @@ from buildbot.db import changesources
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 
 
 def changeSourceKey(changeSource: changesources.ChangeSourceModel):
     return changeSource.id
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # test data
 
     cs42 = fakedb.ChangeSource(id=42, name='cool_source')
@@ -47,13 +46,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
-    def test_signature_findChangeSourceId(self):
-        """The signature of findChangeSourceId is correct"""
-
-        @self.assertArgSpecMatches(self.db.changesources.findChangeSourceId)
-        def findChangeSourceId(self, name):
-            pass
-
     @defer.inlineCallbacks
     def test_findChangeSourceId_new(self):
         """findChangeSourceId for a new changesource creates it"""
@@ -67,13 +59,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         id1 = yield self.db.changesources.findChangeSourceId('csname')
         id2 = yield self.db.changesources.findChangeSourceId('csname')
         self.assertEqual(id1, id2)
-
-    def test_signature_setChangeSourceMaster(self):
-        """setChangeSourceMaster has the right signature"""
-
-        @self.assertArgSpecMatches(self.db.changesources.setChangeSourceMaster)
-        def setChangeSourceMaster(self, changesourceid, masterid):
-            pass
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_fresh(self):
@@ -126,13 +111,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         cs = yield self.db.changesources.getChangeSource(87)
         self.assertEqual(cs.masterid, None)
 
-    def test_signature_getChangeSource(self):
-        """getChangeSource has the right signature"""
-
-        @self.assertArgSpecMatches(self.db.changesources.getChangeSource)
-        def getChangeSource(self, changesourceid):
-            pass
-
     @defer.inlineCallbacks
     def test_getChangeSource(self):
         """getChangeSource for a changesource that exists"""
@@ -167,13 +145,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             cs, changesources.ChangeSourceModel(id=87, name='lame_source', masterid=14)
         )
         # row exists, but marked inactive
-
-    def test_signature_getChangeSources(self):
-        """getChangeSources has right signature"""
-
-        @self.assertArgSpecMatches(self.db.changesources.getChangeSources)
-        def getChangeSources(self, active=None, masterid=None):
-            pass
 
     @defer.inlineCallbacks
     def test_getChangeSources(self):

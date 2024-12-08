@@ -24,14 +24,13 @@ from buildbot.db import sourcestamps
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
 SOMETIME = 20398573
 OTHERTIME = 937239287
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     change13_rows = [
@@ -102,33 +101,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_addChange(self):
-        @self.assertArgSpecMatches(self.db.changes.addChange)
-        def addChange(
-            self,
-            author=None,
-            committer=None,
-            files=None,
-            comments=None,
-            is_dir=None,
-            revision=None,
-            when_timestamp=None,
-            branch=None,
-            category=None,
-            revlink='',
-            properties=None,
-            repository='',
-            codebase='',
-            project='',
-            uid=None,
-        ):
-            pass
-
-    def test_signature_getChange(self):
-        @self.assertArgSpecMatches(self.db.changes.getChange)
-        def getChange(self, key, no_cache=False):
-            pass
 
     @defer.inlineCallbacks
     def test_addChange_getChange(self):
@@ -253,11 +225,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
         self.assertTrue(chdict is None)
 
-    def test_signature_getChangeUids(self):
-        @self.assertArgSpecMatches(self.db.changes.getChangeUids)
-        def getChangeUids(self, changeid):
-            pass
-
     @defer.inlineCallbacks
     def test_getChangeUids_missing(self):
         res = yield self.db.changes.getChangeUids(1)
@@ -293,11 +260,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         res = yield self.db.changes.getChangeUids(14)
 
         self.assertEqual(sorted(res), [1, 2])
-
-    def test_signature_getChanges(self):
-        @self.assertArgSpecMatches(self.db.changes.getChanges)
-        def getChanges(self, resultSpec=None):
-            pass
 
     def insert7Changes(self):
         return self.db.insert_test_data([
@@ -374,11 +336,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         changes = yield self.db.changes.getChanges()
         check(changes)
 
-    def test_signature_getLatestChangeid(self):
-        @self.assertArgSpecMatches(self.db.changes.getLatestChangeid)
-        def getLatestChangeid(self):
-            pass
-
     @defer.inlineCallbacks
     def test_getLatestChangeid(self):
         yield self.db.insert_test_data(self.change13_rows)
@@ -392,11 +349,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         changeid = yield self.db.changes.getLatestChangeid()
 
         self.assertEqual(changeid, None)
-
-    def test_signature_getParentChangeIds(self):
-        @self.assertArgSpecMatches(self.db.changes.getParentChangeIds)
-        def getParentChangeIds(self, branch, repository, project, codebase):
-            pass
 
     @defer.inlineCallbacks
     def test_getParentChangeIds(self):

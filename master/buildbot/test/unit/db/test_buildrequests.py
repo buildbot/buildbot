@@ -23,12 +23,11 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
-from buildbot.test.util import interfaces
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # test that the datetime translations are done correctly by specifying
     # the epoch timestamp and datetime objects explicitly.  These should
     # pass regardless of the local timezone used while running tests!

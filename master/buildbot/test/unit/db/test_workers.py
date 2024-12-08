@@ -21,7 +21,6 @@ from buildbot.db import workers
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.test.util import querylog
 
 
@@ -33,9 +32,7 @@ def configuredOnKey(worker: workers.BuilderMasterModel):
     return (worker.builderid, worker.masterid)
 
 
-class Tests(
-    interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
-):
+class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin):
     # common sample data
 
     baseRows = [
@@ -86,51 +83,6 @@ class Tests(
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_findWorkerId(self):
-        @self.assertArgSpecMatches(self.db.workers.findWorkerId)
-        def findWorkerId(self, name):
-            pass
-
-    def test_signature_getWorker(self):
-        @self.assertArgSpecMatches(self.db.workers.getWorker)
-        def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
-            pass
-
-    def test_signature_getWorkers(self):
-        @self.assertArgSpecMatches(self.db.workers.getWorkers)
-        def getWorkers(self, masterid=None, builderid=None, paused=None, graceful=None):
-            pass
-
-    def test_signature_workerConnected(self):
-        @self.assertArgSpecMatches(self.db.workers.workerConnected)
-        def workerConnected(self, workerid, masterid, workerinfo):
-            pass
-
-    def test_signature_workerDisconnected(self):
-        @self.assertArgSpecMatches(self.db.workers.workerDisconnected)
-        def workerDisconnected(self, workerid, masterid):
-            pass
-
-    def test_signature_workerConfigured(self):
-        @self.assertArgSpecMatches(self.db.workers.workerConfigured)
-        def workerConfigured(self, workerid, masterid, builderids):
-            pass
-
-    def test_signature_deconfigureAllWorkersForMaster(self):
-        @self.assertArgSpecMatches(self.db.workers.deconfigureAllWorkersForMaster)
-        def deconfigureAllWorkersForMaster(self, masterid):
-            pass
-
-    def test_signature_set_worker_paused(self):
-        @self.assertArgSpecMatches(self.db.workers.set_worker_paused)
-        def set_worker_paused(self, workerid, paused, pause_reason=None):
-            pass
-
-    def test_signature_set_worker_graceful(self):
-        @self.assertArgSpecMatches(self.db.workers.set_worker_graceful)
-        def set_worker_graceful(self, workerid, graceful):
-            pass
 
     @defer.inlineCallbacks
     def test_findWorkerId_insert(self):

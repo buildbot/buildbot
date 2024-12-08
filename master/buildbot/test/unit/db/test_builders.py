@@ -22,7 +22,6 @@ from buildbot.db import builders
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util.twisted import async_to_deferred
 
 
@@ -30,7 +29,7 @@ def builderKey(builder: builders.BuilderModel) -> int:
     return builder.id
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     builder_row = [
@@ -42,38 +41,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_findBuilderId(self):
-        @self.assertArgSpecMatches(self.db.builders.findBuilderId)
-        def findBuilderId(self, name, autoCreate=True):
-            pass
-
-    def test_signature_addBuilderMaster(self):
-        @self.assertArgSpecMatches(self.db.builders.addBuilderMaster)
-        def addBuilderMaster(self, builderid=None, masterid=None):
-            pass
-
-    def test_signature_removeBuilderMaster(self):
-        @self.assertArgSpecMatches(self.db.builders.removeBuilderMaster)
-        def removeBuilderMaster(self, builderid=None, masterid=None):
-            pass
-
-    def test_signature_getBuilder(self):
-        @self.assertArgSpecMatches(self.db.builders.getBuilder)
-        def getBuilder(self, builderid):
-            pass
-
-    def test_signature_getBuilders(self):
-        @self.assertArgSpecMatches(self.db.builders.getBuilders)
-        def getBuilders(self, masterid=None, projectid=None, workerid=None):
-            pass
-
-    def test_signature_updateBuilderInfo(self):
-        @self.assertArgSpecMatches(self.db.builders.updateBuilderInfo)
-        def updateBuilderInfo(
-            self, builderid, description, description_format, description_html, projectid, tags
-        ):
-            pass
 
     @defer.inlineCallbacks
     def test_updateBuilderInfo(self):

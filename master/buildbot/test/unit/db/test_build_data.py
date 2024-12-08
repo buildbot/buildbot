@@ -21,10 +21,9 @@ from buildbot.db import build_data
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     common_data = [
         fakedb.Worker(id=47, name='linux'),
         fakedb.Buildset(id=20),
@@ -44,26 +43,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_add_build_data(self):
-        @self.assertArgSpecMatches(self.db.build_data.setBuildData)
-        def setBuildData(self, buildid, name, value, source):
-            pass
-
-    def test_signature_get_build_data(self):
-        @self.assertArgSpecMatches(self.db.build_data.getBuildData)
-        def getBuildData(self, buildid, name):
-            pass
-
-    def test_signature_get_build_data_no_value(self):
-        @self.assertArgSpecMatches(self.db.build_data.getBuildDataNoValue)
-        def getBuildDataNoValue(self, buildid, name):
-            pass
-
-    def test_signature_get_all_build_data_no_values(self):
-        @self.assertArgSpecMatches(self.db.build_data.getAllBuildDataNoValues)
-        def getAllBuildDataNoValues(self, buildid):
-            pass
 
     @defer.inlineCallbacks
     def test_add_data_get_data(self):

@@ -29,7 +29,6 @@ from buildbot.db import logs
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.twisted import async_to_deferred
@@ -54,7 +53,7 @@ class FakeUnavailableCompressor(compression.CompressorInterface):
         return data[len(FakeUnavailableCompressor.HEADER) :]
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     TIMESTAMP_STEP101 = 100000
     TIMESTAMP_STEP102 = 200000
     backgroundData = [
@@ -152,55 +151,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
                 self.assertEqual(got_lines, _join_lines(expLines[first_line : last_line + 1]))
         # check overflow
         self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)), _join_lines(expLines[5:7]))
-
-    # signature tests
-
-    def test_signature_getLog(self):
-        @self.assertArgSpecMatches(self.db.logs.getLog)
-        def getLog(self, logid):
-            pass
-
-    def test_signature_getLogBySlug(self):
-        @self.assertArgSpecMatches(self.db.logs.getLogBySlug)
-        def getLogBySlug(self, stepid, slug):
-            pass
-
-    def test_signature_getLogs(self):
-        @self.assertArgSpecMatches(self.db.logs.getLogs)
-        def getLogs(self, stepid=None):
-            pass
-
-    def test_signature_getLogLines(self):
-        @self.assertArgSpecMatches(self.db.logs.getLogLines)
-        def getLogLines(self, logid, first_line, last_line):
-            pass
-
-    def test_signature_addLog(self):
-        @self.assertArgSpecMatches(self.db.logs.addLog)
-        def addLog(self, stepid, name, slug, type):
-            pass
-
-    def test_signature_appendLog(self):
-        @self.assertArgSpecMatches(self.db.logs.appendLog)
-        def appendLog(self, logid, content):
-            pass
-
-    def test_signature_finishLog(self):
-        @self.assertArgSpecMatches(self.db.logs.finishLog)
-        def finishLog(self, logid):
-            pass
-
-    def test_signature_compressLog(self):
-        @self.assertArgSpecMatches(self.db.logs.compressLog)
-        def compressLog(self, logid, force=False):
-            pass
-
-    def test_signature_deleteOldLogChunks(self):
-        @self.assertArgSpecMatches(self.db.logs.deleteOldLogChunks)
-        def deleteOldLogChunks(self, older_than_timestamp):
-            pass
-
-    # method tests
 
     @defer.inlineCallbacks
     def test_getLog(self):

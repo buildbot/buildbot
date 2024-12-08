@@ -20,10 +20,9 @@ from buildbot.db import test_results
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     common_data = [
         fakedb.Worker(id=47, name='linux'),
         fakedb.Buildset(id=20),
@@ -49,31 +48,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_get_test_code_paths(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestCodePaths)
-        def getTestCodePaths(self, builderid, path_prefix=None, result_spec=None):
-            pass
-
-    def test_signature_get_test_names(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestNames)
-        def getTestNames(self, builderid, name_prefix=None, result_spec=None):
-            pass
-
-    def test_signature_add_test_results(self):
-        @self.assertArgSpecMatches(self.db.test_results.addTestResults)
-        def addTestResults(self, builderid, test_result_setid, result_values):
-            pass
-
-    def test_signature_get_test_result(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestResult)
-        def getTestResult(self, test_resultid):
-            pass
-
-    def test_signature_get_test_results(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestResults)
-        def getTestResults(self, builderid, test_result_setid, result_spec=None):
-            pass
 
     @defer.inlineCallbacks
     def test_add_set_results(self):

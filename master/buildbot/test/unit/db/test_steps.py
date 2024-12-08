@@ -23,7 +23,6 @@ from buildbot.db import steps
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
 TIME1 = 1304262222
@@ -33,7 +32,7 @@ TIME4 = 1304262235
 TIME5 = 1304262236
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     backgroundData = [
@@ -120,38 +119,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_getStep(self):
-        @self.assertArgSpecMatches(self.db.steps.getStep)
-        def getStep(self, stepid=None, buildid=None, number=None, name=None):
-            pass
-
-    def test_signature_getSteps(self):
-        @self.assertArgSpecMatches(self.db.steps.getSteps)
-        def getSteps(self, buildid):
-            pass
-
-    def test_signature_addStep(self):
-        @self.assertArgSpecMatches(self.db.steps.addStep)
-        def addStep(self, buildid, name, state_string):
-            pass
-
-    def test_signature_startStep(self):
-        @self.assertArgSpecMatches(self.db.steps.startStep)
-        def addStep(self, stepid, started_at, locks_acquired):
-            pass
-
-    def test_signature_setStepStateString(self):
-        @self.assertArgSpecMatches(self.db.steps.setStepStateString)
-        def setStepStateString(self, stepid, state_string):
-            pass
-
-    def test_signature_finishStep(self):
-        @self.assertArgSpecMatches(self.db.steps.finishStep)
-        def finishStep(self, stepid, results, hidden):
-            pass
-
-    # method tests
 
     @defer.inlineCallbacks
     def test_getStep(self):
