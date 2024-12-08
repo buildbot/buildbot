@@ -90,9 +90,7 @@ class UpgradeTestMixin(TestReactorMixin):
         )
 
         self._sql_log_handler = querylog.start_log_queries()
-
-    def tearDownUpgradeTest(self):
-        querylog.stop_log_queries(self._sql_log_handler)
+        self.addCleanup(lambda: querylog.stop_log_queries(self._sql_log_handler))
 
     # save subclasses the trouble of calling our setUp and tearDown methods
 
@@ -102,7 +100,6 @@ class UpgradeTestMixin(TestReactorMixin):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownUpgradeTest()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
