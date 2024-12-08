@@ -23,7 +23,6 @@ TestBuildStepMixin
 
             @defer.inlineCallbacks
             def tearDown(self):
-                yield self.tear_down_test_build_step()
                 yield self.tear_down_test_reactor()
 
             @defer.inlineCallbacks
@@ -59,10 +58,6 @@ TestBuildStepMixin
     .. py:method:: setup_test_build_step()
 
         Call this function in the ``setUp()`` method of the test case to setup step testing machinery.
-
-    .. py:method:: tear_down_test_build_step()
-
-        Call this function in the ``tearDown()`` of the test case to destroy step testing machinery.
 
     .. py:method:: setup_build(worker_env=None, build_files=None)
 
