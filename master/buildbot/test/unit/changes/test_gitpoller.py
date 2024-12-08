@@ -63,18 +63,13 @@ class TestGitPollerBase(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
         self.poller = yield self.attachChangeSource(self.createPoller())
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
 
     @async_to_deferred
     async def set_last_rev(self, state: dict[str, str]) -> None:
@@ -2421,15 +2416,10 @@ class TestGitPollerConstructor(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def test_deprecatedFetchRefspec(self):
@@ -2582,6 +2572,7 @@ class TestGitPollerBareRepository(
 
         yield self.setUpChangeSource(want_real_reactor=True)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
         self.poller_workdir = tempfile.mkdtemp(
             prefix="TestGitPollerBareRepository_",
@@ -2598,11 +2589,7 @@ class TestGitPollerBareRepository(
             )
         )
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
-
         def _delete_repository(repo_path: Path):
             # on Win, git will mark objects as read-only
             git_objects_path = repo_path / "objects"

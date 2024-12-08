@@ -49,9 +49,6 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Buildset(id=14, reason='no sourcestamps'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         buildset = yield self.callGet(('buildsets', 13))
@@ -88,9 +85,6 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=14, sourcestampid=92),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get(self):
         buildsets = yield self.callGet(('buildsets',))
@@ -126,7 +120,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.Buildset(self.master)
         yield self.master.db.insert_test_data([
@@ -144,10 +138,6 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             fakedb.Buildset(id=199, complete=False),
             fakedb.BuildRequest(id=999, buildsetid=199, builderid=42),
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     SS234_DATA = {
         'branch': 'br',

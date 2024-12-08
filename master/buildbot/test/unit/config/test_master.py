@@ -113,9 +113,6 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
 
         return self.setUpDirs('basedir')
 
-    def tearDown(self):
-        return self.tearDownDirs()
-
     def install_config_file(self, config_file, other_files=None):
         if other_files is None:
             other_files = {}
@@ -206,9 +203,6 @@ class MasterConfigTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.basedir = os.path.abspath('basedir')
         self.filename = os.path.join(self.basedir, 'test.cfg')
         return self.setUpDirs('basedir')
-
-    def tearDown(self):
-        return self.tearDownDirs()
 
     # utils
 

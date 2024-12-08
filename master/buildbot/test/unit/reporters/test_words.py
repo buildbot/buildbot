@@ -48,7 +48,7 @@ class ContactMixin(TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self) -> Generator[Any, None, None]:
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.patch(reactor, 'seconds', self.reactor.seconds)
         self.patch(reactor, 'stop', self.reactor.stop)
@@ -93,11 +93,7 @@ class ContactMixin(TestReactorMixin):
         self.contact = self.contactClass(user=self.USER, channel=self.bot.getChannel(self.CHANNEL))
         yield self.contact.channel.setServiceParent(self.master)
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tear_down_test_reactor()
+        self.addCleanup(self.master.stopService)
 
     def patch_send(self):
         self.sent = []

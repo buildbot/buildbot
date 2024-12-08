@@ -38,7 +38,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def setUpEndpoint(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.db = self.master.db
         self.mq = self.master.mq
@@ -67,10 +67,6 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
             for pp in pathPatterns
             if pp is not None
         ]
-
-    @defer.inlineCallbacks
-    def tearDownEndpoint(self):
-        yield self.tear_down_test_reactor()
 
     def validateData(self, object):
         validation.verifyData(self, self.rtype.entityType, {}, object)

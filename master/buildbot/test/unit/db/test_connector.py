@@ -33,7 +33,7 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
 
         self.master = yield fakemaster.make_master(
             self, wantDb=True, auto_upgrade=False, check_version=False
@@ -44,11 +44,12 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         yield self.db.set_master(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.db.pool is not None:
-            yield self.db.pool.stop()
-        yield self.tear_down_test_reactor()
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.db.pool is not None:
+                yield self.db.pool.stop()
+
+        self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
     def startService(self, check_version=False):

@@ -187,9 +187,6 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.T
         self.home = os.path.abspath('home')
         self.setUpStdoutAssertions()
 
-    def tearDown(self):
-        self.tearDownDirs()
-
     def do_loadOptionsFile(self, _here, exp):
         # only patch these os.path functions briefly, to
         # avoid breaking other parts of the test system
@@ -282,9 +279,6 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCa
     def setUp(self):
         self.setUpDirs('test')
         self.setUpStdoutAssertions()
-
-    def tearDown(self):
-        self.tearDownDirs()
 
     def activeBasedir(self, extra_lines=()):
         with open(os.path.join('test', 'buildbot.tac'), "w", encoding='utf-8') as f:

@@ -47,12 +47,8 @@ class TestUsersBase(unittest.TestCase):
 
 class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase, ManualUsersMixin):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpManualUsers()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def call_perspective_commandline(self, *args):
         persp = manual.CommandlineUserManagerPerspective(self.master)
@@ -250,16 +246,12 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUsersMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpManualUsers()
         self.manual_component = manual.CommandlineUserManager(
             username="user", passwd="userpw", port="9990"
         )
         yield self.manual_component.setServiceParent(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_no_userpass(self):

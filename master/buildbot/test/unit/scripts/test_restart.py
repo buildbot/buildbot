@@ -37,9 +37,6 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             f.write("Application('buildmaster')")
         self.setUpStdoutAssertions()
 
-    def tearDown(self):
-        self.tearDownDirs()
-
     # tests
 
     def test_restart_not_basedir(self):

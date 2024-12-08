@@ -41,10 +41,7 @@ class Basic(unittest.TestCase):
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
         self.pool.start()
         yield self.pool.do(thd_clean_database)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.pool.stop()
+        self.addCleanup(self.pool.stop)
 
     @defer.inlineCallbacks
     def test_do(self):
@@ -163,10 +160,9 @@ class Stress(unittest.TestCase):
         self.engine.optimal_thread_pool_size = 2
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
         self.pool.start()
+        self.addCleanup(self.pool.stop)
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        yield self.pool.stop()
         os.unlink("test.sqlite")
 
     @defer.inlineCallbacks

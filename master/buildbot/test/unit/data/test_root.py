@@ -32,9 +32,6 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             {'name': 'abc'},
         ]
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get(self):
         rootlinks = yield self.callGet(('',))
@@ -61,9 +58,6 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.master.data.disownServiceParent()
         self.master.data = connector.DataConnector()
         yield self.master.data.setServiceParent(self.master)
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

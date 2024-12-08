@@ -56,9 +56,6 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         build = yield self.callGet(('builds', 14))
@@ -180,9 +177,6 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 buildid=13, name='reason', value='"force build"', source="Force Build Form"
             ),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get_all(self):
@@ -343,7 +337,7 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = builds.Build(self.master)
 
@@ -358,10 +352,6 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
                 id=99, builderid=10, masterid=824, workerid=20, buildrequestid=499, number=42
             ),
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_test_callthrough(

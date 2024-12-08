@@ -42,11 +42,11 @@ class TestPBManager(unittest.TestCase):
     def setUp(self):
         self.pbm = PBManager()
         yield self.pbm.setServiceParent(FakeMaster())
-        self.pbm.startService()
-        self.connections = []
 
-    def tearDown(self):
-        return self.pbm.stopService()
+        self.pbm.startService()
+        self.addCleanup(self.pbm.stopService)
+
+        self.connections = []
 
     def perspectiveFactory(self, mind, username):
         persp = mock.Mock()

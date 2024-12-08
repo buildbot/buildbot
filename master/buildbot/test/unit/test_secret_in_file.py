@@ -42,10 +42,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         self.filepath = self.createFileTemp(self.tmp_dir, "tempfile.txt", text="key value\n")
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.srvfile.stopService()
+        self.addCleanup(self.srvfile.stopService)
 
     def testCheckConfigSecretInAFileService(self):
         self.assertEqual(self.srvfile.name, "SecretInAFile")

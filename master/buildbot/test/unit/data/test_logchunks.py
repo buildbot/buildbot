@@ -95,9 +95,6 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
             ]
         )
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def do_test_chunks(self, path, logid, expLines):
         # get the whole thing in one go

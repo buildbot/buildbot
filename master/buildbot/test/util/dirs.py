@@ -31,12 +31,13 @@ class DirsMixin:
             if os.path.exists(dir):
                 shutil.rmtree(dir)
             os.makedirs(dir)
-        # return a deferred to make chaining easier
-        return defer.succeed(None)
 
-    def tearDownDirs(self):
-        for dir in self._dirs:
-            if os.path.exists(dir):
-                shutil.rmtree(dir)
+        def cleanup():
+            for dir in self._dirs:
+                if os.path.exists(dir):
+                    shutil.rmtree(dir)
+
+        self.addCleanup(cleanup)
+
         # return a deferred to make chaining easier
         return defer.succeed(None)

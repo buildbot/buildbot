@@ -15,7 +15,6 @@
 
 from unittest import mock
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakeprotocol
@@ -26,24 +25,16 @@ from buildbot.worker.protocols import base
 
 class TestFakeConnection(protocols.ConnectionInterfaceTest, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.worker = mock.Mock()
         self.conn = fakeprotocol.FakeConnection(self.worker)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
 
 class TestConnection(protocols.ConnectionInterfaceTest, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.worker = mock.Mock()
         self.conn = base.Connection(self.worker.workername)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_notify(self):
         cb = mock.Mock()

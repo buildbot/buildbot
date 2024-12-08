@@ -55,9 +55,6 @@ class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing_result_set(self):
         result = yield self.callGet(('test_result_sets', 13))
@@ -123,9 +120,6 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_result_sets_all(self):
         results = yield self.callGet(('test_result_sets',))
@@ -165,7 +159,7 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         yield self.master.db.insert_test_data([
             fakedb.Master(id=1),
@@ -193,10 +187,6 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             ),
         ])
         self.rtype = test_result_sets.TestResultSet(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_add_test_result_set(self):
         @self.assertArgSpecMatches(

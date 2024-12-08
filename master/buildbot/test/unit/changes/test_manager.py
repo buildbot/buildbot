@@ -28,17 +28,15 @@ from buildbot.test.reactor import TestReactorMixin
 class TestChangeManager(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
         self.cm = manager.ChangeManager()
+
         self.master.startService()
+        self.addCleanup(self.master.stopService)
+
         yield self.cm.setServiceParent(self.master)
         self.new_config = mock.Mock()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tear_down_test_reactor()
 
     def make_sources(self, n, klass=base.ChangeSource, **kwargs):
         for i in range(n):

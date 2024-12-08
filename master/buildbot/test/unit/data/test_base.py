@@ -26,11 +26,7 @@ from buildbot.test.util import endpoint
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        self.setup_test_reactor()
 
     def makeResourceTypeSubclass(self, **attributes):
         attributes.setdefault('name', 'thing')
@@ -105,9 +101,6 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     def test_sets_master(self):
         self.assertIdentical(self.master, self.ep.master)

@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.buildstep import BuildStep
@@ -33,13 +32,8 @@ class TestBuildStepNameIsRenderable(
     TestBuildStepMixin, unittest.TestCase, TestReactorMixin, configmixin.ConfigErrorsMixin
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_name_is_renderable(self):
         step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))

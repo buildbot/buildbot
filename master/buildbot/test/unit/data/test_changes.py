@@ -51,9 +51,6 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         change = yield self.callGet(('changes', '13'))
@@ -105,9 +102,6 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildRequest(id=1, builderid=1, buildsetid=8822),
             fakedb.Build(buildrequestid=1, masterid=1, workerid=1, builderid=1, number=1),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):
@@ -201,17 +195,13 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changes.Change(self.master)
 
         yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=99),  # force minimum ID in tests below
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(

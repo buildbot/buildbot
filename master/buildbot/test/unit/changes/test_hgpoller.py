@@ -38,7 +38,7 @@ class TestHgPollerBase(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
 
@@ -61,12 +61,7 @@ class TestHgPollerBase(
         self.poller._isRepositoryReady = _isRepositoryReady
 
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def check_current_rev(self, wished, branch='default'):
@@ -271,9 +266,6 @@ class TestHgPollerBookmarks(TestHgPollerBase):
 
 
 class TestHgPoller(TestHgPollerBase):
-    def tearDown(self):
-        return self.tearDownChangeSource()
-
     def gpoFullcommandPattern(self, commandName, *expected_args):
         """Match if the command is commandName and arg list start as expected.
 

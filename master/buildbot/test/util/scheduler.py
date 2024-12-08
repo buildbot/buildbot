@@ -46,9 +46,6 @@ class SchedulerMixin(interfaces.InterfaceTests):
     def setUpScheduler(self):
         self.master = yield fakemaster.make_master(self, wantDb=True, wantMq=True, wantData=True)
 
-    def tearDownScheduler(self):
-        pass
-
     @defer.inlineCallbacks
     def attachScheduler(
         self, scheduler, objectid, schedulerid, overrideBuildsetMethods=False, createBuilderDB=False

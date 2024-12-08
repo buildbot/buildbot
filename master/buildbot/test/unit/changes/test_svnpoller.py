@@ -259,14 +259,9 @@ class TestSVNPoller(
     MasterRunProcessMixin, changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         return self.setUpChangeSource()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def attachSVNPoller(self, *args, **kwargs):

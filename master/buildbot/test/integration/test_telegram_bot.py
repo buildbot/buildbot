@@ -154,13 +154,14 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
 
         tb.bot.send_message = send_message
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownDirs()
-        if self.master:
-            yield self.master.www.stopService()
-            yield self.master.mq.stopService()
-            yield self.master.test_shutdown()
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.master:
+                yield self.master.www.stopService()
+                yield self.master.mq.stopService()
+                yield self.master.test_shutdown()
+
+        self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
     def testWebhook(self):

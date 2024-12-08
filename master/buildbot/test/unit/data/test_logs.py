@@ -48,9 +48,6 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Log(id=61, stepid=50, name='errors', slug='errors', type='t'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         log = yield self.callGet(('logs', 60))
@@ -138,9 +135,6 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Step(id=52, buildid=13, number=11, name='nothing'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_stepid(self):
         logs = yield self.callGet(('steps', 50, 'logs'))
@@ -200,13 +194,9 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Log(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = logs.Log(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_test_callthrough(

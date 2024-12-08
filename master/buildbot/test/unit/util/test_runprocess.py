@@ -37,14 +37,10 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
     FAKE_PID = 1234
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpLogging()
         self.process = None
         self.reactor.spawnProcess = self.fake_spawn_process
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def fake_spawn_process(self, pp, command, args, env, workdir, usePTY=False):
         self.assertIsNone(self.process)

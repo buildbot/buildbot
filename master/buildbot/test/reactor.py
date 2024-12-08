@@ -23,6 +23,7 @@ from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.util import twisted
 from buildbot.util.eventual import _setReactor
+from buildbot.warnings import warn_deprecated
 
 
 class TestReactorMixin:
@@ -32,6 +33,9 @@ class TestReactorMixin:
     """
 
     def setup_test_reactor(self, use_asyncio=False, auto_tear_down=True):
+        if not auto_tear_down:
+            warn_deprecated('4.2.0', 'auto_tear_down=False is deprecated')
+
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.patch(twisted, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()

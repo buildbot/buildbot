@@ -49,7 +49,7 @@ class TestFilterSet(unittest.TestCase):
 
 class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         filter = _OldBuildFilterSet()
 
         ss_filter = SourceStampFilter(
@@ -60,10 +60,6 @@ class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
         self.tracker = _OldBuildrequestTracker(
             self.reactor, filter, lambda ss: ss['branch'], self.on_cancel
         )
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def on_cancel(self, brid):
         self.cancellations.append(brid)
@@ -388,7 +384,7 @@ class TestOldBuildCancellerUtils(ConfigErrorsMixin, unittest.TestCase):
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 
@@ -396,11 +392,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self._cancelled_build_ids = []
 
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tear_down_test_reactor()
+        self.addCleanup(self.master.stopService)
 
     def create_ss_dict(self, project, codebase, repository, branch):
         # Changes have the same structure for the attributes that we're using, so we reuse this

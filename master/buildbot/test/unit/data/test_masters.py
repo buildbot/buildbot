@@ -49,9 +49,6 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=24, name='bldr2'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         master = yield self.callGet(('masters', 14))
@@ -100,9 +97,6 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuilderMaster(masterid=13, builderid=22),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get(self):
         masters = yield self.callGet(('masters',))
@@ -131,13 +125,9 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = masters.Master(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_masterActive(self):
         @self.assertArgSpecMatches(

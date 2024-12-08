@@ -41,9 +41,6 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.SourceStamp(id=14, patchid=99, branch='poplar'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         sourcestamp = yield self.callGet(('sourcestamps', 13))
@@ -92,9 +89,6 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(sourcestampid=13, buildsetid=30),
             fakedb.BuildsetSourceStamp(sourcestampid=14, buildsetid=30),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     @defer.inlineCallbacks
     def test_get(self):

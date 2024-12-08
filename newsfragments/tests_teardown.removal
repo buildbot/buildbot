@@ -1,0 +1,7 @@
+The following test tear down functions have been deprecated:
+
+ - ``TestBuildStepMixin.tear_down_test_build_step()``
+ - ``TestReactorMixin.tear_down_test_reactor()``
+
+The tear down is now run automatically. Any additional test tear down should be run using
+``twisted.trial.TestCase.addCleanup`` to better control tear down ordering.

@@ -47,7 +47,7 @@ def nth_worker(n):
 class TestBRDBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
         self.builders = {}
@@ -65,6 +65,13 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
         self.brd.parent = self.botmaster
         self.brd.startService()
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.brd.running:
+                yield self.brd.stopService()
+
+        self.addCleanup(cleanup)
+
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
@@ -73,12 +80,6 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(sourcestampid=21, buildsetid=11),
         ]
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.brd.running:
-            yield self.brd.stopService()
-        yield self.tear_down_test_reactor()
 
     def make_workers(self, worker_count):
         rows = self.base_rows[:]
