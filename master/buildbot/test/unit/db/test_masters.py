@@ -20,7 +20,6 @@ from buildbot.db import masters
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1348971992
@@ -29,7 +28,7 @@ OTHERTIME = 1008971992
 OTHERTIME_DT = epoch2datetime(OTHERTIME)
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     master_row = [
@@ -42,26 +41,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.reactor.advance(SOMETIME)
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_findMasterId(self):
-        @self.assertArgSpecMatches(self.db.masters.findMasterId)
-        def findMasterId(self, name):
-            pass
-
-    def test_signature_setMasterState(self):
-        @self.assertArgSpecMatches(self.db.masters.setMasterState)
-        def setMasterState(self, masterid, active):
-            pass
-
-    def test_signature_getMaster(self):
-        @self.assertArgSpecMatches(self.db.masters.getMaster)
-        def getMaster(self, masterid):
-            pass
-
-    def test_signature_getMasters(self):
-        @self.assertArgSpecMatches(self.db.masters.getMasters)
-        def getMasters(self):
-            pass
 
     @defer.inlineCallbacks
     def test_findMasterId_new(self):

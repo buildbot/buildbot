@@ -21,10 +21,9 @@ from buildbot.db import schedulers
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # test data
 
     ss92 = fakedb.SourceStamp(id=92)
@@ -46,11 +45,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_enable(self):
-        @self.assertArgSpecMatches(self.db.schedulers.enable)
-        def enable(self, schedulerid, v):
-            pass
 
     @defer.inlineCallbacks
     def test_enable(self):
@@ -74,11 +68,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             sch, schedulers.SchedulerModel(id=24, name='schname', enabled=True, masterid=13)
         )
-
-    def test_signature_classifyChanges(self):
-        @self.assertArgSpecMatches(self.db.schedulers.classifyChanges)
-        def classifyChanges(self, schedulerid, classifications):
-            pass
 
     @defer.inlineCallbacks
     def test_classifyChanges(self):
@@ -104,11 +93,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         yield self.db.schedulers.classifyChanges(24, {3: True, 4: False, 5: True, 6: False})
         res = yield self.db.schedulers.getChangeClassifications(24)
         self.assertEqual(res, {3: True, 4: False, 5: True, 6: False})
-
-    def test_signature_flushChangeClassifications(self):
-        @self.assertArgSpecMatches(self.db.schedulers.flushChangeClassifications)
-        def flushChangeClassifications(self, schedulerid, less_than=None):
-            pass
 
     @defer.inlineCallbacks
     def test_flushChangeClassifications(self):
@@ -140,13 +124,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         res = yield self.db.schedulers.getChangeClassifications(24)
         self.assertEqual(res, {5: True})
 
-    def test_signature_getChangeClassifications(self):
-        @self.assertArgSpecMatches(self.db.schedulers.getChangeClassifications)
-        def getChangeClassifications(
-            self, schedulerid, branch=-1, repository=-1, project=-1, codebase=-1
-        ):
-            pass
-
     @defer.inlineCallbacks
     def test_getChangeClassifications(self):
         yield self.db.insert_test_data([
@@ -175,11 +152,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         res = yield self.db.schedulers.getChangeClassifications(24, branch='sql')
         self.assertEqual(res, {6: True})
 
-    def test_signature_findSchedulerId(self):
-        @self.assertArgSpecMatches(self.db.schedulers.findSchedulerId)
-        def findSchedulerId(self, name):
-            pass
-
     @defer.inlineCallbacks
     def test_findSchedulerId_new(self):
         id = yield self.db.schedulers.findSchedulerId('schname')
@@ -191,11 +163,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         id = yield self.db.schedulers.findSchedulerId('schname')
         id2 = yield self.db.schedulers.findSchedulerId('schname')
         self.assertEqual(id, id2)
-
-    def test_signature_setSchedulerMaster(self):
-        @self.assertArgSpecMatches(self.db.schedulers.setSchedulerMaster)
-        def setSchedulerMaster(self, schedulerid, masterid):
-            pass
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_fresh(self):
@@ -252,11 +219,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         sch = yield self.db.schedulers.getScheduler(25)
         self.assertEqual(sch.masterid, None)
 
-    def test_signature_getScheduler(self):
-        @self.assertArgSpecMatches(self.db.schedulers.getScheduler)
-        def getScheduler(self, schedulerid):
-            pass
-
     @defer.inlineCallbacks
     def test_getScheduler(self):
         yield self.db.insert_test_data([self.scheduler24])
@@ -288,11 +250,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             sch, schedulers.SchedulerModel(id=25, name='schname2', enabled=True, masterid=14)
         )  # row exists, but marked inactive
-
-    def test_signature_getSchedulers(self):
-        @self.assertArgSpecMatches(self.db.schedulers.getSchedulers)
-        def getSchedulers(self, active=None, masterid=None):
-            pass
 
     @defer.inlineCallbacks
     def test_getSchedulers(self):

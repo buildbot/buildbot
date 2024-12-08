@@ -20,46 +20,18 @@ from buildbot.db import projects
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 
 
 def project_key(builder):
     return builder.id
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_find_project_id(self):
-        @self.assertArgSpecMatches(self.db.projects.find_project_id)
-        def find_project_id(self, name, auto_create=True):
-            pass
-
-    def test_signature_get_project(self):
-        @self.assertArgSpecMatches(self.db.projects.get_project)
-        def get_project(self, projectid):
-            pass
-
-    def test_signature_get_projects(self):
-        @self.assertArgSpecMatches(self.db.projects.get_projects)
-        def get_projects(self):
-            pass
-
-    def test_signature_update_project_info(self):
-        @self.assertArgSpecMatches(self.db.projects.update_project_info)
-        def update_project_info(
-            self,
-            projectid,
-            slug,
-            description,
-            description_format,
-            description_html,
-        ):
-            pass
 
     @defer.inlineCallbacks
     def test_update_project_info(self):

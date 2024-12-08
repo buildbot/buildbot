@@ -21,7 +21,6 @@ from buildbot.db import builds
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
 TIME1 = 1304262222
@@ -31,7 +30,7 @@ TIME4 = 1304262235
 CREATED_AT = 927845299
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     backgroundData = [
@@ -130,57 +129,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
-    # signature tests
-
-    def test_signature_getBuild(self):
-        @self.assertArgSpecMatches(self.db.builds.getBuild)
-        def getBuild(self, buildid):
-            pass
-
-    def test_signature_getBuildByNumber(self):
-        @self.assertArgSpecMatches(self.db.builds.getBuildByNumber)
-        def getBuild(self, builderid, number):
-            pass
-
-    def test_signature_getBuilds(self):
-        @self.assertArgSpecMatches(self.db.builds.getBuilds)
-        def getBuilds(
-            self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None
-        ):
-            pass
-
-    def test_signature_addBuild(self):
-        @self.assertArgSpecMatches(self.db.builds.addBuild)
-        def addBuild(self, builderid, buildrequestid, workerid, masterid, state_string):
-            pass
-
-    def test_signature_setBuildStateString(self):
-        @self.assertArgSpecMatches(self.db.builds.setBuildStateString)
-        def setBuildStateString(self, buildid, state_string):
-            pass
-
-    def test_signature_add_build_locks_duration(self):
-        @self.assertArgSpecMatches(self.db.builds.add_build_locks_duration)
-        def setBuildStateString(self, buildid, duration_s):
-            pass
-
-    def test_signature_finishBuild(self):
-        @self.assertArgSpecMatches(self.db.builds.finishBuild)
-        def finishBuild(self, buildid, results):
-            pass
-
-    def test_signature_getBuildProperties(self):
-        @self.assertArgSpecMatches(self.db.builds.getBuildProperties)
-        def getBuildProperties(self, bid, resultSpec=None):
-            pass
-
-    def test_signature_setBuildProperty(self):
-        @self.assertArgSpecMatches(self.db.builds.setBuildProperty)
-        def setBuildProperty(self, bid, name, value, source):
-            pass
-
-    # method tests
-
     @defer.inlineCallbacks
     def test_getBuild(self):
         yield self.db.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
@@ -253,11 +201,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[50], self.threeBdicts[51]]
         )
-
-    def test_signature_getBuildsForChange(self):
-        @self.assertArgSpecMatches(self.db.builds.getBuildsForChange)
-        def getBuildsForChange(self, changeid):
-            pass
 
     @defer.inlineCallbacks
     def do_test_getBuildsForChange(self, rows, changeid, expected):

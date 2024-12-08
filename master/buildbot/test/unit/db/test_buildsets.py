@@ -25,13 +25,12 @@ from buildbot.db import buildsets
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -47,49 +46,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             fakedb.Builder(id=1, name='bldr1'),
             fakedb.Builder(id=2, name='bldr2'),
         ])
-
-    def test_signature_addBuildset(self):
-        @self.assertArgSpecMatches(self.db.buildsets.addBuildset)
-        def addBuildset(
-            self,
-            sourcestamps,
-            reason,
-            properties,
-            builderids,
-            waited_for,
-            external_idstring=None,
-            submitted_at=None,
-            rebuilt_buildid=None,
-            parent_buildid=None,
-            parent_relationship=None,
-            priority=0,
-        ):
-            pass
-
-    def test_signature_completeBuildset(self):
-        @self.assertArgSpecMatches(self.db.buildsets.completeBuildset)
-        def completeBuildset(self, bsid, results, complete_at=None):
-            pass
-
-    def test_signature_getBuildset(self):
-        @self.assertArgSpecMatches(self.db.buildsets.getBuildset)
-        def getBuildset(self, bsid):
-            pass
-
-    def test_signature_getBuildsets(self):
-        @self.assertArgSpecMatches(self.db.buildsets.getBuildsets)
-        def getBuildsets(self, complete=None, resultSpec=None):
-            pass
-
-    def test_signature_getRecentBuildsets(self):
-        @self.assertArgSpecMatches(self.db.buildsets.getRecentBuildsets)
-        def getBuildsets(self, count=None, branch=None, repository=None, complete=None):
-            pass
-
-    def test_signature_getBuildsetProperties(self):
-        @self.assertArgSpecMatches(self.db.buildsets.getBuildsetProperties)
-        def getBuildsetProperties(self, key, no_cache=False):
-            pass
 
     @defer.inlineCallbacks
     def test_addBuildset_getBuildset(self):

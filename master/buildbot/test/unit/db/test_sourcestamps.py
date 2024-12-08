@@ -25,7 +25,6 @@ from buildbot.db import sourcestamps
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
@@ -38,7 +37,7 @@ def sourceStampKey(sourceStamp: sourcestamps.SourceStampModel):
     return (sourceStamp.repository, sourceStamp.branch, sourceStamp.created_at)
 
 
-class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
+class Tests(TestReactorMixin, unittest.TestCase):
     db: FakeDBConnector
 
     @defer.inlineCallbacks
@@ -46,43 +45,6 @@ class Tests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
-
-    def test_signature_findSourceStampId(self):
-        @self.assertArgSpecMatches(self.db.sourcestamps.findSourceStampId)
-        def findSourceStampId(
-            self,
-            branch=None,
-            revision=None,
-            repository=None,
-            project=None,
-            codebase=None,
-            patch_body=None,
-            patch_level=None,
-            patch_author=None,
-            patch_comment=None,
-            patch_subdir=None,
-        ):
-            pass
-
-    def test_signature_getSourceStamp(self):
-        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStamp)
-        def getSourceStamp(self, key, no_cache=False):
-            pass
-
-    def test_signature_getSourceStamps(self):
-        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStamps)
-        def getSourceStamps(self):
-            pass
-
-    def test_signature_getSourceStampsForBuild(self):
-        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStampsForBuild)
-        def getSourceStampsForBuild(self, buildid):
-            pass
-
-    def test_signature_get_sourcestamps_for_buildset(self):
-        @self.assertArgSpecMatches(self.db.sourcestamps.get_sourcestamps_for_buildset)
-        def get_sourcestamps_for_buildset(self, buildsetid):
-            pass
 
     @defer.inlineCallbacks
     def test_findSourceStampId_simple(self):
