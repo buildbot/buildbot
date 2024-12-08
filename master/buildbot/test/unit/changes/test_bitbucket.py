@@ -306,7 +306,6 @@ class TestBitbucketPullrequestPoller(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     def _fakeGetPage(self, result):

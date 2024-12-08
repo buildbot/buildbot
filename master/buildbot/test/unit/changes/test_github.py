@@ -196,7 +196,6 @@ class TestGitHubPullrequestPoller(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

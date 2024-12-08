@@ -115,7 +115,6 @@ class TestP4Poller(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     def add_p4_describe_result(self, number, result):

@@ -73,7 +73,6 @@ class TestGitPollerBase(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     @async_to_deferred
@@ -2428,7 +2427,6 @@ class TestGitPollerConstructor(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -2601,7 +2599,6 @@ class TestGitPollerBareRepository(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        yield self.tearDownChangeSource()
 
         def _delete_repository(repo_path: Path):
             # on Win, git will mark objects as read-only

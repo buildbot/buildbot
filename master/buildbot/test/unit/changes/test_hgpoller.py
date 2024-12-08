@@ -65,7 +65,6 @@ class TestHgPollerBase(
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.master.stopService()
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -271,9 +270,6 @@ class TestHgPollerBookmarks(TestHgPollerBase):
 
 
 class TestHgPoller(TestHgPollerBase):
-    def tearDown(self):
-        return self.tearDownChangeSource()
-
     def gpoFullcommandPattern(self, commandName, *expected_args):
         """Match if the command is commandName and arg list start as expected.
 

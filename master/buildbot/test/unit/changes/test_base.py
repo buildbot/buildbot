@@ -37,7 +37,6 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -92,7 +91,6 @@ class TestReconfigurablePollingChangeSource(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

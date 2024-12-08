@@ -48,7 +48,6 @@ class TestPBChangeSource(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownChangeSource()
         yield self.tear_down_test_reactor()
 
     def test_registration_no_workerport(self):
