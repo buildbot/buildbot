@@ -4178,7 +4178,7 @@ class TestGitPush(
     stepClass = git.GitPush
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=True)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @parameterized.expand([
@@ -4656,7 +4656,7 @@ class TestGitTag(TestBuildStepMixin, config.ConfigErrorsMixin, TestReactorMixin,
     stepClass = git.GitTag
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=True)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
 
     def test_tag_annotated(self):

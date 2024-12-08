@@ -18,12 +18,8 @@ TestBuildStepMixin
 
             @defer.inlineCallbacks
             def setUp(self):
-                yield self.setup_test_reactor(auto_tear_down=False)
+                yield self.setup_test_reactor()
                 yield self.setup_test_build_step()
-
-            @defer.inlineCallbacks
-            def tearDown(self):
-                yield self.tear_down_test_reactor()
 
             @defer.inlineCallbacks
             def test_run_ok(self):
