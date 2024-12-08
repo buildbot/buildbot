@@ -104,13 +104,6 @@ class TestGerritChangeSource(
         self._got_events = []
         yield self.setUpChangeSource()
 
-        @defer.inlineCallbacks
-        def cleanup():
-            if self.master.running:
-                yield self.stopChangeSource()
-
-        self.addCleanup(cleanup)
-
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.tear_down_test_reactor()
