@@ -230,7 +230,6 @@ It supports four types of data:
 
 These are validated from elsewhere in the codebase with calls to
 
- * ``verifyDbDict(testcase, type, value)``,
  * ``verifyData(testcase, type, options, value)``,
  * ``verifyMessage(testcase, routingKey, message)``, and
  * ``verifyType(testcase, name, value, validator)``,

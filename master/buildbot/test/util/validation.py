@@ -292,7 +292,6 @@ class Selector(Validator):
 # Type definitions
 
 message = {}
-dbdict = {}
 
 # parse and use a ResourceType class's dataFields into a validator
 
@@ -310,13 +309,6 @@ message['masters'].add(
             # last_active is not included
         ),
     ),
-)
-
-dbdict['masterdict'] = DictValidator(
-    id=IntValidator(),
-    name=StringValidator(),
-    active=BooleanValidator(),
-    last_active=DateTimeValidator(),
 )
 
 # sourcestamp
@@ -463,20 +455,6 @@ message['builds'].add(
 )
 
 # Validates DATA API layer
-dbdict['builddict'] = DictValidator(
-    id=IntValidator(),
-    number=IntValidator(),
-    builderid=IntValidator(),
-    buildrequestid=IntValidator(),
-    workerid=IntValidator(),
-    masterid=IntValidator(),
-    started_at=DateTimeValidator(),
-    complete_at=NoneOk(DateTimeValidator()),
-    locks_duration_s=IntValidator(),
-    state_string=StringValidator(),
-    results=NoneOk(IntValidator()),
-    properties=NoneOk(SourcedPropertiesValidator()),
-)
 
 # build data
 
@@ -583,10 +561,6 @@ def verifyMessage(testcase, routingKey, message_):
 
     validator = message[bytes2unicode(routingKey[-3])]
     _verify(testcase, validator, '', (routingKey, (routingKey, message_)))
-
-
-def verifyDbDict(testcase, type, value):
-    _verify(testcase, dbdict[type], type, value)
 
 
 def verifyData(testcase, entityType, options, value):
