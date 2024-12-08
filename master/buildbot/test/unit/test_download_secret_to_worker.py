@@ -17,7 +17,6 @@
 import os
 import stat
 
-from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
@@ -38,15 +37,11 @@ class TestDownloadFileSecretToWorkerCommand(
     TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def testBasic(self):
         self.setup_step(
@@ -81,15 +76,11 @@ class TestDownloadFileSecretToWorkerCommand(
 
 class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def testBasic(self):
         self.setup_build(worker_version={'*': '3.0'})
@@ -122,15 +113,11 @@ class TestRemoveFileSecretToWorkerCommand(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def testBasic(self):
         self.setup_step(

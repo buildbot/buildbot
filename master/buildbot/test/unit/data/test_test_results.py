@@ -95,7 +95,7 @@ class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = test_results.TestResult(self.master)
         yield self.master.db.insert_test_data([
@@ -110,10 +110,6 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
             fakedb.Step(id=131, number=132, name='step132', buildid=30),
             fakedb.TestResultSet(id=13, builderid=88, buildid=30, stepid=131),
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_add_test_results(self):
         @self.assertArgSpecMatches(

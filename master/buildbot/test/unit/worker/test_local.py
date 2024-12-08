@@ -32,14 +32,10 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         self.workers = self.master.workers
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def createWorker(self, name='bot', attached=False, configured=True, **kwargs):
         worker = local.LocalWorker(name, **kwargs)

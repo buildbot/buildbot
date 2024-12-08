@@ -125,12 +125,8 @@ Warning: Unable to extract the base list for
 
 class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_sample(self):
         self.setup_step(python.BuildEPYDoc())
@@ -143,12 +139,8 @@ class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @parameterized.expand([('no_results', True), ('with_results', False)])
     def test_success(self, name, store_results):
@@ -441,12 +433,8 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_success(self):
         self.setup_step(python.PyFlakes())
@@ -528,12 +516,8 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_builddir_required(self):
         with self.assertRaises(config.ConfigErrors):

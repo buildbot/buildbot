@@ -48,13 +48,9 @@ class TestGit(
     stepClass = git.Git
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
         return self.setUpSourceStep()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_mode_full_filters_2_26(self):
         self.setup_step(
@@ -4753,15 +4749,11 @@ class TestGitCommit(
     stepClass = git.GitCommit
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.message_list = ['my commit', '42']
         self.path_list = ['file1.txt', 'file2.txt']
 
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_add_fail(self):
         self.setup_step(

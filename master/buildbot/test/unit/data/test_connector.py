@@ -112,26 +112,18 @@ class Tests(interfaces.InterfaceTests):
 class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.data = self.master.data
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
 
 class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True)
         self.data = connector.DataConnector()
         yield self.data.setServiceParent(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
 
 class DataConnector(TestReactorMixin, unittest.TestCase):
@@ -139,16 +131,12 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
         self.data = connector.DataConnector()
         yield self.data.setServiceParent(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def patchFooPattern(self):
         cls = type('FooEndpoint', (base.Endpoint,), {})

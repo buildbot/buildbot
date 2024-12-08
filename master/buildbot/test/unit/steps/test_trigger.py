@@ -100,12 +100,8 @@ def BRID_TO_BUILD_NUMBER(brid):
 
 class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def setup_step(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):

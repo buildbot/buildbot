@@ -19,7 +19,7 @@ class FakeBuildWithMaster(FakeBuild):
 class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
@@ -27,10 +27,6 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMi
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)
         self.build = FakeBuildWithMaster(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_secret(self):
@@ -48,13 +44,9 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMi
 class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.build = FakeBuildWithMaster(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_secret(self):
@@ -66,7 +58,7 @@ class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, Confi
 class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         fakeStorageService = FakeSecretStorage()
         password = "bar"
@@ -77,10 +69,6 @@ class TestInterpolateSecretsHiddenSecrets(TestReactorMixin, unittest.TestCase):
         self.secretsrv.services = [fakeStorageService]
         yield self.secretsrv.setServiceParent(self.master)
         self.build = FakeBuildWithMaster(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_secret(self):

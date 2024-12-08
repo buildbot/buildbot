@@ -31,12 +31,8 @@ class NightlyBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         return self.attachScheduler(timed.NightlyBase(**kwargs), self.OBJECTID, self.SCHEDULERID)

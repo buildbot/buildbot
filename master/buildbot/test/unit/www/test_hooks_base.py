@@ -39,12 +39,8 @@ def _prepare_request(payload, headers=None):
 class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.changeHook = yield _prepare_base_change_hook(self)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):
@@ -102,7 +98,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
 class TestChangeHookConfiguredWithCustomBase(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
 
         class CustomBase(BaseHookHandler):
             def getChanges(self, request):
@@ -116,10 +112,6 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase, TestReactorMixin
                 return ([chdict], None)
 
         self.changeHook = yield _prepare_base_change_hook(self, custom_class=CustomBase)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):

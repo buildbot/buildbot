@@ -33,7 +33,7 @@ class TestSecretInPass(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self.master = yield fakemaster.make_master(self)
         with mock.patch.object(Path, "is_file", return_value=True):
@@ -42,10 +42,6 @@ class TestSecretInPass(
             yield self.srvpass.setServiceParent(self.master)
             yield self.master.startService()
             self.addCleanup(self.srvpass.stopService)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def create_temp_dir(self, dirname):
         tempdir = FilePath(self.mktemp())

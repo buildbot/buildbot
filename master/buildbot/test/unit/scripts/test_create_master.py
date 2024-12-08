@@ -91,14 +91,10 @@ class TestCreateMasterFunctions(
     unittest.TestCase,
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def assertInTacFile(self, str):
         with open(os.path.join('test', 'buildbot.tac'), encoding='utf-8') as f:

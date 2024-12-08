@@ -66,7 +66,7 @@ class TestPage(Resource):
 
 class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         if txrequests is None:
             raise unittest.SkipTest("Need to install txrequests to test http steps")
 
@@ -85,10 +85,6 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.port = self.listener.getHost().port
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def get_connection_string(self):
         return f"http://127.0.0.1:{self.port}"

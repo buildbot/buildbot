@@ -43,7 +43,7 @@ class myTestedService(service.BuildbotService):
 class Test(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setup_test_reactor(auto_tear_down=False)
+        yield self.setup_test_reactor()
 
         baseurl = 'http://127.0.0.1:8080'
         master = yield fakemaster.make_master(self)
@@ -53,10 +53,6 @@ class Test(unittest.TestCase, TestReactorMixin):
 
         yield self.tested.setServiceParent(master)
         yield master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_root(self):

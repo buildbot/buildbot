@@ -67,15 +67,11 @@ class TestException(Exception):
 
 class TestLibVirtWorker(TestReactorMixin, MasterRunProcessMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self.connections = {}
         self.patch(libvirtworker, "libvirt", libvirtfake)
         self.threadpool = TestServerThreadPool(self)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def libvirt_open(self, uri):
         if uri not in self.connections:

@@ -27,16 +27,12 @@ from buildbot.www.authz import endpointmatchers
 class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/a/b/')
         self.db = self.master.db
         self.matcher = self.makeMatcher()
         self.matcher.setAuthz(self.master.authz)
         yield self.insertData()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def makeMatcher(self):
         raise NotImplementedError()

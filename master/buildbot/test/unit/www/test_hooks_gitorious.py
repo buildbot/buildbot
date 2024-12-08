@@ -64,14 +64,10 @@ gitJsonPayload = b"""
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         dialects = {'gitorious': True}
         master = yield fakeMasterForHooks(self)
         self.changeHook = change_hook.ChangeHookResource(dialects=dialects, master=master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.

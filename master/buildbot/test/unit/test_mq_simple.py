@@ -26,7 +26,7 @@ from buildbot.test.reactor import TestReactorMixin
 class SimpleMQ(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.mq = simple.SimpleMQ()
         self.mq.setServiceParent(self.master)
@@ -38,10 +38,6 @@ class SimpleMQ(TestReactorMixin, unittest.TestCase):
                 yield self.mq.stopService()
 
         self.addCleanup(cleanup)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_forward_data(self):

@@ -211,7 +211,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = steps.Step(self.master)
 
@@ -225,10 +225,6 @@ class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
                 id=10, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
             ),
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_addStep(self):
         @self.assertArgSpecMatches(

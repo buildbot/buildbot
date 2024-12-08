@@ -87,14 +87,10 @@ class TestCleanupDb(
     misc.StdoutAssertionsMixin, dirs.DirsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpDirs('basedir')
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
         self.setUpStdoutAssertions()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def createMasterCfg(self, extraconfig=""):
         write_master_cfg(os.path.join('basedir', 'master.cfg'), 'sqlite://', extraconfig)
@@ -127,7 +123,7 @@ class TestCleanupDbRealDb(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpDirs('basedir')
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
         self.setUpStdoutAssertions()
@@ -135,10 +131,6 @@ class TestCleanupDbRealDb(
         self.master = yield fakemaster.make_master(
             self, wantDb=True, wantRealReactor=True, sqlite_memory=False
         )
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def createMasterCfg(self, db_url, extraconfig=""):
         write_master_cfg(os.path.join('basedir', 'master.cfg'), db_url, extraconfig)

@@ -42,13 +42,9 @@ class AuthResourceMixin:
 class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpAuthResource()
         self.rsrc = auth.AuthRootResource(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_getChild_login(self):
         glr = mock.Mock(name='glr')
@@ -66,15 +62,11 @@ class AuthRootResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, un
 class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.auth = auth.AuthBase()
         self.master = yield self.make_master(url='h:/a/b/')
         self.auth.master = self.master
         self.req = self.make_request(b'/')
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin(self):
@@ -111,14 +103,10 @@ class NoAuth(unittest.TestCase):
 class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         yield self.make_master()
         self.request = self.make_request(b'/')
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin(self):
@@ -155,14 +143,10 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.auth = auth.NoAuth()
         yield self.make_master()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_requestAvatar(self):
         realm = auth.AuthRealm(self.master, self.auth)
@@ -173,7 +157,7 @@ class AuthRealm(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 class TwistedICredAuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
 
     # twisted.web makes it difficult to simulate the authentication process, so
     # this only tests the mechanics of the getLoginResource method.
@@ -208,11 +192,7 @@ class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             return us == 'fellow' and ps == 'correct'
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_callable(self):
@@ -228,12 +208,8 @@ class CustomAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class LoginResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpAuthResource()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):
@@ -251,13 +227,9 @@ class PreAuthenticatedLoginResource(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpAuthResource()
         self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):
@@ -280,13 +252,9 @@ class PreAuthenticatedLoginResource(
 class LogoutResource(TestReactorMixin, www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpAuthResource()
         self.rsrc = auth.LogoutResource(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):

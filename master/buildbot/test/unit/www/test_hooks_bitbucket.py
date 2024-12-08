@@ -139,15 +139,11 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase, TestReactor
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         master = yield fakeMasterForHooks(self)
         self.change_hook = change_hook.ChangeHookResource(
             dialects={'bitbucket': True}, master=master
         )
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def testGitWithChange(self):

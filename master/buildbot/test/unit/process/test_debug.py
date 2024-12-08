@@ -32,13 +32,9 @@ class FakeManhole(service.AsyncService):
 
 class TestDebugServices(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = mock.Mock(name='master')
         self.config = MasterConfig()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_reconfigService_manhole(self):

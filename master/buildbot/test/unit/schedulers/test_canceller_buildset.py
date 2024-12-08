@@ -28,7 +28,7 @@ from buildbot.util.ssfilter import SourceStampFilter
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 
@@ -37,10 +37,6 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def insert_test_data(self):

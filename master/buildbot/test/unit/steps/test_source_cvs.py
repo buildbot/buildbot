@@ -15,7 +15,6 @@
 
 import time
 
-from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -38,12 +37,8 @@ from buildbot.test.util import sourcesteps
 
 class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setUpSourceStep()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def setup_step(self, step, *args, **kwargs):
         super().setup_step(step, *args, **kwargs)

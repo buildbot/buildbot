@@ -176,17 +176,13 @@ async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=Fals
 
 class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
 
         def cleanup():
             self.assertFalse(self.master.running, "master is still running!")
 
         self.addCleanup(cleanup)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict):

@@ -82,11 +82,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
     master = None
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):

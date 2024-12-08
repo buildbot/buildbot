@@ -63,17 +63,13 @@ class TestGitPollerBase(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
         self.poller = yield self.attachChangeSource(self.createPoller())
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @async_to_deferred
     async def set_last_rev(self, state: dict[str, str]) -> None:
@@ -2420,14 +2416,10 @@ class TestGitPollerConstructor(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_deprecatedFetchRefspec(self):

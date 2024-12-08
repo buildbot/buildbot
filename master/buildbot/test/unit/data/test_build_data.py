@@ -323,7 +323,7 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = build_data.BuildData(self.master)
         yield self.master.db.insert_test_data([
@@ -334,10 +334,6 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             fakedb.Master(id=88),
             fakedb.Build(id=2, buildrequestid=41, masterid=88, builderid=88, workerid=47),
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_set_build_data(self):
         @self.assertArgSpecMatches(self.master.data.updates.setBuildData, self.rtype.setBuildData)

@@ -85,13 +85,9 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=False, wantDb=True, wantData=True)
         self.rtype = properties.Properties(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_test_callthrough(

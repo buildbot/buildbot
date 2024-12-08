@@ -195,17 +195,13 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changes.Change(self.master)
 
         yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=99),  # force minimum ID in tests below
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(
