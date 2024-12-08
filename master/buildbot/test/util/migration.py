@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
     @defer.inlineCallbacks
     def setUpMigrateTest(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 
@@ -52,10 +52,6 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
             self, wantDb=True, auto_upgrade=False, check_version=False
         )
         self.db = self.master.db
-
-    @defer.inlineCallbacks
-    def tearDownMigrateTest(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_test_migration(self, base_revision, target_revision, setup_thd_cb, verify_thd_cb):
