@@ -102,6 +102,14 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         yield self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self.basedir, self, auto_upgrade=True)
         yield self.db.set_master(self.master)
+
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.db.pool is not None:
+                yield self.db.pool.stop()
+
+        self.addCleanup(cleanup)
+
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
         yield self.mq.setServiceParent(self.master)
         self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
@@ -109,8 +117,6 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
 
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.db.pool is not None:
-            yield self.db.pool.stop()
         yield self.tear_down_test_reactor()
 
     # tests

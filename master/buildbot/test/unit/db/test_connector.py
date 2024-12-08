@@ -44,10 +44,15 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         yield self.db.set_master(self.master)
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.db.pool is not None:
+                yield self.db.pool.stop()
+
+        self.addCleanup(cleanup)
+
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.db.pool is not None:
-            yield self.db.pool.stop()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
