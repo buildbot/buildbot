@@ -107,7 +107,6 @@ class BaseBasicScheduler(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -385,7 +384,6 @@ class SingleBranchScheduler(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
@@ -629,7 +627,6 @@ class AnyBranchScheduler(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     def test_constructor_branch_forbidden(self):

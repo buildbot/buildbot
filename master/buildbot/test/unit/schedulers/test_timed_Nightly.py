@@ -124,7 +124,6 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     def assertConsumingChanges(self, **kwargs):

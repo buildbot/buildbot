@@ -47,7 +47,6 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

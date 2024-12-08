@@ -42,7 +42,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks

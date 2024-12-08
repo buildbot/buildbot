@@ -32,7 +32,6 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     class Subclass(timed.Timed):

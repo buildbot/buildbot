@@ -53,7 +53,6 @@ class NightlyTriggerable(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         yield self.tear_down_test_reactor()
 
     # utilities
