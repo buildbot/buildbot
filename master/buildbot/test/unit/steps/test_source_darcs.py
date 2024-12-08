@@ -39,7 +39,6 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownSourceStep()
         yield self.tear_down_test_reactor()
 
     def test_no_empty_step_config(self):

@@ -42,7 +42,6 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownSourceStep()
         yield self.tear_down_test_reactor()
 
     def setup_step(self, step, args=None, patch=None, **kwargs):

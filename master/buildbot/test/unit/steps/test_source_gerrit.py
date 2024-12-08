@@ -35,7 +35,6 @@ class TestGerrit(
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.tearDownSourceStep()
         yield self.tear_down_test_reactor()
 
     def test_mode_full_clean(self):
