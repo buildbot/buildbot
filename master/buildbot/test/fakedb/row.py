@@ -73,36 +73,6 @@ class Row:
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
-    def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return False
-        return self.values == other.values
-
-    def __ne__(self, other):
-        if self.__class__ != other.__class__:
-            return True
-        return self.values != other.values
-
-    def __lt__(self, other):
-        if self.__class__ != other.__class__:
-            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
-        return self.values < other.values
-
-    def __le__(self, other):
-        if self.__class__ != other.__class__:
-            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
-        return self.values <= other.values
-
-    def __gt__(self, other):
-        if self.__class__ != other.__class__:
-            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
-        return self.values > other.values
-
-    def __ge__(self, other):
-        if self.__class__ != other.__class__:
-            raise TypeError(f"Cannot compare {self.__class__} and {other.__class__}")
-        return self.values >= other.values
-
     def __repr__(self):
         return f'{self.__class__.__name__}(**{self.values!r})'
 
