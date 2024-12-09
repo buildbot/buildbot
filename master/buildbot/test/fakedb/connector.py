@@ -82,7 +82,6 @@ class FakeDBConnector(DBConnector):
     def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True, auto_clean=True):
         super().__init__(basedir)
         self.testcase = testcase
-        self.checkForeignKeys = False
         self.auto_upgrade = auto_upgrade
         self.check_version = check_version
         self.auto_clean = auto_clean
@@ -910,9 +909,5 @@ class FakeDBConnector(DBConnector):
             self.testcase.assertEqual(remaining, [])
 
             conn.commit()
-
-            for row in rows:
-                if self.checkForeignKeys:
-                    row.checkForeignKeys(self, self.testcase)
 
         yield self.pool.do(thd_insert_rows)

@@ -22,7 +22,6 @@ class TestResultSet(Row):
     table = 'test_result_sets'
 
     id_column = 'id'
-    foreignKeys = ('builderid', 'buildid', 'stepid')
     required_columns = ('builderid', 'buildid', 'stepid', 'category', 'value_unit', 'complete')
 
     def __init__(

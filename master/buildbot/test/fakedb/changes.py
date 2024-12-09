@@ -63,7 +63,6 @@ class Change(Row):
 class ChangeFile(Row):
     table = "change_files"
 
-    foreignKeys = ('changeid',)
     required_columns = ('changeid',)
 
     def __init__(self, changeid=None, filename=None):
@@ -73,7 +72,6 @@ class ChangeFile(Row):
 class ChangeProperty(Row):
     table = "change_properties"
 
-    foreignKeys = ('changeid',)
     required_columns = ('changeid',)
 
     def __init__(self, changeid=None, property_name=None, property_value=None):
@@ -85,7 +83,6 @@ class ChangeProperty(Row):
 class ChangeUser(Row):
     table = "change_users"
 
-    foreignKeys = ('changeid',)
     required_columns = ('changeid',)
 
     def __init__(self, changeid=None, uid=None):

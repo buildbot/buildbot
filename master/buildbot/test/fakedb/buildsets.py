@@ -20,7 +20,6 @@ from buildbot.test.fakedb.row import Row
 
 class Buildset(Row):
     table = "buildsets"
-    foreignKeys = ('rebuilt_buildid',)
 
     id_column = 'id'
 
@@ -54,7 +53,6 @@ class Buildset(Row):
 class BuildsetProperty(Row):
     table = "buildset_properties"
 
-    foreignKeys = ('buildsetid',)
     required_columns = ('buildsetid',)
 
     def __init__(self, buildsetid=None, property_name='prop', property_value='[22, "fakedb"]'):
@@ -66,7 +64,6 @@ class BuildsetProperty(Row):
 class BuildsetSourceStamp(Row):
     table = "buildset_sourcestamps"
 
-    foreignKeys = ('buildsetid', 'sourcestampid')
     required_columns = (
         'buildsetid',
         'sourcestampid',

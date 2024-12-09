@@ -60,7 +60,6 @@ class BuilderMaster(Row):
 class BuildersTags(Row):
     table = "builders_tags"
 
-    foreignKeys = ('builderid', 'tagid')
     required_columns = (
         'builderid',
         'tagid',

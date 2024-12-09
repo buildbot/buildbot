@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from twisted.internet import defer
-
 from buildbot.util import unicode2bytes
 from buildbot.util.sautils import hash_columns
 
@@ -49,7 +47,6 @@ class Row:
     lists: Sequence[str] = ()
     dicts: Sequence[str] = ()
     hashedColumns: Sequence[tuple[str, Sequence[str]]] = ()
-    foreignKeys: Sequence[str] = []
     # Columns that content is represented as sa.Binary-like type in DB model.
     # They value is bytestring (in contrast to text-like columns, which are
     # unicode).
@@ -130,32 +127,3 @@ class Row:
         id = Row._next_id if Row._next_id is not None else 1
         Row._next_id = id + 1
         return id
-
-    @defer.inlineCallbacks
-    def checkForeignKeys(self, db, t):
-        accessors = {
-            "buildsetid": db.buildsets.getBuildset,
-            "workerid": db.workers.getWorker,
-            "builderid": db.builders.getBuilder,
-            "buildid": db.builds.getBuild,
-            "changesourceid": db.changesources.getChangeSource,
-            "changeid": db.changes.getChange,
-            "buildrequestid": db.buildrequests.getBuildRequest,
-            "sourcestampid": db.sourcestamps.getSourceStamp,
-            "schedulerid": db.schedulers.getScheduler,
-            "brid": db.buildrequests.getBuildRequest,
-            "stepid": db.steps.getStep,
-            "masterid": db.masters.getMaster,
-            "rebuilt_buildid": db.builds.getBuild,
-        }
-        for foreign_key in self.foreignKeys:
-            if foreign_key in accessors:
-                key = getattr(self, foreign_key)
-                if key is not None:
-                    val = yield accessors[foreign_key](key)
-                    t.assertTrue(
-                        val is not None,
-                        f"in {self!r} foreign key {foreign_key}:{key!r} does not exit",
-                    )
-            else:
-                raise ValueError("warning, unsupported foreign key", foreign_key, self.table)

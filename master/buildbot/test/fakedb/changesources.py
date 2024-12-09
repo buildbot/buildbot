@@ -30,7 +30,6 @@ class ChangeSource(Row):
 class ChangeSourceMaster(Row):
     table = "changesource_masters"
 
-    foreignKeys = ('changesourceid', 'masterid')
     required_columns = ('changesourceid', 'masterid')
 
     def __init__(self, changesourceid=None, masterid=None):

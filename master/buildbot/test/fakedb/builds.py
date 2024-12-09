@@ -22,7 +22,6 @@ class Build(Row):
     table = "builds"
 
     id_column = 'id'
-    foreignKeys = ('buildrequestid', 'masterid', 'workerid', 'builderid')
     required_columns = ('buildrequestid', 'masterid', 'workerid')
 
     def __init__(
@@ -58,7 +57,6 @@ class Build(Row):
 class BuildProperty(Row):
     table = "build_properties"
 
-    foreignKeys = ('buildid',)
     required_columns = ('buildid',)
 
     def __init__(self, buildid=None, name='prop', value=42, source='fakedb'):

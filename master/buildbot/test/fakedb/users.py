@@ -32,7 +32,6 @@ class User(Row):
 class UserInfo(Row):
     table = "users_info"
 
-    foreignKeys = ('uid',)
     required_columns = ('uid',)
 
     def __init__(self, uid=None, attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'):

@@ -35,7 +35,6 @@ class SchedulerMaster(Row):
         "masterid": None,
     }
 
-    foreignKeys = ('schedulerid', 'masterid')
     required_columns = ('schedulerid', 'masterid')
 
     def __init__(self, schedulerid=None, masterid=None):
@@ -51,7 +50,6 @@ class SchedulerChange(Row):
         "important": 1,
     }
 
-    foreignKeys = ('schedulerid', 'changeid')
     required_columns = ('schedulerid', 'changeid')
 
     def __init__(self, schedulerid=None, changeid=None, important=1):
