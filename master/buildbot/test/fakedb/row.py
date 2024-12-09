@@ -64,10 +64,6 @@ class Row:
             setattr(self, col, [])
         for col in self.dicts:
             setattr(self, col, {})
-        # cast to unicode
-        for k, v in self.values.items():
-            if isinstance(v, str):
-                self.values[k] = str(v)
         # Binary columns stores either (compressed) binary data or encoded
         # with utf-8 unicode string. We assume that Row constructor receives
         # only unicode strings and encode them to utf-8 here.
