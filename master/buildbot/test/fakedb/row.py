@@ -40,8 +40,6 @@ class Row:
 
     id_column: tuple[()] | str = ()
 
-    lists: Sequence[str] = ()
-    dicts: Sequence[str] = ()
     hashedColumns: Sequence[tuple[str, Sequence[str]]] = ()
     # Columns that content is represented as sa.Binary-like type in DB model.
     # They value is bytestring (in contrast to text-like columns, which are
@@ -60,10 +58,6 @@ class Row:
         if self.id_column:
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
-        for col in self.lists:
-            setattr(self, col, [])
-        for col in self.dicts:
-            setattr(self, col, {})
         # Binary columns stores either (compressed) binary data or encoded
         # with utf-8 unicode string. We assume that Row constructor receives
         # only unicode strings and encode them to utf-8 here.
