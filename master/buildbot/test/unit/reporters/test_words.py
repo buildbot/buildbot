@@ -813,3 +813,71 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
         ])
         yield self.bot.loadState()
         self.assertEqual(self.bot.channels['#channel1'].notify_events, {'warnings'})
+
+    @defer.inlineCallbacks
+    def test_buildFinished_status_string_only(self):
+        """Test that buildFinished works when only status_string is set"""
+        yield self.setupSomeBuilds()
+        self.patch_send()
+
+        build = yield self.master.data.get(('builds', 13))
+        build['results'] = FAILURE
+        build['status_string'] = 'failing tests in worker'
+        build['state_string'] = None
+
+        self.bot.tags = None
+        self.contact.channel.notify_for = lambda _: True
+        self.contact.useRevisions = False
+
+        yield self.contact.channel.buildFinished(build, watched=True)
+
+        self.assertEqual(
+            self.sent[0],
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of "
+            "`builder1` failed: failing tests in worker",
+        )
+
+    @defer.inlineCallbacks
+    def test_buildFinished_status_string_fallback(self):
+        """Test that buildFinished uses state_string when status_string is None"""
+        yield self.setupSomeBuilds()
+        self.patch_send()
+
+        build = yield self.master.data.get(('builds', 13))
+        build['results'] = FAILURE
+        build['status_string'] = None
+        build['state_string'] = 'failed due to test errors'
+
+        self.bot.tags = None
+        self.contact.channel.notify_for = lambda _: True
+        self.contact.useRevisions = False
+
+        yield self.contact.channel.buildFinished(build, watched=True)
+
+        self.assertEqual(
+            self.sent[0],
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of "
+            "`builder1` failed: failed due to test errors",
+        )
+
+    @defer.inlineCallbacks
+    def test_buildFinished_no_status_strings(self):
+        """Test that buildFinished works when both status_string and state_string are None"""
+        yield self.setupSomeBuilds()
+        self.patch_send()
+
+        build = yield self.master.data.get(('builds', 13))
+        build['results'] = FAILURE
+        build['status_string'] = None
+        build['state_string'] = None
+
+        self.bot.tags = None
+        self.contact.channel.notify_for = lambda _: True
+        self.contact.useRevisions = False
+
+        yield self.contact.channel.buildFinished(build, watched=True)
+
+        self.assertEqual(
+            self.sent[0],
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of `builder1` failed.",
+        )
