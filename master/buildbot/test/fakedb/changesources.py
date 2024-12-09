@@ -30,7 +30,5 @@ class ChangeSource(Row):
 class ChangeSourceMaster(Row):
     table = "changesource_masters"
 
-    required_columns = ('changesourceid', 'masterid')
-
     def __init__(self, changesourceid=None, masterid=None):
         super().__init__(changesourceid=changesourceid, masterid=masterid)

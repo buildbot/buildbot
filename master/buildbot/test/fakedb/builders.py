@@ -49,9 +49,7 @@ class Builder(Row):
 
 class BuilderMaster(Row):
     table = "builder_masters"
-
     id_column = 'id'
-    required_columns = ('builderid', 'masterid')
 
     def __init__(self, id=None, builderid=None, masterid=None):
         super().__init__(id=id, builderid=builderid, masterid=masterid)
@@ -59,11 +57,6 @@ class BuilderMaster(Row):
 
 class BuildersTags(Row):
     table = "builders_tags"
-
-    required_columns = (
-        'builderid',
-        'tagid',
-    )
     id_column = 'id'
 
     def __init__(self, id=None, builderid=None, tagid=None):

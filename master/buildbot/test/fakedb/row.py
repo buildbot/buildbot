@@ -32,9 +32,6 @@ class Row:
     auto-incremented id.  Auto-assigned id's begin at 1000, so any explicitly
     specified ID's should be less than 1000.
 
-    @cvar required_columns: a tuple of columns that must be given in the
-    constructor
-
     @cvar hashedColumns: a tuple of hash column and source columns designating
     a hash to work around MySQL's inability to do indexing.
 
@@ -42,7 +39,6 @@ class Row:
     """
 
     id_column: tuple[()] | str = ()
-    required_columns: Sequence[str] = ()
 
     lists: Sequence[str] = ()
     dicts: Sequence[str] = ()
@@ -64,8 +60,6 @@ class Row:
         if self.id_column:
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
-        for col in self.required_columns:
-            assert col in kwargs, f"{col} not specified: {kwargs}"
         for col in self.lists:
             setattr(self, col, [])
         for col in self.dicts:

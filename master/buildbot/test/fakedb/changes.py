@@ -63,16 +63,12 @@ class Change(Row):
 class ChangeFile(Row):
     table = "change_files"
 
-    required_columns = ('changeid',)
-
     def __init__(self, changeid=None, filename=None):
         super().__init__(changeid=changeid, filename=filename)
 
 
 class ChangeProperty(Row):
     table = "change_properties"
-
-    required_columns = ('changeid',)
 
     def __init__(self, changeid=None, property_name=None, property_value=None):
         super().__init__(
@@ -82,8 +78,6 @@ class ChangeProperty(Row):
 
 class ChangeUser(Row):
     table = "change_users"
-
-    required_columns = ('changeid',)
 
     def __init__(self, changeid=None, uid=None):
         super().__init__(changeid=changeid, uid=uid)

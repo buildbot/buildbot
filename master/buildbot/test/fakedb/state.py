@@ -29,7 +29,5 @@ class Object(Row):
 class ObjectState(Row):
     table = "object_state"
 
-    required_columns = ('objectid',)
-
     def __init__(self, objectid=None, name='nam', value_json='{}'):
         super().__init__(objectid=objectid, name=name, value_json=value_json)

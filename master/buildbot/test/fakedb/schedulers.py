@@ -35,8 +35,6 @@ class SchedulerMaster(Row):
         "masterid": None,
     }
 
-    required_columns = ('schedulerid', 'masterid')
-
     def __init__(self, schedulerid=None, masterid=None):
         super().__init__(schedulerid=schedulerid, masterid=masterid)
 
@@ -49,8 +47,6 @@ class SchedulerChange(Row):
         "changeid": None,
         "important": 1,
     }
-
-    required_columns = ('schedulerid', 'changeid')
 
     def __init__(self, schedulerid=None, changeid=None, important=1):
         super().__init__(schedulerid=schedulerid, changeid=changeid, important=important)

@@ -21,7 +21,6 @@ class Log(Row):
     table = "logs"
 
     id_column = 'id'
-    required_columns = ('stepid',)
 
     def __init__(
         self, id=None, name='log29', slug=None, stepid=None, complete=0, num_lines=0, type='s'
@@ -42,7 +41,6 @@ class Log(Row):
 class LogChunk(Row):
     table = "logchunks"
 
-    required_columns = ('logid',)
     # 'content' column is sa.LargeBinary, it's bytestring.
     binary_columns = ('content',)
 

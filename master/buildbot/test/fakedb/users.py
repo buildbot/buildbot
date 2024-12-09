@@ -32,7 +32,5 @@ class User(Row):
 class UserInfo(Row):
     table = "users_info"
 
-    required_columns = ('uid',)
-
     def __init__(self, uid=None, attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'):
         super().__init__(uid=uid, attr_type=attr_type, attr_data=attr_data)

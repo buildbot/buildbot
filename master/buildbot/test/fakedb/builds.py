@@ -22,7 +22,6 @@ class Build(Row):
     table = "builds"
 
     id_column = 'id'
-    required_columns = ('buildrequestid', 'masterid', 'workerid')
 
     def __init__(
         self,
@@ -56,8 +55,6 @@ class Build(Row):
 
 class BuildProperty(Row):
     table = "build_properties"
-
-    required_columns = ('buildid',)
 
     def __init__(self, buildid=None, name='prop', value=42, source='fakedb'):
         super().__init__(buildid=buildid, name=name, value=value, source=source)

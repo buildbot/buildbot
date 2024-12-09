@@ -53,8 +53,6 @@ class Buildset(Row):
 class BuildsetProperty(Row):
     table = "buildset_properties"
 
-    required_columns = ('buildsetid',)
-
     def __init__(self, buildsetid=None, property_name='prop', property_value='[22, "fakedb"]'):
         super().__init__(
             buildsetid=buildsetid, property_name=property_name, property_value=property_value
@@ -64,10 +62,6 @@ class BuildsetProperty(Row):
 class BuildsetSourceStamp(Row):
     table = "buildset_sourcestamps"
 
-    required_columns = (
-        'buildsetid',
-        'sourcestampid',
-    )
     id_column = 'id'
 
     def __init__(self, id=None, buildsetid=None, sourcestampid=None):

@@ -22,7 +22,6 @@ class Step(Row):
     table = "steps"
 
     id_column = 'id'
-    required_columns = ('buildid',)
 
     def __init__(
         self,
