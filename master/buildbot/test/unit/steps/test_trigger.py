@@ -115,7 +115,6 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         # set up a buildmaster that knows about two fake schedulers, a and b
         m = self.master
-        m.db.checkForeignKeys = True
         self.build.builder.botmaster = m.botmaster
         self.build.conn = object()
         m.config.buildbotURL = "baseurl/"

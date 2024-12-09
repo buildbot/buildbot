@@ -22,8 +22,6 @@ class TestName(Row):
     table = 'test_names'
 
     id_column = 'id'
-    foreignKeys = ('builderid',)
-    required_columns = ('builderid', 'name')
 
     def __init__(self, id=None, builderid=None, name='nam'):
         super().__init__(id=id, builderid=builderid, name=name)
@@ -33,8 +31,6 @@ class TestCodePath(Row):
     table = 'test_code_paths'
 
     id_column = 'id'
-    foreignKeys = ('builderid',)
-    required_columns = ('builderid', 'path')
 
     def __init__(self, id=None, builderid=None, path='path/to/file'):
         super().__init__(id=id, builderid=builderid, path=path)
@@ -44,8 +40,6 @@ class TestResult(Row):
     table = 'test_results'
 
     id_column = 'id'
-    foreignKeys = ('builderid', 'test_result_setid', 'test_nameid', 'test_code_pathid')
-    required_columns = ('builderid', 'test_result_setid', 'value')
 
     def __init__(
         self,

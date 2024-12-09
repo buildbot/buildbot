@@ -22,7 +22,6 @@ class Worker(Row):
     table = "workers"
 
     id_column = 'id'
-    required_columns = ('name',)
 
     def __init__(
         self, id=None, name='some:worker', info=None, paused=0, pause_reason=None, graceful=0
@@ -38,7 +37,6 @@ class ConnectedWorker(Row):
     table = "connected_workers"
 
     id_column = 'id'
-    required_columns = ('masterid', 'workerid')
 
     def __init__(self, id=None, masterid=None, workerid=None):
         super().__init__(id=id, masterid=masterid, workerid=workerid)
@@ -48,7 +46,6 @@ class ConfiguredWorker(Row):
     table = "configured_workers"
 
     id_column = 'id'
-    required_columns = ('buildermasterid', 'workerid')
 
     def __init__(self, id=None, buildermasterid=None, workerid=None):
         super().__init__(id=id, buildermasterid=buildermasterid, workerid=workerid)

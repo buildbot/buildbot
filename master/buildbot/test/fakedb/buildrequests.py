@@ -21,10 +21,7 @@ from buildbot.test.fakedb.row import Row
 class BuildRequest(Row):
     table = "buildrequests"
 
-    foreignKeys = ('buildsetid',)
-
     id_column = 'id'
-    required_columns = ('buildsetid',)
 
     def __init__(
         self,
@@ -53,10 +50,6 @@ class BuildRequest(Row):
 
 class BuildRequestClaim(Row):
     table = "buildrequest_claims"
-
-    foreignKeys = ('brid', 'masterid')
-
-    required_columns = ('brid', 'masterid', 'claimed_at')
 
     def __init__(self, brid=None, masterid=None, claimed_at=None):
         super().__init__(brid=brid, masterid=masterid, claimed_at=claimed_at)
