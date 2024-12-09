@@ -330,14 +330,6 @@ Foreign key checking
 PostgreSQL and SQlite db backends check the foreign keys consistency.
 :bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
 
-To maintain consistency with real db, fakedb can check the foreign key consistency of your test data. For this, just enable it with::
-
-    self.db = fakedb.FakeDBConnector(self.master, self)
-    self.db.checkForeignKeys = True
-
-Note that tests that only use fakedb do not really need foreign key consistency, even if this is a good practice to enable it in new code.
-
-
 .. note:
 
     Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help a lot for testing foreign keys constraint in a developer friendly environment.
