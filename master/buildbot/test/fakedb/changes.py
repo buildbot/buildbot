@@ -21,8 +21,6 @@ from buildbot.test.fakedb.row import Row
 class Change(Row):
     table = "changes"
 
-    lists = ('files', 'uids')
-    dicts = ('properties',)
     id_column = 'changeid'
 
     def __init__(
