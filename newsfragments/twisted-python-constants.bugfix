@@ -1,1 +1,0 @@
-Fixed compatibility with Twisted 24.11.0 due to ``twisted.python.constants`` module being moved.

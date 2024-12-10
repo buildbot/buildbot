@@ -1,1 +1,0 @@
-Fix build status reporting to use state_string as fallback when status_string is None. This makes IRC build failure messages more informative by showing the failure reason instead of just "failed". 

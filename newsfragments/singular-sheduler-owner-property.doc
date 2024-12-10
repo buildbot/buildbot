@@ -1,2 +1,0 @@
-Fixed Scheduler documentation to indicate that owner property is a string, not a list, and contains only one owner.
-This property was changed to singular and to string in Buildbot 1.0, but documentation was not updated.
