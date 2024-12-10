@@ -263,7 +263,6 @@ class TestResourceType(base.ResourceType):
     plural = 'tests'
 
     endpoints = [TestsEndpoint, TestEndpoint, TestsEndpointSubclass]
-    keyField = 'testid'
 
     class EntityType(types.Entity):
         testid = types.Integer()

@@ -86,11 +86,9 @@ class Builder(base.ResourceType):
     name = "builder"
     plural = "builders"
     endpoints = [BuilderEndpoint, BuildersEndpoint]
-    keyField = 'builderid'
     eventPathPatterns = """
         /builders/:builderid
     """
-    subresources = ["Build", "Forcescheduler", "Scheduler", "Buildrequest"]
 
     class EntityType(types.Entity):
         builderid = types.Integer()

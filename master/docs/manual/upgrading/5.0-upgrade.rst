@@ -68,6 +68,9 @@ The following functions have been affected:
 - ``UsersConnectorComponent`` ``getUser``, ``getUserByUsername``, and ``getUsers``.
 - ``WorkersConnectorComponent`` ``getWorker``, and ``getWorkers``.
 
+``DataConnector.produceEvent()`` has been deprecated. The replacement is update methods from the
+data API.
+
 Reporters
 =========
 

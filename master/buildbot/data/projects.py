@@ -85,11 +85,9 @@ class Project(base.ResourceType):
     name = "project"
     plural = "projects"
     endpoints = [ProjectEndpoint, ProjectsEndpoint]
-    keyField = 'projectid'
     eventPathPatterns = """
         /projects/:projectid
     """
-    subresources = ["Builder"]
 
     class EntityType(types.Entity):
         projectid = types.Integer()

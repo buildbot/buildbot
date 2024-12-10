@@ -267,7 +267,6 @@ A few classes deserve special mention:
    It checks that the routing key is a tuple of strings.
    The first tuple element gives the message type.
    The last tuple element is the event, and must be a member of the ``events`` set.
-   The remaining "middle" tuple elements must match the message values identified by ``keyFields``.
    The ``messageValidator`` should be a ``DictValidator`` configured to check the message body.
    This validator's ``validate`` method is called with a tuple ``(routingKey, message)``.
  * ``Selector`` allows different validators to be selected based on matching functions.
@@ -302,7 +301,6 @@ The underlying validator should be a ``MessageValidator``. ::
     message['foo'] = Selector()
     message['foo'].add(lambda rk : rk[-1] == 'new',
         MessageValidator(
-            keyFields=['fooid'],
             events=['new', 'complete'],
             messageValidator=DictValidator(
                 fooid=IntValidator(),

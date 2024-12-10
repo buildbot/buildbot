@@ -231,7 +231,6 @@ In ``master/buildbot/data/pubs.py``, create a subclass of :py:class:`ResourceTyp
     class Pub(base.ResourceType):
         name = "pub"
         endpoints = []
-        keyFields = ['pubid']
 
         class EntityType(types.Entity):
             pubid = types.Integer()

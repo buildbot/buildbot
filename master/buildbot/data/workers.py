@@ -120,11 +120,9 @@ class Worker(base.ResourceType):
     name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
-    keyField = 'workerid'
     eventPathPatterns = """
         /workers/:workerid
     """
-    subresources = ["Build"]
 
     class EntityType(types.Entity):
         workerid = types.Integer()

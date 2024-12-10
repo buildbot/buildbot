@@ -99,12 +99,10 @@ class Step(base.ResourceType):
     name = "step"
     plural = "steps"
     endpoints = [StepEndpoint, StepsEndpoint]
-    keyField = 'stepid'
     eventPathPatterns = """
         /builds/:buildid/steps/:stepid
         /steps/:stepid
     """
-    subresources = ["Log"]
 
     class EntityType(types.Entity):
         stepid = types.Integer()
