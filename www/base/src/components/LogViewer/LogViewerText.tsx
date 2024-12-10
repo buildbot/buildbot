@@ -126,7 +126,7 @@ export const LogViewerText = observer(({log, downloadInitiateOverscanRowCount, d
   )), []);
 
   const LogTextArea: React.FC<Size> = ({height, width}) => (
-    <div className="bb-logviewer-text-area" ref={containerRef}>
+    <div style={{width: width, height: height}} ref={containerRef}>
       <div className="bb-logviewer-text-download-log">
         <div>
           <LogSearchField currentResult={manager.currentSearchResultIndex + 1}
