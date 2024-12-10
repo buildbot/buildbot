@@ -1,2 +1,0 @@
-BuildView (`builders/:builderid/builds/:buildnumber`) now load 'Changes' and 'Responsible Users' on first access to the tab.
-This lower unnecessary queries on the master.

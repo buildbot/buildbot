@@ -1,1 +1,0 @@
-Fixes the timestamp comparison in janitor: it should cleanup builds 'older than' given timestamp - previously janitor would delete all build_data for builds 'newer than' the configured build data horizon.

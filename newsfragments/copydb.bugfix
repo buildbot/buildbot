@@ -1,1 +1,0 @@
-Fixed ``copydb`` script when SQLAlchemy 2.x is used.

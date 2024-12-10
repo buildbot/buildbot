@@ -1,2 +1,0 @@
-Logs compression/decompression operation no longer occur in a Database connection thread.
-This change will improve overall master reactivity on instances receiving large logs from Steps.

@@ -1,1 +1,0 @@
-Fix ANSI color reset not resetting the color in Buildbot UI log output of a step.

@@ -1,1 +1,0 @@
-Fix ``SetPropertiesFromEnv`` not treating environment variable names as case insensitive for Windows workers

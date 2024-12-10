@@ -1,1 +1,0 @@
-Fixed bad default of Github webhooks not verifying HTTPS certificates in connections originating from Buildbot.
