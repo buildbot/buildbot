@@ -19,6 +19,8 @@ from twisted.trial import unittest
 from buildbot.data import connector
 from buildbot.data import root
 from buildbot.test.util import endpoint
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -34,7 +36,10 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get(self):
-        rootlinks = yield self.callGet(('',))
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern='.*the root endpoint with endpoint directory.*'
+        ):
+            rootlinks = yield self.callGet(('',))
 
         for rootlink in rootlinks:
             self.validateData(rootlink)
