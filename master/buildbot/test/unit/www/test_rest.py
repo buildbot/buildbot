@@ -28,17 +28,15 @@ from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz
-from buildbot.www import graphql
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
 
 
 class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    maxVersion = 3
+    maxVersion = 2
 
     def setUp(self):
         self.setup_test_reactor()
-        _ = graphql  # used for import side effect
 
     @defer.inlineCallbacks
     def test_render(self):

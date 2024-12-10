@@ -589,6 +589,3 @@ class FakeDataConnector(service.AsyncMultiService):
 
     def resultspec_from_jsonapi(self, args, entityType, is_collection):
         return self.realConnector.resultspec_from_jsonapi(args, entityType, is_collection)
-
-    def getResourceTypeForGraphQlType(self, type):
-        return self.realConnector.getResourceTypeForGraphQlType(type)

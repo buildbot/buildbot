@@ -13,12 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import asyncio
-
 from twisted.internet import threads
 from twisted.python import threadpool
 
-from buildbot.asyncio import AsyncIOLoopWithTwisted
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.util import twisted
@@ -33,6 +30,8 @@ class TestReactorMixin:
     """
 
     def setup_test_reactor(self, use_asyncio=False, auto_tear_down=True):
+        if use_asyncio:
+            warn_deprecated('4.2.0', 'use_asyncio=True is deprecated')
         if not auto_tear_down:
             warn_deprecated('4.2.0', 'auto_tear_down=False is deprecated')
 
@@ -50,12 +49,6 @@ class TestReactorMixin:
 
         self.patch(threads, 'deferToThread', deferToThread)
 
-        self._reactor_use_asyncio = use_asyncio
-        if use_asyncio:
-            self.asyncio_loop = AsyncIOLoopWithTwisted(self.reactor)
-            asyncio.set_event_loop(self.asyncio_loop)
-            self.asyncio_loop.start()
-
         if auto_tear_down:
             self.addCleanup(self.tear_down_test_reactor)
         self._reactor_tear_down_called = False
@@ -65,11 +58,6 @@ class TestReactorMixin:
             return
 
         self._reactor_tear_down_called = True
-
-        if self._reactor_use_asyncio:
-            self.asyncio_loop.stop()
-            self.asyncio_loop.close()
-            asyncio.set_event_loop(None)
 
         # During shutdown sequence we must first stop the reactor and only then set unset the
         # reactor used for eventually() because any callbacks that are run during reactor.stop()

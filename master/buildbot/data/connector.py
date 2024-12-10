@@ -78,7 +78,6 @@ class DataConnector(service.AsyncService):
                 rtype = obj(self.master)
                 setattr(self.rtypes, rtype.name, rtype)
                 setattr(self.plural_rtypes, rtype.plural, rtype)
-                self.graphql_rtypes[rtype.entityType.toGraphQLTypeName()] = rtype
                 # put its update methods into our 'updates' attribute
                 for name in dir(rtype):
                     o = getattr(rtype, name)
@@ -103,7 +102,6 @@ class DataConnector(service.AsyncService):
 
     def _setup(self):
         self.updates = Updates()
-        self.graphql_rtypes = {}
         self.rtypes = RTypes()
         self.plural_rtypes = RTypes()
         for moduleName in self.submodules:
@@ -129,11 +127,6 @@ class DataConnector(service.AsyncService):
         elif rtype_plural is not None:
             return rtype_plural.getCollectionEndpoint()
         return None
-
-    def getResourceTypeForGraphQlType(self, type):
-        if type not in self.graphql_rtypes:
-            raise RuntimeError(f"Can't get rtype for {type}: {self.graphql_rtypes.keys()}")
-        return self.graphql_rtypes.get(type)
 
     def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
         resultSpec = resultspec.ResultSpec(

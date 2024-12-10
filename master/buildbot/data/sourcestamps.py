@@ -102,4 +102,4 @@ class SourceStamp(base.ResourceType):
         patch = types.NoneOk(patches.Patch.entityType)
         created_at = types.DateTime()
 
-    entityType = EntityType(name, 'Sourcestamp')
+    entityType = EntityType(name)

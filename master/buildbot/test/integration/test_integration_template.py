@@ -39,7 +39,6 @@ class ShellMaster(RunMasterBase):
         f = BuildFactory()
         f.addStep(steps.ShellCommand(command='echo hello'))
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
-        c['www'] = {'graphql': True}
         yield self.setup_master(c)
 
     @defer.inlineCallbacks

@@ -132,11 +132,6 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         logLines = yield self.master.db.logs.getLogLines(logid, firstline, lastline)
         return {'logid': logid, 'firstline': firstline, 'content': logLines}
 
-    def get_kwargs_from_graphql(self, parent, resolve_info, args):
-        if parent is not None:
-            return self.get_kwargs_from_graphql_parent(parent, resolve_info.parent_type.name)
-        return {"logid": args["logid"]}
-
 
 class RawLogChunkEndpoint(LogChunkEndpointBase):
     # Note that this is a singular endpoint, even though it overrides the
@@ -224,4 +219,4 @@ class LogChunk(base.ResourceType):
         firstline = types.Integer()
         content = types.String()
 
-    entityType = EntityType(name, 'LogChunk')
+    entityType = EntityType(name)

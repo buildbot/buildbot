@@ -87,7 +87,7 @@ class ChangeSource(base.ResourceType):
         name = types.String()
         master = types.NoneOk(masters.Master.entityType)
 
-    entityType = EntityType(name, 'Changesource')
+    entityType = EntityType(name)
 
     @base.updateMethod
     def findChangeSourceId(self, name):

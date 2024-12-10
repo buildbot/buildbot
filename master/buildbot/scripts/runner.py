@@ -689,16 +689,6 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
         return "Usage:   buildbot dataspec [options]"
 
 
-class GenGraphQLOption(base.BasedirMixin, base.SubcommandOptions):
-    subcommandFunction = "buildbot.scripts.gengraphql.gengraphql"
-    optParameters = [
-        ['out', 'o', "graphql.schema", "output to specified path"],
-    ]
-
-    def getSynopsis(self):
-        return "Usage:   buildbot graphql-schema [options]"
-
-
 class DevProxyOptions(base.BasedirMixin, base.SubcommandOptions):
     """Run a fake web server serving the local ui frontend and a distant rest and websocket api.
     This command required aiohttp to be installed in the virtualenv"""
@@ -840,7 +830,6 @@ class Options(usage.Options):
             DevProxyOptions,
             "Run a fake web server serving the local ui frontend and a distant rest and websocket api.",
         ],
-        ['graphql-schema', None, GenGraphQLOption, "Output graphql api schema"],
         ['cleanupdb', None, CleanupDBOptions, "cleanup the database"],
         ["copy-db", None, CopyDBOptions, "copy the database"],
     ]

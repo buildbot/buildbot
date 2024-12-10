@@ -18,6 +18,7 @@ TestReactorMixin
     .. py:method:: setup_test_reactor(use_asyncio=False, auto_tear_down=True)
 
         :param bool use_asyncio: Whether to enable asyncio integration.
+                                 This option has been deprecated and has no effect.
         :param bool auto_tear_down: Whether to automatically tear down the test reactor.
                                     Setting it to ``False`` is deprecated.
 

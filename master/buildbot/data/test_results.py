@@ -81,7 +81,7 @@ class TestResult(base.ResourceType):
         duration_ns = types.NoneOk(types.Integer())
         value = types.String()
 
-    entityType = EntityType(name, 'TestResult')
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

@@ -32,7 +32,6 @@ from buildbot.changes.manager import ChangeManager
 from buildbot.config.master import FileLoader
 from buildbot.config.master import MasterConfig
 from buildbot.data import connector as dataconnector
-from buildbot.data import graphql
 from buildbot.db import connector as dbconnector
 from buildbot.db import exceptions
 from buildbot.machine.manager import MachineManager
@@ -180,9 +179,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.data = dataconnector.DataConnector()
         yield self.data.setServiceParent(self)
-
-        self.graphql = graphql.GraphQLConnector()
-        yield self.graphql.setServiceParent(self)
 
         self.www = wwwservice.WWWService()
         yield self.www.setServiceParent(self)
