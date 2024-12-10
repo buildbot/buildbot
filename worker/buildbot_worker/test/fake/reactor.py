@@ -83,7 +83,7 @@ class CoreReactor:
     def running(self) -> bool:
         raise NotImplementedError()
 
-    def resolve(self, name: str, timeout: Sequence[int]) -> defer.Deferred[str]:
+    def resolve(self, name: str, timeout: Sequence[int] = (1, 3, 11, 45)) -> defer.Deferred[str]:
         raise NotImplementedError()
 
     def stop(self) -> None:
