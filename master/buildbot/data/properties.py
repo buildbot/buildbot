@@ -93,7 +93,6 @@ class Property(base.ResourceType):
     name = "_property"
     plural = "_properties"
     endpoints = [PropertiesListEndpoint]
-    keyField = "name"
 
     entityType = types.PropertyEntityType(name)
 
@@ -102,7 +101,6 @@ class Properties(base.ResourceType):
     name = "property"
     plural = "properties"
     endpoints = [BuildsetPropertiesEndpoint, BuildPropertiesEndpoint]
-    keyField = "name"
 
     entityType = types.SourcedProperties()
 

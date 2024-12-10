@@ -90,7 +90,6 @@ class Scheduler(base.ResourceType):
     name = "scheduler"
     plural = "schedulers"
     endpoints = [SchedulerEndpoint, SchedulersEndpoint]
-    keyField = 'schedulerid'
     eventPathPatterns = """
         /schedulers/:schedulerid
     """

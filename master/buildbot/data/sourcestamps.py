@@ -89,7 +89,6 @@ class SourceStamp(base.ResourceType):
     name = "sourcestamp"
     plural = "sourcestamps"
     endpoints = [SourceStampEndpoint, SourceStampsEndpoint]
-    keyField = 'ssid'
     subresources = ["Change"]
 
     class EntityType(types.Entity):

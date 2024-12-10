@@ -172,7 +172,6 @@ class BuildRequest(base.ResourceType):
     name = "buildrequest"
     plural = "buildrequests"
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
-    keyField = 'buildrequestid'
     eventPathPatterns = """
         /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
         /buildrequests/:buildrequestid

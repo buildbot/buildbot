@@ -80,7 +80,6 @@ class ChangeSource(base.ResourceType):
     name = "changesource"
     plural = "changesources"
     endpoints = [ChangeSourceEndpoint, ChangeSourcesEndpoint]
-    keyField = 'changesourceid'
 
     class EntityType(types.Entity):
         changesourceid = types.Integer()

@@ -134,7 +134,6 @@ class Change(base.ResourceType):
     eventPathPatterns = """
         /changes/:changeid
     """
-    keyField = "changeid"
     subresources = ["Build", "Property"]
 
     class EntityType(types.Entity):

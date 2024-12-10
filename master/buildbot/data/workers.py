@@ -120,7 +120,6 @@ class Worker(base.ResourceType):
     name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
-    keyField = 'workerid'
     eventPathPatterns = """
         /workers/:workerid
     """

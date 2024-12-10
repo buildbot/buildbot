@@ -196,7 +196,6 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
-    keyField = "buildid"
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid

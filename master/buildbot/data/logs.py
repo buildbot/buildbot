@@ -99,7 +99,6 @@ class Log(base.ResourceType):
     name = "log"
     plural = "logs"
     endpoints = [LogEndpoint, LogsEndpoint]
-    keyField = "logid"
     eventPathPatterns = """
         /logs/:logid
         /steps/:stepid/logs/:slug

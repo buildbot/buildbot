@@ -51,7 +51,6 @@ class ResourceType:
     name: str | None = None
     plural: str | None = None
     endpoints: list[type[Endpoint]] = []
-    keyField: str | None = None
     eventPathPatterns = ""
     entityType: types.Type | None = None
     subresources: list[str] = []
