@@ -88,7 +88,6 @@ class Project(base.ResourceType):
     eventPathPatterns = """
         /projects/:projectid
     """
-    subresources = ["Builder"]
 
     class EntityType(types.Entity):
         projectid = types.Integer()

@@ -201,7 +201,6 @@ class Build(base.ResourceType):
         /builds/:buildid
         /workers/:workerid/builds/:buildid
     """
-    subresources = ["Step", "Property"]
 
     class EntityType(types.Entity):
         buildid = types.Integer()

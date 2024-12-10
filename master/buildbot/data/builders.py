@@ -89,7 +89,6 @@ class Builder(base.ResourceType):
     eventPathPatterns = """
         /builders/:builderid
     """
-    subresources = ["Build", "Forcescheduler", "Scheduler", "Buildrequest"]
 
     class EntityType(types.Entity):
         builderid = types.Integer()

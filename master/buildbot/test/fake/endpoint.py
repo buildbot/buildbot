@@ -129,7 +129,6 @@ class Test(base.ResourceType):
     name = "test"
     plural = "tests"
     endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint, RawTestsEndpoint]
-    subresources = ["Step"]
 
     class EntityType(types.Entity):
         testid = types.Integer()

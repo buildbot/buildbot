@@ -103,7 +103,6 @@ class Log(base.ResourceType):
         /logs/:logid
         /steps/:stepid/logs/:slug
     """
-    subresources = ["LogChunk"]
 
     class EntityType(types.Entity):
         logid = types.Integer()

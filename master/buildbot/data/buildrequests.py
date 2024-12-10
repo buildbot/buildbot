@@ -178,8 +178,6 @@ class BuildRequest(base.ResourceType):
         /builders/:builderid/buildrequests/:buildrequestid
     """
 
-    subresources = ["Build"]
-
     class EntityType(types.Entity):
         buildrequestid = types.Integer()
         buildsetid = types.Integer()

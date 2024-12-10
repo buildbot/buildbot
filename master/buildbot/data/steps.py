@@ -103,7 +103,6 @@ class Step(base.ResourceType):
         /builds/:buildid/steps/:stepid
         /steps/:stepid
     """
-    subresources = ["Log"]
 
     class EntityType(types.Entity):
         stepid = types.Integer()

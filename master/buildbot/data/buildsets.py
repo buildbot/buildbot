@@ -140,7 +140,6 @@ class Buildset(base.ResourceType):
         parent_relationship = types.NoneOk(types.String())
 
     entityType = EntityType(name)
-    subresources = ["Property"]
 
     @base.updateMethod
     @defer.inlineCallbacks
