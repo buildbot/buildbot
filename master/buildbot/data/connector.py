@@ -119,15 +119,6 @@ class DataConnector(service.AsyncService):
     def getResourceType(self, name):
         return getattr(self.rtypes, name, None)
 
-    def getEndPointForResourceName(self, name):
-        rtype = getattr(self.rtypes, name, None)
-        rtype_plural = getattr(self.plural_rtypes, name, None)
-        if rtype is not None:
-            return rtype.getDefaultEndpoint()
-        elif rtype_plural is not None:
-            return rtype_plural.getCollectionEndpoint()
-        return None
-
     def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
         resultSpec = resultspec.ResultSpec(
             filters=filters, fields=fields, order=order, limit=limit, offset=offset
