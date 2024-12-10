@@ -555,7 +555,6 @@ class FakeDataConnector(service.AsyncMultiService):
         self.realConnector = connector.DataConnector()
         self.realConnector.setServiceParent(self)
         self.rtypes = self.realConnector.rtypes
-        self.plural_rtypes = self.realConnector.plural_rtypes
 
     def _scanModule(self, mod):
         return self.realConnector._scanModule(mod)

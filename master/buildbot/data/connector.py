@@ -77,7 +77,6 @@ class DataConnector(service.AsyncService):
             if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
                 rtype = obj(self.master)
                 setattr(self.rtypes, rtype.name, rtype)
-                setattr(self.plural_rtypes, rtype.plural, rtype)
                 # put its update methods into our 'updates' attribute
                 for name in dir(rtype):
                     o = getattr(rtype, name)
@@ -103,7 +102,6 @@ class DataConnector(service.AsyncService):
     def _setup(self):
         self.updates = Updates()
         self.rtypes = RTypes()
-        self.plural_rtypes = RTypes()
         for moduleName in self.submodules:
             module = reflect.namedModule(moduleName)
             self._scanModule(module)
