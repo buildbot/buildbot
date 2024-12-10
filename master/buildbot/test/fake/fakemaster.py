@@ -24,11 +24,9 @@ from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot.config.master import MasterConfig
-from buildbot.data.graphql import GraphQLConnector
 from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
 from buildbot.test.fake import bworkermanager
-from buildbot.test.fake import endpoint
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import msgmanager
@@ -93,7 +91,6 @@ class FakeMaster(service.MasterService):
     buildbotURL: str
     mq: fakemq.FakeMQConnector
     data: fakedata.FakeDataConnector
-    graphql: GraphQLConnector
     _test_want_db: bool = False
     _test_did_shutdown: bool = False
 
@@ -216,16 +213,7 @@ async def make_master(
 
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
-    if wantGraphql:
-        master.graphql = GraphQLConnector()
-        await master.graphql.setServiceParent(master)
-        master.graphql.data = master.data.realConnector
-        master.data._scanModule(endpoint)
-        master.config.www = {'graphql': {"debug": True}}
-        try:
-            master.graphql.reconfigServiceWithBuildbotConfig(master.config)
-        except ImportError:
-            pass
+
     if with_secrets is not None:
         secret_service = SecretManager()
         secret_service.services = [FakeSecretStorage(secretdict=with_secrets)]

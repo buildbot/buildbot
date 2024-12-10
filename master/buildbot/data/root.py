@@ -36,7 +36,7 @@ class Root(base.ResourceType):
     class EntityType(types.Entity):
         name = types.String()
 
-    entityType = EntityType(name, 'Rootlink')
+    entityType = EntityType(name)
 
 
 class SpecEndpoint(base.Endpoint):
@@ -58,4 +58,4 @@ class Spec(base.ResourceType):
         plural = types.String()
         type_spec = types.JsonObject()
 
-    entityType = EntityType(name, 'Spec')
+    entityType = EntityType(name)

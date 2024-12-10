@@ -36,4 +36,4 @@ class Patch(base.ResourceType):
         author = types.String()
         comment = types.String()
 
-    entityType = EntityType(name, 'Patch')
+    entityType = EntityType(name)

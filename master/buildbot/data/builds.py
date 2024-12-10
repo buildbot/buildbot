@@ -181,16 +181,12 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         buildscol = []
         for b in builds:
             data = _db2data(b)
-            if kwargs.get('graphql'):
-                # let the graphql engine manage the properties
-                del data['properties']
-            else:
-                # Avoid to request DB for Build's properties if not specified
-                if filters:
-                    props = yield self.master.db.builds.getBuildProperties(data["buildid"])
-                    filtered_properties = self._generate_filtered_properties(props, filters)
-                    if filtered_properties:
-                        data["properties"] = filtered_properties
+            # Avoid to request DB for Build's properties if not specified
+            if filters:
+                props = yield self.master.db.builds.getBuildProperties(data["buildid"])
+                filtered_properties = self._generate_filtered_properties(props, filters)
+                if filtered_properties:
+                    data["properties"] = filtered_properties
 
             buildscol.append(data)
         return buildscol
@@ -223,7 +219,7 @@ class Build(base.ResourceType):
         state_string = types.String()
         properties = types.NoneOk(types.SourcedProperties())
 
-    entityType = EntityType(name, 'Build')
+    entityType = EntityType(name)
 
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):

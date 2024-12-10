@@ -268,7 +268,7 @@ class TestResourceType(base.ResourceType):
     class EntityType(types.Entity):
         testid = types.Integer()
 
-    entityType = EntityType(name, 'Test')
+    entityType = EntityType(name)
 
     @base.updateMethod
     def testUpdate(self):

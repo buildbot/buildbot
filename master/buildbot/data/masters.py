@@ -99,7 +99,7 @@ class Master(base.ResourceType):
         active = types.Boolean()
         last_active = types.DateTime()
 
-    entityType = EntityType(name, 'Master')
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

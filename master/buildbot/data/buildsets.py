@@ -140,7 +140,7 @@ class Buildset(base.ResourceType):
         parent_buildid = types.NoneOk(types.Integer())
         parent_relationship = types.NoneOk(types.String())
 
-    entityType = EntityType(name, 'Buildset')
+    entityType = EntityType(name)
     subresources = ["Property"]
 
     @base.updateMethod

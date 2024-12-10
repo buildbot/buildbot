@@ -101,7 +101,7 @@ class Scheduler(base.ResourceType):
         enabled = types.Boolean()
         master = types.NoneOk(masters.Master.entityType)
 
-    entityType = EntityType(name, 'Scheduler')
+    entityType = EntityType(name)
 
     @defer.inlineCallbacks
     def generateEvent(self, schedulerid, event):

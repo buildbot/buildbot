@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import copy
-import json
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
@@ -36,7 +35,7 @@ if TYPE_CHECKING:
 
 class FixerMixin:
     @defer.inlineCallbacks
-    def _fixChange(self, model: ChangeModel, is_graphql: bool):
+    def _fixChange(self, model: ChangeModel):
         # TODO: make these mods in the DB API
         data = {
             'changeid': model.changeid,
@@ -54,20 +53,11 @@ class FixerMixin:
             'project': model.project,
             'files': model.files,
         }
-        if is_graphql:
-            data['sourcestampid'] = model.sourcestampid
-        else:
-            sskey = ('sourcestamps', str(model.sourcestampid))
-            assert hasattr(self, "master"), "FixerMixin requires a master attribute"
-            data['sourcestamp'] = yield self.master.data.get(sskey)
 
-        if is_graphql:
-            data['properties'] = [
-                {'name': k, 'source': v[1], 'value': json.dumps(v[0])}
-                for k, v in model.properties.items()
-            ]
-        else:
-            data['properties'] = model.properties
+        sskey = ('sourcestamps', str(model.sourcestampid))
+        assert hasattr(self, "master"), "FixerMixin requires a master attribute"
+        data['sourcestamp'] = yield self.master.data.get(sskey)
+        data['properties'] = model.properties
 
         return data
 
@@ -99,7 +89,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
         change = yield self.master.db.changes.getChange(kwargs['changeid'])
         if change is None:
             return None
-        return (yield self._fixChange(change, is_graphql='graphql' in kwargs))
+        return (yield self._fixChange(change))
 
 
 class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
@@ -133,7 +123,7 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
                 changes = yield self.master.db.changes.getChanges(resultSpec=resultSpec)
         results = []
         for ch in changes:
-            results.append((yield self._fixChange(ch, is_graphql='graphql' in kwargs)))
+            results.append((yield self._fixChange(ch)))
         return results
 
 
@@ -165,7 +155,7 @@ class Change(base.ResourceType):
         codebase = types.String()
         sourcestamp = sourcestamps.SourceStamp.entityType
 
-    entityType = EntityType(name, 'Change')
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

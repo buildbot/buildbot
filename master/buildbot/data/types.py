@@ -103,18 +103,6 @@ class NoneOk(Type):
     def toRaml(self):
         return self.nestedType.toRaml()
 
-    def toGraphQL(self):
-        # remove trailing !
-        if isinstance(self.nestedType, Entity):
-            return self.nestedType.graphql_name
-        return self.nestedType.toGraphQL()[:-1]
-
-    def graphQLDependentTypes(self):
-        return [self.nestedType]
-
-    def getGraphQLInputType(self):
-        return self.nestedType.getGraphQLInputType()
-
 
 class Instance(Type):
     types: tuple[type, ...] = ()
@@ -351,11 +339,10 @@ class Entity(Type):
     #  * self.master.data.rtypes.buildsets.entityType
 
     name: Identifier | String | str | None = None  # set in constructor
-    graphql_name: str | None = None  # set in constructor
     fields: dict[str, Type] = {}
     fieldNames: set[str] = set([])
 
-    def __init__(self, name, graphql_name):
+    def __init__(self, name):
         fields = {}
         for k, v in self.__class__.__dict__.items():
             if isinstance(v, Type):
@@ -363,7 +350,6 @@ class Entity(Type):
         self.fields = fields
         self.fieldNames = set(fields)
         self.name = name
-        self.graphql_name = graphql_name
 
     def validate(self, name, object):
         # this uses isinstance, allowing dict subclasses as used by the DB API
@@ -402,29 +388,6 @@ class Entity(Type):
                 for k, v in self.fields.items()
             },
         }
-
-    def toGraphQL(self):
-        return {
-            "type": self.graphql_name,
-            "fields": [
-                {"name": k, "type": v.toGraphQL()}
-                for k, v in self.fields.items()
-                # in graphql, we handle properties as queriable sub resources
-                # instead of hardcoded attributes like in rest api
-                if k != "properties"
-            ],
-        }
-
-    def toGraphQLTypeName(self):
-        return self.graphql_name
-
-    def graphQLDependentTypes(self):
-        return self.fields.values()
-
-    def getGraphQLInputType(self):
-        # for now, complex types are not query able
-        # in the future, we may want to declare (and implement) graphql input types
-        return None
 
 
 class PropertyEntityType(Entity):

@@ -196,7 +196,7 @@ class BuildRequest(base.ResourceType):
         waited_for = types.Boolean()
         properties = types.NoneOk(types.SourcedProperties())
 
-    entityType = EntityType(name, 'Buildrequest')
+    entityType = EntityType(name)
 
     @defer.inlineCallbacks
     def generateEvent(self, brids, event):
