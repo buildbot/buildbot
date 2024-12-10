@@ -147,8 +147,10 @@ class DataConnector(service.AsyncService):
         return endpoint.control(action, args, kwargs)
 
     def produceEvent(self, rtype, msg, event):
-        # warning, this is temporary api, until all code is migrated to data
-        # api
+        warn_deprecated(
+            '4.3.0',
+            'DataConnector.produceEvent is deprecated, use data API update methods',
+        )
         rsrc = self.getResourceType(rtype)
         return rsrc.produceEvent(msg, event)
 
