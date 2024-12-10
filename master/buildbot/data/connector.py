@@ -25,6 +25,7 @@ from buildbot.data import resultspec
 from buildbot.util import bytes2unicode
 from buildbot.util import pathmatch
 from buildbot.util import service
+from buildbot.warnings import warn_deprecated
 
 
 class Updates:
