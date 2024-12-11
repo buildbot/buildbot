@@ -227,11 +227,11 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
   if (lastLine > chunk.lastLine) {
     lastLine = chunk.lastLine;
   }
+  const chunkFirstLine = firstLine - chunk.firstLine;
+  const chunkLastLine = lastLine - chunk.firstLine;
 
   if (chunk.linesWithEscapes !== null) {
     // small number of escaped lines
-    const chunkFirstLine = firstLine - chunk.firstLine;
-    const chunkLastLine = lastLine - chunk.firstLine;
     for (const chunkLineI of chunk.linesWithEscapes) {
       if (chunkLineI < chunkFirstLine) {
         // It probably makes sense to use binary search in this loop
@@ -250,14 +250,13 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
     }
   } else {
     // large number of escape sequences
-    for (let lineI = firstLine; lineI < lastLine; ++lineI) {
-      const chunkLineI = lineI - chunk.firstLine;
+    for (let lineI = chunkFirstLine; lineI < chunkLastLine; ++lineI) {
       const chunkLine = chunk.text.slice(
-        chunk.textLineBounds[chunkLineI], chunk.textLineBounds[chunkLineI + 1] - 1);
+        chunk.textLineBounds[lineI], chunk.textLineBounds[lineI + 1] - 1);
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
       if (lineCssClasses !== null) {
-        cssClasses[chunkLineI] = [strippedLine, lineCssClasses!];
+        cssClasses[lineI] = [strippedLine, lineCssClasses!];
       }
     }
   }
