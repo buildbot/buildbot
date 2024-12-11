@@ -76,19 +76,19 @@ describe('LogChunkParsing', () => {
 
     const chunkCssClasses = parseCssClassesForChunk(chunk, 20, 23);
     expect(chunkCssClasses).toEqual({
-      20: ["DEBUG [plugin]: Loading plugin karma-jasmine.",
+      0: ["DEBUG [plugin]: Loading plugin karma-jasmine.",
         [
           {cssClasses: "ansi36", firstPos: 0, lastPos: 16},
           {cssClasses: "", firstPos: 16, lastPos: 45},
         ],
       ],
-      21: [".F",
+      1: [".F",
         [
           {cssClasses: "ansi32", firstPos: 0, lastPos: 1},
           {cssClasses: "ansi31", firstPos: 1, lastPos: 2},
         ],
       ],
-      22: ["..",
+      2: ["..",
         [
           {cssClasses: "ansi32", firstPos: 0, lastPos: 1},
           {cssClasses: "ansi32", firstPos: 1, lastPos: 2},
