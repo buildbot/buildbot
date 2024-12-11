@@ -210,10 +210,10 @@ export function mergeChunks(chunk1: ParsedLogChunk, chunk2: ParsedLogChunk): Par
 export type ChunkCssClasses = {[globalLine: number]: [string, LineCssClasses[]]};
 
 // Parses ansi escape code information for a span of lines in a particular chunk. Returns a map
-// containing key-value pairs, where each key-value pair represents a line with at least on escape
-// code. The key is line number and value is a tuple containing the line text with escape
-// sequences removed and a list of CSS classes to style the line. The line text and the
-// text positions in the list exclude any trailing newlines.
+// containing key-value pairs, where each key-value pair represents a line with at least one escape
+// code. The key is line index relative to beginning of a specific chunk and value is a tuple
+// containing the line text with escape sequences removed and a list of CSS classes to style the
+// line. The line text and the text positions in the list exclude any trailing newlines.
 export function parseCssClassesForChunk(chunk: ParsedLogChunk,
                                         firstLine: number, lastLine: number) {
   const cssClasses: ChunkCssClasses = {};
@@ -257,7 +257,7 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
       if (lineCssClasses !== null) {
-        cssClasses[lineI] = [strippedLine, lineCssClasses!];
+        cssClasses[chunkLineI] = [strippedLine, lineCssClasses!];
       }
     }
   }
