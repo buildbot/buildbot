@@ -39,7 +39,7 @@ Following is a quick shell session to put you on the right track, including runn
     make virtualenv
 
     # activate the virtualenv (you should now see (.venv) in your shell prompt)
-    . .venv/bin/activate
+    . .venvpython3/bin/activate
 
     # now run the test suite
     trial buildbot

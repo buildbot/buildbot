@@ -18,7 +18,7 @@ Following is a quick shell session to put you on the right track.
 
     # helper script which creates the virtualenv for development
     make virtualenv
-    . .venv/bin/activate
+    . .venvpython3/bin/activate
 
     # now run the test suite
     trial buildbot
