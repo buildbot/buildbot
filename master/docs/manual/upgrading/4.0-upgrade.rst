@@ -149,7 +149,7 @@ buildbot.util.croniter
 ----------------------
 
 ``buildbot.util.croniter`` module has been removed.
-The replacement is ``croniter`` package from Pypi.
+The replacement is ``croniter`` package from PyPI.
 
 Migration to ``croniter`` involves ensuring that the input times are passed as time-aware ``datetime`` objects.
 

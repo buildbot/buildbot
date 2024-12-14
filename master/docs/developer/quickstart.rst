@@ -39,7 +39,7 @@ Following is a quick shell session to put you on the right track, including runn
     make virtualenv
 
     # activate the virtualenv (you should now see (.venv) in your shell prompt)
-    . .venv/bin/activate
+    . .venvpython3/bin/activate
 
     # now run the test suite
     trial buildbot
@@ -51,7 +51,7 @@ Following is a quick shell session to put you on the right track, including runn
     trial -n --reporter=bwverbose buildbot | grep mail
 
     # run only one test module
-    trial buildbot.test.unit.test_reporters_mail
+    trial buildbot.test.unit.reporters.test_mail.TestMailNotifier
 
     # you can also skip the virtualenv activation and
     # run the test suite in one step with make
@@ -78,9 +78,9 @@ Prerequisites
 
   Buildbot UI requires at least node 14.18 or newer and yarn 1.x.
 
-* Install LTS release of node.js.
+* Install LTS release of Node.js.
 
-  http://nodejs.org/ is a good start for Windows and OSX.
+  http://nodejs.org/ is a good start for Windows and macOS.
 
   For modern Linux distributions, you can often just install the distribution-provided packages if
   they are recent enough. Note, that on Debian-based distributions yarn is available as yarnpkg.
@@ -109,7 +109,7 @@ Next, you need to install the ``buildbot`` and ``buildbot-www`` python packages 
 
     make frontend
 
-This will fetch a number of python dependencies from pypi, the Python package repository, and also a number of node.js dependencies that are used for building the web application.
+This will fetch a number of Python dependencies from PyPI, the Python package repository, and also a number of Node.js dependencies that are used for building the web application.
 Then the actual frontend code will be built with artifacts stored in the source directory, e.g. ``www/base/buildbot_www/static``.
 Finally, the built python packages will be installed to virtualenv environment as ``--editable`` packages.
 This means that the webserver will load resources from ``www/base/buildbot_www/static``.

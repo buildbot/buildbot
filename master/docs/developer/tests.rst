@@ -18,7 +18,7 @@ Following is a quick shell session to put you on the right track.
 
     # helper script which creates the virtualenv for development
     make virtualenv
-    . .venv/bin/activate
+    . .venvpython3/bin/activate
 
     # now run the test suite
     trial buildbot
@@ -27,7 +27,7 @@ Following is a quick shell session to put you on the right track.
     trial -n --reporter=bwverbose buildbot | grep mail
 
     # run only one test module
-    trial buildbot.test.unit.test_reporters_mail
+    trial buildbot.test.unit.reporters.test_mail.TestMailNotifier
 
 Suites
 ------

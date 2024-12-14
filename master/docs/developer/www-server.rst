@@ -41,7 +41,7 @@ This allows frontend developers and users to build custom components for the web
 Python development and AngularJS development are very different processes, requiring different environment requirements and skillsets.
 To maximize hackability, Buildbot separates the two cleanly.
 An experienced AngularJS hacker should be quite comfortable in the :src:`www/` directory, with a few exceptions described below.
-Similarly, an experienced Python hacker can simply download the pre-built web UI (from pypi!) and never venture near the :src:`www/` directory.
+Similarly, an experienced Python hacker can simply download the pre-built web UI (from PyPI!) and never venture near the :src:`www/` directory.
 
 URLs
 ~~~~
