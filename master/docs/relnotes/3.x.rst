@@ -273,7 +273,7 @@ Deprecations and Removals
   Fixes to React web frontend that are regressions from AngularJS web frontend will be backported to 3.x Buildbot series to make migration easier.
 - Buildbot Master now requires Python 3.8 or newer.
   Python 3.7 is no longer supported.
-- ``buildbot.util.croniter`` module has been deprecated in favor of using Pypi ``croniter`` package.
+- ``buildbot.util.croniter`` module has been deprecated in favor of using PyPI ``croniter`` package.
 - ``master.data.updates.setWorkerState()`` has been deprecated.
   Use ``master.data.updates.set_worker_paused()`` and ``master.data.updates.set_worker_graceful()`` as replacements.
 - Buildbot now requires ``docker`` of version v4.0.0 or newer for Docker support.
