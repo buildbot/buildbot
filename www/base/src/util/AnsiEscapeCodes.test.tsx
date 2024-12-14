@@ -146,6 +146,15 @@ describe('AnsiEscapeCodes', () => {
       ]);
     });
 
+    it('bold', () => {
+      const ret = parseEscapeCodesToSimple(
+        "\x1b[1;36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.");
+      expect(ret).toEqual([
+        {class: "ansi1 ansi36", text: "DEBUG [plugin]: "},
+        {class: "", text: "Loading plugin karma-jasmine."},
+      ]);
+    });
+
     it('256 colors reset only fg last instruction', () => {
       const ret = parseEscapeCodesToSimple(
         "\x1b[48;5;71mDEBUG \x1b[38;5;72m[plugin]: \x1b[39mLoading plugin karma-jasmine.");
