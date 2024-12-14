@@ -51,7 +51,7 @@ Following is a quick shell session to put you on the right track, including runn
     trial -n --reporter=bwverbose buildbot | grep mail
 
     # run only one test module
-    trial buildbot.test.unit.test_reporters_mail
+    trial buildbot.test.unit.reporters.test_mail.TestMailNotifier
 
     # you can also skip the virtualenv activation and
     # run the test suite in one step with make
