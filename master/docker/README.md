@@ -3,7 +3,7 @@ Buildbot-Master docker container
 
 [Buildbot](http://buildbot.net) is a continuous integration framework written and configured in python.
 
-You can look at the [tutorial](http://docs.buildbot.net/latest/tutorial/docker.html) to learn how to use it.
+You can look at the [tutorial](https://docs.buildbot.net/latest/tutorial/docker.html) to learn how to use it.
 
 This container is based on alpine linux, and thus very lightweight. Another version based on ubuntu exists if you need more custom environment.
 

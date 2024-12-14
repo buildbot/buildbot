@@ -39,7 +39,7 @@ class UpgradeFromBefore0p9Error(Exception):
     def __init__(self):
         message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x or newer.
         This is not supported. Please start from a clean database
-        http://docs.buildbot.net/latest/manual/upgrading/0.9-upgrade.html"""
+        https://docs.buildbot.net/latest/manual/upgrading/0.9-upgrade.html"""
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
@@ -49,7 +49,7 @@ class UpgradeFromBefore3p0Error(Exception):
         message = """You are trying to upgrade to Buildbot 3.0 or newer from Buildbot 2.x or older.
         This is only supported via an intermediate upgrade to newest Buildbot 2.10.x that is
         available. Please first upgrade to 2.10.x and then try to upgrade to this version.
-        http://docs.buildbot.net/latest/manual/upgrading/3.0-upgrade.html"""
+        https://docs.buildbot.net/latest/manual/upgrading/3.0-upgrade.html"""
         super().__init__(message)
 
 

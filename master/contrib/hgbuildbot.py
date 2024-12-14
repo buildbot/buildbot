@@ -26,7 +26,7 @@
 # behind a reverse proxy that does TLS and authentication for you and/or keep
 # it behind a firewall. See the docs for more details:
 #
-# http://docs.buildbot.net/latest/manual/cfg-wwwhooks.html
+# https://docs.buildbot.net/latest/manual/cfg-wwwhooks.html
 #
 # Copy this file to ".hg/hgbuildbot.py" in the repository that should notify
 # Buildbot.

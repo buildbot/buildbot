@@ -52,7 +52,7 @@ class Db2DataMixin:
 
         .. seealso::
 
-            `Official Documentation <http://docs.buildbot.net/latest/developer/rtype-build.html>`_
+            `Official Documentation <https://docs.buildbot.net/latest/developer/rtype-build.html>`_
 
         :param props: The Build's properties as a dict (from db)
         :param filters: Desired properties keys as a list (from API URI)

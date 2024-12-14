@@ -4,10 +4,10 @@ If you don't remove this paragraph from the pull request description, this means
 
 Please have a look at our developer documentation before submitting your Pull Request.
 
-http://docs.buildbot.net/latest/developer/quickstart.html
+https://docs.buildbot.net/latest/developer/quickstart.html
 
 And especially:
-http://docs.buildbot.net/latest/developer/pull-request.html
+https://docs.buildbot.net/latest/developer/pull-request.html
 
 
 ## Contributor Checklist:
