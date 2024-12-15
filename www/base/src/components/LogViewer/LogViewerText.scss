@@ -8,7 +8,14 @@
     // zebra pattern
     background: repeating-linear-gradient(-45deg,rgb(10, 10, 10),rgb(40, 40, 40) 7%, rgb(10,10,10) 10%)
   }
-  .log_o, .ansi_white, .ansi30 {
+  .log_o, .ansi_white {
+    color: $bb-color-log-white;
+  }
+  // note: As log output window is always black and text always has to be visible, background and
+  // foreground text color ansi classes are reverted: ansi30 refers to white (whereas by SGR code 30
+  // is actually a black display) and ansi40 refers to black (whereas by SGR code 40 is actually a
+  // 40 black background).
+  .ansi30 {
     color: $bb-color-log-white;
   }
   .log_e, .ansi_red, .ansi31 {
