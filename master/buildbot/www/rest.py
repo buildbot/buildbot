@@ -293,9 +293,9 @@ class V2RootResource(resource.Resource):
         request.setResponseCode(errcode)
         request.setHeader(b'content-type', b'text/plain; charset=utf-8')
         msg = bytes2unicode(msg)
-        data = json.dumps({"error": msg})
-        data = unicode2bytes(data)
-        request.write(data)
+        json_data = json.dumps({"error": msg})
+        byte_data = unicode2bytes(json_data)
+        request.write(byte_data)
 
     def _write_not_found_rest_error(
         self,
