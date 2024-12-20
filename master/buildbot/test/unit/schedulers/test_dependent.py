@@ -38,13 +38,8 @@ UPSTREAM_NAME = 'uppy'
 class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def makeScheduler(self, upstream=None):
@@ -139,6 +134,11 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
             a new buildset in response
         """
 
+        yield self.master.db.insert_test_data([
+            fakedb.ObjectState(objectid=OBJECTID, name='upstream_bsids', value_json='[]'),
+            fakedb.Object(id=OBJECTID),
+        ])
+
         sched = yield self.makeScheduler()
         sched.activate()
 
@@ -164,6 +164,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
             fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
         ])
         self.sendBuildsetMessage(scheduler_name=scheduler_name, complete=False)
+        yield self.master.mq._deferwaiter.wait()
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:

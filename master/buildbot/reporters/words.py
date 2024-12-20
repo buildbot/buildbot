@@ -390,7 +390,7 @@ class Channel(service.AsyncService):
                 f"Build [#{buildNumber}]({url}) of `{builderName}` "
                 f"{self.bot.format_build_status(build)}"
             )
-        s = build.get('status_string')
+        s = build.get('status_string') or build.get('state_string')
         if build['results'] != SUCCESS and s is not None:
             r += ": " + s
         else:

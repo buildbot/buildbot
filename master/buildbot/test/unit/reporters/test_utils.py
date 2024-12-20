@@ -31,6 +31,10 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import logging
 
 
+def sort_builds(builds):
+    return sorted(builds, key=lambda key: key['buildid'])
+
+
 class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     LOGCONTENT = textwrap.dedent("""\
         line zero
@@ -38,12 +42,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def setupDb(self):
@@ -51,6 +51,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         yield self.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
+            fakedb.Buildset(id=97, results=SUCCESS, reason="testReason0"),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason2", parent_buildid=21),
             fakedb.Builder(id=80, name='Builder1'),
@@ -146,6 +147,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         def getChangesForBuild(buildid):
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
+            if ch is None:
+                return []
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
@@ -171,6 +174,9 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             self.master, 98, want_properties=True, want_steps=True, want_previous_build=True
         )
         self.assertEqual(len(res['builds']), 2)
+
+        res['builds'] = sort_builds(res['builds'])
+
         build1 = res['builds'][0]
         build2 = res['builds'][1]
         buildset = res['buildset']
@@ -236,7 +242,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             want_logs_content=True,
         )
 
-        build1 = res['builds'][0]
+        build1 = sort_builds(res['builds'])[0]
         self.assertEqual(
             build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT + "\n"
         )
@@ -258,6 +264,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             want_logs=True,
             want_logs_content=True,
         )
+
+        res['builds'] = sort_builds(res['builds'])
 
         self.assertEqual(
             res,
@@ -618,12 +626,8 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 class TestURLUtils(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_UrlForBuild(self):
         self.assertEqual(

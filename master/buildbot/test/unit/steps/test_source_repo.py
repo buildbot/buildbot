@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes.changes import Change
@@ -61,15 +60,10 @@ class RepoURL(unittest.TestCase):
 
 class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.shouldRetry = False
         self.logEnviron = True
         return self.setUpSourceStep()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownSourceStep()
-        yield self.tear_down_test_reactor()
 
     def shouldLogEnviron(self):
         r = self.logEnviron

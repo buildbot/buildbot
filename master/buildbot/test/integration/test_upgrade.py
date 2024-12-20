@@ -17,7 +17,6 @@ from __future__ import annotations
 import locale
 import os
 import pprint
-import shutil
 import sqlite3
 import tarfile
 
@@ -29,16 +28,14 @@ from twisted.internet import defer
 from twisted.python import util
 from twisted.trial import unittest
 
-from buildbot.db import connector
 from buildbot.db.model import UpgradeFromBefore0p9Error
 from buildbot.db.model import UpgradeFromBefore3p0Error
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import db
 from buildbot.test.util import querylog
 
 
-class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
+class UpgradeTestMixin(TestReactorMixin):
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
 
@@ -47,23 +44,12 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
     # filename of the tarball (sibling to this file)
     source_tarball: None | str = None
 
-    # set to true in subclasses to set up and use a real DB
-    use_real_db = False
-
-    # db URL to use, if not using a real db
-    db_url = "sqlite:///state.sqlite"
-
     # these tests take a long time on platforms where sqlite is slow
     # (e.g., lion, see #2256)
     timeout = 1200
 
     @defer.inlineCallbacks
     def setUpUpgradeTest(self):
-        # set up the "real" db if desired
-        if self.use_real_db:
-            # note this changes self.db_url
-            yield self.setUpRealDatabase(sqlite_memory=False)
-
         self.basedir = None
 
         if self.source_tarball:
@@ -85,39 +71,32 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             # get the top-level dir from the tarball
             assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
             self.basedir = prefixes.pop()
+            db_url = 'sqlite:///' + os.path.abspath(os.path.join(self.basedir, 'state.sqlite'))
         else:
             if not os.path.exists("basedir"):
                 os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
+            db_url = None
 
-        self.master = master = yield fakemaster.make_master(self)
-        master.config.db['db_url'] = self.db_url
-        self.db = connector.DBConnector(self.basedir)
-        yield self.db.setServiceParent(master)
-        yield self.db.setup(check_version=False)
+        self.master = yield fakemaster.make_master(
+            self,
+            basedir=self.basedir,
+            wantDb=True,
+            db_url=db_url,
+            sqlite_memory=False,
+            auto_upgrade=False,
+            check_version=False,
+            auto_clean=False if self.source_tarball else True,
+        )
 
         self._sql_log_handler = querylog.start_log_queries()
-
-    @defer.inlineCallbacks
-    def tearDownUpgradeTest(self):
-        querylog.stop_log_queries(self._sql_log_handler)
-
-        if self.use_real_db:
-            yield self.tearDownRealDatabase()
-
-        if self.basedir:
-            shutil.rmtree(self.basedir)
+        self.addCleanup(lambda: querylog.stop_log_queries(self._sql_log_handler))
 
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setUpUpgradeTest()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownUpgradeTest()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def assertModelMatches(self):
@@ -131,7 +110,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                     # There is issue with comparison MEDIUMBLOB() vs LargeBinary(length=65536) in logchunks table.
                     opts = {"compare_type": False}
                 diff = compare_metadata(
-                    MigrationContext.configure(conn, opts=opts), self.db.model.metadata
+                    MigrationContext.configure(conn, opts=opts), self.master.db.model.metadata
                 )
 
             if engine.dialect.name == 'mysql':
@@ -145,7 +124,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             insp = sa.inspect(engine)
             # unique, name, column_names
             diff = []
-            for tbl in self.db.model.metadata.sorted_tables:
+            for tbl in self.master.db.model.metadata.sorted_tables:
                 exp = sorted(
                     [
                         {
@@ -161,7 +140,9 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
                 # include implied indexes on postgres and mysql
                 if engine.dialect.name == 'mysql':
                     implied = [
-                        idx for (tname, idx) in self.db.model.implied_indexes if tname == tbl.name
+                        idx
+                        for (tname, idx) in self.master.db.model.implied_indexes
+                        if tname == tbl.name
                     ]
                     exp = sorted(exp + implied, key=lambda k: k["name"])
 
@@ -193,7 +174,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
             return None
 
         try:
-            diff = yield self.db.pool.do_with_engine(comp)
+            diff = yield self.master.db.pool.do_with_engine(comp)
         except TypeError as e:
             # older sqlites cause failures in reflection, which manifest as a
             # TypeError.  Reflection is only used for tests, so we can just skip
@@ -221,17 +202,15 @@ class UpgradeTestMixin(db.RealDatabaseMixin, TestReactorMixin):
         yield from pre_callbacks
 
         try:
-            yield self.db.model.upgrade()
+            yield self.master.db.model.upgrade()
         except Exception as e:
             self.gotError(e)
 
-        yield self.db.pool.do(self.verify_thd)
+        yield self.master.db.pool.do(self.verify_thd)
         yield self.assertModelMatches()
 
 
 class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
-    use_real_db = True
-
     @defer.inlineCallbacks
     def test_emptydb_modelmatches(self):
         os_encoding = locale.getpreferredencoding()
@@ -244,7 +223,7 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
                 f"Cannot encode weird unicode on this platform with {os_encoding}"
             ) from e
 
-        yield self.db.model.upgrade()
+        yield self.master.db.model.upgrade()
         yield self.assertModelMatches()
 
 
@@ -262,7 +241,7 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
 
-        self.db.model.upgrade = upgrade
+        self.master.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
             yield self.do_test_upgrade()
 
@@ -271,7 +250,7 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
         def upgrade():
             return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
 
-        self.db.model.upgrade = upgrade
+        self.master.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
             yield self.do_test_upgrade()
 

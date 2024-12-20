@@ -210,10 +210,10 @@ export function mergeChunks(chunk1: ParsedLogChunk, chunk2: ParsedLogChunk): Par
 export type ChunkCssClasses = {[globalLine: number]: [string, LineCssClasses[]]};
 
 // Parses ansi escape code information for a span of lines in a particular chunk. Returns a map
-// containing key-value pairs, where each key-value pair represents a line with at least on escape
-// code. The key is line number and value is a tuple containing the line text with escape
-// sequences removed and a list of CSS classes to style the line. The line text and the
-// text positions in the list exclude any trailing newlines.
+// containing key-value pairs, where each key-value pair represents a line with at least one escape
+// code. The key is line index relative to beginning of a specific chunk and value is a tuple
+// containing the line text with escape sequences removed and a list of CSS classes to style the
+// line. The line text and the text positions in the list exclude any trailing newlines.
 export function parseCssClassesForChunk(chunk: ParsedLogChunk,
                                         firstLine: number, lastLine: number) {
   const cssClasses: ChunkCssClasses = {};
@@ -227,11 +227,11 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
   if (lastLine > chunk.lastLine) {
     lastLine = chunk.lastLine;
   }
+  const chunkFirstLine = firstLine - chunk.firstLine;
+  const chunkLastLine = lastLine - chunk.firstLine;
 
   if (chunk.linesWithEscapes !== null) {
     // small number of escaped lines
-    const chunkFirstLine = firstLine - chunk.firstLine;
-    const chunkLastLine = lastLine - chunk.firstLine;
     for (const chunkLineI of chunk.linesWithEscapes) {
       if (chunkLineI < chunkFirstLine) {
         // It probably makes sense to use binary search in this loop
@@ -250,10 +250,9 @@ export function parseCssClassesForChunk(chunk: ParsedLogChunk,
     }
   } else {
     // large number of escape sequences
-    for (let lineI = firstLine; lineI < lastLine; ++lineI) {
-      const chunkLineI = lineI - chunk.firstLine;
+    for (let lineI = chunkFirstLine; lineI < chunkLastLine; ++lineI) {
       const chunkLine = chunk.text.slice(
-        chunk.textLineBounds[chunkLineI], chunk.textLineBounds[chunkLineI + 1] - 1);
+        chunk.textLineBounds[lineI], chunk.textLineBounds[lineI + 1] - 1);
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
       if (lineCssClasses !== null) {

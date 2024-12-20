@@ -47,9 +47,6 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.ChangeSourceMaster(changesourceid=15, masterid=33),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         """get an existing changesource by id"""
@@ -115,9 +112,6 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.ChangeSourceMaster(changesourceid=16, masterid=33),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get(self):
         changesources = yield self.callGet(('changesources',))
@@ -146,13 +140,9 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class ChangeSource(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changesources.ChangeSource(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def test_signature_findChangeSourceId(self):
         @self.assertArgSpecMatches(

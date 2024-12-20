@@ -123,8 +123,6 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             f.write(b"this is some data\n" * 10)
 
     def tearDown(self):
-        self.tearDownCommand()
-
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
 
@@ -317,8 +315,6 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             f.write(b"and a little b" * 17)
 
     def tearDown(self):
-        self.tearDownCommand()
-
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
 
@@ -400,9 +396,6 @@ class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
         self.setUpCommand()
         self.fakemaster = FakeMasterMethods(self.add_update)
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_directory_not_available(self):
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -443,8 +436,6 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         os.makedirs(self.basedir)
 
     def tearDown(self):
-        self.tearDownCommand()
-
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 

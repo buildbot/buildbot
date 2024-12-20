@@ -27,9 +27,6 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     @defer.inlineCallbacks
     def test_simple(self):
         workdir = os.path.join(self.basedir, 'workdir')

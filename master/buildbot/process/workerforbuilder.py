@@ -15,12 +15,11 @@
 
 from __future__ import annotations
 
+import enum
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python.constants import NamedConstant
-from twisted.python.constants import Names
 
 if TYPE_CHECKING:
     from buildbot.process.builder import Builder
@@ -28,13 +27,13 @@ if TYPE_CHECKING:
     from buildbot.worker.latent import AbstractLatentWorker
 
 
-class States(Names):
+class States(enum.Enum):
     # The worker isn't attached, or is in the process of attaching.
-    DETACHED = NamedConstant()
+    DETACHED = 0
     # The worker is available to build: either attached, or a latent worker.
-    AVAILABLE = NamedConstant()
+    AVAILABLE = 1
     # The worker is building.
-    BUILDING = NamedConstant()
+    BUILDING = 2
 
 
 class AbstractWorkerForBuilder:

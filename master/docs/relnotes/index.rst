@@ -8,6 +8,90 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.2.0`` ( ``2024-12-10`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed an `Access is denied` error on Windows when calling `AssignProcessToJobObject` (:issue:`8162`).
+- Improved new build prioritization when many builds arrive at similar time.
+- Fixed ``copydb`` script when SQLAlchemy 2.x is used.
+- Fixed ``copydb`` script when there are rebuilt builds in the database.
+- Fixed ``SetPropertiesFromEnv`` not treating environment variable names as case insensitive for
+  Windows workers
+- Reliability of Gerrit change source has been improved on unstable connections.
+- Fixed bad default of Github webhooks not verifying HTTPS certificates in connections originating from Buildbot.
+- Fixed the timestamp comparison in janitor: it should cleanup builds 'older than' given timestamp -
+  previously janitor would delete all build_data for builds 'newer than' the configured build data horizon.
+- Fixed compatibility with Twisted 24.11.0 due to ``twisted.python.constants`` module being moved.
+- Fixed build status reporting to use state_string as fallback when ``status_string`` is ``None``.
+  This makes IRC build failure messages more informative by showing the failure reason instead of
+  just "failed".
+- Fix exception when worker loses connection to master while a command is running.
+- Fix certain combinations of ANSI reset escape sequences not displayed correctly (:issue:`8216`).
+- Fixed wrong positioning of search box in Buildbot UI log viewer.
+- Improved ANSI escape sequence support in Buildbot UI log viewer:
+  - Fixed support for formatting and color reset.
+  - Fixed support for simultaneous background and foreground color (:issue:`8151`).
+- Slightly reduced waterfall view loading times
+
+
+Improved Documentation
+----------------------
+
+- Fixed Scheduler documentation to indicate that owner property is a string, not a list, and
+  contains only one owner. This property was changed to singular and to string in Buildbot 1.0,
+  but documentation was not updated.
+
+
+Features
+--------
+
+- Use standard URL syntax for Git steps to enable the use of a dedicated SSH port.
+- Added ``ignore-fk-error-rows`` option to ``copy-db`` script. It allows ignoring
+  all rows that fail foreign key constraint checks. This is useful in cases when
+  migrating from a database engine that does not support foreign key constraints
+  to one that does.
+- Enhanced ``debounce.method`` to support calling target function only when the burst is finished.
+- Added support for specifying the master protocol to ``DockerLatentWorker`` and
+  ``KubeLatentWorker``. These classes get new ``master_protocol`` argument. The worker
+  docker image will receive the master protocol via BUILDMASTER_PROTOCOL environment
+  variable.
+- Master's ``cleanupdb`` command can now run database optimization on PostgreSQL and MySQL
+  (only available on SQLite previously)
+- Added a way to setup ``TestReactorMixin`` with explicit tear down function.
+- Added a way to return all test result sets from `getTestResultSets()`
+  and from data API via new /test_result_sets path.
+
+
+Misc
+----
+
+- Logs compression/decompression operation no longer occur in a Database connection thread.
+  This change will improve overall master reactivity on instances receiving large logs from Steps.
+- Improve logs compression operation performance with zstd.
+  Logs compression/decompression tasks now re-use ``zstandard``'s ``ZstdCompressor`` and
+  ``ZstdDecompressor`` objects, as advised in the documentation.
+- BuildView's 'Changes' tab (`builders/:builderid/builds/:buildnumber`) now only loads a limited
+  number of changes, with the option to load more.
+- BuildView (`builders/:builderid/builds/:buildnumber`) now load 'Changes' and 'Responsible Users'
+  on first access to the tab. This lower unnecessary queries on the master.
+
+
+Deprecations and Removals
+-------------------------
+
+- The following test tear down functions have been deprecated:
+
+   - ``TestBuildStepMixin.tear_down_test_build_step()``
+   - ``TestReactorMixin.tear_down_test_reactor()``
+
+  The tear down is now run automatically. Any additional test tear down should be run using
+  ``twisted.trial.TestCase.addCleanup`` to better control tear down ordering.
+
+- ``Worker.__init__`` no longer accepts ``usePTY`` argument. It has been deprecated for a long time
+  and no other values than ``None`` were accepted.
 
 Buildbot ``4.1.0`` ( ``2024-10-13`` )
 =====================================

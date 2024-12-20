@@ -90,7 +90,6 @@ class Scheduler(base.ResourceType):
     name = "scheduler"
     plural = "schedulers"
     endpoints = [SchedulerEndpoint, SchedulersEndpoint]
-    keyField = 'schedulerid'
     eventPathPatterns = """
         /schedulers/:schedulerid
     """
@@ -101,7 +100,7 @@ class Scheduler(base.ResourceType):
         enabled = types.Boolean()
         master = types.NoneOk(masters.Master.entityType)
 
-    entityType = EntityType(name, 'Scheduler')
+    entityType = EntityType(name)
 
     @defer.inlineCallbacks
     def generateEvent(self, schedulerid, event):

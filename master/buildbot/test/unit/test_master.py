@@ -79,7 +79,7 @@ class InitTests(unittest.SynchronousTestCase):
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         yield self.setUpDirs(self.basedir)
@@ -101,16 +101,19 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.secrets_manager = self.master.secrets_manager = SecretManager()
         yield self.secrets_manager.setServiceParent(self.master)
         self.db = self.master.db = fakedb.FakeDBConnector(self.basedir, self, auto_upgrade=True)
-        yield self.db.setServiceParent(self.master)
+        yield self.db.set_master(self.master)
+
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.db.pool is not None:
+                yield self.db.pool.stop()
+
+        self.addCleanup(cleanup)
+
         self.mq = self.master.mq = fakemq.FakeMQConnector(self)
         yield self.mq.setServiceParent(self.master)
         self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
         yield self.data.setServiceParent(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownDirs()
-        yield self.tear_down_test_reactor()
 
     # tests
     @defer.inlineCallbacks

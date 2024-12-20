@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -28,11 +27,8 @@ from buildbot.test.steps import TestBuildStepMixin
 
 class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    def tearDown(self):
-        return self.tear_down_test_build_step()
 
     def test_no_root(self):
         with self.assertRaises(config.ConfigErrors):
@@ -109,13 +105,8 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_no_spec(self):
         with self.assertRaises(config.ConfigErrors):
@@ -152,13 +143,8 @@ class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 class TestMockRebuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_no_srpm(self):
         with self.assertRaises(config.ConfigErrors):

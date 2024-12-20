@@ -18,15 +18,10 @@ import os
 
 import sqlalchemy as sa
 from sqlalchemy.schema import MetaData
-from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 from twisted.trial import unittest
 
-from buildbot.db import enginestrategy
 from buildbot.db import model
-from buildbot.db import pool
-from buildbot.db.connector import DBConnector
 from buildbot.util.sautils import withoutSqliteForeignKeys
 
 
@@ -35,7 +30,7 @@ def skip_for_dialect(dialect):
 
     def dec(fn):
         def wrap(self, *args, **kwargs):
-            if self.db_engine.dialect.name == dialect:
+            if self.master.db._engine.dialect.name == dialect:
                 raise unittest.SkipTest(f"Not supported on dialect '{dialect}'")
             return fn(self, *args, **kwargs)
 
@@ -62,6 +57,9 @@ def resolve_test_index_in_db_url(db_url):
     test_id = get_trial_parallel_from_cwd(os.getcwd())
 
     if "{TEST_ID}" in db_url:
+        if test_id is None:
+            raise RuntimeError("Database tests are run in parallel, but test index is unknown")
+
         return db_url.replace("{TEST_ID}", str(test_id or 0))
 
     if db_url == 'sqlite://':
@@ -77,6 +75,16 @@ def resolve_test_index_in_db_url(db_url):
         raise RuntimeError("Database tests cannnot run in parallel")
 
     return db_url
+
+
+def resolve_test_db_url(db_url, sqlite_memory):
+    default_sqlite = 'sqlite://'
+    if db_url is None:
+        db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
+        if not sqlite_memory and db_url == default_sqlite:
+            db_url = "sqlite:///tmp.sqlite"
+
+    return resolve_test_index_in_db_url(db_url)
 
 
 def thd_clean_database(conn):
@@ -162,141 +170,3 @@ def thd_create_tables(conn, table_names):
     # (that use use_alter=True in definition).
     model.Model.metadata.create_all(bind=conn, tables=tables, checkfirst=True)
     conn.commit()
-
-
-class RealDatabaseMixin:
-    """
-    A class that sets up a real database for testing.  This sets self.db_url to
-    the URL for the database.  By default, it specifies an in-memory SQLite
-    database, but if the BUILDBOT_TEST_DB_URL environment variable is set, it
-    will use the specified database, being careful to clean out *all* tables in
-    the database before and after the tests are run - so each test starts with
-    a clean database.
-
-    @ivar db_pool: a (real) DBThreadPool instance that can be used as desired
-
-    @ivar db_url: the DB URL used to run these tests
-
-    @ivar db_engine: the engine created for the test database
-
-    Note that this class uses the production database model.  A
-    re-implementation would be virtually identical and just require extra
-    work to keep synchronized.
-
-    Similarly, this class uses the production DB thread pool.  This achieves
-    a few things:
-     - affords more thorough tests for the pool
-     - avoids repetitive implementation
-     - cooperates better at runtime with thread-sensitive DBAPI's
-
-    Finally, it duplicates initialization performed in db.connector.DBConnector.setup().
-    Never call that method in tests that use RealDatabaseMixin, use
-    RealDatabaseWithConnectorMixin.
-    """
-
-    @defer.inlineCallbacks
-    def setUpRealDatabase(
-        self, table_names=None, basedir='basedir', want_pool=True, sqlite_memory=True, db_url=None
-    ):
-        """
-
-        Set up a database.  Ordinarily sets up an engine and a pool and takes
-        care of cleaning out any existing tables in the database.  If
-        C{want_pool} is false, then no pool will be created, and the database
-        will not be cleaned.
-
-        @param table_names: list of names of tables to instantiate
-        @param basedir: (optional) basedir for the engine
-        @param want_pool: (optional) false to not create C{self.db_pool}
-        @param sqlite_memory: (optional) False to avoid using an in-memory db
-        @returns: Deferred
-        """
-        if table_names is None:
-            table_names = []
-        self.__want_pool = want_pool
-
-        default_sqlite = 'sqlite://'
-        if db_url is None:
-            db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
-            if not sqlite_memory and db_url == default_sqlite:
-                db_url = "sqlite:///tmp.sqlite"
-
-        self.db_url = resolve_test_index_in_db_url(db_url)
-
-        if not os.path.exists(basedir):
-            os.makedirs(basedir)
-
-        self.basedir = basedir
-        self.db_engine = enginestrategy.create_engine(self.db_url, basedir=basedir)
-        # if the caller does not want a pool, we're done.
-        if not want_pool:
-            return None
-
-        self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
-
-        log.msg(f"cleaning database {self.db_url}")
-        yield self.db_pool.do(thd_clean_database)
-        yield self.db_pool.do(thd_create_tables, table_names)
-        return None
-
-    @defer.inlineCallbacks
-    def tearDownRealDatabase(self):
-        if self.__want_pool:
-            yield self.db_pool.do(thd_clean_database)
-            yield self.db_pool.shutdown()
-        else:
-            self.db_engine.engine.dispose()
-
-    @defer.inlineCallbacks
-    def insert_test_data(self, rows):
-        """Insert test data into the database for use during the test.
-
-        @param rows: be a sequence of L{fakedb.Row} instances.  These will be
-        sorted by table dependencies, so order does not matter.
-
-        @returns: Deferred
-        """
-        # sort the tables by dependency
-        all_table_names = {row.table for row in rows}
-        ordered_tables = [
-            t for t in model.Model.metadata.sorted_tables if t.name in all_table_names
-        ]
-
-        def thd(conn):
-            # insert into tables -- in order
-            for tbl in ordered_tables:
-                for row in [r for r in rows if r.table == tbl.name]:
-                    tbl = model.Model.metadata.tables[row.table]
-                    try:
-                        conn.execute(tbl.insert().values(row.values))
-                        conn.commit()
-                    except Exception:
-                        log.msg(f"while inserting {row} - {row.values}")
-                        raise
-
-        yield self.db_pool.do(thd)
-
-
-class RealDatabaseWithConnectorMixin(RealDatabaseMixin):
-    # Same as RealDatabaseMixin, except that a real DBConnector is also setup in a correct way.
-
-    @defer.inlineCallbacks
-    def setUpRealDatabaseWithConnector(
-        self,
-        master,
-        table_names=None,
-        basedir='basedir',
-        want_pool=True,
-        sqlite_memory=True,
-        db_url=None,
-    ):
-        yield self.setUpRealDatabase(
-            table_names, basedir, want_pool=want_pool, sqlite_memory=sqlite_memory, db_url=db_url
-        )
-        master.config.db['db_url'] = self.db_url
-        master.db = DBConnector(self.basedir)
-        yield master.db.setServiceParent(master)
-        master.db.pool = self.db_pool
-
-    def tearDownRealDatabaseWithConnector(self):
-        return self.tearDownRealDatabase()

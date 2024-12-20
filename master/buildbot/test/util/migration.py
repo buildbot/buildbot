@@ -24,10 +24,8 @@ from alembic.runtime.migration import MigrationContext
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.db import connector
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
 from buildbot.util import sautils
@@ -43,25 +41,17 @@ if TYPE_CHECKING:
 # single db upgrade script.
 
 
-class MigrateTestMixin(TestReactorMixin, db.RealDatabaseMixin, dirs.DirsMixin):
+class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
     @defer.inlineCallbacks
     def setUpMigrateTest(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 
-        yield self.setUpRealDatabase()
-
-        master = yield fakemaster.make_master(self)
-        self.db = connector.DBConnector(self.basedir)
-        yield self.db.setServiceParent(master)
-        self.db.pool = self.db_pool
-
-    @defer.inlineCallbacks
-    def tearDownMigrateTest(self):
-        self.tearDownDirs()
-        yield self.tearDownRealDatabase()
-        yield self.tear_down_test_reactor()
+        self.master = yield fakemaster.make_master(
+            self, wantDb=True, auto_upgrade=False, check_version=False
+        )
+        self.db = self.master.db
 
     @defer.inlineCallbacks
     def do_test_migration(self, base_revision, target_revision, setup_thd_cb, verify_thd_cb):

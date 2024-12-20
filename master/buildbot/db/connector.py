@@ -62,36 +62,17 @@ upgrade_message = textwrap.dedent("""\
     """).strip()
 
 
-class AbstractDBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    def __init__(self) -> None:
-        super().__init__()
-        self.configured_url = None
-
-    @defer.inlineCallbacks
-    def setup(self):
-        if self.configured_url is None:
-            self.configured_url = yield self.master.get_db_url(self.master.config)
-
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        new_db_url = yield self.master.get_db_url(new_config)
-        if self.configured_url is None:
-            self.configured_url = new_db_url
-        elif self.configured_url != new_db_url:
-            config.error(
-                "Cannot change c['db']['db_url'] after the master has started",
-            )
-
-        return (yield super().reconfigServiceWithBuildbotConfig(new_config))
-
-
-class DBConnector(AbstractDBConnector):
+class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
     # Most of the interesting operations available via the connector are
     # implemented in connector components, available as attributes of this
     # object, and listed below.
+    #
+    # DBConnector is not usual Buildbot service because it is not child of the
+    # master service. This is because DBConnector must start before all other
+    # services and must stop after all other services that may be using it.
 
     # Period, in seconds, of the cleanup task.  This master will perform
     # periodic cleanup actions on this schedule.
@@ -110,30 +91,70 @@ class DBConnector(AbstractDBConnector):
         self._engine = None  # set up in reconfigService
         self.pool = None  # set up in reconfigService
         self.upsert = get_upsert_method(None)  # set up in reconfigService
+        self.has_native_upsert = False
+
+        self._master = None
+
+        self._db_tasks_waiter = DeferWaiter()
+
+    @property
+    def master(self):
+        return self._master
 
     @defer.inlineCallbacks
-    def setServiceParent(self, p):
-        yield super().setServiceParent(p)
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        new_db_url = yield self.master.get_db_url(new_config)
+        if self.configured_url is None:
+            self.configured_url = new_db_url
+        elif self.configured_url != new_db_url:
+            config.error(
+                "Cannot change c['db']['db_url'] after the master has started",
+            )
+
+        return (yield super().reconfigServiceWithBuildbotConfig(new_config))
+
+    @defer.inlineCallbacks
+    def set_master(self, master):
+        self._master = master
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
+        yield self.changes.setServiceParent(self)
         self.changesources = changesources.ChangeSourcesConnectorComponent(self)
+        yield self.changesources.setServiceParent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
+        yield self.schedulers.setServiceParent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
+        yield self.sourcestamps.setServiceParent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
+        yield self.buildsets.setServiceParent(self)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
+        yield self.buildrequests.setServiceParent(self)
         self.state = state.StateConnectorComponent(self)
+        yield self.state.setServiceParent(self)
         self.builds = builds.BuildsConnectorComponent(self)
+        yield self.builds.setServiceParent(self)
         self.build_data = build_data.BuildDataConnectorComponent(self)
+        yield self.build_data.setServiceParent(self)
         self.workers = workers.WorkersConnectorComponent(self)
+        yield self.workers.setServiceParent(self)
         self.users = users.UsersConnectorComponent(self)
+        yield self.users.setServiceParent(self)
         self.masters = masters.MastersConnectorComponent(self)
+        yield self.masters.setServiceParent(self)
         self.builders = builders.BuildersConnectorComponent(self)
+        yield self.builders.setServiceParent(self)
         self.projects = projects.ProjectsConnectorComponent(self)
+        yield self.projects.setServiceParent(self)
         self.steps = steps.StepsConnectorComponent(self)
+        yield self.steps.setServiceParent(self)
         self.tags = tags.TagsConnectorComponent(self)
+        yield self.tags.setServiceParent(self)
         self.logs = logs.LogsConnectorComponent(self)
+        yield self.logs.setServiceParent(self)
         self.test_results = test_results.TestResultsConnectorComponent(self)
+        yield self.test_results.setServiceParent(self)
         self.test_result_sets = test_result_sets.TestResultSetsConnectorComponent(self)
+        yield self.test_result_sets.setServiceParent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self._doCleanup)
         self.cleanup_timer.clock = self.master.reactor
@@ -141,7 +162,9 @@ class DBConnector(AbstractDBConnector):
 
     @defer.inlineCallbacks
     def setup(self, check_version=True, verbose=True):
-        yield super().setup()
+        if self.configured_url is None:
+            self.configured_url = yield self.master.get_db_url(self.master.config)
+
         db_url = self.configured_url
 
         log.msg(f"Setting up database with URL {util.stripUrlPassword(db_url)!r}")
@@ -149,8 +172,9 @@ class DBConnector(AbstractDBConnector):
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
         self.upsert = get_upsert_method(self._engine)
+        self.has_native_upsert = self.upsert != get_upsert_method(None)
         self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
-        self._db_tasks_waiter = DeferWaiter()
+        self.pool.start()
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
@@ -176,7 +200,10 @@ class DBConnector(AbstractDBConnector):
     @defer.inlineCallbacks
     def stopService(self):
         yield self._shutdown()
-        yield super().stopService()
+        try:
+            yield super().stopService()
+        finally:
+            yield self.pool.stop()
 
     def _doCleanup(self):
         """

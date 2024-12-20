@@ -1,1 +1,0 @@
-Fixed ``copydb`` script when there are rebuilt builds in the database.

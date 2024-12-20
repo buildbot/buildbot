@@ -15,10 +15,13 @@
 
 import json
 
+import sqlalchemy as sa
 from twisted.internet import defer
 
 from buildbot.db.connector import DBConnector
+from buildbot.test.util.db import thd_clean_database
 from buildbot.util.sautils import hash_columns
+from buildbot.util.twisted import async_to_deferred
 
 from .build_data import BuildData
 from .builders import Builder
@@ -61,11 +64,14 @@ from .workers import ConnectedWorker
 from .workers import Worker
 
 
+def row_bool_to_int(value):
+    return 1 if value else 0
+
+
 class FakeDBConnector(DBConnector):
     """
     A stand-in for C{master.db} that operates without an actual database
-    backend.  This also implements a test-data interface similar to the
-    L{buildbot.test.util.db.RealDatabaseMixin.insert_test_data} method.
+    backend.
 
     The child classes implement various useful assertions and faking methods;
     see their documentation for more.
@@ -73,24 +79,55 @@ class FakeDBConnector(DBConnector):
 
     MASTER_ID = 824
 
-    def __init__(self, basedir, testcase, auto_upgrade=False):
+    def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True, auto_clean=True):
         super().__init__(basedir)
         self.testcase = testcase
-        self.checkForeignKeys = False
         self.auto_upgrade = auto_upgrade
+        self.check_version = check_version
+        self.auto_clean = auto_clean
 
     @defer.inlineCallbacks
     def setup(self):
         if self.auto_upgrade:
             yield super().setup(check_version=False)
+            yield self.pool.do(thd_clean_database)
             yield self.model.upgrade()
         else:
-            yield super().setup()
+            yield super().setup(check_version=self.check_version)
+            if self.auto_clean:
+                yield self.pool.do(thd_clean_database)
+
+    @async_to_deferred
+    async def _shutdown(self) -> None:
+        await super()._shutdown()
+        await self.pool.stop()
 
     def _match_rows(self, rows, type):
         matched_rows = [r for r in rows if isinstance(r, type)]
         non_matched_rows = [r for r in rows if r not in matched_rows]
         return matched_rows, non_matched_rows
+
+    def _thd_post_insert(self, conn, table):
+        if self.pool.engine.dialect.name == 'postgresql':
+            # Explicitly inserting primary row IDs does not bump the primary key
+            # sequence on Postgres
+            autoincrement_foreign_key_column = None
+
+            for column in table.columns.values():
+                if (
+                    not column.foreign_keys
+                    and column.primary_key
+                    and isinstance(column.type, sa.Integer)
+                ):
+                    autoincrement_foreign_key_column = column
+
+            if autoincrement_foreign_key_column is not None:
+                r = conn.execute(sa.select(sa.func.max(autoincrement_foreign_key_column)))
+                max_column_id = r.fetchone()[0]
+                r.close()
+
+                seq_name = f"{table.name}_{autoincrement_foreign_key_column.name}_seq"
+                conn.execute(sa.text(f"ALTER SEQUENCE {seq_name} RESTART WITH {max_column_id + 1}"))
 
     def _thd_maybe_insert_build_data(self, conn, rows):
         matched_rows, non_matched_rows = self._match_rows(rows, BuildData)
@@ -108,6 +145,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.build_data)
         return non_matched_rows
 
     def _thd_maybe_insert_builder(self, conn, rows):
@@ -127,6 +166,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.builders)
         return non_matched_rows
 
     def _thd_maybe_insert_builder_master(self, conn, rows):
@@ -145,6 +186,8 @@ class FakeDBConnector(DBConnector):
                 self.model.builders_tags.insert(),
                 [{'builderid': row.builderid, 'tagid': row.tagid}],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.builders_tags)
         return non_matched_rows
 
     def _thd_maybe_insert_buildrequest(self, conn, rows):
@@ -158,7 +201,7 @@ class FakeDBConnector(DBConnector):
                         'buildsetid': row.buildsetid,
                         'builderid': row.builderid,
                         'priority': row.priority,
-                        'complete': row.complete,
+                        'complete': row_bool_to_int(row.complete),
                         'results': row.results,
                         'submitted_at': row.submitted_at,
                         'complete_at': row.complete_at,
@@ -166,6 +209,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.buildrequests)
         return non_matched_rows
 
     def _thd_maybe_insert_buildrequest_claim(self, conn, rows):
@@ -204,6 +249,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.builds)
         return non_matched_rows
 
     def _thd_maybe_insert_build_properties(self, conn, rows):
@@ -220,6 +267,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.build_properties)
         return non_matched_rows
 
     def _thd_maybe_insert_buildset(self, conn, rows):
@@ -233,15 +282,27 @@ class FakeDBConnector(DBConnector):
                         'external_idstring': row.external_idstring,
                         'reason': row.reason,
                         'submitted_at': row.submitted_at,
-                        'complete': row.complete,
+                        'complete': row_bool_to_int(row.complete),
                         'complete_at': row.complete_at,
                         'results': row.results,
-                        'parent_buildid': row.parent_buildid,
+                        'parent_buildid': None,
                         'parent_relationship': row.parent_relationship,
-                        'rebuilt_buildid': row.rebuilt_buildid,
+                        'rebuilt_buildid': None,
                     }
                 ],
             )
+        return rows  # filtered by _thd_maybe_insert_buildset_fk_columns
+
+    def _thd_maybe_insert_buildset_fk_columns(self, conn, rows):
+        matched_rows, non_matched_rows = self._match_rows(rows, Buildset)
+        for row in matched_rows:
+            conn.execute(
+                self.model.buildsets.update()
+                .where(self.model.buildsets.c.id == row.id)
+                .values(rebuilt_buildid=row.rebuilt_buildid, parent_buildid=row.parent_buildid)
+            )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.buildsets)
         return non_matched_rows
 
     def _thd_maybe_insert_buildset_property(self, conn, rows):
@@ -257,6 +318,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.buildset_properties)
         return non_matched_rows
 
     def _thd_maybe_insert_buildset_sourcestamp(self, conn, rows):
@@ -272,6 +335,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.buildset_sourcestamps)
         return non_matched_rows
 
     def _thd_maybe_insert_change(self, conn, rows):
@@ -298,6 +363,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.changes)
         return non_matched_rows
 
     def _thd_maybe_insert_change_file(self, conn, rows):
@@ -307,6 +374,8 @@ class FakeDBConnector(DBConnector):
                 self.model.change_files.insert(),
                 [{'changeid': row.changeid, 'filename': row.filename}],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.change_files)
         return non_matched_rows
 
     def _thd_maybe_insert_change_property(self, conn, rows):
@@ -322,6 +391,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.change_properties)
         return non_matched_rows
 
     def _thd_maybe_insert_change_user(self, conn, rows):
@@ -331,6 +402,8 @@ class FakeDBConnector(DBConnector):
                 self.model.change_users.insert(),
                 [{'changeid': row.changeid, 'uid': row.uid}],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.change_users)
         return non_matched_rows
 
     def _thd_maybe_insert_changesource(self, conn, rows):
@@ -346,6 +419,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.changesources)
         return non_matched_rows
 
     def _thd_maybe_insert_changesource_master(self, conn, rows):
@@ -360,6 +435,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.changesource_masters)
         return non_matched_rows
 
     def _thd_maybe_insert_log(self, conn, rows):
@@ -379,6 +456,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.logs)
         return non_matched_rows
 
     def _thd_maybe_insert_log_chunk(self, conn, rows):
@@ -396,6 +475,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.logchunks)
         return non_matched_rows
 
     def _thd_maybe_insert_master(self, conn, rows):
@@ -408,11 +489,13 @@ class FakeDBConnector(DBConnector):
                         'id': row.id,
                         'name': row.name,
                         'name_hash': hash_columns(row.name),
-                        'active': row.active,
-                        'last_active': row.last_active,
+                        'active': row_bool_to_int(row.active),
+                        'last_active': int(row.last_active),
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.masters)
         return non_matched_rows
 
     def _thd_maybe_insert_project(self, conn, rows):
@@ -432,6 +515,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.projects)
         return non_matched_rows
 
     def _thd_maybe_insert_scheduler_change(self, conn, rows):
@@ -447,6 +532,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.scheduler_changes)
         return non_matched_rows
 
     def _thd_maybe_insert_scheduler(self, conn, rows):
@@ -463,6 +550,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.schedulers)
         return non_matched_rows
 
     def _thd_maybe_insert_scheduler_master(self, conn, rows):
@@ -477,6 +566,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.scheduler_masters)
         return non_matched_rows
 
     def _thd_maybe_insert_patch(self, conn, rows):
@@ -495,6 +586,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.patches)
         return non_matched_rows
 
     def _thd_maybe_insert_sourcestamp(self, conn, rows):
@@ -523,6 +616,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.sourcestamps)
         return non_matched_rows
 
     def _thd_maybe_insert_object(self, conn, rows):
@@ -538,6 +633,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.objects)
         return non_matched_rows
 
     def _thd_maybe_insert_object_state(self, conn, rows):
@@ -553,6 +650,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.object_state)
         return non_matched_rows
 
     def _thd_maybe_insert_step(self, conn, rows):
@@ -572,10 +671,12 @@ class FakeDBConnector(DBConnector):
                         'state_string': row.state_string,
                         'results': row.results,
                         'urls_json': row.urls_json,
-                        'hidden': row.hidden,
+                        'hidden': row_bool_to_int(row.hidden),
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.steps)
         return non_matched_rows
 
     def _thd_maybe_insert_tag(self, conn, rows):
@@ -591,6 +692,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.tags)
         return non_matched_rows
 
     def _thd_maybe_insert_test_result_set(self, conn, rows):
@@ -609,10 +712,12 @@ class FakeDBConnector(DBConnector):
                         'value_unit': row.value_unit,
                         'tests_passed': row.tests_passed,
                         'tests_failed': row.tests_failed,
-                        'complete': row.complete,
+                        'complete': row_bool_to_int(row.complete),
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.test_result_sets)
         return non_matched_rows
 
     def _thd_maybe_insert_test_name(self, conn, rows):
@@ -628,6 +733,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.test_names)
         return non_matched_rows
 
     def _thd_maybe_insert_test_code_path(self, conn, rows):
@@ -643,6 +750,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.test_code_paths)
         return non_matched_rows
 
     def _thd_maybe_insert_test_result(self, conn, rows):
@@ -663,6 +772,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.test_results)
         return non_matched_rows
 
     def _thd_maybe_insert_user(self, conn, rows):
@@ -679,6 +790,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.users)
         return non_matched_rows
 
     def _thd_maybe_insert_user_info(self, conn, rows):
@@ -694,6 +807,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.users_info)
         return non_matched_rows
 
     def _thd_maybe_insert_worker(self, conn, rows):
@@ -712,6 +827,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.workers)
         return non_matched_rows
 
     def _thd_maybe_insert_configured_worker(self, conn, rows):
@@ -727,6 +844,8 @@ class FakeDBConnector(DBConnector):
                     }
                 ],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.configured_workers)
         return non_matched_rows
 
     def _thd_maybe_insert_connected_worker(self, conn, rows):
@@ -736,6 +855,8 @@ class FakeDBConnector(DBConnector):
                 self.model.connected_workers.insert(),
                 [{'id': row.id, 'masterid': row.masterid, 'workerid': row.workerid}],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.connected_workers)
         return non_matched_rows
 
     @defer.inlineCallbacks
@@ -744,17 +865,25 @@ class FakeDBConnector(DBConnector):
 
         def thd_insert_rows(conn):
             remaining = rows
-            remaining = self._thd_maybe_insert_build_data(conn, remaining)
+            remaining = self._thd_maybe_insert_master(conn, remaining)
+            remaining = self._thd_maybe_insert_project(conn, remaining)
             remaining = self._thd_maybe_insert_builder(conn, remaining)
+            remaining = self._thd_maybe_insert_tag(conn, remaining)
+            remaining = self._thd_maybe_insert_worker(conn, remaining)
+            remaining = self._thd_maybe_insert_user(conn, remaining)
+            remaining = self._thd_maybe_insert_patch(conn, remaining)
+            remaining = self._thd_maybe_insert_sourcestamp(conn, remaining)
             remaining = self._thd_maybe_insert_builder_master(conn, remaining)
             remaining = self._thd_maybe_insert_builder_tags(conn, remaining)
-            remaining = self._thd_maybe_insert_buildrequest(conn, remaining)
-            remaining = self._thd_maybe_insert_buildrequest_claim(conn, remaining)
-            remaining = self._thd_maybe_insert_build(conn, remaining)
-            remaining = self._thd_maybe_insert_build_properties(conn, remaining)
             remaining = self._thd_maybe_insert_buildset(conn, remaining)
             remaining = self._thd_maybe_insert_buildset_property(conn, remaining)
             remaining = self._thd_maybe_insert_buildset_sourcestamp(conn, remaining)
+            remaining = self._thd_maybe_insert_buildrequest(conn, remaining)
+            remaining = self._thd_maybe_insert_buildrequest_claim(conn, remaining)
+            remaining = self._thd_maybe_insert_build(conn, remaining)
+            remaining = self._thd_maybe_insert_build_data(conn, remaining)
+            remaining = self._thd_maybe_insert_build_properties(conn, remaining)
+            remaining = self._thd_maybe_insert_step(conn, remaining)
             remaining = self._thd_maybe_insert_change(conn, remaining)
             remaining = self._thd_maybe_insert_change_file(conn, remaining)
             remaining = self._thd_maybe_insert_change_property(conn, remaining)
@@ -763,33 +892,22 @@ class FakeDBConnector(DBConnector):
             remaining = self._thd_maybe_insert_changesource_master(conn, remaining)
             remaining = self._thd_maybe_insert_log(conn, remaining)
             remaining = self._thd_maybe_insert_log_chunk(conn, remaining)
-            remaining = self._thd_maybe_insert_master(conn, remaining)
-            remaining = self._thd_maybe_insert_project(conn, remaining)
-            remaining = self._thd_maybe_insert_scheduler_change(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler(conn, remaining)
+            remaining = self._thd_maybe_insert_scheduler_change(conn, remaining)
             remaining = self._thd_maybe_insert_scheduler_master(conn, remaining)
-            remaining = self._thd_maybe_insert_patch(conn, remaining)
-            remaining = self._thd_maybe_insert_sourcestamp(conn, remaining)
             remaining = self._thd_maybe_insert_object(conn, remaining)
             remaining = self._thd_maybe_insert_object_state(conn, remaining)
-            remaining = self._thd_maybe_insert_step(conn, remaining)
-            remaining = self._thd_maybe_insert_tag(conn, remaining)
             remaining = self._thd_maybe_insert_test_result_set(conn, remaining)
             remaining = self._thd_maybe_insert_test_name(conn, remaining)
             remaining = self._thd_maybe_insert_test_code_path(conn, remaining)
             remaining = self._thd_maybe_insert_test_result(conn, remaining)
-            remaining = self._thd_maybe_insert_user(conn, remaining)
             remaining = self._thd_maybe_insert_user_info(conn, remaining)
-            remaining = self._thd_maybe_insert_worker(conn, remaining)
             remaining = self._thd_maybe_insert_configured_worker(conn, remaining)
             remaining = self._thd_maybe_insert_connected_worker(conn, remaining)
+            remaining = self._thd_maybe_insert_buildset_fk_columns(conn, remaining)
 
             self.testcase.assertEqual(remaining, [])
 
             conn.commit()
-
-            for row in rows:
-                if self.checkForeignKeys:
-                    row.checkForeignKeys(self, self.testcase)
 
         yield self.pool.do(thd_insert_rows)

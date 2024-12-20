@@ -63,7 +63,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     worker = None
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def setupWorker(self, *args, config=None, **kwargs):
@@ -85,10 +85,6 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertTrue(config.running)
         self.addCleanup(self.master.stopService)
         return worker
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def get_expected_metadata(self):
         return {"name": "buildbot-worker-87de7e"}

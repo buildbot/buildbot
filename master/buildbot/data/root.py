@@ -18,6 +18,7 @@ from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.warnings import warn_deprecated
 
 
 class RootEndpoint(base.Endpoint):
@@ -25,6 +26,7 @@ class RootEndpoint(base.Endpoint):
     pathPatterns = "/"
 
     def get(self, resultSpec, kwargs):
+        warn_deprecated('4.3.0', 'the root endpoint with endpoint directory has been deprecated')
         return defer.succeed(self.master.data.rootLinks)
 
 
@@ -36,7 +38,7 @@ class Root(base.ResourceType):
     class EntityType(types.Entity):
         name = types.String()
 
-    entityType = EntityType(name, 'Rootlink')
+    entityType = EntityType(name)
 
 
 class SpecEndpoint(base.Endpoint):
@@ -58,4 +60,4 @@ class Spec(base.ResourceType):
         plural = types.String()
         type_spec = types.JsonObject()
 
-    entityType = EntityType(name, 'Spec')
+    entityType = EntityType(name)

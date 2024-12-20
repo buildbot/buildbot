@@ -15,7 +15,6 @@
 
 import textwrap
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Property
@@ -94,13 +93,8 @@ FAILED (failures=8)
 
 class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_run_env(self):
         self.setup_step(
@@ -400,13 +394,8 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_run_ok(self):
         self.setup_build(build_files=['foo.xhtml'])
@@ -471,13 +460,8 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class RemovePYCs(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_run_ok(self):
         self.setup_step(python_twisted.RemovePYCs())

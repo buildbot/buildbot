@@ -102,7 +102,6 @@ class BuildData(base.ResourceType):
     name = "build_data"
     plural = "build_data"
     endpoints = [BuildDatasNoValueEndpoint, BuildDataNoValueEndpoint, BuildDataEndpoint]
-    keyField = "name"
 
     class EntityType(types.Entity):
         buildid = types.Integer()
@@ -111,7 +110,7 @@ class BuildData(base.ResourceType):
         value = types.NoneOk(types.Binary())
         source = types.String()
 
-    entityType = EntityType(name, 'BuildData')
+    entityType = EntityType(name)
 
     @base.updateMethod
     def setBuildData(self, buildid, name, value, source):

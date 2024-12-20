@@ -80,19 +80,14 @@ class ProjectsEndpoint(base.Endpoint):
 
         return [project_db_to_data(dbdict, active=active) for dbdict in dbdicts]
 
-    def get_kwargs_from_graphql(self, parent, resolve_info, args):
-        return {}
-
 
 class Project(base.ResourceType):
     name = "project"
     plural = "projects"
     endpoints = [ProjectEndpoint, ProjectsEndpoint]
-    keyField = 'projectid'
     eventPathPatterns = """
         /projects/:projectid
     """
-    subresources = ["Builder"]
 
     class EntityType(types.Entity):
         projectid = types.Integer()
@@ -103,7 +98,7 @@ class Project(base.ResourceType):
         description_format = types.NoneOk(types.String())
         description_html = types.NoneOk(types.String())
 
-    entityType = EntityType(name, 'Project')
+    entityType = EntityType(name)
 
     @defer.inlineCallbacks
     def generate_event(self, _id, event):

@@ -27,12 +27,8 @@ from twisted.trial import unittest
 from twisted.web import client
 from twisted.web.http_headers import Headers
 
-from buildbot.data import connector as dataconnector
-from buildbot.db import connector as dbconnector
-from buildbot.mq import connector as mqconnector
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import db
 from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
@@ -66,30 +62,20 @@ class BodyReader(protocol.Protocol):
             self.finishedDeferred.errback(reason)
 
 
-class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
+class Www(www.RequiresWwwMixin, unittest.TestCase):
     master = None
 
     @defer.inlineCallbacks
     def setUp(self):
         # set up a full master serving HTTP
-        yield self.setUpRealDatabase(
-            table_names=['masters', 'objects', 'object_state'], sqlite_memory=False
+        master = yield fakemaster.make_master(
+            self,
+            wantRealReactor=True,
+            wantDb=True,
+            wantData=True,
+            sqlite_memory=False,
+            auto_shutdown=False,
         )
-
-        master = fakemaster.FakeMaster(reactor)
-
-        master.config.db = {"db_url": self.db_url}
-        master.db = dbconnector.DBConnector('basedir')
-        yield master.db.setServiceParent(master)
-        yield master.db.setup(check_version=False)
-
-        master.config.mq = {"type": 'simple'}
-        master.mq = mqconnector.MQConnector()
-        yield master.mq.setServiceParent(master)
-        yield master.mq.setup()
-
-        master.data = dataconnector.DataConnector()
-        yield master.data.setServiceParent(master)
 
         master.config.www = {
             "port": 'tcp:0:interface=127.0.0.1',
@@ -117,22 +103,18 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         self.master = master
 
+        self.addCleanup(self.master.test_shutdown)
+        self.addCleanup(self.master.www.stopService)
+
         # build an HTTP agent, using an explicit connection pool if Twisted
         # supports it (Twisted 13.0.0 and up)
         if hasattr(client, 'HTTPConnectionPool'):
             self.pool = client.HTTPConnectionPool(reactor)
             self.agent = client.Agent(reactor, pool=self.pool)
+            self.addCleanup(self.pool.closeCachedConnections)
         else:
             self.pool = None
             self.agent = client.Agent(reactor)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.pool:
-            yield self.pool.closeCachedConnections()
-        if self.master:
-            yield self.master.www.stopService()
-        yield self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
     def apiGet(self, url, expect200=True):
@@ -162,7 +144,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_masters(self):
-        yield self.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
             fakedb.Master(id=8, active=1, last_active=OTHERTIME),
         ])
@@ -212,7 +194,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         encoding: bytes,
         decompress_fn: Callable[[bytes], bytes],
     ) -> None:
-        await self.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
         ])
 

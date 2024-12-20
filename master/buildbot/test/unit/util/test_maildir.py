@@ -36,7 +36,6 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
     def tearDown(self):
         if self.svc and self.svc.running:
             self.svc.stopService()
-        self.tearDownDirs()
 
     # tests
 

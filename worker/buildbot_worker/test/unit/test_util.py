@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
 from twisted.trial import unittest
 
 from buildbot_worker import util
@@ -149,3 +150,26 @@ class TestRewrap(unittest.TestCase):
 
         for text, expected, width in tests:
             self.assertEqual(util.rewrap(text, width=width), expected)
+
+
+class TestTwistedConnectionStringToWsUrl(unittest.TestCase):
+    @parameterized.expand([
+        ('empty', ''),
+        ('tcp_no_host', 'tcp:'),
+        ('tls_no_host', 'tls:'),
+    ])
+    def test_exception(self, name, description):
+        with self.assertRaises(ValueError):
+            util.twisted_connection_string_to_ws_url(description)
+
+    @parameterized.expand([
+        ('tcp_host', 'tcp:abc', 'ws://abc:80'),
+        ('tcp_host_port', 'tcp:abc:123', 'ws://abc:123'),
+        ('tcp_host_kw_port', 'tcp:host=abc:123', 'ws://abc:123'),
+        ('tcp_host_port_kw', 'tcp:abc:port=123', 'ws://abc:123'),
+        ('tcp_host_kw_port_kw', 'tcp:host=abc:port=123', 'ws://abc:123'),
+        ('tls_host_port', 'tls:host=abc:port=123', 'ws://abc:123'),
+    ])
+    def test_converts(self, name, description, expected):
+        ws_connection = util.twisted_connection_string_to_ws_url(description)
+        self.assertEqual(ws_connection, expected)

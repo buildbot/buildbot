@@ -291,24 +291,6 @@ this::
                 return thdict
             return self.db.pool.do(thd)
 
-Tests
-~~~~~
-
-It goes without saying that any new connector methods must be fully tested!
-
-You will also want to add an in-memory implementation of the methods to the
-fake classes in ``master/buildbot/test/fake/fakedb.py``.  Non-DB Buildbot code
-is tested using these fake implementations in order to isolate that code from
-the database code, and to speed-up tests.
-
-The keys and types used in the return value from a connector's ``get`` methods are described in :src:`master/buildbot/test/util/validation.py`, via the ``dbdict`` module-level value.
-This is a dictionary of ``DictValidator`` objects, one for each return value.
-
-These values are used within test methods like this::
-
-    rv = yield self.db.masters.getMaster(7)
-    validation.verifyDbDict(self, 'masterdict', rv)
-
 .. _Modifying-the-Database-Schema:
 
 Modifying the Database Schema
@@ -347,14 +329,6 @@ Foreign key checking
 --------------------
 PostgreSQL and SQlite db backends check the foreign keys consistency.
 :bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
-
-To maintain consistency with real db, fakedb can check the foreign key consistency of your test data. For this, just enable it with::
-
-    self.db = fakedb.FakeDBConnector(self.master, self)
-    self.db.checkForeignKeys = True
-
-Note that tests that only use fakedb do not really need foreign key consistency, even if this is a good practice to enable it in new code.
-
 
 .. note:
 

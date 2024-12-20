@@ -24,54 +24,38 @@ from buildbot.db import connector
 from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
-from buildbot.test.util import db
 
 
-class TestDBConnector(TestReactorMixin, db.RealDatabaseMixin, unittest.TestCase):
+class TestDBConnector(TestReactorMixin, unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
-        yield self.setUpRealDatabase(
-            table_names=[
-                'changes',
-                'change_properties',
-                'change_files',
-                'patches',
-                'sourcestamps',
-                'buildset_properties',
-                'buildsets',
-                'sourcestampsets',
-                'builds',
-                'builders',
-                'masters',
-                'buildrequests',
-                'workers',
-                "projects",
-            ]
+        self.setup_test_reactor()
+
+        self.master = yield fakemaster.make_master(
+            self, wantDb=True, auto_upgrade=False, check_version=False
         )
-
-        self.master = yield fakemaster.make_master(self)
         self.master.config = MasterConfig()
+        self.db_url = self.master.db.configured_url
+        yield self.master.db._shutdown()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
-        yield self.db.setServiceParent(self.master)
+        yield self.db.set_master(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.db.running:
-            yield self.db.stopService()
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.db.pool is not None:
+                yield self.db.pool.stop()
 
-        yield self.tearDownRealDatabase()
-        yield self.tear_down_test_reactor()
+        self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
     def startService(self, check_version=False):
         self.master.config.db['db_url'] = self.db_url
         yield self.db.setup(check_version=check_version)
-        self.db.startService()
+        yield self.db.startService()
         yield self.db.reconfigServiceWithBuildbotConfig(self.master.config)
 
     # tests

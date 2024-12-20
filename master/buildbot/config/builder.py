@@ -18,7 +18,7 @@ from buildbot.config.checks import check_markdown_support
 from buildbot.config.checks import check_param_length
 from buildbot.config.checks import check_param_str_none
 from buildbot.config.errors import error
-from buildbot.db.model import Model
+from buildbot.db import model_config
 from buildbot.util import bytes2unicode
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
@@ -137,13 +137,15 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.properties = properties or {}
         for property_name in self.properties:
             check_param_length(
-                property_name, f'Builder {self.name} property', Model.property_name_length
+                property_name, f'Builder {self.name} property', model_config.property_name_length
             )
 
         self.defaultProperties = defaultProperties or {}
         for property_name in self.defaultProperties:
             check_param_length(
-                property_name, f'Builder {self.name} default property', Model.property_name_length
+                property_name,
+                f'Builder {self.name} default property',
+                model_config.property_name_length,
             )
 
         self.collapseRequests = collapseRequests

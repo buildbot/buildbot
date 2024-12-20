@@ -203,7 +203,7 @@ Other Worker Configuration
 ``unicode_encoding``
     This represents the encoding that Buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
 
-    The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale settings.
+    The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on macOS is 'utf-8', and on Unix depends on your locale settings.
 
     If you need a different encoding, this can be changed in your worker's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the Worker constructor.
 

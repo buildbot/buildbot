@@ -32,13 +32,8 @@ class OldStyleSourceStep(Source):
 
 class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def setup_deferred_mock(self):
         m = mock.Mock()
@@ -170,13 +165,8 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
 
 class TestSourceDescription(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_constructor_args_strings(self):
         step = Source(
@@ -208,13 +198,8 @@ class AttrGroup(Source):
 
 class TestSourceAttrGroup(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_attrgroup_hasattr(self):
         step = AttrGroup()

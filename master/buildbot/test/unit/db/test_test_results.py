@@ -18,11 +18,11 @@ from twisted.trial import unittest
 
 from buildbot.db import test_results
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
-from buildbot.test.util import interfaces
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 
 
-class Tests(interfaces.InterfaceTests):
+class Tests(TestReactorMixin, unittest.TestCase):
     common_data = [
         fakedb.Worker(id=47, name='linux'),
         fakedb.Buildset(id=20),
@@ -43,34 +43,15 @@ class Tests(interfaces.InterfaceTests):
         ),
     ]
 
-    def test_signature_get_test_code_paths(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestCodePaths)
-        def getTestCodePaths(self, builderid, path_prefix=None, result_spec=None):
-            pass
-
-    def test_signature_get_test_names(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestNames)
-        def getTestNames(self, builderid, name_prefix=None, result_spec=None):
-            pass
-
-    def test_signature_add_test_results(self):
-        @self.assertArgSpecMatches(self.db.test_results.addTestResults)
-        def addTestResults(self, builderid, test_result_setid, result_values):
-            pass
-
-    def test_signature_get_test_result(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestResult)
-        def getTestResult(self, test_resultid):
-            pass
-
-    def test_signature_get_test_results(self):
-        @self.assertArgSpecMatches(self.db.test_results.getTestResults)
-        def getTestResults(self, builderid, test_result_setid, result_spec=None):
-            pass
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor()
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
 
     @defer.inlineCallbacks
     def test_add_set_results(self):
-        yield self.insert_test_data(self.common_data)
+        yield self.db.insert_test_data(self.common_data)
 
         result_values = [
             {'test_name': 'name1', 'value': '1'},
@@ -174,7 +155,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_names(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             *self.common_data,
             fakedb.TestName(id=103, builderid=88, name='name103'),
             fakedb.TestName(id=104, builderid=88, name='name104'),
@@ -199,7 +180,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_get_code_paths(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             *self.common_data,
             fakedb.TestCodePath(id=103, builderid=88, path='path103'),
             fakedb.TestCodePath(id=104, builderid=88, path='path104'),
@@ -221,29 +202,3 @@ class Tests(interfaces.InterfaceTests):
 
         path_dicts = yield self.db.test_results.getTestCodePaths(builderid=88, path_prefix='path11')
         self.assertEqual(path_dicts, ['path116', 'path117'])
-
-
-class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, Tests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=[
-                'steps',
-                'builds',
-                "projects",
-                'builders',
-                'masters',
-                'buildrequests',
-                'buildsets',
-                'workers',
-                'test_names',
-                'test_code_paths',
-                'test_results',
-                'test_result_sets',
-            ]
-        )
-
-        self.db.test_results = test_results.TestResultsConnectorComponent(self.db)
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()

@@ -13,7 +13,6 @@
 #
 # Copyright  Team Members
 
-import hashlib
 import json
 
 from autobahn.twisted.resource import WebSocketResource
@@ -23,7 +22,6 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
-from buildbot.util import debounce
 from buildbot.util import toJson
 
 
@@ -40,9 +38,6 @@ class WsProtocol(WebSocketServerProtocol):
         self.master = master
         self.qrefs = {}
         self.debug = self.master.config.www.get("debug", False)
-        self.is_graphql = None
-        self.graphql_subs = {}
-        self.graphql_consumer = None
 
     def to_json(self, msg):
         return json.dumps(msg, default=toJson, separators=(",", ":")).encode()
@@ -51,19 +46,11 @@ class WsProtocol(WebSocketServerProtocol):
         return self.sendMessage(self.to_json(msg))
 
     def send_error(self, error, code, _id):
-        if self.is_graphql:
-            return self.send_json_message(message=error, type="error", id=_id)
-
         return self.send_json_message(error=error, code=code, _id=_id)
 
     def onMessage(self, frame, isBinary):
         """
         Parse the incoming request.
-        Can be either a graphql ws:
-        https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
-        or legacy "buildbot" protocol (documented in www-server.rst)
-        as they are very similar, we use the same routing method, distinguishing by the
-        presence of _id or type attributes.
         """
         if self.debug:
             log.msg(f"FRAME {frame}")
@@ -76,31 +63,10 @@ class WsProtocol(WebSocketServerProtocol):
                 error="no '_id' or 'type' in websocket frame", code=400, _id=None
             )
 
-        if _type is not None:
-            cmdmeth = "graphql_cmd_" + _type
-            if self.is_graphql is None:
-                self.is_graphql = True
-            elif not self.is_graphql:
-                return self.send_error(
-                    error="using 'type' in websocket frame when"
-                    " already started using buildbot protocol",
-                    code=400,
-                    _id=None,
-                )
-        else:
-            if self.is_graphql is None:
-                self.is_graphql = False
-            elif self.is_graphql:
-                return self.send_error(
-                    error="missing 'type' in websocket frame when already started using graphql",
-                    code=400,
-                    _id=None,
-                )
-            self.is_graphql = False
-            cmd = frame.pop("cmd", None)
-            if cmd is None:
-                return self.send_error(error="no 'cmd' in websocket frame", code=400, _id=None)
-            cmdmeth = "cmd_" + cmd
+        cmd = frame.pop("cmd", None)
+        if cmd is None:
+            return self.send_error(error="no 'cmd' in websocket frame", code=400, _id=None)
+        cmdmeth = "cmd_" + cmd
 
         meth = getattr(self, cmdmeth, None)
         if meth is None:
@@ -170,84 +136,15 @@ class WsProtocol(WebSocketServerProtocol):
     def cmd_ping(self, _id):
         self.send_json_message(msg="pong", code=200, _id=_id)
 
-    # graphql methods
-    def graphql_cmd_connection_init(self, payload=None, id=None):
-        return self.send_json_message(type="connection_ack")
-
-    def graphql_got_event(self, key, message):
-        # for now, we just ignore the events
-        # an optimization would be to only re-run queries that
-        # are impacted by the event
-        self.graphql_dispatch_events()
-
-    @debounce.method(0.1)
-    @defer.inlineCallbacks
-    def graphql_dispatch_events(self):
-        """We got a bunch of events, dispatch them to the subscriptions
-        For now, we just re-run all queries and see if they changed.
-        We use a debouncer to ensure we only do that once a second per connection
-        """
-        for sub in self.graphql_subs.values():
-            yield self.graphql_run_query(sub)
-
-    @defer.inlineCallbacks
-    def graphql_run_query(self, sub):
-        res = yield self.master.graphql.query(sub.query)
-        if res.data is None:
-            # bad query, better not re-run it!
-            self.graphql_cmd_stop(sub.id)
-        errors = None
-        if res.errors:
-            errors = [e.formatted for e in res.errors]
-        data = self.to_json({
-            "type": "data",
-            "payload": {"data": res.data, "errors": errors},
-            "id": sub.id,
-        })
-        cksum = hashlib.blake2b(data).digest()
-        if cksum != sub.last_value_chksum:
-            sub.last_value_chksum = cksum
-            self.sendMessage(data)
-
-    @defer.inlineCallbacks
-    def graphql_cmd_start(self, id, payload=None):
-        sub = Subscription(payload.get("query"), id)
-        if not self.graphql_subs:
-            # consume all events!
-            self.graphql_consumer = yield self.master.mq.startConsuming(
-                self.graphql_got_event, (None, None, None)
-            )
-
-        self.graphql_subs[id] = sub
-        yield self.graphql_run_query(sub)
-
-    def graphql_cmd_stop(self, id, payload=None):
-        if id in self.graphql_subs:
-            del self.graphql_subs[id]
-        else:
-            return self.send_error(error="stopping unknown subscription", code=400, _id=id)
-        if not self.graphql_subs and self.graphql_consumer:
-            self.graphql_consumer.stopConsuming()
-            self.graphql_consumer = None
-
-        return None
-
     def connectionLost(self, reason):
         if self.debug:
             log.msg("connection lost", system=self)
         for qref in self.qrefs.values():
             qref.stopConsuming()
-        if self.graphql_consumer:
-            self.graphql_consumer.stopConsuming()
 
         self.qrefs = None  # to be sure we don't add any more
 
     def onConnect(self, request):
-        # we don't mandate graphql-ws subprotocol, but if it is presented
-        # we must acknowledge it
-        if "graphql-ws" in request.protocols:
-            self.is_graphql = True
-            return "graphql-ws"
         return None
 
 

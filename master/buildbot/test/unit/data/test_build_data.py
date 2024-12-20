@@ -45,9 +45,6 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing_build_data_by_build_id(self):
         result = yield self.callGet(('builds', 30, 'data', 'name1'))
@@ -152,9 +149,6 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ),
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
-
-    def tearDown(self):
-        self.tearDownEndpoint()
 
     def validateData(self, data):
         self.assertIsInstance(data['raw'], bytes)
@@ -286,9 +280,6 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildData(id=93, buildid=31, name='name3', value=b'value3', source='source3'),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @parameterized.expand([
         ('multiple_values', 7, ['name1', 'name2']),
         ('single_value', 8, ['name3']),
@@ -332,13 +323,17 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = build_data.BuildData(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        yield self.master.db.insert_test_data([
+            fakedb.Worker(id=47, name='linux'),
+            fakedb.Buildset(id=20),
+            fakedb.Builder(id=88, name='b1'),
+            fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
+            fakedb.Master(id=88),
+            fakedb.Build(id=2, buildrequestid=41, masterid=88, builderid=88, workerid=47),
+        ])
 
     def test_signature_set_build_data(self):
         @self.assertArgSpecMatches(self.master.data.updates.setBuildData, self.rtype.setBuildData)

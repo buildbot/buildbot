@@ -99,7 +99,7 @@ class TestedMaster:
         except Exception as e:
             log.err(e)
         try:
-            await self.master.db.pool.shutdown()
+            await self.master.db.pool.stop()
         except Exception as e:
             log.err(e)
         self.is_master_shutdown = True
@@ -176,13 +176,13 @@ async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=Fals
 
 class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.assertFalse(self.master.running, "master is still running!")
-        yield self.tear_down_test_reactor()
+        def cleanup():
+            self.assertFalse(self.master.running, "master is still running!")
+
+        self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict):

@@ -13,49 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-from unittest import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.db import model
-from buildbot.test.util import db
+from buildbot.test.fake import fakemaster
 
 
-class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
+class DBConnector_Basic(unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
     @defer.inlineCallbacks
     def setUp(self):
-        yield self.setUpRealDatabase(
-            basedir=os.path.abspath('basedir'),
-            want_pool=False,
+        self.master = yield fakemaster.make_master(
+            self, wantRealReactor=True, wantDb=True, auto_upgrade=False, check_version=False
         )
-
-        # mock out the pool, and set up the model
-        self.db = mock.Mock()
-        self.db.pool.do = lambda thd: defer.maybeDeferred(thd, self.db_engine.connect())
-        self.db.pool.do_with_engine = lambda thd: defer.maybeDeferred(thd, self.db_engine)
-        self.db.model = model.Model(self.db)
-        self.db.start()
-
-    def tearDown(self):
-        self.db.stop()
-        return self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
     def test_is_current_empty(self):
-        res = yield self.db.model.is_current()
+        res = yield self.master.db.model.is_current()
         self.assertFalse(res)
 
     @defer.inlineCallbacks
     def test_is_current_full(self):
-        yield self.db.model.upgrade()
-        res = yield self.db.model.is_current()
+        yield self.master.db.model.upgrade()
+        res = yield self.master.db.model.is_current()
         self.assertTrue(res)
-
-    # the upgrade method is very well-tested by the integration tests; the
-    # remainder of the object is just tables.

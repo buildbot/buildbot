@@ -29,7 +29,7 @@ class TestMaildirSource(
 ):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.maildir = os.path.abspath("maildir")
 
         yield self.setUpChangeSource()
@@ -51,12 +51,6 @@ class TestMaildirSource(
     def assertMailProcessed(self):
         self.assertFalse(os.path.exists(os.path.join(self.maildir, "new", "newmsg")))
         self.assertTrue(os.path.exists(os.path.join(self.maildir, "cur", "newmsg")))
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownDirs()
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
 
     # tests
 

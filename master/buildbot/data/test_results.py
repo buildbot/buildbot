@@ -66,7 +66,6 @@ class TestResult(base.ResourceType):
     name = "test_result"
     plural = "test_results"
     endpoints = [TestResultsEndpoint]
-    keyField = 'test_resultid'
     eventPathPatterns = """
         /test_result_sets/:test_result_setid/results
     """
@@ -81,7 +80,7 @@ class TestResult(base.ResourceType):
         duration_ns = types.NoneOk(types.Integer())
         value = types.String()
 
-    entityType = EntityType(name, 'TestResult')
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

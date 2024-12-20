@@ -19,19 +19,18 @@ from twisted.trial import unittest
 
 from buildbot.data import resultspec
 from buildbot.data.changes import FixerMixin
-from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
-from buildbot.test.util import interfaces
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 20398573
 OTHERTIME = 937239287
 
 
-class Tests(interfaces.InterfaceTests):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     change13_rows = [
@@ -97,34 +96,11 @@ class Tests(interfaces.InterfaceTests):
         sourcestampid=233,
     )
 
-    # tests
-
-    def test_signature_addChange(self):
-        @self.assertArgSpecMatches(self.db.changes.addChange)
-        def addChange(
-            self,
-            author=None,
-            committer=None,
-            files=None,
-            comments=None,
-            is_dir=None,
-            revision=None,
-            when_timestamp=None,
-            branch=None,
-            category=None,
-            revlink='',
-            properties=None,
-            repository='',
-            codebase='',
-            project='',
-            uid=None,
-        ):
-            pass
-
-    def test_signature_getChange(self):
-        @self.assertArgSpecMatches(self.db.changes.getChange)
-        def getChange(self, key, no_cache=False):
-            pass
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor()
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
 
     @defer.inlineCallbacks
     def test_addChange_getChange(self):
@@ -181,7 +157,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addChange_withParent(self):
-        yield self.insert_test_data(self.change14_rows)
+        yield self.db.insert_test_data(self.change14_rows)
 
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
@@ -236,7 +212,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChange_chdict(self):
-        yield self.insert_test_data(self.change14_rows)
+        yield self.db.insert_test_data(self.change14_rows)
 
         chdict = yield self.db.changes.getChange(14)
 
@@ -249,11 +225,6 @@ class Tests(interfaces.InterfaceTests):
 
         self.assertTrue(chdict is None)
 
-    def test_signature_getChangeUids(self):
-        @self.assertArgSpecMatches(self.db.changes.getChangeUids)
-        def getChangeUids(self, changeid):
-            pass
-
     @defer.inlineCallbacks
     def test_getChangeUids_missing(self):
         res = yield self.db.changes.getChangeUids(1)
@@ -262,7 +233,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeUids_found(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             *self.change14_rows,
             fakedb.SourceStamp(id=92),
             fakedb.User(uid=1),
@@ -274,7 +245,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeUids_multi(self):
-        yield self.insert_test_data(
+        yield self.db.insert_test_data(
             self.change14_rows
             + self.change13_rows
             + [
@@ -290,13 +261,8 @@ class Tests(interfaces.InterfaceTests):
 
         self.assertEqual(sorted(res), [1, 2])
 
-    def test_signature_getChanges(self):
-        @self.assertArgSpecMatches(self.db.changes.getChanges)
-        def getChanges(self, resultSpec=None):
-            pass
-
     def insert7Changes(self):
-        return self.insert_test_data([
+        return self.db.insert_test_data([
             fakedb.SourceStamp(id=922),
             fakedb.Change(changeid=8, sourcestampid=922),
             fakedb.Change(changeid=9, sourcestampid=922),
@@ -325,7 +291,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangesHugeCount(self):
-        yield self.insert_test_data(
+        yield self.db.insert_test_data(
             [
                 fakedb.SourceStamp(id=92),
             ]
@@ -349,7 +315,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChanges_missing(self):
-        yield self.insert_test_data(self.change13_rows + self.change14_rows)
+        yield self.db.insert_test_data(self.change13_rows + self.change14_rows)
 
         def check(changes):
             # requested all, but only got 2
@@ -370,14 +336,9 @@ class Tests(interfaces.InterfaceTests):
         changes = yield self.db.changes.getChanges()
         check(changes)
 
-    def test_signature_getLatestChangeid(self):
-        @self.assertArgSpecMatches(self.db.changes.getLatestChangeid)
-        def getLatestChangeid(self):
-            pass
-
     @defer.inlineCallbacks
     def test_getLatestChangeid(self):
-        yield self.insert_test_data(self.change13_rows)
+        yield self.db.insert_test_data(self.change13_rows)
 
         changeid = yield self.db.changes.getLatestChangeid()
 
@@ -389,23 +350,14 @@ class Tests(interfaces.InterfaceTests):
 
         self.assertEqual(changeid, None)
 
-    def test_signature_getParentChangeIds(self):
-        @self.assertArgSpecMatches(self.db.changes.getParentChangeIds)
-        def getParentChangeIds(self, branch, repository, project, codebase):
-            pass
-
     @defer.inlineCallbacks
     def test_getParentChangeIds(self):
-        yield self.insert_test_data(self.change14_rows + self.change13_rows)
+        yield self.db.insert_test_data(self.change14_rows + self.change13_rows)
 
         changeid = yield self.db.changes.getParentChangeIds(
             branch='warnerdb', repository='git://warner', project='Buildbot', codebase='mainapp'
         )
         self.assertEqual(changeid, [14])
-
-
-class RealTests(Tests):
-    # tests that only "real" implementations will pass
 
     @defer.inlineCallbacks
     def test_addChange(self):
@@ -556,7 +508,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_addChange_with_uid(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.User(uid=1, identifier="one"),
         ])
         changeid = yield self.db.changes.addChange(
@@ -614,7 +566,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Scheduler(id=29),
             fakedb.SourceStamp(id=234, branch="aa"),
             fakedb.SourceStamp(id=235, branch="bb"),
@@ -651,7 +603,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges_lots(self):
-        yield self.insert_test_data(
+        yield self.db.insert_test_data(
             [
                 fakedb.SourceStamp(id=29),
             ]
@@ -681,7 +633,7 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_pruneChanges_None(self):
-        yield self.insert_test_data(self.change13_rows)
+        yield self.db.insert_test_data(self.change13_rows)
 
         yield self.db.changes.pruneChanges(None)
 
@@ -827,7 +779,7 @@ class RealTests(Tests):
         # Build 10 has only one change for codebase C, and fails
         rows.extend(addChange('C', 6, 'bob', 'bob', '14th commit'))
         rows.extend(addBuild(codebase_ss, 2))
-        yield self.insert_test_data(rows)
+        yield self.db.insert_test_data(rows)
 
         @defer.inlineCallbacks
         def expect(buildid, commits):
@@ -862,40 +814,3 @@ class RealTests(Tests):
         yield expect(8, ['3rd commit', '10th commit', '11th commit', '12th commit'])
         yield expect(9, ['13th commit'])
         yield expect(10, ['13th commit', '14th commit'])
-
-
-class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=[
-                'changes',
-                'change_files',
-                'change_properties',
-                'scheduler_changes',
-                'schedulers',
-                'sourcestampsets',
-                'sourcestamps',
-                'patches',
-                'change_users',
-                'users',
-                'buildsets',
-                'workers',
-                'builders',
-                'masters',
-                'buildrequests',
-                'builds',
-                'buildset_sourcestamps',
-                'workers',
-                "projects",
-            ]
-        )
-
-        self.db.changes = changes.ChangesConnectorComponent(self.db)
-        self.db.builds = builds.BuildsConnectorComponent(self.db)
-        self.db.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self.db)
-        self.master = self.db.master
-        self.master.db = self.db
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()

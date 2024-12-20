@@ -100,6 +100,8 @@ def upgradeDatabase(config, master_cfg):
         print(msg.format(signum))
 
     prev_handlers = {}
+    db = None
+
     try:
         for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP", "SIGUSR1", "SIGUSR2", "SIGBREAK"):
             if hasattr(signal, signame):
@@ -108,9 +110,8 @@ def upgradeDatabase(config, master_cfg):
 
         master = BuildMaster(config['basedir'])
         master.config = master_cfg
-        master.db.disownServiceParent()
         db = connector.DBConnector(basedir=config['basedir'])
-        yield db.setServiceParent(master)
+        yield db.set_master(master)
         yield master.secrets_manager.setup()
         yield db.setup(check_version=False, verbose=not config['quiet'])
         yield db.model.upgrade()
@@ -121,25 +122,34 @@ def upgradeDatabase(config, master_cfg):
         for signum, handler in prev_handlers.items():
             signal.signal(signum, handler)
 
+        if db is not None and db.pool is not None:
+            yield db.pool.stop()
+
 
 @in_reactor
 def upgradeMaster(config):
     if not base.checkBasedir(config):
         return defer.succeed(1)
 
-    os.chdir(config['basedir'])
+    orig_cwd = os.getcwd()
 
     try:
-        configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError):
-        print(f"Unable to load 'buildbot.tac' from '{config['basedir']}':", file=sys.stderr)
-        e = traceback.format_exc()
-        print(e, file=sys.stderr)
-        return defer.succeed(1)
-    master_cfg = base.loadConfig(config, configFile)
-    if not master_cfg:
-        return defer.succeed(1)
-    return _upgradeMaster(config, master_cfg)
+        os.chdir(config['basedir'])
+
+        try:
+            configFile = base.getConfigFileFromTac(config['basedir'])
+        except (SyntaxError, ImportError):
+            print(f"Unable to load 'buildbot.tac' from '{config['basedir']}':", file=sys.stderr)
+            e = traceback.format_exc()
+            print(e, file=sys.stderr)
+            return defer.succeed(1)
+        master_cfg = base.loadConfig(config, configFile)
+        if not master_cfg:
+            return defer.succeed(1)
+        return _upgradeMaster(config, master_cfg)
+
+    finally:
+        os.chdir(orig_cwd)
 
 
 @defer.inlineCallbacks

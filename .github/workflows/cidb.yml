@@ -17,15 +17,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: MariaDB Server latest
+            database: mariadb:latest
+            connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
+            check: healthcheck.sh --connect --innodb_initialized
+
+          - name: MariaDB Server LTS
+            database: mariadb:lts
+            connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
+            check: healthcheck.sh --connect --innodb_initialized
+            
           - name: MySQL 5
             database: mysql:5
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
-            check: mysqladmin ping
+            check: mysqladmin --protocol tcp ping
 
           - name: MySQL latest
             database: mysql:latest
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
-            check: mysqladmin ping
+            check: mysqladmin --protocol tcp ping
 
           - name: PostgreSQL 12 / psycopg2
             database: postgres:12
@@ -56,6 +66,10 @@ jobs:
       database:
         image: ${{ matrix.database }}
         env:
+          MARIADB_USER: buildbot
+          MARIADB_PASSWORD: buildbot
+          MARIADB_DATABASE: bbtest     
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
           MYSQL_USER: buildbot
           MYSQL_PASSWORD: buildbot
           MYSQL_DATABASE: bbtest

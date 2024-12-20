@@ -59,14 +59,10 @@ class NeedsReconfigResource(resource.Resource):
 class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         yield self.svc.setServiceParent(self.master)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def makeConfig(self, **kwargs):
         w = {"port": None, "auth": auth.NoAuth(), "logfileName": 'l'}

@@ -22,8 +22,6 @@ class BuildData(Row):
     table = 'build_data'
 
     id_column = 'id'
-    foreignKeys = ('buildid',)
-    required_columns = ('buildid', 'name', 'value', 'length', 'source')
     binary_columns = ('value',)
 
     def __init__(self, id=None, buildid=None, name=None, value=None, source=None):

@@ -68,10 +68,10 @@ Through npm dependency hell, guanlecoja is depending on *625* npm packages/versi
 We do not advise you to try and package all those npm *build* dependencies.
 They are *not* required in order to *run* buildbot.
 
-We do release pre-built packages in the form of the `wheel`_ format on pypi.
+We do release pre-built packages in the form of the `wheel`_ format on PyPI.
 Those wheels contain the full python source code, and prebuilt javascript source code.
 
-Depending on distro maintainers feedback, we *could* also release source tarballs with prebuilt javascript, but those would be pypi packages with different names, e.g. ``buildbot_www_prebuilt.0.9.0.tar.gz``.
+Depending on distro maintainers feedback, we *could* also release source tarballs with prebuilt javascript, but those would be PyPI packages with different names, e.g. ``buildbot_www_prebuilt.0.9.0.tar.gz``.
 
 Another option would be to package a `guanlecoja`_ that would embed all its dependencies inside one package.
 

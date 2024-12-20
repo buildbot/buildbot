@@ -28,7 +28,7 @@ from buildbot.test.reactor import TestReactorMixin
 class TestMetricBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.observer = metrics.MetricLogObserver()
         self.observer.parent = self.master = yield fakemaster.make_master(self)
         self.master.config.metrics = {"log_interval": 0, "periodic_interval": 0}
@@ -36,11 +36,12 @@ class TestMetricBase(TestReactorMixin, unittest.TestCase):
         self.observer.startService()
         self.observer.reconfigServiceWithBuildbotConfig(self.master.config)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.observer.running:
-            yield self.observer.stopService()
-        yield self.tear_down_test_reactor()
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.observer.running:
+                yield self.observer.stopService()
+
+        self.addCleanup(cleanup)
 
 
 class TestMetricCountEvent(TestMetricBase):

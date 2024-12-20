@@ -44,18 +44,20 @@ class CommandTestMixin:
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
-    def tearDownCommand(self):
-        """
-        Call this from the tearDown method to clean up any leftover workdirs and do
-        any additional cleanup required.
-        """
-        # clean up the basedir unconditionally
-        if os.path.exists(self.basedir):
-            shutil.rmtree(self.basedir)
+        def cleanup():
+            """
+            Call this from the tearDown method to clean up any leftover workdirs and do
+            any additional cleanup required.
+            """
+            # clean up the basedir unconditionally
+            if os.path.exists(self.basedir):
+                shutil.rmtree(self.basedir)
 
-        # finish up the runprocess
-        if hasattr(self, 'runprocess_patched') and self.runprocess_patched:
-            runprocess.FakeRunProcess.test_done()
+            # finish up the runprocess
+            if hasattr(self, 'runprocess_patched') and self.runprocess_patched:
+                runprocess.FakeRunProcess.test_done()
+
+        self.addCleanup(cleanup)
 
     def make_command(self, cmdclass, args, makedirs=False):
         """

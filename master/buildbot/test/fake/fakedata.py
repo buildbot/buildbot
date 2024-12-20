@@ -555,7 +555,6 @@ class FakeDataConnector(service.AsyncMultiService):
         self.realConnector = connector.DataConnector()
         self.realConnector.setServiceParent(self)
         self.rtypes = self.realConnector.rtypes
-        self.plural_rtypes = self.realConnector.plural_rtypes
 
     def _scanModule(self, mod):
         return self.realConnector._scanModule(mod)
@@ -589,6 +588,3 @@ class FakeDataConnector(service.AsyncMultiService):
 
     def resultspec_from_jsonapi(self, args, entityType, is_collection):
         return self.realConnector.resultspec_from_jsonapi(args, entityType, is_collection)
-
-    def getResourceTypeForGraphQlType(self, type):
-        return self.realConnector.getResourceTypeForGraphQlType(type)

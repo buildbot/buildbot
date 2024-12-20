@@ -47,7 +47,7 @@ def nth_worker(n):
 class TestBRDBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
         self.builders = {}
@@ -65,19 +65,21 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
         self.brd.parent = self.botmaster
         self.brd.startService()
 
+        @defer.inlineCallbacks
+        def cleanup():
+            if self.brd.running:
+                yield self.brd.stopService()
+
+        self.addCleanup(cleanup)
+
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=21),
             fakedb.Builder(id=77, name='A'),
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(sourcestampid=21, buildsetid=11),
         ]
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.brd.running:
-            yield self.brd.stopService()
-        yield self.tear_down_test_reactor()
 
     def make_workers(self, worker_count):
         rows = self.base_rows[:]
@@ -437,7 +439,9 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_no_workerforbuilders(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=78, name='bldr'),
+            fakedb.Buildset(id=10),
             fakedb.BuildRequest(id=11, buildsetid=10, builderid=78),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[], exp_builds=[])
@@ -745,6 +749,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = [
             *self.base_rows,
+            fakedb.Master(id=9999),
             fakedb.BuildRequest(
                 id=10, buildsetid=11, builderid=77, submitted_at=130000
             ),  # will turn out to be claimed!
@@ -779,6 +784,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             self.addWorkers({f'test-worker{i}': 1})
 
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=21),
             fakedb.Builder(id=78, name='B'),
             fakedb.Buildset(id=12, reason='because'),

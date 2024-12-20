@@ -186,7 +186,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
     @defer.inlineCallbacks
     def setUp(self):
         CommonTestCase.setUp(self)
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
 
         master = yield self.make_master(url='http://a/b/', avatar_methods=[self.userInfoProvider])
 
@@ -194,10 +194,6 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         self.rsrc.reconfigResource(master.config)
 
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(

@@ -25,7 +25,8 @@ from twisted.trial import unittest
 
 from buildbot.db import base
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import sautils
 
 if TYPE_CHECKING:
@@ -69,13 +70,12 @@ class TestBase(unittest.TestCase):
         self.comp.checkLength(self.tbl.c.str32, "long string" * 5)
 
 
-class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.ConnectorComponentMixin):
+class TestBaseAsConnectorComponent(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        # this co-opts the masters table to test findSomethingId
-        yield self.setUpConnectorComponent(table_names=['masters'])
-
-        self.db.base = base.DBConnectorComponent(self.db)
+        self.setup_test_reactor()
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
 
     @defer.inlineCallbacks
     def test_findSomethingId_race(self):
@@ -90,7 +90,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
             )
             conn.commit()
 
-        id = yield self.db.base.findSomethingId(
+        id = yield self.db.masters.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={
@@ -107,7 +107,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
     def test_findSomethingId_new(self):
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
-        id = yield self.db.base.findSomethingId(
+        id = yield self.db.masters.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},
@@ -119,11 +119,11 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, name='somemaster', name_hash=hash),
         ])
 
-        id = yield self.db.base.findSomethingId(
+        id = yield self.db.masters.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},
@@ -134,7 +134,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase, connector_component.Connec
     def test_findSomethingId_new_noCreate(self):
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
-        id = yield self.db.base.findSomethingId(
+        id = yield self.db.masters.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
             insert_values={"name": 'somemaster', "name_hash": hash, "active": 1, "last_active": 1},

@@ -43,18 +43,15 @@ from buildbot.test.steps import TestBuildStepMixin
 
 class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
         return self.setup_test_build_step()
 
-    @defer.inlineCallbacks
     def tearDown(self):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def testConstructorModeType(self):
         with self.assertRaises(config.ConfigErrors):
@@ -311,20 +308,16 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
         return self.setup_test_build_step()
 
-    @defer.inlineCallbacks
     def tearDown(self):
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
-
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def testBasic(self):
         self.setup_step(transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir))
@@ -497,20 +490,16 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
 class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
         return self.setup_test_build_step()
 
-    @defer.inlineCallbacks
     def tearDown(self):
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
-
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def testEmpty(self):
         self.setup_step(transfer.MultipleFileUpload(workersrcs=[], masterdest=self.destdir))
@@ -942,19 +931,15 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
 class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
         return self.setup_test_build_step()
 
-    @defer.inlineCallbacks
     def tearDown(self):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
-
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_init_workerdest_keyword(self):
         step = transfer.FileDownload(mastersrc='srcfile', workerdest='dstfile')
@@ -1055,13 +1040,8 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     # check that ConfigErrors is raised on invalid 'mode' argument
 
@@ -1165,13 +1145,8 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
 class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def testBasic(self):
@@ -1268,13 +1243,8 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
 class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def testBasic(self):

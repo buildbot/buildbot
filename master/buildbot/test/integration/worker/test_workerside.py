@@ -111,7 +111,7 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         # set the worker port to a loopback address with unspecified
         # port
@@ -142,19 +142,20 @@ class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
 
         self.tmpdirs = set()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        for tmp in self.tmpdirs:
-            if os.path.exists(tmp):
-                shutil.rmtree(tmp)
-        yield self.pbmanager.stopService()
-        yield self.botmaster.stopService()
-        yield self.workers.stopService()
+        @defer.inlineCallbacks
+        def cleanup():
+            for tmp in self.tmpdirs:
+                if os.path.exists(tmp):
+                    shutil.rmtree(tmp)
+            yield self.pbmanager.stopService()
+            yield self.botmaster.stopService()
+            yield self.workers.stopService()
 
-        # if the worker is still attached, wait for it to detach, too
-        if self.buildworker:
-            yield self.buildworker.waitForCompleteShutdown()
-        yield self.tear_down_test_reactor()
+            # if the worker is still attached, wait for it to detach, too
+            if self.buildworker:
+                yield self.buildworker.waitForCompleteShutdown()
+
+        self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
     def addMasterSideWorker(

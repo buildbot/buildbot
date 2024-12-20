@@ -18,7 +18,7 @@ Following is a quick shell session to put you on the right track.
 
     # helper script which creates the virtualenv for development
     make virtualenv
-    . .venv/bin/activate
+    . .venvpython3/bin/activate
 
     # now run the test suite
     trial buildbot
@@ -27,7 +27,7 @@ Following is a quick shell session to put you on the right track.
     trial -n --reporter=bwverbose buildbot | grep mail
 
     # run only one test module
-    trial buildbot.test.unit.test_reporters_mail
+    trial buildbot.test.unit.reporters.test_mail.TestMailNotifier
 
 Suites
 ------
@@ -230,7 +230,6 @@ It supports four types of data:
 
 These are validated from elsewhere in the codebase with calls to
 
- * ``verifyDbDict(testcase, type, value)``,
  * ``verifyData(testcase, type, options, value)``,
  * ``verifyMessage(testcase, routingKey, message)``, and
  * ``verifyType(testcase, name, value, validator)``,
@@ -268,7 +267,6 @@ A few classes deserve special mention:
    It checks that the routing key is a tuple of strings.
    The first tuple element gives the message type.
    The last tuple element is the event, and must be a member of the ``events`` set.
-   The remaining "middle" tuple elements must match the message values identified by ``keyFields``.
    The ``messageValidator`` should be a ``DictValidator`` configured to check the message body.
    This validator's ``validate`` method is called with a tuple ``(routingKey, message)``.
  * ``Selector`` allows different validators to be selected based on matching functions.
@@ -303,7 +301,6 @@ The underlying validator should be a ``MessageValidator``. ::
     message['foo'] = Selector()
     message['foo'].add(lambda rk : rk[-1] == 'new',
         MessageValidator(
-            keyFields=['fooid'],
             events=['new', 'complete'],
             messageValidator=DictValidator(
                 fooid=IntValidator(),

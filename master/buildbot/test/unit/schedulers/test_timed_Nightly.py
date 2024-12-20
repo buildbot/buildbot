@@ -111,18 +111,16 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         # fakedb.Change requires changeid instead of number
         chd['changeid'] = chd['number']
         del chd['number']
-        yield self.db.insert_test_data([fakedb.Change(**chd)])
+        yield self.db.insert_test_data([
+            fakedb.Change(**chd),
+            fakedb.SourceStamp(id=92),
+        ])
         return ch
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     def assertConsumingChanges(self, **kwargs):
         self.assertEqual(self.consumingChanges, kwargs)
@@ -227,6 +225,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch=None, minute=[10, 20, 21, 40, 50, 51]
         )
+        yield self.mkch(number=19)
 
         # add a change classification
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {19: True})

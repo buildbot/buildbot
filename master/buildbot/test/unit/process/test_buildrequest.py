@@ -30,7 +30,7 @@ from buildbot.test.reactor import TestReactorMixin
 class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.botmaster = mock.Mock(name='botmaster')
         self.master.botmaster.builders = {}
@@ -52,10 +52,6 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         bldr.getCollapseRequestsFn = lambda: False
 
         return bldr
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def do_request_collapse(self, brids, exp):
@@ -85,6 +81,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([19], [])
 
     BASE_ROWS = [
+        fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
         fakedb.Builder(id=77, name='A'),
         fakedb.SourceStamp(id=234, revision=None, repository='repo', codebase='C'),
         fakedb.Buildset(id=30, reason='foo', submitted_at=1300305712, results=-1),
@@ -200,6 +197,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
             fakedb.SourceStamp(id=223, codebase='C'),
             fakedb.Builder(id=77, name='A'),
@@ -216,6 +214,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_does_not_collapse_older(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222),
             fakedb.Builder(id=77, name='A'),
         ]
@@ -231,6 +230,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_does_not_collapse_concurrent_claims(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222),
             fakedb.Builder(id=77, name='A'),
         ]
@@ -256,6 +256,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_does_not_collapse_scheduler_props(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222),
             fakedb.Builder(id=77, name='A'),
         ]
@@ -287,6 +288,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_branches(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A', branch='br1'),
             fakedb.SourceStamp(id=223, codebase='C', branch='br2'),
             fakedb.SourceStamp(id=224, codebase='C', branch='br3'),
@@ -305,6 +307,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_repository(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A', repository='repo1'),
             fakedb.SourceStamp(id=223, codebase='C', repository='repo2'),
             fakedb.SourceStamp(id=224, codebase='C', repository='repo3'),
@@ -323,6 +326,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_codebases_projects(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A', project='proj1'),
             fakedb.SourceStamp(id=223, codebase='C', project='proj2'),
             fakedb.SourceStamp(id=224, codebase='C', project='proj3'),
@@ -342,8 +346,17 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_a_patch(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
             fakedb.SourceStamp(id=223, codebase='C'),
+            fakedb.Patch(
+                id=123,
+                patch_base64='aGVsbG8sIHdvcmxk',
+                patch_author='bar',
+                patch_comment='foo',
+                subdir='/foo',
+                patchlevel=3,
+            ),
             fakedb.SourceStamp(id=224, codebase='C', patchid=123),
             fakedb.Builder(id=77, name='A'),
         ]
@@ -360,6 +373,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_changes(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
             fakedb.SourceStamp(id=223, codebase='C'),
             fakedb.Builder(id=77, name='A'),
@@ -377,6 +391,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_with_non_matching_revision(self):
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
             fakedb.SourceStamp(id=223, codebase='C'),
             fakedb.SourceStamp(id=224, codebase='C', revision='abcd1234'),
@@ -490,16 +505,13 @@ class TestSourceStamp(unittest.TestCase):
 
 class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_fromBrdict(self):
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -546,6 +558,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     def test_fromBrdict_no_sourcestamps(self):
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
             # buildset has no sourcestamps
@@ -561,6 +574,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
     def test_fromBrdict_multiple_sourcestamps(self):
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -636,6 +650,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         brs = []  # list of buildrequests
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=234,
@@ -751,6 +766,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         """
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(
                 id=238,

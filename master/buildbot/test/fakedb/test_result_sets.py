@@ -22,8 +22,6 @@ class TestResultSet(Row):
     table = 'test_result_sets'
 
     id_column = 'id'
-    foreignKeys = ('builderid', 'buildid', 'stepid')
-    required_columns = ('builderid', 'buildid', 'stepid', 'category', 'value_unit', 'complete')
 
     def __init__(
         self,
@@ -32,11 +30,11 @@ class TestResultSet(Row):
         buildid=None,
         stepid=None,
         description=None,
-        category=None,
-        value_unit=None,
+        category='cat',
+        value_unit='unit',
         tests_passed=None,
         tests_failed=None,
-        complete=None,
+        complete=1,
     ):
         super().__init__(
             id=id,

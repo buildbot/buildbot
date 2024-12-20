@@ -173,7 +173,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
             else:
                 q = build_data.delete()
                 q = q.where(builds.c.id == build_data.c.buildid)
-                q = q.where(builds.c.complete_at <= older_than_timestamp)
+                q = q.where(builds.c.complete_at < older_than_timestamp)
             res = conn.execute(q)
             conn.commit()
             res.close()

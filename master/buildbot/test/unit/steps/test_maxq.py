@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -27,13 +26,8 @@ from buildbot.test.steps import TestBuildStepMixin
 
 class TestShellCommandExecution(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         return self.setup_test_build_step()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_build_step()
-        yield self.tear_down_test_reactor()
 
     def test_testdir_required(self):
         with self.assertRaises(config.ConfigErrors):

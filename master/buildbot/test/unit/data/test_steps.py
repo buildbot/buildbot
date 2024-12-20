@@ -73,9 +73,6 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Step(id=72, number=2, name='three', buildid=30, started_at=TIME4, hidden=True),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_existing(self):
         step = yield self.callGet(('steps', 72))
@@ -183,9 +180,6 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Step(id=73, number=0, name='otherbuild', buildid=31, started_at=TIME3),
         ])
 
-    def tearDown(self):
-        self.tearDownEndpoint()
-
     @defer.inlineCallbacks
     def test_get_buildid(self):
         steps = yield self.callGet(('builds', 30, 'steps'))
@@ -217,13 +211,20 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class Step(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = steps.Step(self.master)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        yield self.master.db.insert_test_data([
+            fakedb.Worker(id=47, name='linux'),
+            fakedb.Builder(id=77, name='builder77'),
+            fakedb.Master(id=88),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
+            fakedb.Build(
+                id=10, builderid=77, number=7, masterid=88, buildrequestid=82, workerid=47
+            ),
+        ])
 
     def test_signature_addStep(self):
         @self.assertArgSpecMatches(

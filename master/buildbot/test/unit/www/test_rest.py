@@ -28,21 +28,15 @@ from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import authz
-from buildbot.www import graphql
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
 
 
 class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    maxVersion = 3
+    maxVersion = 2
 
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
-        _ = graphql  # used for import side effect
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        self.setup_test_reactor()
 
     @defer.inlineCallbacks
     def test_render(self):
@@ -75,15 +69,11 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield self.make_master(url='http://server/path/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def assertSimpleError(self, message, responseCode):
         content = json.dumps({'error': message})
@@ -148,7 +138,7 @@ class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
@@ -160,10 +150,6 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             return defer.succeed(None)
 
         self.rsrc.renderRest = renderRest
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def assertOk(self, expectHeaders=True, content=b'ok', origin=b'h://good'):
         hdrs = (
@@ -272,7 +258,7 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/')
         self.master.config.www['debug'] = True
         self.master.data._scanModule(endpoint)
@@ -288,10 +274,6 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         endpoint.TestsEndpoint.rtype = mock.MagicMock()
         endpoint.Test.kind = EndpointKind.COLLECTION
         endpoint.Test.rtype = endpoint.Test
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def assertRestCollection(
         self, typeName, items, total=None, contentType=None, orderSignificant=False
@@ -769,7 +751,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/')
 
         def allow(*args, **kw):
@@ -780,10 +762,6 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     def assertJsonRpcError(self, message, responseCode=400, jsonrpccode=None):
         got = {}

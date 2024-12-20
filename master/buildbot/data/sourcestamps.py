@@ -89,8 +89,6 @@ class SourceStamp(base.ResourceType):
     name = "sourcestamp"
     plural = "sourcestamps"
     endpoints = [SourceStampEndpoint, SourceStampsEndpoint]
-    keyField = 'ssid'
-    subresources = ["Change"]
 
     class EntityType(types.Entity):
         ssid = types.Integer()
@@ -102,4 +100,4 @@ class SourceStamp(base.ResourceType):
         patch = types.NoneOk(patches.Patch.entityType)
         created_at = types.DateTime()
 
-    entityType = EntityType(name, 'Sourcestamp')
+    entityType = EntityType(name)

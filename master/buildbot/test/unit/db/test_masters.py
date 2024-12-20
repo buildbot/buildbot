@@ -18,8 +18,8 @@ from twisted.trial import unittest
 
 from buildbot.db import masters
 from buildbot.test import fakedb
-from buildbot.test.util import connector_component
-from buildbot.test.util import interfaces
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 SOMETIME = 1348971992
@@ -28,34 +28,19 @@ OTHERTIME = 1008971992
 OTHERTIME_DT = epoch2datetime(OTHERTIME)
 
 
-class Tests(interfaces.InterfaceTests):
+class Tests(TestReactorMixin, unittest.TestCase):
     # common sample data
 
     master_row = [
         fakedb.Master(id=7, active=1, last_active=SOMETIME),
     ]
 
-    # tests
-
-    def test_signature_findMasterId(self):
-        @self.assertArgSpecMatches(self.db.masters.findMasterId)
-        def findMasterId(self, name):
-            pass
-
-    def test_signature_setMasterState(self):
-        @self.assertArgSpecMatches(self.db.masters.setMasterState)
-        def setMasterState(self, masterid, active):
-            pass
-
-    def test_signature_getMaster(self):
-        @self.assertArgSpecMatches(self.db.masters.getMaster)
-        def getMaster(self, masterid):
-            pass
-
-    def test_signature_getMasters(self):
-        @self.assertArgSpecMatches(self.db.masters.getMasters)
-        def getMasters(self):
-            pass
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setup_test_reactor()
+        self.reactor.advance(SOMETIME)
+        self.master = yield fakemaster.make_master(self, wantDb=True)
+        self.db = self.master.db
 
     @defer.inlineCallbacks
     def test_findMasterId_new(self):
@@ -68,7 +53,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_new_name_differs_only_by_case(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, name='some:master'),
         ])
         id = yield self.db.masters.findMasterId('some:Master')
@@ -80,7 +65,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findMasterId_exists(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, name='some:master'),
         ])
         id = yield self.db.masters.findMasterId('some:master')
@@ -93,7 +78,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_active(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, active=1, last_active=OTHERTIME),
         ])
         activated = yield self.db.masters.setMasterState(masterid=7, active=True)
@@ -106,7 +91,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_true_when_inactive(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=OTHERTIME),
         ])
         activated = yield self.db.masters.setMasterState(masterid=7, active=True)
@@ -119,7 +104,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_active(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, active=1, last_active=OTHERTIME),
         ])
         deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
@@ -132,7 +117,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setMasterState_false_when_inactive(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=OTHERTIME),
         ])
         deactivated = yield self.db.masters.setMasterState(masterid=7, active=False)
@@ -145,7 +130,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getMaster(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
         ])
         masterdict = yield self.db.masters.getMaster(7)
@@ -162,7 +147,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getMasters(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
             fakedb.Master(id=8, active=1, last_active=OTHERTIME),
         ])
@@ -182,13 +167,9 @@ class Tests(interfaces.InterfaceTests):
         )
         self.assertEqual(sorted(masterlist, key=masterKey), expected)
 
-
-class RealTests(Tests):
-    # tests that only "real" implementations will pass
-
     @defer.inlineCallbacks
     def test_setMasterState_false_deletes_links(self):
-        yield self.insert_test_data([
+        yield self.db.insert_test_data([
             fakedb.Master(id=7, name='some:master', active=1, last_active=OTHERTIME),
             fakedb.Scheduler(id=21),
             fakedb.SchedulerMaster(schedulerid=21, masterid=7),
@@ -202,18 +183,3 @@ class RealTests(Tests):
             self.assertEqual(conn.execute(tbl.select()).fetchall(), [])
 
         yield self.db.pool.do(thd)
-
-
-class TestRealDB(unittest.TestCase, connector_component.ConnectorComponentMixin, RealTests):
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpConnectorComponent(
-            table_names=['masters', 'schedulers', 'scheduler_masters']
-        )
-
-        self.reactor.advance(SOMETIME)
-
-        self.db.masters = masters.MastersConnectorComponent(self.db)
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()

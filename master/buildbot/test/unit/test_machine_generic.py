@@ -55,12 +55,8 @@ class TestActions(
     MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_local_wake_action(self):
@@ -263,15 +259,11 @@ class TestActions(
 class TestHttpAction(config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, "http://localhost/request"
         )
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_http_wrong_method(self):

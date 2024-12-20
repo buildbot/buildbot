@@ -48,17 +48,23 @@ class ContactMixin(TestReactorMixin):
 
     @defer.inlineCallbacks
     def setUp(self) -> Generator[Any, None, None]:
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.patch(reactor, 'seconds', self.reactor.seconds)
         self.patch(reactor, 'stop', self.reactor.stop)
 
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
-        yield self.master.db.insert_test_data([
-            fakedb.Builder(id=builderid, name=name)
-            for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
-        ])
+        yield self.master.db.insert_test_data(
+            [
+                fakedb.Master(id=88),
+                fakedb.Worker(id=13, name='w13'),
+            ]
+            + [
+                fakedb.Builder(id=builderid, name=name)
+                for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES)
+            ]
+        )
 
         self.bot = self.botClass(notify_events={'success': 1, 'failure': 1})
         self.bot.channelClass = self.channelClass
@@ -87,10 +93,7 @@ class ContactMixin(TestReactorMixin):
         self.contact = self.contactClass(user=self.USER, channel=self.bot.getChannel(self.CHANNEL))
         yield self.contact.channel.setServiceParent(self.master)
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
+        self.addCleanup(self.master.stopService)
 
     def patch_send(self):
         self.sent = []
@@ -142,6 +145,8 @@ class ContactMixin(TestReactorMixin):
     def setupSomeBuilds(self):
         yield self.master.db.insert_test_data([
             # Three builds on builder#0, One build on builder#1
+            fakedb.Buildset(id=82),
+            fakedb.BuildRequest(id=82, buildsetid=82, builderid=self.BUILDER_IDS[0]),
             fakedb.Build(
                 id=13,
                 masterid=88,
@@ -150,6 +155,8 @@ class ContactMixin(TestReactorMixin):
                 buildrequestid=82,
                 number=3,
             ),
+            fakedb.Buildset(id=83),
+            fakedb.BuildRequest(id=83, buildsetid=83, builderid=self.BUILDER_IDS[0]),
             fakedb.Build(
                 id=14,
                 masterid=88,
@@ -158,6 +165,8 @@ class ContactMixin(TestReactorMixin):
                 buildrequestid=83,
                 number=4,
             ),
+            fakedb.Buildset(id=84),
+            fakedb.BuildRequest(id=84, buildsetid=84, builderid=self.BUILDER_IDS[1]),
             fakedb.Build(
                 id=15,
                 masterid=88,
@@ -166,6 +175,8 @@ class ContactMixin(TestReactorMixin):
                 buildrequestid=84,
                 number=5,
             ),
+            fakedb.Buildset(id=85),
+            fakedb.BuildRequest(id=85, buildsetid=85, builderid=self.BUILDER_IDS[0]),
             fakedb.Build(
                 id=16,
                 masterid=88,
@@ -182,6 +193,7 @@ class ContactMixin(TestReactorMixin):
         # Make first builder configured, but not connected
         # Make second builder configured and connected
         yield self.master.db.insert_test_data([
+            fakedb.Master(id=13),
             fakedb.Worker(id=1, name='linux1', info={}),  # connected one
             fakedb.Worker(id=2, name='linux2', info={}),  # disconnected one
             fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
@@ -426,7 +438,10 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
-        yield self.master.db.workers.db.insert_test_data([fakedb.Change()])
+        yield self.master.db.workers.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
+            fakedb.Change(sourcestampid=92),
+        ])
         yield self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 1)
 
@@ -798,3 +813,71 @@ class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
         ])
         yield self.bot.loadState()
         self.assertEqual(self.bot.channels['#channel1'].notify_events, {'warnings'})
+
+    @defer.inlineCallbacks
+    def test_buildFinished_status_string_only(self):
+        """Test that buildFinished works when only status_string is set"""
+        yield self.setupSomeBuilds()
+        self.patch_send()
+
+        build = yield self.master.data.get(('builds', 13))
+        build['results'] = FAILURE
+        build['status_string'] = 'failing tests in worker'
+        build['state_string'] = None
+
+        self.bot.tags = None
+        self.contact.channel.notify_for = lambda _: True
+        self.contact.useRevisions = False
+
+        yield self.contact.channel.buildFinished(build, watched=True)
+
+        self.assertEqual(
+            self.sent[0],
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of "
+            "`builder1` failed: failing tests in worker",
+        )
+
+    @defer.inlineCallbacks
+    def test_buildFinished_status_string_fallback(self):
+        """Test that buildFinished uses state_string when status_string is None"""
+        yield self.setupSomeBuilds()
+        self.patch_send()
+
+        build = yield self.master.data.get(('builds', 13))
+        build['results'] = FAILURE
+        build['status_string'] = None
+        build['state_string'] = 'failed due to test errors'
+
+        self.bot.tags = None
+        self.contact.channel.notify_for = lambda _: True
+        self.contact.useRevisions = False
+
+        yield self.contact.channel.buildFinished(build, watched=True)
+
+        self.assertEqual(
+            self.sent[0],
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of "
+            "`builder1` failed: failed due to test errors",
+        )
+
+    @defer.inlineCallbacks
+    def test_buildFinished_no_status_strings(self):
+        """Test that buildFinished works when both status_string and state_string are None"""
+        yield self.setupSomeBuilds()
+        self.patch_send()
+
+        build = yield self.master.data.get(('builds', 13))
+        build['results'] = FAILURE
+        build['status_string'] = None
+        build['state_string'] = None
+
+        self.bot.tags = None
+        self.contact.channel.notify_for = lambda _: True
+        self.contact.useRevisions = False
+
+        yield self.contact.channel.buildFinished(build, watched=True)
+
+        self.assertEqual(
+            self.sent[0],
+            "Build [#3](http://localhost:8080/#/builders/23/builds/3) of `builder1` failed.",
+        )

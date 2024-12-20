@@ -147,19 +147,21 @@ class RunMasterBehindProxy(RunMasterBase):
         self.target_port = self.queue.get()
         write_to_log(f"got target_port {self.target_port}\n")
 
-    def tearDown(self):
-        write_to_log("tearDown\n")
-        self.proxy_process.terminate()
-        self.proxy_process.join()
-        if self.enable_debug:
-            print("---- stdout ----")
-            with open(get_log_path(), encoding='utf-8') as file:
-                print(file.read())
-            print("---- ------ ----")
-            with open(self.queue.get(), encoding='utf-8') as file:
-                print(file.read())
-            print("---- ------ ----")
-            os.unlink(get_log_path())
+        def cleanup():
+            write_to_log("cleanup\n")
+            self.proxy_process.terminate()
+            self.proxy_process.join()
+            if self.enable_debug:
+                print("---- stdout ----")
+                with open(get_log_path(), encoding='utf-8') as file:
+                    print(file.read())
+                print("---- ------ ----")
+                with open(self.queue.get(), encoding='utf-8') as file:
+                    print(file.read())
+                print("---- ------ ----")
+                os.unlink(get_log_path())
+
+        self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict, startWorker=True):

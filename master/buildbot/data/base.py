@@ -51,10 +51,8 @@ class ResourceType:
     name: str | None = None
     plural: str | None = None
     endpoints: list[type[Endpoint]] = []
-    keyField: str | None = None
     eventPathPatterns = ""
     entityType: types.Type | None = None
-    subresources: list[str] = []
 
     def __init__(self, master):
         self.master = master
@@ -149,33 +147,6 @@ class Endpoint:
         if action_method is None:
             raise exceptions.InvalidControlException(f"action: {action} is not supported")
         return action_method(args, kwargs)
-
-    def get_kwargs_from_graphql_parent(self, parent, parent_type):
-        if parent_type not in self.parentMapping:
-            rtype = self.master.data.getResourceTypeForGraphQlType(parent_type)
-            if rtype.keyField in parent:
-                parentid = rtype.keyField
-            else:
-                raise NotImplementedError(
-                    "Collection endpoint should implement get_kwargs_from_graphql or parentMapping"
-                )
-        else:
-            parentid = self.parentMapping[parent_type]
-        ret = {'graphql': True}
-        ret[parentid] = parent[parentid]
-        return ret
-
-    def get_kwargs_from_graphql(self, parent, resolve_info, args):
-        if self.kind == EndpointKind.COLLECTION or self.isPseudoCollection:
-            if parent is not None:
-                return self.get_kwargs_from_graphql_parent(parent, resolve_info.parent_type.name)
-            return {'graphql': True}
-        ret = {'graphql': True}
-        k = self.rtype.keyField
-        v = args.pop(k)
-        if v is not None:
-            ret[k] = v
-        return ret
 
     def __repr__(self):
         return "endpoint for " + ",".join(self.pathPatterns.split())

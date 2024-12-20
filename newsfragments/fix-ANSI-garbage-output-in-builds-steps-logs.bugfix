@@ -1,0 +1,1 @@
+Fix garbage output of ANSI escape codes sequences in builds steps logs (:bug:`7852`)

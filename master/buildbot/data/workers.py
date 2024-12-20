@@ -120,23 +120,21 @@ class Worker(base.ResourceType):
     name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
-    keyField = 'workerid'
     eventPathPatterns = """
         /workers/:workerid
     """
-    subresources = ["Build"]
 
     class EntityType(types.Entity):
         workerid = types.Integer()
         name = types.String()
-        connected_to = types.List(of=MasterIdEntityType("master_id", 'MasterId'))
-        configured_on = types.List(of=MasterBuilderEntityType("master_builder", 'MasterBuilder'))
+        connected_to = types.List(of=MasterIdEntityType("master_id"))
+        configured_on = types.List(of=MasterBuilderEntityType("master_builder"))
         workerinfo = types.JsonObject()
         paused = types.Boolean()
         pause_reason = types.NoneOk(types.String())
         graceful = types.Boolean()
 
-    entityType = EntityType(name, 'Worker')
+    entityType = EntityType(name)
 
     @base.updateMethod
     # returns a Deferred that returns None

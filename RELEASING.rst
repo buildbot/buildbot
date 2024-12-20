@@ -65,19 +65,19 @@ If you draft the release and publish it before CircleCi, make sure the release n
 This is a requirement for subsequent release scripts to work.
 Manual publishing is preferred, because the releases created by CircleCi don't contain release notes, thus GitHub notifications are not informative.
 
-Step 6: Upload release to pypi
+Step 6: Upload release to PyPI
 ------------------------------
 
 This step requires GitHub Hub tool to be installed and authorized to GitHub (https://github.com/github/hub).
 Additionally you have to have access to GPG key that is used to sign the releases.
-Finally, you have to be added as a maintainer to all Buildbot PyPi projects.
+Finally, you have to be added as a maintainer to all Buildbot PyPI projects.
 
 To complete the release just run the following:
 
     make finishrelease
 
 The above will download the releases from GitHub and upload them using twine.
-If you get bytes-related error after entering Pypi password, you'll need to upgrade Twine.
+If you get bytes-related error after entering PyPI password, you'll need to upgrade Twine.
 
 Step 7: Announce the release
 ----------------------------

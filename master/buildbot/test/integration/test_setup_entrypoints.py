@@ -161,6 +161,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.subscription.SubscriptionPoint',
             'buildbot.util.test_result_submitter.TestResultSubmitter',
             "buildbot.util.watchdog.Watchdog",
+            "buildbot.util.twisted.ThreadPool",
         }
         self.verify_plugins_registered('util', 'buildbot.util', None, known_not_exported)
 

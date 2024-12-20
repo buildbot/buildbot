@@ -37,13 +37,8 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def makeScheduler(self, name='testsched', builderNames=None, properties=None, codebases=None):
@@ -445,6 +440,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     def test_addBuildsetForChanges_one_change(self):
         sched = yield self.makeScheduler(name='n', builderNames=['b'])
         yield self.db.insert_test_data([
+            fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, sourcestampid=234),
         ])
         bsid, brids = yield sched.addBuildsetForChanges(
@@ -468,6 +464,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     def test_addBuildsetForChanges_properties(self):
         sched = yield self.makeScheduler(name='n', builderNames=['c'])
         yield self.db.insert_test_data([
+            fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=14, sourcestampid=234),
         ])
         bsid, brids = yield sched.addBuildsetForChanges(
@@ -525,6 +522,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         )
         # No codebaseGenerator means all changes have codebase == ''
         yield self.db.insert_test_data([
+            fakedb.SourceStamp(id=10),
+            fakedb.SourceStamp(id=11),
+            fakedb.SourceStamp(id=12),
             fakedb.Change(changeid=13, codebase='cb', sourcestampid=12),
             fakedb.Change(changeid=14, codebase='cb', sourcestampid=11),
             fakedb.Change(changeid=15, codebase='cb', sourcestampid=10),
@@ -561,6 +561,12 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         # for repositories that have no changes
         sched = yield self.makeScheduler(name='n', builderNames=['b', 'c'], codebases=codebases)
         yield self.db.insert_test_data([
+            fakedb.SourceStamp(id=912),
+            fakedb.SourceStamp(id=913),
+            fakedb.SourceStamp(id=914),
+            fakedb.SourceStamp(id=915),
+            fakedb.SourceStamp(id=916),
+            fakedb.SourceStamp(id=917),
             fakedb.Change(changeid=12, codebase='cbA', sourcestampid=912),
             fakedb.Change(changeid=13, codebase='cbA', sourcestampid=913),
             fakedb.Change(changeid=14, codebase='cbA', sourcestampid=914),

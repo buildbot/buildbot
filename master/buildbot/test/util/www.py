@@ -53,6 +53,9 @@ class FakeRequest:
     responseCode = 200
 
     def __init__(self, path=None):
+        # from twisted.web.http.Request. Used to detect connection dropped
+        self.channel = True
+
         self.headers = {}
         self.input_headers = {}
         self.prepath = []

@@ -704,8 +704,12 @@ class TestBuildStepMixin:
         self._exp_result_summaries: list[str] = []
         self._exp_build_result_summaries: list[str] = []
 
-    def tear_down_test_build_step(self):
-        pass
+    def tear_down_test_build_step(self):  # pragma: no cover
+        warn_deprecated(
+            '4.2.0',
+            'tear_down_test_build_step() no longer needs to be called, '
+            + 'test tear down is run automatically',
+        )
 
     def _setup_fake_build(self, worker_version, worker_env, build_files):
         if worker_version is None:

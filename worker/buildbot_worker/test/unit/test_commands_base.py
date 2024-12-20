@@ -61,9 +61,6 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-    def tearDown(self):
-        self.tearDownCommand()
-
     def assertState(self, setup_done, running, started, interrupted, msg=None):
         self.assertEqual(
             {

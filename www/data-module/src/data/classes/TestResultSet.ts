@@ -27,7 +27,7 @@ export class TestResultSet extends BaseClass {
   @observable complete!: boolean;
 
   constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.stepid));
+    super(accessor, endpoint, String(object.test_result_setid));
     this.update(object);
     makeObservable(this);
   }

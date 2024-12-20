@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from twisted.internet import defer
+from twisted.internet import threads
 from twisted.internet.error import ConnectionDone
 from twisted.python import log
 from twisted.web.error import Error
@@ -63,6 +64,12 @@ class ContentTypeParser:
         if self.typeheader is None:
             return None
         return bytes2unicode(self.typeheader).split(';', 1)[0]
+
+
+def _is_request_finished(request: server.Request) -> bool:
+    # In case of lost connection, request is not marked as finished
+    # detect this case with `channel` being None
+    return bool(request.finished) or request.channel is None
 
 
 URL_ENCODED = b"application/x-www-form-urlencoded"
@@ -333,9 +340,7 @@ class V2RootResource(resource.Resource):
             return
 
         async for chunk in data['raw']:
-            if request.finished or request.channel is None:
-                # In case of lost connection, request is not marked as finished
-                # detect this case with `channel` being None
+            if _is_request_finished(request):
                 return
             request.write(unicode2bytes(chunk))
 
@@ -355,6 +360,9 @@ class V2RootResource(resource.Resource):
             data = yield ep.get(rspec, kwargs)
             if data is None:
                 self._write_not_found_rest_error(request, ep, rspec=rspec, kwargs=kwargs)
+                return
+
+            if _is_request_finished(request):
                 return
 
             # post-process any remaining parts of the resultspec
@@ -405,12 +413,7 @@ class V2RootResource(resource.Resource):
             else:
                 encoder.indent = 2
 
-            content_length = sum(len(unicode2bytes(chunk)) for chunk in encoder.iterencode(data))
-            request.setHeader(b"content-length", unicode2bytes(str(content_length)))
-
-            if request.method != b"HEAD":
-                for chunk in encoder.iterencode(data):
-                    request.write(unicode2bytes(chunk))
+            yield threads.deferToThread(V2RootResource._write_json_data, request, encoder, data)
 
     def reconfigResource(self, new_config):
         # buildbotURL may contain reverse proxy path, Origin header is just
@@ -488,6 +491,25 @@ class V2RootResource(resource.Resource):
             raise Error(400, b"invalid HTTP method")
 
         return res
+
+    @staticmethod
+    def _write_json_data(
+        request: server.Request,
+        encoder: json.encoder.JSONEncoder,
+        data: Any,
+    ) -> None:
+        content_length = 0
+        for chunk in encoder.iterencode(data):
+            if _is_request_finished(request):
+                return
+            content_length += len(unicode2bytes(chunk))
+        request.setHeader(b"content-length", unicode2bytes(str(content_length)))
+
+        if request.method != b"HEAD":
+            for chunk in encoder.iterencode(data):
+                if _is_request_finished(request):
+                    return
+                request.write(unicode2bytes(chunk))
 
 
 RestRootResource.addApiVersion(2, V2RootResource)

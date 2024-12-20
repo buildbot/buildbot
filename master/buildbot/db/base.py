@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 
+from buildbot.util import service
 from buildbot.util import unicode2bytes
 from buildbot.util.sautils import hash_columns
 
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from buildbot.db.connector import DBConnector
 
 
-class DBConnectorComponent:
+class DBConnectorComponent(service.AsyncService):
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
     # DBConnector object, so that they are available at e.g.,
@@ -46,10 +47,6 @@ class DBConnectorComponent:
             o = getattr(self, method)
             if isinstance(o, CachedMethod):
                 setattr(self, method, o.get_cached_method(self))
-
-    @property
-    def master(self):
-        return self.db.master
 
     _isCheckLengthNecessary: bool | None = None
 

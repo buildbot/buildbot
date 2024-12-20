@@ -38,17 +38,12 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         # Necessary to get an assertable submitted_at time.
         self.reactor.advance(946684799)
 
         yield self.setUpScheduler()
         self.subscription = None
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):

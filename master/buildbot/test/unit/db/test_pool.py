@@ -22,23 +22,26 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
+from buildbot.db import enginestrategy
 from buildbot.db import pool
 from buildbot.test.util import db
+from buildbot.test.util.db import thd_clean_database
 from buildbot.util import sautils
 
 
 class Basic(unittest.TestCase):
     # basic tests, just using an in-memory SQL db and one thread
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.engine = sa.create_engine('sqlite://', future=True)
+        url = db.resolve_test_db_url(None, sqlite_memory=True)
+        self.engine = enginestrategy.create_engine(url, basedir=os.getcwd())
         self.engine.should_retry = lambda _: False
         self.engine.optimal_thread_pool_size = 1
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.pool.shutdown()
+        self.pool.start()
+        yield self.pool.do(thd_clean_database)
+        self.addCleanup(self.pool.stop)
 
     @defer.inlineCallbacks
     def test_do(self):
@@ -51,16 +54,18 @@ class Basic(unittest.TestCase):
         self.assertEqual(res, 21)
 
     @defer.inlineCallbacks
-    def expect_failure(self, d, expected_exception, expect_logged_error=False):
+    def expect_failure(self, d, expected_exceptions, expect_logged_error=False):
         exception = None
         try:
             yield d
         except Exception as e:
             exception = e
-        errors = self.flushLoggedErrors(expected_exception)
+        errors = []
+        for expected_exception in expected_exceptions:
+            errors += self.flushLoggedErrors(expected_exception)
         if expect_logged_error:
             self.assertEqual(len(errors), 1)
-        self.assertTrue(isinstance(exception, expected_exception))
+        self.assertTrue(isinstance(exception, expected_exceptions))
 
     def test_do_error(self):
         def fail(conn):
@@ -68,7 +73,9 @@ class Basic(unittest.TestCase):
             return rp.scalar()
 
         return self.expect_failure(
-            self.pool.do(fail), sa.exc.OperationalError, expect_logged_error=True
+            self.pool.do(fail),
+            (sa.exc.ProgrammingError, sa.exc.OperationalError),
+            expect_logged_error=True,
         )
 
     def test_do_exception(self):
@@ -76,7 +83,7 @@ class Basic(unittest.TestCase):
             raise RuntimeError("oh noes")
 
         return self.expect_failure(
-            self.pool.do(raise_something), RuntimeError, expect_logged_error=True
+            self.pool.do(raise_something), (RuntimeError,), expect_logged_error=True
         )
 
     @defer.inlineCallbacks
@@ -84,7 +91,7 @@ class Basic(unittest.TestCase):
         def add(engine, addend1, addend2):
             with engine.connect() as conn:
                 rp = conn.execute(sa.text(f"SELECT {addend1} + {addend2}"))
-            return rp.scalar()
+                return rp.scalar()
 
         res = yield self.pool.do_with_engine(add, 10, 11)
 
@@ -96,7 +103,9 @@ class Basic(unittest.TestCase):
                 rp = conn.execute(sa.text("EAT COOKIES"))
             return rp.scalar()
 
-        return self.expect_failure(self.pool.do_with_engine(fail), sa.exc.OperationalError)
+        return self.expect_failure(
+            self.pool.do_with_engine(fail), (sa.exc.ProgrammingError, sa.exc.OperationalError)
+        )
 
     @defer.inlineCallbacks
     def test_persistence_across_invocations(self):
@@ -120,6 +129,26 @@ class Basic(unittest.TestCase):
 
         yield self.pool.do_with_engine(insert_into_table)
 
+    @defer.inlineCallbacks
+    def test_ddl_and_queries(self):
+        meta = sa.MetaData()
+        native_tests = sautils.Table("native_tests", meta, sa.Column('name', sa.String(length=200)))
+
+        # perform a DDL operation and immediately try to access that table;
+        # this has caused problems in the past, so this is basically a
+        # regression test.
+        def ddl(conn):
+            t = conn.begin()
+            native_tests.create(bind=conn)
+            t.commit()
+
+        yield self.pool.do(ddl)
+
+        def access(conn):
+            conn.execute(native_tests.insert().values({'name': 'foo'}))
+
+        yield self.pool.do_with_transaction(access)
+
 
 class Stress(unittest.TestCase):
     def setUp(self):
@@ -130,10 +159,10 @@ class Stress(unittest.TestCase):
         self.engine = sa.create_engine('sqlite:///test.sqlite', future=True)
         self.engine.optimal_thread_pool_size = 2
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
+        self.pool.start()
+        self.addCleanup(self.pool.stop)
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        yield self.pool.shutdown()
         os.unlink("test.sqlite")
 
     @defer.inlineCallbacks
@@ -171,50 +200,3 @@ class BasicWithDebug(Basic):
     def tearDown(self):
         pool.debug = False
         return super().tearDown()
-
-
-class Native(unittest.TestCase, db.RealDatabaseMixin):
-    # similar tests, but using the BUILDBOT_TEST_DB_URL
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setUpRealDatabase(want_pool=False)
-
-        self.pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        # try to delete the 'native_tests' table
-        meta = sa.MetaData()
-        native_tests = sautils.Table("native_tests", meta)
-
-        def thd(conn):
-            native_tests.drop(bind=self.db_engine, checkfirst=True)
-
-        yield self.pool.do(thd)
-
-        # tearDownRealDatabase() won't shutdown the pool as want_pool was false in
-        # setUpRealDatabase call
-        yield self.pool.shutdown()
-
-        yield self.tearDownRealDatabase()
-
-    @defer.inlineCallbacks
-    def test_ddl_and_queries(self):
-        meta = sa.MetaData()
-        native_tests = sautils.Table("native_tests", meta, sa.Column('name', sa.String(length=200)))
-
-        # perform a DDL operation and immediately try to access that table;
-        # this has caused problems in the past, so this is basically a
-        # regression test.
-        def ddl(conn):
-            t = conn.begin()
-            native_tests.create(bind=conn)
-            t.commit()
-
-        yield self.pool.do(ddl)
-
-        def access(conn):
-            conn.execute(native_tests.insert().values({'name': 'foo'}))
-
-        yield self.pool.do_with_transaction(access)

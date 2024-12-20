@@ -97,18 +97,12 @@ class TestGerritChangeSource(
     TestReactorMixin,
     unittest.TestCase,
 ):
+    @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.setup_master_run_process()
         self._got_events = []
-        return self.setUpChangeSource()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.master.running:
-            yield self.master.stopService()
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
+        yield self.setUpChangeSource()
 
     @defer.inlineCallbacks
     def create_gerrit(self, host, user, *args, **kwargs):
@@ -528,14 +522,14 @@ class TestGerritChangeSource(
 
         self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         self.reactor.process_send_stderr(0, b"test stderr\n")
         self.reactor.process_send_stdout(0, b'{"type":"dropped-output", "eventCreatedOn": 123}\n')
 
         self.reactor.expect_process_signalProcess(0, "KILL")
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(0, None)
         yield d
 
@@ -545,7 +539,7 @@ class TestGerritChangeSource(
 
         self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         pid = 0
@@ -566,6 +560,8 @@ class TestGerritChangeSource(
             self.reactor.process_done(pid, None)
             pid += 1
             self.reactor.advance(0.05)
+
+        yield self.stopChangeSource()
 
     def _build_messages_to_bytes(self, timestamps):
         messages = [
@@ -625,7 +621,7 @@ class TestGerritChangeSource(
             processing_delay_s=1,
         )
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         # Poll after timeout
@@ -682,7 +678,7 @@ class TestGerritChangeSource(
 
         self.assertTrue(s._is_synchronized)
 
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(1, None)
         yield d
 
@@ -726,7 +722,7 @@ class TestGerritChangeSource(
             content=b"",
         )
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         self.reactor.advance(2)
@@ -777,6 +773,9 @@ class TestGerritChangeSource(
         # This is what triggers process startup above
         self.reactor.process_done(0, None)
 
+        # Stream should not be made primary until there are messages flowing
+        self.assertFalse(s._is_synchronized)
+
         self.reactor.advance(2)
 
         # Poll after messages below
@@ -807,7 +806,7 @@ class TestGerritChangeSource(
 
         self.assertTrue(s._is_synchronized)
 
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(1, None)
         yield d
 
@@ -849,7 +848,7 @@ class TestGerritChangeSource(
             content=b"",
         )
 
-        yield self.master.startService()
+        yield self.startChangeSource()
         s.activate()
 
         self.reactor.advance(2)
@@ -920,7 +919,7 @@ class TestGerritChangeSource(
 
         self.assertTrue(s._is_synchronized)
 
-        d = self.master.stopService()
+        d = self.stopChangeSource()
         self.reactor.process_done(0, None)
         yield d
 
@@ -1047,15 +1046,10 @@ class TestGerritEventLogPoller(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tearDownChangeSource()
-        yield self.tear_down_test_reactor()
+        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def newChangeSource(self, **kwargs):

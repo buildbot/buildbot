@@ -35,13 +35,8 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     def makeScheduler(self, **kwargs):
         return self.attachScheduler(
@@ -101,9 +96,6 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         self.tmpdir = os.path.join(self.jobdir, 'tmp')
         self.setUpDirs(self.jobdir, self.newdir, self.curdir, self.tmpdir)
 
-    def tearDown(self):
-        self.tearDownDirs()
-
     def test_messageReceived(self):
         # stub out svc.scheduler.handleJobFile and .jobdir
         scheduler = mock.Mock()
@@ -132,16 +124,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
         self.jobdir = None
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        self.tearDownScheduler()
         if self.jobdir:
             shutil.rmtree(self.jobdir)
-        yield self.tear_down_test_reactor()
 
     # tests
 
@@ -881,13 +870,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     def makeScheduler(self, **kwargs):
         return self.attachScheduler(
@@ -1060,13 +1044,8 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def makeScheduler(self, **kwargs):

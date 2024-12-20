@@ -25,9 +25,10 @@ from buildbot.util.test_result_submitter import TestResultSubmitter
 class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield self.master.startService()
+        self.addCleanup(self.master.stopService)
 
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -40,11 +41,6 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ),
             fakedb.Step(id=131, number=132, name='step132', buildid=30),
         ])
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.master.stopService()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_complete_empty(self):

@@ -33,9 +33,6 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         self.configdir = self.mktemp()
         return self.setUpDirs(self.configdir)
 
-    def tearDown(self):
-        return self.tearDownDirs()
-
     # tests
 
     def do_test_load(self, config='', other_files=None, stdout_re=None, stderr_re=None):

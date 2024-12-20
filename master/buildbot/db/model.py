@@ -25,6 +25,7 @@ from twisted.python import log
 from twisted.python import util
 
 from buildbot.db import base
+from buildbot.db import model_config
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
@@ -38,7 +39,7 @@ class UpgradeFromBefore0p9Error(Exception):
     def __init__(self):
         message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x or newer.
         This is not supported. Please start from a clean database
-        http://docs.buildbot.net/latest/manual/upgrading/0.9-upgrade.html"""
+        https://docs.buildbot.net/latest/manual/upgrading/0.9-upgrade.html"""
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
@@ -48,19 +49,11 @@ class UpgradeFromBefore3p0Error(Exception):
         message = """You are trying to upgrade to Buildbot 3.0 or newer from Buildbot 2.x or older.
         This is only supported via an intermediate upgrade to newest Buildbot 2.10.x that is
         available. Please first upgrade to 2.10.x and then try to upgrade to this version.
-        http://docs.buildbot.net/latest/manual/upgrading/3.0-upgrade.html"""
+        https://docs.buildbot.net/latest/manual/upgrading/3.0-upgrade.html"""
         super().__init__(message)
 
 
 class Model(base.DBConnectorComponent):
-    property_name_length = 256
-    property_source_length = 256
-    hash_length = 40
-
-    #
-    # schema
-    #
-
     metadata = sa.MetaData()
 
     # NOTES
@@ -147,10 +140,10 @@ class Model(base.DBConnectorComponent):
         sa.Column(
             'buildid', sa.Integer, sa.ForeignKey('builds.id', ondelete='CASCADE'), nullable=False
         ),
-        sa.Column('name', sa.String(property_name_length), nullable=False),
+        sa.Column('name', sa.String(model_config.property_name_length), nullable=False),
         # JSON encoded value
         sa.Column('value', sa.Text, nullable=False),
-        sa.Column('source', sa.String(property_source_length), nullable=False),
+        sa.Column('source', sa.String(model_config.property_source_length), nullable=False),
     )
 
     # This table contains transient build state.
@@ -283,7 +276,7 @@ class Model(base.DBConnectorComponent):
             sa.ForeignKey('buildsets.id', ondelete='CASCADE'),
             nullable=False,
         ),
-        sa.Column('property_name', sa.String(property_name_length), nullable=False),
+        sa.Column('property_name', sa.String(model_config.property_name_length), nullable=False),
         # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.Text, nullable=False),
     )
@@ -341,7 +334,7 @@ class Model(base.DBConnectorComponent):
         # name for this changesource, as given in the configuration, plus a hash
         # of that name used for a unique index
         sa.Column('name', sa.Text, nullable=False),
-        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
     )
 
     # This links changesources to the master where they are running.  A changesource
@@ -434,7 +427,7 @@ class Model(base.DBConnectorComponent):
             sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
             nullable=False,
         ),
-        sa.Column('property_name', sa.String(property_name_length), nullable=False),
+        sa.Column('property_name', sa.String(model_config.property_name_length), nullable=False),
         # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.Text, nullable=False),
     )
@@ -538,7 +531,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer, primary_key=True),
         # hash of the branch, revision, patchid, repository, codebase, and
         # project, using hash_columns.
-        sa.Column('ss_hash', sa.String(hash_length), nullable=False),
+        sa.Column('ss_hash', sa.String(model_config.hash_length), nullable=False),
         # the branch to check out.  When branch is NULL, that means
         # the main branch (trunk, master, etc.)
         sa.Column('branch', sa.String(256)),
@@ -591,7 +584,7 @@ class Model(base.DBConnectorComponent):
         # name for this scheduler, as given in the configuration, plus a hash
         # of that name used for a unique index
         sa.Column('name', sa.Text, nullable=False),
-        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
         sa.Column('enabled', sa.SmallInteger, server_default=sa.DefaultClause("1")),
     )
 
@@ -650,7 +643,7 @@ class Model(base.DBConnectorComponent):
         # project name
         sa.Column('name', sa.Text, nullable=False),
         # sha1 of name; used for a unique index
-        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
         # project slug, potentially shown in the URLs
         sa.Column('slug', sa.String(50), nullable=False),
         # project description
@@ -684,7 +677,7 @@ class Model(base.DBConnectorComponent):
             nullable=True,
         ),
         # sha1 of name; used for a unique index
-        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
     )
 
     # This links builders to the master where they are running.  A builder
@@ -715,7 +708,7 @@ class Model(base.DBConnectorComponent):
         # tag's name
         sa.Column('name', sa.Text, nullable=False),
         # sha1 of name; used for a unique index
-        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
     )
 
     # a many-to-may relationship between builders and tags
@@ -925,7 +918,7 @@ class Model(base.DBConnectorComponent):
         # master's name (generally in the form hostname:basedir)
         sa.Column('name', sa.Text, nullable=False),
         # sha1 of name; used for a unique index
-        sa.Column('name_hash', sa.String(hash_length), nullable=False),
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
         # true if this master is running
         sa.Column('active', sa.Integer, nullable=False),
         # updated periodically by a running master, so silently failed masters

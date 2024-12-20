@@ -26,9 +26,6 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     def setUp(self):
         return self.setUpMigrateTest()
 
-    def tearDown(self):
-        return self.tearDownMigrateTest()
-
     def create_tables_thd(self, conn):
         metadata = sa.MetaData()
         metadata.bind = conn

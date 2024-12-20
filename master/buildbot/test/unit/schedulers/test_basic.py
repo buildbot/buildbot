@@ -102,13 +102,24 @@ class BaseBasicScheduler(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
 
     @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
+    def mkch(self, **kwargs):
+        # create changeset and insert in database.
+        chd = {"branch": 'master', "project": '', "repository": ''}
+        chd.update(kwargs)
+        ch = self.makeFakeChange(**chd)
+        # fakedb.Change requires changeid instead of number
+        chd['changeid'] = chd['number']
+        sourcestampid = chd['number'] + 100
+        del chd['number']
+        yield self.db.insert_test_data([
+            fakedb.Change(sourcestampid=sourcestampid, **chd),
+            fakedb.SourceStamp(id=sourcestampid),
+        ])
+        return ch
 
     # tests
 
@@ -123,6 +134,11 @@ class BaseBasicScheduler(
         sched = yield self.makeScheduler(
             self.Subclass, treeStableTimer=None, change_filter=cf, fileIsImportant=fII
         )
+
+        yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
+            fakedb.Change(changeid=20),
+        ])
 
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
@@ -149,6 +165,7 @@ class BaseBasicScheduler(
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
 
         yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
             fakedb.Change(changeid=20),
         ])
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
@@ -171,7 +188,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), False)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), False)
 
         self.assertEqual(self.events, [])
 
@@ -183,7 +200,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), True)
 
         self.assertEqual(self.events, ['B[13]@0'])
 
@@ -195,7 +212,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), False)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), False)
 
         self.assertEqual(self.events, [])
         self.clock.advance(10)
@@ -209,7 +226,7 @@ class BaseBasicScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
+        yield sched.gotChange((yield self.mkch(branch='master', number=13)), True)
         self.clock.advance(10)
 
         self.assertEqual(self.events, ['B[13]@10'])
@@ -220,6 +237,7 @@ class BaseBasicScheduler(
     def test_gotChange_treeStableTimer_sequence(self):
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=9, branch='master')
         yield self.master.db.insert_test_data([
+            fakedb.SourceStamp(id=92),
             fakedb.Change(changeid=1, branch='master', when_timestamp=1110),
             fakedb.ChangeFile(changeid=1, filename='readme.txt'),
             fakedb.Change(changeid=2, branch='master', when_timestamp=2220),
@@ -347,19 +365,18 @@ class SingleBranchScheduler(
         ch = self.makeFakeChange(**chd)
         # fakedb.Change requires changeid instead of number
         chd['changeid'] = chd['number']
+        sourcestampid = chd['number'] + 100
         del chd['number']
-        yield self.db.insert_test_data([fakedb.Change(**chd)])
+        yield self.db.insert_test_data([
+            fakedb.Change(sourcestampid=sourcestampid, **chd),
+            fakedb.SourceStamp(id=sourcestampid),
+        ])
         return ch
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def test_constructor_no_reason(self):
@@ -421,7 +438,8 @@ class SingleBranchScheduler(
 
         sched.activate()
 
-        yield sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
+        change = yield self.mkch(branch='master', number=13)
+        yield sched.gotChange(change, True)
         self.clock.advance(10)
 
         self.assertEqual(self.events, ['B[13]@10'])
@@ -446,10 +464,10 @@ class SingleBranchScheduler(
         yield sched.activate()
 
         yield sched.gotChange(
-            (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=0)), True
+            (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=1)), True
         )
         yield sched.gotChange(
-            (yield self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1)), True
+            (yield self.mkch(codebase='b', revision='2345:bcd', repository='B', number=2)), True
         )
 
         yield self.assert_state(
@@ -459,13 +477,13 @@ class SingleBranchScheduler(
                     "branch": 'master',
                     "repository": 'A',
                     "revision": '1234:abc',
-                    "lastChange": 0,
+                    "lastChange": 1,
                 },
                 'b': {
                     "branch": 'master',
                     "repository": 'B',
                     "revision": '2345:bcd',
-                    "lastChange": 1,
+                    "lastChange": 2,
                 },
             },
         )
@@ -596,13 +614,8 @@ class AnyBranchScheduler(
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         yield self.setUpScheduler()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        self.tearDownScheduler()
-        yield self.tear_down_test_reactor()
 
     def test_constructor_branch_forbidden(self):
         with self.assertRaises(config.ConfigErrors):

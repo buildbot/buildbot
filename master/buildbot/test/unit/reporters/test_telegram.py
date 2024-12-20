@@ -266,8 +266,8 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_list_workers(self):
         workers = ['worker1', 'worker2']
-        for worker in workers:
-            yield self.master.db.workers.db.insert_test_data([fakedb.Worker(name=worker)])
+        for i, worker in enumerate(workers):
+            yield self.master.db.workers.db.insert_test_data([fakedb.Worker(id=i, name=worker)])
         yield self.do_test_command('list', args='all workers')
         self.assertEqual(len(self.sent), 1)
         for worker in workers:
@@ -287,13 +287,19 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_list_changes(self):
-        yield self.master.db.workers.db.insert_test_data([fakedb.Change()])
+        yield self.master.db.workers.db.insert_test_data([
+            fakedb.SourceStamp(id=14),
+            fakedb.Change(changeid=99, sourcestampid=14),
+        ])
         yield self.do_test_command('list', args='2 changes')
         self.assertEqual(len(self.sent), 2)
 
     @defer.inlineCallbacks
     def test_command_list_changes_long(self):
-        yield self.master.db.workers.db.insert_test_data([fakedb.Change() for i in range(200)])
+        yield self.master.db.workers.db.insert_test_data(
+            [fakedb.SourceStamp(id=i) for i in range(1, 200)]
+            + [fakedb.Change(changeid=i, sourcestampid=i) for i in range(1, 200)]
+        )
         yield self.do_test_command('list', args='all changes')
         self.assertIn('reply_markup', self.sent[1][2])
 
@@ -554,14 +560,10 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.setup_test_reactor(auto_tear_down=False)
+        self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
         self.http = None
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.tear_down_test_reactor()
 
     @defer.inlineCallbacks
     def setup_http_service(self):

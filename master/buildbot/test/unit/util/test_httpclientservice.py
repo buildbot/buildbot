@@ -355,19 +355,18 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         if httpclientservice.txrequests is None or httpclientservice.treq is None:
             raise unittest.SkipTest('this test requires txrequests and treq')
         self.site = SiteWithClose(MyResource())
+        self.addCleanup(self.site.close_connections)
+        self.addCleanup(self.site.stopFactory)
+
         self.listenport = reactor.listenTCP(0, self.site)
+        self.addCleanup(self.listenport.stopListening)
+
         self.port = self.listenport.getHost().port
         self.parent = parent = service.MasterService()
         self.parent.reactor = reactor
         yield parent.startService()
+        self.addCleanup(self.parent.stopService)
         self._http = yield self.httpFactory(parent)
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        yield self.listenport.stopListening()
-        yield self.site.stopFactory()
-        yield self.site.close_connections()
-        yield self.parent.stopService()
 
     @defer.inlineCallbacks
     def test_content(self):

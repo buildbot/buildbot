@@ -26,7 +26,7 @@ class SourceStepMixin(TestBuildStepMixin):
 
      - fake sourcestamps
 
-    The following instance variables are available after C{setupSourceStep}, in
+    The following instance variables are available after C{setup_step}, in
     addition to those made available by L{TestBuildStepMixin}:
 
     @ivar sourcestamp: fake SourceStamp for the build
@@ -34,9 +34,6 @@ class SourceStepMixin(TestBuildStepMixin):
 
     def setUpSourceStep(self):
         return super().setup_test_build_step()
-
-    def tearDownSourceStep(self):
-        return super().tear_down_test_build_step()
 
     # utilities
 
