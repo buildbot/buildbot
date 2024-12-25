@@ -26,7 +26,6 @@ from twisted.python import log
 
 import buildbot
 from buildbot import config
-from buildbot import monkeypatches
 from buildbot.buildbot_net_usage_data import sendBuildbotNetUsageData
 from buildbot.changes.manager import ChangeManager
 from buildbot.config.master import FileLoader
@@ -227,9 +226,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # Set umask
         if self.umask is not None:
             os.umask(self.umask)
-
-        # first, apply all monkeypatches
-        monkeypatches.patch_all()
 
         # we want to wait until the reactor is running, so we can call
         # reactor.stop() for fatal errors
