@@ -159,6 +159,7 @@ class MasterConfig(util.ComparableMixin):
         self.manhole = None
         self.protocols = {}
         self.buildbotNetUsageData = "basic"
+        self.messageInfoDir = None
 
         self.validation = {
             "branch": re.compile(r'^[\w.+/~-]*$'),
@@ -229,6 +230,7 @@ class MasterConfig(util.ComparableMixin):
         "validation",
         "www",
         "workers",
+        "messageInfoDir",
     ])
     compare_attrs: ClassVar[Sequence[str]] = list(_known_config_keys)
 
@@ -338,6 +340,7 @@ class MasterConfig(util.ComparableMixin):
                 stacklevel=1,
             )
 
+        copy_str_param('messageInfoDir')
         copy_str_url_param_with_trailing_slash('titleURL')
         copy_str_url_param_with_trailing_slash('buildbotURL')
 
