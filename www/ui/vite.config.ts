@@ -1,5 +1,6 @@
 import {resolve} from "path";
 import {defineConfig} from "vite";
+import checker from 'vite-plugin-checker';
 import react from "@vitejs/plugin-react";
 import dts from 'vite-plugin-dts'
 import {viteStaticCopy} from 'vite-plugin-static-copy';
@@ -15,6 +16,7 @@ export default defineConfig({
         }
       }
     }),
+    checker({typescript: true}),
     dts(),
     viteStaticCopy({
       targets: [
