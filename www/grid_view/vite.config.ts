@@ -1,5 +1,6 @@
 import {resolve} from "path";
 import {defineConfig} from "vite";
+import checker from 'vite-plugin-checker';
 import react from "@vitejs/plugin-react";
 import { ModuleFormat } from "rollup";
 
@@ -14,6 +15,7 @@ export default defineConfig({
         }
       }
     }),
+    checker({typescript: true}),
   ],
   define: {
     'process.env.NODE_ENV': '"production"',
