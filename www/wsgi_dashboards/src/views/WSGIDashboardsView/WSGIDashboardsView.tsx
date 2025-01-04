@@ -18,11 +18,12 @@
 import axios, {AxiosRequestConfig} from 'axios';
 import {createElement, useEffect, useRef, useState} from "react";
 import * as fa from "react-icons/fa";
+import {IconType} from "react-icons";
 import {CancellablePromise, capitalize} from "buildbot-data-js";
 import {LoadingIndicator} from "buildbot-ui";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
 
-function getWsgiUrl(location: Location, name) {
+function getWsgiUrl(location: Location, name: string) {
   let pathname = location.pathname;
   if (!pathname.endsWith("/")) {
     pathname += "/";
@@ -30,7 +31,7 @@ function getWsgiUrl(location: Location, name) {
   return `${location.protocol}//${location.hostname}:${location.port}${pathname}plugins/wsgi_dashboards/${name}/index.html`;
 }
 
-function getData(url) {
+function getData(url: string) {
   return new CancellablePromise<any>((resolve, reject, onCancel) => {
     const controller = new AbortController();
     onCancel(() => {
@@ -51,7 +52,11 @@ function getData(url) {
   });
 }
 
-export default function WSGIDashboardsView({ name }) {
+export type WSGIDashboardsViewProps = {
+  name: string;
+}
+
+export default function WSGIDashboardsView({name}: WSGIDashboardsViewProps) {
   const location = getWsgiUrl(window.location, name);
   const pendingRequest = useRef<CancellablePromise<any> | null>(null);
 
@@ -94,7 +99,11 @@ buildbotSetupPlugin((reg, config) => {
     if (caption == null) { caption = capitalize(name); }
     if (dashboard.order == null) { dashboard.order = 5; }
 
-    const icon = fa['Fa' + capitalize(dashboard.icon)];
+    // @ts-ignore
+    const icon: IconType|undefined = fa['Fa' + capitalize(dashboard.icon)];
+    if (icon === undefined) {
+      throw Error(`Could not find icon ${dashboard.icon}`);
+    }
 
     reg.registerMenuGroup({
       name: name,
