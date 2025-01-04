@@ -35,6 +35,7 @@ export * from "./data/DataMultiPropertiesCollection";
 export * from "./data/DataPropertiesCollection";
 export * from "./data/DataQuery";
 export * from "./data/DataUtils";
+export * from "./data/MockDataCollection";
 export * from "./data/ReactUtils";
 export * from "./data/RestClient";
 export * from "./data/WebSocketClient";
