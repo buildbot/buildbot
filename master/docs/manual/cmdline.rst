@@ -163,6 +163,8 @@ This command is frontend for various database maintenance jobs:
 - optimiselogs: This optimization groups logs into bigger chunks
   to apply higher level of compression.
 
+This script runs for as long as it takes to finish the job including the time needed to check master.cfg file.
+
 copy-db
 +++++++
 
