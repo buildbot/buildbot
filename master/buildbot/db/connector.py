@@ -85,7 +85,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         # not configured yet - we don't build an engine until the first
         # reconfig
-        self.configured_url = None
+        self.configured_db = None
 
         # set up components
         self._engine = None  # set up in reconfigService
@@ -103,12 +103,12 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        new_db_url = yield self.master.get_db_url(new_config)
-        if self.configured_url is None:
-            self.configured_url = new_db_url
-        elif self.configured_url != new_db_url:
+        new_db_config = yield self.master.get_db_config(new_config)
+        if self.configured_db is None:
+            self.configured_db = new_db_config
+        elif self.configured_db != new_db_config:
             config.error(
-                "Cannot change c['db']['db_url'] after the master has started",
+                "Cannot change c['db'] after the master has started",
             )
 
         return (yield super().reconfigServiceWithBuildbotConfig(new_config))
@@ -162,15 +162,17 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
     @defer.inlineCallbacks
     def setup(self, check_version=True, verbose=True):
-        if self.configured_url is None:
-            self.configured_url = yield self.master.get_db_url(self.master.config)
+        if self.configured_db is None:
+            self.configured_db = yield self.master.get_db_config(self.master.config)
 
-        db_url = self.configured_url
+        db_config = dict(self.configured_db)
+        db_url = db_config['db_url']
+        del db_config['db_url']
 
         log.msg(f"Setting up database with URL {util.stripUrlPassword(db_url)!r}")
 
         # set up the engine and pool
-        self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
+        self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir, **db_config)
         self.upsert = get_upsert_method(self._engine)
         self.has_native_upsert = self.upsert != get_upsert_method(None)
         self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
@@ -212,7 +214,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         @returns: Deferred
         """
         # pass on this if we're not configured yet
-        if not self.configured_url:
+        if not self.configured_db:
             return None
 
         d = self.changes.pruneChanges(self.master.config.changeHorizon)
