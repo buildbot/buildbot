@@ -78,7 +78,7 @@ class TestGitLab(
                     'fetch',
                     '-f',
                     '--progress',
-                    'git@gitlab.example.com:build/awesome_project.git',
+                    'ssh://git@gitlab.example.com:22/build/awesome_project.git',
                     'ms-viewport',
                 ],
             ).exit(0),
