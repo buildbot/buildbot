@@ -43,3 +43,14 @@ class TestConnection(protocols.ConnectionInterfaceTest, TestReactorMixin, unitte
         self.assertEqual(cb.call_args_list, [])
         self.conn.notifyDisconnected()
         self.assertNotEqual(cb.call_args_list, [])
+
+    def test_notify_twice(self):
+        cb = mock.Mock()
+
+        self.conn.notifyOnDisconnect(cb)
+        self.assertEqual(cb.call_args_list, [])
+        self.conn.notifyDisconnected()
+        self.assertNotEqual(cb.call_args_list, [])
+        cb.call_args_list = []
+        self.conn.notifyDisconnected()
+        self.assertEqual(cb.call_args_list, [])
