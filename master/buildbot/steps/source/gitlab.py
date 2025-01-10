@@ -26,9 +26,15 @@ class GitLab(Git):
     """
 
     def run_vc(self, branch, revision, patch):
+        self.setup_repourl()
         # If this is a merge request:
         if self.build.hasProperty("target_branch"):
             target_repourl = self.build.getProperty("target_git_ssh_url", None)
+
+            # repourl always includes ssh://
+            if not target_repourl.startswith('ssh://'):
+                target_repourl = 'ssh://' + target_repourl
+
             if self.repourl != target_repourl:
                 log.msg(
                     "GitLab.run_vc: note: GitLab step for merge requests"

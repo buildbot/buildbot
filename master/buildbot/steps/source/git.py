@@ -168,6 +168,7 @@ class Git(Source, GitStepMixin):
 
     @defer.inlineCallbacks
     def run_vc(self, branch, revision, patch):
+        self.setup_repourl()
         self.branch = branch or 'HEAD'
         self.revision = revision
 
@@ -668,6 +669,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def run(self):
+        self.setup_repourl()
         self.stdio_log = yield self.addLog("stdio")
 
         auth_workdir = self._get_auth_data_workdir()
