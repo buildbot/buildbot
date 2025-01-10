@@ -747,6 +747,8 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     This command uses the database specified in
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
+    This command runs for as long as it takes to finish the job including the
+    time needed to check the master configuration file.
     """)
 
 
