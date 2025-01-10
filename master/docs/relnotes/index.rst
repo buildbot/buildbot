@@ -8,6 +8,14 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.2.1`` ( ``2025-01-10`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed regression introduced in Buildbot 4.2.0 that broke support for renderable Git step repourl parameter.
+
 Buildbot ``4.2.0`` ( ``2024-12-10`` )
 =====================================
 
