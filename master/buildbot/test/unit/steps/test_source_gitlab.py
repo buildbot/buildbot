@@ -33,7 +33,7 @@ class TestGitLab(
     def setUp(self):
         self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def setup_step(self, step, args, **kwargs):
         step = super().setup_step(step, args, **kwargs)

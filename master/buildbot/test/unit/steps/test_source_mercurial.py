@@ -35,7 +35,7 @@ from buildbot.test.util import sourcesteps
 class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def patch_workerVersionIsOlderThan(self, result):
         self.patch(mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)

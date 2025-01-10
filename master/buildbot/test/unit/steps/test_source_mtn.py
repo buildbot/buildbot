@@ -42,7 +42,7 @@ class TestMonotone(
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def test_mode_full_clean(self):
         self.setup_step(
