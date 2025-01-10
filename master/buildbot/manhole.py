@@ -186,9 +186,10 @@ class _BaseManhole(service.AsyncMultiService):
             assert OpenSSHFactory is not None, "cryptography required for ssh mahole."
             openSSHFactory = OpenSSHFactory()
             openSSHFactory.dataRoot = self.ssh_hostkey_dir
-            openSSHFactory.dataModuliRoot = self.ssh_hostkey_dir
+            openSSHFactory.moduliRoot = self.ssh_hostkey_dir
             f.publicKeys = openSSHFactory.getPublicKeys()
             f.privateKeys = openSSHFactory.getPrivateKeys()
+            f.primes = openSSHFactory.getPrimes()
         else:
             self.using_ssh = False
             r = _TelnetRealm(makeNamespace)
