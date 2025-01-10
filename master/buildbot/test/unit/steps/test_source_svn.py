@@ -122,7 +122,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
     def setUp(self):
         self.setup_test_reactor()
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def patch_workerVersionIsOlderThan(self, result):
         self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)

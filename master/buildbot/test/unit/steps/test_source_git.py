@@ -50,7 +50,7 @@ class TestGit(
     def setUp(self):
         self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def test_mode_full_filters_2_26(self):
         self.setup_step(

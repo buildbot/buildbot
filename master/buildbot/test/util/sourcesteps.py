@@ -32,11 +32,6 @@ class SourceStepMixin(TestBuildStepMixin):
     @ivar sourcestamp: fake SourceStamp for the build
     """
 
-    def setUpSourceStep(self):
-        return super().setup_test_build_step()
-
-    # utilities
-
     def setup_step(self, step, args=None, patch=None, **kwargs):
         """
         Set up C{step} for testing.  This calls L{TestBuildStepMixin}'s C{setup_step}

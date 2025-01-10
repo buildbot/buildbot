@@ -37,7 +37,7 @@ _is_windows = platform.system() == 'Windows'
 class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def setup_step(self, step, args=None, patch=None, **kwargs):
         if args is None:

@@ -63,7 +63,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.setup_test_reactor()
         self.shouldRetry = False
         self.logEnviron = True
-        return self.setUpSourceStep()
+        return self.setup_test_build_step()
 
     def shouldLogEnviron(self):
         r = self.logEnviron
