@@ -184,6 +184,7 @@ class GitStepMixin(GitMixin):
         if not hasattr(self, '_git_auth'):
             self._git_auth = GitStepAuth(self)
 
+    def setup_repourl(self):
         # Use standard URL syntax to enable the use of a dedicated SSH port
         self.repourl = scp_style_to_url_syntax(self.repourl, self.port)
 

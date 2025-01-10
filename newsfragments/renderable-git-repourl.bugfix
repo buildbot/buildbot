@@ -1,0 +1,1 @@
+Fixed regression introduced in Buildbot 4.2.0 that broke support for renderable Git step repourl parameter.

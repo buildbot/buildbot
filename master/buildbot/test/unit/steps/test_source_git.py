@@ -21,6 +21,7 @@ from twisted.trial import unittest
 from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerSetupError
 from buildbot.process import remotetransfer
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -120,7 +121,17 @@ class TestGit(
 
     @parameterized.expand([
         ('url', 'ssh://github.com/test/test.git', 'ssh://github.com/test/test.git'),
+        (
+            'url_renderable',
+            Interpolate('ssh://github.com/test/test.git'),
+            'ssh://github.com/test/test.git',
+        ),
         ('ssh_host_and_path', 'host:path/to/git', 'ssh://host:22/path/to/git'),
+        (
+            'ssh_host_and_path_renderable',
+            Interpolate('host:path/to/git'),
+            'ssh://host:22/path/to/git',
+        ),
     ])
     def test_mode_full_clean(self, name, url, pull_url):
         self.setup_step(self.stepClass(repourl=url, mode='full', method='clean'))
@@ -4183,7 +4194,13 @@ class TestGitPush(
 
     @parameterized.expand([
         ('url', 'ssh://github.com/test/test.git', 'ssh://github.com/test/test.git'),
+        (
+            'url_renderable',
+            Interpolate('ssh://github.com/test/test.git'),
+            'ssh://github.com/test/test.git',
+        ),
         ('host_path', 'host:path/to/git', 'ssh://host:22/path/to/git'),
+        ('host_path_renderable', Interpolate('host:path/to/git'), 'ssh://host:22/path/to/git'),
     ])
     def test_push_simple(self, name, url, push_url):
         self.setup_step(self.stepClass(workdir='wkdir', repourl=url, branch='testbranch'))
