@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import TYPE_CHECKING
+
 from twisted.internet import threads
 from twisted.python import threadpool
 
@@ -22,14 +24,21 @@ from buildbot.util import twisted
 from buildbot.util.eventual import _setReactor
 from buildbot.warnings import warn_deprecated
 
+if TYPE_CHECKING:
+    from twisted.trial import unittest
 
-class TestReactorMixin:
+    _TestReactorMixinBase = unittest.TestCase
+else:
+    _TestReactorMixinBase = object
+
+
+class TestReactorMixin(_TestReactorMixinBase):
     """
     Mix this in to get TestReactor as self.reactor which is correctly cleaned up
     at the end
     """
 
-    def setup_test_reactor(self, use_asyncio=False, auto_tear_down=True):
+    def setup_test_reactor(self, use_asyncio=False, auto_tear_down=True) -> None:
         if use_asyncio:
             warn_deprecated('4.2.0', 'use_asyncio=True is deprecated')
         if not auto_tear_down:
