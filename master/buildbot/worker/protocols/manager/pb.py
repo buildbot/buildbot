@@ -55,10 +55,14 @@ class Dispatcher(BaseDispatcher):
         self, avatarId: bytes | tuple[()], mind: object, *interfaces: type[Interface]
     ) -> Generator[defer.Deferred[Any], None, tuple[type[Interface], object, Callable]]:
         assert interfaces[0] == pb.IPerspective
-        avatarIdStr = bytes2unicode(avatarId)
+
+        if isinstance(avatarId, tuple) and not avatarId:
+            avatarIdStr = None  # Handle the empty tuple case
+        else:
+            avatarIdStr = bytes2unicode(avatarId)
 
         persp = None
-        if avatarIdStr in self.users:
+        if avatarIdStr and avatarIdStr in self.users:
             _, afactory = self.users.get(avatarIdStr)
             persp = yield afactory(mind, avatarIdStr)
 
