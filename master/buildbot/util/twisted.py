@@ -17,22 +17,22 @@ from __future__ import annotations
 
 import inspect
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import Coroutine
+from typing import Generator
+from typing import TypeVar
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import threadpool
+from typing_extensions import ParamSpec
 
-if TYPE_CHECKING:
-    from typing import Any
-    from typing import Callable
-    from typing import Coroutine
-    from typing import TypeVar
+_T = TypeVar('_T')
+_P = ParamSpec('_P')
 
-    from typing_extensions import ParamSpec
 
-    _T = TypeVar('_T')
-    _P = ParamSpec('_P')
+InlineCallbacksType = Generator[defer.Deferred[Any], Any, _T]
 
 
 def async_to_deferred(
