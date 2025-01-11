@@ -18,6 +18,7 @@ import os
 import re
 import sys
 from io import StringIO
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -301,6 +302,7 @@ class TestedRealMaster(TestedMaster):
         case.patch(reactor, 'stop', stop)
 
         if start_worker:
+            config_protocols: dict[str, Any] = {}
             if proto == 'pb':
                 config_protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
