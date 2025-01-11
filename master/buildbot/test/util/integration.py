@@ -324,6 +324,7 @@ class TestedRealMaster(TestedMaster):
         if not start_worker:
             return
 
+        assert self.master
         if proto in ('pb', 'msgpack'):
             sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
             if proto == 'pb':
@@ -343,6 +344,7 @@ class TestedRealMaster(TestedMaster):
             worker_dir = FilePath(case.mktemp())
             worker_dir.createDirectory()
             if sandboxed_worker_path is None:
+                assert Worker
                 self.worker = Worker(
                     "127.0.0.1",
                     worker_port,
