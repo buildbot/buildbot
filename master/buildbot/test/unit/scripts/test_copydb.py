@@ -108,8 +108,7 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
         self.setUpStdoutAssertions()  # comment out to see stdout from script
         write_buildbot_tac(os.path.join('basedir', 'buildbot.tac'))
 
-    @defer.inlineCallbacks
-    def create_master_config(self):
+    async def create_master_config(self):
         f = BuildFactory()
         cmd = "dir" if platform.system() in ("Windows", "Microsoft") else "ls"
         f.addStep(MasterShellCommand(cmd))
@@ -127,8 +126,8 @@ class TestCopyDbRealDb(misc.StdoutAssertionsMixin, RunMasterBase, dirs.DirsMixin
             'multiMaster': True,
             'db_url': self.INITIAL_DB_URL,
         }
-        yield self.setup_master(config_dict, basedir='basedir')
-        builder_id = yield self.master.data.updates.findBuilderId('testy')
+        await self.setup_master(config_dict, basedir='basedir')
+        builder_id = await self.master.data.updates.findBuilderId('testy')
 
         return builder_id
 
