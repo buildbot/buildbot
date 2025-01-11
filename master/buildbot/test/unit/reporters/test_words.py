@@ -33,7 +33,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util.twisted import InlineCallbacksType
 
 
-class ContactMixin(TestReactorMixin):
+class ContactMixin(TestReactorMixin, unittest.TestCase):
     botClass = words.StatusBot
 
     channelClass = words.Channel
