@@ -13,13 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
 
+if TYPE_CHECKING:
+    from twisted.trial import unittest
 
-class ChangeSourceMixin:
+    _ChangeSourceMixinBase = unittest.TestCase
+else:
+    _ChangeSourceMixinBase = object
+
+
+class ChangeSourceMixin(_ChangeSourceMixinBase):
     """
     This class is used for testing change sources, and handles a few things:
 
