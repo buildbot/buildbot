@@ -174,7 +174,7 @@ async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=Fals
                 print_test_log(l, out)
 
 
-class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
+class RunFakeMasterTestCase(TestReactorMixin, DebugIntegrationLogsMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.setupDebugIntegrationLogs()

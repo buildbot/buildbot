@@ -29,7 +29,7 @@ class TestBuildStep(BuildStep):
 
 
 class TestBuildStepNameIsRenderable(
-    TestBuildStepMixin, unittest.TestCase, TestReactorMixin, configmixin.ConfigErrorsMixin
+    TestBuildStepMixin, TestReactorMixin, configmixin.ConfigErrorsMixin, unittest.TestCase
 ):
     def setUp(self):
         self.setup_test_reactor()

@@ -1083,7 +1083,7 @@ class InterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class TestFakeItfc(unittest.TestCase, TestBuildStepMixin, TestReactorMixin, InterfaceTests):
+class TestFakeItfc(TestBuildStepMixin, TestReactorMixin, InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

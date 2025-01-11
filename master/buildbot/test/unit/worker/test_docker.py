@@ -30,7 +30,7 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.worker import docker as dockerworker
 
 
-class TestDockerLatentWorker(ConfigErrorsMixin, unittest.TestCase, TestReactorMixin):
+class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setupWorker(self, *args, **kwargs):
         worker = dockerworker.DockerLatentWorker(*args, **kwargs)

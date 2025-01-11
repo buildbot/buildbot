@@ -139,7 +139,7 @@ class MyWorker(worker.Worker):
         d.callback(None)
 
 
-class TestWorkerComm(unittest.TestCase, TestReactorMixin):
+class TestWorkerComm(TestReactorMixin, unittest.TestCase):
     """
     Test handling of connections from workers as integrated with
      - Twisted Spread

@@ -27,7 +27,7 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
 
-class TestMarathonLatentWorker(unittest.TestCase, TestReactorMixin):
+class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.build = Properties(image="busybox:latest", builder="docker_worker")

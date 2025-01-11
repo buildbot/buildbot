@@ -40,7 +40,7 @@ class myTestedService(service.BuildbotService):
         return res_json
 
 
-class Test(unittest.TestCase, TestReactorMixin):
+class Test(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setup_test_reactor()

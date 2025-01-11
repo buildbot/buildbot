@@ -61,7 +61,7 @@ gitJsonPayload = b"""
 """
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

@@ -1016,7 +1016,7 @@ def FakeRequestMR(content):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1243,7 +1243,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
         )
 
 
-class TestChangeHookConfiguredWithSecret(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithSecret(TestReactorMixin, unittest.TestCase):
     _SECRET = 'thesecret'
 
     @defer.inlineCallbacks
