@@ -21,17 +21,17 @@ from buildbot.util import sautils
 
 
 class TestSaUtils(unittest.TestCase):
-    def _sha1(self, s):
+    def _sha1(self, s: bytes) -> str:
         return hashlib.sha1(s).hexdigest()
 
-    def test_hash_columns_single(self):
+    def test_hash_columns_single(self) -> None:
         self.assertEqual(sautils.hash_columns('master'), self._sha1(b'master'))
 
-    def test_hash_columns_multiple(self):
+    def test_hash_columns_multiple(self) -> None:
         self.assertEqual(sautils.hash_columns('a', None, 'b', 1), self._sha1(b'a\0\xf5\x00b\x001'))
 
-    def test_hash_columns_None(self):
+    def test_hash_columns_None(self) -> None:
         self.assertEqual(sautils.hash_columns(None), self._sha1(b'\xf5'))
 
-    def test_hash_columns_integer(self):
+    def test_hash_columns_integer(self) -> None:
         self.assertEqual(sautils.hash_columns(11), self._sha1(b'11'))
