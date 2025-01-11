@@ -490,23 +490,20 @@ class MasterConfig(util.ComparableMixin):
                 self.validation.update(validation)
 
     @staticmethod
-    def getDbUrlFromConfig(config_dict, throwErrors=True):
+    def getDbFromConfig(config_dict, throwErrors=True):
         if 'db' in config_dict:
             db = config_dict['db']
-            if set(db.keys()) - set(['db_url']) and throwErrors:
-                error("unrecognized keys in c['db']")
-
             config_dict = db
 
         # we don't attempt to parse db URLs here - the engine strategy will do
         # so.
-        if 'db_url' in config_dict:
-            return config_dict['db_url']
+        if not 'db_url' in config_dict:
+            config_dict['db_url'] = DEFAULT_DB_URL
 
-        return DEFAULT_DB_URL
+        return config_dict
 
     def load_db(self, filename, config_dict):
-        self.db = {"db_url": self.getDbUrlFromConfig(config_dict)}
+        self.db = self.getDbFromConfig(config_dict)
 
     def load_mq(self, filename, config_dict):
         from buildbot.mq import connector  # avoid circular imports
