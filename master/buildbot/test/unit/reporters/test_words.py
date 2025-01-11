@@ -17,7 +17,6 @@ from __future__ import annotations
 import re
 from typing import Any
 from typing import Callable
-from typing import Generator
 from unittest import mock
 
 from twisted.internet import defer
@@ -31,6 +30,7 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import datetime2epoch
+from buildbot.util.twisted import InlineCallbacksType
 
 
 class ContactMixin(TestReactorMixin):
@@ -47,7 +47,7 @@ class ContactMixin(TestReactorMixin):
     patch: Callable[[Any, str, Any], Any]
 
     @defer.inlineCallbacks
-    def setUp(self) -> Generator[Any, None, None]:
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.patch(reactor, 'callLater', self.reactor.callLater)
         self.patch(reactor, 'seconds', self.reactor.seconds)
