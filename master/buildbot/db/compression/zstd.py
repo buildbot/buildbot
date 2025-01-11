@@ -97,7 +97,7 @@ class ZStdCompressor(CompressorInterface):
         )
 
     @classmethod
-    def set_pools_max_size(cls, new_size: int):
+    def set_pools_max_size(cls, new_size: int) -> None:
         cls._compressor_pool.set_max_size(new_size)
         cls._decompressor_pool.set_max_size(new_size)
 
