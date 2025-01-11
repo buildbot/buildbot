@@ -40,7 +40,6 @@ class ChangeSourceMixin:
         self.master = yield fakemaster.make_master(
             self, wantDb=True, wantData=True, wantRealReactor=want_real_reactor
         )
-        assert not hasattr(self.master, 'addChange')  # just checking..
 
         @defer.inlineCallbacks
         def cleanup():
