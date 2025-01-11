@@ -48,7 +48,7 @@ class TestRawCompressor(unittest.TestCase):
 
         compress_obj = self.CompressorCls.CompressObj()
 
-        def _test():
+        def _test() -> None:
             result_buffer = [compress_obj.compress(e) for e in input_buffer]
             result_buffer.append(compress_obj.flush())
 
