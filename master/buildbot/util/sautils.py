@@ -85,7 +85,9 @@ def withoutSqliteForeignKeys(connection: Connection):
         return
 
     res = connection.exec_driver_sql('pragma foreign_keys')
-    foreign_keys_enabled = res.fetchone()[0]
+    r = res.fetchone()
+    assert r
+    foreign_keys_enabled = r[0]
     res.close()
     if not foreign_keys_enabled:
         yield

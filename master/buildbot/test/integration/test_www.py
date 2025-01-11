@@ -194,6 +194,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
         encoding: bytes,
         decompress_fn: Callable[[bytes], bytes],
     ) -> None:
+        assert self.master
         await self.master.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
         ])

@@ -39,7 +39,7 @@ class States(enum.Enum):
 class AbstractWorkerForBuilder:
     def __init__(self, builder: Builder):
         self.ping_watchers: list[defer.Deferred] = []
-        self.state = None  # set in subclass
+        self.state: States | None = None  # set in subclass
         self.worker: AbstractWorker | None = None
         self.builder = builder
         self.builder_name = builder.name

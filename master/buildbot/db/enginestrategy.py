@@ -23,7 +23,10 @@ special cases that Buildbot needs.  Those include:
 
 """
 
+from __future__ import annotations
+
 import os
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import url
@@ -209,7 +212,7 @@ def get_drivers_strategy(drivername):
     return Strategy()
 
 
-def create_engine(name_or_url, **kwargs):
+def create_engine(name_or_url: str, **kwargs: Any) -> sa.Engine:
     if 'basedir' not in kwargs:
         raise TypeError('no basedir supplied to create_engine')
 
@@ -232,9 +235,9 @@ def create_engine(name_or_url, **kwargs):
     driver_strategy = get_drivers_strategy(u.drivername)
     engine = sa.create_engine(u, **kwargs, future=True)
     driver_strategy.set_up(u, engine)
-    engine.should_retry = driver_strategy.should_retry
+    engine.should_retry = driver_strategy.should_retry  # type: ignore[attr-defined]
     # annotate the engine with the optimal thread pool size; this is used
     # by DBConnector to configure the surrounding thread pool
-    engine.optimal_thread_pool_size = max_conns
+    engine.optimal_thread_pool_size = max_conns  # type: ignore[attr-defined]
 
     return engine

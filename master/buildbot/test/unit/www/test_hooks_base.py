@@ -36,7 +36,7 @@ def _prepare_request(payload, headers=None):
     return request
 
 
-class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -95,7 +95,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase, TestReactorMixin):
         })
 
 
-class TestChangeHookConfiguredWithCustomBase(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithCustomBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

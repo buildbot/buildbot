@@ -64,12 +64,12 @@ class Log:
         decoder = Log._decoderFromString(logEncoding)
         return subcls(master, name, type, logid, decoder)
 
-    def getName(self):
+    def getName(self) -> str:
         return self.name
 
     # subscriptions
 
-    def subscribe(self, callback):
+    def subscribe(self, callback) -> util.subscription.Subscription:
         return self.subPoint.subscribe(callback)
 
     # adding lines
@@ -84,7 +84,7 @@ class Log:
 
     # completion
 
-    def isFinished(self):
+    def isFinished(self) -> bool:
         return self.finished
 
     def waitUntilFinished(self):
@@ -95,7 +95,7 @@ class Log:
             self.finishWaiters.append(d)
         return d
 
-    def had_errors(self):
+    def had_errors(self) -> bool:
         return self._had_errors
 
     @defer.inlineCallbacks

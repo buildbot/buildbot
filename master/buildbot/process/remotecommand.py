@@ -64,7 +64,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         ignore_updates: bool = False,
         collectStdout: bool = False,
         collectStderr: bool = False,
-        decodeRC: dict[int, int] | None = None,
+        decodeRC: dict[int | None, int] | None = None,
         stdioLogName: str = 'stdio',
     ) -> None:
         if decodeRC is None:
@@ -90,7 +90,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.remote_command: str = remote_command
         self.args: dict[str, Any] = args
         self.ignore_updates: bool = ignore_updates
-        self.decodeRC: dict[int, int] = decodeRC
+        self.decodeRC: dict[int | None, int] = decodeRC
         self.conn: Connection | None = None
         self._is_conn_test_fake = False
         self.worker: AbstractWorker | None = None
@@ -456,7 +456,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             # CopiedFailure cannot be raised back, this make debug difficult
             if isinstance(maybeFailure, pb.CopiedFailure):
                 maybeFailure.value = RemoteException(
-                    f"{maybeFailure.type}: {maybeFailure.value}\n{maybeFailure.traceback}"
+                    f"{maybeFailure.type}: {maybeFailure.value}\n{maybeFailure.getTraceback()}"
                 )
                 maybeFailure.type = RemoteException
             maybeFailure.raiseException()

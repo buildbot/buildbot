@@ -623,7 +623,6 @@ class GitStepAuth(AbstractGitAuth):
         assert isinstance(self.step, buildstep.BuildStep) and self.step.master is not None
         return self.step.master
 
-    @async_to_deferred
     async def _download_file(
         self,
         path: str,
@@ -721,7 +720,6 @@ class GitServiceAuth(AbstractGitAuth):
             auth_files_path=workdir,  # this is ... not great
         )
 
-    @async_to_deferred
     async def _download_file(
         self,
         path: str,

@@ -13,23 +13,42 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
+if TYPE_CHECKING:
+    from typing import Any
 
-class StateTestMixin:
+    from twisted.trial import unittest
+
+    from buildbot.test.fake import fakemaster
+    from buildbot.util.twisted import InlineCallbacksType
+
+    _StateTestMixinBase = unittest.TestCase
+else:
+    _StateTestMixinBase = object
+
+
+class StateTestMixin(_StateTestMixinBase):
+    master: fakemaster.FakeMaster
+
     @defer.inlineCallbacks
-    def set_fake_state(self, object, name, value):
+    def set_fake_state(self, object: Any, name: str, value: Any) -> InlineCallbacksType[None]:
         objectid = yield self.master.db.state.getObjectId(object.name, object.__class__.__name__)
         yield self.master.db.state.setState(objectid, name, value)
 
     @defer.inlineCallbacks
-    def assert_state(self, objectid, **kwargs):
+    def assert_state(self, objectid: int, **kwargs: Any) -> InlineCallbacksType[None]:
         for k, v in kwargs.items():
             value = yield self.master.db.state.getState(objectid, k)
             self.assertEqual(value, v, f"state for {k!r} is {v!r}")
 
     @defer.inlineCallbacks
-    def assert_state_by_class(self, name, class_name, **kwargs):
+    def assert_state_by_class(
+        self, name: str, class_name: str, **kwargs: Any
+    ) -> InlineCallbacksType[None]:
         objectid = yield self.master.db.state.getObjectId(name, class_name)
         yield self.assert_state(objectid, **kwargs)

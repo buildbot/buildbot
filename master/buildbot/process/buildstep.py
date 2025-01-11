@@ -844,6 +844,8 @@ class BuildStep(
         self.cmd = command
         command.worker = self.worker
         try:
+            assert self.build
+            assert self.build.builder.name
             res = yield command.run(self, self.remote, self.build.builder.name)
             if command.remote_failure_reason in ("timeout", "timeout_without_output"):
                 self.timed_out = True

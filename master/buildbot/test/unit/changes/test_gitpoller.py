@@ -2412,7 +2412,7 @@ class TestGitPollerWithAuthCredentials(TestGitPollerBase):
 
 
 class TestGitPollerConstructor(
-    unittest.TestCase, TestReactorMixin, changesource.ChangeSourceMixin, config.ConfigErrorsMixin
+    TestReactorMixin, changesource.ChangeSourceMixin, config.ConfigErrorsMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self):

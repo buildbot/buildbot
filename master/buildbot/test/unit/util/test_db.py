@@ -19,7 +19,7 @@ from buildbot.test.util.db import get_trial_parallel_from_cwd
 
 
 class Tests(TestCase):
-    def test_unknown(self):
+    def test_unknown(self) -> None:
         self.assertIsNone(get_trial_parallel_from_cwd(""))
         self.assertIsNone(get_trial_parallel_from_cwd("/"))
         self.assertIsNone(get_trial_parallel_from_cwd("/abc"))
@@ -29,7 +29,7 @@ class Tests(TestCase):
         self.assertIsNone(get_trial_parallel_from_cwd("/_trial_temp/abc/1"))
         self.assertIsNone(get_trial_parallel_from_cwd("/_trial_temp/abc/1/"))
 
-    def test_single(self):
+    def test_single(self) -> None:
         self.assertIs(get_trial_parallel_from_cwd("_trial_temp"), False)
         self.assertIs(get_trial_parallel_from_cwd("_trial_temp/"), False)
         self.assertIs(get_trial_parallel_from_cwd("/_trial_temp"), False)
@@ -37,7 +37,7 @@ class Tests(TestCase):
         self.assertIs(get_trial_parallel_from_cwd("/abc/_trial_temp"), False)
         self.assertIs(get_trial_parallel_from_cwd("/abc/_trial_temp/"), False)
 
-    def test_index(self):
+    def test_index(self) -> None:
         self.assertEqual(get_trial_parallel_from_cwd("_trial_temp/0"), 0)
         self.assertEqual(get_trial_parallel_from_cwd("_trial_temp/0/"), 0)
         self.assertEqual(get_trial_parallel_from_cwd("_trial_temp/5"), 5)

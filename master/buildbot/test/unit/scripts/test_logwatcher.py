@@ -41,7 +41,7 @@ class MockedLogWatcher(LogWatcher):
         self.printed_output.append(output)
 
 
-class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
+class TestLogWatcher(dirs.DirsMixin, TestReactorMixin, unittest.TestCase):
     delimiter = unicode2bytes(os.linesep)
 
     def setUp(self):

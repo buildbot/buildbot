@@ -74,7 +74,7 @@ class WaiterTests(unittest.TestCase):
         self.assertTrue(d.called)
 
 
-class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
+class RepeatedActionHandlerTests(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 
@@ -426,7 +426,7 @@ class RepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
         yield d
 
 
-class NonRepeatedActionHandlerTests(unittest.TestCase, TestReactorMixin):
+class NonRepeatedActionHandlerTests(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 

@@ -53,7 +53,7 @@ def get_trial_parallel_from_cwd(cwd):
     return None
 
 
-def resolve_test_index_in_db_url(db_url):
+def resolve_test_index_in_db_url(db_url: str) -> str:
     test_id = get_trial_parallel_from_cwd(os.getcwd())
 
     if "{TEST_ID}" in db_url:
@@ -77,7 +77,7 @@ def resolve_test_index_in_db_url(db_url):
     return db_url
 
 
-def resolve_test_db_url(db_url, sqlite_memory):
+def resolve_test_db_url(db_url: str, sqlite_memory: bool) -> str:
     default_sqlite = 'sqlite://'
     if db_url is None:
         db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
@@ -87,7 +87,7 @@ def resolve_test_db_url(db_url, sqlite_memory):
     return resolve_test_index_in_db_url(db_url)
 
 
-def thd_clean_database(conn):
+def thd_clean_database(conn) -> None:
     # In general it's nearly impossible to do "bullet proof" database cleanup with SQLAlchemy
     # that will work on a range of databases and they configurations.
     #

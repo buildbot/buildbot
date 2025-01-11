@@ -26,7 +26,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 
 class TestZulipStatusPush(
-    unittest.TestCase, ReporterTestMixin, LoggingMixin, ConfigErrorsMixin, TestReactorMixin
+    ReporterTestMixin, LoggingMixin, ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self):

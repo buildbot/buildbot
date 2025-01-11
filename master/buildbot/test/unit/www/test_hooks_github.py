@@ -606,7 +606,7 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     return request
 
 
-class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -879,7 +879,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase, TestReactorMixin)
 
 
 class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
-    unittest.TestCase, TestReactorMixin
+    TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self):
@@ -917,7 +917,7 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRef(
 
 
 class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
-    unittest.TestCase, TestReactorMixin
+    TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self):
@@ -962,7 +962,7 @@ class TestChangeHookConfiguredWithGitChangeCustomPullrequestRefWithAuth(
         self.assertEqual(change["branch"], "refs/pull/50/head")
 
 
-class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
+class TestChangeHookRefWithAuth(TestReactorMixin, unittest.TestCase):
     secret_name = 'secretkey'
     secret_value = 'githubtoken'
 
@@ -1015,7 +1015,7 @@ class TestChangeHookRefWithAuth(unittest.TestCase, TestReactorMixin):
         self.assertEqual(change["branch"], "refs/pull/50/merge")
 
 
-class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithAuthAndCustomSkips(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1103,7 +1103,7 @@ class TestChangeHookConfiguredWithAuthAndCustomSkips(unittest.TestCase, TestReac
         self._check_pull_request_no_skip(gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithAuth(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1222,7 +1222,7 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase, TestReactorMixin):
             self._check_git_pull_request_with_skip_message(gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithCustomApiRoot(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1257,7 +1257,7 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase, TestReactorMi
         self._check_pull_request(gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithCustomApiRootWithAuth(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1297,7 +1297,7 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase, TestR
         self._check_pull_request(gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithStrict(TestReactorMixin, unittest.TestCase):
     _SECRET = 'somethingreallysecret'
 
     @defer.inlineCallbacks
@@ -1403,7 +1403,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase, TestReactorMixin):
         self.assertEqual(self.request.written, expected)
 
 
-class TestChangeHookConfiguredWithCodebaseValue(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithCodebaseValue(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1428,7 +1428,7 @@ def _codebase_function(payload):
     return 'foobar-' + payload['repository']['name']
 
 
-class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithCodebaseFunction(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -1449,7 +1449,7 @@ class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase, TestReacto
         return self._check_git_with_change(gitJsonPayload)
 
 
-class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase, TestReactorMixin):
+class TestChangeHookConfiguredWithCustomEventHandler(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

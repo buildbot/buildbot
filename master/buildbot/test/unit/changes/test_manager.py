@@ -25,7 +25,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
 
-class TestChangeManager(unittest.TestCase, TestReactorMixin):
+class TestChangeManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

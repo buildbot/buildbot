@@ -33,7 +33,7 @@ class FakeObject(codebase.AbsoluteSourceStampsMixin, state.StateMixin):
 
 
 class TestAbsoluteSourceStampsMixin(
-    unittest.TestCase, scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin
+    scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin, unittest.TestCase
 ):
     codebases = {
         'a': {'repository': '', 'branch': 'master'},

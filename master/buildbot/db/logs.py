@@ -21,7 +21,6 @@ import os
 import threading
 from functools import partial
 from typing import TYPE_CHECKING
-from typing import cast
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -810,7 +809,7 @@ async def _async_iter_on_pool(
     """
 
     if provider_threadpool is None:
-        provider_threadpool = cast(threadpool.ThreadPool, reactor.getThreadPool())
+        provider_threadpool = reactor.getThreadPool()
 
     # create a single element queue as to
     # occupy a thread of the pool

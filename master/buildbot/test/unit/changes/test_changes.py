@@ -26,7 +26,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
 
-class Change(unittest.TestCase, TestReactorMixin):
+class Change(TestReactorMixin, unittest.TestCase):
     change23_rows = [
         fakedb.SourceStamp(id=92),
         fakedb.Change(

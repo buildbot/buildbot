@@ -93,7 +93,7 @@ class TestingWorker(buildbot_worker.bot.Worker):
         self.bf.failedToGetPerspective = failedToGetPerspective
 
 
-class TestWorkerConnection(unittest.TestCase, TestReactorMixin):
+class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
     """
     Test handling of connections from real worker code
 

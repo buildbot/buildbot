@@ -183,6 +183,7 @@ script:
   - title: mypy
     condition: TESTS == "mypy"
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       (cd ./master && mypy --config-file ../pyproject.toml buildbot)
       (cd ./worker && mypy --config-file ../pyproject.toml buildbot_worker)

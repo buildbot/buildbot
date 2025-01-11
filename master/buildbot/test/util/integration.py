@@ -18,6 +18,7 @@ import os
 import re
 import sys
 from io import StringIO
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -174,7 +175,7 @@ async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=Fals
                 print_test_log(l, out)
 
 
-class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
+class RunFakeMasterTestCase(TestReactorMixin, DebugIntegrationLogsMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
@@ -301,6 +302,7 @@ class TestedRealMaster(TestedMaster):
         case.patch(reactor, 'stop', stop)
 
         if start_worker:
+            config_protocols: dict[str, Any] = {}
             if proto == 'pb':
                 config_protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
                 workerclass = worker.Worker
@@ -324,6 +326,7 @@ class TestedRealMaster(TestedMaster):
         if not start_worker:
             return
 
+        assert self.master
         if proto in ('pb', 'msgpack'):
             sandboxed_worker_path = os.environ.get("SANDBOXED_WORKER_PATH", None)
             if proto == 'pb':
@@ -343,6 +346,7 @@ class TestedRealMaster(TestedMaster):
             worker_dir = FilePath(case.mktemp())
             worker_dir.createDirectory()
             if sandboxed_worker_path is None:
+                assert Worker
                 self.worker = Worker(
                     "127.0.0.1",
                     worker_port,

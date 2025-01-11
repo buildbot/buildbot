@@ -47,7 +47,7 @@ class TestFilterSet(unittest.TestCase):
         self.assertEqual(filter.is_matched(builder, props), expected)
 
 
-class TestOldBuildrequestTracker(unittest.TestCase, TestReactorMixin):
+class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         filter = _OldBuildFilterSet()

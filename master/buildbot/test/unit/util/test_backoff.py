@@ -26,7 +26,7 @@ class TestException(Exception):
     pass
 
 
-class ExponentialBackoffEngineAsyncTests(unittest.TestCase, TestReactorMixin):
+class ExponentialBackoffEngineAsyncTests(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
 

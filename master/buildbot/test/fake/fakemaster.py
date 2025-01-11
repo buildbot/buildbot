@@ -91,6 +91,7 @@ class FakeMaster(service.MasterService):
     buildbotURL: str
     mq: fakemq.FakeMQConnector
     data: fakedata.FakeDataConnector
+    www: mock.Mock
     _test_want_db: bool = False
     _test_did_shutdown: bool = False
 

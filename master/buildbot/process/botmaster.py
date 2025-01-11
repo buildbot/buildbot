@@ -114,7 +114,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
         self.brd.setServiceParent(self)
-        self._pending_builderids = set()
+        self._pending_builderids: set[str] = set()
 
         # Dictionary of build request ID to False or cancellation reason string in case cancellation
         # has been requested.

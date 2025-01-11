@@ -94,7 +94,7 @@ class AsyncMultiService(unittest.TestCase):
         self.assertTrue(d.called)
 
 
-class ClusteredBuildbotService(unittest.TestCase, TestReactorMixin):
+class ClusteredBuildbotService(TestReactorMixin, unittest.TestCase):
     SVC_NAME = 'myName'
     SVC_ID = 20
 
