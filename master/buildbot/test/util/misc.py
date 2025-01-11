@@ -16,12 +16,16 @@
 import os
 import sys
 from io import StringIO
+from typing import TYPE_CHECKING
 
 from twisted.python import log
 from twisted.trial.unittest import TestCase
 
 import buildbot
 from buildbot.process.buildstep import BuildStep
+
+if TYPE_CHECKING:
+    from twisted.trial import unittest
 
 
 class PatcherMixin:
@@ -43,22 +47,28 @@ class PatcherMixin:
             os.uname = replacement
 
 
-class StdoutAssertionsMixin:
+if TYPE_CHECKING:
+    _StdoutAssertionsMixinBase = unittest.TestCase
+else:
+    _StdoutAssertionsMixinBase = object
+
+
+class StdoutAssertionsMixin(_StdoutAssertionsMixinBase):
     """
     Mix this in to be able to assert on stdout during the test
     """
 
-    def setUpStdoutAssertions(self):
+    def setUpStdoutAssertions(self) -> None:
         self.stdout = StringIO()
         self.patch(sys, 'stdout', self.stdout)
 
-    def assertWasQuiet(self):
+    def assertWasQuiet(self) -> None:
         self.assertEqual(self.stdout.getvalue(), '')
 
-    def assertInStdout(self, exp):
+    def assertInStdout(self, exp: str) -> None:
         self.assertIn(exp, self.stdout.getvalue())
 
-    def getStdout(self):
+    def getStdout(self) -> str:
         return self.stdout.getvalue().strip()
 
 
