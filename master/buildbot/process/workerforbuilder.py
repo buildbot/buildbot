@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import enum
-from typing import Optional
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
@@ -40,7 +39,7 @@ class States(enum.Enum):
 class AbstractWorkerForBuilder:
     def __init__(self, builder: Builder):
         self.ping_watchers: list[defer.Deferred] = []
-        self.state: Optional[States] = None  # set in subclass
+        self.state: States | None = None  # set in subclass
         self.worker: AbstractWorker | None = None
         self.builder = builder
         self.builder_name = builder.name
