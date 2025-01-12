@@ -26,7 +26,7 @@ from buildbot.warnings import DeprecatedApiWarning  # noqa: F401
 _ = mock
 
 # apply the same patches the buildmaster does when it starts
-monkeypatches.patch_all()
+monkeypatches.patch_all(for_tests=True)
 
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
