@@ -22,6 +22,7 @@ from typing import Callable
 from typing import Coroutine
 from typing import Generator
 from typing import TypeVar
+from typing import Union
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -32,7 +33,7 @@ _T = TypeVar('_T')
 _P = ParamSpec('_P')
 
 
-InlineCallbacksType = Generator[defer.Deferred[Any], Any, _T]
+InlineCallbacksType = Generator[Union[Any, defer.Deferred[Any]], Any, _T]
 
 
 def async_to_deferred(
