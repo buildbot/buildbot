@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from functools import reduce
 from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -358,8 +359,11 @@ class Build(properties.PropertiesMixin):
         # the preparation step counts the time needed for preparing the worker and getting the
         # locks.
         # we cannot use a real step as we don't have a worker yet.
-        self._preparation_step = buildstep.create_step_from_step_or_factory(
-            buildstep.BuildStep(name="worker_preparation")
+        self._preparation_step = cast(
+            buildstep.BuildStep,
+            buildstep.create_step_from_step_or_factory(
+                buildstep.BuildStep(name="worker_preparation")
+            ),
         )
         assert self._preparation_step is not None
         self._preparation_step.setBuild(self)
@@ -377,8 +381,11 @@ class Build(properties.PropertiesMixin):
             # not start builds that cannot acquire locks immediately. However on a loaded master
             # it may happen that more builds are cleared to start than there are free locks. In
             # such case some of the builds will be blocked and wait for the locks.
-            self._locks_acquire_step = buildstep.create_step_from_step_or_factory(
-                buildstep.BuildStep(name="locks_acquire")
+            self._locks_acquire_step = cast(
+                buildstep.BuildStep,
+                buildstep.create_step_from_step_or_factory(
+                    buildstep.BuildStep(name="locks_acquire")
+                ),
             )
             self._locks_acquire_step.setBuild(self)
             yield self._locks_acquire_step.addStep()
