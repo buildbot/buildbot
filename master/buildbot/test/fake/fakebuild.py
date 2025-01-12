@@ -84,8 +84,8 @@ class FakeBuild(properties.PropertiesMixin):
     def getWorkerInfo(self):
         return self.workerforbuilder.worker.info
 
-    def setUniqueStepName(self, step):
-        pass
+    def setUniqueStepName(self, name):
+        return name
 
 
 class FakeBuildForRendering:

@@ -142,10 +142,10 @@ class NonReactor:
     def suggestThreadPoolSize(self, size: int) -> None:
         pass
 
-    def callInThread(self, callable: Callable, *args, **kwargs) -> None:
+    def callInThread(self, callable: Callable[..., Any], *args, **kwargs: object) -> None:
         callable(*args, **kwargs)
 
-    def callFromThread(self, callable: Callable, *args: object, **kwargs: object) -> None:  # type: ignore[override]
+    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:  # type: ignore[override]
         callable(*args, **kwargs)
 
     def getThreadPool(self):

@@ -150,6 +150,12 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
+      "buildbot.process.buildstep",
+    ]
+    disallow_untyped_calls = false
+
+    [[tool.mypy.overrides]]
+    module = [
       "buildbot.asyncio",
       "buildbot.buildbot_net_usage_data",
       "buildbot.changes.base",
@@ -262,7 +268,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.process.build",
       "buildbot.process.buildrequestdistributor",
       "buildbot.process.buildrequest",
-      "buildbot.process.buildstep",
       "buildbot.process.cache",
       "buildbot.process.debug",
       "buildbot.process.factory",

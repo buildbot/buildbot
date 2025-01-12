@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from functools import reduce
 from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -74,6 +75,7 @@ class Build(properties.PropertiesMixin):
     VIRTUAL_BUILDER_PROJECT_PROP = "virtual_builder_project"
     VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
+    workername: str | None
     reason = "changes"
     finished = False
     results: int | None = None
@@ -101,8 +103,8 @@ class Build(properties.PropertiesMixin):
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
-        self._preparation_step = None
-        self._locks_acquire_step = None
+        self._preparation_step: buildstep.BuildStep | None = None
+        self._locks_acquire_step: buildstep.BuildStep | None = None
         self.currentStep = None
 
         self.workerEnvironment: dict[str, str] = {}
@@ -214,7 +216,7 @@ class Build(properties.PropertiesMixin):
     def getWorkerCommandVersion(self, command, oldversion=None):
         return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)
 
-    def getWorkerName(self):
+    def getWorkerName(self) -> str | None:
         return self.workername
 
     @staticmethod
@@ -357,8 +359,11 @@ class Build(properties.PropertiesMixin):
         # the preparation step counts the time needed for preparing the worker and getting the
         # locks.
         # we cannot use a real step as we don't have a worker yet.
-        self._preparation_step = buildstep.create_step_from_step_or_factory(
-            buildstep.BuildStep(name="worker_preparation")
+        self._preparation_step = cast(
+            buildstep.BuildStep,
+            buildstep.create_step_from_step_or_factory(
+                buildstep.BuildStep(name="worker_preparation")
+            ),
         )
         assert self._preparation_step is not None
         self._preparation_step.setBuild(self)
@@ -376,8 +381,11 @@ class Build(properties.PropertiesMixin):
             # not start builds that cannot acquire locks immediately. However on a loaded master
             # it may happen that more builds are cleared to start than there are free locks. In
             # such case some of the builds will be blocked and wait for the locks.
-            self._locks_acquire_step = buildstep.create_step_from_step_or_factory(
-                buildstep.BuildStep(name="locks_acquire")
+            self._locks_acquire_step = cast(
+                buildstep.BuildStep,
+                buildstep.create_step_from_step_or_factory(
+                    buildstep.BuildStep(name="locks_acquire")
+                ),
             )
             self._locks_acquire_step.setBuild(self)
             yield self._locks_acquire_step.addStep()
@@ -399,7 +407,7 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildProperties(self.buildid, self)
         yield self.master.data.updates.setBuildStateString(self.buildid, 'preparing worker')
         try:
-            ready_or_failure = False
+            ready_or_failure: bool | Failure = False
             if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
                 self._is_substantiating = True
                 ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
@@ -447,6 +455,7 @@ class Build(properties.PropertiesMixin):
         )
         yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
 
+        assert workerforbuilder.worker is not None
         self.conn = workerforbuilder.worker.conn
 
         # To retrieve the worker properties, the worker must be attached as we depend on its
@@ -468,6 +477,7 @@ class Build(properties.PropertiesMixin):
         if self._locks_to_acquire:
             yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
             locks_acquire_start_at = int(self.master.reactor.seconds())
+            assert self._locks_acquire_step is not None
             yield self.master.data.updates.startStep(
                 self._locks_acquire_step.stepid, started_at=locks_acquire_start_at
             )
@@ -533,18 +543,17 @@ class Build(properties.PropertiesMixin):
             lock.claim(self, access)
         return defer.succeed(None)
 
-    def setUniqueStepName(self, step):
+    def setUniqueStepName(self, name: str) -> str:
         # If there are any name collisions, we add a count to the loser
         # until it is unique.
-        name = step.name
         if name in self.stepnames:
             count = self.stepnames[name]
             count += 1
             self.stepnames[name] = count
-            name = f"{step.name}_{count}"
+            name = f"{name}_{count}"
         else:
             self.stepnames[name] = 0
-        step.name = name
+        return name
 
     def setupBuildSteps(self, step_factories):
         steps = []

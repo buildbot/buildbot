@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
     from buildbot.process.buildstep import BuildStep
+    from buildbot.process.log import Log
     from buildbot.process.log import StreamLog
     from buildbot.worker.base import AbstractWorker
     from buildbot.worker.protocols.base import Connection
@@ -59,7 +60,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def __init__(
         self,
-        remote_command: str,
+        remote_command: str | list[str],
         args: dict[str, Any],
         ignore_updates: bool = False,
         collectStdout: bool = False,
@@ -69,7 +70,7 @@ class RemoteCommand(base.RemoteCommandImpl):
     ) -> None:
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
-        self.logs: dict[str, StreamLog] = {}
+        self.logs: dict[str, Any] = {}
         self.delayedLogs: dict[
             str,
             tuple[
@@ -87,7 +88,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self._startTime: float | None = None
         self._remoteElapsed: float | None = None
         self.remote_failure_reason = None
-        self.remote_command: str = remote_command
+        self.remote_command: str | list[str] = remote_command
         self.args: dict[str, Any] = args
         self.ignore_updates: bool = ignore_updates
         self.decodeRC: dict[int | None, int] = decodeRC
@@ -157,7 +158,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def useLog(
         self,
-        log_: StreamLog,
+        log_: Log,
         closeWhenFinished: bool = False,
         logfileName: str | None = None,
     ) -> None:
@@ -173,7 +174,9 @@ class RemoteCommand(base.RemoteCommandImpl):
     def useLogDelayed(
         self,
         logfileName: str,
-        activateCallBack: Callable[[RemoteCommand], Awaitable[StreamLog]],
+        activateCallBack: Callable[
+            [RemoteCommand], defer.Deferred[StreamLog] | Awaitable[StreamLog]
+        ],
         closeWhenFinished: bool = False,
     ) -> None:
         assert logfileName not in self.logs
