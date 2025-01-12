@@ -952,6 +952,7 @@ class TestBuildStep(
         step.master = mock.Mock()
         step.master.reactor = self.reactor
         step.build = mock.Mock()
+        step.build.setUniqueStepName = lambda name: name
         step.build._locks_to_acquire = []
         step.build.properties.cleanupTextFromSecrets = lambda s: s
         step.build.builder.botmaster.getLockFromLockAccesses = mock.Mock(return_value=[])

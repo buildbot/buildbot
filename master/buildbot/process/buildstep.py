@@ -474,7 +474,7 @@ class BuildStep(
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
         self.name = yield self.build.render(self.name)
-        self.build.setUniqueStepName(self)
+        self.name = self.build.setUniqueStepName(self.name)
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid, name=util.bytes2unicode(self.name)
         )
