@@ -393,7 +393,12 @@ class Git(Source, GitStepMixin):
             rev = self.revision
         else:
             rev = 'FETCH_HEAD'
-        command = ['checkout', '-f', rev]
+        # Now we set the correct commit via "git reset --hard <rev>":
+        # * This will move HEAD to correct commit
+        #   Unlike "checkout -f <rev>" that create "detached head"
+        # * If <rev> isn't found on <branch> it will fail loudly
+        #   This is the correct behavior when contradicting parameters are provided
+        command = ['reset', '--hard', rev]
         res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
 
         # Rename the branch if needed.
@@ -490,9 +495,9 @@ class Git(Source, GitStepMixin):
         if res != RC_SUCCESS:
             return res
 
-        # If revision specified checkout that revision
+        # If revision specified reset (--hard) to that revision
         if self.revision:
-            res = yield self._dovccmd(['checkout', '-f', self.revision], shallowClone)
+            res = yield self._dovccmd(['reset', '--hard', self.revision], shallowClone)
 
         # init and update submodules, recursively. If there's not recursion
         # it will not do it.

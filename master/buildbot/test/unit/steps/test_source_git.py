@@ -153,7 +153,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -192,7 +192,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -246,7 +246,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -300,7 +300,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH_COMMAND': ssh_command},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -367,7 +367,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -442,7 +442,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -509,7 +509,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH_COMMAND': ssh_command},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -588,7 +588,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -667,7 +667,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -738,7 +738,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir=workdir, command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir=workdir, command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir=workdir, command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -775,7 +775,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -830,7 +830,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -885,7 +885,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH_COMMAND': ssh_command},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -947,7 +947,7 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -990,7 +990,7 @@ class TestGit(
                 ],
             ).exit(0),
             ExpectShell(
-                workdir='wkdir', timeout=1, command=['git', 'checkout', '-f', 'FETCH_HEAD']
+                workdir='wkdir', timeout=1, command=['git', 'reset', '--hard', 'FETCH_HEAD']
             ).exit(0),
             ExpectShell(workdir='wkdir', timeout=1, command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -1030,7 +1030,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectDownloadFile(
                 blocksize=32768,
                 maxsize=None,
@@ -1093,7 +1093,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectDownloadFile(
                 blocksize=32768,
                 maxsize=None,
@@ -1152,7 +1152,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectDownloadFile(
                 blocksize=32768,
                 maxsize=None,
@@ -1207,7 +1207,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -1247,7 +1247,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -1320,7 +1320,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD'])
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD'])
             .stderr("fatal: Could not parse object 'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
             .exit(128),
         )
@@ -1488,7 +1488,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='wkdir', command=['git', 'submodule', 'update', '--init', '--recursive']
@@ -1537,7 +1537,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -1745,7 +1745,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -1787,7 +1787,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -1827,7 +1827,7 @@ class TestGit(
             ExpectShell(
                 workdir='wkdir',
                 interrupt_signal='TERM',
-                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                command=['git', 'reset', '--hard', 'FETCH_HEAD'],
             ).exit(0),
             ExpectShell(
                 workdir='wkdir', interrupt_signal='TERM', command=['git', 'rev-parse', 'HEAD']
@@ -1864,7 +1864,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -1896,7 +1896,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -1975,7 +1975,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2030,7 +2030,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2109,7 +2109,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2168,7 +2168,7 @@ class TestGit(
             ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
             ExpectListdir(dir='wkdir').files(['.git']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'cat-file', '-e', 'abcdef01']).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'abcdef01']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'abcdef01']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2202,7 +2202,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'abcdef01']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'abcdef01']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2240,7 +2240,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='wkdir', command=['git', 'submodule', 'update', '--init', '--recursive']
@@ -2287,7 +2287,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -2337,7 +2337,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -2501,7 +2501,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(1),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(1),
             ExpectShell(
                 workdir='wkdir',
                 command=[
@@ -2513,7 +2513,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2551,7 +2551,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(1),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(1),
             ExpectShell(
                 workdir='wkdir',
                 command=[
@@ -2563,7 +2563,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2601,7 +2601,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(1),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(1),
             ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -2650,7 +2650,7 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(1),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(1),
             ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -2699,7 +2699,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='source', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='source', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=1200).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2754,7 +2754,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='source', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='source', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=1200).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -2868,7 +2868,7 @@ class TestGit(
                     '--progress',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'abcdef01']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'abcdef01']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2905,7 +2905,7 @@ class TestGit(
                     '--progress',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'abcdef01']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'abcdef01']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ada95a1d')  # too short
             .exit(0),
@@ -3026,7 +3026,7 @@ class TestGit(
                     '--progress',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'abcdef01']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'abcdef01']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -3163,7 +3163,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -3204,7 +3204,9 @@ class TestGit(
                 env={'abc': '123'},
             ).exit(0),
             ExpectShell(
-                workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD'], env={'abc': '123'}
+                workdir='wkdir',
+                command=['git', 'reset', '--hard', 'FETCH_HEAD'],
+                env={'abc': '123'},
             ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'], env={'abc': '123'})
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -3244,7 +3246,7 @@ class TestGit(
                 log_environ=False,
             ).exit(0),
             ExpectShell(
-                workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD'], log_environ=False
+                workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD'], log_environ=False
             ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'], log_environ=False)
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -3315,7 +3317,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -3363,7 +3365,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -3626,7 +3628,9 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=[*prefix, 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=[*prefix, 'reset', '--hard', 'FETCH_HEAD']).exit(
+                0
+            ),
             ExpectShell(workdir='wkdir', command=[*prefix, 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -3728,7 +3732,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='source', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='source', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='source', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='source', command=['git', 'submodule', 'update', '--init', '--recursive']
@@ -3862,7 +3866,7 @@ class TestGit(
                 ],
             ).exit(0),
             # continue as normal
-            ExpectShell(workdir='source', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='source', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='source', command=['git', 'submodule', 'sync']).exit(0),
             ExpectShell(
                 workdir='source', command=['git', 'submodule', 'update', '--init', '--recursive']
@@ -4001,7 +4005,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -4072,7 +4076,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -4170,7 +4174,7 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),

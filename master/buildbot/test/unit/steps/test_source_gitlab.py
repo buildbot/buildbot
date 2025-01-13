@@ -82,7 +82,7 @@ class TestGitLab(
                     'ms-viewport',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'ms-viewport']).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
