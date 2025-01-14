@@ -138,10 +138,17 @@ class MasterService(AsyncMultiService):
     def master(self):
         return self
 
-    def get_db_url(self, new_config) -> defer.Deferred:
+    @defer.inlineCallbacks
+    def get_db_config(self, new_config) -> dict[str, str]:
+        result = {}
+
         p = Properties()
         p.master = self
-        return p.render(new_config.db['db_url'])
+
+        for key in new_config.db:
+          result[key] = yield p.render(new_config.db[key])
+
+        return result
 
 
 class SharedService(AsyncMultiService):
