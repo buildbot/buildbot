@@ -34,6 +34,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
@@ -320,6 +321,10 @@ class Build(properties.PropertiesMixin):
         finishes. This Deferred is guaranteed to never errback."""
         self.workerforbuilder = workerforbuilder
         self.conn = None
+        if self.builder.config is not None:
+            self.do_build = self.builder.config.do_build_if(self)
+        else:
+            self.do_build = True
 
         worker = workerforbuilder.worker
         assert worker is not None
@@ -329,7 +334,7 @@ class Build(properties.PropertiesMixin):
         self.workername = worker.workername
         self.worker_info = worker.info
 
-        log.msg(f"{self}.startBuild")
+        log.msg(f"{self}.startBuild{' skipped' if not self.do_build else ''}")
 
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the build to the first buildrequest
@@ -355,6 +360,20 @@ class Build(properties.PropertiesMixin):
             if isinstance(reason, str):
                 yield self.stopBuild(reason=reason)
                 return
+
+        if not self.do_build:
+            Build.setupBuildProperties(
+                self.getProperties(), self.requests, self.sources, self.number
+            )
+            metrics.MetricCountEvent.log('active_builds', 1)
+
+            # flush properties in the beginning of the build
+            yield self.master.data.updates.setBuildProperties(self.buildid, self)
+
+            self.results = SKIPPED
+            self.text: list[str] = []
+            yield self.allStepsDone()
+            return
 
         # the preparation step counts the time needed for preparing the worker and getting the
         # locks.

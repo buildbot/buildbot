@@ -171,6 +171,11 @@ Other optional keys may be set on each ``BuilderConfig``:
     By default, it is ``None`` and corresponds to plain text format.
     Allowed values: ``None``, ``markdown``.
 
+``do_build_if``
+    (function taking a :class:`Build` and returning a `bool`, optional)
+
+    Can be set a function, which if it returns `False`, the whole build will be skipped. This is useful in case one want the build to be displayed in the UI, without incurring worker preparation costs.
+
 .. index:: Builds; merging
 
 .. _Collapsing-Build-Requests:
