@@ -59,6 +59,7 @@ class BuildFactory(util.ComparableMixin):
     useProgress = True
     workdir = "build"
     compare_attrs: ClassVar[Sequence[str]] = ('buildClass', 'steps', 'useProgress', 'workdir')
+    skipBuildIf: Callable[[Build], bool] | None = None
 
     def __init__(self, steps=None):
         self.steps = []
@@ -75,6 +76,8 @@ class BuildFactory(util.ComparableMixin):
         b.useProgress = self.useProgress
         b.workdir = self.workdir
         b.setStepFactories(self.steps)
+        if self.skipBuildIf is not None:
+            b.skipBuildIf = self.skipBuildIf
         return b
 
     def addStep(self, step):
@@ -93,6 +96,9 @@ class BuildFactory(util.ComparableMixin):
             self.addStep(s)
         if withSecrets:
             self.addStep(RemoveWorkerFileSecret(withSecrets))
+
+    def setSkipBuildIf(self, predicate: Callable[[Build], bool]):
+        self.skipBuildIf = predicate
 
     @contextmanager
     def withSecrets(self, secrets):

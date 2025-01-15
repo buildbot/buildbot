@@ -12,6 +12,8 @@ When asked to create a :class:`Build`, the :class:`BuildFactory` puts a copy of 
 When the :class:`Build` is actually started, these `BuildStep` factories are used to create the actual set of :class:`BuildStep`\s, which are then executed one at a time.
 This serves to give each Build an independent copy of each step.
 
+Futhermore, the :meth:`setSkipBuildIf` can be used to set a predice which will skip the whole build. This is useful in case one want the build to be displayed in the UI, without incurring worker preparation costs.
+
 Each step can affect the build process in the following ways:
 
 * If the step's :attr:`haltOnFailure` attribute is ``True``, then a failure in the step (i.e. if it completes with a result of ``FAILURE``) will cause the whole build to be terminated immediately: no further steps will be executed, with the exception of steps with :attr:`alwaysRun` set to ``True``.

@@ -16,8 +16,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import TYPE_CHECKING
-from typing import cast
+from typing import TYPE_CHECKING, cast, Callable
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -34,6 +33,7 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
@@ -115,6 +115,8 @@ class Build(properties.PropertiesMixin):
         self.stepnames: dict[str, int] = {}
 
         self.terminate = False
+
+        self.skipBuildIf = lambda _x: False
 
         self._acquiringLock = None
         self._builderid = None
@@ -320,6 +322,7 @@ class Build(properties.PropertiesMixin):
         finishes. This Deferred is guaranteed to never errback."""
         self.workerforbuilder = workerforbuilder
         self.conn = None
+        self.skipBuild = self.skipBuildIf(self)
 
         worker = workerforbuilder.worker
         assert worker is not None
@@ -329,7 +332,7 @@ class Build(properties.PropertiesMixin):
         self.workername = worker.workername
         self.worker_info = worker.info
 
-        log.msg(f"{self}.startBuild")
+        log.msg(f"{self}.startBuild{' skipped' if self.skipBuild else ''}")
 
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the build to the first buildrequest
@@ -356,27 +359,29 @@ class Build(properties.PropertiesMixin):
                 yield self.stopBuild(reason=reason)
                 return
 
-        # the preparation step counts the time needed for preparing the worker and getting the
-        # locks.
-        # we cannot use a real step as we don't have a worker yet.
-        self._preparation_step = cast(
-            buildstep.BuildStep,
-            buildstep.create_step_from_step_or_factory(
-                buildstep.BuildStep(name="worker_preparation")
-            ),
-        )
-        assert self._preparation_step is not None
-        self._preparation_step.setBuild(self)
-        yield self._preparation_step.addStep()
-        assert self.master.data.updates is not None
-        yield self.master.data.updates.startStep(self._preparation_step.stepid, locks_acquired=True)
+        if not self.skipBuild:
+            # the preparation step counts the time needed for preparing the worker and getting the
+            # locks.
+            # we cannot use a real step as we don't have a worker yet.
+            self._preparation_step = cast(
+                buildstep.BuildStep,
+                buildstep.create_step_from_step_or_factory(
+                    buildstep.BuildStep(name="worker_preparation")
+                ),
+            )
+            assert self._preparation_step is not None
+            self._preparation_step.setBuild(self)
+            yield self._preparation_step.addStep()
+            assert self.master.data.updates is not None
+            yield self.master.data.updates.startStep(self._preparation_step.stepid, locks_acquired=True)
 
         Build.setupBuildProperties(self.getProperties(), self.requests, self.sources, self.number)
 
-        yield self._setup_locks()
+        if not self.skipBuild:
+            yield self._setup_locks()
         metrics.MetricCountEvent.log('active_builds', 1)
 
-        if self._locks_to_acquire:
+        if not self.skipBuild and self._locks_to_acquire:
             # Note that most of the time locks will already free because build distributor does
             # not start builds that cannot acquire locks immediately. However on a loaded master
             # it may happen that more builds are cleared to start than there are free locks. In
@@ -396,110 +401,117 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid, 'starting')
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
-        try:
-            self.setupBuild()  # create .steps
-        except Exception:
-            yield self.buildPreparationFailure(Failure(), "setupBuild")
-            yield self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
-            return
+        if not self.skipBuild:
+            try:
+                self.setupBuild()  # create .steps
+            except Exception:
+                yield self.buildPreparationFailure(Failure(), "setupBuild")
+                yield self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
+                return
 
         # flush properties in the beginning of the build
         yield self.master.data.updates.setBuildProperties(self.buildid, self)
         yield self.master.data.updates.setBuildStateString(self.buildid, 'preparing worker')
-        try:
-            ready_or_failure: bool | Failure = False
-            if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
-                self._is_substantiating = True
-                ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
-        except Exception:
-            ready_or_failure = Failure()
-        finally:
-            self._is_substantiating = False
 
-        # If prepare returns True then it is ready and we start a build
-        # If it returns failure then we don't start a new build.
-        if ready_or_failure is not True:
-            yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
-            if self.stopped:
-                yield self.buildFinished(["worker", "cancelled"], self.results)
-            elif isinstance(ready_or_failure, Failure) and ready_or_failure.check(
-                interfaces.LatentWorkerCannotSubstantiate
-            ):
-                yield self.buildFinished(["worker", "cannot", "substantiate"], EXCEPTION)
-            else:
-                yield self.buildFinished(["worker", "not", "available"], RETRY)
-            return
+        if not self.skipBuild:
+            try:
+                ready_or_failure: bool | Failure = False
+                if workerforbuilder.worker and workerforbuilder.worker.acquireLocks():
+                    self._is_substantiating = True
+                    ready_or_failure = yield workerforbuilder.substantiate_if_needed(self)
+            except Exception:
+                ready_or_failure = Failure()
+            finally:
+                self._is_substantiating = False
 
-        # ping the worker to make sure they're still there. If they've
-        # fallen off the map (due to a NAT timeout or something), this
-        # will fail in a couple of minutes, depending upon the TCP
-        # timeout.
-        #
-        # TODO: This can unnecessarily suspend the starting of a build, in
-        # situations where the worker is live but is pushing lots of data to
-        # us in a build.
-        yield self.master.data.updates.setBuildStateString(self.buildid, 'pinging worker')
-        log.msg(f"starting build {self}.. pinging the worker {workerforbuilder}")
-        try:
-            ping_success_or_failure = yield workerforbuilder.ping()
-        except Exception:
-            ping_success_or_failure = Failure()
+            # If prepare returns True then it is ready and we start a build
+            # If it returns failure then we don't start a new build.
+            if ready_or_failure is not True:
+                yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
+                if self.stopped:
+                    yield self.buildFinished(["worker", "cancelled"], self.results)
+                elif isinstance(ready_or_failure, Failure) and ready_or_failure.check(
+                    interfaces.LatentWorkerCannotSubstantiate
+                ):
+                    yield self.buildFinished(["worker", "cannot", "substantiate"], EXCEPTION)
+                else:
+                    yield self.buildFinished(["worker", "not", "available"], RETRY)
+                return
 
-        if ping_success_or_failure is not True:
-            yield self.buildPreparationFailure(ping_success_or_failure, "worker_ping")
-            yield self.buildFinished(["worker", "not", "pinged"], RETRY)
-            return
+            # ping the worker to make sure they're still there. If they've
+            # fallen off the map (due to a NAT timeout or something), this
+            # will fail in a couple of minutes, depending upon the TCP
+            # timeout.
+            #
+            # TODO: This can unnecessarily suspend the starting of a build, in
+            # situations where the worker is live but is pushing lots of data to
+            # us in a build.
+            yield self.master.data.updates.setBuildStateString(self.buildid, 'pinging worker')
+            log.msg(f"starting build {self}.. pinging the worker {workerforbuilder}")
+            try:
+                ping_success_or_failure = yield workerforbuilder.ping()
+            except Exception:
+                ping_success_or_failure = Failure()
 
-        yield self.master.data.updates.setStepStateString(
-            self._preparation_step.stepid, f"worker {self.getWorkerName()} ready"
-        )
-        yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
+            if ping_success_or_failure is not True:
+                yield self.buildPreparationFailure(ping_success_or_failure, "worker_ping")
+                yield self.buildFinished(["worker", "not", "pinged"], RETRY)
+                return
 
-        assert workerforbuilder.worker is not None
-        self.conn = workerforbuilder.worker.conn
-
-        # To retrieve the worker properties, the worker must be attached as we depend on its
-        # path_module for at least the builddir property. Latent workers become attached only after
-        # preparing them, so we can't setup the builddir property earlier like the rest of
-        # properties
-        self.setupWorkerProperties(workerforbuilder)
-        self.setupWorkerForBuilder(workerforbuilder)
-        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
-
-        # tell the remote that it's starting a build, too
-        try:
-            yield self.conn.remoteStartBuild(self.builder.name)
-        except Exception:
-            yield self.buildPreparationFailure(Failure(), "start_build")
-            yield self.buildFinished(["worker", "not", "building"], RETRY)
-            return
-
-        if self._locks_to_acquire:
-            yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
-            locks_acquire_start_at = int(self.master.reactor.seconds())
-            assert self._locks_acquire_step is not None
-            yield self.master.data.updates.startStep(
-                self._locks_acquire_step.stepid, started_at=locks_acquire_start_at
-            )
-            yield self.acquireLocks()
-            locks_acquired_at = int(self.master.reactor.seconds())
-            yield self.master.data.updates.set_step_locks_acquired_at(
-                self._locks_acquire_step.stepid, locks_acquired_at=locks_acquired_at
-            )
-            yield self.master.data.updates.add_build_locks_duration(
-                self.buildid, duration_s=locks_acquired_at - locks_acquire_start_at
-            )
             yield self.master.data.updates.setStepStateString(
-                self._locks_acquire_step.stepid, "locks acquired"
+                self._preparation_step.stepid, f"worker {self.getWorkerName()} ready"
             )
-            yield self.master.data.updates.finishStep(
-                self._locks_acquire_step.stepid, SUCCESS, False
-            )
+            yield self.master.data.updates.finishStep(self._preparation_step.stepid, SUCCESS, False)
+
+            assert workerforbuilder.worker is not None
+            self.conn = workerforbuilder.worker.conn
+
+            # To retrieve the worker properties, the worker must be attached as we depend on its
+            # path_module for at least the builddir property. Latent workers become attached only after
+            # preparing them, so we can't setup the builddir property earlier like the rest of
+            # properties
+            self.setupWorkerProperties(workerforbuilder)
+            self.setupWorkerForBuilder(workerforbuilder)
+            self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
+
+            # tell the remote that it's starting a build, too
+            try:
+                yield self.conn.remoteStartBuild(self.builder.name)
+            except Exception:
+                yield self.buildPreparationFailure(Failure(), "start_build")
+                yield self.buildFinished(["worker", "not", "building"], RETRY)
+                return
+
+            if self._locks_to_acquire:
+                yield self.master.data.updates.setBuildStateString(self.buildid, "acquiring locks")
+                locks_acquire_start_at = int(self.master.reactor.seconds())
+                assert self._locks_acquire_step is not None
+                yield self.master.data.updates.startStep(
+                    self._locks_acquire_step.stepid, started_at=locks_acquire_start_at
+                )
+                yield self.acquireLocks()
+                locks_acquired_at = int(self.master.reactor.seconds())
+                yield self.master.data.updates.set_step_locks_acquired_at(
+                    self._locks_acquire_step.stepid, locks_acquired_at=locks_acquired_at
+                )
+                yield self.master.data.updates.add_build_locks_duration(
+                    self.buildid, duration_s=locks_acquired_at - locks_acquire_start_at
+                )
+                yield self.master.data.updates.setStepStateString(
+                    self._locks_acquire_step.stepid, "locks acquired"
+                )
+                yield self.master.data.updates.finishStep(
+                    self._locks_acquire_step.stepid, SUCCESS, False
+                )
 
         yield self.master.data.updates.setBuildStateString(self.buildid, 'building')
 
-        # start the sequence of steps
-        self.startNextStep()
+        if self.skipBuild:
+            self.results = SKIPPED
+            self.allStepsDone()
+        else:
+            # start the sequence of steps
+            self.startNextStep()
 
     @defer.inlineCallbacks
     def buildPreparationFailure(self, why, state_string):
