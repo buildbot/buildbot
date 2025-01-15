@@ -23,6 +23,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.internet import reactor
 
+from buildbot.config.master import DBConfig as MasterDBConfig
 from buildbot.config.master import MasterConfig
 from buildbot.secrets.manager import SecretManager
 from buildbot.test import fakedb
@@ -207,7 +208,7 @@ async def make_master(
             # affect further tests
             testcase.addCleanup(master.test_shutdown)
 
-        master.db.configured_url = resolve_test_db_url(db_url, sqlite_memory)
+        master.db.configured_db_config = MasterDBConfig(resolve_test_db_url(db_url, sqlite_memory))
         if not os.path.exists(master.basedir):
             os.makedirs(master.basedir)
         await master.db.set_master(master)

@@ -13,15 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
 import os
 import re
 import sys
 import traceback
 import warnings
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Any
 from typing import ClassVar
+from typing import Generator
 from typing import Sequence
 
+from twisted.internet import defer
 from twisted.python import log
 from twisted.python.compat import execfile
 from zope.interface import implementer
@@ -34,6 +41,7 @@ from buildbot.config.errors import ConfigErrors
 from buildbot.config.errors import capture_config_errors
 from buildbot.config.errors import error
 from buildbot.db.compression import ZStdCompressor
+from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
 from buildbot.process.codebase import Codebase
 from buildbot.process.project import Project
@@ -135,7 +143,26 @@ class FileLoader(ComparableMixin):
         return config
 
 
+@implementer(IRenderable)
+@dataclass
+class DBConfig:
+    db_url: str | interfaces.IRenderable = DEFAULT_DB_URL
+    engine_kwargs: dict[str, Any] = field(default_factory=lambda: {})
+
+    @defer.inlineCallbacks
+    def getRenderingFor(self, iprops: IProperties) -> Generator[Any, Any, DBConfig]:
+        if interfaces.IRenderable.providedBy(self.db_url):
+            db_url = yield iprops.render(self.db_url)
+        else:
+            db_url = self.db_url
+        engine_kwargs = yield iprops.render(self.engine_kwargs)
+
+        return DBConfig(db_url, engine_kwargs)
+
+
 class MasterConfig(util.ComparableMixin):
+    db: DBConfig
+
     def __init__(self):
         # local import to avoid circular imports
         from buildbot.process import properties
@@ -167,7 +194,7 @@ class MasterConfig(util.ComparableMixin):
             "property_name": re.compile(r'^[\w\.\-/~:]*$'),
             "property_value": re.compile(r'^[\w\.\-/~:]*$'),
         }
-        self.db = {"db_url": DEFAULT_DB_URL}
+        self.db = DBConfig()
         self.mq = {"type": 'simple'}
         self.metrics = None
         self.caches = {"Builds": 15, "Changes": 10}
@@ -272,7 +299,7 @@ class MasterConfig(util.ComparableMixin):
             config.run_configurators(filename, config_dict)
             config.load_global(filename, config_dict)
             config.load_validation(filename, config_dict)
-            config.load_db(filename, config_dict)
+            config.load_dbconfig(filename, config_dict)
             config.load_mq(filename, config_dict)
             config.load_metrics(filename, config_dict)
             config.load_secrets(filename, config_dict)
@@ -494,23 +521,23 @@ class MasterConfig(util.ComparableMixin):
                 self.validation.update(validation)
 
     @staticmethod
-    def getDbUrlFromConfig(config_dict, throwErrors=True):
+    def get_dbconfig_from_config(config_dict, throwErrors=True) -> DBConfig | None:
+        dbconfig = DBConfig()
+
         if 'db' in config_dict:
-            db = config_dict['db']
-            if set(db.keys()) - set(['db_url']) and throwErrors:
+            if set(config_dict['db'].keys()) - set(['db_url', 'engine_kwargs']) and throwErrors:
                 error("unrecognized keys in c['db']")
+            dbconfig = DBConfig(
+                db_url=config_dict['db'].get('db_url', DEFAULT_DB_URL),
+                engine_kwargs=config_dict['db'].get('engine_kwargs', {}),
+            )
+        elif 'db_url' in config_dict:
+            dbconfig = DBConfig(config_dict['db_url'])
 
-            config_dict = db
+        return dbconfig
 
-        # we don't attempt to parse db URLs here - the engine strategy will do
-        # so.
-        if 'db_url' in config_dict:
-            return config_dict['db_url']
-
-        return DEFAULT_DB_URL
-
-    def load_db(self, filename, config_dict):
-        self.db = {"db_url": self.getDbUrlFromConfig(config_dict)}
+    def load_dbconfig(self, filename, config_dict):
+        self.db = self.get_dbconfig_from_config(config_dict)
 
     def load_mq(self, filename, config_dict):
         from buildbot.mq import connector  # avoid circular imports

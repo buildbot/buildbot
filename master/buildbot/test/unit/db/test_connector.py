@@ -39,7 +39,7 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
             self, wantDb=True, auto_upgrade=False, check_version=False
         )
         self.master.config = MasterConfig()
-        self.db_url = self.master.db.configured_url
+        self.db_url = self.master.db.configured_db_config.db_url
         yield self.master.db._shutdown()
         self.db = connector.DBConnector(os.path.abspath('basedir'))
         yield self.db.set_master(self.master)
@@ -53,7 +53,7 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def startService(self, check_version=False):
-        self.master.config.db['db_url'] = self.db_url
+        self.master.config.db.db_url = self.db_url
         yield self.db.setup(check_version=check_version)
         yield self.db.startService()
         yield self.db.reconfigServiceWithBuildbotConfig(self.master.config)

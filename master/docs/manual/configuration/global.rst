@@ -50,6 +50,21 @@ documented at http://www.sqlalchemy.org/docs/dialects/, but is generally of the 
 This parameter can be specified directly in the configuration dictionary, as ``c['db_url']``,
 although this method is deprecated.
 
+Buildbot also accepts a dictionary at ``c['db']['engine_kwargs']``, this dictionary eventually ends
+up being passed to SQLAlchemy's ``create_engine`` function, see
+https://docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine for details. As an
+example, one may configure the amount of connections opened to PostgreSQL like so:
+
+.. code-block:: python
+
+    c['db'] = {
+        'db_url': "postgresql://username:password@hostname/dbname",
+        'engine_kwargs': {
+	    'pool_size': 512,
+            'max_overflow': 0,
+	},
+    }
+
 The following sections give additional information for particular database backends:
 
 .. index:: SQLite

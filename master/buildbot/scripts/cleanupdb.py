@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 async def doCleanupDatabase(config, master_cfg) -> None:
     if not config['quiet']:
-        print(f"cleaning database ({master_cfg.db['db_url']})")
+        print(f"cleaning database ({master_cfg.db.db_url})")
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg

@@ -76,7 +76,7 @@ class TestedMaster:
 
         # TODO: Allow BuildMaster to transparently upgrade the database, at least
         # for tests.
-        self.master.config.db['db_url'] = config_dict['db_url']
+        self.master.config.db.db_url = config_dict['db_url']
         await self.master.db.setup(check_version=False)
         await self.master.db.model.upgrade()
         self.master.db.setup = lambda: None

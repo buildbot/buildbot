@@ -70,9 +70,9 @@ def _copy_database_in_reactor(config):
     if not master_src_cfg or not master_dst_cfg:
         return 1
 
-    master_dst_cfg.db["db_url"] = config["destination_url"]
+    master_dst_cfg.db.db_url = config["destination_url"]
 
-    print_log(f"Copying database ({master_src_cfg.db['db_url']}) to ({config['destination_url']})")
+    print_log(f"Copying database ({master_src_cfg.db.db_url}) to ({config['destination_url']})")
 
     if not master_src_cfg or not master_dst_cfg:
         return 1

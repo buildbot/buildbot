@@ -145,7 +145,7 @@ class TestCleanupDbRealDb(
         logid = await self.master.db.logs.addLog(102, "x", "x", "s")
         await self.master.db.logs.appendLog(logid, LOGDATA)
 
-        db_url = self.master.db.configured_url
+        db_url = self.master.db.configured_db_config.db_url
 
         # test all methods
         lengths = {}
