@@ -129,6 +129,20 @@ class AsyncMultiService(AsyncService, service.MultiService):
         return defer.succeed(None)
 
 
+class IndependentAsyncMultiService(AsyncMultiService):
+    # Used in cases where lifetime must be managed differently than the parent
+
+    name: str | None  # type: ignore[assignment]
+    _master: None
+
+    def set_master(self, master):
+        self._master = master
+
+    @property
+    def master(self):
+        return self._master
+
+
 class MasterService(AsyncMultiService):
     # master service is the service that stops the master property recursion
 
