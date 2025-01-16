@@ -1025,14 +1025,21 @@ Here is a fully-worked example:
 ForceScheduler Scheduler
 ::::::::::::::::::::::::
 
-The :bb:sched:`ForceScheduler` scheduler is the way you can configure a force build form in the web UI.
+The :bb:sched:`ForceScheduler` scheduler is the to configure a "force build" form in the web UI.
 
-In the ``/#/builders/:builderid`` web page, you will see, on the top right of the page, one button for each :bb:sched:`ForceScheduler` scheduler that was configured for this builder.
-If you click on that button, a dialog will let you choose various parameters for requesting a new build.
+For each configured :bb:sched:`ForceScheduler` instance the builder page at
+``/#/builders/:builderid`` will show a button at the top right of the page.
+If the button is clicked, a dialog will let you choose various parameters for requesting a new build.
 
-The Buildbot framework allows you to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
+The Buildbot framework allows to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
 
-You do so by configuring a :bb:sched:`ForceScheduler` and adding it to the list of :bb:cfg:`schedulers`.
+This is done configuring a :bb:sched:`ForceScheduler` and adding it to the list of
+:bb:cfg:`schedulers`.
+
+The fields visible in the build form are configured by the arguments of ForceScheduler. There are
+some pre-defined parameters, the rest are specified by ``properties`` parameter. All fields are
+configured by a child class of BaseParameter. Use NestedParameter to provide logical groupings for
+parameters.
 
 The scheduler takes the following parameters:
 
@@ -1065,6 +1072,8 @@ The scheduler takes the following parameters:
 
     A list of strings or :ref:`CodebaseParameter <ForceScheduler-Parameters>` specifying the codebases that should be presented.
     The default is a single codebase with no name (i.e. `codebases=['']`).
+    The value of ``None`` will generate a default, but ``CodebaseParameter(codebase='', hide=True)``
+    will remove all codebases
 
 ``properties``
 
