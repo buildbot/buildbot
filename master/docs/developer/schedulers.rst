@@ -57,10 +57,6 @@ When the configuration for a scheduler changes, Buildbot deactivates, stops and 
 Buildbot determines whether a scheduler has changed by subclassing :py:class:`~buildbot.util.ComparableMixin`.
 See the documentation for class for an explanation of the ``compare_attrs`` attribute.
 
-.. note::
-
-    In a future version, schedulers will be converted to handle reconfiguration as reconfigurable services, and will no longer require ``compare_attrs`` to be set.
-
 Becoming Active and Inactive
 ----------------------------
 
