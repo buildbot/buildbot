@@ -1,0 +1,3 @@
+Raising ``NotImplementedError`` from ``reconfigServiceWithSibling`` or
+``reconfigService`` has been deprecated. Use ``canReconfigWithSibling()`` that returns ``False`` as
+a replacement.

@@ -32,6 +32,7 @@ from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
+from buildbot.warnings import warn_deprecated
 
 
 class ReconfigurableServiceMixin:
@@ -549,6 +550,12 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, Reconfig
                 # so we implement switch of child when the service raises NotImplementedError
                 # Note this means that self will stop, and sibling will take ownership
                 # means that we have a small time where the service is unavailable.
+                warn_deprecated(
+                    '4.3.0',
+                    'raising NotImplementedError from '
+                    'reconfigServiceWithSibling() or reconfigService() has been deprecated',
+                )
+
                 yield svc.disownServiceParent()
                 config_sibling.objectid = svc.objectid
                 yield config_sibling.setServiceParent(self)

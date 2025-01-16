@@ -23,6 +23,8 @@ from twisted.trial import unittest
 from buildbot.db.schedulers import SchedulerModel
 from buildbot.schedulers import base
 from buildbot.schedulers import manager
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class SchedulerManager(unittest.TestCase):
@@ -176,7 +178,10 @@ class SchedulerManager(unittest.TestCase):
         sch1_new = self.makeSched(self.Sched, 'sch1', attr='alpha')
         self.new_config.schedulers = {"sch1": sch1_new}
 
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern='.*raising NotImplementedError.*'
+        ):
+            yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sch1 had parameter change but is not reconfigurable, so sch1_new is now the active
         # instance
