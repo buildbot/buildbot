@@ -54,8 +54,6 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-# twisted 16's Service is now an new style class, better put everybody new style
-# to catch issues even on twisted < 16
 class AsyncService(service.Service):
     name: str | None  # type: ignore[assignment]
 
