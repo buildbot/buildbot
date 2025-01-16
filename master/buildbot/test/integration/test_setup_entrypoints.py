@@ -79,6 +79,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.schedulers.timed.Timed',
             'buildbot.schedulers.trysched.TryBase',
             'buildbot.schedulers.base.BaseScheduler',
+            'buildbot.schedulers.base.ReconfigurableBaseScheduler',
             'buildbot.schedulers.timed.NightlyBase',
             'buildbot.schedulers.basic.Scheduler',
         }

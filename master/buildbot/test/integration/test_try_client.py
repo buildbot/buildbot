@@ -151,7 +151,9 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def test_userpass_no_wait(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(
+            trysched.Try_Userpass(name='try', builderNames=['a'], port=0, userpass=[('u', b'p')])
+        )
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -173,7 +175,9 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def test_userpass_wait(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(
+            trysched.Try_Userpass(name='try', builderNames=['a'], port=0, userpass=[('u', b'p')])
+        )
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -199,7 +203,9 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     def test_userpass_wait_bytes(self):
         self.sourcestamp = tryclient.SourceStamp(branch=b'br', revision=b'rr', patch=(0, b'++--'))
 
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(
+            trysched.Try_Userpass(name='try', builderNames=['a'], port=0, userpass=[('u', b'p')])
+        )
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -223,7 +229,9 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def test_userpass_wait_dryrun(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(
+            trysched.Try_Userpass(name='try', builderNames=['a'], port=0, userpass=[('u', b'p')])
+        )
         yield self.runClient({
             'connect': 'pb',
             'master': f'127.0.0.1:{self.serverPort}',
@@ -253,7 +261,9 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     @defer.inlineCallbacks
     def test_userpass_list_builders(self):
-        yield self.startMaster(trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
+        yield self.startMaster(
+            trysched.Try_Userpass(name='try', builderNames=['a'], port=0, userpass=[('u', b'p')])
+        )
         yield self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
@@ -275,7 +285,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_jobdir_no_wait(self):
         jobdir = self.setupJobdir()
-        yield self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
+        yield self.startMaster(trysched.Try_Jobdir(name='try', builderNames=['a'], jobdir=jobdir))
         yield self.runClient({
             'connect': 'ssh',
             'master': '127.0.0.1',
@@ -298,7 +308,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_jobdir_wait(self):
         jobdir = self.setupJobdir()
-        yield self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
+        yield self.startMaster(trysched.Try_Jobdir(name='try', builderNames=['a'], jobdir=jobdir))
         yield self.runClient({
             'connect': 'ssh',
             'wait': True,

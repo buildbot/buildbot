@@ -699,7 +699,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(errors, "scheduler name 'sch' used multiple times")
 
     def test_load_schedulers(self):
-        sch = schedulers_base.BaseScheduler('sch', [""])
+        sch = schedulers_base.ReconfigurableBaseScheduler(name='sch', builderNames=["a"])
         self.cfg.load_schedulers(self.filename, {"schedulers": [sch]})
         self.assertResults(schedulers={"sch": sch})
 

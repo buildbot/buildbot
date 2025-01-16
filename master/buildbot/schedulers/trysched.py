@@ -16,6 +16,7 @@
 import base64
 import json
 import os
+from typing import Any
 from typing import ClassVar
 from typing import Sequence
 
@@ -34,7 +35,7 @@ from buildbot.util.maildir import MaildirService
 from buildbot.util.service import IndependentAsyncMultiService
 
 
-class TryBase(base.BaseScheduler):
+class TryBase(base.ReconfigurableBaseScheduler):
     def filterBuilderList(self, builderNames):
         """
         Make sure that C{builderNames} is a subset of the configured
@@ -83,11 +84,40 @@ class Try_Jobdir(TryBase):
     compare_attrs: ClassVar[Sequence[str]] = ('jobdir',)
 
     def __init__(self, name, builderNames, jobdir, **kwargs):
-        super().__init__(name, builderNames, **kwargs)
-        self.jobdir = jobdir
+        super().__init__(name=name, builderNames=builderNames, jobdir=jobdir, **kwargs)
         self.watcher = JobdirService(scheduler=self)
         self._watcher_parent = IndependentAsyncMultiService()
         self.watcher.setServiceParent(self._watcher_parent)
+
+    def checkConfig(self, builderNames, jobdir, **kwargs: Any):  # type: ignore[override]
+        super().checkConfig(builderNames=builderNames, **kwargs)
+
+    @defer.inlineCallbacks
+    def reconfigService(  # type: ignore[override]
+        self,
+        builderNames,
+        jobdir,
+        **kwargs: Any,
+    ):
+        yield super().reconfigService(builderNames=builderNames, **kwargs)
+        self.jobdir = jobdir
+        self._watcher_parent.set_master(self.master)
+
+        if self.active:
+            self._watcher_parent.stopService()
+            self._start_watcher()
+
+    def _start_watcher(self):
+        # set the watcher's basedir now that we have a master
+        jobdir = os.path.join(self.master.basedir, self.jobdir)
+        self.watcher.setBasedir(jobdir)
+        for subdir in "cur new tmp".split():
+            if not os.path.exists(os.path.join(jobdir, subdir)):
+                os.makedirs(os.path.join(jobdir, subdir))
+
+        # bridge the activate/deactivate to a startService/stopService on the
+        # child service
+        self._watcher_parent.startService()
 
     # activation handlers
 
@@ -98,15 +128,7 @@ class Try_Jobdir(TryBase):
         if not self.enabled:
             return
 
-        # set the watcher's basedir now that we have a master
-        jobdir = os.path.join(self.master.basedir, self.jobdir)
-        self.watcher.setBasedir(jobdir)
-        for subdir in "cur new tmp".split():
-            if not os.path.exists(os.path.join(jobdir, subdir)):
-                os.mkdir(os.path.join(jobdir, subdir))
-
-        self._watcher_parent.set_master(self.master)
-        self._watcher_parent.startService()
+        self._start_watcher()
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -472,18 +494,33 @@ class Try_Userpass(TryBase):
     )
 
     def __init__(self, name, builderNames, port, userpass, **kwargs):
-        super().__init__(name, builderNames, **kwargs)
+        super().__init__(
+            name=name, builderNames=builderNames, port=port, userpass=userpass, **kwargs
+        )
+        self.registrations = []
+
+    def checkConfig(self, builderNames, port, userpass, **kwargs: Any):  # type: ignore[override]
+        super().checkConfig(builderNames=builderNames, **kwargs)
+
+    @defer.inlineCallbacks
+    def reconfigService(  # type: ignore[override]
+        self,
+        builderNames,
+        port,
+        userpass,
+        **kwargs: Any,
+    ):
+        yield super().reconfigService(builderNames=builderNames, **kwargs)
         self.port = port
         self.userpass = userpass
         self.registrations = []
 
+        if self.active:
+            yield self._destroy_pb()
+            yield self._create_pb()
+
     @defer.inlineCallbacks
-    def activate(self):
-        yield super().activate()
-
-        if not self.enabled:
-            return
-
+    def _create_pb(self):
         # register each user/passwd with the pbmanager
         def factory(mind, username):
             return Try_Userpass_Perspective(self, username)
@@ -493,12 +530,26 @@ class Try_Userpass(TryBase):
             self.registrations.append(reg)
 
     @defer.inlineCallbacks
+    def _destroy_pb(self):
+        yield defer.gatherResults(
+            [reg.unregister() for reg in self.registrations], consumeErrors=True
+        )
+        self.registrations = []
+
+    @defer.inlineCallbacks
+    def activate(self):
+        yield super().activate()
+
+        if not self.enabled:
+            return
+
+        yield self._create_pb()
+
+    @defer.inlineCallbacks
     def deactivate(self):
         yield super().deactivate()
 
         if not self.enabled:
             return
 
-        yield defer.gatherResults(
-            [reg.unregister() for reg in self.registrations], consumeErrors=True
-        )
+        yield self._destroy_pb()

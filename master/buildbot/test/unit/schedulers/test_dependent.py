@@ -44,9 +44,9 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
     @defer.inlineCallbacks
     def makeScheduler(self, upstream=None):
         # build a fake upstream scheduler
-        class Upstream(base.BaseScheduler):
+        class Upstream(base.ReconfigurableBaseScheduler):
             def __init__(self, name):
-                self.name = name
+                super().__init__(name=name, builderNames=['a'])
 
         if not upstream:
             upstream = Upstream(UPSTREAM_NAME)
@@ -77,7 +77,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
     @defer.inlineCallbacks
     def test_activate(self):
         sched = yield self.makeScheduler()
-        sched.activate()
+        yield self.master.startService()
 
         self.assertEqual(
             sorted([q.filter for q in sched.master.mq.qrefs]),
@@ -139,8 +139,8 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
             fakedb.Object(id=OBJECTID),
         ])
 
-        sched = yield self.makeScheduler()
-        sched.activate()
+        yield self.makeScheduler()
+        yield self.master.startService()
 
         # announce a buildset with a matching name..
         yield self.db.insert_test_data([

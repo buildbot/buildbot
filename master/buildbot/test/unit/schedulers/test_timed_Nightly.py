@@ -128,6 +128,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
     @defer.inlineCallbacks
     def test_constructor_no_reason(self):
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        yield sched.configureService()
         self.assertEqual(sched.reason, "The Nightly scheduler named 'test' triggered this build")
 
     @defer.inlineCallbacks
@@ -135,6 +136,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', reason="hourly"
         )
+        yield sched.configureService()
         self.assertEqual(sched.reason, "hourly")
 
     @defer.inlineCallbacks
@@ -145,6 +147,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
             branch=None,
             change_filter=filter.ChangeFilter(category_re="fo+o"),
         )
+        yield sched.configureService()
         assert sched.change_filter
 
     @defer.inlineCallbacks
@@ -152,6 +155,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', month='1'
         )
+        yield sched.configureService()
         self.assertEqual(sched.month, "1")
 
     @defer.inlineCallbacks
@@ -159,6 +163,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=None
         )
+        yield sched.configureService()
         self.assertEqual(sched.priority, None)
 
     @defer.inlineCallbacks
@@ -166,6 +171,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=8
         )
+        yield sched.configureService()
         self.assertEqual(sched.priority, 8)
 
     @defer.inlineCallbacks
@@ -176,11 +182,13 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=sched_priority
         )
+        yield sched.configureService()
         self.assertEqual(sched.priority, sched_priority)
 
     @defer.inlineCallbacks
     def test_enabled_callback(self):
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        yield sched.configureService()
         expectedValue = not sched.enabled
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
@@ -220,7 +228,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         # starts at midnight UTC, so be careful not to use times that are
         # timezone dependent -- stick to minutes-past-the-half-hour, as some
         # timezones are multiples of 30 minutes off from UTC
-        sched = yield self.makeScheduler(
+        yield self.makeScheduler(
             name='test', builderNames=['test'], branch=None, minute=[10, 20, 21, 40, 50, 51]
         )
         yield self.mkch(number=19)
@@ -228,7 +236,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         # add a change classification
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {19: True})
 
-        yield sched.activate()
+        yield self.master.startService()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
@@ -278,16 +286,15 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         )
         yield self.assert_state_by_class('test', 'Nightly', last_build=1260 + self.time_offset)
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_iterations_simple_with_branch(self):
         # see timezone warning above
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='master', minute=[5, 35]
         )
+        yield self.master.startService()
 
-        sched.activate()
+        yield sched.activate()
 
         self.reactor.advance(0)
         while self.reactor.seconds() < self.time_offset + 10 * 60:
@@ -310,8 +317,6 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
             ],
         )
         yield self.assert_state_by_class('test', 'Nightly', last_build=300 + self.time_offset)
-
-        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def do_test_iterations_onlyIfChanged(
@@ -338,7 +343,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
 
     @defer.inlineCallbacks
     def do_test_iterations_onlyIfChanged_test(self, fII, changes_at):
-        yield self.sched.activate()
+        yield self.master.startService()
 
         # check that the scheduler has started to consume changes
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=None, onlyImportant=False)

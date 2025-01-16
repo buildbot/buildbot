@@ -404,6 +404,7 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
     def allSchedulers(self):
         return self.schedulers
 
+    @defer.inlineCallbacks
     def make_forcescheduler(self, two=False):
         scheduler = forcesched.ForceScheduler(
             name='force1',
@@ -431,6 +432,8 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
             scheduler2 = forcesched.ForceScheduler(name='force2', builderNames=['builder2'])
             self.schedulers.append(scheduler2)
         self.bot.master.allSchedulers = self.allSchedulers
+        for sched in self.schedulers:
+            yield sched.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def test_command_force_no_schedulers(self):
@@ -438,48 +441,48 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_force_noargs_multiple_schedulers(self):
-        self.make_forcescheduler(two=True)
+        yield self.make_forcescheduler(two=True)
         yield self.do_test_command('force')
         self.assertButton('/force force1')
         self.assertButton('/force force2')
 
     @defer.inlineCallbacks
     def test_command_force_noargs(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force')
         self.assertButton('/force force1 config builder1')
         self.assertButton('/force force1 config builder2')
 
     @defer.inlineCallbacks
     def test_command_force_only_scheduler(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1')
         self.assertButton('/force force1 config builder1')
         self.assertButton('/force force1 config builder2')
 
     @defer.inlineCallbacks
     def test_command_force_bad_scheduler(self):
-        self.make_forcescheduler(two=True)
+        yield self.make_forcescheduler(two=True)
         yield self.do_test_command('force', 'force3', exp_UsageError=True)
 
     @defer.inlineCallbacks
     def test_command_force_bad_builder(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 config builder0', exp_UsageError=True)
 
     @defer.inlineCallbacks
     def test_command_force_bad_command(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 bad builder1', exp_UsageError=True)
 
     @defer.inlineCallbacks
     def test_command_force_only_bad_command(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'bad builder1', exp_UsageError=True)
 
     @defer.inlineCallbacks
     def test_command_force_config(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 config builder1')
         self.assertButton('/force force1 ask reason builder1 ')
         self.assertButton('/force force1 ask branch builder1 ')
@@ -491,19 +494,19 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_force_config_more(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 config builder1 branch=master')
         self.assertButton('/force force1 ask reason builder1 branch=master')
 
     @defer.inlineCallbacks
     def test_command_force_config_nothing_missing(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 config builder1 reason=Ok')
         self.assertButton('/force force1 build builder1 reason=Ok')
 
     @defer.inlineCallbacks
     def test_command_force_ask(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 ask reason builder1 branch=master')
         self.assertEqual(
             self.contact.template, '/force force1 config builder1 branch=master reason={}'
@@ -511,13 +514,13 @@ class TestTelegramContact(ContactMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_force_build_missing(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
         yield self.do_test_command('force', 'force1 build builder1')
         self.assertButton('/force force1 ask reason builder1 ')
 
     @defer.inlineCallbacks
     def test_command_force_build(self):
-        self.make_forcescheduler()
+        yield self.make_forcescheduler()
 
         force_args = {}
 

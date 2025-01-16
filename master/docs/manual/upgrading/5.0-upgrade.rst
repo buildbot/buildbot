@@ -26,6 +26,13 @@ The ``build_files``, ``worker_env`` and ``worker_version`` arguments of
 ``TestBuildStepMixin.setup_step()`` have been removed. As a replacement, call
 ``TestBuildStepMixin.setup_build()`` before ``setup_step``.
 
+Non-reconfigurable services
+===========================
+
+Raising ``NotImplementedError`` from ``reconfigServiceWithSibling`` or ``reconfigService`` service
+functions has been deprecated. Use ``canReconfigWithSibling()`` that returns ``False`` as a
+replacement.
+
 HTTP service
 ============
 
@@ -76,6 +83,9 @@ Schedulers
 
 Old location of ``Dependent`` scheduler has been removed. Instead of
 ``buildbot.schedulers.basic.Dependent`` use ``buildbot.plugins.schedulers.Dependent``.
+
+``buildbot.schedulers.base.BaseScheduler`` has been deprecated. Replace uses of it with
+``buildbot.schedulers.base.ReconfigurableBaseScheduler``.
 
 Reporters
 =========

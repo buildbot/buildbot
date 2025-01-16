@@ -60,6 +60,7 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
+        yield sched.configureService()
         expectedValue = not sched.enabled
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
@@ -456,10 +457,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['branch'], None)
         self.assertEqual(parsedjob['baserev'], None)
 
+    @defer.inlineCallbacks
     def test_parseJob_v3_no_builders(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
+        yield sched.setServiceParent(self.master)
+        yield self.master.startService()
         jobstr = self.makeNetstring(
             '3',
             'extid',
@@ -474,10 +478,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
+    @defer.inlineCallbacks
     def test_parseJob_v3_no_properties(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
+        yield sched.setServiceParent(self.master)
+        yield self.master.startService()
         jobstr = self.makeNetstring(
             '3',
             'extid',
@@ -715,6 +722,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             overrideBuildsetMethods=True,
             createBuilderDB=True,
         )
+        yield self.master.startService()
         fakefile = mock.Mock()
 
         def parseJob_(f):
