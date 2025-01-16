@@ -3,7 +3,7 @@ BaseScheduler
 
 .. py:module:: buildbot.schedulers.base
 
-.. py:class:: BaseScheduler
+.. py:class:: ReconfigurableBaseScheduler
 
     This is the base class for all Buildbot schedulers.
     See :ref:`Writing-Schedulers` for information on writing new schedulers.
@@ -170,3 +170,9 @@ BaseScheduler
         :returns: Deferred
 
         This calls through to :py:meth:`buildbot.db.state.StateConnectorComponent.setState`, using the scheduler's objectid.
+
+
+.. py:class:: BaseScheduler
+
+    This class is legacy counterpart of ``ReconfigurableBaseScheduler``. It does not support
+    reconfiguration.

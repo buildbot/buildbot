@@ -68,11 +68,6 @@ class SchedulerMixin(interfaces.InterfaceTests):
         """
         scheduler.objectid = objectid
 
-        # set up a fake master
-        db = self.db = self.master.db
-        self.mq = self.master.mq
-        scheduler.setServiceParent(self.master)
-
         rows = [
             fakedb.Scheduler(id=schedulerid, name=scheduler.name),
         ]
@@ -82,7 +77,12 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 for i, bname in enumerate(scheduler.builderNames)
             ])
 
-        yield db.insert_test_data(rows)
+        yield self.master.db.insert_test_data(rows)
+
+        # set up a fake master
+        self.db = self.master.db
+        self.mq = self.master.mq
+        yield scheduler.setServiceParent(self.master)
 
         if overrideBuildsetMethods:
             self.assertArgSpecMatches(
@@ -128,7 +128,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
         # patch methods to detect a failure to upcall the activate and
         # deactivate methods .. unless we're testing BaseScheduler
-        def patch(meth):
+        def patch(scheduler_class, meth):
             oldMethod = getattr(scheduler, meth)
 
             @defer.inlineCallbacks
@@ -141,18 +141,35 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
             setattr(scheduler, meth, newMethod)
 
-            oldParent = getattr(base.BaseScheduler, meth)
+            oldParent = getattr(scheduler_class, meth)
 
             def newParent(self_):
                 self._parentMethodCalled = True
                 return oldParent(self_)
 
             self.patch(base.BaseScheduler, meth, newParent)
+            self.patch(base.ReconfigurableBaseScheduler, meth, newParent)
 
-        if scheduler.__class__.activate != base.BaseScheduler.activate:
-            patch('activate')
-        if scheduler.__class__.deactivate != base.BaseScheduler.deactivate:
-            patch('deactivate')
+        if (
+            isinstance(scheduler, base.BaseScheduler)
+            and scheduler.__class__.activate != base.BaseScheduler.activate
+        ):
+            patch(base.BaseScheduler, 'activate')
+        if (
+            isinstance(scheduler, base.BaseScheduler)
+            and scheduler.__class__.deactivate != base.BaseScheduler.deactivate
+        ):
+            patch(base.BaseScheduler, 'deactivate')
+        if (
+            isinstance(scheduler, base.ReconfigurableBaseScheduler)
+            and scheduler.__class__.activate != base.ReconfigurableBaseScheduler.activate
+        ):
+            patch(base.ReconfigurableBaseScheduler, 'activate')
+        if (
+            isinstance(scheduler, base.ReconfigurableBaseScheduler)
+            and scheduler.__class__.deactivate != base.ReconfigurableBaseScheduler.deactivate
+        ):
+            patch(base.ReconfigurableBaseScheduler, 'deactivate')
 
         self.sched = scheduler
         return scheduler

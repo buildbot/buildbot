@@ -455,7 +455,7 @@ For backward compatibility, schedulers that do not support reconfiguration will 
 During a reconfiguration, if a new and old scheduler's fully qualified class names differ, then the old class will be stopped, and the new class will be started.
 This supports the case when a user changes, for example, a :bb:sched:`Nightly` scheduler to a :bb:sched:`Periodic` scheduler without changing the name.
 
-Because Buildbot uses :py:class:`~buildbot.schedulers.base.BaseScheduler` instances directly in the configuration file, a reconfigured scheduler must extract its new configuration information from another instance of itself.
+Because Buildbot uses :py:class:`~buildbot.schedulers.base.ReconfigurableBaseScheduler` instances directly in the configuration file, a reconfigured scheduler must extract its new configuration information from another instance of itself.
 
 Custom Subclasses
 ~~~~~~~~~~~~~~~~~
