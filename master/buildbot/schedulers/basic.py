@@ -263,11 +263,12 @@ class Scheduler(SingleBranchScheduler):
     "alias for SingleBranchScheduler"
 
     def __init__(self, *args, **kwargs):
-        log.msg(
-            "WARNING: the name 'Scheduler' is deprecated; use "
-            + "buildbot.schedulers.basic.SingleBranchScheduler instead "
-            + "(note that this may require you to change your import "
-            + "statement)"
+        warn_deprecated(
+            '4.3.0',
+            (
+                'the name \'Scheduler\' is deprecated; use '
+                'buildbot.schedulers.basic.SingleBranchScheduler instead'
+            ),
         )
         super().__init__(*args, **kwargs)
 
