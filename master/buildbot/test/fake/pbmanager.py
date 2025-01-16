@@ -46,4 +46,4 @@ class FakeRegistration:
         self._pbmanager = pbmanager
 
     def unregister(self):
-        self._pbmanager._unregister(self._portstr, self._username)
+        return self._pbmanager._unregister(self._portstr, self._username)
