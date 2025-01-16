@@ -16,7 +16,6 @@
 from unittest import mock
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import config
@@ -279,7 +278,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_activation(self):
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
-        sched.clock = task.Clock()
         sched.activate = mock.Mock(return_value=defer.succeed(None))
         sched.deactivate = mock.Mock(return_value=defer.succeed(None))
 
@@ -287,9 +285,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         yield self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
         yield sched.startService()
-        sched.clock.advance(sched.POLL_INTERVAL_SEC / 2)
-        sched.clock.advance(sched.POLL_INTERVAL_SEC / 5)
-        sched.clock.advance(sched.POLL_INTERVAL_SEC / 5)
+        self.reactor.advance(sched.POLL_INTERVAL_SEC / 2)
+        self.reactor.advance(sched.POLL_INTERVAL_SEC / 5)
+        self.reactor.advance(sched.POLL_INTERVAL_SEC / 5)
         self.assertFalse(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
         self.assertFalse(sched.isActive())
@@ -300,7 +298,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         yield sched.stopService()
         self.setSchedulerToMaster(None)
         yield sched.startService()
-        sched.clock.advance(sched.POLL_INTERVAL_SEC)
+        self.reactor.advance(sched.POLL_INTERVAL_SEC)
         self.assertTrue(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
         self.assertTrue(sched.isActive())
@@ -314,7 +312,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_activation_claim_raises(self):
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
-        sched.clock = task.Clock()
 
         # set the schedulerid, and claim the scheduler on another master
         self.setSchedulerToMaster(RuntimeError())
@@ -326,7 +323,6 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_activation_activate_fails(self):
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
-        sched.clock = task.Clock()
 
         def activate():
             raise RuntimeError('oh noes')

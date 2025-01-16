@@ -54,8 +54,6 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
             fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])
         ])
 
-        # add a Clock to help checking timing issues
-        sched._reactor = self.reactor
         self.reactor.advance(self.time_offset)
 
         self.addBuildsetCallTimes = []

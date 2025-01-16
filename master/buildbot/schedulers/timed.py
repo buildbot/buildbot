@@ -19,7 +19,6 @@ from typing import Sequence
 
 import croniter
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 from zope.interface import implementer
 
@@ -129,7 +128,6 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
         self.fileIsImportant = fileIsImportant
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
-        self._reactor = reactor  # patched by tests
         self.is_first_build = None
 
     @defer.inlineCallbacks
@@ -301,7 +299,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
 
     def now(self):
         "Similar to util.now, but patchable by tests"
-        return util.now(self._reactor)
+        return util.now(self.master.reactor)
 
     def current_utc_offset(self, tm):
         return (
@@ -331,7 +329,7 @@ class Timed(AbsoluteSourceStampsMixin, base.BaseScheduler):
                     f"{self.__class__.__name__} scheduler <{self.name}>: "
                     "missed scheduled build time - building immediately"
                 )
-            self.actuateAtTimer = self._reactor.callLater(untilNext, self._actuate)
+            self.actuateAtTimer = self.master.reactor.callLater(untilNext, self._actuate)
 
     @defer.inlineCallbacks
     def _actuate(self):

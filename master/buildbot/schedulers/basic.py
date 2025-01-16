@@ -18,7 +18,6 @@ from typing import ClassVar
 from typing import Sequence
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import config
@@ -46,8 +45,6 @@ class BaseBasicScheduler(base.BaseScheduler):
         'onlyImportant',
         'reason',
     )
-
-    _reactor = reactor  # for tests
 
     fileIsImportant = None
     reason = ''
@@ -165,7 +162,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 d = self.stableTimerFired(timer_name)
                 d.addErrback(log.err, "while firing stable timer")
 
-            self._stable_timers[timer_name] = self._reactor.callLater(
+            self._stable_timers[timer_name] = self.master.reactor.callLater(
                 self.treeStableTimer, fire_timer
             )
 
