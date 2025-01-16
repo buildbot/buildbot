@@ -467,10 +467,8 @@ def command_to_string(command):
 
     try:
         len(words)
-    except (AttributeError, TypeError):
+    except TypeError:
         # WithProperties and Property don't have __len__
-        # For old-style classes instances AttributeError raised,
-        # for new-style classes instances - TypeError.
         return None
 
     # flatten any nested lists
