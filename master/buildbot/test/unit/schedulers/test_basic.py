@@ -120,14 +120,14 @@ class BaseBasicScheduler(
     # tests
 
     def test_constructor_positional_exception(self):
-        with self.assertRaises(config.ConfigErrors):
+        with self.assertRaises(TypeError):
             self.Subclass("tsched", "master", 60)
 
     @defer.inlineCallbacks
     def test_activate_no_treeStableTimer(self):
         cf = mock.Mock('cf')
         fII = mock.Mock('fII')
-        sched = yield self.makeScheduler(
+        yield self.makeScheduler(
             self.Subclass, treeStableTimer=None, change_filter=cf, fileIsImportant=fII
         )
 
@@ -138,13 +138,12 @@ class BaseBasicScheduler(
 
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
-        yield sched.activate()
+        yield self.master.startService()
 
         # check that the scheduler has started to consume changes, and the
         # classifications *have* been flushed, since they will not be used
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=cf, onlyImportant=False)
         yield self.assert_classifications(self.SCHEDULERID, {})
-        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_activate_treeStableTimer(self):
@@ -157,7 +156,7 @@ class BaseBasicScheduler(
         ])
         yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
-        yield sched.activate()
+        yield self.master.startService()
 
         # check that the scheduler has started to consume changes, and no
         # classifications have been flushed.  Furthermore, the existing
@@ -167,37 +166,30 @@ class BaseBasicScheduler(
         yield self.assert_classifications(self.SCHEDULERID, {20: True})
         self.assertTrue(sched.timer_started)
         self.reactor.advance(10)
-        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_no_treeStableTimer_unimportant(self):
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=None, branch='master')
-
-        sched.activate()
+        yield self.master.startService()
 
         yield sched.gotChange((yield self.mkch(branch='master', number=13)), False)
 
         self.assertEqual(self.events, [])
-
-        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_no_treeStableTimer_important(self):
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=None, branch='master')
 
-        sched.activate()
+        yield self.master.startService()
 
         yield sched.gotChange((yield self.mkch(branch='master', number=13)), True)
 
         self.assertEqual(self.events, ['B[13]@0'])
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_unimportant(self):
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, branch='master')
-
-        sched.activate()
+        yield self.master.startService()
 
         yield sched.gotChange((yield self.mkch(branch='master', number=13)), False)
 
@@ -205,20 +197,16 @@ class BaseBasicScheduler(
         self.reactor.advance(10)
         self.assertEqual(self.events, [])
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_important(self):
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, branch='master')
 
-        sched.activate()
+        yield self.master.startService()
 
         yield sched.gotChange((yield self.mkch(branch='master', number=13)), True)
         self.reactor.advance(10)
 
         self.assertEqual(self.events, ['B[13]@10'])
-
-        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_sequence(self):
@@ -234,7 +222,7 @@ class BaseBasicScheduler(
             fakedb.Change(changeid=4, branch='master', when_timestamp=4440),
             fakedb.ChangeFile(changeid=4, filename='readme.txt'),
         ])
-        sched.activate()
+        yield self.master.startService()
 
         self.reactor.advance(2220)
 
@@ -271,11 +259,11 @@ class BaseBasicScheduler(
         self.assertEqual(self.events, ['B[1,2,3]@2241'])
         yield self.assert_classifications(self.SCHEDULERID, {})
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_enabled_callback(self):
         sched = yield self.makeScheduler(self.Subclass)
+        yield self.master.startService()
+
         expectedValue = not sched.enabled
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
@@ -365,6 +353,7 @@ class SingleBranchScheduler(
     @defer.inlineCallbacks
     def test_constructor_no_reason(self):
         sched = yield self.makeScheduler(basic.SingleBranchScheduler, branch="master")
+        yield sched.configureService()
         self.assertEqual(
             sched.reason, "The SingleBranchScheduler scheduler named 'tsched' triggered this build"
         )
@@ -374,6 +363,7 @@ class SingleBranchScheduler(
         sched = yield self.makeScheduler(
             basic.SingleBranchScheduler, branch="master", reason="Changeset"
         )
+        yield sched.configureService()
         self.assertEqual(sched.reason, "Changeset")
 
     def test_constructor_branch_mandatory(self):
@@ -395,11 +385,13 @@ class SingleBranchScheduler(
         sched = yield self.makeScheduler(
             basic.SingleBranchScheduler, branch="master", priority=None
         )
+        yield sched.configureService()
         self.assertEqual(sched.priority, None)
 
     @defer.inlineCallbacks
     def test_constructor_priority_int(self):
         sched = yield self.makeScheduler(basic.SingleBranchScheduler, branch="master", priority=8)
+        yield sched.configureService()
         self.assertEqual(sched.priority, 8)
 
     @defer.inlineCallbacks
@@ -410,6 +402,7 @@ class SingleBranchScheduler(
         sched = yield self.makeScheduler(
             basic.SingleBranchScheduler, branch="master", priority=sched_priority
         )
+        yield sched.configureService()
         self.assertEqual(sched.priority, sched_priority)
 
     @defer.inlineCallbacks
@@ -420,15 +413,13 @@ class SingleBranchScheduler(
             basic.SingleBranchScheduler, treeStableTimer=10, branch='master'
         )
 
-        sched.activate()
+        yield self.master.startService()
 
         change = yield self.mkch(branch='master', number=13)
         yield sched.gotChange(change, True)
         self.reactor.advance(10)
 
         self.assertEqual(self.events, ['B[13]@10'])
-
-        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_saveCodebase(self):
@@ -444,8 +435,7 @@ class SingleBranchScheduler(
         yield self.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')
         ])
-
-        yield sched.activate()
+        yield self.master.startService()
 
         yield sched.gotChange(
             (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=1)), True
@@ -472,8 +462,6 @@ class SingleBranchScheduler(
             },
         )
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_older_change(self):
         # check codebase is not stored if it's older than the most recent
@@ -495,7 +483,7 @@ class SingleBranchScheduler(
             ),
         ])
 
-        yield sched.activate()
+        yield self.master.startService()
 
         # this change is not recorded, since it's older than
         # change 20
@@ -515,8 +503,6 @@ class SingleBranchScheduler(
             },
         )
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
         sched = yield self.makeFullScheduler(
@@ -527,6 +513,7 @@ class SingleBranchScheduler(
             codebases=self.codebases,
             createAbsoluteSourceStamps=True,
         )
+        yield self.master.startService()
         sched._lastCodebases = {
             'a': {"branch": 'master', "repository": 'A', "revision": '5555:def', "lastChange": 20}
         }
@@ -546,6 +533,7 @@ class SingleBranchScheduler(
             codebases=self.codebases,
             createAbsoluteSourceStamps=False,
         )
+        yield self.master.startService()
         sched._lastCodebases = {
             'a': {"branch": 'master', "repository": 'A', "revision": '5555:def', "lastChange": 20}
         }
@@ -563,7 +551,7 @@ class SingleBranchScheduler(
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')
         ])
 
-        yield sched.activate()
+        yield self.master.startService()
 
         yield sched.gotChange(
             (yield self.mkch(codebase='a', revision='1234:abc', repository='A', number=10)), True
@@ -586,8 +574,6 @@ class SingleBranchScheduler(
                 )
             ],
         )
-
-        yield sched.deactivate()
 
 
 class AnyBranchScheduler(
@@ -612,7 +598,7 @@ class AnyBranchScheduler(
             basic.AnyBranchScheduler, treeStableTimer=10, branches=['master', 'devel', 'boring']
         )
 
-        sched.activate()
+        yield self.master.startService()
 
         @defer.inlineCallbacks
         def mkch(**kwargs):
@@ -630,8 +616,6 @@ class AnyBranchScheduler(
 
         self.assertEqual(self.events, ['B[500,501]@11', 'B[503]@15'])
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_multiple_repositories(self):
         """Two repositories, even with the same branch name, have different treeStableTimers"""
@@ -639,7 +623,7 @@ class AnyBranchScheduler(
             basic.AnyBranchScheduler, treeStableTimer=10, branches=['master']
         )
 
-        yield sched.activate()
+        yield self.master.startService()
 
         @defer.inlineCallbacks
         def mkch(**kwargs):
@@ -661,8 +645,6 @@ class AnyBranchScheduler(
 
         self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_multiple_projects(self):
         """Two projects, even with the same branch name, have different treeStableTimers"""
@@ -670,7 +652,7 @@ class AnyBranchScheduler(
             basic.AnyBranchScheduler, treeStableTimer=10, branches=['master']
         )
 
-        sched.startService()
+        yield self.master.startService()
 
         @defer.inlineCallbacks
         def mkch(**kwargs):
@@ -690,8 +672,6 @@ class AnyBranchScheduler(
 
         self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
 
-        yield sched.deactivate()
-
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_multiple_codebases(self):
         """Two codebases, even with the same branch name, have different treeStableTimers"""
@@ -699,7 +679,7 @@ class AnyBranchScheduler(
             basic.AnyBranchScheduler, treeStableTimer=10, branches=['master']
         )
 
-        sched.startService()
+        yield self.master.startService()
 
         @defer.inlineCallbacks
         def mkch(**kwargs):
@@ -720,5 +700,3 @@ class AnyBranchScheduler(
         self.reactor.pump([1] * 10)  # time is now 15
 
         self.assertEqual(self.events, ['B[500,501]@11', 'B[502,503]@15'])
-
-        yield sched.deactivate()
