@@ -1,0 +1,2 @@
+``buildbot.schedulers.base.BaseScheduler`` has been deprecated. Replace uses of it with
+``ReconfigurableBaseScheduler``.

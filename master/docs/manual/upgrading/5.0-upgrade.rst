@@ -84,6 +84,9 @@ Schedulers
 Old location of ``Dependent`` scheduler has been removed. Instead of
 ``buildbot.schedulers.basic.Dependent`` use ``buildbot.plugins.schedulers.Dependent``.
 
+``buildbot.schedulers.base.BaseScheduler`` has been deprecated. Replace uses of it with
+``buildbot.schedulers.base.ReconfigurableBaseScheduler``.
+
 Reporters
 =========
 

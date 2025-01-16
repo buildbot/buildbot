@@ -44,9 +44,9 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
     @defer.inlineCallbacks
     def makeScheduler(self, upstream=None):
         # build a fake upstream scheduler
-        class Upstream(base.BaseScheduler):
+        class Upstream(base.ReconfigurableBaseScheduler):
             def __init__(self, name):
-                self.name = name
+                super().__init__(name=name, builderNames=['a'])
 
         if not upstream:
             upstream = Upstream(UPSTREAM_NAME)

@@ -23,7 +23,7 @@ from twisted.trial import unittest
 from buildbot.db.schedulers import SchedulerModel
 from buildbot.schedulers import base
 from buildbot.schedulers import manager
-from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
@@ -103,7 +103,10 @@ class SchedulerManager(unittest.TestCase):
         pass
 
     def makeSched(self, cls, name, attr='alpha'):
-        sch = cls(name=name, builderNames=['x'], properties={})
+        with assertProducesWarnings(
+            DeprecatedApiWarning, message_pattern='.*BaseScheduler has been deprecated.*'
+        ):
+            sch = cls(name=name, builderNames=['x'], properties={})
         sch.attr = attr
         return sch
 

@@ -27,6 +27,7 @@ from buildbot.changes import changes
 from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
+from buildbot.warnings import warn_deprecated
 
 
 @implementer(interfaces.IScheduler)
@@ -41,6 +42,11 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     )
 
     def __init__(self, name, builderNames, properties=None, codebases=None, priority=None):
+        warn_deprecated(
+            '4.3.0',
+            'BaseScheduler has been deprecated, use ReconfigurableBaseScheduler',
+        )
+
         super().__init__(name=name)
         if codebases is None:
             codebases = self.DEFAULT_CODEBASES.copy()

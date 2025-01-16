@@ -28,6 +28,8 @@ from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class TestReconfigurableBaseScheduler(
@@ -926,10 +928,15 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
             yield self.master.db.insert_test_data(dbBuilder)
 
-        sched = yield self.attachScheduler(
-            base.BaseScheduler(
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern="",
+        ):
+            sched = base.BaseScheduler(
                 name=name, builderNames=builderNames, properties=properties, codebases=codebases
-            ),
+            )
+        sched = yield self.attachScheduler(
+            sched,
             self.OBJECTID,
             self.SCHEDULERID,
         )
