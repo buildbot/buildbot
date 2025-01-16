@@ -651,6 +651,7 @@ class ForceScheduler(base.BaseScheduler):
         "reason",
         "username",
         "forcedProperties",
+        "forced_priority",
     )
 
     def __init__(
@@ -745,7 +746,7 @@ class ForceScheduler(base.BaseScheduler):
             priority = IntParameter(name="priority", default=0)
 
         if self.checkIfType(priority, IntParameter):
-            self.priority = priority
+            self.forced_priority = priority
         else:
             config.error(f"ForceScheduler '{name}': priority must be a IntParameter: {priority!r}")
 
@@ -837,7 +838,7 @@ class ForceScheduler(base.BaseScheduler):
             )
 
         priority = yield collector.collectValidationErrors(
-            self.priority.fullName, self.priority.getFromKwargs, kwargs
+            self.forced_priority.fullName, self.forced_priority.getFromKwargs, kwargs
         )
 
         properties, _, sourcestamps = yield self.gatherPropertiesAndChanges(collector, **kwargs)
