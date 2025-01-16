@@ -193,6 +193,9 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.setUpEndpoint()
         scheds = [ForceScheduler(name="defaultforce", builderNames=["builder"])]
         self.master.allSchedulers = lambda: scheds
+        for sched in scheds:
+            yield sched.setServiceParent(self.master)
+        yield self.master.startService()
 
     @defer.inlineCallbacks
     def test_get_existing(self):
@@ -216,6 +219,9 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.setUpEndpoint()
         scheds = [ForceScheduler(name="defaultforce", builderNames=["builder"])]
         self.master.allSchedulers = lambda: scheds
+        for sched in scheds:
+            yield sched.setServiceParent(self.master)
+        yield self.master.startService()
 
     @defer.inlineCallbacks
     def test_get_existing(self):

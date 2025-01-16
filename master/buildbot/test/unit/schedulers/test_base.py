@@ -27,10 +27,11 @@ from buildbot.schedulers import base
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
+from buildbot.test.util.config import ConfigErrorsMixin
 
 
 class TestReconfigurableBaseScheduler(
-    scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
+    scheduler.SchedulerMixin, ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     OBJECTID = 19
     SCHEDULERID = 9
@@ -97,6 +98,27 @@ class TestReconfigurableBaseScheduler(
             return ['a']
 
         yield self.makeScheduler(builderNames=names)
+
+    @defer.inlineCallbacks
+    def test_integer_builderNames(self):
+        with self.assertRaisesConfigError(
+            "builderNames argument to a scheduler must be a list of Builder names"
+        ):
+            yield self.makeScheduler(builderNames=1234)
+
+    @defer.inlineCallbacks
+    def test_listofints_builderNames(self):
+        with self.assertRaisesConfigError(
+            "builderNames argument to a scheduler must be a list of Builder names"
+        ):
+            yield self.makeScheduler(builderNames=[1234])
+
+    @defer.inlineCallbacks
+    def test_listofmixed_builderNames(self):
+        with self.assertRaisesConfigError(
+            "builderNames argument to a scheduler must be a list of Builder names"
+        ):
+            yield self.makeScheduler(builderNames=['test', 1234])
 
     @defer.inlineCallbacks
     def test_constructor_codebases_valid(self):

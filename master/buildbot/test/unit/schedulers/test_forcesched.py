@@ -169,6 +169,7 @@ class TestForceScheduler(
     @defer.inlineCallbacks
     def test_basicForce(self):
         sched = yield self.makeScheduler()
+        yield self.master.startService()
 
         res = yield sched.force(
             'user',
@@ -214,6 +215,7 @@ class TestForceScheduler(
     def test_basicForce_reasonString(self):
         """Same as above, but with a reasonString"""
         sched = yield self.makeScheduler(reasonString='%(owner)s wants it %(reason)s')
+        yield self.master.startService()
 
         res = yield sched.force(
             'user',
@@ -260,6 +262,7 @@ class TestForceScheduler(
     @defer.inlineCallbacks
     def test_force_allBuilders(self):
         sched = yield self.makeScheduler()
+        yield self.master.startService()
 
         res = yield sched.force(
             'user',
@@ -301,6 +304,7 @@ class TestForceScheduler(
     @defer.inlineCallbacks
     def test_force_someBuilders(self):
         sched = yield self.makeScheduler(builderNames=['a', 'b', 'c'])
+        yield self.master.startService()
 
         res = yield sched.force(
             'user',
@@ -380,6 +384,7 @@ class TestForceScheduler(
     @defer.inlineCallbacks
     def test_good_codebases(self):
         sched = yield self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
+        yield self.master.startService()
         yield sched.force(
             'user',
             builderNames=['a'],
@@ -435,6 +440,7 @@ class TestForceScheduler(
         sched = yield self.makeScheduler(
             codebases=['foo', CodebaseParameter('bar', patch=PatchParameter())]
         )
+        yield self.master.startService()
         yield sched.force(
             'user',
             builderNames=['a'],
@@ -550,6 +556,7 @@ class TestForceScheduler(
             self.assertEqual(gotSpec, expectSpec)
 
         sched = yield self.makeScheduler(properties=[prop])
+        yield self.master.startService()
 
         if not req:
             req = {name: value, 'reason': 'because'}
@@ -920,10 +927,6 @@ class TestForceScheduler(
         ):
             ForceScheduler(name='testsched', builderNames=[], codebases=['bar'], username="foo")
 
-    def test_notstring_name(self):
-        with self.assertRaisesConfigError("ForceScheduler name must be a unicode string:"):
-            ForceScheduler(name=1234, builderNames=[], codebases=['bar'], username="foo")
-
     def test_notidentifier_name(self):
         # FIXME: this test should be removed eventually when bug 3460 gets a
         # real fix
@@ -936,29 +939,6 @@ class TestForceScheduler(
         with self.assertRaisesConfigError("ForceScheduler name must not be empty:"):
             ForceScheduler(name='', builderNames=[], codebases=['bar'], username="foo")
 
-    def test_integer_builderNames(self):
-        with self.assertRaisesConfigError(
-            "ForceScheduler 'testsched': builderNames must be a list of strings:"
-        ):
-            ForceScheduler(name='testsched', builderNames=1234, codebases=['bar'], username="foo")
-
-    def test_listofints_builderNames(self):
-        with self.assertRaisesConfigError(
-            "ForceScheduler 'testsched': builderNames must be a list of strings:"
-        ):
-            ForceScheduler(name='testsched', builderNames=[1234], codebases=['bar'], username="foo")
-
-    def test_listofunicode_builderNames(self):
-        ForceScheduler(name='testsched', builderNames=['a', 'b'])
-
-    def test_listofmixed_builderNames(self):
-        with self.assertRaisesConfigError(
-            "ForceScheduler 'testsched': builderNames must be a list of strings:"
-        ):
-            ForceScheduler(
-                name='testsched', builderNames=['test', 1234], codebases=['bar'], username="foo"
-            )
-
     def test_integer_properties(self):
         with self.assertRaisesConfigError(
             "ForceScheduler 'testsched': properties must be a list of BaseParameters:"
@@ -966,8 +946,6 @@ class TestForceScheduler(
             ForceScheduler(
                 name='testsched',
                 builderNames=[],
-                codebases=['bar'],
-                username="foo",
                 properties=1234,
             )
 
@@ -978,8 +956,6 @@ class TestForceScheduler(
             ForceScheduler(
                 name='testsched',
                 builderNames=[],
-                codebases=['bar'],
-                username="foo",
                 properties=[1234, 2345],
             )
 
@@ -990,8 +966,6 @@ class TestForceScheduler(
             ForceScheduler(
                 name='testsched',
                 builderNames=[],
-                codebases=['bar'],
-                username="foo",
                 properties=[
                     BaseParameter(
                         name="test",

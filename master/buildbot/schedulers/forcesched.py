@@ -639,14 +639,14 @@ class PatchParameter(NestedParameter):
         super().__init__(name, fields=fields, **kwargs)
 
 
-class ForceScheduler(base.BaseScheduler):
+class ForceScheduler(base.ReconfigurableBaseScheduler):
     """
     ForceScheduler implements the backend for a UI to allow customization of
     builds. For example, a web form be populated to trigger a build.
     """
 
     compare_attrs: ClassVar[Sequence[str]] = (
-        *base.BaseScheduler.compare_attrs,
+        *base.ReconfigurableBaseScheduler.compare_attrs,
         "builderNames",
         "reason",
         "username",
@@ -654,9 +654,11 @@ class ForceScheduler(base.BaseScheduler):
         "forced_priority",
     )
 
-    def __init__(
+    def __init__(self, name, builderNames, **kwargs):
+        super().__init__(name=name, builderNames=builderNames, **kwargs)
+
+    def checkConfig(  # type: ignore[override]
         self,
-        name,
         builderNames,
         username: UserNameParameter | None = None,
         reason: StringParameter | None = None,
@@ -666,89 +668,105 @@ class ForceScheduler(base.BaseScheduler):
         label=None,
         properties=None,
         priority: IntParameter | None = None,
+        **kwargs: Any,
     ):
-        if not self.checkIfType(name, str):
-            config.error(f"ForceScheduler name must be a unicode string: {name!r}")
+        super().checkConfig(builderNames=builderNames, **kwargs)
 
-        if not name:
-            config.error(f"ForceScheduler name must not be empty: {name!r}")
+        if not self.name:
+            config.error(f"ForceScheduler name must not be empty: {self.name!r}")
 
-        if not identifiers.ident_re.match(name):
-            config.error(f"ForceScheduler name must be an identifier: {name!r}")
+        assert self.name is not None
+
+        if not identifiers.ident_re.match(self.name):
+            config.error(f"ForceScheduler name must be an identifier: {self.name!r}")
 
         if not self.checkIfListOfType(builderNames, (str,)):
             config.error(
-                f"ForceScheduler '{name}': builderNames must be a list of strings: {builderNames!r}"
+                f"ForceScheduler '{self.name}': builderNames must be a list of strings: {builderNames!r}"
             )
 
-        if reason is None:
-            reason = StringParameter(name="reason", default="force build", size=20)
-
-        if self.checkIfType(reason, BaseParameter):
-            self.reason = reason
-        else:
-            config.error(f"ForceScheduler '{name}': reason must be a StringParameter: {reason!r}")
-
-        if properties is None:
-            properties = []
-        if not self.checkIfListOfType(properties, BaseParameter):
+        if username is not None and not self.checkIfType(username, BaseParameter):
             config.error(
-                f"ForceScheduler '{name}': properties must be "
+                f"ForceScheduler '{self.name}': username must be a StringParameter: {username!r}"
+            )
+
+        if reason is not None and not self.checkIfType(reason, BaseParameter):
+            config.error(
+                f"ForceScheduler '{self.name}': reason must be a StringParameter: {reason!r}"
+            )
+
+        if properties is not None and not self.checkIfListOfType(properties, BaseParameter):
+            config.error(
+                f"ForceScheduler '{self.name}': properties must be "
                 f"a list of BaseParameters: {properties!r}"
             )
 
+        if priority is not None and not self.checkIfType(priority, IntParameter):
+            config.error(
+                f"ForceScheduler '{self.name}': priority must be a IntParameter: {priority!r}"
+            )
+
+        if codebases is not None:
+            if not codebases:
+                config.error(
+                    f"ForceScheduler '{self.name}': 'codebases' cannot be empty;"
+                    f" use [CodebaseParameter(codebase='', hide=True)] if needed: "
+                    f"{codebases!r} "
+                )
+            if not isinstance(codebases, list):
+                config.error(
+                    f"ForceScheduler '{self.name}': 'codebases' should be a list of strings "
+                    f"or CodebaseParameter, not {type(codebases)}"
+                )
+
+            for codebase in codebases:
+                if not isinstance(codebase, (str, CodebaseParameter)):
+                    config.error(
+                        f"ForceScheduler '{self.name}': 'codebases' must be a list of strings "
+                        f"or CodebaseParameter objects: {codebases!r}"
+                    )
+
+    @defer.inlineCallbacks
+    def reconfigService(  # type: ignore[override]
+        self,
+        builderNames,
+        username: UserNameParameter | None = None,
+        reason: StringParameter | None = None,
+        reasonString="A build was forced by '%(owner)s': %(reason)s",
+        buttonName=None,
+        codebases=None,
+        label=None,
+        properties=None,
+        priority: IntParameter | None = None,
+        **kwargs: Any,
+    ):
+        if reason is None:
+            reason = StringParameter(name="reason", default="force build", size=20)
+        self.reason = reason
+
         if username is None:
             username = UserNameParameter()
+        self.username = username
 
-        if self.checkIfType(username, BaseParameter):
-            self.username = username
-        else:
-            config.error(
-                f"ForceScheduler '{name}': username must be a StringParameter: {username!r}"
-            )
+        if priority is None:
+            priority = IntParameter(name="priority", default=0)
+        self.forced_priority = priority
+
+        self.label = self.name if label is None else label
 
         self.forcedProperties = []
-        self.label = name if label is None else label
-
-        # Use the default single codebase form if none are provided
         if codebases is None:
             codebases = [CodebaseParameter(codebase='')]
-        elif not codebases:
-            config.error(
-                f"ForceScheduler '{name}': 'codebases' cannot be empty;"
-                f" use [CodebaseParameter(codebase='', hide=True)] if needed: "
-                f"{codebases!r} "
-            )
-        elif not isinstance(codebases, list):
-            config.error(
-                f"ForceScheduler '{name}': 'codebases' should be a list of strings "
-                f"or CodebaseParameter, not {type(codebases)}"
-            )
 
         codebase_dict = {}
         for codebase in codebases:
             if isinstance(codebase, str):
                 codebase = CodebaseParameter(codebase=codebase)
-            elif not isinstance(codebase, CodebaseParameter):
-                config.error(
-                    f"ForceScheduler '{name}': 'codebases' must be a list of strings "
-                    f"or CodebaseParameter objects: {codebases!r}"
-                )
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = {"branch": '', "repository": '', "revision": ''}
 
-        super().__init__(
-            name=name, builderNames=builderNames, properties={}, codebases=codebase_dict
-        )
-
-        if priority is None:
-            priority = IntParameter(name="priority", default=0)
-
-        if self.checkIfType(priority, IntParameter):
-            self.forced_priority = priority
-        else:
-            config.error(f"ForceScheduler '{name}': priority must be a IntParameter: {priority!r}")
+        yield super().reconfigService(builderNames=builderNames, codebases=codebase_dict, **kwargs)
 
         if properties:
             self.forcedProperties.extend(properties)
@@ -758,7 +776,7 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
-        self.buttonName = buttonName or name
+        self.buttonName = buttonName or self.name
 
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)
