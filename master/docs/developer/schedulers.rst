@@ -14,12 +14,6 @@ Each scheduler has a unique name, and within a Buildbot cluster, can be active o
 If a scheduler is configured on multiple masters, it will be inactive on all but one master.
 This provides a form of non-revertive failover for schedulers: if an active scheduler's master fails, an inactive instance of that scheduler on another master will become active.
 
-API Stability
--------------
-
-Until Buildbot reaches version 1.0.0, API stability is not guaranteed.
-The instructions in this document may change incompatibly until that time.
-
 Implementing A Scheduler
 ------------------------
 
