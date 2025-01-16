@@ -80,6 +80,7 @@ class NightlyTriggerable(
     @defer.inlineCallbacks
     def test_constructor_no_reason(self):
         sched = yield self.makeScheduler(name='test', builderNames=['test'])
+        yield sched.configureService()
         self.assertEqual(
             sched.reason, "The NightlyTriggerable scheduler named 'test' triggered this build"
         )
@@ -89,18 +90,20 @@ class NightlyTriggerable(
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], reason="hourlytriggerable"
         )
+        yield sched.configureService()
         self.assertEqual(sched.reason, "hourlytriggerable")
 
     @defer.inlineCallbacks
     def test_constructor_month(self):
         sched = yield self.makeScheduler(name='test', builderNames=['test'], month='1')
+        yield sched.configureService()
         self.assertEqual(sched.month, "1")
 
     @defer.inlineCallbacks
     def test_timer_noBuilds(self):
-        sched = yield self.makeScheduler(name='test', builderNames=['test'], minute=[5])
+        yield self.makeScheduler(name='test', builderNames=['test'], minute=[5])
+        yield self.master.startService()
 
-        sched.activate()
         self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertEqual(self.addBuildsetCalls, [])
@@ -113,8 +116,7 @@ class NightlyTriggerable(
             minute=[5],
             codebases={'cb': {'repository': 'annoying'}},
         )
-
-        sched.activate()
+        yield self.master.startService()
 
         sched.trigger(
             False,
@@ -153,7 +155,7 @@ class NightlyTriggerable(
             codebases={'cb': {'repository': 'annoying'}},
         )
 
-        sched.activate()
+        yield self.master.startService()
 
         sched.trigger(
             False,
@@ -206,7 +208,7 @@ class NightlyTriggerable(
             codebases={'cb': {'repository': 'annoying'}},
         )
 
-        sched.activate()
+        yield self.master.startService()
 
         sched.trigger(
             False,
@@ -250,7 +252,7 @@ class NightlyTriggerable(
             codebases={'cb': {'repository': 'annoying'}},
         )
 
-        sched.activate()
+        yield self.master.startService()
 
         sched.trigger(
             False,
@@ -310,7 +312,7 @@ class NightlyTriggerable(
 
     @defer.inlineCallbacks
     def test_savedTrigger(self):
-        sched = yield self.makeScheduler(
+        yield self.makeScheduler(
             name='test',
             builderNames=['test'],
             minute=[5],
@@ -329,7 +331,7 @@ class NightlyTriggerable(
             ),
         ])
 
-        sched.activate()
+        yield self.master.startService()
 
         self.reactor.advance(60 * 60)  # Run for 1h
 
@@ -347,7 +349,7 @@ class NightlyTriggerable(
 
     @defer.inlineCallbacks
     def test_savedTrigger_dict(self):
-        sched = yield self.makeScheduler(
+        yield self.makeScheduler(
             name='test',
             builderNames=['test'],
             minute=[5],
@@ -365,7 +367,7 @@ class NightlyTriggerable(
             ),
         ])
 
-        sched.activate()
+        yield self.master.startService()
 
         self.reactor.advance(60 * 60)  # Run for 1h
 
@@ -393,7 +395,7 @@ class NightlyTriggerable(
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
-        sched.activate()
+        yield self.master.startService()
 
         _, d = sched.trigger(
             False,
@@ -440,7 +442,7 @@ class NightlyTriggerable(
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
-        sched.activate()
+        yield self.master.startService()
 
         _, d = sched.trigger(
             False,
@@ -473,7 +475,7 @@ class NightlyTriggerable(
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
-        sched.activate()
+        yield self.master.startService()
 
         sched.trigger(
             False,
@@ -524,7 +526,7 @@ class NightlyTriggerable(
 
     @defer.inlineCallbacks
     def test_savedProperties(self):
-        sched = yield self.makeScheduler(
+        yield self.makeScheduler(
             name='test',
             builderNames=['test'],
             minute=[5],
@@ -543,7 +545,7 @@ class NightlyTriggerable(
             ),
         ])
 
-        sched.activate()
+        yield self.master.startService()
 
         self.reactor.advance(60 * 60)  # Run for 1h
 
