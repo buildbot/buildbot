@@ -147,15 +147,6 @@ class BaseBasicScheduler(
         yield sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_subclass_fileIsImportant(self):
-        class Subclass(self.Subclass):
-            def fileIsImportant(self, change):
-                return False
-
-        sched = yield self.makeScheduler(Subclass, onlyImportant=True)
-        self.assertEqual(Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
-
-    @defer.inlineCallbacks
     def test_activate_treeStableTimer(self):
         cf = mock.Mock()
         sched = yield self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
