@@ -19,6 +19,8 @@ from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 
 from buildbot import config
 from buildbot import util
@@ -28,6 +30,7 @@ from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
+from buildbot.warnings import warn_deprecated
 
 
 class BaseBasicScheduler(base.BaseScheduler):
@@ -294,3 +297,10 @@ class AnyBranchScheduler(BaseBasicScheduler):
 
 # now at buildbot.schedulers.dependent, but keep the old name alive
 Dependent = dependent.Dependent
+
+deprecatedModuleAttribute(
+    Version('buildbot', 4, 3, 0),
+    message='Use buildbot.schedulers.dependent.Dependent',
+    moduleName='buildbot.schedulers.basic',
+    name='Dependent',
+)
