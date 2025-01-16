@@ -153,6 +153,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.service.BuildbotService',
             'buildbot.util.service.BuildbotServiceManager',
             'buildbot.util.service.ClusteredBuildbotService',
+            'buildbot.util.service.IndependentAsyncMultiService',
             'buildbot.util.service.MasterService',
             'buildbot.util.service.ReconfigurableServiceMixin',
             'buildbot.util.service.SharedService',

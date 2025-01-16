@@ -31,6 +31,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import netstrings
 from buildbot.util import unicode2bytes
 from buildbot.util.maildir import MaildirService
+from buildbot.util.service import IndependentAsyncMultiService
 
 
 class TryBase(base.BaseScheduler):
@@ -85,16 +86,8 @@ class Try_Jobdir(TryBase):
         super().__init__(name, builderNames, **kwargs)
         self.jobdir = jobdir
         self.watcher = JobdirService(scheduler=self)
-
-    # TryBase used to be a MultiService and managed the JobdirService via a parent/child
-    # relationship. We stub out the addService/removeService and just keep track of
-    # JobdirService as self.watcher. We'll refactor these things later and remove
-    # the need for this.
-    def addService(self, child):
-        pass
-
-    def removeService(self, child):
-        pass
+        self._watcher_parent = IndependentAsyncMultiService()
+        self.watcher.setServiceParent(self._watcher_parent)
 
     # activation handlers
 
@@ -112,9 +105,8 @@ class Try_Jobdir(TryBase):
             if not os.path.exists(os.path.join(jobdir, subdir)):
                 os.mkdir(os.path.join(jobdir, subdir))
 
-        # bridge the activate/deactivate to a startService/stopService on the
-        # child service
-        self.watcher.startService()
+        self._watcher_parent.set_master(self.master)
+        self._watcher_parent.startService()
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -123,9 +115,7 @@ class Try_Jobdir(TryBase):
         if not self.enabled:
             return
 
-        # bridge the activate/deactivate to a startService/stopService on the
-        # child service
-        self.watcher.stopService()
+        self._watcher_parent.stopService()
 
     def parseJob(self, f):
         # jobfiles are serialized build requests. Each is a list of

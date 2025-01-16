@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.process import properties
@@ -40,10 +39,6 @@ class NightlyTriggerable(
             overrideBuildsetMethods=True,
             createBuilderDB=True,
         )
-
-        # add a Clock to help checking timing issues
-        self.clock = sched._reactor = task.Clock()
-
         return sched
 
     @defer.inlineCallbacks
@@ -106,7 +101,7 @@ class NightlyTriggerable(
         sched = yield self.makeScheduler(name='test', builderNames=['test'], minute=[5])
 
         sched.activate()
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertEqual(self.addBuildsetCalls, [])
 
@@ -135,7 +130,7 @@ class NightlyTriggerable(
             set_props=None,
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -187,7 +182,7 @@ class NightlyTriggerable(
             set_props=None,
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -227,7 +222,7 @@ class NightlyTriggerable(
             set_props=None,
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -241,7 +236,7 @@ class NightlyTriggerable(
             ]
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         # no trigger, so the second did not build
         self.assertNoBuildsetAdded()
@@ -271,7 +266,7 @@ class NightlyTriggerable(
             set_props=None,
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -299,7 +294,7 @@ class NightlyTriggerable(
             set_props=None,
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -336,7 +331,7 @@ class NightlyTriggerable(
 
         sched.activate()
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -372,7 +367,7 @@ class NightlyTriggerable(
 
         sched.activate()
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             sourcestamps=[
@@ -461,7 +456,7 @@ class NightlyTriggerable(
             set_props=None,
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         yield d
         yield self.assert_state(self.SCHEDULERID, lastTrigger=None)
@@ -512,7 +507,7 @@ class NightlyTriggerable(
             ],
         )
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             properties={"testprop": ('test', 'TEST')},
@@ -550,7 +545,7 @@ class NightlyTriggerable(
 
         sched.activate()
 
-        self.clock.advance(60 * 60)  # Run for 1h
+        self.reactor.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
             properties={'testprop': ('test', 'TEST')},

@@ -16,6 +16,7 @@
 
 from twisted.trial import unittest
 
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
 
@@ -48,7 +49,8 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.scheduler import AnyBranchScheduler  # noqa: F401
 
     def test_scheduler_basic_Dependent(self):
-        from buildbot.schedulers.basic import Dependent  # noqa: F401
+        with assertProducesWarnings(DeprecationWarning, message_pattern='.*was deprecated.*'):
+            from buildbot.schedulers.basic import Dependent  # noqa: F401
 
     def test_scheduler_Dependent(self):
         from buildbot.scheduler import Dependent  # noqa: F401

@@ -71,6 +71,12 @@ The following functions have been affected:
 ``DataConnector.produceEvent()`` has been deprecated. The replacement is update methods from the
 data API.
 
+Schedulers
+==========
+
+Old location of ``Dependent`` scheduler has been removed. Instead of
+``buildbot.schedulers.basic.Dependent`` use ``buildbot.plugins.schedulers.Dependent``.
+
 Reporters
 =========
 

@@ -651,6 +651,7 @@ class ForceScheduler(base.BaseScheduler):
         "reason",
         "username",
         "forcedProperties",
+        "forced_priority",
     )
 
     def __init__(
@@ -666,41 +667,6 @@ class ForceScheduler(base.BaseScheduler):
         properties=None,
         priority: IntParameter | None = None,
     ):
-        """
-        Initialize a ForceScheduler.
-
-        The UI will provide a set of fields to the user; these fields are
-        driven by a corresponding child class of BaseParameter.
-
-        Use NestedParameter to provide logical groupings for parameters.
-
-        The branch/revision/repository/project fields are deprecated and
-        provided only for backwards compatibility. Using a Codebase(name='')
-        will give the equivalent behavior.
-
-        @param name: name of this scheduler (used as a key for state)
-        @type name: unicode
-
-        @param builderNames: list of builders this scheduler may start
-        @type builderNames: list of unicode
-
-        @param username: the "owner" for a build (may not be shown depending
-                         on the Auth configuration for the master)
-        @type username: BaseParameter
-
-        @param reason: the "reason" for a build
-        @type reason: BaseParameter
-
-        @param codebases: the codebases for a build
-        @type codebases: list of string's or CodebaseParameter's;
-                         None will generate a default, but
-                         CodebaseParameter(codebase='', hide=True)
-                         will remove all codebases
-
-        @param properties: extra properties to configure the build
-        @type properties: list of BaseParameter's
-        """
-
         if not self.checkIfType(name, str):
             config.error(f"ForceScheduler name must be a unicode string: {name!r}")
 
@@ -780,7 +746,7 @@ class ForceScheduler(base.BaseScheduler):
             priority = IntParameter(name="priority", default=0)
 
         if self.checkIfType(priority, IntParameter):
-            self.priority = priority
+            self.forced_priority = priority
         else:
             config.error(f"ForceScheduler '{name}': priority must be a IntParameter: {priority!r}")
 
@@ -872,7 +838,7 @@ class ForceScheduler(base.BaseScheduler):
             )
 
         priority = yield collector.collectValidationErrors(
-            self.priority.fullName, self.priority.getFromKwargs, kwargs
+            self.forced_priority.fullName, self.forced_priority.getFromKwargs, kwargs
         )
 
         properties, _, sourcestamps = yield self.gatherPropertiesAndChanges(collector, **kwargs)

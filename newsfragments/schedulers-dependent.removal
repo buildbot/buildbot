@@ -1,0 +1,2 @@
+Old location of ``Dependent`` scheduler has been deprecated. Instead of
+``buildbot.schedulers.basic.Dependent`` use ``buildbot.plugins.schedulers.Dependent``.

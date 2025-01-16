@@ -83,6 +83,7 @@ class MaildirService(service.BuildbotService):
             log.msg("DNotify failed, falling back to polling")
         if not self.dnotify:
             self.timerService = internet.TimerService(self.pollInterval, self.poll)
+            self.timerService.clock = self.master.reactor
             yield self.timerService.setServiceParent(self)
         self.poll()
         yield super().startService()

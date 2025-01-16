@@ -54,8 +54,6 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-# twisted 16's Service is now an new style class, better put everybody new style
-# to catch issues even on twisted < 16
 class AsyncService(service.Service):
     name: str | None  # type: ignore[assignment]
 
@@ -129,6 +127,20 @@ class AsyncMultiService(AsyncService, service.MultiService):
             service.privilegedStartService()
             return service.startService()
         return defer.succeed(None)
+
+
+class IndependentAsyncMultiService(AsyncMultiService):
+    # Used in cases where lifetime must be managed differently than the parent
+
+    name: str | None  # type: ignore[assignment]
+    _master: None
+
+    def set_master(self, master):
+        self._master = master
+
+    @property
+    def master(self):
+        return self._master
 
 
 class MasterService(AsyncMultiService):

@@ -14,12 +14,6 @@ Each scheduler has a unique name, and within a Buildbot cluster, can be active o
 If a scheduler is configured on multiple masters, it will be inactive on all but one master.
 This provides a form of non-revertive failover for schedulers: if an active scheduler's master fails, an inactive instance of that scheduler on another master will become active.
 
-API Stability
--------------
-
-Until Buildbot reaches version 1.0.0, API stability is not guaranteed.
-The instructions in this document may change incompatibly until that time.
-
 Implementing A Scheduler
 ------------------------
 
@@ -62,10 +56,6 @@ Handling Reconfiguration
 When the configuration for a scheduler changes, Buildbot deactivates, stops and removes the old scheduler, then adds, starts, and maybe activates the new scheduler.
 Buildbot determines whether a scheduler has changed by subclassing :py:class:`~buildbot.util.ComparableMixin`.
 See the documentation for class for an explanation of the ``compare_attrs`` attribute.
-
-.. note::
-
-    In a future version, schedulers will be converted to handle reconfiguration as reconfigurable services, and will no longer require ``compare_attrs`` to be set.
 
 Becoming Active and Inactive
 ----------------------------

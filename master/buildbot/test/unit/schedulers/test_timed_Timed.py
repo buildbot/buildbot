@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.schedulers import timed
@@ -42,7 +41,6 @@ class Timed(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         sched = yield self.attachScheduler(self.Subclass(**kwargs), self.OBJECTID)
-        self.clock = sched._reactor = task.Clock()
         return sched
 
     # tests

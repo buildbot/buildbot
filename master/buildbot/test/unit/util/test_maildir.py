@@ -19,17 +19,23 @@ import os
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.fake import fakemaster
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.util import maildir
 
 
-class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
+class TestMaildirService(dirs.DirsMixin, TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
     def setUp(self):
+        self.setup_test_reactor()
         self.maildir = os.path.abspath("maildir")
         self.newdir = os.path.join(self.maildir, "new")
         self.curdir = os.path.join(self.maildir, "cur")
         self.tmpdir = os.path.join(self.maildir, "tmp")
         self.setUpDirs(self.maildir, self.newdir, self.curdir, self.tmpdir)
+
+        self.master = yield fakemaster.make_master(self, wantDb=True, wantMq=True, wantData=True)
 
         self.svc = None
 
@@ -42,15 +48,17 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_start_stop_repeatedly(self):
         self.svc = maildir.MaildirService(self.maildir)
-        self.svc.startService()
-        yield self.svc.stopService()
-        self.svc.startService()
-        yield self.svc.stopService()
+        yield self.svc.setServiceParent(self.master)
+        yield self.master.startService()
+        yield self.master.stopService()
+        yield self.master.startService()
+        yield self.master.stopService()
         self.assertEqual(len(list(self.svc)), 0)
 
     @defer.inlineCallbacks
     def test_messageReceived(self):
         self.svc = maildir.MaildirService(self.maildir)
+        yield self.svc.setServiceParent(self.master)
 
         # add a fake messageReceived method
         messagesReceived = []
@@ -60,7 +68,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
             return defer.succeed(None)
 
         self.svc.messageReceived = messageReceived
-        yield self.svc.startService()
+        yield self.master.startService()
 
         self.assertEqual(messagesReceived, [])
 
