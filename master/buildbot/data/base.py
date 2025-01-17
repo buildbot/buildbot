@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from buildbot.db.logs import LogModel
     from buildbot.db.steps import StepModel
     from buildbot.db.workers import WorkerModel
+    from buildbot.master import BuildMaster
 
 
 class EndpointKind(enum.Enum):
@@ -54,7 +55,7 @@ class ResourceType:
     eventPathPatterns = ""
     entityType: types.Type | None = None
 
-    def __init__(self, master):
+    def __init__(self, master: BuildMaster):
         self.master = master
         self.compileEventPathPatterns()
 
@@ -126,7 +127,7 @@ class Endpoint:
     kind = EndpointKind.SINGLE
     parentMapping: dict[str, str] = {}
 
-    def __init__(self, rtype, master):
+    def __init__(self, rtype, master: BuildMaster):
         self.rtype = rtype
         self.master = master
 
