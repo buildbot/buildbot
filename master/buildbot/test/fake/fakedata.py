@@ -267,8 +267,11 @@ class FakeUpdates(service.AsyncService):
             projectid, slug, description, description_format, description_html
         )
 
-    def find_project_id(self, name):
+    def find_project_id(self, name: str, auto_create: bool = True):
         validation.verifyType(self.testcase, 'project name', name, validation.StringValidator())
+        validation.verifyType(
+            self.testcase, 'auto_create', auto_create, validation.BooleanValidator()
+        )
         return self.master.db.projects.find_project_id(name)
 
     def updateBuilderList(self, masterid, builderNames):
