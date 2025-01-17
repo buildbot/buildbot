@@ -121,7 +121,7 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             self.master.data.updates.find_project_id,  # fake
             self.rtype.find_project_id,
         )  # real
-        def find_project_id(self, name):
+        def find_project_id(self, name: str, auto_create: bool = True):
             pass
 
     def test_find_project_id(self):

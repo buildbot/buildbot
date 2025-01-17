@@ -106,8 +106,8 @@ class Project(base.ResourceType):
         self.produceEvent(project, event)
 
     @base.updateMethod
-    def find_project_id(self, name):
-        return self.master.db.projects.find_project_id(name)
+    def find_project_id(self, name: str, auto_create: bool = True):
+        return self.master.db.projects.find_project_id(name, auto_create)
 
     @base.updateMethod
     @defer.inlineCallbacks
