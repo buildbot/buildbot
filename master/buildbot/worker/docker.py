@@ -457,10 +457,18 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     def _thd_stop_instance(self, instance, curr_client_args, fast):
         docker_client = self._getDockerClient(curr_client_args)
         log.msg(f"Stopping container {instance['Id'][:6]}...")
-        docker_client.stop(instance['Id'])
+        try:
+            docker_client.stop(instance['Id'])
+        except docker.errors.NotFound as not_found_err:
+            log.msg('Cannot stop container {}: {}'.format(instance['Id'][:6], not_found_err))
+            # don't try to wait for it.
+            fast = True
         if not fast:
             docker_client.wait(instance['Id'])
-        docker_client.remove_container(instance['Id'], v=True, force=True)
+        try:
+            docker_client.remove_container(instance['Id'], v=True, force=True)
+        except docker.errors.NotFound as not_found_err:
+            log.msg('Cannot remove container {}: {}'.format(instance['Id'][:6], not_found_err))
         if self.image is None:
             try:
                 docker_client.remove_image(image=instance['image'])

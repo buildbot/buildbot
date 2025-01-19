@@ -116,3 +116,6 @@ class APIClient(Client):
 class errors:
     class APIError(Exception):
         pass
+
+    class NotFound(Exception):
+        pass
