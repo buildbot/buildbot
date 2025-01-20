@@ -193,7 +193,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             category if callable(category) else bytes2unicode(category, encoding=self.encoding)
         )
         self.project = bytes2unicode(project, encoding=self.encoding)
-        self.changeCount = 0
         self.lastRev = None
 
         self.setupGit()
@@ -549,7 +548,6 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             + ['^' + rev for rev in sorted(self.lastRev.values())]
             + ['--']
         )
-        self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
         # process oldest change first
@@ -568,12 +566,12 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                     # commit than last time we saw it, rebuild.
                     log.msg(f'gitpoller: rebuilding {newRev} for updated branch "{branch}"')
 
-        self.changeCount = len(revList)
+        change_count = len(revList)
         self.lastRev[branch] = newRev
 
-        if self.changeCount:
+        if change_count:
             log.msg(
-                f'gitpoller: processing {self.changeCount} changes: {revList} from '
+                f'gitpoller: processing {change_count} changes: {revList} from '
                 f'"{self.repourl}" branch "{branch}"'
             )
 
