@@ -15,6 +15,9 @@ This section documents the available REST APIs according to the RAML specificati
     build_data
     change
     changesource
+    codebase
+    codebase_branch
+    codebase_commit
     forcescheduler
     identifier
     logchunk

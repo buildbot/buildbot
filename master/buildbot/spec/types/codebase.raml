@@ -1,0 +1,34 @@
+#%RAML 1.0 DataType
+description: |
+    Codebase represent an logical collection of source code and other resources.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.codebases.Codebase
+
+        .. py:method:: update_codebase_info(*, codebaseid, projectid, slug)
+
+            :param int codebaseid: the ID of the codebase to update
+            :param int projectid: the new project to associate the codebase to
+            :param string slug: the new slug to assign to codebase
+            :returns: None via Deferred.
+
+            Updates the information of an existing codebase.
+
+properties:
+    codebaseid:
+        description: the ID of this codebase
+        type: integer
+    name:
+        description: the name of the codebase
+        type: string
+    slug:
+        description: the "slug", suitable for use in a URL, of this codebase
+        type: identifier
+    projectid:
+        description: the ID of the project codebase is associated to
+        type: integer
+type: object

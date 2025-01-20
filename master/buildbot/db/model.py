@@ -654,6 +654,90 @@ class Model(base.DBConnectorComponent):
         sa.Column('description_html', sa.Text, nullable=True),
     )
 
+    codebases = sautils.Table(
+        'codebases',
+        metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # project
+        sa.Column(
+            'projectid',
+            sa.Integer,
+            sa.ForeignKey('projects.id', ondelete='CASCADE'),
+            nullable=False,
+        ),
+        # codebase name
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
+        # codebase slug, potentially shown in the URLs
+        sa.Column('slug', sa.String(50), nullable=False),
+    )
+
+    # Note: currently commit data is distributed across multiple tables: changes, sourcestamps
+    # and codebase_commits. It is hard to merge the data into one table because this affects the
+    # APIs in various places, thus cannot be done in one go. Additionally, changes and sourcestamps
+    # tables may not refer to commits per-se, but to some indeterminate state of a branch.
+    codebase_commits = sautils.Table(
+        'codebase_commits',
+        metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # codebase
+        sa.Column(
+            'codebaseid',
+            sa.Integer,
+            sa.ForeignKey('codebases.id', ondelete='CASCADE'),
+            nullable=False,
+        ),
+        # author's name
+        sa.Column('author', sa.String(255), nullable=False),
+        # committer's name
+        sa.Column('committer', sa.String(255), nullable=True),
+        # commit comment
+        sa.Column('comments', sa.Text, nullable=False),
+        # timestamp of the revision - it is usually copied from the version-control system, and
+        # may be long in the past or even in the future
+        sa.Column('when_timestamp', sa.Integer, nullable=False),
+        # The revision identifier in the version control system.
+        # Revision length per VCS:
+        # git: 40 (SHA-1), 64 (SHA-256)
+        # mercurial: 40
+        # bzr, svn, p4 use numeric IDs, so small lengths as 10 are enough
+        sa.Column('revision', sa.String(70), nullable=False),
+        sa.Column(
+            'parent_commitid',
+            sa.Integer,
+            sa.ForeignKey('codebase_commits.id', ondelete='SET NULL'),
+            nullable=True,
+        ),
+    )
+
+    codebase_branches = sautils.Table(
+        'codebase_branches',
+        metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # Codebase
+        sa.Column(
+            'codebaseid',
+            sa.Integer,
+            sa.ForeignKey('codebases.id', ondelete='CASCADE'),
+            nullable=False,
+        ),
+        # branch name
+        sa.Column('name', sa.String(255), nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(model_config.hash_length), nullable=False),
+        # Most recent commit
+        sa.Column(
+            'commitid',
+            sa.Integer,
+            sa.ForeignKey('codebase_commits.id', ondelete='SET NULL'),
+            nullable=True,
+        ),
+        # The timestamps when the branch was last updated. This is not revision timestamp, but
+        # when the change source saw the update.
+        sa.Column('last_timestamp', sa.Integer, nullable=False),
+    )
+
     # Tables related to builders
     # --------------------------
 
@@ -958,6 +1042,21 @@ class Model(base.DBConnectorComponent):
         unique=True,
     )
     sa.Index('projects_name_hash', projects.c.name_hash, unique=True)
+    sa.Index(
+        'codebases_projects_name_hash', codebases.c.projectid, codebases.c.name_hash, unique=True
+    )
+    sa.Index(
+        'codebase_commits_unique',
+        codebase_commits.c.codebaseid,
+        codebase_commits.c.revision,
+        unique=True,
+    )
+    sa.Index(
+        'codebase_branches_unique',
+        codebase_branches.c.codebaseid,
+        codebase_branches.c.name_hash,
+        unique=True,
+    )
     sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
     sa.Index('builders_projectid', builders.c.projectid)
     sa.Index('builder_masters_builderid', builder_masters.c.builderid)
@@ -1052,6 +1151,14 @@ class Model(base.DBConnectorComponent):
         (
             'changes',
             {"unique": False, "column_names": ['parent_changeids'], "name": 'parent_changeids'},
+        ),
+        (
+            'codebase_branches',
+            {"unique": False, "column_names": ['commitid'], "name": 'commitid'},
+        ),
+        (
+            'codebase_commits',
+            {"unique": False, "column_names": ['parent_commitid'], "name": 'parent_commitid'},
         ),
         (
             'test_result_sets',

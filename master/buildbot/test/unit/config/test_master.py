@@ -37,6 +37,8 @@ from buildbot.config.master import FileLoader
 from buildbot.config.master import loadConfigDict
 from buildbot.process import factory
 from buildbot.process import properties
+from buildbot.process.codebase import Codebase
+from buildbot.process.project import Project
 from buildbot.schedulers import base as schedulers_base
 from buildbot.test.util import dirs
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -738,6 +740,40 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         }
         self.cfg.load_builders(self.filename, {"builders": [bldr]})
         self.assertEqual(len(self.flushWarnings([self.cfg.load_builders])), 1)
+
+    def test_load_codebases_defaults(self):
+        self.cfg.load_codebases(self.filename, {})
+        self.assertResults(codebases=[])
+
+    def test_load_codebases_not_list(self):
+        with capture_config_errors() as errors:
+            self.cfg.load_codebases(self.filename, {'codebases': {}})
+        self.assertConfigError(errors, "must be a list")
+
+    def test_load_codebases_not_instance(self):
+        with capture_config_errors() as errors:
+            self.cfg.load_codebases(self.filename, {'codebases': [mock.Mock()]})
+
+        self.assertConfigError(errors, "is not a codebase config")
+
+    def test_load_codebases_not_project(self):
+        with capture_config_errors() as errors:
+            self.cfg.load_codebases(
+                self.filename, {'codebases': [Codebase(name='codebase', project='project')]}
+            )
+
+        self.assertConfigError(errors, "includes unknown project")
+
+    def test_load_codebases_valid(self):
+        cfg = {
+            'projects': [Project(name='project')],
+            'codebases': [Codebase(name='codebase', project='project')],
+        }
+
+        self.cfg.load_projects(self.filename, cfg)
+        self.cfg.load_codebases(self.filename, cfg)
+
+        self.assertResults(codebases=[Codebase(name='codebase', project='project')])
 
     def test_load_workers_defaults(self):
         self.cfg.load_workers(self.filename, {})

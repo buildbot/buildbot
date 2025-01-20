@@ -170,6 +170,11 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
         )
         self.patch(
             self.botmaster,
+            'reconfig_codebases',
+            mock.Mock(side_effect=lambda c: defer.succeed(None)),
+        )
+        self.patch(
+            self.botmaster,
             'reconfigServiceBuilders',
             mock.Mock(side_effect=lambda c: defer.succeed(None)),
         )
@@ -180,6 +185,7 @@ class TestBotMaster(TestReactorMixin, unittest.TestCase):
 
         self.botmaster.reconfigServiceBuilders.assert_called_with(new_config)
         self.botmaster.reconfigProjects.assert_called_with(new_config)
+        self.botmaster.reconfig_codebases.assert_called_with(new_config)
         self.assertTrue(self.botmaster.maybeStartBuildsForAllBuilders.called)
 
     @defer.inlineCallbacks

@@ -1,0 +1,37 @@
+#%RAML 1.0 DataType
+description: |
+    A branch represents a certain named version of code in a codebase.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.codebases.CodebaseBranch
+
+        .. py:method:: update_branch(*, codebaseid, name, commitid, last_timestamp)
+
+            :param int codebaseid: the ID of the codebase to associate branch with
+            :param str name: the name of the branch
+            :param int commitid: optional ID of the commit pointed to by branch
+            :param int last_timestamp: the time of last change of the branch
+            :returns: None via Deferred.
+
+            Updates information of the branch
+
+properties:
+    codebaseid:
+        description: the ID of the codebase that this commit is associated with
+        type: integer
+    name:
+        description: the name of the branch
+        type: string
+    commitid?:
+        description: |
+            the ID of the current commit. This may be not set if there was an error
+            accessing commit information, it was removed or due to similar reasons.
+        type: int
+    last_timestamp:
+        description: the time of the last branch change
+        type: int
+type: object

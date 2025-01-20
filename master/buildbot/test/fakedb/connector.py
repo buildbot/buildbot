@@ -40,6 +40,9 @@ from .changes import ChangeProperty
 from .changes import ChangeUser
 from .changesources import ChangeSource
 from .changesources import ChangeSourceMaster
+from .codebases import Codebase
+from .codebases import CodebaseBranch
+from .codebases import CodebaseCommit
 from .logs import Log
 from .logs import LogChunk
 from .masters import Master
@@ -519,6 +522,67 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.projects)
         return non_matched_rows
 
+    def _thd_maybe_insert_codebase(self, conn, rows):
+        matched_rows, non_matched_rows = self._match_rows(rows, Codebase)
+        for row in matched_rows:
+            conn.execute(
+                self.model.codebases.insert(),
+                [
+                    {
+                        'id': row.id,
+                        'projectid': row.projectid,
+                        'name': row.name,
+                        'name_hash': hash_columns(row.name),
+                        'slug': row.slug,
+                    }
+                ],
+            )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.codebases)
+        return non_matched_rows
+
+    def _thd_maybe_insert_codebase_commit(self, conn, rows):
+        matched_rows, non_matched_rows = self._match_rows(rows, CodebaseCommit)
+        for row in matched_rows:
+            conn.execute(
+                self.model.codebase_commits.insert(),
+                [
+                    {
+                        'id': row.id,
+                        'codebaseid': row.codebaseid,
+                        'author': row.author,
+                        'committer': row.committer,
+                        'comments': row.comments,
+                        'when_timestamp': int(row.when_timestamp),
+                        'revision': row.revision,
+                        'parent_commitid': row.parent_commitid,
+                    }
+                ],
+            )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.codebase_commits)
+        return non_matched_rows
+
+    def _thd_maybe_insert_codebase_branch(self, conn, rows):
+        matched_rows, non_matched_rows = self._match_rows(rows, CodebaseBranch)
+        for row in matched_rows:
+            conn.execute(
+                self.model.codebase_branches.insert(),
+                [
+                    {
+                        'id': row.id,
+                        'codebaseid': row.codebaseid,
+                        'name': row.name,
+                        'name_hash': hash_columns(row.name),
+                        'commitid': row.commitid,
+                        'last_timestamp': int(row.last_timestamp),
+                    }
+                ],
+            )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.codebase_branches)
+        return non_matched_rows
+
     def _thd_maybe_insert_scheduler_change(self, conn, rows):
         matched_rows, non_matched_rows = self._match_rows(rows, SchedulerChange)
         for row in matched_rows:
@@ -867,6 +931,9 @@ class FakeDBConnector(DBConnector):
             remaining = rows
             remaining = self._thd_maybe_insert_master(conn, remaining)
             remaining = self._thd_maybe_insert_project(conn, remaining)
+            remaining = self._thd_maybe_insert_codebase(conn, remaining)
+            remaining = self._thd_maybe_insert_codebase_commit(conn, remaining)
+            remaining = self._thd_maybe_insert_codebase_branch(conn, remaining)
             remaining = self._thd_maybe_insert_builder(conn, remaining)
             remaining = self._thd_maybe_insert_tag(conn, remaining)
             remaining = self._thd_maybe_insert_worker(conn, remaining)

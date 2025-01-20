@@ -36,6 +36,9 @@ from .changes import ChangeProperty
 from .changes import ChangeUser
 from .changesources import ChangeSource
 from .changesources import ChangeSourceMaster
+from .codebases import Codebase
+from .codebases import CodebaseBranch
+from .codebases import CodebaseCommit
 from .connector import FakeDBConnector
 from .logs import Log
 from .logs import LogChunk
@@ -78,6 +81,9 @@ __all__ = [
     'ChangeSource',
     'ChangeSourceMaster',
     'ChangeUser',
+    'Codebase',
+    'CodebaseCommit',
+    'CodebaseBranch',
     'ConfiguredWorker',
     'ConnectedWorker',
     'FakeDBConnector',

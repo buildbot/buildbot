@@ -32,6 +32,7 @@ from buildbot.process.workerforbuilder import States
 from buildbot.util import debounce
 from buildbot.util import service
 from buildbot.util.render_description import render_description
+from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.latent import AbstractLatentWorker
 
 if TYPE_CHECKING:
@@ -333,6 +334,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         timer.start()
 
         yield self.reconfigProjects(new_config)
+        yield self.reconfig_codebases(new_config)
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
@@ -354,6 +356,29 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 project_config.description,
                 project_config.description_format,
                 render_description(project_config.description, project_config.description_format),
+            )
+
+    @async_to_deferred
+    async def reconfig_codebases(self, new_config):
+        for codebase_config in new_config.codebases:
+            projectid = await self.master.data.updates.find_project_id(
+                codebase_config.project, auto_create=False
+            )
+            if projectid is None:
+                raise RuntimeError(
+                    'Could not find project {codebase_config.project} '
+                    'for codebase {codebase_config.name'
+                )
+
+            codebaseid = await self.master.data.updates.find_codebase_id(
+                projectid=projectid,
+                name=codebase_config.name,
+            )
+
+            await self.master.data.updates.update_codebase_info(
+                codebaseid=codebaseid,
+                projectid=projectid,
+                slug=codebase_config.slug,
             )
 
     @defer.inlineCallbacks

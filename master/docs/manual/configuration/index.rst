@@ -19,6 +19,7 @@ The next section, :doc:`../customization`, describes this approach, with frequen
     workers
     builders
     projects
+    codebases
     buildfactories
     buildsets
     properties

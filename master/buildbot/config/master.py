@@ -35,6 +35,7 @@ from buildbot.config.errors import capture_config_errors
 from buildbot.config.errors import error
 from buildbot.db.compression import ZStdCompressor
 from buildbot.interfaces import IRenderable
+from buildbot.process.codebase import Codebase
 from buildbot.process.project import Project
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
@@ -177,6 +178,7 @@ class MasterConfig(util.ComparableMixin):
         self.change_sources = []
         self.machines = []
         self.projects = []
+        self.codebases = []
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
@@ -276,6 +278,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
             config.load_projects(filename, config_dict)
+            config.load_codebases(filename, config_dict)
             config.load_builders(filename, config_dict)
             config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
@@ -610,6 +613,31 @@ class MasterConfig(util.ComparableMixin):
             return None
 
         self.projects = [mapper(p) for p in projects]
+
+    def load_codebases(self, filename, config_dict):
+        if 'codebases' not in config_dict:
+            return
+
+        codebases = config_dict['codebases']
+
+        if not isinstance(codebases, (list, tuple)):
+            error("c['codebases'] must be a list")
+            return
+
+        project_names = [p.name for p in self.projects]
+
+        def mapper(c):
+            if not isinstance(c, Codebase):
+                error(f"{c!r} is not a codebase config (in c['codebases']")
+                return None
+
+            if c.project not in project_names:
+                error(f"{c!r} includes unknown project name {c.project} (in c['codebases']")
+                return None
+
+            return c
+
+        self.codebases = [mapper(p) for p in codebases]
 
     def load_builders(self, filename, config_dict):
         if 'builders' not in config_dict:

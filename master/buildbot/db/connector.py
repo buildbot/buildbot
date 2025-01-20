@@ -29,6 +29,9 @@ from buildbot.db import builds
 from buildbot.db import buildsets
 from buildbot.db import changes
 from buildbot.db import changesources
+from buildbot.db import codebase_branches
+from buildbot.db import codebase_commits
+from buildbot.db import codebases
 from buildbot.db import enginestrategy
 from buildbot.db import exceptions
 from buildbot.db import logs
@@ -145,6 +148,12 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         yield self.builders.setServiceParent(self)
         self.projects = projects.ProjectsConnectorComponent(self)
         yield self.projects.setServiceParent(self)
+        self.codebases = codebases.CodebasesConnectorComponent(self)
+        yield self.codebases.setServiceParent(self)
+        self.codebase_commits = codebase_commits.CodebaseCommitsConnectorComponent(self)
+        yield self.codebase_commits.setServiceParent(self)
+        self.codebase_branches = codebase_branches.CodebaseBranchConnectorComponent(self)
+        yield self.codebase_branches.setServiceParent(self)
         self.steps = steps.StepsConnectorComponent(self)
         yield self.steps.setServiceParent(self)
         self.tags = tags.TagsConnectorComponent(self)

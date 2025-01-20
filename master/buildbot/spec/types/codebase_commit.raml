@@ -1,0 +1,50 @@
+#%RAML 1.0 DataType
+description: |
+    A commit represents a certain version of code in a codebase.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.codebases.CodebaseCommit
+
+        .. py:method:: add_commit(*, codebaseid, author, committer, files, comments, when_timestamp, revision, parent_commitid)
+
+            :param int codebaseid: the ID of the codebase to associate commit with
+            :param str author: author associated with the commit
+            :param str committer: optional committer associated with the commit
+            :param list[str] files: optional list of file paths updated in the commit
+            :param str comments: any comments associated with the commit
+            :param int when_timestamp: the time when the commit happened
+            :param str revision: the ID of the commit in the version control system
+            :param int parent_commitid: optional ID of the parent commit
+            :returns: None via Deferred.
+
+            Creates a new commit.
+
+properties:
+    commitid:
+        description: the ID of this commit
+        type: integer
+    codebaseid:
+        description: the ID of the codebase that this commit is associated with
+        type: integer
+    author:
+        description: the author of the commit
+        type: string
+    committer?:
+        description: the committer of the commit
+        type: string
+    comments:
+        description: comment associated with the commit. Usually this is the commit message.
+        type: string
+    when_timestamp:
+        description: time of the commit
+        type: integer
+    parent_commitid?:
+        description: |
+            the ID of the parent commit. Commits form a chain from older to newer commits.
+            Merging is not supported in this representation of the codebase.
+        type: integer
+type: object
