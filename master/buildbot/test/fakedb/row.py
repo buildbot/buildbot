@@ -74,7 +74,8 @@ class Row:
         self.__dict__.update(self.values)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(**{self.values!r})'
+        values_str = ''.join(f'{k}={v!r}, ' for k, v in self.values.items())
+        return f'{self.__class__.__name__}({values_str})'
 
     @staticmethod
     def nextId():
