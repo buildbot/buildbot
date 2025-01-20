@@ -11,6 +11,7 @@ import {Builder, builderDescriptor} from "./Builder";
 import {IDataDescriptor} from "./DataDescriptor";
 import {IDataAccessor} from "../DataAccessor";
 import {RequestQuery} from "../DataQuery";
+import {Codebase, codebaseDescriptor} from "./Codebase";
 
 export class Project extends BaseClass {
   @observable projectid!: number;
@@ -49,6 +50,10 @@ export class Project extends BaseClass {
 
   getBuilders(query: RequestQuery = {}) {
     return this.get<Builder>("builders", query, builderDescriptor);
+  }
+
+  getCodebases(query: RequestQuery = {}) {
+    return this.get<Codebase>("codebases", query, codebaseDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
