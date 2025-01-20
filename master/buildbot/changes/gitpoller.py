@@ -28,6 +28,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
+from buildbot.process.codebase import Codebase
 from buildbot.util import bytes2unicode
 from buildbot.util import giturlparse
 from buildbot.util import private_tempdir
@@ -64,6 +65,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         "gitbin",
         "usetimestamps",
         "category",
+        'codebase',
         "project",
         "pollAtLaunch",
         "buildPushesWithNoCommits",
@@ -92,6 +94,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         gitbin="git",
         usetimestamps=True,
         category=None,
+        codebase=None,
         project=None,
         fetch_refspec=None,
         encoding="utf-8",
@@ -134,6 +137,11 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         if name is None:
             name = repourl
 
+        if not isinstance(codebase, (Codebase, type(None))):
+            config.error(
+                f'{self.__class__.__name__}: codebase must be None or instance of Codebase'
+            )
+
         super().checkConfig(
             name=name,
             pollInterval=pollInterval,
@@ -153,6 +161,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         gitbin="git",
         usetimestamps=True,
         category=None,
+        codebase=None,
         project=None,
         fetch_refspec=None,
         encoding="utf-8",
@@ -192,6 +201,18 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         self.category = (
             category if callable(category) else bytes2unicode(category, encoding=self.encoding)
         )
+        self.codebase = codebase
+
+        if codebase is not None:
+            projectid = yield self.master.data.updates.find_project_id(
+                codebase.project, auto_create=False
+            )
+            self._codebase_id = yield self.master.data.updates.find_codebase_id(
+                projectid=projectid, name=codebase.name
+            )
+        else:
+            self._codebase_id = None
+
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.lastRev = None
 
@@ -527,6 +548,11 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             raise OSError('could not get commit committer for rev')
         return res
 
+    def _get_commit_parent_hashes(self, rev):
+        args = ['--no-walk', r'--format=%P', rev, '--']
+        d = self._dovccmd('log', args, path=self.workdir)
+        return d
+
     @defer.inlineCallbacks
     def _process_changes(self, newRev, branch):
         """
@@ -575,6 +601,18 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 f'"{self.repourl}" branch "{branch}"'
             )
 
+        last_commit_id = None
+        if self._codebase_id is not None:
+            rev = revList[0]
+            parent_hashes = yield self._get_commit_parent_hashes(rev)
+            parent_hash = parent_hashes.split()[0]
+            last_commit_id = yield self.master.data.get((
+                'codebases',
+                self._codebase_id,
+                'commits_by_revision',
+                parent_hash,
+            ))
+
         for rev in revList:
             dl = defer.DeferredList(
                 [
@@ -611,6 +649,25 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
                 category=self.category,
                 src='git',
+            )
+
+            if self._codebase_id is not None:
+                last_commit_id = yield self.master.data.updates.add_commit(
+                    codebaseid=self._codebase_id,
+                    author=author,
+                    committer=committer,
+                    comments=comments,
+                    when_timestamp=timestamp,
+                    revision=bytes2unicode(rev, encoding=self.encoding),
+                    parent_commitid=last_commit_id,
+                )
+
+        if self._codebase_id is not None and last_commit_id is not None:
+            yield self.master.data.updates.update_branch(
+                codebaseid=self._codebase_id,
+                name=branch,
+                commitid=last_commit_id,
+                last_timestamp=int(self.master.reactor.seconds()),
             )
 
     @async_to_deferred

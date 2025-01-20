@@ -29,6 +29,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import gitpoller
+from buildbot.process.codebase import Codebase
+from buildbot.test import fakedb
 from buildbot.test.fake.private_tempdir import MockPrivateTemporaryDirectory
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.runprocess import ExpectMasterShell
@@ -2571,6 +2573,11 @@ class TestGitPollerBareRepository(
         yield self.prepare_repository()
 
         yield self.setUpChangeSource(want_real_reactor=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Project(id=7, name='fake_project7'),
+            fakedb.Codebase(id=13, projectid=7, name='codebase1'),
+        ])
+
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
@@ -2586,6 +2593,7 @@ class TestGitPollerBareRepository(
                 branches=['main'],
                 workdir=self.poller_workdir,
                 gitbin=self.repo.git_bin,
+                codebase=Codebase('codebase1', 'fake_project7'),
             )
         )
 
@@ -2735,4 +2743,36 @@ class TestGitPollerBareRepository(
                     'when_timestamp': 1717855500,
                 },
             ],
+        )
+
+        commits = await self.master.data.get(('codebases', 13, 'commits'))
+        self.assertEqual(
+            commits,
+            [
+                {
+                    'commitid': 1,
+                    'codebaseid': 13,
+                    'author': 'test user <user@example.com>',
+                    'committer': 'test user <user@example.com>',
+                    'comments': 'Fix 1',
+                    'when_timestamp': 1717855320,
+                    'parent_commitid': None,
+                },
+                {
+                    'commitid': 2,
+                    'codebaseid': 13,
+                    'author': 'test user <user@example.com>',
+                    'committer': 'test user <user@example.com>',
+                    'comments': "Merge branch 'feature/1'",
+                    'when_timestamp': 1717855500,
+                    'parent_commitid': 1,
+                },
+            ],
+        )
+
+        branches = await self.master.data.get(('codebases', 13, 'branches'))
+        for b in branches:
+            del b['last_timestamp']
+        self.assertEqual(
+            branches, [{'branchid': 1, 'codebaseid': 13, 'name': 'main', 'commitid': 2}]
         )
