@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 
 from twisted.internet import defer
@@ -273,6 +274,101 @@ class FakeUpdates(service.AsyncService):
             self.testcase, 'auto_create', auto_create, validation.BooleanValidator()
         )
         return self.master.db.projects.find_project_id(name)
+
+    @async_to_deferred
+    async def add_commit(
+        self,
+        *,
+        codebaseid: int,
+        author: str,
+        committer: str | None = None,
+        files: list[str] | None = None,
+        comments: str,
+        when_timestamp: datetime.datetime,
+        revision: str,
+        parent_commitid: int | None = None,
+    ) -> None:
+        validation.verifyType(self.testcase, 'codebaseid', codebaseid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'author', author, validation.StringValidator())
+        validation.verifyType(
+            self.testcase, 'committer', committer, validation.NoneOk(validation.StringValidator())
+        )
+        validation.verifyType(
+            self.testcase,
+            'files',
+            files,
+            validation.NoneOk(validation.StringListValidator()),
+        )
+        validation.verifyType(self.testcase, 'comments', comments, validation.StringValidator())
+        validation.verifyType(
+            self.testcase, 'when_timestamp', when_timestamp, validation.IntValidator()
+        )
+        validation.verifyType(self.testcase, 'revision', revision, validation.StringValidator())
+        validation.verifyType(
+            self.testcase,
+            'parent_commitid',
+            parent_commitid,
+            validation.NoneOk(validation.IntValidator()),
+        )
+
+        return await self.master.db.codebase_commits.add_commit(
+            codebaseid=codebaseid,
+            author=author,
+            committer=committer,
+            files=files,
+            comments=comments,
+            when_timestamp=when_timestamp,
+            revision=revision,
+            parent_commitid=parent_commitid,
+        )
+
+    @async_to_deferred
+    async def update_branch(
+        self,
+        *,
+        codebaseid: int,
+        name: str,
+        commitid: int | None = None,
+        last_timestamp: datetime.datetime,
+    ) -> None:
+        validation.verifyType(self.testcase, 'codebaseid', codebaseid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
+        validation.verifyType(
+            self.testcase, 'commitid', commitid, validation.NoneOk(validation.IntValidator())
+        )
+        validation.verifyType(
+            self.testcase, 'last_timestamp', last_timestamp, validation.IntValidator()
+        )
+
+        return await self.master.db.codebase_branches.update_branch(
+            codebaseid=codebaseid,
+            name=name,
+            commitid=commitid,
+            last_timestamp=last_timestamp,
+        )
+
+    @async_to_deferred
+    async def update_codebase_info(
+        self,
+        *,
+        codebaseid: int,
+        projectid: int,
+        slug: str,
+    ) -> None:
+        validation.verifyType(self.testcase, 'codebaseid', codebaseid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'projectid', projectid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'slug', slug, validation.StringValidator())
+
+        await self.master.db.codebases.update_codebase_info(
+            codebaseid=codebaseid, projectid=projectid, slug=slug
+        )
+
+    def find_codebase_id(self, *, projectid: int, name: str, auto_create: bool = True):
+        validation.verifyType(self.testcase, 'project id', projectid, validation.IntValidator())
+        validation.verifyType(self.testcase, 'codebase name', name, validation.StringValidator())
+        return self.master.db.codebases.find_codebase_id(
+            projectid=projectid, name=name, auto_create=auto_create
+        )
 
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
