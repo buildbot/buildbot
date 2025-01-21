@@ -52,7 +52,7 @@ class TestGitHub(test_source_git.TestGit):
                     'refs/pull/1234/merge',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', 'FETCH_HEAD']).exit(0),
             ExpectShell(
                 workdir='wkdir', command=['git', 'checkout', '-B', 'refs/pull/1234/merge']
             ).exit(0),
@@ -82,7 +82,7 @@ class TestGitHub(test_source_git.TestGit):
             # in the case of the head, we try to find if the head is already present
             # and reset to that without fetching
             ExpectShell(workdir='wkdir', command=['git', 'cat-file', '-e', '12345678']).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', '12345678']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'reset', '--hard', '12345678']).exit(0),
             ExpectShell(
                 workdir='wkdir', command=['git', 'checkout', '-B', 'refs/pull/1234/head']
             ).exit(0),
