@@ -19,10 +19,12 @@ import re
 from collections import defaultdict
 
 from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import util
 from buildbot.util import lineboundaries
+from buildbot.util.twisted import async_to_deferred
 
 
 class Log:
@@ -122,22 +124,22 @@ class PlainLog(Log):
 
         self.lbf = lineboundaries.LineBoundaryFinder()
 
-    def addContent(self, text: str | bytes):
+    @async_to_deferred
+    async def addContent(self, text: str | bytes) -> None:
         if not isinstance(text, str):
             text = self.decoder(text)
         # add some text in the log's default stream
-        lines = self.lbf.append(text)
-        if lines is None:
-            return defer.succeed(None)
-        self.subPoint.deliver(None, lines)
-        return self.addRawLines(lines)
-
-    @defer.inlineCallbacks
-    def flush(self):
-        lines = self.lbf.flush()
+        lines = await threads.deferToThread(self.lbf.append, text)
         if lines is not None:
             self.subPoint.deliver(None, lines)
-            yield self.addRawLines(lines)
+            await self.addRawLines(lines)
+
+    @async_to_deferred
+    async def flush(self):
+        lines = await threads.deferToThread(self.lbf.flush)
+        if lines is not None:
+            self.subPoint.deliver(None, lines)
+            await self.addRawLines(lines)
 
     @defer.inlineCallbacks
     def finish(self):
@@ -166,19 +168,20 @@ class StreamLog(Log):
         super().__init__(step, name, type, logid, decoder)
         self.lbfs = defaultdict(lineboundaries.LineBoundaryFinder)
 
-    def _on_whole_lines(self, stream, lines):
+    @async_to_deferred
+    async def _on_whole_lines(self, stream, lines) -> None:
         # deliver the un-annotated version to subscribers
         self.subPoint.deliver(stream, lines)
         # strip the last character, as the regexp will add a
         # prefix character after the trailing newline
-        return self.addRawLines(self.pat.sub(stream, lines)[:-1])
+        lines = await threads.deferToThread(self.pat.sub, stream, lines)
+        await self.addRawLines(lines[:-1])
 
-    def split_lines(self, stream, text):
-        lbf = self.lbfs[stream]
-        lines = lbf.append(text)
-        if lines is None:
-            return defer.succeed(None)
-        return self._on_whole_lines(stream, lines)
+    @async_to_deferred
+    async def split_lines(self, stream, text) -> None:
+        lines = await threads.deferToThread(self.lbfs[stream].append, text)
+        if lines is not None:
+            await self._on_whole_lines(stream, lines)
 
     def addStdout(self, text):
         if not isinstance(text, str):
@@ -210,12 +213,19 @@ class StreamLog(Log):
             text = self.decoder(text)
         return self._on_whole_lines('h', text)
 
-    def flush(self):
-        for stream, lbf in self.lbfs.items():
-            lines = lbf.flush()
+    @async_to_deferred
+    async def flush(self) -> None:
+        async def _process(stream, lbf: lineboundaries.LineBoundaryFinder) -> None:
+            lines = await threads.deferToThread(lbf.flush)
             if lines is not None:
-                self._on_whole_lines(stream, lines)
-        return defer.succeed(None)
+                await self._on_whole_lines(stream, lines)
+
+        await defer.DeferredList(
+            (
+                defer.Deferred.fromCoroutine(_process(stream, lbf))
+                for stream, lbf in self.lbfs.items()
+            )
+        )
 
     @defer.inlineCallbacks
     def finish(self):
