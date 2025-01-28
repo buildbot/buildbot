@@ -15,10 +15,16 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from queue import Queue
+from threading import Thread
 from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
+from twisted.internet import reactor
+from twisted.internet import threads
+from twisted.internet.interfaces import IReactorFromThreads
 from twisted.logger import Logger
 from twisted.python.failure import Failure
 from twisted.spread import pb
@@ -104,6 +110,9 @@ class RemoteCommand(base.RemoteCommandImpl):
         # This is really only a problem with old-style steps, which do not
         # wait for the Deferred from one method before invoking the next.
         self.loglock = defer.DeferredLock()
+        self.update_queue: Queue[tuple[Any, Any] | None] = Queue()
+        self.update_processing_thread: Thread | None = None
+        self.update_processing_thread_deferred: defer.Deferred[None] = defer.Deferred()
         self._line_boundary_finders: defaultdict[
             str,
             LineBoundaryFinder,
@@ -197,7 +206,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         assert logfileName not in self.delayedLogs
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
-    def _start(self) -> defer.Deferred:
+    def _start(self) -> defer.Deferred[None]:
         self._startTime = util.now()
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
@@ -206,14 +215,13 @@ class RemoteCommand(base.RemoteCommandImpl):
         assert self.conn is not None
         assert self.builder_name is not None
         assert self.commandID is not None
-        d = self.conn.remoteStartCommand(
+        return self.conn.remoteStartCommand(
             self,
             self.builder_name,
             self.commandID,
             self.remote_command,
             self.args,
         )
-        return d
 
     @async_to_deferred
     async def _finished(self, failure=None) -> None:
@@ -231,6 +239,12 @@ class RemoteCommand(base.RemoteCommandImpl):
             while self.rc is None and timeout > 0:
                 await util.asyncSleep(0.1)
                 timeout -= 1
+
+        # do this BEFORE remoteComplete to finish processing updates
+        if self.update_processing_thread is not None:
+            self.update_queue.put_nowait(None)
+            await self.update_processing_thread_deferred
+            self.update_processing_thread = None
 
         assert self.deferred is not None
         try:
@@ -293,9 +307,8 @@ class RemoteCommand(base.RemoteCommandImpl):
     def split_line(self, stream: str, text: str) -> str | None:
         return self._line_boundary_finders[stream].append(text)
 
-    def remote_update(
-        self, updates: list[tuple[dict[str | bytes, Any], int]]
-    ) -> defer.Deferred[int]:
+    @async_to_deferred
+    async def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
         """
         I am called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.sendUpdate} so
@@ -306,38 +319,85 @@ class RemoteCommand(base.RemoteCommandImpl):
         """
         assert self.worker is not None
         self.worker.messageReceivedFromWorker()
+
+        # Lazily start the processing thread on update received
+        # to avoid spawning a thread for nothing
+        # Do not use a thread from the reactor threadpool
+        # since the thread will block waiting for next update
+        if self.update_processing_thread is None:
+            self.update_processing_thread_deferred = defer.Deferred()
+            self.update_processing_thread = Thread(
+                target=self._process_remote_update,
+                name=f"{self!r}-update-processing",
+            )
+            self.update_processing_thread.start()
+
         max_updatenum = 0
         for update, num in updates:
-            try:
-                if self.active and not self.ignore_updates:
-                    for key, value in update.items():
-                        key = util.bytes2unicode(key)
-                        value = decode(value)
-                        if key in ['stdout', 'stderr', 'header']:
-                            assert isinstance(value, str), type(value)
-                            whole_line = self.split_line(key, value)
-                            if whole_line is not None:
-                                self.remoteUpdate(key, whole_line, False)
-                        elif key == "log":
-                            logname, data = value
-                            assert isinstance(logname, str), type(logname)
-                            assert isinstance(data, str), type(data)
-                            whole_line = self.split_line(logname, data)
-                            if whole_line is not None:
-                                value = (logname, whole_line)
-                                self.remoteUpdate(key, value, False)
-                        else:
-                            self.remoteUpdate(key, value, False)
+            if self.active and not self.ignore_updates:
+                for key, value in update.items():
+                    self.update_queue.put_nowait((key, value))
+            max_updatenum = max(max_updatenum, num)
+        return max_updatenum
 
-            except Exception:
+    def _process_remote_update(self) -> None:
+        _reactor = cast(IReactorFromThreads, reactor)
+        purge_queue = False
+
+        while (update_item := self.update_queue.get()) is not None:
+            if purge_queue:
+                continue
+            try:
+                key, value = update_item
+                key = util.bytes2unicode(key)
+                value = decode(value)
+
+                if key in ['stdout', 'stderr', 'header']:
+                    assert isinstance(value, str), type(value)
+                    whole_line = self.split_line(key, value)
+                    if whole_line is not None:
+                        threads.blockingCallFromThread(
+                            _reactor,
+                            self.remoteUpdate,
+                            key,
+                            whole_line,
+                            False,
+                        )
+                elif key == "log":
+                    logname, data = value
+                    assert isinstance(logname, str), type(logname)
+                    assert isinstance(data, str), type(data)
+                    whole_line = self.split_line(logname, data)
+                    if whole_line is not None:
+                        value = (logname, whole_line)
+                        threads.blockingCallFromThread(
+                            _reactor,
+                            self.remoteUpdate,
+                            key,
+                            value,
+                            False,
+                        )
+                else:
+                    threads.blockingCallFromThread(
+                        _reactor,
+                        self.remoteUpdate,
+                        key,
+                        value,
+                        False,
+                    )
+            except Exception as exc:
                 # log failure, terminate build, let worker retire the update
-                self._finished(Failure())
+                purge_queue = True
+                _reactor.callFromThread(self.update_processing_thread_deferred.errback, exc)
+                _reactor.callFromThread(self._finished, Failure(exc))
                 # TODO: what if multiple updates arrive? should
                 # skip the rest but ack them all
-            max_updatenum = max(max_updatenum, num)
-        return defer.succeed(max_updatenum)
 
-    def remote_complete(self, failure=None) -> defer.Deferred[None]:
+        if not purge_queue:
+            _reactor.callFromThread(self.update_processing_thread_deferred.callback, None)
+
+    @async_to_deferred
+    async def remote_complete(self, failure=None) -> None:
         """
         Called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.commandComplete} to
@@ -353,8 +413,6 @@ class RemoteCommand(base.RemoteCommandImpl):
         # acknowledgement so the worker can retire the completion message.
         if self.active:
             eventually(self._finished, failure)
-
-        return defer.succeed(None)
 
     @util.deferredLocked('loglock')
     @async_to_deferred
