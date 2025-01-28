@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import re
+from collections import defaultdict
 
 from twisted.internet import defer
 from twisted.python import log
@@ -163,14 +164,7 @@ class StreamLog(Log):
 
     def __init__(self, step, name, type, logid, decoder):
         super().__init__(step, name, type, logid, decoder)
-        self.lbfs = {}
-
-    def _getLbf(self, stream):
-        try:
-            return self.lbfs[stream]
-        except KeyError:
-            lbf = self.lbfs[stream] = lineboundaries.LineBoundaryFinder()
-            return lbf
+        self.lbfs = defaultdict(lineboundaries.LineBoundaryFinder)
 
     def _on_whole_lines(self, stream, lines):
         # deliver the un-annotated version to subscribers
@@ -180,7 +174,7 @@ class StreamLog(Log):
         return self.addRawLines(self.pat.sub(stream, lines)[:-1])
 
     def split_lines(self, stream, text):
-        lbf = self._getLbf(stream)
+        lbf = self.lbfs[stream]
         lines = lbf.append(text)
         if lines is None:
             return defer.succeed(None)
