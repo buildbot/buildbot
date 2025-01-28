@@ -1,0 +1,2 @@
+Log received from a worker are no longer processed on Buildbot master's main thread.
+This change will improve master reactivity on instances which run multiple builds concurrently.
