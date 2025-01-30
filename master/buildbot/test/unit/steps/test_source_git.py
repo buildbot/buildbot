@@ -246,7 +246,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', '-c', ssh_command_config, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -300,7 +303,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH_COMMAND': ssh_command},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH_COMMAND': ssh_command},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -367,7 +374,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH': ssh_wrapper_path},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -442,7 +453,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', '-c', ssh_command_config, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -509,7 +523,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH_COMMAND': ssh_command},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH_COMMAND': ssh_command},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -588,7 +606,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH': ssh_wrapper_path},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -667,7 +689,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH': ssh_wrapper_path},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -738,7 +764,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir=workdir, command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir=workdir,
+                command=['git', '-c', ssh_command_config, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir=workdir, command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -830,7 +859,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', '-c', ssh_command_config, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -885,7 +917,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH_COMMAND': ssh_command},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH_COMMAND': ssh_command},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -947,7 +983,11 @@ class TestGit(
                 ],
                 env={'GIT_SSH': ssh_wrapper_path},
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'checkout', '-f', 'FETCH_HEAD'],
+                env={'GIT_SSH': ssh_wrapper_path},
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2030,8 +2070,14 @@ class TestGit(
                     'test-branch',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-B', 'test-branch']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', '-c', ssh_command_config, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', '-c', ssh_command_config, 'checkout', '-B', 'test-branch'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2754,7 +2800,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='source', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='source',
+                command=['git', '-c', ssh_command_config, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectCpdir(fromdir='source', todir='wkdir', log_environ=True, timeout=1200).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -3953,7 +4002,12 @@ class TestGit(
         ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
         git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
 
-        use_http_path_arg = []
+        use_http_path_arg = [
+            '-c',
+            'credential.helper=',
+            '-c',
+            f'credential.helper=store "--file={git_credential_path}"',
+        ]
         if use_http_path is not None:
             use_http_path_arg.append('-c')
             if use_http_path:
@@ -3971,10 +4025,6 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
                     *use_http_path_arg,
                     'credential',
                     'approve',
@@ -3989,10 +4039,6 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
                     *use_http_path_arg,
                     'fetch',
                     '-f',
@@ -4001,7 +4047,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', *use_http_path_arg, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -4033,6 +4082,12 @@ class TestGit(
 
         ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
         git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+        git_credentials_config_args = [
+            '-c',
+            'credential.helper=',
+            '-c',
+            f'credential.helper=store "--file={git_credential_path}"',
+        ]
 
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
@@ -4044,10 +4099,7 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
+                    *git_credentials_config_args,
                     'credential',
                     'approve',
                 ],
@@ -4061,10 +4113,7 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
+                    *git_credentials_config_args,
                     'fetch',
                     '-f',
                     '--progress',
@@ -4072,7 +4121,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', *git_credentials_config_args, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -4106,6 +4158,14 @@ class TestGit(
 
         ssh_workdir = '/wrk/.bldr.wkdir.buildbot'
         git_credential_path = '/wrk/.bldr.wkdir.buildbot/.git-credentials'
+        git_credentials_config_args = [
+            '-c',
+            'credential.helper=',
+            '-c',
+            f'credential.helper=store "--file={git_credential_path}"',
+            '-c',
+            'credential.useHttpPath=true',
+        ]
 
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
@@ -4117,12 +4177,7 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
-                    '-c',
-                    'credential.useHttpPath=true',
+                    *git_credentials_config_args,
                     'credential',
                     'approve',
                 ],
@@ -4136,12 +4191,7 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
-                    '-c',
-                    'credential.useHttpPath=true',
+                    *git_credentials_config_args,
                     'credential',
                     'approve',
                 ],
@@ -4157,12 +4207,7 @@ class TestGit(
                 workdir='wkdir',
                 command=[
                     'git',
-                    '-c',
-                    'credential.helper=',
-                    '-c',
-                    f'credential.helper=store "--file={git_credential_path}"',
-                    '-c',
-                    'credential.useHttpPath=true',
+                    *git_credentials_config_args,
                     'fetch',
                     '-f',
                     '--progress',
@@ -4170,7 +4215,10 @@ class TestGit(
                     'HEAD',
                 ],
             ).exit(0),
-            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', *git_credentials_config_args, 'checkout', '-f', 'FETCH_HEAD'],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),

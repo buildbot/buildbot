@@ -320,6 +320,7 @@ class AbstractGitAuth(ComparableMixin):
         git_commands_that_need_auth = [
             'clone',
             'credential',
+            'checkout',
             'fetch',
             'ls-remote',
             'push',
