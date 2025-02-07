@@ -59,6 +59,7 @@ class CodebaseCommitEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 'commitid': 110,
                 'committer': 'committer1',
                 'parent_commitid': None,
+                'revision': 'rev110',
                 'when_timestamp': 1234567,
             },
         )
@@ -186,6 +187,7 @@ class CodebaseCommitTests(interfaces.InterfaceTests, TestReactorMixin, unittest.
                     'committer': 'committer1',
                     'comments': 'comments1',
                     'when_timestamp': 12345678,
+                    'revision': 'rev120',
                     'parent_commitid': None,
                 }
             ],
