@@ -609,12 +609,14 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             rev = revList[0]
             parent_hashes = yield self._get_commit_parent_hashes(rev)
             parent_hash = parent_hashes.split()[0]
-            last_commit_id = yield self.master.data.get((
+            last_commit = yield self.master.data.get((
                 'codebases',
                 self._codebase_id,
                 'commits_by_revision',
                 parent_hash,
             ))
+            if last_commit is not None:
+                last_commit_id = last_commit['commitid']
 
         for rev in revList:
             dl = defer.DeferredList(
