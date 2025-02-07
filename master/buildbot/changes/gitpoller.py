@@ -207,6 +207,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             projectid = yield self.master.data.updates.find_project_id(
                 codebase.project, auto_create=False
             )
+            if projectid is None:
+                raise RuntimeError(f'Project {codebase.project} is not configured')
+
             self._codebase_id = yield self.master.data.updates.find_codebase_id(
                 projectid=projectid, name=codebase.name
             )
