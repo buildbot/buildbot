@@ -3,9 +3,9 @@
 Database
 ========
 
-Buildbot stores most of its state in a database.
-This section describes the database connector classes, which allow other parts of Buildbot to access the database.
-It also describes how to modify the database schema and the connector classes themselves.
+Buildbot stores most of its state in a database. This section describes the database connector
+classes, which allow other parts of Buildbot to access the database. It also describes how to
+modify the database schema and the connector classes themselves.
 
 
 Database Overview
@@ -42,10 +42,11 @@ Identifier
 
 .. _type-identifier:
 
-Restrictions on many string fields in the database are referred to as the Identifier concept.
-An "identifier" is a nonempty unicode string of limited length, containing only UTF-8 alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit.
-Wherever an identifier is used, the documentation will give the maximum length in characters.
-The function :py:func:`buildbot.util.identifiers.isIdentifier` is useful to verify a well-formed identifier.
+Restrictions on many string fields in the database are referred to as the Identifier concept. An
+"identifier" is a nonempty unicode string of limited length, containing only UTF-8 alphanumeric
+characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit. Wherever
+an identifier is used, the documentation will give the maximum length in characters. The function
+:py:func:`buildbot.util.identifiers.isIdentifier` is useful to verify a well-formed identifier.
 
 Writing Database Connector Methods
 ----------------------------------
@@ -103,18 +104,21 @@ The DB Connector and Components
 
     .. py:method:: checkLength(col, value)
 
-        For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table column from the model.
-        Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite).
+        For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table
+        column from the model. Ignore this check for database engines that either provide this
+        error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite).
 
     .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True)
 
-        Find (using ``whereclause``) or add (using ``insert_values``) a row to
-        ``table``, and return the resulting ID. If ``autoCreate`` == False, we will not automatically insert the row.
+        Find (using ``whereclause``) or add (using ``insert_values``) a row to ``table``, and
+        return the resulting ID. If ``autoCreate`` == False, we will not automatically insert the
+        row.
 
     .. py:method:: hashColumns(*args)
 
-        Hash the given values in a consistent manner: None is represented as \xf5, an invalid unicode byte; strings are converted to utf8; and integers are represented by their decimal expansion.
-        The values are then joined by '\0' and hashed with sha1.
+        Hash the given values in a consistent manner: None is represented as \xf5, an invalid
+        unicode byte; strings are converted to utf8; and integers are represented by their decimal
+        expansion. The values are then joined by '\0' and hashed with sha1.
 
     .. py:method:: doBatch(batch, batch_n=500)
 
@@ -217,12 +221,14 @@ handled through the model.
 
 .. py:class:: Model
 
-    This class contains the canonical description of the Buildbot schema.
-    It is represented in the form of SQLAlchemy :class:`Table <sqlalchemy:sqlalchemy.schema.Table>` instances, as class variables.
-    At runtime, the model is available at ``master.db.model``.
-    So, for example, the ``buildrequests`` table can be referred to as ``master.db.model.buildrequests``, and columns are available in its ``c`` attribute.
+    This class contains the canonical description of the Buildbot schema. It is represented in the
+    form of SQLAlchemy :class:`Table <sqlalchemy:sqlalchemy.schema.Table>` instances, as class
+    variables. At runtime, the model is available at ``master.db.model``. So, for example, the
+    ``buildrequests`` table can be referred to as ``master.db.model.buildrequests``, and columns
+    are available in its ``c`` attribute.
 
-    The source file, :src:`master/buildbot/db/model.py`, contains comments describing each table; that information is not replicated in this documentation.
+    The source file, :src:`master/buildbot/db/model.py`, contains comments describing each table;
+    that information is not replicated in this documentation.
 
     Note that the model is not used for new installations or upgrades of the
     Buildbot database.  See :ref:`Modifying-the-Database-Schema` for more
@@ -299,30 +305,34 @@ Modifying the Database Schema
 Changes to the schema are accomplished through migration scripts, supported by
 `Alembic <https://alembic.sqlalchemy.org/en/latest/>`_.
 
-The schema is tracked by a revision number, stored in the ``alembic_version`` table.
-It can be anything, but by convention Buildbot uses revision numbers that are numbers incremented by one for each revision.
-The master will refuse to run with an outdated database.
+The schema is tracked by a revision number, stored in the ``alembic_version`` table. It can be
+anything, but by convention Buildbot uses revision numbers that are numbers incremented by one for
+each revision. The master will refuse to run with an outdated database.
 
 To make a change to the schema, first consider how to handle any existing data.
 When adding new columns, this may not be necessary, but table refactorings can
 be complex and require caution so as not to lose information.
 
-Refer to the documentation of Alembic for details of how database migration scripts should be written.
+Refer to the documentation of Alembic for details of how database migration scripts should be
+written.
 
-The database schema itself is stored in :src:`master/buildbot/db/model.py` which should be updated to represent the new schema.
-Buildbot's automated tests perform a rudimentary comparison of an upgraded database with the model, but it is important to check the details - key length, nullability, and so on can sometimes be missed by the checks.
-If the schema and the upgrade scripts get out of sync, bizarre behavior can result.
+The database schema itself is stored in :src:`master/buildbot/db/model.py` which should be updated
+to represent the new schema. Buildbot's automated tests perform a rudimentary comparison of an
+upgraded database with the model, but it is important to check the details - key length,
+nullability, and so on can sometimes be missed by the checks. If the schema and the upgrade scripts
+get out of sync, bizarre behavior can result.
 
-Changes to database schema should be reflected in corresponding fake database table definitions in :src:`master/buildbot/test/fakedb`
+Changes to database schema should be reflected in corresponding fake database table definitions in
+:src:`master/buildbot/test/fakedb`
 
 The upgrade scripts should have unit tests.
 The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
 Unit test scripts should be named e.g., :file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
 
-The :src:`master/buildbot/test/integration/test_upgrade.py <master/buildbot/test/integration/test_upgrade.py>` also tests
-upgrades, and will confirm that the resulting database matches the model.  If
-you encounter implicit indexes on MySQL, that do not appear on SQLite or
-Postgres, add them to ``implied_indexes`` in
+The :src:`master/buildbot/test/integration/test_upgrade.py
+<master/buildbot/test/integration/test_upgrade.py>` also tests upgrades, and will confirm that the
+resulting database matches the model. If you encounter implicit indexes on MySQL, that do not
+appear on SQLite or Postgres, add them to ``implied_indexes`` in
 :file:`master/buidlbot/db/model.py`.
 
 Foreign key checking
@@ -332,9 +342,12 @@ PostgreSQL and SQlite db backends check the foreign keys consistency.
 
 .. note:
 
-    Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help a lot for testing foreign keys constraint in a developer friendly environment.
-    For compat reason, they decided to disable foreign key checks by default.
-    Since 0.9.0b8, buildbot now enforces by default the foreign key checking, and is now dependent on sqlite3 >3.6.19, which was released in 2009.
+    Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do
+    `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help
+    a lot for testing foreign keys constraint in a developer friendly environment. For compat
+    reason, they decided to disable foreign key checks by default. Since 0.9.0b8, buildbot now
+    enforces by default the foreign key checking, and is now dependent on sqlite3 >3.6.19, which
+    was released in 2009.
 
 
 Database Compatibility Notes
@@ -409,7 +422,8 @@ Too Many Variables in SQLite
 .. index:: single: SQLite; limitations
 
 Sqlite has a limitation on the number of variables it can use.
-This limitation is usually `SQLITE_LIMIT_VARIABLE_NUMBER=999 <http://www.sqlite.org/c3ref/c_limit_attached.html#sqlitelimitvariablenumber>`_.
+This limitation is usually
+`SQLITE_LIMIT_VARIABLE_NUMBER=999 <http://www.sqlite.org/c3ref/c_limit_attached.html#sqlitelimitvariablenumber>`_.
 There is currently no way with pysqlite to query the value of this limit.
 The C-api ``sqlite_limit`` is just not bound to the python.
 

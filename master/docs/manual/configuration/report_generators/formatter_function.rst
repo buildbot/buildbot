@@ -23,8 +23,8 @@ As opposed to :ref:`MessageFormatterFunctionRaw`, only the message body can be c
          - ``buildset`` key with the buildset dictionary as received from the data API.
          - ``builds`` key with the builds dictionaries as received from the data API.
 
-    :param string template_type: either ``plain``, ``html`` or ``json`` depending on the output of the formatter.
-        JSON output must not be encoded.
+    :param string template_type: either ``plain``, ``html`` or ``json`` depending on the output of
+        the formatter. JSON output must not be encoded.
     :param boolean want_properties: include 'properties' in the build dictionary
     :param boolean want_steps: include 'steps' in the build dictionary
     :param boolean wantLogs: deprecated, use ``want_logs`` and ``want_logs_content`` set to the same value.

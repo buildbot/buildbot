@@ -7,7 +7,8 @@ Launching the daemons
 ---------------------
 
 Both the buildmaster and the worker run as daemon programs.
-To launch them, pass the working directory to the :command:`buildbot` and :command:`buildbot-worker` commands, as appropriate:
+To launch them, pass the working directory to the :command:`buildbot` and :command:`buildbot-worker`
+commands, as appropriate:
 
 .. code-block:: bash
 
@@ -23,35 +24,49 @@ The *BASEDIR* is optional and can be omitted if the current directory contains t
     buildbot start
 
 This command will start the daemon and then return, so normally it will not produce any output.
-To verify that the programs are indeed running, look for a pair of files named :file:`twistd.log` and :file:`twistd.pid` that should be created in the working directory.
-:file:`twistd.pid` contains the process ID of the newly-spawned daemon.
+To verify that the programs are indeed running, look for a pair of files named :file:`twistd.log`
+and :file:`twistd.pid` that should be created in the working directory. :file:`twistd.pid` contains
+the process ID of the newly-spawned daemon.
 
 When the worker connects to the buildmaster, new directories will start appearing in its base directory.
 The buildmaster tells the worker to create a directory for each Builder which will be using that worker.
 All build operations are performed within these directories: CVS checkouts, compiles, and tests.
 
-Once you get everything running, you will want to arrange for the buildbot daemons to be started at boot time.
-One way is to use :command:`cron`, by putting them in a ``@reboot`` crontab entry [#f1]_
+Once you get everything running, you will want to arrange for the buildbot daemons to be started at
+boot time. One way is to use :command:`cron`, by putting them in a ``@reboot`` crontab entry [#f1]_
 
 .. code-block:: none
 
     @reboot buildbot start [ BASEDIR ]
 
 When you run :command:`crontab` to set this up, remember to do it as the buildmaster or worker account!
-If you add this to your crontab when running as your regular account (or worse yet, root), then the daemon will run as the wrong user, quite possibly as one with more authority than you intended to provide.
+If you add this to your crontab when running as your regular account (or worse yet, root), then
+the daemon will run as the wrong user, quite possibly as one with more authority than you intended
+to provide.
 
-It is important to remember that the environment provided to cron jobs and init scripts can be quite different than your normal runtime.
+It is important to remember that the environment provided to cron jobs and init scripts can be
+quite different than your normal runtime.
 There may be fewer environment variables specified, and the :envvar:`PATH` may be shorter than usual.
-It is a good idea to test out this method of launching the worker by using a cron job with a time in the near future, with the same command, and then check :file:`twistd.log` to make sure the worker actually started correctly.
-Common problems here are for :file:`/usr/local` or :file:`~/bin` to not be on your :envvar:`PATH`, or for :envvar:`PYTHONPATH` to not be set correctly.
-Sometimes :envvar:`HOME` is messed up too. If using systemd to launch :command:`buildbot-worker`, it may be a good idea to specify a fixed :envvar:`PATH` using the :envvar:`Environment` directive
-(see `systemd unit file example <https://github.com/buildbot/buildbot-contrib/blob/master/worker/contrib/systemd/buildbot-worker%40.service>`_).
+It is a good idea to test out this method of launching the worker by using a cron job with a time
+in the near future, with the same command, and then check :file:`twistd.log` to make sure the worker
+actually started correctly.
+Common problems here are for :file:`/usr/local` or :file:`~/bin` to not be on your :envvar:`PATH`,
+or for :envvar:`PYTHONPATH` to not be set correctly.
+Sometimes :envvar:`HOME` is messed up too. If using systemd to launch :command:`buildbot-worker`,
+it may be a good idea to specify a fixed :envvar:`PATH` using the :envvar:`Environment` directive
+(see `systemd unit file example
+<https://github.com/buildbot/buildbot-contrib/blob/master/worker/contrib/systemd/buildbot-worker%40.service>`_).
 
 Some distributions may include conveniences to make starting buildbot at boot time easy.
-For instance, with the default buildbot package in Debian-based distributions, you may only need to modify :file:`/etc/default/buildbot` (see also :file:`/etc/init.d/buildbot`, which reads the configuration in :file:`/etc/default/buildbot`).
+For instance, with the default buildbot package in Debian-based distributions, you may only need to
+modify :file:`/etc/default/buildbot` (see also :file:`/etc/init.d/buildbot`, which reads the
+configuration in :file:`/etc/default/buildbot`).
 
-Buildbot also comes with its own init scripts that provide support for controlling multi-worker and multi-master setups (mostly because they are based on the init script from the Debian package).
-With a little modification, these scripts can be used on both Debian and RHEL-based distributions. Thus, they may prove helpful to package maintainers who are working on buildbot (or to those who haven't yet split buildbot into master and worker packages).
+Buildbot also comes with its own init scripts that provide support for controlling multi-worker and
+multi-master setups (mostly because they are based on the init script from the Debian package).
+With a little modification, these scripts can be used on both Debian and RHEL-based distributions.
+Thus, they may prove helpful to package maintainers who are working on buildbot (or to those who
+haven't yet split buildbot into master and worker packages).
 
 .. code-block:: bash
 

@@ -49,8 +49,10 @@ The following parameters are supported:
 
 ``start_formatter``
     (optional, instance of ``reporters.MessageFormatter`` or ``reporters.MessageFormatterRenderable``)
-    This is an optional message formatter that can be used to generate a custom message at the start of the build.
+    This is an optional message formatter that can be used to generate a custom message at the start
+    of the build.
 
 ``end_formatter``
     (optional, instance of ``reporters.MessageFormatter`` or ``reporters.MessageFormatterRenderable``)
-    This is an optional message formatter that can be used to generate a custom message at the end of the build.
+    This is an optional message formatter that can be used to generate a custom message at the end
+    of the build.

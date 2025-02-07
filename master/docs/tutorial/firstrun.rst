@@ -7,15 +7,18 @@ First Run
 Goal
 ----
 
-This tutorial will take you from zero to running your first buildbot master and worker as quickly as possible, without changing the default configuration.
+This tutorial will take you from zero to running your first buildbot master and worker as quickly
+as possible, without changing the default configuration.
 
-This tutorial is all about instant gratification and the five minute experience: in five minutes we want to convince you that this project works, and that you should seriously consider spending time learning the system.
-In this tutorial no configuration or code changes are done.
+This tutorial is all about instant gratification and the five minute experience: in five minutes we
+want to convince you that this project works, and that you should seriously consider spending time
+learning the system. In this tutorial no configuration or code changes are done.
 
 This tutorial assumes that you are running Unix, but might be adaptable to Windows.
 
-Thanks to virtualenv_, installing buildbot in a standalone environment is very easy.
-For those more familiar with Docker_, there also exists a :ref:`docker version of these instructions <first-run-docker-label>`.
+Thanks to virtualenv_, installing buildbot in a standalone environment is very easy. For those more
+familiar with Docker_, there also exists a :ref:`docker version of these instructions
+<first-run-docker-label>`.
 
 You should be able to cut and paste each shell block from this tutorial directly into a terminal.
 
@@ -24,11 +27,11 @@ Simple introduction to BuildBot
 
 Before trying to run BuildBot it's helpful to know what BuildBot is.
 
-BuildBot is a continuous integration framework written in Python.
-It consists of a master daemon and potentially many worker daemons that usually run on other machines.
-The master daemon runs a web server that allows the end user to start new builds and to control the behaviour of the BuildBot instance.
-The master also distributes builds to the workers.
-The worker daemons connect to the master daemon and execute builds whenever master tells them to do so.
+BuildBot is a continuous integration framework written in Python. It consists of a master daemon
+and potentially many worker daemons that usually run on other machines. The master daemon runs a
+web server that allows the end user to start new builds and to control the behaviour of the
+BuildBot instance. The master also distributes builds to the workers. The worker daemons connect to
+the master daemon and execute builds whenever master tells them to do so.
 
 In this tutorial we will run a single master and a single worker on the same machine.
 
@@ -55,10 +58,13 @@ To make this work, you will need the following installed:
 
 Preferably, use your distribution package manager to install these.
 
-You will also need a working Internet connection, as virtualenv and pip will need to download other projects from the Internet.
-The master and builder daemons will need to be able to connect to ``github.com`` via HTTPS to fetch the repo we're testing.
+You will also need a working Internet connection, as virtualenv and pip will need to download other
+projects from the Internet. The master and builder daemons will need to be able to connect to
+``github.com`` via HTTPS to fetch the repo we're testing.
 
-If you need to use a proxy for this ensure that either the ``HTTPS_PROXY`` or ``ALL_PROXY`` environment variable is set to your proxy, e.g., by executing ``export HTTPS_PROXY=http://localhost:9080`` in the shell before starting each daemon.
+If you need to use a proxy for this ensure that either the ``HTTPS_PROXY`` or ``ALL_PROXY``
+environment variable is set to your proxy, e.g., by executing ``export
+HTTPS_PROXY=http://localhost:9080`` in the shell before starting each daemon.
 
 .. note::
 
@@ -87,10 +93,14 @@ Then we create the virtual environment. On Python 3:
 Next, we need to install several build dependencies to make sure we can install buildbot and its supporting packages.
 These build dependencies are:
 
-* GCC build tools (``gcc`` for RHEL/CentOS/Fedora based distributions, or ``build-essential``  for Ubuntu/Debian based distributions).
-* Python development library (``python3-devel`` for RHEL/CentOS/Fedora based distributions, or ``python3-dev`` for Ubuntu/Debian based distributions).
-* OpenSSL development library (``openssl-devel`` for RHEL/CentOS/Fedora based distributions, or ``libssl-dev`` for Ubuntu/Debian based distributions).
-* `libffi` development library (``libffi-devel`` for RHEL/CentOS/Fedora based distributions, or ``libffi-dev`` for Ubuntu/Debian based distributions).
+* GCC build tools (``gcc`` for RHEL/CentOS/Fedora based distributions, or ``build-essential``
+  for Ubuntu/Debian based distributions).
+* Python development library (``python3-devel`` for RHEL/CentOS/Fedora based distributions, or
+  ``python3-dev`` for Ubuntu/Debian based distributions).
+* OpenSSL development library (``openssl-devel`` for RHEL/CentOS/Fedora based distributions, or
+  ``libssl-dev`` for Ubuntu/Debian based distributions).
+* `libffi` development library (``libffi-devel`` for RHEL/CentOS/Fedora based distributions, or
+  ``libffi-dev`` for Ubuntu/Debian based distributions).
 
 Install these build dependencies:
 
@@ -120,9 +130,10 @@ Now that buildbot is installed, it's time to create the master.
 
   buildbot create-master my_master
 
-Buildbot's activity is controlled by a configuration file.
-Buildbot by default uses configuration from file at ``master.cfg``, but its installation comes with a sample configuration file named ``master.cfg.sample``.
-We will use the sample configuration file unchanged, but we have to rename it to ``master.cfg``:
+Buildbot's activity is controlled by a configuration file. Buildbot by default uses configuration
+from file at ``master.cfg``, but its installation comes with a sample configuration file named
+``master.cfg.sample``. We will use the sample configuration file unchanged, but we have to rename
+it to ``master.cfg``:
 
 .. code-block:: bash
 
@@ -156,8 +167,8 @@ As a consequence of this, your worker will need access to the git_ command in or
 Be sure that it is installed, or the builds will fail.
 
 Same as we did for our master, we will create a virtualenv for our worker next to the master's one.
-It would however be completely ok to do this on another computer - as long as the *worker* computer is able to connect to the *master's* .
-We first create a new directory for the worker:
+It would however be completely ok to do this on another computer - as long as the *worker* computer
+is able to connect to the *master's* . We first create a new directory for the worker:
 
 .. code-block:: bash
 
@@ -186,9 +197,14 @@ Now, create the worker:
 
   buildbot-worker create-worker my_worker localhost example-worker pass
 
-.. note:: If you decided to create this from another computer, you should replace ``localhost`` with the name of the computer where your master is running.
+.. note::
 
-The username (``example-worker``), and password (``pass``) should be the same as those in :file:`my_master/master.cfg`; verify this is the case by looking at the section for ``c['workers']``:
+    If you decided to create this from another computer, you should replace ``localhost`` with the
+    name of the computer where your master is running.
+
+The username (``example-worker``), and password (``pass``) should be the same as those in
+:file:`my_master/master.cfg`; verify this is the case by looking at the section for
+``c['workers']``:
 
 .. code-block:: bash
 
@@ -209,7 +225,8 @@ It should end with lines like these:
   2014-11-01 15:56:51+0100 [Broker,client] message from master: attached
   The worker appears to have (re)started correctly.
 
-Meanwhile, from the other terminal, in the master log (:file:`twisted.log` in the master directory), you should see lines like these:
+Meanwhile, from the other terminal, in the master log (:file:`twisted.log` in the master
+directory), you should see lines like these:
 
 .. code-block:: none
 
@@ -236,7 +253,9 @@ You should now be able to go to http://localhost:8010, where you will see a web 
 .. image:: _images/index.png
    :alt: index page
 
-Click on "Builds" at the left to open the submenu and then `Builders <http://localhost:8010/#/builders>`_ to see that the worker you just started (identified by the green bubble) has connected to the master:
+Click on "Builds" at the left to open the submenu and then
+`Builders <http://localhost:8010/#/builders>`_ to see that the worker you just started (identified
+by the green bubble) has connected to the master:
 
 .. image:: _images/builders.png
    :alt: builder runtests is active.
@@ -245,8 +264,8 @@ Your master is now quietly waiting for new commits to hello-world.
 This doesn't happen very often though.
 In the next section, we'll see how to manually start a build.
 
-We just wanted to get you to dip your toes in the water.
-It's easy to take your first steps, but this is about as far as we can go without touching the configuration.
+We just wanted to get you to dip your toes in the water. It's easy to take your first steps, but
+this is about as far as we can go without touching the configuration.
 
 You've got a taste now, but you're probably curious for more.
 Let's step it up a little in the second tutorial by changing the configuration and doing an actual build.

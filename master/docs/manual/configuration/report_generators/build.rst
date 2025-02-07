@@ -7,8 +7,9 @@ BuildStatusGenerator
 
 .. py:class:: buildbot.reporters.BuildStatusGenerator
 
-This report generator sends a message when a build completes.
-In case a reporter is used to provide a live status notification for both build start and completion, :ref:`Reportgen-BuildStartEndStatusGenerator` is a better option.
+This report generator sends a message when a build completes. In case a reporter is used to provide
+a live status notification for both build start and completion,
+:ref:`Reportgen-BuildStartEndStatusGenerator` is a better option.
 
 The following parameters are supported:
 
@@ -105,5 +106,6 @@ The following parameters are supported:
 
 ``message_formatter``
     (optional, instance of ``reporters.MessageFormatter``)
-    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom message.
+    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to
+    generate a custom message.
 

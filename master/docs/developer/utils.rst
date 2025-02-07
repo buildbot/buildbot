@@ -31,13 +31,15 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
             compare_attrs = ( 'radius', 'thickness' )
             # ...
 
-    Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
-    This is used to implement Buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
-    If the comparison shows the objects to be equivalent, then the old object is left in place.
-    If they differ, the old object is removed from the buildmaster, and the new object is added.
+    Any attributes not in ``compare_attrs`` will not be considered when comparing objects. This is
+    used to implement Buildbot's reconfig logic, where a comparison between the new and existing
+    objects is used to determine whether the new object should replace the existing object. If the
+    comparison shows the objects to be equivalent, then the old object is left in place. If they
+    differ, the old object is removed from the buildmaster, and the new object is added.
 
-    For use in configuration objects (schedulers, changesources, etc.), include any attributes which are set in the constructor based on the user's configuration.
-    Be sure to also include the superclass's list, e.g.:
+    For use in configuration objects (schedulers, changesources, etc.), include any attributes
+    which are set in the constructor based on the user's configuration. Be sure to also include the
+    superclass's list, e.g.:
 
     .. code-block:: python
 
@@ -45,7 +47,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
             compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
 
 
-    A point to note is that the compare_attrs list is cumulative; that is, when a subclass also has a compare_attrs and the parent class has a compare_attrs, the subclass' compare_attrs also includes the parent class' compare_attrs.
+    A point to note is that the compare_attrs list is cumulative; that is, when a subclass also has
+    a compare_attrs and the parent class has a compare_attrs, the subclass' compare_attrs also
+    includes the parent class' compare_attrs.
 
     This class also implements the :py:class:`buildbot.interfaces.IConfigured` interface.
     The configuration is automatically generated, being the dict of all ``compare_attrs``.
@@ -55,8 +59,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param str: input string
     :returns: safe version of the input
 
-    This function will filter out some inappropriate characters for filenames; it is suitable for adapting strings from the configuration for use as filenames.
-    It is not suitable for use with strings from untrusted sources.
+    This function will filter out some inappropriate characters for filenames; it is suitable for
+    adapting strings from the configuration for use as filenames. It is not suitable for use with
+    strings from untrusted sources.
 
 .. py:function:: epoch2datetime(epoch)
 
@@ -77,9 +82,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
 .. py:data:: UTC
 
-    A ``datetime.tzinfo`` subclass representing UTC time.
-    A similar class has finally been added to Python in version 3.2, but the implementation is simple enough to include here.
-    This is mostly used in tests to create timezone-aware datetime objects in UTC:
+    A ``datetime.tzinfo`` subclass representing UTC time. A similar class has finally been added to
+    Python in version 3.2, but the implementation is simple enough to include here. This is mostly
+    used in tests to create timezone-aware datetime objects in UTC:
 
     .. code-block:: python
 
@@ -101,9 +106,10 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param input: a thing
     :returns: a list of zero or more things
 
-    This function is intended to support the many places in Buildbot where the user can specify either a string or a list of strings, but the implementation wishes to always consider lists.
-    It converts any string to a single-element list, ``None`` to an empty list, and any iterable to a list.
-    Input lists are copied, avoiding aliasing issues.
+    This function is intended to support the many places in Buildbot where the user can specify
+    either a string or a list of strings, but the implementation wishes to always consider lists.
+    It converts any string to a single-element list, ``None`` to an empty list, and any iterable to
+    a list. Input lists are copied, avoiding aliasing issues.
 
 .. py:function:: now()
 
@@ -197,9 +203,10 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
 .. py:function:: in_reactor(fn)
 
-    This decorator will cause the wrapped function to be run in the Twisted reactor, with the reactor stopped when the function completes.
-    It returns the result of the wrapped function.
-    If the wrapped function fails, its traceback will be printed, the reactor halted, and ``None`` returned.
+    This decorator will cause the wrapped function to be run in the Twisted reactor, with the
+    reactor stopped when the function completes. It returns the result of the wrapped function. If
+    the wrapped function fails, its traceback will be printed, the reactor halted, and ``None``
+    returned.
 
 .. py:function:: asyncSleep(secs, reactor=None)
 
@@ -220,8 +227,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param maybe_list: list, tuple, byte string, or unicode
     :returns: unicode string
 
-    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`bytes2unicode`.
-    This is useful for configuration parameters that may be strings or lists of strings.
+    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode
+    using :py:func:`bytes2unicode`. This is useful for configuration parameters that may be strings
+    or lists of strings.
 
 .. py:class:: Notifier()
 
@@ -240,13 +248,14 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param url: a git url
     :returns: a :py:class:`GitUrl` with results of parsed url
 
-    This function is intended to help various components to parse git urls.
-    It helps to find the ``<owner>/<repo>`` of a git repository url coming from a change, in order to call urls.
-    ``owner`` and ``repo`` is a common scheme for identifying a git repository between various git hosting services, like GitHub, GitLab, BitBucket, etc.
-    Each service has their own naming for similar things, but we choose to use the GitHub naming as a de-facto standard.
-    To simplify implementation, the parser is accepting invalid urls, but it should always parse valid urls correctly.
-    The unit tests in ``test_util_giturlparse.py`` are the references on what the parser accepts.
-    Please feel free to update the parser and the unit tests.
+    This function is intended to help various components to parse git urls. It helps to find the
+    ``<owner>/<repo>`` of a git repository url coming from a change, in order to call urls.
+    ``owner`` and ``repo`` is a common scheme for identifying a git repository between various git
+    hosting services, like GitHub, GitLab, BitBucket, etc. Each service has their own naming for
+    similar things, but we choose to use the GitHub naming as a de-facto standard. To simplify
+    implementation, the parser is accepting invalid urls, but it should always parse valid urls
+    correctly. The unit tests in ``test_util_giturlparse.py`` are the references on what the parser
+    accepts. Please feel free to update the parser and the unit tests.
 
     Example use:
 
@@ -277,7 +286,8 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     .. py:attribute:: owner
 
-        The owner of the repository (in case of GitLab might be a nested group, i.e contain ``/``, e.g ``repo/subrepo/subsubrepo``)
+        The owner of the repository (in case of GitLab might be a nested group, i.e contain ``/``,
+        e.g ``repo/subrepo/subsubrepo``)
 
     .. py:attribute:: repo
 
@@ -291,23 +301,29 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
 .. py:class:: LRUCache(miss_fn, max_size=50)
 
-    :param miss_fn: function to call, with key as parameter, for cache misses.
-        The function should return the value associated with the key argument, or None if there is no value associated with the key.
+    :param miss_fn: function to call, with key as parameter, for cache misses. The function should
+        return the value associated with the key argument, or None if there is no value associated with
+        the key.
     :param max_size: maximum number of objects in the cache.
 
-    This is a simple least-recently-used cache.
-    When the cache grows beyond the maximum size, the least-recently used items will be automatically removed from the cache.
+    This is a simple least-recently-used cache. When the cache grows beyond the maximum size, the
+    least-recently used items will be automatically removed from the cache.
 
-    This cache is designed to control memory usage by minimizing duplication of objects, while avoiding unnecessary re-fetching of the same rows from the database.
+    This cache is designed to control memory usage by minimizing duplication of objects, while
+    avoiding unnecessary re-fetching of the same rows from the database.
 
-    All values are also stored in a weak valued dictionary, even after they have expired from the cache.
-    This allows values that are used elsewhere in Buildbot to "stick" in the cache in case they are needed by another component.
-    Weak references cannot be used for some types, so these types are not compatible with this class.
-    Note that dictionaries can be weakly referenced if they are an instance of a subclass of ``dict``.
+    All values are also stored in a weak valued dictionary, even after they have expired from the
+    cache. This allows values that are used elsewhere in Buildbot to "stick" in the cache in case
+    they are needed by another component. Weak references cannot be used for some types, so these
+    types are not compatible with this class. Note that dictionaries can be weakly referenced if
+    they are an instance of a subclass of ``dict``.
 
-    If the result of the ``miss_fn`` is ``None``, then the value is not cached; this is intended to avoid caching negative results.
+    If the result of the ``miss_fn`` is ``None``, then the value is not cached; this is intended to
+    avoid caching negative results.
 
-    This is based on `Raymond Hettinger's implementation <http://code.activestate.com/recipes/498245-lru-and-lfu-cache-decorators/>`_, licensed under the PSF license, which is GPL-compatible.
+    This is based on `Raymond Hettinger's implementation
+    <http://code.activestate.com/recipes/498245-lru-and-lfu-cache-decorators/>`_, licensed under
+    the PSF license, which is GPL-compatible.
 
     .. py:attribute:: hits
 
@@ -331,18 +347,21 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
         :param miss_fn_kwargs: keyword arguments to the ``miss_fn``
         :returns: value via Deferred
 
-        Fetch a value from the cache by key, invoking ``miss_fn(key, **miss_fn_kwargs)`` if the key is not in the cache.
+        Fetch a value from the cache by key, invoking ``miss_fn(key, **miss_fn_kwargs)`` if the key
+        is not in the cache.
 
-        Any additional keyword arguments are passed to the ``miss_fn`` as keyword arguments; these can supply additional information relating to the key.
-        It is up to the caller to ensure that this information is functionally identical for each key value: if the key is already in the cache, the ``miss_fn`` will not be invoked, even if the keyword arguments differ.
+        Any additional keyword arguments are passed to the ``miss_fn`` as keyword arguments; these
+        can supply additional information relating to the key. It is up to the caller to ensure
+        that this information is functionally identical for each key value: if the key is already
+        in the cache, the ``miss_fn`` will not be invoked, even if the keyword arguments differ.
 
     .. py:method:: put(key, value)
 
         :param key: key at which to place the value
         :param value: value to place there
 
-        Add the given key and value into the cache.
-        The purpose of this method is to insert a new value into the cache *without* invoking the miss_fn (e.g., to avoid unnecessary overhead).
+        Add the given key and value into the cache. The purpose of this method is to insert a new
+        value into the cache *without* invoking the miss_fn (e.g., to avoid unnecessary overhead).
 
     .. py:method set_max_size(max_size)
 
@@ -359,10 +378,13 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
 .. py:class:: AsyncLRUCache(miss_fn, max_size=50)
 
-    :param miss_fn: This is the same as the miss_fn for class LRUCache, with the difference that this function *must* return a Deferred.
+    :param miss_fn: This is the same as the miss_fn for class LRUCache, with the difference that
+        this function *must* return a Deferred.
     :param max_size: maximum number of objects in the cache.
 
-    This class has the same functional interface as LRUCache, but asynchronous locking is used to ensure that in the common case of multiple concurrent requests for the same key, only one fetch is performed.
+    This class has the same functional interface as LRUCache, but asynchronous locking is used to
+    ensure that in the common case of multiple concurrent requests for the same key, only one fetch
+    is performed.
 
 :py:mod:`buildbot.util.bbcollections`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -373,17 +395,19 @@ This package provides a few useful collection objects.
 
 .. note::
 
-    This module used to be named ``collections``, but without absolute imports (:pep:`328`), this precluded using the standard library's ``collections`` module.
+    This module used to be named ``collections``, but without absolute imports (:pep:`328`), this
+    precluded using the standard library's ``collections`` module.
 
 .. py:class:: defaultdict
 
-    This is a clone of the Python :class:`collections.defaultdict` for use in Python-2.4.
-    In later versions, this is simply a reference to the built-in :class:`defaultdict`, so Buildbot code can simply use :class:`buildbot.util.collections.defaultdict` everywhere.
+    This is a clone of the Python :class:`collections.defaultdict` for use in Python-2.4. In later
+    versions, this is simply a reference to the built-in :class:`defaultdict`, so Buildbot code can
+    simply use :class:`buildbot.util.collections.defaultdict` everywhere.
 
 .. py:class:: KeyedSets
 
-    This is a collection of named sets.
-    In principle, it contains an empty set for every name, and you can add things to sets, discard things from sets, and so on.
+    This is a collection of named sets. In principle, it contains an empty set for every name, and
+    you can add things to sets, discard things from sets, and so on.
 
     .. code-block:: python
 
@@ -422,7 +446,8 @@ For example
         return d
     eventually(do_what_I_say, "clean up", "your bedroom")
 
-The package defines "later" as "next time the reactor has control", so this is a good way to avoid long loops that block another activity in the reactor.
+The package defines "later" as "next time the reactor has control", so this is a good way to avoid
+long loops that block another activity in the reactor.
 
 .. py:function:: eventually(cb, *args, **kwargs)
 
@@ -432,7 +457,9 @@ The package defines "later" as "next time the reactor has control", so this is a
 
     Invoke the callable ``cb`` in a later reactor turn.
 
-    Callables given to :func:`eventually` are guaranteed to be called in the same order as the calls to :func:`eventually` -- writing ``eventually(a); eventually(b)`` guarantees that ``a`` will be called before ``b``.
+    Callables given to :func:`eventually` are guaranteed to be called in the same order as the
+    calls to :func:`eventually` -- writing ``eventually(a); eventually(b)`` guarantees that ``a``
+    will be called before ``b``.
 
     Any exceptions that occur in the callable will be logged with ``log.err()``.
     If you really want to ignore them, provide a callable that catches those exceptions.
@@ -445,24 +472,26 @@ The package defines "later" as "next time the reactor has control", so this is a
     :param value: value with which the Deferred should fire
     :returns: Deferred
 
-    This function returns a Deferred which will fire in a later reactor turn, after the current call stack has been completed, and after all other Deferreds previously scheduled with :py:func:`eventually`.
-    The returned Deferred will never fail.
+    This function returns a Deferred which will fire in a later reactor turn, after the current
+    call stack has been completed, and after all other Deferreds previously scheduled with
+    :py:func:`eventually`. The returned Deferred will never fail.
 
 .. py:function:: flushEventualQueue()
 
     :returns: Deferred
 
-    This returns a Deferred which fires when the eventual-send queue is finally empty.
-    This is useful for tests and other circumstances where it is useful to know that "later" has arrived.
+    This returns a Deferred which fires when the eventual-send queue is finally empty. This is
+    useful for tests and other circumstances where it is useful to know that "later" has arrived.
 
 :py:mod:`buildbot.util.debounce`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.debounce
 
-It's often necessary to perform some action in response to a particular type of event.
-For example, steps need to update their status after updates arrive from the worker.
-However, when many events arrive in quick succession, it's more efficient to only perform the action once, after the last event has occurred.
+It's often necessary to perform some action in response to a particular type of event. For example,
+steps need to update their status after updates arrive from the worker. However, when many events
+arrive in quick succession, it's more efficient to only perform the action once, after the last
+event has occurred.
 
 The ``debounce.method(wait, until_idle=False)`` decorator is the tool for the job.
 
@@ -470,22 +499,27 @@ The ``debounce.method(wait, until_idle=False)`` decorator is the tool for the jo
 
     :param wait: time to wait before invoking, in seconds
     :param until_idle: resets the timer on every call
-    :param get_reactor: A callable that takes the underlying instance and returns the reactor to use. Defaults to ``instance.master.reactor``.
+    :param get_reactor: A callable that takes the underlying instance and returns the reactor to use.
+        Defaults to ``instance.master.reactor``.
 
     Returns a decorator that debounces the underlying method.
     The underlying method must take no arguments (except ``self``).
 
-    Calls are "debounced", meaning that multiple calls to the decorated method will result in a single invocation.
+    Calls are "debounced", meaning that multiple calls to the decorated method will result in a
+    single invocation.
 
-    When `until_idle` is `True`, the underlying method will be called after *wait* seconds have elapsed since the last time the decorated method have been called.
-    In case of constant stream, it will never be called.
+    When `until_idle` is `True`, the underlying method will be called after *wait* seconds have
+    elapsed since the last time the decorated method have been called. In case of constant stream,
+    it will never be called.
 
-    When `until_idle` is `False`, the underlying method will be called after *wait* seconds have elapsed since the first time the decorated method have been called.
-    In case of constant stream, it will called about once every *wait* seconds (plus the time the method takes to execute)
+    When `until_idle` is `False`, the underlying method will be called after *wait* seconds have
+    elapsed since the first time the decorated method have been called. In case of constant stream,
+    it will called about once every *wait* seconds (plus the time the method takes to execute)
 
-
-    The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and stopped.
-    This is useful when the method is a part of a Buildbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
+    The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and
+    stopped. This is useful when the method is a part of a Buildbot service: call
+    ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling
+    its Deferred appropriately.
 
 .. py:class:: Debouncer
 
@@ -517,15 +551,17 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 
 .. py:function:: method
 
-    This decorator replaces the decorated method with a :py:class:`Poller` instance configured to call the decorated method periodically.
-    The poller is initially stopped, so periodic calls will not begin until its ``start`` method is called.
-    The start polling interval is specified when the poller is started.
-    A random delay may optionally be supplied.
-    This allows to avoid the situation of multiple services with the same interval are executing at exactly the same time.
+    This decorator replaces the decorated method with a :py:class:`Poller` instance configured to
+    call the decorated method periodically. The poller is initially stopped, so periodic calls will
+    not begin until its ``start`` method is called. The start polling interval is specified when
+    the poller is started. A random delay may optionally be supplied. This allows to avoid the
+    situation of multiple services with the same interval are executing at exactly the same time.
 
-    If the decorated method fails or raises an exception, the Poller logs the error and re-schedules the call for the next interval.
+    If the decorated method fails or raises an exception, the Poller logs the error and
+    re-schedules the call for the next interval.
 
-    If a previous invocation of the method has not completed when the interval expires, then the next invocation is skipped and the interval timer starts again.
+    If a previous invocation of the method has not completed when the interval expires, then the
+    next invocation is skipped and the interval timer starts again.
 
     A common idiom is to call ``start`` and ``stop`` from ``startService`` and ``stopService``:
 
@@ -565,25 +601,27 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 
     .. py:method:: __call__()
 
-        Force a call to the decorated method now.
-        If the decorated method is currently running, another call will begin as soon as it completes unless the poller is currently stopping.
+        Force a call to the decorated method now. If the decorated method is currently running,
+        another call will begin as soon as it completes unless the poller is currently stopping.
 
 :py:mod:`buildbot.util.maildir`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.maildir
 
-Several Buildbot components make use of `maildirs <http://www.courier-mta.org/maildir.html>`_ to hand off messages between components.
-On the receiving end, there's a need to watch a maildir for incoming messages and trigger some action when one arrives.
+Several Buildbot components make use of `maildirs <http://www.courier-mta.org/maildir.html>`_ to
+hand off messages between components. On the receiving end, there's a need to watch a maildir for
+incoming messages and trigger some action when one arrives.
 
 .. py:class:: MaildirService(basedir)
 
         :param basedir: (optional) base directory of the maildir
 
-    A :py:class:`MaildirService` instance watches a maildir for new messages.
-    It should be a child service of some :py:class:`~twisted.application.service.MultiService` instance.
-    When running, this class uses the linux dirwatcher API (if available) or polls for new files in the 'new' maildir subdirectory.
-    When it discovers a new message, it invokes its :py:meth:`messageReceived` method.
+    A :py:class:`MaildirService` instance watches a maildir for new messages. It should be a child
+    service of some :py:class:`~twisted.application.service.MultiService` instance. When running,
+    this class uses the linux dirwatcher API (if available) or polls for new files in the 'new'
+    maildir subdirectory. When it discovers a new message, it invokes its
+    :py:meth:`messageReceived` method.
 
     To use this class, subclass it and implement a more interesting :py:meth:`messageReceived` function.
 
@@ -591,22 +629,25 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
 
         :param basedir: base directory of the maildir
 
-        If no ``basedir`` is provided to the constructor, this method must be used to set the basedir before the service starts.
+        If no ``basedir`` is provided to the constructor, this method must be used to set the
+        basedir before the service starts.
 
     .. py:method:: messageReceived(filename)
 
         :param filename: unqualified filename of the new message
 
-        This method is called with the short filename of the new message.
-        The full name of the new file can be obtained with ``os.path.join(maildir, 'new', filename)``.
-        The method is un-implemented in the :py:class:`MaildirService` class, and must be implemented in subclasses.
+        This method is called with the short filename of the new message. The full name of the new
+        file can be obtained with ``os.path.join(maildir, 'new', filename)``. The method is
+        un-implemented in the :py:class:`MaildirService` class, and must be implemented in
+        subclasses.
 
     .. py:method:: moveToCurDir(filename)
 
         :param filename: unqualified filename of the new message
         :returns: open file object
 
-        Call this from :py:meth:`messageReceived` to start processing the message; this moves the message file to the 'cur' directory and returns an open file handle for it.
+        Call this from :py:meth:`messageReceived` to start processing the message; this moves the
+        message file to the 'cur' directory and returns an open file handle for it.
 
 :py:mod:`buildbot.util.misc`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -615,10 +656,12 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
 
 .. py:function:: deferredLocked(lock)
 
-    :param lock: a :py:class:`twisted.internet.defer.DeferredLock` instance or a string naming an instance attribute containing one
+    :param lock: a :py:class:`twisted.internet.defer.DeferredLock` instance or a string naming an
+        instance attribute containing one
 
-    This is a decorator to wrap an event-driven method (one returning a ``Deferred``) in an acquire/release pair of a designated :py:class:`~twisted.internet.defer.DeferredLock`.
-    For simple functions with a static lock, this is as easy as:
+    This is a decorator to wrap an event-driven method (one returning a ``Deferred``) in an
+    acquire/release pair of a designated :py:class:`~twisted.internet.defer.DeferredLock`. For
+    simple functions with a static lock, this is as easy as:
 
     .. code-block:: python
 
@@ -629,7 +672,8 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
             # ..
             return d
 
-    For class methods which must access a lock that is an instance attribute, the lock can be specified by a string, which will be dynamically resolved to the specific instance at runtime:
+    For class methods which must access a lock that is an instance attribute, the lock can be
+    specified by a string, which will be dynamically resolved to the specific instance at runtime:
 
     .. code-block:: python
 
@@ -648,15 +692,17 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
     :returns: the deferred passed to the function
 
     Cancel the given deferred after the given time has elapsed, if it has not already been fired.
-    When this occurs, the deferred's errback will be fired with a :py:class:`twisted.internet.defer.CancelledError` failure.
+    When this occurs, the deferred's errback will be fired with a
+    :py:class:`twisted.internet.defer.CancelledError` failure.
 
 :py:mod:`buildbot.util.netstrings`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.netstrings
 
-Similar to maildirs, `netstrings <http://cr.yp.to/proto/netstrings.txt>`_ are used occasionally in Buildbot to encode data for interchange.
-While Twisted supports a basic netstring receiver protocol, it does not have a simple way to apply that to a non-network situation.
+Similar to maildirs, `netstrings <http://cr.yp.to/proto/netstrings.txt>`_ are used occasionally in
+Buildbot to encode data for interchange. While Twisted supports a basic netstring receiver
+protocol, it does not have a simple way to apply that to a non-network situation.
 
 .. py:class:: NetstringParser
 
@@ -670,14 +716,16 @@ While Twisted supports a basic netstring receiver protocol, it does not have a s
         Add arbitrarily-sized ``data`` to the incoming-data buffer.
         Any complete netstrings will trigger a call to the :py:meth:`stringReceived` method.
 
-        Note that this method (like the Twisted class it is based on) cannot detect a trailing partial netstring at EOF - the data will be silently ignored.
+        Note that this method (like the Twisted class it is based on) cannot detect a trailing
+        partial netstring at EOF - the data will be silently ignored.
 
     .. py:method:: stringReceived(string):
 
         :param string: the decoded string
 
-        This method is called for each decoded string as soon as it is read completely.
-        The default implementation appends the string to the :py:attr:`strings` attribute, but subclasses can do anything.
+        This method is called for each decoded string as soon as it is read completely. The default
+        implementation appends the string to the :py:attr:`strings` attribute, but subclasses can
+        do anything.
 
     .. py:attribute:: strings
 
@@ -695,7 +743,9 @@ This module contains a few utilities that are not included with SQLAlchemy.
     :param table: table into which insert should be performed
     :param select: select query from which data should be drawn
 
-    This class is taken directly from SQLAlchemy's `compiler.html <http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct>`_, and allows a Pythonic representation of ``INSERT INTO .. SELECT ..`` queries.
+    This class is taken directly from SQLAlchemy's `compiler.html
+    <http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct>`_,
+    and allows a Pythonic representation of ``INSERT INTO .. SELECT ..`` queries.
 
 .. py:function:: sa_version()
 
@@ -717,7 +767,8 @@ This module contains a few utilities that are not included with SQLAlchemy.
     * ``i`` specifies an identifier (:ref:`identifier <type-identifier>`).
     * ``n`` specifies a number (parseable by ``int``).
 
-    A tuple of strings matches a pattern if the lengths are identical, every variable matches and has the correct type, and every non-variable pattern element matches exactly.
+    A tuple of strings matches a pattern if the lengths are identical, every variable matches and
+    has the correct type, and every non-variable pattern element matches exactly.
 
     A matcher object takes patterns using dictionary-assignment syntax:
 
@@ -733,7 +784,8 @@ This module contains a few utilities that are not included with SQLAlchemy.
         changeEndpoint, kwargs = matcher[('change', '13')]
         # -> (ep, {'changeid': 13})
 
-    where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
+    where the result is a tuple of the original assigned object (the ``Change`` instance in this
+    case) and the values of any variables in the path.
 
     .. py:method:: iterPatterns()
 
@@ -748,8 +800,9 @@ This module contains a few utilities that are not included with SQLAlchemy.
 
     :param list topics: topics to match
 
-    This class implements the AMQP-defined syntax: routing keys are treated as dot-separated sequences of words and matched against topics.
-    A star (``*``) in the topic will match any single word, while an octothorpe (``#``) will match zero or more words.
+    This class implements the AMQP-defined syntax: routing keys are treated as dot-separated
+    sequences of words and matched against topics. A star (``*``) in the topic will match any
+    single word, while an octothorpe (``#``) will match zero or more words.
 
     .. py:method:: matches(routingKey)
 
@@ -759,22 +812,25 @@ This module contains a few utilities that are not included with SQLAlchemy.
 :py:mod:`buildbot.util.subscription`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The classes in the :py:mod:`buildbot.util.subscription` module are used for master-local subscriptions.
-In the near future, all uses of this module will be replaced with message-queueing implementations that allow subscriptions and subscribers to span multiple masters.
+The classes in the :py:mod:`buildbot.util.subscription` module are used for master-local
+subscriptions. In the near future, all uses of this module will be replaced with message-queueing
+implementations that allow subscriptions and subscribers to span multiple masters.
 
 :py:mod:`buildbot.util.croniter`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (deprecated)
 
-This module is a copy of https://github.com/taichino/croniter, and provides support for converting cron-like time specifications to actual times.
+This module is a copy of https://github.com/taichino/croniter, and provides support for converting
+cron-like time specifications to actual times.
 
 :py:mod:`buildbot.util.state`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.state
 
-The classes in the :py:mod:`buildbot.util.state` module are used for dealing with object state stored in the database.
+The classes in the :py:mod:`buildbot.util.state` module are used for dealing with object state
+stored in the database.
 
 .. py:class:: StateMixin
 
@@ -853,9 +909,10 @@ This module makes it easy to manipulate identifiers.
     This class accepts a sequence of arbitrary strings and computes newline-terminated substrings.
     Input strings are accepted in append function, and newline-terminated substrings are returned.
 
-    The class buffers any partial lines until a subsequent newline is seen.
-    It considers any of ``\r``, ``\n``, and ``\r\n`` to be newlines.
-    Because of the ambiguity of an append operation ending in the character ``\r`` (it may be a bare ``\r`` or half of ``\r\n``), the last line of such an append operation will be buffered until the next append or flush.
+    The class buffers any partial lines until a subsequent newline is seen. It considers any of
+    ``\r``, ``\n``, and ``\r\n`` to be newlines. Because of the ambiguity of an append operation
+    ending in the character ``\r`` (it may be a bare ``\r`` or half of ``\r\n``), the last line of
+    such an append operation will be buffered until the next append or flush.
 
     .. py:method:: append(text)
 
@@ -884,53 +941,63 @@ The first two classes are more robust implementations of two Twisted classes, an
 
 .. class:: AsyncMultiService
 
-    This class is similar to :py:class:`twisted.application.service.MultiService`, except that it handles Deferreds returned from child services ``startService`` and ``stopService`` methods.
+    This class is similar to :py:class:`twisted.application.service.MultiService`, except that it
+    handles Deferreds returned from child services ``startService`` and ``stopService`` methods.
 
-    Twisted's service implementation does not support asynchronous ``startService`` methods.
-    The reasoning is that all services should start at process startup, with no need to coordinate between them.
-    For Buildbot, this is not sufficient.
-    The framework needs to know when startup has completed, so it can begin scheduling builds.
-    This class implements the desired functionality, with a parent service's ``startService`` returning a Deferred which will only fire when all child services ``startService`` methods have completed.
+    Twisted's service implementation does not support asynchronous ``startService`` methods. The
+    reasoning is that all services should start at process startup, with no need to coordinate
+    between them. For Buildbot, this is not sufficient. The framework needs to know when startup
+    has completed, so it can begin scheduling builds. This class implements the desired
+    functionality, with a parent service's ``startService`` returning a Deferred which will only
+    fire when all child services ``startService`` methods have completed.
 
-    This class also fixes a bug with Twisted's implementation of ``stopService`` which ignores failures in the ``stopService`` process.
-    With :py:class:`AsyncMultiService`, any errors in a child's ``stopService`` will be propagated to the parent's ``stopService`` method.
+    This class also fixes a bug with Twisted's implementation of ``stopService`` which ignores
+    failures in the ``stopService`` process. With :py:class:`AsyncMultiService`, any errors in a
+    child's ``stopService`` will be propagated to the parent's ``stopService`` method.
 
 .. py:class:: AsyncService
 
-    This class is similar to :py:class:`twisted.application.service.Service`, except that its ``setServiceParent`` method will return a Deferred.
-    That Deferred will fire after the ``startService`` method has completed, if the service was started because the new parent was already running.
+    This class is similar to :py:class:`twisted.application.service.Service`, except that its
+    ``setServiceParent`` method will return a Deferred. That Deferred will fire after the
+    ``startService`` method has completed, if the service was started because the new parent was
+    already running.
 
 .. index:: Service utilities; ClusteredService
 
-Some services in buildbot must have only one "active" instance at any given time.
-In a single-master configuration, this requirement is trivial to maintain.
-In a multiple-master configuration, some arbitration is required to ensure that the service is always active on exactly one master in the cluster.
+Some services in buildbot must have only one "active" instance at any given time. In a
+single-master configuration, this requirement is trivial to maintain. In a multiple-master
+configuration, some arbitration is required to ensure that the service is always active on exactly
+one master in the cluster.
 
-For example, a particular daily scheduler could be configured on multiple masters, but only one of them should actually trigger the required builds.
+For example, a particular daily scheduler could be configured on multiple masters, but only one of
+them should actually trigger the required builds.
 
 .. py:class:: ClusteredService
 
     A base class for a service that must have only one "active" instance in a buildbot configuration.
 
-    Each instance of the service is started and stopped via the usual twisted ``startService`` and ``stopService`` methods.
-    This utility class hooks into those methods in order to run an arbitration strategy to pick the one instance that should actually be "active".
+    Each instance of the service is started and stopped via the usual twisted ``startService`` and
+    ``stopService`` methods. This utility class hooks into those methods in order to run an
+    arbitration strategy to pick the one instance that should actually be "active".
 
-    The arbitration strategy is implemented via a polling loop.
-    When each service instance starts, it immediately offers to take over as the active instance (via ``_claimService``).
+    The arbitration strategy is implemented via a polling loop. When each service instance starts,
+    it immediately offers to take over as the active instance (via ``_claimService``).
 
-    If successful, the ``activate`` method is called.
-    Once active, the instance remains active until it is explicitly stopped (eg, via ``stopService``) or otherwise fails.
-    When this happens, the ``deactivate`` method is invoked and the "active" status is given back to the cluster (via ``_unclaimService``).
+    If successful, the ``activate`` method is called. Once active, the instance remains active
+    until it is explicitly stopped (eg, via ``stopService``) or otherwise fails. When this happens,
+    the ``deactivate`` method is invoked and the "active" status is given back to the cluster (via
+    ``_unclaimService``).
 
-    If another instance is already active, this offer fails, and the instance will poll periodically to try again.
-    The polling strategy helps guard against active instances that might silently disappear and leave the service without any active instance running.
+    If another instance is already active, this offer fails, and the instance will poll
+    periodically to try again. The polling strategy helps guard against active instances that might
+    silently disappear and leave the service without any active instance running.
 
     Subclasses should use these methods to hook into this activation scheme:
 
     .. method:: activate()
 
-        When a particular instance of the service is chosen to be the one "active" instance, this method is invoked.
-        It is the corollary to twisted's ``startService``.
+        When a particular instance of the service is chosen to be the one "active" instance, this
+        method is invoked. It is the corollary to twisted's ``startService``.
 
     .. method:: deactivate()
 
@@ -945,60 +1012,69 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. method:: _getServiceId()
 
-        The "service id" uniquely represents this service in the cluster.
-        Each instance of this service must have this same id, which will be used in the arbitration to identify candidates for activation.
-        This method may return a Deferred.
+        The "service id" uniquely represents this service in the cluster. Each instance of this
+        service must have this same id, which will be used in the arbitration to identify
+        candidates for activation. This method may return a Deferred.
 
     .. method:: _claimService()
 
-        An instance is attempting to become the one active instance in the cluster.
-        This method must return `True` or `False` (optionally via a Deferred) to represent whether this instance's offer to be the active one was accepted.
-        If this returns `True`, the ``activate`` method will be called for this instance.
+        An instance is attempting to become the one active instance in the cluster. This method
+        must return `True` or `False` (optionally via a Deferred) to represent whether this
+        instance's offer to be the active one was accepted. If this returns `True`, the
+        ``activate`` method will be called for this instance.
 
     .. method:: _unclaimService()
 
-        Surrender the "active" status back to the cluster and make it available for another instance.
-        This will only be called on an instance that successfully claimed the service and has been activated and after its ``deactivate`` has been called.
-        Therefore, in this method it is safe to reassign the "active" status to another instance.
-        This method may return a Deferred.
+        Surrender the "active" status back to the cluster and make it available for another
+        instance. This will only be called on an instance that successfully claimed the service and
+        has been activated and after its ``deactivate`` has been called. Therefore, in this method
+        it is safe to reassign the "active" status to another instance. This method may return a
+        Deferred.
 
 .. py:class:: SharedService
 
-    This class implements a generic Service that needs to be instantiated only once according to its parameters.
-    It is a common use case to need this for accessing remote services.
-    Having a shared service allows to limit the number of simultaneous access to the same remote service.
-    Thus, several completely independent Buildbot services can use that :py:class:`SharedService` to access the remote service, and automatically synchronize themselves to not overwhelm it.
+    This class implements a generic Service that needs to be instantiated only once according to
+    its parameters. It is a common use case to need this for accessing remote services. Having a
+    shared service allows to limit the number of simultaneous access to the same remote service.
+    Thus, several completely independent Buildbot services can use that :py:class:`SharedService`
+    to access the remote service, and automatically synchronize themselves to not overwhelm it.
 
     .. py:method:: __init__(self, *args, **kwargs)
 
         Constructor of the service.
 
-        Note that unlike :py:class:`BuildbotService`, :py:class:`SharedService` is not reconfigurable and uses the classical constructor method.
+        Note that unlike :py:class:`BuildbotService`, :py:class:`SharedService` is not
+        reconfigurable and uses the classical constructor method.
 
-        Reconfigurability would mean to add some kind of reference counting of the users, which will make the design much more complicated to use.
-        This means that the SharedService will not be destroyed when there is no more users, it will be destroyed at the master's stopService
-        It is important that those :py:class:`SharedService` life cycles are properly handled.
-        Twisted will indeed wait for any thread pool to finish at master stop, which will not happen if the thread pools are not properly closed.
+        Reconfigurability would mean to add some kind of reference counting of the users, which
+        will make the design much more complicated to use. This means that the SharedService will
+        not be destroyed when there is no more users, it will be destroyed at the master's
+        stopService It is important that those :py:class:`SharedService` life cycles are properly
+        handled. Twisted will indeed wait for any thread pool to finish at master stop, which will
+        not happen if the thread pools are not properly closed.
 
-        The lifecycle of the SharedService is the same as a service, it must implement startService and stopService in order to allocate and free its resources.
+        The lifecycle of the SharedService is the same as a service, it must implement startService
+        and stopService in order to allocate and free its resources.
 
     .. py:method:: getName(cls, *args, **kwargs)
 
-        Class method.
-        Takes same arguments as the constructor of the service.
-        Get a unique name for that instance of a service.
-        This returned name is the key inside the parent's service dictionary that is used to decide if the instance has already been created before or if there is a need to create a new object.
-        Default implementation will hash args and kwargs and use ``<classname>_<hash>`` as the name.
+        Class method. Takes same arguments as the constructor of the service. Get a unique name for
+        that instance of a service. This returned name is the key inside the parent's service
+        dictionary that is used to decide if the instance has already been created before or if
+        there is a need to create a new object. Default implementation will hash args and kwargs
+        and use ``<classname>_<hash>`` as the name.
 
     .. py:method:: getService(cls, parentService, *args, **kwargs)
 
-        :param parentService: an :py:class:`AsyncMultiService` where to lookup and register the :py:class:`SharedService` (usually the root service, the master)
+        :param parentService: an :py:class:`AsyncMultiService` where to lookup and register the
+            :py:class:`SharedService` (usually the root service, the master)
         :returns: instance of the service via Deferred
 
-        Class method.
-        Takes same arguments as the constructor of the service (plus the `parentService` at the beginning of the list).
-        Construct an instance of the service if needed, and place it at the beginning of the `parentService` service list.
-        Placing it at the beginning will guarantee that the :py:class:`SharedService` will be stopped after the other services.
+        Class method. Takes same arguments as the constructor of the service (plus the
+        `parentService` at the beginning of the list). Construct an instance of the service if
+        needed, and place it at the beginning of the `parentService` service list. Placing it at
+        the beginning will guarantee that the :py:class:`SharedService` will be stopped after the
+        other services.
 
 .. py:class:: BuildbotService
 
@@ -1049,43 +1125,48 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: checkConfig(self, *args, **kwargs)
 
-        Please override this method to check the parameters of your config.
-        Please use :py:func:`buildbot.config.error` for error reporting.
-        You can replace them ``*args, **kwargs`` by actual constructor like arguments with default args, and it have to match self.reconfigService
-        This method is synchronous, and executed in the context of the master.cfg.
-        Please don't block, or use deferreds in this method.
-        Remember that the object that runs checkConfig is not always the object that is actually started.
-        The checked configuration can be passed to another sibling service.
-        Any actual resource creation shall be handled in reconfigService() or startService()
+        Please override this method to check the parameters of your config. Please use
+        :py:func:`buildbot.config.error` for error reporting. You can replace them ``*args,
+        **kwargs`` by actual constructor like arguments with default args, and it have to match
+        self.reconfigService This method is synchronous, and executed in the context of the
+        master.cfg. Please don't block, or use deferreds in this method. Remember that the object
+        that runs checkConfig is not always the object that is actually started. The checked
+        configuration can be passed to another sibling service. Any actual resource creation shall
+        be handled in reconfigService() or startService()
 
     .. py:method:: reconfigService(self, *args, **kwargs)
 
-        This method is called at buildbot startup, and buildbot reconfig.
-        `*args` and `**kwargs` are the configuration arguments passed to the constructor in master.cfg.
-        You can replace ``them *args, **kwargs`` by actual constructor like arguments with default args, and it have to match self.checkConfig
+        This method is called at buildbot startup, and buildbot reconfig. `*args` and `**kwargs`
+        are the configuration arguments passed to the constructor in master.cfg. You can replace
+        ``them *args, **kwargs`` by actual constructor like arguments with default args, and it
+        have to match self.checkConfig
 
         Returns a deferred that should fire when the service is ready.
         Builds are not started until all services are configured.
 
-        BuildbotServices must be aware that during reconfiguration, their methods can still be called by running builds.
-        So they should atomically switch old configuration and new configuration, so that the service is always available.
+        BuildbotServices must be aware that during reconfiguration, their methods can still be
+        called by running builds. So they should atomically switch old configuration and new
+        configuration, so that the service is always available.
 
-        If this method raises :py:class:`NotImplementedError`, it means the service is legacy, and do not support reconfiguration.
-        The :py:class:`BuildbotServiceManager` parent, will detect this, and swap old service with new service.
-        This behaviour allow smooth transition of old code to new reconfigurable service lifecycle but shall not be used for new code.
+        If this method raises :py:class:`NotImplementedError`, it means the service is legacy, and
+        do not support reconfiguration. The :py:class:`BuildbotServiceManager` parent, will detect
+        this, and swap old service with new service. This behaviour allow smooth transition of old
+        code to new reconfigurable service lifecycle but shall not be used for new code.
 
     .. py:method:: reconfigServiceWithSibling(self, sibling)
 
-        Internal method that finds the configuration bits in a sibling, an object with same class that is supposed to replace it from a new configuration.
-        We want to reuse the service started at master startup and just reconfigure it.
-        This method handles necessary steps to detect if the config has changed, and eventually call self.reconfigService()
+        Internal method that finds the configuration bits in a sibling, an object with same class
+        that is supposed to replace it from a new configuration. We want to reuse the service
+        started at master startup and just reconfigure it. This method handles necessary steps to
+        detect if the config has changed, and eventually call self.reconfigService()
 
     .. py:method:: renderSecrets(self, *args)
 
         Utility method which renders a list of parameters which can be interpolated as a secret.
-        This is meant for services which have their secrets parameter configurable as positional arguments.
-        If there are several argument, the secrets are interpolated in parallel, and a list of result is returned via deferred.
-        If there is one argument, the result is directly returned.
+        This is meant for services which have their secrets parameter configurable as positional
+        arguments. If there are several argument, the secrets are interpolated in parallel, and a
+        list of result is returned via deferred. If there is one argument, the result is directly
+        returned.
 
         .. note::
 
@@ -1109,9 +1190,11 @@ For example, a particular daily scheduler could be configured on multiple master
                     # nothing to do; user and password will be automatically interpolated
 
 
-    Advanced users can derive this class to make their own services that run inside buildbot, and follow the application lifecycle of buildbot master.
+    Advanced users can derive this class to make their own services that run inside buildbot, and
+    follow the application lifecycle of buildbot master.
 
-    Such services are singletons accessible to nearly every object in Buildbot (buildsteps, status, changesources, etc) using self.master.namedServices['<nameOfYourService>'].
+    Such services are singletons accessible to nearly every object in Buildbot (buildsteps, status,
+    changesources, etc) using self.master.namedServices['<nameOfYourService>'].
 
     As such, they can be used to factorize access to external services, available e.g using a REST api.
     Having a single service will help with caching, and rate-limiting access of those APIs.
@@ -1164,19 +1247,21 @@ For example, a particular daily scheduler could be configured on multiple master
 
 .. py:class:: HTTPClientService
 
-    This class implements a SharedService for doing http client access.
-    The module automatically chooses from `txrequests`_ and `treq`_ and uses whichever is installed.
-    It provides minimalistic API similar to the one from `txrequests`_ and `treq`_.
-    Having a SharedService for this allows to limits the number of simultaneous connection for the same host.
-    While twisted application can managed thousands of connections at the same time, this is often not the case for the services buildbot controls.
-    Both `txrequests`_ and `treq`_ use keep-alive connection polling.
-    Lots of HTTP REST API will however force a connection close in the end of a transaction.
+    This class implements a SharedService for doing http client access. The module automatically
+    chooses from `txrequests`_ and `treq`_ and uses whichever is installed. It provides
+    minimalistic API similar to the one from `txrequests`_ and `treq`_. Having a SharedService for
+    this allows to limits the number of simultaneous connection for the same host. While twisted
+    application can managed thousands of connections at the same time, this is often not the case
+    for the services buildbot controls. Both `txrequests`_ and `treq`_ use keep-alive connection
+    polling. Lots of HTTP REST API will however force a connection close in the end of a
+    transaction.
 
     .. note::
 
-        The API described here is voluntary minimalistic, and reflects what is tested.
-        As most of this module is implemented as a pass-through to the underlying libraries, other options can work but have not been tested to work in both backends.
-        If there is a need for more functionality, please add new tests before using them.
+        The API described here is voluntary minimalistic, and reflects what is tested. As most of
+        this module is implemented as a pass-through to the underlying libraries, other options can
+        work but have not been tested to work in both backends. If there is a need for more
+        functionality, please add new tests before using them.
 
     .. py:staticmethod:: getService(master, base_url, auth=None, headers=None, debug=None, verify=None)
 
@@ -1203,8 +1288,10 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: get(endpoint, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``GET``. This function has been deprecated. Please use ``HTTPSession``.
@@ -1212,18 +1299,24 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: delete(endpoint, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``DELETE``. This function has been deprecated. Please use ``HTTPSession``.
 
     .. py:method:: post(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
-        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests
+            as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests
+            as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``POST``. This function has been deprecated. Please use ``HTTPSession``.
@@ -1234,10 +1327,14 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: put(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
-        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests
+            as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests
+            as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``PUT``. This function has been deprecated. Please use ``HTTPSession``.
@@ -1286,26 +1383,34 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: get(endpoint, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``GET``
 
     .. py:method:: delete(endpoint, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``DELETE``
 
     .. py:method:: post(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
-        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests
+            as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests
+            as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``POST``
@@ -1316,10 +1421,14 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. py:method:: put(endpoint, data=None, json=None, params=None)
 
-        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or ``https://``) or relative to the base_url (starts with ``/``)
-        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
-        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
-        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :param endpoint: endpoint. It must either be a full URL (starts with ``http://`` or
+            ``https://``) or relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests
+            as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests
+            as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url
+            (e.g. ``?param1=foo``)
         :returns: implementation of :`IHTTPResponse` via deferred
 
         Performs a HTTP ``PUT``
@@ -1332,15 +1441,19 @@ For example, a particular daily scheduler could be configured on multiple master
 
     .. note::
 
-        :class:`IHTTPResponse` is a subset of `treq`_ :py:class:`Response` API described `here <https://treq.readthedocs.io/en/latest/api.html#module-treq.response>`_.
-        The API it is voluntarily minimalistic and reflects what is tested and reliable to use with the three backends (including fake).
-        The API is a subset of the `treq`_ API, which is itself a superset of `twisted IResponse API`_.
-        `treq`_ is thus implemented as passthrough.
+        :class:`IHTTPResponse` is a subset of `treq`_ :py:class:`Response` API described `here
+        <https://treq.readthedocs.io/en/latest/api.html#module-treq.response>`_. The API it is
+        voluntarily minimalistic and reflects what is tested and reliable to use with the three
+        backends (including fake). The API is a subset of the `treq`_ API, which is itself a
+        superset of `twisted IResponse API`_. `treq`_ is thus implemented as passthrough.
 
         Notably:
 
-        * There is no API to automatically decode content, as this is not implemented the same in both backends.
-        * There is no API to stream content as the two libraries have very different way for doing it, and we do not see use-case where buildbot would need to transfer large content to the master.
+        * There is no API to automatically decode content, as this is not implemented the same in
+          both backends.
+        * There is no API to stream content as the two libraries have very different way for doing
+          it, and we do not see use-case where buildbot would need to transfer large content to the
+          master.
 
     .. py:method:: content()
 
@@ -1369,19 +1482,24 @@ For example, a particular daily scheduler could be configured on multiple master
 
 .. py:class:: HTTPClientService
 
-    This class implements a fake version of the :class:`buildbot.util.httpclientservice.HTTPClientService` that needs to be used for testing services which need http client access.
-    It implements the same APIs as :class:`buildbot.util.httpclientservice.HTTPClientService`, plus one that should be used to register the expectations.
-    It should be registered by the test case before the tested service actually requests an HTTPClientService instance, with the same parameters.
-    It will then replace the original implementation automatically (no need to patch anything).
+    This class implements a fake version of the
+    :class:`buildbot.util.httpclientservice.HTTPClientService` that needs to be used for testing
+    services which need http client access. It implements the same APIs as
+    :class:`buildbot.util.httpclientservice.HTTPClientService`, plus one that should be used to
+    register the expectations. It should be registered by the test case before the tested service
+    actually requests an HTTPClientService instance, with the same parameters. It will then replace
+    the original implementation automatically (no need to patch anything).
 
     .. py:method:: getService(cls, master, case, *args, **kwargs)
 
         :param master: the instance of a fake master service
         :param case: a :py:class:`twisted.python.unittest.TestCase` instance
 
-        :py:meth:`getService` returns a fake :py:class:`HTTPClientService`, and should be used just like the regular :py:meth:`getService`.
+        :py:meth:`getService` returns a fake :py:class:`HTTPClientService`, and should be used just
+        like the regular :py:meth:`getService`.
 
-        It will make sure the original :py:class:`HTTPClientService` is not called, and assert that all expected http requests have been described in the test case.
+        It will make sure the original :py:class:`HTTPClientService` is not called, and assert that
+        all expected http requests have been described in the test case.
 
 
     .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200, content=None, content_json=None, processing_delay_s=None)
@@ -1464,8 +1582,11 @@ For example, a particular daily scheduler could be configured on multiple master
 
 .. py:module:: buildbot.util.ssl
 
-This module is a copy of :py:mod:`twisted.internet.ssl` except it won't crash with :py:class:`ImportError` if :py:mod:`pyopenssl` is not installed.
-If you need to use :py:mod:`twisted.internet.ssl`, please instead use :py:mod:`buildbot.util.ssl`, and call :py:func:`ssl.ensureHasSSL` in :py:meth:`checkConfig` to provide helpful message to the user, only if they enabled SSL for your plugin.
+This module is a copy of :py:mod:`twisted.internet.ssl` except it won't crash with
+:py:class:`ImportError` if :py:mod:`pyopenssl` is not installed. If you need to use
+:py:mod:`twisted.internet.ssl`, please instead use :py:mod:`buildbot.util.ssl`, and call
+:py:func:`ssl.ensureHasSSL` in :py:meth:`checkConfig` to provide helpful message to the user, only
+if they enabled SSL for your plugin.
 
 .. py:function:: ensureHasSSL(plugin_name)
 

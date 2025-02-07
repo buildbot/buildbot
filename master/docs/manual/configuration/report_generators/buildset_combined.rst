@@ -11,8 +11,9 @@ This report generator sends a message about a buildset.
 
 Message formatter is invoked only once for all builds in the buildset.
 
-It is very similar to :bb:reportgen:`BuildSetCombinedStatusGenerator` but invokes message formatters for each
-matching build in the buildset. The collected messages are then joined and sent as a single message.
+It is very similar to :bb:reportgen:`BuildSetCombinedStatusGenerator` but invokes message
+formatters for each matching build in the buildset. The collected messages are then joined and sent
+as a single message.
 
 
 A buildset without any builds is useful as a means to report to code review system that a

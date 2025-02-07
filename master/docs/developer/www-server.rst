@@ -7,16 +7,20 @@ WWW Server
 History and Motivation
 ----------------------
 
-One of the goals of the 'nine' project is to rework Buildbot's web services to use a more modern, consistent design and implement UI features in client-side JavaScript instead of server-side Python.
+One of the goals of the 'nine' project is to rework Buildbot's web services to use a more modern,
+consistent design and implement UI features in client-side JavaScript instead of server-side
+Python.
 
-The rationale behind this is that a client side UI relieves pressure on the server while being more responsive for the user.
-The web server only concentrates on serving data via a REST interface wrapping the :ref:`Data_API`.
-This removes a lot of sources of latency where, in previous versions, long synchronous calculations were made on the server to generate complex pages.
+The rationale behind this is that a client side UI relieves pressure on the server while being more
+responsive for the user. The web server only concentrates on serving data via a REST interface
+wrapping the :ref:`Data_API`. This removes a lot of sources of latency where, in previous versions,
+long synchronous calculations were made on the server to generate complex pages.
 
-Another big advantage is live updates of status pages, without having to poll or reload.
-The new system uses Comet techniques in order to relay Data API events to connected clients.
+Another big advantage is live updates of status pages, without having to poll or reload. The new
+system uses Comet techniques in order to relay Data API events to connected clients.
 
-Finally, making web services an integral part of Buildbot, rather than a status plugin, allows tighter integration with the rest of the application.
+Finally, making web services an integral part of Buildbot, rather than a status plugin, allows
+tighter integration with the rest of the application.
 
 Design Overview
 ---------------
@@ -27,28 +31,32 @@ The ``www`` service exposes three pieces via HTTP:
 * HTTP-based messaging protocols wrapping the :ref:`Messaging_and_Queues` interface; and
 * Static resources implementing the client-side UI.
 
-The REST interface is a very thin wrapper: URLs are translated directly into Data API paths, and results are returned directly, in JSON format.
-It is based on `JSON API <http://jsonapi.org/>`_.
-Control calls are handled with a simplified form of `JSONRPC 2.0 <http://www.jsonrpc.org/specification>`_.
+The REST interface is a very thin wrapper: URLs are translated directly into Data API paths, and
+results are returned directly, in JSON format. It is based on `JSON API <http://jsonapi.org/>`_.
+Control calls are handled with a simplified form of `JSONRPC 2.0
+<http://www.jsonrpc.org/specification>`_.
 
-The message interface is also a thin wrapper around Buildbot's MQ mechanism.
-Clients can subscribe to messages, and receive copies of the messages, in JSON, as they are received by the buildmaster.
+The message interface is also a thin wrapper around Buildbot's MQ mechanism. Clients can subscribe
+to messages, and receive copies of the messages, in JSON, as they are received by the buildmaster.
 
-The client-side UI is an AngularJS application.
-Buildbot uses the Python setuptools entry-point mechanism to allow multiple packages to be combined into a single client-side experience.
-This allows frontend developers and users to build custom components for the web UI without hacking Buildbot itself.
+The client-side UI is an AngularJS application. Buildbot uses the Python setuptools entry-point
+mechanism to allow multiple packages to be combined into a single client-side experience. This
+allows frontend developers and users to build custom components for the web UI without hacking
+Buildbot itself.
 
-Python development and AngularJS development are very different processes, requiring different environment requirements and skillsets.
-To maximize hackability, Buildbot separates the two cleanly.
-An experienced AngularJS hacker should be quite comfortable in the :src:`www/` directory, with a few exceptions described below.
-Similarly, an experienced Python hacker can simply download the pre-built web UI (from PyPI!) and never venture near the :src:`www/` directory.
+Python development and AngularJS development are very different processes, requiring different
+environment requirements and skillsets. To maximize hackability, Buildbot separates the two
+cleanly. An experienced AngularJS hacker should be quite comfortable in the :src:`www/` directory,
+with a few exceptions described below. Similarly, an experienced Python hacker can simply download
+the pre-built web UI (from PyPI!) and never venture near the :src:`www/` directory.
 
 URLs
 ~~~~
 
-The Buildbot web interface is rooted at its base URL, as configured by the user.
-It is entirely possible for this base URL to contain path components, e.g., ``http://build.example.org/buildbot/``, if hosted behind an HTTP proxy.
-To accomplish this, all URLs are generated relative to the base URL.
+The Buildbot web interface is rooted at its base URL, as configured by the user. It is entirely
+possible for this base URL to contain path components, e.g.,
+``http://build.example.org/buildbot/``, if hosted behind an HTTP proxy. To accomplish this, all
+URLs are generated relative to the base URL.
 
 Overall, the space under the base URL looks like this:
 
@@ -58,7 +66,8 @@ Overall, the space under the base URL looks like this:
 * ``/api/v{version}`` -- The root of the REST APIs, each versioned numerically.
   Users should, in general, use the latest version.
 * ``/ws`` -- The WebSocket endpoint to subscribe to messages from the mq system.
-* ``/sse`` -- The `server sent event <http://en.wikipedia.org/wiki/Server-sent_events>`_ endpoint where clients can subscribe to messages from the mq system.
+* ``/sse`` -- The `server sent event <http://en.wikipedia.org/wiki/Server-sent_events>`_ endpoint
+  where clients can subscribe to messages from the mq system.
 
 REST API
 --------
@@ -88,17 +97,20 @@ The following attributes may be available:
 Message API
 -----------
 
-Currently, messages are implemented with two protocols, WebSockets and `server sent events <http://en.wikipedia.org/wiki/Server-sent_events>`_.
+Currently, messages are implemented with two protocols, WebSockets and `server sent events
+<http://en.wikipedia.org/wiki/Server-sent_events>`_.
 
 WebSocket
 ~~~~~~~~~
 
-WebSocket is a protocol for arbitrary messaging to and from a browser.
-As an HTTP extension, the protocol is not yet well supported by all HTTP proxy technologies. Although, it has been reported to work well used behind the https protocol. Only one WebSocket connection is needed per browser.
+WebSocket is a protocol for arbitrary messaging to and from a browser. As an HTTP extension, the
+protocol is not yet well supported by all HTTP proxy technologies. Although, it has been reported
+to work well used behind the https protocol. Only one WebSocket connection is needed per browser.
 
 The client can connect using the url ``ws[s]://<BB_BASE_URL>/ws``.
 
-The protocol used is a simple in-house protocol based on json. The structure of a command from the client is as follows:
+The protocol used is a simple in-house protocol based on json. The structure of a command from the
+client is as follows:
 
 .. code-block:: javascript
 
@@ -179,7 +191,9 @@ The client will receive events as websocket frames encoded in json with the foll
 Server Sent Events
 ~~~~~~~~~~~~~~~~~~
 
-SSE is a simpler protocol than WebSockets and is more REST compliant. It uses the chunk-encoding HTTP feature to stream the events. SSE also does not work well behind an enterprise proxy, unless you use the https protocol.
+SSE is a simpler protocol than WebSockets and is more REST compliant. It uses the chunk-encoding
+HTTP feature to stream the events. SSE also does not work well behind an enterprise proxy, unless
+you use the https protocol.
 
 The client can connect using following endpoints:
 
@@ -189,7 +203,8 @@ The client can connect using following endpoints:
 * ``http[s]://<BB_BASE_URL>/sse/add/<uuid>/<path>``: Configure a sse session to add an event filter
 * ``http[s]://<BB_BASE_URL>/sse/remove/<uuid>/<path>``: Configure a sse session to remove an event filter
 
-Note that if a load balancer is setup as a front end to buildbot web masters, the load balancer must be configured to always use the same master given a client IP address for /sse endpoint.
+Note that if a load balancer is setup as a front end to buildbot web masters, the load balancer
+must be configured to always use the same master given a client IP address for /sse endpoint.
 
 The client will receive events as sse events, encoded with the following format:
 
@@ -198,7 +213,8 @@ The client will receive events as sse events, encoded with the following format:
   event: event
   data: { "key": <key>, "message": <message> }
 
-The first event received is a handshake, and is used to inform the client about the uuid to use for configuring additional event filters
+The first event received is a handshake, and is used to inform the client about the uuid to use for
+configuring additional event filters
 
 .. code-block:: none
 
