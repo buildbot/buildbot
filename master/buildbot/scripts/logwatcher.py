@@ -110,6 +110,8 @@ class LogWatcher(LineOnlyLongLineReceiver):
             tailBin = "/usr/xpg4/bin/tail"
         elif platform.system().lower() == 'haiku' and os.path.exists('/bin/tail'):
             tailBin = "/bin/tail"
+        elif os.path.exists('/etc/nixos') and os.path.exists('/run/current-system/sw/bin/tail'):
+            tailBin = "/run/current-system/sw/bin/tail"
         else:
             tailBin = "/usr/bin/tail"
 
