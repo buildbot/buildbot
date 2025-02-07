@@ -1217,10 +1217,10 @@ vite-plugin-dts@^4.1.0:
     local-pkg "^0.5.0"
     magic-string "^0.30.11"
 
-vite@~5.4.10:
-  version "5.4.10"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-5.4.10.tgz#d358a7bd8beda6cf0f3b7a450a8c7693a4f80c18"
-  integrity sha512-1hvaPshuPUtxeQ0hsVH3Mud0ZanOLwVTneA1EgbAM5LhaZEqyPWGRQ7BtaMvUrTDeEaC8pxtj6a6jku3x4z6SQ==
+vite@~5.4.12:
+  version "5.4.14"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-5.4.14.tgz#ff8255edb02134df180dcfca1916c37a6abe8408"
+  integrity sha512-EK5cY7Q1D8JNhSaPKVK4pwBFvaTmZxEnoKXLG/U9gmdDcihQGNzFlgIvaxezFR4glP1LsuiedwMBqCXH3wZccA==
   dependencies:
     esbuild "^0.21.3"
     postcss "^8.4.43"
