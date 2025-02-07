@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from typing import Callable
 from typing import ClassVar
 from typing import Sequence
 
@@ -93,6 +94,9 @@ class BuildFactory(util.ComparableMixin):
             self.addStep(s)
         if withSecrets:
             self.addStep(RemoveWorkerFileSecret(withSecrets))
+
+    def setSkipBuildIf(self, predicate: Callable[[Build], bool]):
+        self.skipBuildIf = predicate
 
     @contextmanager
     def withSecrets(self, secrets):
