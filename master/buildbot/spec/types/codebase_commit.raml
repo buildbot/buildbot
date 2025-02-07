@@ -42,6 +42,9 @@ properties:
     when_timestamp:
         description: time of the commit
         type: integer
+    revision:
+        description: the commit revision identifier in the underlying version control system
+        type: string
     parent_commitid?:
         description: |
             the ID of the parent commit. Commits form a chain from older to newer commits.

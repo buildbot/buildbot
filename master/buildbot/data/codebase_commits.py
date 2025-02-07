@@ -34,6 +34,7 @@ def commit_db_to_data(model: CodebaseCommitModel) -> dict[str, Any]:
         'committer': model.committer,
         'comments': model.comments,
         'when_timestamp': model.when_timestamp,
+        'revision': model.revision,
         'parent_commitid': model.parent_commitid,
     }
 
@@ -110,6 +111,7 @@ class CodebaseCommit(base.ResourceType):
         committer = types.NoneOk(types.String())
         comments = types.String()
         when_timestamp = types.Integer()
+        revision = types.String()
         parent_commitid = types.NoneOk(types.Integer())
 
     entityType = EntityType(name)

@@ -98,7 +98,7 @@ class Codebase(base.ResourceType):
 
     @async_to_deferred
     async def generate_event(self, _id: int, event: str) -> None:
-        codebase = await self.master.data.get(('codebase', str(_id)))
+        codebase = await self.master.data.get(('codebases', str(_id)))
         self.produceEvent(codebase, event)
 
     @base.updateMethod
@@ -118,5 +118,7 @@ class Codebase(base.ResourceType):
         projectid: int,
         slug: str,
     ) -> None:
-        await self.master.db.codebases.update_codebase_info(codebaseid, projectid, slug)
+        await self.master.db.codebases.update_codebase_info(
+            codebaseid=codebaseid, projectid=projectid, slug=slug
+        )
         await self.generate_event(codebaseid, "update")
