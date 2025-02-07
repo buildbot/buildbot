@@ -71,6 +71,9 @@ class TestGitPollerBase(
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
+        project_id = yield self.master.data.updates.find_project_id(name='project1')
+        yield self.master.data.updates.find_codebase_id(projectid=project_id, name='codebase1')
+
         self.poller = yield self.attachChangeSource(self.createPoller())
 
     def patch_poller_get_commit_info(self, poller, timestamp):
@@ -1808,6 +1811,144 @@ class TestGitPollerDefaultBranch(TestGitPollerBase):
         self.assert_all_commands_ran()
         await self.assert_last_rev({'HEAD': '737b94eca1ddde3dd4a0040b25c8a25fe973fe09'})
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
+
+
+class TestGitPollerWithCodebase(TestGitPollerBase):
+    def createPoller(self):
+        return gitpoller.GitPoller(
+            self.REPOURL, branches=['master'], codebase=Codebase('codebase1', 'project1')
+        )
+
+    @defer.inlineCallbacks
+    def test_poll_initial(self):
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell([
+                'git',
+                'ls-remote',
+                '--refs',
+                self.REPOURL,
+                'refs/heads/master',
+            ]).stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master\n'),
+            ExpectMasterShell([
+                'git',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+        )
+
+        self.poller.doPoll.running = True
+        yield self.poller.poll()
+
+        self.assert_all_commands_ran()
+        yield self.assert_last_rev({'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'})
+
+    @defer.inlineCallbacks
+    def test_poll_allBranches_single(self):
+        self.expect_commands(
+            ExpectMasterShell(['git', '--version']).stdout(b'git version 1.7.5\n'),
+            ExpectMasterShell(['git', 'init', '--bare', self.POLLER_WORKDIR]),
+            ExpectMasterShell(['git', 'ls-remote', '--refs', self.REPOURL, 'refs/heads/*']).stdout(
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master\n'
+            ),
+            ExpectMasterShell([
+                'git',
+                'fetch',
+                '--progress',
+                self.REPOURL,
+                '+refs/heads/master:refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+                '--',
+            ]).workdir(self.POLLER_WORKDIR),
+            ExpectMasterShell([
+                'git',
+                'rev-parse',
+                'refs/buildbot/' + self.REPOURL_QUOTED + '/heads/master',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            ExpectMasterShell([
+                'git',
+                'log',
+                '--ignore-missing',
+                '--first-parent',
+                '--format=%H',
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '--',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(
+                b'\n'.join([
+                    b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                    b'ff2ad982e61af5e11e6147cb2ca6bdfab47a92b7',
+                    b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                ])
+            ),
+            ExpectMasterShell([
+                'git',
+                'log',
+                '--no-walk',
+                '--format=%P',
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '--',
+            ])
+            .workdir(self.POLLER_WORKDIR)
+            .stdout(b'0659625c8a684845076a30eeb3a7b3fe12c279b1\n'),
+        )
+
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
+
+        # do the poll
+        self.poller.branches = True
+        yield self.set_last_rev({
+            'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
+        })
+        self.poller.doPoll.running = True
+        yield self.poller.poll()
+
+        self.assert_all_commands_ran()
+        yield self.assert_last_rev({
+            'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
+
+        self.assertEqual(len(self.master.data.updates.changesAdded), 3)
+        commits = yield self.master.data.get(('codebases', 1, 'commits'))
+        commits = [
+            {k: v for k, v in c.items() if k in ['commitid', 'revision', 'parent_commitid']}
+            for c in commits
+        ]
+        commits = sorted(commits, key=lambda c: c['commitid'])
+        self.assertEqual(
+            commits,
+            [
+                {
+                    'commitid': 1,
+                    'parent_commitid': None,
+                    'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                },
+                {
+                    'commitid': 2,
+                    'parent_commitid': 1,
+                    'revision': 'ff2ad982e61af5e11e6147cb2ca6bdfab47a92b7',
+                },
+                {
+                    'commitid': 3,
+                    'parent_commitid': 2,
+                    'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                },
+            ],
+        )
 
 
 class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
