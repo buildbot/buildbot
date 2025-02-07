@@ -73,6 +73,33 @@ class TestGitPollerBase(
 
         self.poller = yield self.attachChangeSource(self.createPoller())
 
+    def patch_poller_get_commit_info(self, poller, timestamp):
+        # There is a separate test suite for the methods below, no need to complicate each test
+        def get_timestamp(rev):
+            return defer.succeed(timestamp)
+
+        self.patch(self.poller, '_get_commit_timestamp', get_timestamp)
+
+        def author(rev):
+            return defer.succeed('by:' + rev[:8])
+
+        self.patch(self.poller, '_get_commit_author', author)
+
+        def committer(rev):
+            return defer.succeed('by:' + rev[:8])
+
+        self.patch(self.poller, '_get_commit_committer', committer)
+
+        def files(rev):
+            return defer.succeed(['/etc/' + rev[:3]])
+
+        self.patch(self.poller, '_get_commit_files', files)
+
+        def comments(rev):
+            return defer.succeed('hello!')
+
+        self.patch(self.poller, '_get_commit_comments', comments)
+
     @async_to_deferred
     async def set_last_rev(self, state: dict[str, str]) -> None:
         await self.poller.setState('lastRev', state)
@@ -632,32 +659,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'\n'.join([b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = ['master', 'release']
@@ -822,32 +824,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = ['release']
@@ -923,32 +900,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = ['release']
@@ -1026,32 +978,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b''),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = ['release']
@@ -1127,32 +1054,7 @@ class TestGitPoller(TestGitPollerBase):
             ),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = True
@@ -1302,32 +1204,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'\n'.join([b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = True
@@ -1415,32 +1292,7 @@ class TestGitPoller(TestGitPollerBase):
             ),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         class TestCallable:
@@ -1522,32 +1374,7 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'\n'.join([b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         def pullFilter(branch):
             """
@@ -1628,33 +1455,7 @@ class TestGitPoller(TestGitPollerBase):
             ),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
-
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
         # do the poll
         yield self.set_last_rev({'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'})
         self.poller.doPoll.running = True
@@ -1743,32 +1544,7 @@ class TestGitPoller(TestGitPollerBase):
             ),
         )
 
-        # and patch out the _get_commit_foo methods which were already tested
-        # above
-        def timestamp(rev):
-            return defer.succeed(1273258009)
-
-        self.patch(self.poller, '_get_commit_timestamp', timestamp)
-
-        def author(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_author', author)
-
-        def committer(rev):
-            return defer.succeed('by:' + rev[:8])
-
-        self.patch(self.poller, '_get_commit_committer', committer)
-
-        def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
-
-        self.patch(self.poller, '_get_commit_files', files)
-
-        def comments(rev):
-            return defer.succeed('hello!')
-
-        self.patch(self.poller, '_get_commit_comments', comments)
+        self.patch_poller_get_commit_info(self.poller, timestamp=1273258009)
 
         # do the poll
         self.poller.branches = True
