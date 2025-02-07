@@ -605,7 +605,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             )
 
         last_commit_id = None
-        if self._codebase_id is not None:
+        if self._codebase_id is not None and change_count:
             rev = revList[0]
             parent_hashes = yield self._get_commit_parent_hashes(rev)
             parent_hash = parent_hashes.split()[0]
