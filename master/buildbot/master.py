@@ -152,6 +152,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.workers = workermanager.WorkerManager(self)
         yield self.workers.setServiceParent(self)
+        self.workers.reconfig_priority = 127
 
         self.change_svc = ChangeManager()
         yield self.change_svc.setServiceParent(self)
