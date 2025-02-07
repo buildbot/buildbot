@@ -162,6 +162,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.machine_manager = MachineManager()
         yield self.machine_manager.setServiceParent(self)
+        self.machine_manager.reconfig_priority = self.workers.reconfig_priority + 1
 
         self.scheduler_manager = SchedulerManager()
         yield self.scheduler_manager.setServiceParent(self)
