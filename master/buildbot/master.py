@@ -159,6 +159,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.botmaster = BotMaster()
         yield self.botmaster.setServiceParent(self)
+        # must be configured first so that projects and codebases are registered
+        self.botmaster.reconfig_priority = 1001
 
         self.machine_manager = MachineManager()
         yield self.machine_manager.setServiceParent(self)
