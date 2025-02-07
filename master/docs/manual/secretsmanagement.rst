@@ -8,11 +8,11 @@ Secret Management
 Requirements
 ============
 
-Buildbot steps might need secrets to execute their actions.
-Secrets are used to execute commands or to create authenticated network connections.
-Secrets may be a SSH key, a password, or a file content like a wgetrc file or a public SSH key.
-To preserve confidentiality, the secret values must not be printed or logged in the twisted or step logs.
-Secrets must not be stored in the Buildbot configuration (master.cfg), as the source code is usually shared in SCM like git.
+Buildbot steps might need secrets to execute their actions. Secrets are used to execute commands or
+to create authenticated network connections. Secrets may be a SSH key, a password, or a file
+content like a wgetrc file or a public SSH key. To preserve confidentiality, the secret values must
+not be printed or logged in the twisted or step logs. Secrets must not be stored in the Buildbot
+configuration (master.cfg), as the source code is usually shared in SCM like git.
 
 How to use Buildbot Secret Management
 =====================================
@@ -28,10 +28,9 @@ Buildbot implements several providers for secrets retrieval:
 - Third party backend based: secrets are stored by a specialized software.
   These solutions are usually more secure.
 
-Secrets providers are configured if needed in the master configuration.
-Multiple providers can be configured at once.
-The secret manager is a Buildbot service.
-The secret manager returns the specific provider results related to the providers registered in the configuration.
+Secrets providers are configured if needed in the master configuration. Multiple providers can be
+configured at once. The secret manager is a Buildbot service. The secret manager returns the
+specific provider results related to the providers registered in the configuration.
 
 How to use secrets in Buildbot
 ------------------------------
@@ -134,9 +133,11 @@ HashiCorpVaultKvSecretProvider allows to use HashiCorp Vault KV secret engine as
 Other secret engines are not supported by this particular provider.
 For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
-In order to use this secret provider, optional dependency ``hvac`` needs to be installed (``pip install hvac``).
+In order to use this secret provider, optional dependency ``hvac`` needs to be installed (``pip
+install hvac``).
 
-It supports different authentication methods with ability to re-authenticate when authentication token expires (not possible using ``HvacAuthenticatorToken``).
+It supports different authentication methods with ability to re-authenticate when authentication
+token expires (not possible using ``HvacAuthenticatorToken``).
 
 Parameters accepted by ``HashiCorpVaultKvSecretProvider``:
 
@@ -144,7 +145,8 @@ Parameters accepted by ``HashiCorpVaultKvSecretProvider``:
    Possible authenticators are:
 
     - ``VaultAuthenticatorToken(token)``: simplest authentication by directly providing the authentication token.
-      This method cannot benefit from re-authentication mechanism and when token expires, secret provider will just stop working.
+      This method cannot benefit from re-authentication mechanism and when token expires, secret
+      provider will just stop working.
 
     - ``VaultAuthenticatorApprole(roleId, secretId)``: approle authentication using roleId and secretId.
       This is common method for automation tools fetching secrets from vault.
@@ -159,11 +161,14 @@ Parameters accepted by ``HashiCorpVaultKvSecretProvider``:
  - ``path_delimiter``: character used to separate path and key name in secret identifiers.
    Default value is "|".
 
- - ``path_escape``: escape character used in secret identifiers to allow escaping of ``path_delimiter`` character in path or key values.
+ - ``path_escape``: escape character used in secret identifiers to allow escaping of
+   ``path_delimiter`` character in path or key values.
    Default value is "\".
 
-The secret identifiers that need to be passed to, e.g. :ref:`Interpolate`, have format: ``"path/to/secret:key"``.
-In case path or key name does contain colon character, it is possible to escape it using "\" or specify different separator character using ``path_delimiter`` parameter when initializing secret provider.
+The secret identifiers that need to be passed to, e.g. :ref:`Interpolate`, have format:
+``"path/to/secret:key"``. In case path or key name does contain colon character, it is possible to
+escape it using "\" or specify different separator character using ``path_delimiter`` parameter
+when initializing secret provider.
 
 Example use:
 
@@ -183,10 +188,10 @@ SecretInPass
                             dirname="/path/to/password/store"
     )]
 
-Passwords can be stored in a unix password store, encrypted using GPG keys.
-Buildbot can query secrets via the ``pass`` binary found in the PATH of each worker.
-While ``pass`` allows for multiline entries, the secret must be on the first line of each entry.
-The only caveat is that all passwords Buildbot needs to access have to be encrypted using the same GPG key.
+Passwords can be stored in a unix password store, encrypted using GPG keys. Buildbot can query
+secrets via the ``pass`` binary found in the PATH of each worker. While ``pass`` allows for
+multiline entries, the secret must be on the first line of each entry. The only caveat is that all
+passwords Buildbot needs to access have to be encrypted using the same GPG key.
 
 For more information about ``pass``, please visit _`pass`: https://www.passwordstore.org/
 
@@ -266,10 +271,10 @@ Then, export the environment variable VAULT_ADDR needed to init Vault.
 Writing secrets
 ```````````````
 
-By default the official docker instance of Vault is initialized with a mount path of 'secret', a KV v1 secret engine, and a second KV engine (v2) at 'secret/data'.
-Currently, Buildbot is "hard wired" to expect KV v2 engines to reside within this "data" sub path.
-Provision is made to set a top level path via the "secretsmount" argument: defaults to "secret".
-To add a new secret:
+By default the official docker instance of Vault is initialized with a mount path of 'secret', a KV
+v1 secret engine, and a second KV engine (v2) at 'secret/data'. Currently, Buildbot is "hard wired"
+to expect KV v2 engines to reside within this "data" sub path. Provision is made to set a top level
+path via the "secretsmount" argument: defaults to "secret". To add a new secret:
 
 .. code-block:: shell
 

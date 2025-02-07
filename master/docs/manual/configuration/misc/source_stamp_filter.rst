@@ -15,23 +15,28 @@ The following parameters are supported by the :py:class:`SourceStampFilter`:
 
 ``project_eq``, ``codebase_eq``, ``repository_eq``, ``branch_eq``
     (optional, a string or a list of strings)
-    The corresponding property of the source stamp must match exactly to at least one string from the value supplied by the argument.
+    The corresponding property of the source stamp must match exactly to at least one string from
+    the value supplied by the argument.
 
-    ``branch`` uses ``util.NotABranch`` as its default value which indicates that no checking should be done, because the branch may actually have ``None`` value to be checked.
+    ``branch`` uses ``util.NotABranch`` as its default value which indicates that no checking should
+    be done, because the branch may actually have ``None`` value to be checked.
 
 ``project_not_eq``, ``codebase_not_eq``, ``repository_not_eq``, ``branch_not_eq``
     (optional, a string or a list of strings)
-    The corresponding property of the source stamp must not match exactly to any string from the value supplied by the argument.
+    The corresponding property of the source stamp must not match exactly to any string from the
+    value supplied by the argument.
 
 ``project_re``, ``codebase_re``, ``repository_re``, ``branch_re``
     (optional, a string or a list of strings or regex pattern objects)
-    The corresponding property of the source stamp must match to at least one regex from the value supplied by the argument.
-    Any strings passed via this parameter are converted to a regex via ``re.compile``.
+    The corresponding property of the source stamp must match to at least one regex from the value
+    supplied by the argument. Any strings passed via this parameter are converted to a regex via
+    ``re.compile``.
 
 ``project_not_re``, ``codebase_not_re``, ``repository_not_re``, ``branch_not_re``
     (optional, a string or a list of strings or regex pattern objects)
-    The corresponding property of the source stamp must not match to any regex from the value supplied by the argument.
-    Any strings passed via this parameter are converted to a regex via ``re.compile``.
+    The corresponding property of the source stamp must not match to any regex from the value
+    supplied by the argument. Any strings passed via this parameter are converted to a regex via
+    ``re.compile``.
 
 ``filter_fn``
     (optional, a callable accepting a dictionary and returning a boolean)

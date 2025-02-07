@@ -12,7 +12,8 @@ The recommended upgrade procedure is as follows:
   - Remove usage of the deprecated APIs.
     All usages of deprecated APIs threw a deprecation warning at the point of use.
     If the code does not emit deprecation warnings, it's in a good shape in this regard.
-    You may need to run the master on a real workload in order to force all deprecated code paths to be exercised.
+    You may need to run the master on a real workload in order to force all deprecated code paths
+    to be exercised.
 
   - Upgrade to the latest Buildbot 3.0.x release.
 
@@ -25,28 +26,30 @@ The recommended upgrade procedure is as follows:
 Build steps
 -----------
 
-Buildbot 3.0 no longer supports old-style steps (steps which implement ``start`` method as opposed to ``run`` method).
-This only affects users who use steps as base classes for their own steps.
-New style steps provide a completely different set of functions that may be overridden.
-Direct instantiation of step classes is not affected.
-Old and new style steps work exactly the same in that case and users don't need to do anything.
+Buildbot 3.0 no longer supports old-style steps (steps which implement ``start`` method as opposed
+to ``run`` method). This only affects users who use steps as base classes for their own steps. New
+style steps provide a completely different set of functions that may be overridden. Direct
+instantiation of step classes is not affected. Old and new style steps work exactly the same in
+that case and users don't need to do anything.
 
 See :ref:`New-Style-Build-Steps` for instructions of migration to new-style steps.
 
-Migrating build steps that subclass one of the build steps provided by Buildbot is a little bit more involved.
-The new and old-style step APIs cannot be provided by a single class.
-Therefore Buildbot 2.9 introduces a number of new-style build steps that are direct equivalent of their old-style counterparts.
-These build steps are named as ``<StepType>NewStyle`` where ``<StepType>`` is the old-style step they provide compatibility interface for.
-Buildbot 3.0 removes old-style step support and changes the ``<StepType>`` classes to be equivalent to ``<StepType>NewStyle`` counterparts.
-Buildbot 3.2 removes the ``<StepType>NewStyle`` aliases.
+Migrating build steps that subclass one of the build steps provided by Buildbot is a little bit
+more involved. The new and old-style step APIs cannot be provided by a single class. Therefore
+Buildbot 2.9 introduces a number of new-style build steps that are direct equivalent of their
+old-style counterparts. These build steps are named as ``<StepType>NewStyle`` where ``<StepType>``
+is the old-style step they provide compatibility interface for. Buildbot 3.0 removes old-style step
+support and changes the ``<StepType>`` classes to be equivalent to ``<StepType>NewStyle``
+counterparts. Buildbot 3.2 removes the ``<StepType>NewStyle`` aliases.
 
-If a custom step is a subclass of ``<StepType`` step which is provided by Buildbot, then the migration process is as follows.
-The custom step should be changed to subclass the ``<StepType>NewStyle`` equivalent and use the new-style APIs as specified in :ref:`New-Style-Build-Steps`.
-This part of the migration must be done before the build master is migrated to 3.0.
-The resulting custom step will work in Buildbot 2.9.x-3.1.x.
-After the build master is migrated to 3.0, the custom step may be changed to subclass ``<StepType``.
-This is a simple renaming change, no other related changes are necessary.
-This part of the migration must be done before the build master is migrated to 3.2.
+If a custom step is a subclass of ``<StepType`` step which is provided by Buildbot, then the
+migration process is as follows. The custom step should be changed to subclass the
+``<StepType>NewStyle`` equivalent and use the new-style APIs as specified in
+:ref:`New-Style-Build-Steps`. This part of the migration must be done before the build master is
+migrated to 3.0. The resulting custom step will work in Buildbot 2.9.x-3.1.x. After the build
+master is migrated to 3.0, the custom step may be changed to subclass ``<StepType``. This is a
+simple renaming change, no other related changes are necessary. This part of the migration must be
+done before the build master is migrated to 3.2.
 
 The following build steps have their new-style equivalents since Buildbot 2.9:
 
@@ -55,7 +58,8 @@ The list of old-style steps that have new-style equivalents for gradual migratio
  - ``Configure`` (new-style equivalent is ``ConfigureNewStyle``)
  - ``Compile`` (new-style equivalent is ``CompileNewStyle``)
  - ``HTTPStep`` (new-style equivalent is ``HTTPStepNewStyle``)
- - ``GET``, ``PUT``, ``POST``, ``DELETE``, ``HEAD``, ``OPTIONS`` (new-style equivalent is ``GETNewStyle``, ``PUTNewStyle``, ``POSTNewStyle``, ``DELETENewStyle``, ``HEADNewStyle``, ``OPTIONSNewStyle``)
+ - ``GET``, ``PUT``, ``POST``, ``DELETE``, ``HEAD``, ``OPTIONS`` (new-style equivalent is
+   ``GETNewStyle``, ``PUTNewStyle``, ``POSTNewStyle``, ``DELETENewStyle``, ``HEADNewStyle``, ``OPTIONSNewStyle``)
  - ``MasterShellCommand`` (new-style equivalent is ``MasterShellCommandNewStyle``)
  - ``ShellCommand`` (new-style equivalent is ``ShellCommandNewStyle``)
  - ``SetPropertyFromCommand`` (new-style equivalent is ``SetPropertyFromCommandNewStyle``)
@@ -67,12 +71,14 @@ The migration path of all other steps is more involved as no compatibility steps
 Reporters and report generators
 -------------------------------
 
-Buildbot 2.9 introduced report generators as the preferred way of configuring the conditions of when a message is sent by a reporter and contents of the messages.
-The old parameters have been gradually deprecated in Buildbot 2.9 and Buildbot 2.10 and removed in Buildbot 3.0.
+Buildbot 2.9 introduced report generators as the preferred way of configuring the conditions of
+when a message is sent by a reporter and contents of the messages. The old parameters have been
+gradually deprecated in Buildbot 2.9 and Buildbot 2.10 and removed in Buildbot 3.0.
 
 The following describes the procedure of upgrading reporters.
 
-In general, one or more arguments to a reporter is going to be replaced by a list of one or more report generators passed as a list to the ``generators`` parameter.
+In general, one or more arguments to a reporter is going to be replaced by a list of one or more
+report generators passed as a list to the ``generators`` parameter.
 
 The description below will explain what to do with each parameter.
 
@@ -81,8 +87,10 @@ MailNotifier
 
 The ``generators`` list will contain one or two report generators.
 
-The first will be an instance of :bb:reportgen:`BuildStatusGenerator` if the value of ``buildSetSummary`` was ``True`` or :bb:reportgen:`BuildSetStatusGenerator` if the value of ``buildSetSummary`` was ``False``.
-This will be referred to as *status generator* in the description below.
+The first will be an instance of :bb:reportgen:`BuildStatusGenerator` if the value of
+``buildSetSummary`` was ``True`` or :bb:reportgen:`BuildSetStatusGenerator` if the value of
+``buildSetSummary`` was ``False``. This will be referred to as *status generator* in the
+description below.
 
 The second generator is optional.
 It included if the value of ``watchedWorkers`` is not ``None`` (the default is ``"all"``)
@@ -107,22 +115,28 @@ The following arguments have been removed:
 
 * ``addPatch``. Replacement is ``add_patch`` parameter of the *status generator*.
 
-* ``buildSetSummary``. Defines whether the *status generator* will be instance of :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
+* ``buildSetSummary``. Defines whether the *status generator* will be instance of
+  :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or
+  :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
 
 * ``messageFormatter``. Replacement is ``message_formatter`` parameter of the *status generator*.
 
 * ``watchedWorkers``. Replacement is ``workers`` parameter of the *missing worker generator*.
-  If the value was ``None``, then there's no *missing worker generator* and the value of ``messageFormatterMissingWorker`` is ignored.
+  If the value was ``None``, then there's no *missing worker generator* and the value of
+  ``messageFormatterMissingWorker`` is ignored.
 
-* ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
+* ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the
+  *missing worker generator*.
 
 PushjetNotifier, PushoverNotifier, BitbucketServerPRCommentPush
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``generators`` list will contain one or two report generators.
 
-The first will be an instance of :bb:reportgen:`BuildStatusGenerator` if the value of ``buildSetSummary`` was ``True`` or :bb:reportgen:`BuildSetStatusGenerator` if the value of ``buildSetSummary`` was ``False``.
-This will be referred to as *status generator* in the description below.
+The first will be an instance of :bb:reportgen:`BuildStatusGenerator` if the value of
+``buildSetSummary`` was ``True`` or :bb:reportgen:`BuildSetStatusGenerator` if the value of
+``buildSetSummary`` was ``False``. This will be referred to as *status generator* in the
+description below.
 
 The second generator is optional.
 It included if the value of ``watchedWorkers`` is not ``None`` (the default is ``None``)
@@ -143,16 +157,21 @@ The following arguments have been removed:
 
 * ``branches``. Replacement is ``branches`` parameter of the *status generator*.
 
-* ``buildSetSummary``. Defines whether the *status generator* will be instance of :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
+* ``buildSetSummary``. Defines whether the *status generator* will be instance of
+  :bb:reportgen:`BuildStatusGenerator` (value of ``True``, the default) or :bb:reportgen:`BuildSetStatusGenerator` (value of ``False``).
 
 * ``messageFormatter``. Replacement is ``message_formatter`` parameter of the *status generator*.
-  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatter(template_type='html', template=<default text>)``.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is
+  ``MessageFormatter(template_type='html', template=<default text>)``.
 
 * ``watchedWorkers``. Replacement is ``workers`` parameter of the *missing worker generator*.
-  If the value was ``None``, then there's no *missing worker generator* and the value of ``messageFormatterMissingWorker`` is ignored.
+  If the value was ``None``, then there's no *missing worker generator* and the value of
+  ``messageFormatterMissingWorker`` is ignored.
 
-* ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the *missing worker generator*.
-  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter is ``MessageFormatterMissingWorker(template=<default text>)``.
+* ``messageFormatterMissingWorker``. Replacement is ``message_formatter`` parameter of the
+  *missing worker generator*.
+  In the case of ``PushjetNotifier`` and ``PushoverNotifier``, the default message formatter
+  is ``MessageFormatterMissingWorker(template=<default text>)``.
 
 BitbucketServerCoreAPIStatusPush, BitbucketServerStatusPush, GerritVerifyStatusPush, GitHubStatusPush, GitHubCommentPush, GitLabStatusPush
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,51 +182,66 @@ The following arguments have been removed:
 
 * ``builders``. Replacement is ``builders`` parameter of the *status generator*.
 
-* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed to the *status generator*.
+* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed
+  to the *status generator*.
 
-* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the *status generator*.
+* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the
+  *status generator*.
 
-* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the *status generator*.
+* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the
+  *status generator*.
 
-* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when information on previous build is needed.
+* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when
+  information on previous build is needed.
 
-* ``startDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``start_formatter`` parameter to the *status generator*.
+* ``startDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable``
+  passed as the ``start_formatter`` parameter to the *status generator*.
 
-* ``endDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable`` passed as the ``end_formatter`` parameter to the *status generator*.
+* ``endDescription``. Replacement is a message formatter of type ``MessageFormatterRenderable``
+  passed as the ``end_formatter`` parameter to the *status generator*.
 
 HttpStatusPush
 ^^^^^^^^^^^^^^
 
-The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStatusGenerator`.
+The ``generators`` list will contain one report generator of instance
+:bb:reportgen:`BuildStatusGenerator`.
 
 The following arguments have been removed:
 
 * ``builders``. Replacement is ``builders`` parameter of the *status generator*.
 
-* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed to the *status generator*.
+* ``wantProperties``. Replacement is ``wantProperties`` parameter of the message formatter passed
+  to the *status generator*.
 
-* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the *status generator*.
+* ``wantSteps``. Replacement is ``wantSteps`` parameter of the message formatter passed to the
+  *status generator*.
 
-* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the *status generator*.
+* ``wantLogs``. Replacement is ``wantLogs`` parameter of the message formatter passed to the
+  *status generator*.
 
-* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when information on previous build is needed.
+* ``wantPreviousBuild``. There is no replacement, the value is computed automatically when
+  information on previous build is needed.
 
-* ``format_fn``. Replacement is a message formatter of type ``MessageFormatterFunction`` passed as the ``message_formatter`` parameter to the *status generator*.
+* ``format_fn``. Replacement is a message formatter of type ``MessageFormatterFunction`` passed as
+  the ``message_formatter`` parameter to the *status generator*.
   The ``MessageFormatterFunction`` should be passed a callable function as the ``function`` parameter.
   This ``function`` parameter has a different signature than ``format_fn``.
   ``format_fn`` was previously passed a build dictionary directly as the first argument.
-  ``function`` will be passed a dictionary, which contains a ``build`` key which will contain the build dictionary as the value.
+  ``function`` will be passed a dictionary, which contains a ``build`` key which will contain the
+  build dictionary as the value.
 
 BitbucketStatusPush
 ^^^^^^^^^^^^^^^^^^^
 
-The ``generators`` list will contain one report generator of instance :bb:reportgen:`BuildStartEndStatusGenerator`.
+The ``generators`` list will contain one report generator of instance
+:bb:reportgen:`BuildStartEndStatusGenerator`.
 
 The following arguments have been removed:
 
 * ``builders``. Replacement is ``builders`` parameter of the *status generator*.
 
-* ``wantProperties``, ``wantSteps``, ``wantLogs`` and ``wantPreviousBuild`` were previously accepted, but they do not affect the behavior of the reporter.
+* ``wantProperties``, ``wantSteps``, ``wantLogs`` and ``wantPreviousBuild`` were previously accepted,
+  but they do not affect the behavior of the reporter.
 
 Template files in message formatters
 ------------------------------------

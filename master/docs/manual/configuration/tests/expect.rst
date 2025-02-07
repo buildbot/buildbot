@@ -1,11 +1,13 @@
 Worker command expectations
 +++++++++++++++++++++++++++
 
-:class:`TestBuildStepMixin` is used to test steps and accepts command expectations to its ``expect_commands`` method.
-These command expectations are instances of classes listed in this page.
+:class:`TestBuildStepMixin` is used to test steps and accepts command expectations to its
+``expect_commands`` method. These command expectations are instances of classes listed in this
+page.
 
-In all cases the arguments used to construct the expectation is what is expected to receive from the step under test.
-The methods called on the command are used to build a list of effects that the step will observe.
+In all cases the arguments used to construct the expectation is what is expected to receive from
+the step under test. The methods called on the command are used to build a list of effects that the
+step will observe.
 
 
 .. py:class:: buildbot.test.steps.Expect
@@ -50,8 +52,8 @@ The methods called on the command are used to build a list of effects that the s
 
         :param error: An instance of an exception to throw when running the command.
 
-        Throws an exception when running the command.
-        This is often used to simulate broken connection by throwing in an instance of ``twisted.internet.error.ConnectionLost``.
+        Throws an exception when running the command. This is often used to simulate broken
+        connection by throwing in an instance of ``twisted.internet.error.ConnectionLost``.
 
 
 .. _Test-ExpectShell:
@@ -126,7 +128,8 @@ ExpectUploadFile
     .. py:method:: upload_string(string, error=None)
 
         :param str string: The data of the file to sent to the step.
-        :param object error: An optional instance of an exception to raise to simulate failure to transfer data.
+        :param object error: An optional instance of an exception to raise to simulate failure to
+                             transfer data.
 
         Specifies the data to send to the step.
 
@@ -138,8 +141,9 @@ ExpectDownloadFile
 
 .. py:class:: buildbot.test.steps.ExpectDownloadFile(Expect)
 
-    This class represents a ``downloadFile`` command sent to the worker.
-    Tests usually check what the step attempts to send to the worker by calling ``.download_string`` and checking what data the supplied callable receives.
+    This class represents a ``downloadFile`` command sent to the worker. Tests usually check what
+    the step attempts to send to the worker by calling ``.download_string`` and checking what data
+    the supplied callable receives.
 
     .. py:method:: __init__(blocksize=None, maxsize=None, workerdest=None, workdir=None, reader=None, mode=None, interrupted=False, slavesrc=None, slavedest=None)
 

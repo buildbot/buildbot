@@ -269,8 +269,10 @@ Builder Configuration
 Error Handling
 --------------
 
-If any errors are encountered while loading the configuration, :py:func:`buildbot.config.error` should be called.
-This can occur both in the configuration-loading code, and in the constructors of any objects that are instantiated in the configuration - change sources, workers, schedulers, build steps, and so on.
+If any errors are encountered while loading the configuration, :py:func:`buildbot.config.error`
+should be called. This can occur both in the configuration-loading code, and in the constructors
+of any objects that are instantiated in the configuration - change sources, workers, schedulers,
+build steps, and so on.
 
 .. py:function:: error(error)
 
@@ -278,8 +280,8 @@ This can occur both in the configuration-loading code, and in the constructors o
     :raises: :py:exc:`ConfigErrors` if called at build-time
 
     This function reports a configuration error.
-    If a config file is being loaded, then the function merely records the error, and allows the rest of the configuration to be loaded.
-    At any other time, it raises :py:exc:`ConfigErrors`.
+    If a config file is being loaded, then the function merely records the error, and allows the
+    rest of the configuration to be loaded. At any other time, it raises :py:exc:`ConfigErrors`.
     This is done so that all config errors can be reported, rather than just the first one.
 
 .. py:exception:: ConfigErrors([errors])
@@ -305,9 +307,11 @@ Configuration in AngularJS
 ==========================
 
 The AngularJS frontend often needs access to the local master configuration.
-This is accomplished automatically by converting various pieces of the master configuration to a dictionary.
+This is accomplished automatically by converting various pieces of the master configuration to a
+dictionary.
 
-The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to convert any object into a JSON-able dictionary.
+The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to convert any object
+into a JSON-able dictionary.
 
 .. py:class:: buildbot.interfaces.IConfigured
 
@@ -328,7 +332,8 @@ The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to c
 .. py:class:: buildbot.util.ConfiguredMixin
 
     This class is a basic implementation of :py:class:`~buildbot.interfaces.IConfigured`.
-    Its :py:meth:`getConfigDict` method simply returns the instance's ``name`` attribute (all objects configured must have the ``name`` attribute).
+    Its :py:meth:`getConfigDict` method simply returns the instance's ``name`` attribute (all
+    objects configured must have the ``name`` attribute).
 
     .. py:method:: getConfigDict()
 
@@ -380,12 +385,15 @@ implemented as Twisted services and mix in the
 
 The services implementing ``ReconfigurableServiceMixin`` operate on whole master configuration.
 
-In some cases they are effectively singletons that handle configuration identified by a specific configuration key.
-Such singletons often manage non-singleton services as children and pass bits of its own configuration when reconfiguring these children.
-``BuildbotServiceManager`` is one internal implementation of ``ReconfigurableServiceMixin`` which accepts a list of child service configurations as its configuration and then intelligently reconfigures child services on changes.
+In some cases they are effectively singletons that handle configuration identified by a specific
+configuration key. Such singletons often manage non-singleton services as children and pass bits of
+its own configuration when reconfiguring these children. ``BuildbotServiceManager`` is one internal
+implementation of ``ReconfigurableServiceMixin`` which accepts a list of child service
+configurations as its configuration and then intelligently reconfigures child services on changes.
 
-Non-singleton ``ReconfigurableServiceMixin`` services are harder to write as they must manually pick its configuration from whole master configuration.
-The parent service also needs explicit support for this kind of setup to work correctly.
+Non-singleton ``ReconfigurableServiceMixin`` services are harder to write as they must manually
+pick its configuration from whole master configuration. The parent service also needs explicit
+support for this kind of setup to work correctly.
 
 .. py:class:: ReconfigurableServiceMixin
 
@@ -448,14 +456,20 @@ values change.
 Schedulers
 ..........
 
-Schedulers have names, so Buildbot can determine whether a scheduler has been added, removed, or changed during a reconfig.
-Old schedulers will be stopped, new schedulers will be started, and both new and existing schedulers will see a call to :py:meth:`~ReconfigurableServiceMixin.reconfigService`, if such a method exists.
-For backward compatibility, schedulers that do not support reconfiguration will be stopped, and a new scheduler will be started when their configuration changes.
+Schedulers have names, so Buildbot can determine whether a scheduler has been added, removed, or
+changed during a reconfig. Old schedulers will be stopped, new schedulers will be started, and both
+new and existing schedulers will see a call to :py:meth:`~ReconfigurableServiceMixin.reconfigService`,
+if such a method exists. For backward compatibility, schedulers that do not support reconfiguration
+will be stopped, and a new scheduler will be started when their configuration changes.
 
-During a reconfiguration, if a new and old scheduler's fully qualified class names differ, then the old class will be stopped, and the new class will be started.
-This supports the case when a user changes, for example, a :bb:sched:`Nightly` scheduler to a :bb:sched:`Periodic` scheduler without changing the name.
+During a reconfiguration, if a new and old scheduler's fully qualified class names differ, then the
+old class will be stopped, and the new class will be started. This supports the case when a user
+changes, for example, a :bb:sched:`Nightly` scheduler to a :bb:sched:`Periodic` scheduler without
+changing the name.
 
-Because Buildbot uses :py:class:`~buildbot.schedulers.base.ReconfigurableBaseScheduler` instances directly in the configuration file, a reconfigured scheduler must extract its new configuration information from another instance of itself.
+Because Buildbot uses :py:class:`~buildbot.schedulers.base.ReconfigurableBaseScheduler` instances
+directly in the configuration file, a reconfigured scheduler must extract its new configuration
+information from another instance of itself.
 
 Custom Subclasses
 ~~~~~~~~~~~~~~~~~
@@ -480,20 +494,23 @@ scheduler (with the new name and class) to be started.
 Workers
 .......
 
-Similar to schedulers, workers are specified by name, so new and old configurations are first compared by name, and any workers to be added or
-removed are noted.
+Similar to schedulers, workers are specified by name, so new and old configurations are first
+compared by name, and any workers to be added or removed are noted.
 Workers for which the fully-qualified class name has changed are also added and removed.
 All workers have their :py:meth:`~ReconfigurableServiceMixin.reconfigService` method called.
 
-This method takes care of the basic worker attributes, including changing the PB registration if necessary.
-Any subclasses that add configuration parameters should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and update those parameters.
-As with schedulers, because the :py:class:`~buildbot.worker.AbstractWorker` instance is given directly in the configuration, a reconfigured worker instance must extract its new configuration from another instance of itself.
+This method takes care of the basic worker attributes, including changing the PB registration if
+necessary. Any subclasses that add configuration parameters should override
+:py:meth:`~ReconfigurableServiceMixin.reconfigService` and update those parameters.
+As with schedulers, because the :py:class:`~buildbot.worker.AbstractWorker` instance is given
+directly in the configuration, a reconfigured worker instance must extract its new configuration
+from another instance of itself.
 
 User Managers
 .............
 
-Since user managers are rarely used, and their purpose is unclear, they are always stopped and re-started on every reconfig.
-This may change in future versions.
+Since user managers are rarely used, and their purpose is unclear, they are always stopped and
+re-started on every reconfig. This may change in future versions.
 
 Status Receivers
 ................

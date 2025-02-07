@@ -14,7 +14,8 @@ Buildsets connector
 
     .. index:: bsdict, bsid
 
-    Buildsets are indexed by *bsid* and their contents are represented as :class:`BuildSetModel` dataclass with the following fields:
+    Buildsets are indexed by *bsid* and their contents are represented as :class:`BuildSetModel`
+    dataclass with the following fields:
 
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
@@ -43,16 +44,20 @@ Buildsets connector
         :type external_idstring: unicode string
         :param datetime submitted_at: time this buildset was created; defaults to the current time
         :param int parent_buildid: optional build id that is the parent for this buildset
-        :param unicode parent_relationship: relationship identifier for the parent. This is the configured relationship between the parent build and the child buildsets
+        :param unicode parent_relationship: relationship identifier for the parent. This is the
+            configured relationship between the parent build and the child buildsets
         :param int rebuilt_buildid: optional rebuilt build id
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
-        Add a new buildset to the database, along with build requests for each builder, returning the resulting bsid via a Deferred.
-        Arguments should be specified by keyword.
+        Add a new buildset to the database, along with build requests for each builder, returning
+        the resulting bsid via a Deferred. Arguments should be specified by keyword.
 
-        Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to be a sourcestamp ID, or a dictionary of keyword arguments to be passed to :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
+        Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to
+        be a sourcestamp ID, or a dictionary of keyword arguments to be passed to
+        :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
 
-        The return value is a tuple ``(bsid, brids)`` where ``bsid`` is the inserted buildset ID and ``brids`` is a dictionary mapping builderids to build request IDs.
+        The return value is a tuple ``(bsid, brids)`` where ``bsid`` is the inserted buildset ID
+        and ``brids`` is a dictionary mapping builderids to build request IDs.
 
     .. py:method:: completeBuildset(bsid, results[, complete_at=XX])
 

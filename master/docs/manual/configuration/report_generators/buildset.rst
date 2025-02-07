@@ -118,5 +118,6 @@ The following parameters are supported:
 
 ``message_formatter``
     (optional, instance of ``reporters.MessageFormatter``)
-    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom message.
+    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to
+    generate a custom message.
 

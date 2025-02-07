@@ -4,25 +4,29 @@ Buildbot Coding Style
 Documentation
 -------------
 
-Buildbot strongly encourages developers to document the methods, behavior, and usage of classes that users might interact with.
-However, this documentation should be in ``.rst`` files under ``master/docs/developer``, rather than in docstrings within the code.
-For private methods or where code deserves some kind of explanatory preface, use comments instead of a docstring.
-While some docstrings remain within the code, these should be migrated to documentation files and removed as the code is modified.
+Buildbot strongly encourages developers to document the methods, behavior, and usage of classes
+that users might interact with. However, this documentation should be in ``.rst`` files under
+``master/docs/developer``, rather than in docstrings within the code. For private methods or where
+code deserves some kind of explanatory preface, use comments instead of a docstring. While some
+docstrings remain within the code, these should be migrated to documentation files and removed as
+the code is modified.
 
-Within the reStructuredText files, write each English sentence on its own line.
-While this does not affect the generated output, it makes git diffs between versions of the documentation easier to read, as they are not obscured by changes due to re-wrapping.
-This convention is not followed everywhere, but we are slowly migrating documentation from the old (wrapped) style as we update it.
+Within the reStructuredText files, write each English sentence on its own line. While this does not
+affect the generated output, it makes git diffs between versions of the documentation easier to
+read, as they are not obscured by changes due to re-wrapping. This convention is not followed
+everywhere, but we are slowly migrating documentation from the old (wrapped) style as we update it.
 
 Symbol Names
 ------------
 
 Buildbot follows `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ regarding the formatting of symbol names.
 
-Due to historical reasons, most of the public API uses interCaps naming style
-To preserve backwards compatibility, the public API should continue using interCaps naming style.
-That is, you should spell public API methods and functions with the first character in lower-case, and the first letter of subsequent words capitalized, e.g., ``compareToOther`` or ``getChangesGreaterThan``.
-The public API refers to the documented API that external developers can rely on.
-See section on the definition of the public API in :ref:`Public-API`.
+Due to historical reasons, most of the public API uses interCaps naming style To preserve backwards
+compatibility, the public API should continue using interCaps naming style. That is, you should
+spell public API methods and functions with the first character in lower-case, and the first letter
+of subsequent words capitalized, e.g., ``compareToOther`` or ``getChangesGreaterThan``. The public
+API refers to the documented API that external developers can rely on. See section on the
+definition of the public API in :ref:`Public-API`.
 
 Everything else should use the style recommended by PEP8.
 
@@ -66,7 +70,8 @@ for the full details.
     In general, you will want to wrap the function to capture and log errors.
 
 :class:`twisted.application.internet.TimerService`
-    Similar to ``t.i.t.LoopingCall``, but implemented as a service that will automatically start and stop the function calls when the service starts and stops.
+    Similar to ``t.i.t.LoopingCall``, but implemented as a service that will automatically start
+    and stop the function calls when the service starts and stops.
     See the warning about failing functions for ``t.i.t.LoopingCall``.
 
 Sequences of Operations
@@ -78,8 +83,8 @@ operations, many of which may block.
 In all cases where this occurs, there is a danger of pre-emption, so exercise
 the same caution you would if writing a threaded application.
 
-For simple cases, you can use nested callback functions. For more complex cases, inlineCallbacks is appropriate.
-In all cases, please prefer maintainability and readability over performance.
+For simple cases, you can use nested callback functions. For more complex cases, inlineCallbacks is
+appropriate. In all cases, please prefer maintainability and readability over performance.
 
 Nested Callbacks
 ................
@@ -121,8 +126,9 @@ nested functions:
         d.addCallback(set_results)
         return d
 
-It is usually best to make the first operation occur within a callback, as the deferred machinery will then handle any exceptions as a failure in the outer Deferred.
-As a shortcut, ``d.addCallback`` can work as a decorator:
+It is usually best to make the first operation occur within a callback, as the deferred machinery
+will then handle any exceptions as a failure in the outer Deferred. As a shortcut,
+``d.addCallback`` can work as a decorator:
 
 .. code-block:: python
 
@@ -133,12 +139,13 @@ As a shortcut, ``d.addCallback`` can work as a decorator:
 
 .. note::
 
-    ``d.addCallback`` is not really a decorator as it does not return a modified function.
-    As a result, in the previous code, ``rev_parse`` value is actually the Deferred.
-    In general, the :class:`inlineCallbacks` method is preferred inside new code as it keeps the code easier to read.
-    As a general rule of thumb, when you need more than 2 callbacks in the same method, it's time to switch to  :class:`inlineCallbacks`.
-    This would be for example the case for the :py:func:`getRevInfo` example.
-    See this `discussion <:pull:`2523`>`_ with Twisted experts for more information.
+    ``d.addCallback`` is not really a decorator as it does not return a modified function. As a
+    result, in the previous code, ``rev_parse`` value is actually the Deferred. In general, the
+    :class:`inlineCallbacks` method is preferred inside new code as it keeps the code easier to
+    read. As a general rule of thumb, when you need more than 2 callbacks in the same method, it's
+    time to switch to :class:`inlineCallbacks`. This would be for example the case for the
+    :py:func:`getRevInfo` example. See this `discussion <:pull:`2523`>`_ with Twisted experts for
+    more information.
 
 Be careful with local variables. For example, if ``parse_rev_parse``, above,
 merely assigned ``rev = res.strip()``, then that variable would be local to
@@ -149,13 +156,15 @@ merely assigned ``rev = res.strip()``, then that variable would be local to
     Deferreds!  Unbounded chaining can result in stack overflows, at least on older
     versions of Twisted. Use ``inlineCallbacks`` instead.
 
-In most of the cases, if you need more than two callbacks in a method, it is more readable and maintainable to use inlineCallbacks.
+In most of the cases, if you need more than two callbacks in a method, it is more readable and
+maintainable to use inlineCallbacks.
 
 inlineCallbacks
 ...............
 
-:class:`twisted.internet.defer.inlineCallbacks` is a great help to writing code that makes a lot of asynchronous calls, particularly if those calls are made in loop or conditionals.
-Refer to the Twisted documentation for the details, but the style within Buildbot is as follows:
+:class:`twisted.internet.defer.inlineCallbacks` is a great help to writing code that makes a lot of
+asynchronous calls, particularly if those calls are made in loop or conditionals. Refer to the
+Twisted documentation for the details, but the style within Buildbot is as follows:
 
 .. code-block:: python
 
@@ -178,7 +187,8 @@ The key points to notice here:
 * Always import ``defer`` as a module, not the names within it.
 * Use the decorator form of ``inlineCallbacks``.
 * In most cases, the result of a ``yield`` expression should be assigned to a variable.
-  It can be used in a larger expression, but remember that Python requires that you enclose the expression in its own set of parentheses.
+  It can be used in a larger expression, but remember that Python requires that you enclose the
+  expression in its own set of parentheses.
 
 The great advantage of ``inlineCallbacks`` is that it allows you to use all of the usual Pythonic control structures in their natural form.
 In particular, it is easy to represent a loop or even nested loops in this style without losing any readability.
@@ -202,10 +212,12 @@ The previous :py:func:`getRevInfo` example implementation should rather be writt
 Locking
 .......
 
-Remember that asynchronous programming does not free you from the need to worry about concurrency issues.
-In particular, if you are executing a sequence of operations, and each time you wait for a Deferred, other arbitrary actions can take place.
+Remember that asynchronous programming does not free you from the need to worry about concurrency
+issues. In particular, if you are executing a sequence of operations, and each time you wait for a
+Deferred, other arbitrary actions can take place.
 
-In general, you should try to perform actions atomically, but for the rare situations that require synchronization, the following might be useful:
+In general, you should try to perform actions atomically, but for the rare situations that require
+synchronization, the following might be useful:
 
 * :py:class:`twisted.internet.defer.DeferredLock`
 * :py:func:`buildbot.util.misc.deferredLocked`
@@ -238,11 +250,14 @@ For this purpose, you may use a `DeferredList <http://twistedmatrix.com/document
         d.addCallback(handle_results)
         return d
 
-Here, the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to fire, or for one of them to fail.
-You may attach callbacks and errbacks to a ``DeferredList`` just as you would with a deferred.
+Here, the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to fire, or for one of
+them to fail. You may attach callbacks and errbacks to a ``DeferredList`` just as you would with a
+deferred.
 
 Functions running outside of the main thread
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is very important in Twisted to be able to distinguish functions that runs in the main thread and functions that don't, as reactors and deferreds can only be used in the main thread.
-To make this distinction clearer, every function meant to be run in a secondary thread must be prefixed with ``thd_``.
+It is very important in Twisted to be able to distinguish functions that runs in the main thread
+and functions that don't, as reactors and deferreds can only be used in the main thread. To make
+this distinction clearer, every function meant to be run in a secondary thread must be prefixed
+with ``thd_``.

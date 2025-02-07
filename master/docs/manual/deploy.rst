@@ -20,18 +20,21 @@ Buildbot uses the sqlite3 database backend by default.
    However, it does not scale well with large numbers of builders, workers and users.
    If you expect your Buildbot to grow over time, it is strongly advised to use a real database server (e.g., MySQL or Postgres).
 
-If you want to use a database server as the database backend for your Buildbot, use option `buildbot create-master --db` to specify the :ref:`connection string <Database-Specification>` for the database, and make sure that the same URL appears in the ``db_url`` of the :bb:cfg:`db` parameter in your configuration file.
+If you want to use a database server as the database backend for your Buildbot, use option
+`buildbot create-master --db` to specify the :ref:`connection string <Database-Specification>` for
+the database, and make sure that the same URL appears in the ``db_url`` of the :bb:cfg:`db`
+parameter in your configuration file.
 
 Server Setup Example
 ~~~~~~~~~~~~~~~~~~~~
 
-Installing and configuring a database server can be complex.
-Here is a minimalist example on how to install and configure a PostgreSQL server for your Buildbot on a recent Ubuntu system.
+Installing and configuring a database server can be complex. Here is a minimalist example on how to
+install and configure a PostgreSQL server for your Buildbot on a recent Ubuntu system.
 
 .. note::
 
-   To install PostgreSQL on Ubuntu, you need root access.
-   There are other ways to do it without root access (e.g. docker, build from source, etc.) but outside the scope of this example.
+   To install PostgreSQL on Ubuntu, you need root access. There are other ways to do it without
+   root access (e.g. docker, build from source, etc.) but outside the scope of this example.
 
 First, let's install the server with ``apt-get``:
 
@@ -111,18 +114,21 @@ Any reasonably recent version should suffice.
 Maintenance
 -----------
 
-The buildmaster can be configured to send out email notifications when a worker has been offline for a while.
-Be sure to configure the buildmaster with a contact email address for each worker so these notifications are sent to someone who can bring it back online.
+The buildmaster can be configured to send out email notifications when a worker has been offline
+for a while. Be sure to configure the buildmaster with a contact email address for each worker so
+these notifications are sent to someone who can bring it back online.
 
-If you find you can no longer provide a worker to the project, please let the project admins know, so they can put out a call for a replacement.
+If you find you can no longer provide a worker to the project, please let the project admins know,
+so they can put out a call for a replacement.
 
-The Buildbot records status and logs output continually, each time a build is performed.
-The status tends to be small, but the build logs can become quite large.
-Each build and log are recorded in a separate file, arranged hierarchically under the buildmaster's base directory.
-To prevent these files from growing without bound, you should periodically delete old build logs.
-A simple cron job to delete anything older than, say, two weeks should do the job.
-The only trick is to leave the :file:`buildbot.tac` and other support files alone, for which :command:`find`'s ``-mindepth`` argument helps skip everything in the top directory.
-You can use something like the following (assuming builds are stored in :file:`./builds/` directory):
+The Buildbot records status and logs output continually, each time a build is performed. The status
+tends to be small, but the build logs can become quite large. Each build and log are recorded in a
+separate file, arranged hierarchically under the buildmaster's base directory. To prevent these
+files from growing without bound, you should periodically delete old build logs. A simple cron job
+to delete anything older than, say, two weeks should do the job. The only trick is to leave the
+:file:`buildbot.tac` and other support files alone, for which :command:`find`'s ``-mindepth``
+argument helps skip everything in the top directory. You can use something like the following
+(assuming builds are stored in :file:`./builds/` directory):
 
 .. code-block:: none
 
@@ -130,7 +136,8 @@ You can use something like the following (assuming builds are stored in :file:`.
         -prune -o -type f -mtime +14 -exec rm {} \;
     @weekly cd BASEDIR && find twistd.log* -mtime +14 -exec rm {} \;
 
-Alternatively, you can configure a maximum number of old logs to be kept using the ``--log-count`` command line option when running ``buildbot-worker create-worker`` or ``buildbot create-master``.
+Alternatively, you can configure a maximum number of old logs to be kept using the ``--log-count``
+command line option when running ``buildbot-worker create-worker`` or ``buildbot create-master``.
 
 .. _Troubleshooting:
 
@@ -144,33 +151,39 @@ Here are a few hints on diagnosing common problems.
 Starting the worker
 ~~~~~~~~~~~~~~~~~~~
 
-Cron jobs are typically run with a minimal shell (:file:`/bin/sh`, not :file:`/bin/bash`), and tilde expansion is not always performed in such commands.
-You may want to use explicit paths, because the :envvar:`PATH` is usually quite short and doesn't include anything set by your shell's startup scripts (:file:`.profile`, :file:`.bashrc`, etc).
-If you've installed buildbot (or other Python libraries) to an unusual location, you may need to add a :envvar:`PYTHONPATH` specification (note that Python will do tilde-expansion on :envvar:`PYTHONPATH` elements by itself).
-Sometimes it is safer to fully-specify everything:
+Cron jobs are typically run with a minimal shell (:file:`/bin/sh`, not :file:`/bin/bash`), and
+tilde expansion is not always performed in such commands. You may want to use explicit paths,
+because the :envvar:`PATH` is usually quite short and doesn't include anything set by your shell's
+startup scripts (:file:`.profile`, :file:`.bashrc`, etc). If you've installed buildbot (or other
+Python libraries) to an unusual location, you may need to add a :envvar:`PYTHONPATH` specification
+(note that Python will do tilde-expansion on :envvar:`PYTHONPATH` elements by itself). Sometimes it
+is safer to fully-specify everything:
 
 .. code-block:: none
 
     @reboot PYTHONPATH=~/lib/python /usr/local/bin/buildbot \
         start /usr/home/buildbot/basedir
 
-Take the time to get the ``@reboot`` job set up.
-Otherwise, things will work fine for a while, but the first power outage or system reboot you have will stop the worker with nothing but the cries of sorrowful developers to remind you that it has gone away.
+Take the time to get the ``@reboot`` job set up. Otherwise, things will work fine for a while, but
+the first power outage or system reboot you have will stop the worker with nothing but the cries of
+sorrowful developers to remind you that it has gone away.
 
 .. _Connecting-to-the-buildmaster:
 
 Connecting to the buildmaster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the worker cannot connect to the buildmaster, the reason should be described in the :file:`twistd.log` logfile.
-Some common problems are an incorrect master hostname or port number, or a mistyped bot name or password.
-If the worker loses the connection to the master, it is supposed to attempt to reconnect with an exponentially-increasing backoff.
-Each attempt (and the time of the next attempt) will be logged.
-If you get impatient, just manually stop and re-start the worker.
+If the worker cannot connect to the buildmaster, the reason should be described in the
+:file:`twistd.log` logfile. Some common problems are an incorrect master hostname or port number,
+or a mistyped bot name or password. If the worker loses the connection to the master, it is
+supposed to attempt to reconnect with an exponentially-increasing backoff. Each attempt (and the
+time of the next attempt) will be logged. If you get impatient, just manually stop and re-start the
+worker.
 
-When the buildmaster is restarted, all workers will be disconnected, and will attempt to reconnect as usual.
-The reconnect time will depend upon how long the buildmaster is offline (i.e. how far up the exponential backoff curve the workers have travelled).
-Again, :samp:`buildbot-worker restart {BASEDIR}` will speed up the process.
+When the buildmaster is restarted, all workers will be disconnected, and will attempt to reconnect
+as usual. The reconnect time will depend upon how long the buildmaster is offline (i.e. how far up
+the exponential backoff curve the workers have travelled). Again,
+:samp:`buildbot-worker restart {BASEDIR}` will speed up the process.
 
 .. _Logging-to-stdout:
 
@@ -203,5 +216,6 @@ More information on the python debugger can be found here: https://docs.python.o
 Contrib Scripts
 ~~~~~~~~~~~~~~~
 
-While some features of Buildbot are included in the distribution, others are only available in :src:`master/contrib/` in the source directory.
+While some features of Buildbot are included in the distribution, others are only available in
+:src:`master/contrib/` in the source directory.
 The latest versions of such scripts are available at :src:`master/contrib`.

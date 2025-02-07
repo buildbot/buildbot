@@ -7,8 +7,9 @@ A Quick Tour
 Goal
 ----
 
-This tutorial will expand on the :ref:`first-run-label` tutorial by taking a quick tour around some of the features of buildbot that are hinted at in the comments in the sample configuration.
-We will simply change parts of the default configuration and explain the activated features.
+This tutorial will expand on the :ref:`first-run-label` tutorial by taking a quick tour around some
+of the features of buildbot that are hinted at in the comments in the sample configuration. We will
+simply change parts of the default configuration and explain the activated features.
 
 As a part of this tutorial, we will make buildbot do a few actual builds.
 
@@ -40,10 +41,12 @@ You will now see that a successful test run has happened:
 
 This simple process is essentially the whole purpose of the Buildbot project.
 
-The information about what actions are executed for a certain build are defined in things called :ref:`builders <Concepts-Builder>`.
+The information about what actions are executed for a certain build are defined in things called
+:ref:`builders <Concepts-Builder>`.
 
-The information about when a certain builder should launch a build are defined in things called :ref:`schedulers <Concepts-Scheduler>`.
-In fact, the blue "force" button that was pushed in this example activated a scheduler too.
+The information about when a certain builder should launch a build are defined in things called
+:ref:`schedulers <Concepts-Scheduler>`. In fact, the blue "force" button that was pushed in this
+example activated a scheduler too.
 
 Setting Project Name and URL
 ----------------------------
@@ -52,7 +55,9 @@ Let's start simple by looking at where you would customize the buildbot's projec
 
 We continue where we left off in the :ref:`first-run-label` tutorial.
 
-Open a new terminal, go to the directory you created master in, activate the same virtualenv instance you created before, and open the master configuration file with an editor (here ``$EDITOR`` is your editor of choice like vim, gedit, or emacs):
+Open a new terminal, go to the directory you created master in, activate the same virtualenv
+instance you created before, and open the master configuration file with an editor (here
+``$EDITOR`` is your editor of choice like vim, gedit, or emacs):
 
 .. code-block:: bash
 
@@ -70,7 +75,8 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
   c['title'] = "Hello World CI"
   c['titleURL'] = "https://buildbot.github.io/hello-world/"
 
-If you want, you can change either of these links to anything you want so that you can see what happens when you change them.
+If you want, you can change either of these links to anything you want so that you can see what
+happens when you change them.
 
 After making a change, go to the terminal and type:
 
@@ -101,16 +107,22 @@ You will see a handful of lines of output from the master log, much like this:
 
     Reconfiguration appears to have completed successfully.
 
-The important lines are the ones telling you that the new configuration is being loaded (at the top) and that the update is complete (at the bottom).
+The important lines are the ones telling you that the new configuration is being loaded (at the
+top) and that the update is complete (at the bottom).
 
-Now, if you go back to `the waterfall page <http://localhost:8010/#/waterfall>`_, you will see that the project's name is whatever you may have changed it to, and when you click on the URL of the project name at the bottom of the page, it should take you to the link you put in the configuration.
+Now, if you go back to `the waterfall page <http://localhost:8010/#/waterfall>`_, you will see that
+the project's name is whatever you may have changed it to, and when you click on the URL of the
+project name at the bottom of the page, it should take you to the link you put in the
+configuration.
 
 Configuration Errors
 --------------------
 
-It is very common to make a mistake when configuring buildbot, so you might as well see now what happens in that case and what you can do to fix the error.
+It is very common to make a mistake when configuring buildbot, so you might as well see now what
+happens in that case and what you can do to fix the error.
 
-Open up the config again and introduce a syntax error by removing the first single quote in the two lines you changed before, so they read:
+Open up the config again and introduce a syntax error by removing the first single quote in the two
+lines you changed before, so they read:
 
 ..
     Format a `none` since this is not a valid Python code
@@ -167,7 +179,8 @@ Buildbot includes an IRC bot that you can tell to join a channel to control and 
 
 .. note:: Security Note
 
-    Please note that any user having access to your IRC channel, or can send a private message to the bot, will be able to create or stop builds :bug:`3377`.
+    Please note that any user having access to your IRC channel, or can send a private message to
+    the bot, will be able to create or stop builds :bug:`3377`.
 
 First, start an IRC client of your choice, connect to irc.freenode.net and join an empty channel.
 In this example we will use ``#buildbot-test``, so go join that channel.
@@ -232,7 +245,8 @@ The full documentation is available at :bb:reporter:`IRC`.
 Setting Authorized Web Users
 ----------------------------
 
-The default configuration allows everyone to perform any task, like creating or stopping builds via the web interface. To restrict this to a user, look for::
+The default configuration allows everyone to perform any task, like creating or stopping builds via
+the web interface. To restrict this to a user, look for::
 
   c['www'] = {
       "port": 8010,
@@ -259,8 +273,9 @@ For more details, see :ref:`Web-Authentication`.
 Adding a 'try' scheduler
 ------------------------
 
-Buildbot includes a way for developers to submit patches for testing without committing them to the source code control system.
-(This is really handy for projects that support several operating systems or architectures.)
+Buildbot includes a way for developers to submit patches for testing without committing them to the
+source code control system. (This is really handy for projects that support several operating
+systems or architectures.)
 
 To set this up, add the following lines to master.cfg::
 
@@ -292,14 +307,18 @@ Then run buildbot's ``try`` command as follows:
     buildbot try --connect=pb --master=127.0.0.1:5555 \
         --username=sampleuser --passwd=samplepass --vc=git
 
-This will do ``git diff`` for you and send the resulting patch to the server for build and test against the latest sources from Git.
+This will do ``git diff`` for you and send the resulting patch to the server for build and test
+against the latest sources from Git.
 
-Now go back to the `waterfall <http://localhost:8010/#/waterfall>`_ page, click on the runtests link, and scroll down.
-You should see that another build has been started with your change (and stdout for the tests should be chock-full of parse trees as a result).
-The "Reason" for the job will be listed as "'try' job", and the blamelist will be empty.
+Now go back to the `waterfall <http://localhost:8010/#/waterfall>`_ page, click on the runtests
+link, and scroll down. You should see that another build has been started with your change (and
+stdout for the tests should be chock-full of parse trees as a result). The "Reason" for the job
+will be listed as "'try' job", and the blamelist will be empty.
 
-To make yourself show up as the author of the change, use the ``--who=emailaddr`` option on ``buildbot try`` to pass your email address.
+To make yourself show up as the author of the change, use the ``--who=emailaddr`` option on
+``buildbot try`` to pass your email address.
 
-To make a description of the change show up, use the ``--properties=comment="this is a comment"`` option on ``buildbot try``.
+To make a description of the change show up, use the ``--properties=comment="this is a comment"``
+option on ``buildbot try``.
 
 To use ssh instead of a private username/password database, see :bb:sched:`Try_Jobdir`.
