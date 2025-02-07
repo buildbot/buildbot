@@ -45,9 +45,6 @@ class AbstractWorker(service.BuildbotService):
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
 
-    # reconfig workers after builders
-    reconfig_priority = 64
-
     quarantine_timer: DelayedCall | None = None
     quarantine_timeout = quarantine_initial_timeout = 10
     quarantine_max_timeout = 60 * 60

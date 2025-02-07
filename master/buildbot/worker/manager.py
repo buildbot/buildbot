@@ -76,7 +76,6 @@ class WorkerManager(MeasuredBuildbotServiceManager):
 
     config_attr = "workers"
     PING_TIMEOUT = 10
-    reconfig_priority = 127
 
     def __init__(self, master):
         super().__init__()

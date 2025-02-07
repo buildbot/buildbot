@@ -55,9 +55,6 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
 
 
 class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
-    # reconfigure builders before workers
-    reconfig_priority = 196
-
     master: BuildMaster | None = None
 
     @property
