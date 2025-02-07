@@ -118,5 +118,7 @@ class Codebase(base.ResourceType):
         projectid: int,
         slug: str,
     ) -> None:
-        await self.master.db.codebases.update_codebase_info(codebaseid, projectid, slug)
+        await self.master.db.codebases.update_codebase_info(
+            codebaseid=codebaseid, projectid=projectid, slug=slug
+        )
         await self.generate_event(codebaseid, "update")
