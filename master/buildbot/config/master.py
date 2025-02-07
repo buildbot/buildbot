@@ -200,6 +200,7 @@ class MasterConfig(util.ComparableMixin):
         "caches",
         "change_source",
         "codebaseGenerator",
+        "codebases",
         "configurators",
         "changeCacheSize",
         "changeHorizon",
