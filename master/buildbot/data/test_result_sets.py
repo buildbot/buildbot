@@ -24,6 +24,7 @@ from buildbot.data import types
 
 if TYPE_CHECKING:
     from buildbot.db.test_result_sets import TestResultSetModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Db2DataMixin:
@@ -130,7 +131,15 @@ class TestResultSet(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+    def addTestResultSet(
+        self,
+        builderid: int,
+        buildid: int,
+        stepid: int,
+        description: str,
+        category: str,
+        value_unit: str,
+    ) -> InlineCallbacksType[int]:
         test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
             builderid, buildid, stepid, description, category, value_unit
         )
@@ -139,7 +148,12 @@ class TestResultSet(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
+    def completeTestResultSet(
+        self,
+        test_result_setid: int,
+        tests_passed: int | None = None,
+        tests_failed: int | None = None,
+    ) -> InlineCallbacksType[None]:
         yield self.master.db.test_result_sets.completeTestResultSet(
             test_result_setid, tests_passed, tests_failed
         )

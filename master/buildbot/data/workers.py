@@ -26,6 +26,7 @@ from buildbot.util import identifiers
 
 if TYPE_CHECKING:
     from buildbot.db.workers import WorkerModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Db2DataMixin:
@@ -144,14 +145,16 @@ class Worker(base.ResourceType):
         )
 
     @base.updateMethod
-    def findWorkerId(self, name):
+    def findWorkerId(self, name: str) -> int:
         if not identifiers.isIdentifier(50, name):
             raise ValueError(f"Worker name {name!r} is not a 50-character identifier")
         return self.master.db.workers.findWorkerId(name)
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def workerConnected(self, workerid, masterid, workerinfo):
+    def workerConnected(
+        self, workerid: int, masterid: int, workerinfo: str
+    ) -> InlineCallbacksType[None]:
         yield self.master.db.workers.workerConnected(
             workerid=workerid, masterid=masterid, workerinfo=workerinfo
         )
@@ -160,14 +163,16 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def workerDisconnected(self, workerid, masterid):
+    def workerDisconnected(self, workerid: int, masterid: int) -> InlineCallbacksType[None]:
         yield self.master.db.workers.workerDisconnected(workerid=workerid, masterid=masterid)
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'disconnected')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def workerMissing(self, workerid, masterid, last_connection, notify):
+    def workerMissing(
+        self, workerid: int, masterid: int, last_connection: int, notify: bool
+    ) -> InlineCallbacksType[None]:
         bs = yield self.master.data.get(('workers', workerid))
         bs['last_connection'] = last_connection
         bs['notify'] = notify
@@ -175,7 +180,9 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def set_worker_paused(self, workerid, paused, pause_reason=None):
+    def set_worker_paused(
+        self, workerid: int, paused: bool, pause_reason: str | None = None
+    ) -> InlineCallbacksType[None]:
         yield self.master.db.workers.set_worker_paused(
             workerid=workerid, paused=paused, pause_reason=pause_reason
         )
@@ -184,15 +191,15 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def set_worker_graceful(self, workerid, graceful):
+    def set_worker_graceful(self, workerid: int, graceful: bool) -> InlineCallbacksType[None]:
         yield self.master.db.workers.set_worker_graceful(workerid=workerid, graceful=graceful)
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'state_updated')
 
     @base.updateMethod
-    def deconfigureAllWorkersForMaster(self, masterid):
+    def deconfigureAllWorkersForMaster(self, masterid: int) -> defer.Deferred[None]:
         # unconfigure all workers for this master
         return self.master.db.workers.deconfigureAllWorkersForMaster(masterid=masterid)
 
-    def _masterDeactivated(self, masterid):
+    def _masterDeactivated(self, masterid: int) -> defer.Deferred[None]:
         return self.deconfigureAllWorkersForMaster(masterid)

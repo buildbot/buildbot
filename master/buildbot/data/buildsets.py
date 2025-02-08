@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -145,16 +146,16 @@ class Buildset(base.ResourceType):
     @defer.inlineCallbacks
     def addBuildset(
         self,
-        waited_for,
-        scheduler=None,
-        sourcestamps=None,
-        reason='',
-        properties=None,
-        builderids=None,
-        external_idstring=None,
-        rebuilt_buildid=None,
-        parent_buildid=None,
-        parent_relationship=None,
+        waited_for: bool,
+        scheduler: str | None = None,
+        sourcestamps: list[dict[str, Any] | str] | None = None,
+        reason: str = '',
+        properties: dict[str, Any] | None = None,
+        builderids: list[int] | None = None,
+        external_idstring: str | None = None,
+        rebuilt_buildid: int | None = None,
+        parent_buildid: int | None = None,
+        parent_relationship: str | None = None,
         priority=0,
     ):
         if sourcestamps is None:
@@ -218,7 +219,7 @@ class Buildset(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid):
+    def maybeBuildsetComplete(self, bsid: int):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid, complete=False)
 
         # if there are incomplete buildrequests, bail out

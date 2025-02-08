@@ -113,6 +113,8 @@ class BuildData(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
-    def setBuildData(self, buildid, name, value, source):
+    def setBuildData(
+        self, buildid: int, name: str, value: bytes, source: str
+    ) -> defer.Deferred[None]:
         # forward deferred directly
         return self.master.db.build_data.setBuildData(buildid, name, value, source)

@@ -101,14 +101,14 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterActive(self, name, masterid):
+    def masterActive(self, name: str, masterid: int):
         activated = yield self.master.db.masters.setMasterState(masterid=masterid, active=True)
         if activated:
             self.produceEvent({"masterid": masterid, "name": name, "active": True}, 'started')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def expireMasters(self, forceHouseKeeping=False):
+    def expireMasters(self, forceHouseKeeping: bool = False):
         too_old = epoch2datetime(self.master.reactor.seconds() - 60 * EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
@@ -124,7 +124,7 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterStopped(self, name, masterid):
+    def masterStopped(self, name: str, masterid: int):
         deactivated = yield self.master.db.masters.setMasterState(masterid=masterid, active=False)
         if deactivated:
             yield self._masterDeactivated(masterid, name)

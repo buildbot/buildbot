@@ -89,11 +89,11 @@ class ChangeSource(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
-    def findChangeSourceId(self, name):
+    def findChangeSourceId(self, name: str) -> defer.Deferred[int]:
         return self.master.db.changesources.findChangeSourceId(name)
 
     @base.updateMethod
-    def trySetChangeSourceMaster(self, changesourceid, masterid):
+    def trySetChangeSourceMaster(self, changesourceid: int, masterid: int) -> defer.Deferred[bool]:
         # the db layer throws an exception if the claim fails; we translate
         # that to a straight true-false value. We could trap the exception
         # type, but that seems a bit too restrictive

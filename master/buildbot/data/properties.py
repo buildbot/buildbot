@@ -13,12 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IProperties
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BuildsetPropertiesEndpoint(base.Endpoint):
@@ -116,12 +124,14 @@ class Properties(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setBuildProperties(self, buildid, properties):
+    def setBuildProperties(
+        self, buildid: int, properties: IProperties
+    ) -> InlineCallbacksType[None]:
         to_update = {}
         oldproperties = yield self.master.data.get(('builds', str(buildid), "properties"))
-        properties = properties.getProperties()
-        properties = yield properties.render(properties.asDict())
-        for k, v in properties.items():
+        properties_real = properties.getProperties()
+        properties_dict = yield properties_real.render(properties_real.asDict())
+        for k, v in properties_dict.items():
             if k in oldproperties and oldproperties[k] == v:
                 continue
             to_update[k] = v
@@ -133,7 +143,9 @@ class Properties(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setBuildProperty(self, buildid, name, value, source):
+    def setBuildProperty(
+        self, buildid: int, name: str, value: Any, source: str
+    ) -> InlineCallbacksType[None]:
         res = yield self.master.db.builds.setBuildProperty(buildid, name, value, source)
         yield self.generateUpdateEvent(buildid, {"name": (value, source)})
         return res

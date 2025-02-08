@@ -112,7 +112,12 @@ class Project(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def update_project_info(
-        self, projectid, slug, description, description_format, description_html
+        self,
+        projectid: int,
+        slug: str,
+        description: str | None,
+        description_format: str | None,
+        description_html: str | None,
     ):
         yield self.master.db.projects.update_project_info(
             projectid, slug, description, description_format, description_html
