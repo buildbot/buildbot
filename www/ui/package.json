@@ -65,7 +65,7 @@
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-dts": "^4.1.0",
     "vite-plugin-static-copy": "~1.0.5",
-    "vitest": "~2.0.5"
+    "vitest": "~3.0.5"
   },
   "license": "GPL-2.0",
   "dependencies": {

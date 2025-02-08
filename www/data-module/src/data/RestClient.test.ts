@@ -42,12 +42,12 @@ describe('Rest service', () => {
     expect(gotResponse).toEqual(response);
   });
 
-  it('should reject the promise on error', () => {
+  it('should reject the promise on error', async () => {
     const client = new RestClient(rootUrl);
     const error = 'Internal server error';
     mock.onGet(rootUrl + 'endpoint').reply(500, error);
 
-    expect(client.get('endpoint')).rejects.toEqual(new Error('Request failed with status code 500'));
+    await expect(client.get('endpoint')).rejects.toBeInstanceOf(Error);
   });
 
   it('should make an ajax POST call to /api/endpoint', async () => {
