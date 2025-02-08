@@ -21,6 +21,7 @@ from io import StringIO
 from typing import Any
 from unittest import mock
 
+from twisted.application.service import Service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -55,7 +56,7 @@ class DictLoader:
 
 
 class TestedMaster:
-    def __init__(self):
+    def __init__(self) -> None:
         self.master: BuildMaster | None = None
         self.is_master_shutdown = False
 
@@ -270,10 +271,10 @@ class RunFakeMasterTestCase(TestReactorMixin, DebugIntegrationLogsMixin, unittes
 
 
 class TestedRealMaster(TestedMaster):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.case: unittest.TestCase | None = None
-        self.worker: Worker | None = None
+        self.worker: Service | None = None
 
     @async_to_deferred
     async def setup_master(
