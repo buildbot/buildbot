@@ -656,7 +656,7 @@ class BuildStep(
         yield defer.gatherResults(dl, consumeErrors=True)
         self.rendered = True
 
-    def setBuildData(self, name: str, value: str, source: str) -> defer.Deferred:
+    def setBuildData(self, name: str, value: bytes, source: str) -> defer.Deferred:
         # returns a Deferred that yields nothing
         assert self.master is not None
         assert self.build is not None
