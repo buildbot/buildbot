@@ -42,12 +42,7 @@ from buildbot.test.util.sandboxed_worker import SandboxedWorker
 from buildbot.util.twisted import any_to_async
 from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.local import LocalWorker
-
-Worker: type | None = None
-try:
-    from buildbot_worker.bot import Worker
-except ImportError:
-    pass
+from buildbot_worker.bot import Worker
 
 
 @implementer(IConfigLoader)
@@ -346,7 +341,6 @@ class TestedRealMaster(TestedMaster):
             worker_dir = FilePath(case.mktemp())
             worker_dir.createDirectory()
             if sandboxed_worker_path is None:
-                assert Worker
                 self.worker = Worker(
                     "127.0.0.1",
                     worker_port,
@@ -404,9 +398,6 @@ class RunMasterBase(unittest.TestCase):
     # All tests that start master need higher timeout due to test runtime variability on
     # oversubscribed hosts.
     timeout = 60
-
-    if Worker is None:
-        skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
     def setup_master(self, config_dict, startWorker=True, basedir=None, **worker_kwargs):
