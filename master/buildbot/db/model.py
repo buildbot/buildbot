@@ -216,7 +216,7 @@ class Model(base.DBConnectorComponent):
         metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('name', sa.String(model_config.step_name_length), nullable=False),
         sa.Column(
             'buildid', sa.Integer, sa.ForeignKey('builds.id', ondelete='CASCADE'), nullable=False
         ),
