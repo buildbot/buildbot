@@ -43,7 +43,7 @@ from buildbot.config.checks import check_param_length
 from buildbot.config.checks import check_param_number_none
 from buildbot.config.checks import check_param_str
 from buildbot.config.checks import check_param_str_none
-from buildbot.db.model import Model
+from buildbot.db import model_config
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
 from buildbot.locks import BaseLock
@@ -271,7 +271,7 @@ class BuildStep(
         self._pendingLogObservers: list[tuple[str, interfaces.ILogObserver]] = []
 
         check_param_length(
-            self.name, f'Step {self.__class__.__name__} name', Model.steps.c.name.type.length
+            self.name, f'Step {self.__class__.__name__} name', model_config.step_name_length
         )
 
         if isinstance(self.description, str):

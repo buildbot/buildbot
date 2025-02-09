@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Callable
 
 from buildbot.config.checks import check_markdown_support
@@ -23,10 +24,13 @@ from buildbot.config.checks import check_param_length
 from buildbot.config.checks import check_param_str_none
 from buildbot.config.errors import error
 from buildbot.db import model_config
-from buildbot.process.build import Build
 from buildbot.util import bytes2unicode
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
+
+if TYPE_CHECKING:
+    from buildbot.process.build import Build
+
 
 RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
 
