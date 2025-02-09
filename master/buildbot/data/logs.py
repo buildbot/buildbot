@@ -26,6 +26,7 @@ from buildbot.util import identifiers
 
 if TYPE_CHECKING:
     from buildbot.db.logs import LogModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class EndpointMixin:
@@ -123,7 +124,7 @@ class Log(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addLog(self, stepid, name, type):
+    def addLog(self, stepid: int, name: str, type: int) -> InlineCallbacksType[int]:
         slug = identifiers.forceIdentifier(50, name)
         while True:
             try:
@@ -138,18 +139,18 @@ class Log(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def appendLog(self, logid, content):
+    def appendLog(self, logid: int, content: str) -> InlineCallbacksType[None]:
         res = yield self.master.db.logs.appendLog(logid=logid, content=content)
         self.generateEvent(logid, "append")
         return res
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def finishLog(self, logid):
+    def finishLog(self, logid: int) -> InlineCallbacksType[None]:
         res = yield self.master.db.logs.finishLog(logid=logid)
         self.generateEvent(logid, "finished")
         return res
 
     @base.updateMethod
-    def compressLog(self, logid):
+    def compressLog(self, logid: int) -> defer.Deferred[int]:
         return self.master.db.logs.compressLog(logid=logid)

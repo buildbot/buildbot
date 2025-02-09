@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -221,7 +223,7 @@ class BuildRequest(base.ResourceType):
         return True
 
     @base.updateMethod
-    def claimBuildRequests(self, brids, claimed_at=None):
+    def claimBuildRequests(self, brids: list[int], claimed_at: datetime.datetime | None = None):
         return self.callDbBuildRequests(
             brids,
             self.master.db.buildrequests.claimBuildRequests,
@@ -231,14 +233,16 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def unclaimBuildRequests(self, brids):
+    def unclaimBuildRequests(self, brids: list[int]):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
             yield self.generateEvent(brids, "unclaimed")
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None):
+    def completeBuildRequests(
+        self, brids: list[int], results: int, complete_at: datetime.datetime | None = None
+    ):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
@@ -271,7 +275,7 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def rebuildBuildrequest(self, buildrequest):
+    def rebuildBuildrequest(self, buildrequest: dict[str, Any]):
         # goal is to make a copy of the original buildset
         buildset = yield self.master.data.get(('buildsets', buildrequest['buildsetid']))
         properties = yield self.master.data.get((

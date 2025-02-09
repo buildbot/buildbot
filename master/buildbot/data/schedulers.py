@@ -26,6 +26,7 @@ from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 if TYPE_CHECKING:
     from buildbot.db.schedulers import SchedulerModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Db2DataMixin:
@@ -109,17 +110,17 @@ class Scheduler(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def schedulerEnable(self, schedulerid, v):
+    def schedulerEnable(self, schedulerid: int, v: bool) -> InlineCallbacksType[None]:
         yield self.master.db.schedulers.enable(schedulerid, v)
         yield self.generateEvent(schedulerid, 'updated')
         return None
 
     @base.updateMethod
-    def findSchedulerId(self, name):
+    def findSchedulerId(self, name: str) -> defer.Deferred[int]:
         return self.master.db.schedulers.findSchedulerId(name)
 
     @base.updateMethod
-    def trySetSchedulerMaster(self, schedulerid, masterid):
+    def trySetSchedulerMaster(self, schedulerid: int, masterid: int) -> defer.Deferred:
         d = self.master.db.schedulers.setSchedulerMaster(schedulerid, masterid)
 
         # set is successful: deferred result is True

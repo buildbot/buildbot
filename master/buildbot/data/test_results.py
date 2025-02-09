@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -24,6 +25,7 @@ from buildbot.data import types
 
 if TYPE_CHECKING:
     from buildbot.db.test_results import TestResultModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Db2DataMixin:
@@ -84,7 +86,9 @@ class TestResult(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addTestResults(self, builderid, test_result_setid, result_values):
+    def addTestResults(
+        self, builderid: int, test_result_setid: int, result_values: list[dict[str, Any]]
+    ) -> InlineCallbacksType[None]:
         # We're not adding support for emitting any messages, because in all cases all test results
         # will be part of a test result set. The users should wait for a 'complete' event on a
         # test result set and only then fetch the test results, which won't change from that time

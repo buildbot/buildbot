@@ -25,6 +25,7 @@ from buildbot.data.resultspec import ResultSpec
 
 if TYPE_CHECKING:
     from buildbot.db.builds import BuildModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 def _db2data(model: BuildModel):
@@ -227,7 +228,9 @@ class Build(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuild(self, builderid, buildrequestid, workerid):
+    def addBuild(
+        self, builderid: int, buildrequestid: int, workerid: int
+    ) -> InlineCallbacksType[tuple[int, int]]:
         res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,
@@ -238,12 +241,12 @@ class Build(base.ResourceType):
         return res
 
     @base.updateMethod
-    def generateNewBuildEvent(self, buildid):
+    def generateNewBuildEvent(self, buildid: int) -> defer.Deferred:
         return self.generateEvent(buildid, "new")
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setBuildStateString(self, buildid, state_string):
+    def setBuildStateString(self, buildid: int, state_string: str) -> InlineCallbacksType[None]:
         res = yield self.master.db.builds.setBuildStateString(
             buildid=buildid, state_string=state_string
         )
@@ -252,13 +255,13 @@ class Build(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def add_build_locks_duration(self, buildid, duration_s):
+    def add_build_locks_duration(self, buildid: int, duration_s: int) -> InlineCallbacksType[None]:
         yield self.master.db.builds.add_build_locks_duration(buildid=buildid, duration_s=duration_s)
         yield self.generateEvent(buildid, "update")
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def finishBuild(self, buildid, results):
+    def finishBuild(self, buildid: int, results: int) -> InlineCallbacksType[None]:
         res = yield self.master.db.builds.finishBuild(buildid=buildid, results=results)
         yield self.generateEvent(buildid, "finished")
         return res

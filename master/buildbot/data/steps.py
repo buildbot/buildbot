@@ -24,6 +24,7 @@ from buildbot.data import types
 
 if TYPE_CHECKING:
     from buildbot.db.steps import StepModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Db2DataMixin:
@@ -136,7 +137,7 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def startStep(self, stepid, started_at=None, locks_acquired=False):
+    def startStep(self, stepid: int, started_at: int | None = None, locks_acquired: bool = False):
         if started_at is None:
             started_at = int(self.master.reactor.seconds())
         yield self.master.db.steps.startStep(
@@ -146,7 +147,7 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
+    def set_step_locks_acquired_at(self, stepid: int, locks_acquired_at: int | None = None):
         if locks_acquired_at is None:
             locks_acquired_at = int(self.master.reactor.seconds())
 
@@ -157,18 +158,18 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setStepStateString(self, stepid, state_string):
+    def setStepStateString(self, stepid: int, state_string: str) -> InlineCallbacksType[None]:
         yield self.master.db.steps.setStepStateString(stepid=stepid, state_string=state_string)
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addStepURL(self, stepid, name, url):
+    def addStepURL(self, stepid: int, name: str, url: str) -> InlineCallbacksType[None]:
         yield self.master.db.steps.addURL(stepid=stepid, name=name, url=url)
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def finishStep(self, stepid, results, hidden):
+    def finishStep(self, stepid: int, results: int, hidden: bool) -> InlineCallbacksType[None]:
         yield self.master.db.steps.finishStep(stepid=stepid, results=results, hidden=hidden)
         yield self.generateEvent(stepid, 'finished')
