@@ -202,12 +202,9 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.scheduler_b.triggered_with, self.exp_b_trigger)
 
         # check the URLs
-        stepUrls = self.master.data.updates.stepUrls
-        if stepUrls:
-            got_added_urls = stepUrls[next(iter(stepUrls))]
-        else:
-            got_added_urls = []
-        self.assertEqual(sorted(got_added_urls), sorted(self.exp_added_urls))
+        step_data = yield self.master.data.get(('steps', self.get_nth_step(0).stepid))
+        step_urls = [(url['name'], url['url']) for url in step_data['urls']]
+        self.assertEqual(step_urls, sorted(self.exp_added_urls))
 
         if self.exp_add_sourcestamp:
             self.assertEqual(self.addSourceStamp_kwargs, self.exp_add_sourcestamp)

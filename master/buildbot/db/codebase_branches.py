@@ -42,7 +42,20 @@ class CodebaseBranchModel:
 
 class CodebaseBranchConnectorComponent(base.DBConnectorComponent):
     @async_to_deferred
-    async def get_branch(self, codebaseid: int, name: str) -> CodebaseBranchModel | None:
+    async def get_branch(self, id: int) -> CodebaseBranchModel | None:
+        def thd(conn: Connection) -> CodebaseBranchModel | None:
+            tbl = self.db.model.codebase_branches
+            q = tbl.select().where(tbl.c.id == id)
+            res = conn.execute(q)
+            row = res.fetchone()
+            rv = self._model_from_row(row) if row else None
+            res.close()
+            return rv
+
+        return await self.db.pool.do(thd)
+
+    @async_to_deferred
+    async def get_branch_by_name(self, codebaseid: int, name: str) -> CodebaseBranchModel | None:
         def thd(conn: Connection) -> CodebaseBranchModel | None:
             tbl = self.db.model.codebase_branches
             q = tbl.select().where((tbl.c.codebaseid == codebaseid) & (tbl.c.name == name))

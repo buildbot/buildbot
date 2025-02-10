@@ -191,6 +191,14 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.request = r
         self.master = yield fakemaster.make_master(self, wantData=True)
 
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=1234),
+            fakedb.Builder(id=83),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=9385, builderid=83, buildsetid=8822),
+        ])
+
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
         self.builder = FakeBuilder(self.master)
@@ -207,9 +215,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.build.text = []
         self.build.buildid = 666
 
-    def assertWorkerPreparationFailure(self, reason):
-        states = "".join(self.master.data.updates.stepStateString.values())
-        self.assertIn(states, reason)
+    @defer.inlineCallbacks
+    def assert_worker_preparation_failure(self, reason):
+        steps = yield self.master.data.get(('builds', self.build.buildid, 'steps'))
+        self.assertIn(steps[-1]['state_string'], reason)
 
     def create_fake_build_step(self):
         return create_step_from_step_or_factory(FakeBuildStep())
@@ -254,6 +263,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         self.assertIn('stop it', step.interrupted)
 
+    @defer.inlineCallbacks
     def test_build_retry_when_worker_substantiate_returns_false(self):
         b = self.build
 
@@ -261,24 +271,31 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.setStepFactories([FakeStepFactory(step)])
 
         self.workerforbuilder.substantiate_if_needed = lambda _: False
-        b.startBuild(self.workerforbuilder)
-        self.assertEqual(b.results, RETRY)
-        self.assertWorkerPreparationFailure('error while worker_prepare')
 
+        yield b.startBuild(self.workerforbuilder)
+        self.assertEqual(b.results, RETRY)
+        yield self.assert_worker_preparation_failure('error while worker_prepare')
+
+    @defer.inlineCallbacks
     def test_build_cancelled_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
         step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
-        d = defer.Deferred()
-        self.workerforbuilder.substantiate_if_needed = lambda _: d
-        b.startBuild(self.workerforbuilder)
-        b.stopBuild('Cancel Build', CANCELLED)
-        d.callback(False)
-        self.assertEqual(b.results, CANCELLED)
-        self.assertWorkerPreparationFailure('error while worker_prepare')
+        substantiation_d = defer.Deferred()
+        self.workerforbuilder.substantiate_if_needed = lambda _: substantiation_d
 
+        build_d = b.startBuild(self.workerforbuilder)
+        b.stopBuild('Cancel Build', CANCELLED)
+
+        substantiation_d.callback(False)
+        yield build_d
+
+        self.assertEqual(b.results, CANCELLED)
+        yield self.assert_worker_preparation_failure('pending')
+
+    @defer.inlineCallbacks
     def test_build_retry_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
@@ -291,7 +308,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
         self.assertEqual(b.results, RETRY)
-        self.assertWorkerPreparationFailure('error while worker_prepare')
+        yield self.assert_worker_preparation_failure('pending')
 
     @defer.inlineCallbacks
     def testAlwaysRunStepStopBuild(self):
@@ -712,26 +729,21 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
 
-        # remove duplicates, note that set() can't be used as properties contain complex
-        # data structures. Also, remove builddir which depends on the platform
-        got_properties = []
-        for prop in sorted(self.master.data.updates.properties):
-            if prop not in got_properties and prop[1] != 'builddir':
-                got_properties.append(prop)
-
+        properties = yield self.master.data.get(('builds', 1, 'properties'))
+        del properties['builddir']  # contains per-platform data
         self.assertEqual(
-            got_properties,
-            [
-                (10, 'basedir', '/wrk', 'Worker'),
-                (10, 'branch', None, 'Build'),
-                (10, 'buildnumber', 1, 'Build'),
-                (10, 'codebase', '', 'Build'),
-                (10, 'foo', 'bar', 'test'),  # custom property
-                (10, 'owners', ['me'], 'Build'),
-                (10, 'project', '', 'Build'),
-                (10, 'repository', '', 'Build'),
-                (10, 'revision', '12345', 'Build'),
-            ],
+            properties,
+            {
+                'basedir': ('/wrk', 'Worker'),
+                'branch': (None, 'Build'),
+                'buildnumber': (1, 'Build'),
+                'codebase': ('', 'Build'),
+                'foo': ('bar', 'test'),  # custom property
+                'owners': (['me'], 'Build'),
+                'project': ('', 'Build'),
+                'repository': ('', 'Build'),
+                'revision': ('12345', 'Build'),
+            },
         )
 
     @defer.inlineCallbacks
@@ -828,7 +840,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testGetUrlForVirtualBuilder(self):
         # Let's fake a virtual builder
         yield self.master.db.insert_test_data([
-            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=108, name='wilma'),
         ])
         self.builder._builders['wilma'] = 108

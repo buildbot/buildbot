@@ -89,6 +89,7 @@ class FakeMaster(service.MasterService):
     """
 
     buildbotURL: str
+    db: fakedb.FakeDBConnector
     mq: fakemq.FakeMQConnector
     data: fakedata.FakeDataConnector
     www: mock.Mock

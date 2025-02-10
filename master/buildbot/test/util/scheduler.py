@@ -69,6 +69,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         scheduler.objectid = objectid
 
         rows = [
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Master(id=self.OTHER_MASTER_ID),
             fakedb.Scheduler(id=schedulerid, name=scheduler.name),
         ]
         if createBuilderDB is True:
@@ -177,10 +179,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def setSchedulerToMaster(self, otherMaster):
         sched_id = yield self.master.data.updates.findSchedulerId(self.sched.name)
-        if otherMaster:
-            self.master.data.updates.schedulerMasters[sched_id] = otherMaster
-        else:
-            del self.master.data.updates.schedulerMasters[sched_id]
+        yield self.master.data.updates.trySetSchedulerMaster(sched_id, otherMaster)
 
     class FakeChange:
         who = ''

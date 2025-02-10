@@ -19,6 +19,7 @@ from twisted.trial import unittest
 
 from buildbot.data import forceschedulers
 from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.test import fakedb
 from buildbot.test.util import endpoint
 
 expected_default = {
@@ -195,6 +196,9 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.master.allSchedulers = lambda: scheds
         for sched in scheds:
             yield sched.setServiceParent(self.master)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+        ])
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -221,6 +225,9 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.master.allSchedulers = lambda: scheds
         for sched in scheds:
             yield sched.setServiceParent(self.master)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+        ])
         yield self.master.startService()
 
     @defer.inlineCallbacks

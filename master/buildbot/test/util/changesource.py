@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 
 if TYPE_CHECKING:
@@ -50,6 +51,12 @@ class ChangeSourceMixin(_ChangeSourceMixinBase):
             self, wantDb=True, wantData=True, wantRealReactor=want_real_reactor
         )
 
+        self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Master(id=self.OTHER_MASTER_ID, active=1),
+            fakedb.ChangeSource(id=self.DUMMY_CHANGESOURCE_ID, name=self.DEFAULT_NAME),
+        ])
+
         @defer.inlineCallbacks
         def cleanup():
             if not self.started:
@@ -79,17 +86,9 @@ class ChangeSourceMixin(_ChangeSourceMixinBase):
 
         self.started = False
 
+    @defer.inlineCallbacks
     def setChangeSourceToMaster(self, otherMaster):
-        # some tests build the CS late, so for those tests we will require that
-        # they use the default name in order to run tests that require master
-        # assignments
-        if self.changesource is not None:
-            name = self.changesource.name
-        else:
-            name = self.DEFAULT_NAME
-
-        self.master.data.updates.changesourceIds[name] = self.DUMMY_CHANGESOURCE_ID
-        if otherMaster:
-            self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID] = otherMaster
-        else:
-            del self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID]
+        ret = yield self.master.data.updates.trySetChangeSourceMaster(
+            self.DUMMY_CHANGESOURCE_ID, otherMaster
+        )
+        return ret
