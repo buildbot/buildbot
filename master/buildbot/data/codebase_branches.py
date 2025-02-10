@@ -48,14 +48,12 @@ branches_field_map = {
 class CodebaseBranchEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
-        /codebases/n:codebaseid/branches/i:branchname
+        /branches/n:branchid
     """
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
-        branch = await self.master.db.codebase_branches.get_branch(
-            kwargs['codebaseid'], kwargs['branchname']
-        )
+        branch = await self.master.db.codebase_branches.get_branch(kwargs['branchid'])
         if not branch:
             return None
         return branch_db_to_data(branch)
@@ -81,7 +79,7 @@ class CodebaseBranch(base.ResourceType):
     plural = "branches"
     endpoints = [CodebaseBranchEndpoint, CodebaseBranchesEndpoint]
     eventPathPatterns = """
-        /codebases/:codebaseid/branches/:name
+        /branches/:branchid
     """
 
     class EntityType(types.Entity):
@@ -95,8 +93,8 @@ class CodebaseBranch(base.ResourceType):
 
     @async_to_deferred
     async def generate_event(self, _id: int, event: str) -> None:
-        commit = await self.master.data.get(('branches', str(_id)))
-        self.produceEvent(commit, event)
+        branch = await self.master.data.get(('branches', _id))
+        self.produceEvent(branch, event)
 
     @base.updateMethod
     @async_to_deferred
@@ -114,6 +112,8 @@ class CodebaseBranch(base.ResourceType):
             commitid=commitid,
             last_timestamp=last_timestamp,
         )
-        branch = await self.master.db.codebase_branches.get_branch(codebaseid, name)
+        branch = await self.master.db.codebase_branches.get_branch_by_name(
+            codebaseid=codebaseid, name=name
+        )
+        assert branch is not None
         await self.generate_event(branch.id, 'update')
-        return branch.id

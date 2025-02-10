@@ -45,8 +45,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @async_to_deferred
-    async def test_get_branch_exists(self) -> None:
-        dbdict = await self.master.db.codebase_branches.get_branch(codebaseid=13, name='branch1')
+    async def test_get_branch_exists_id(self) -> None:
+        dbdict = await self.master.db.codebase_branches.get_branch(id=200)
         self.assertEqual(
             dbdict,
             codebase_branches.CodebaseBranchModel(
@@ -59,10 +59,31 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_get_branch_does_not_exist(self) -> None:
-        dbdict = await self.master.db.codebase_branches.get_branch(
+    async def test_get_branch_exists_name(self) -> None:
+        dbdict = await self.master.db.codebase_branches.get_branch_by_name(
+            codebaseid=13, name='branch1'
+        )
+        self.assertEqual(
+            dbdict,
+            codebase_branches.CodebaseBranchModel(
+                id=200,
+                codebaseid=13,
+                name='branch1',
+                commitid=106,
+                last_timestamp=123456700,
+            ),
+        )
+
+    @async_to_deferred
+    async def test_get_branch_does_not_exist_name(self) -> None:
+        dbdict = await self.master.db.codebase_branches.get_branch_by_name(
             codebaseid=13, name='branch_not_exists'
         )
+        self.assertIsNone(dbdict)
+
+    @async_to_deferred
+    async def test_get_branch_does_not_exist_id(self) -> None:
+        dbdict = await self.master.db.codebase_branches.get_branch(id=234)
         self.assertIsNone(dbdict)
 
     @async_to_deferred
@@ -104,7 +125,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             commitid=107,
             last_timestamp=123456789,
         )
-        dbdict = await self.master.db.codebase_branches.get_branch(codebaseid=13, name='branch1')
+        dbdict = await self.master.db.codebase_branches.get_branch(id=200)
         self.assertEqual(
             dbdict,
             codebase_branches.CodebaseBranchModel(
