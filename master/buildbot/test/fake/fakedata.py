@@ -522,7 +522,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
         validation.verifyType(self.testcase, 'value', value, validation.BinaryValidator())
         validation.verifyType(self.testcase, 'source', source, validation.StringValidator())
-        await self.master.db.build_data.setBuildData(buildid, name, value, source)
+        return await self.data.updates.setBuildData(buildid, name, value, source)
 
     # methods from TestResultSet resource
     @async_to_deferred
