@@ -291,7 +291,7 @@ class FakeUpdates(service.AsyncService):
             validation.NoneOk(validation.IntValidator()),
         )
 
-        return await self.master.db.codebase_commits.add_commit(
+        return await self.data.updates.add_commit(
             codebaseid=codebaseid,
             author=author,
             committer=committer,
@@ -320,7 +320,7 @@ class FakeUpdates(service.AsyncService):
             self.testcase, 'last_timestamp', last_timestamp, validation.IntValidator()
         )
 
-        return await self.master.db.codebase_branches.update_branch(
+        return await self.data.updates.update_branch(
             codebaseid=codebaseid,
             name=name,
             commitid=commitid,
@@ -339,14 +339,14 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'projectid', projectid, validation.IntValidator())
         validation.verifyType(self.testcase, 'slug', slug, validation.StringValidator())
 
-        await self.master.db.codebases.update_codebase_info(
+        await self.data.updates.update_codebase_info(
             codebaseid=codebaseid, projectid=projectid, slug=slug
         )
 
     def find_codebase_id(self, *, projectid: int, name: str, auto_create: bool = True):
         validation.verifyType(self.testcase, 'project id', projectid, validation.IntValidator())
         validation.verifyType(self.testcase, 'codebase name', name, validation.StringValidator())
-        return self.master.db.codebases.find_codebase_id(
+        return self.data.updates.find_codebase_id(
             projectid=projectid, name=name, auto_create=auto_create
         )
 
