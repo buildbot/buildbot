@@ -139,6 +139,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         if when_timestamp is None:
             when_timestamp = epoch2datetime(self.master.reactor.seconds())
 
+        if author is None:
+            author = ''
+        if comments is None:
+            comments = ''
         if properties is None:
             properties = {}
 
