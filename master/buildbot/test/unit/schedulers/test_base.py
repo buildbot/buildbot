@@ -331,7 +331,7 @@ class TestReconfigurableBaseScheduler(
 
         # clear that masterid
         yield sched.stopService()
-        self.setSchedulerToMaster(None)
+        yield self.setSchedulerToMaster(None)
         yield sched.startService()
         self.reactor.advance(sched.POLL_INTERVAL_SEC)
         self.assertTrue(sched.activate.called)
@@ -349,7 +349,7 @@ class TestReconfigurableBaseScheduler(
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
 
         # set the schedulerid, and claim the scheduler on another master
-        self.setSchedulerToMaster(RuntimeError())
+        yield self.setSchedulerToMaster(RuntimeError())
 
         sched.startService()
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
@@ -1171,7 +1171,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
         # clear that masterid
         yield sched.stopService()
-        self.setSchedulerToMaster(None)
+        yield self.setSchedulerToMaster(None)
         yield sched.startService()
         self.reactor.advance(sched.POLL_INTERVAL_SEC)
         self.assertTrue(sched.activate.called)
@@ -1189,7 +1189,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
 
         # set the schedulerid, and claim the scheduler on another master
-        self.setSchedulerToMaster(RuntimeError())
+        yield self.setSchedulerToMaster(RuntimeError())
 
         sched.startService()
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
