@@ -41,7 +41,6 @@ class FakeUpdates(service.AsyncService):
         # { name : id }; users can add changesources here
         self.changesourceIds = {}
         self.masterStateChanges = []  # dictionaries
-        self.schedulerIds = {}  # { name : id }; users can add schedulers here
         self.builderIds = {}  # { name : id }; users can add builders here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
@@ -365,17 +364,8 @@ class FakeUpdates(service.AsyncService):
             builderid, description, description_format, description_html, projectid, tags
         )
 
-    def masterDeactivated(self, masterid):
-        return defer.succeed(None)
-
     def findSchedulerId(self, name):
         return self.master.db.schedulers.findSchedulerId(name)
-
-    def forget_about_it(self, name):
-        validation.verifyType(self.testcase, 'scheduler name', name, validation.StringValidator())
-        if name not in self.schedulerIds:
-            self.schedulerIds[name] = max([0, *list(self.schedulerIds.values())]) + 1
-        return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
         validation.verifyType(
