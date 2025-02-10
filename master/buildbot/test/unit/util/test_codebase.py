@@ -44,7 +44,6 @@ class TestAbsoluteSourceStampsMixin(
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
-        self.db = self.master.db
         self.object = FakeObject(self.master, self.codebases)
 
     @defer.inlineCallbacks
