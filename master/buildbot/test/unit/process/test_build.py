@@ -191,6 +191,14 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.request = r
         self.master = yield fakemaster.make_master(self, wantData=True)
 
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=1234),
+            fakedb.Builder(id=83),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=9385, builderid=83, buildsetid=8822),
+        ])
+
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
         self.builder = FakeBuilder(self.master)
@@ -722,15 +730,15 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(
             got_properties,
             [
-                (10, 'basedir', '/wrk', 'Worker'),
-                (10, 'branch', None, 'Build'),
-                (10, 'buildnumber', 1, 'Build'),
-                (10, 'codebase', '', 'Build'),
-                (10, 'foo', 'bar', 'test'),  # custom property
-                (10, 'owners', ['me'], 'Build'),
-                (10, 'project', '', 'Build'),
-                (10, 'repository', '', 'Build'),
-                (10, 'revision', '12345', 'Build'),
+                (1, 'basedir', '/wrk', 'Worker'),
+                (1, 'branch', None, 'Build'),
+                (1, 'buildnumber', 1, 'Build'),
+                (1, 'codebase', '', 'Build'),
+                (1, 'foo', 'bar', 'test'),  # custom property
+                (1, 'owners', ['me'], 'Build'),
+                (1, 'project', '', 'Build'),
+                (1, 'repository', '', 'Build'),
+                (1, 'revision', '12345', 'Build'),
             ],
         )
 
@@ -828,7 +836,6 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
     def testGetUrlForVirtualBuilder(self):
         # Let's fake a virtual builder
         yield self.master.db.insert_test_data([
-            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=108, name='wilma'),
         ])
         self.builder._builders['wilma'] = 108

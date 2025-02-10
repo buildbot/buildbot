@@ -384,28 +384,28 @@ class FakeUpdates(service.AsyncService):
             self.testcase, 'buildrequestid', buildrequestid, validation.IntValidator()
         )
         validation.verifyType(self.testcase, 'workerid', workerid, validation.IntValidator())
-        return defer.succeed((10, 1))
+        return self.data.updates.addBuild(builderid, buildrequestid, workerid)
 
     def generateNewBuildEvent(self, buildid):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
-        return defer.succeed(None)
+        return self.data.updates.generateNewBuildEvent(buildid)
 
     def setBuildStateString(self, buildid, state_string):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
         validation.verifyType(
             self.testcase, 'state_string', state_string, validation.StringValidator()
         )
-        return defer.succeed(None)
+        return self.data.updates.setBuildStateString(buildid, state_string)
 
     def add_build_locks_duration(self, buildid, duration_s):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
         validation.verifyType(self.testcase, 'duration_s', duration_s, validation.IntValidator())
-        return defer.succeed(None)
+        return self.data.updates.add_build_locks_duration(buildid, duration_s)
 
     def finishBuild(self, buildid, results):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
         validation.verifyType(self.testcase, 'results', results, validation.IntValidator())
-        return defer.succeed(None)
+        return self.data.updates.finishBuild(buildid, results)
 
     def setBuildProperty(self, buildid, name, value, source):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
