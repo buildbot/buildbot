@@ -35,9 +35,6 @@ class FakeUpdates(service.AsyncService):
 
         # test cases should assert the values here:
         self.changesAdded = []  # Changes are numbered starting at 1.
-        self.masterStateChanges = []  # dictionaries
-        self.builderIds = {}  # { name : id }; users can add builders here
-        # extra assertions
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
