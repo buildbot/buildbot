@@ -36,7 +36,7 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
             fakedb.Project(id=2, name='project2'),
         ])
@@ -75,7 +75,7 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
             fakedb.Project(id=2, name='project2'),
             fakedb.Project(id=3, name='project3'),

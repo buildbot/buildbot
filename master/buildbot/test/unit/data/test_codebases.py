@@ -39,7 +39,7 @@ class CodebaseEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1', slug='slug_codebase1'),
         ])
@@ -67,7 +67,7 @@ class CodebasesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Project(id=8, name='fake_project8'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1', slug='slug_codebase1'),

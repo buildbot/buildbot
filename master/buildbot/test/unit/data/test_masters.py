@@ -41,7 +41,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpEndpoint()
         self.master.name = "myname"
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=13, active=False, last_active=SOMETIME),
             fakedb.Master(id=14, active=False, last_active=SOMETIME),
             fakedb.Builder(id=23, name='bldr1'),
@@ -90,7 +90,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpEndpoint()
         self.master.name = "myname"
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=13, active=False, last_active=SOMETIME),
             fakedb.Master(id=14, active=True, last_active=OTHERTIME),
             fakedb.Builder(id=22),

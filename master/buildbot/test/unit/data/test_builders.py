@@ -36,7 +36,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=1, name='buildera'),
             fakedb.Builder(id=2, name='builderb'),
             fakedb.Builder(id=3, name='builder unicode \N{SNOWMAN}'),
@@ -106,7 +106,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Project(id=201, name='project201'),
             fakedb.Project(id=202, name='project202'),
             fakedb.Builder(id=1, name='buildera'),
