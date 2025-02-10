@@ -720,26 +720,21 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         yield b.startBuild(self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
 
-        # remove duplicates, note that set() can't be used as properties contain complex
-        # data structures. Also, remove builddir which depends on the platform
-        got_properties = []
-        for prop in sorted(self.master.data.updates.properties):
-            if prop not in got_properties and prop[1] != 'builddir':
-                got_properties.append(prop)
-
+        properties = yield self.master.data.get(('builds', 1, 'properties'))
+        del properties['builddir']  # contains per-platform data
         self.assertEqual(
-            got_properties,
-            [
-                (1, 'basedir', '/wrk', 'Worker'),
-                (1, 'branch', None, 'Build'),
-                (1, 'buildnumber', 1, 'Build'),
-                (1, 'codebase', '', 'Build'),
-                (1, 'foo', 'bar', 'test'),  # custom property
-                (1, 'owners', ['me'], 'Build'),
-                (1, 'project', '', 'Build'),
-                (1, 'repository', '', 'Build'),
-                (1, 'revision', '12345', 'Build'),
-            ],
+            properties,
+            {
+                'basedir': ('/wrk', 'Worker'),
+                'branch': (None, 'Build'),
+                'buildnumber': (1, 'Build'),
+                'codebase': ('', 'Build'),
+                'foo': ('bar', 'test'),  # custom property
+                'owners': (['me'], 'Build'),
+                'project': ('', 'Build'),
+                'repository': ('', 'Build'),
+                'revision': ('12345', 'Build'),
+            },
         )
 
     @defer.inlineCallbacks

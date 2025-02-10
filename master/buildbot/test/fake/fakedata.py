@@ -44,7 +44,6 @@ class FakeUpdates(service.AsyncService):
         self.logs = {}
         self.stepStateString = {}  # { stepid : string }
         self.stepUrls = {}  # { stepid : [(name,url)] }
-        self.properties = []
         self.missingWorkers = []
         # extra assertions
 
@@ -415,13 +414,10 @@ class FakeUpdates(service.AsyncService):
         except (TypeError, ValueError):
             self.testcase.fail(f"Value for {name} is not JSON-able")
         validation.verifyType(self.testcase, 'source', source, validation.StringValidator())
-        return defer.succeed(None)
+        return self.data.updates.setBuildProperty(buildid, name, value, source)
 
-    @async_to_deferred
-    async def setBuildProperties(self, buildid, properties) -> None:
-        for k, v, s in properties.getProperties().asList():
-            self.properties.append((buildid, k, v, s))
-            await self.setBuildProperty(buildid, k, v, s)
+    def setBuildProperties(self, buildid, properties) -> None:
+        return self.data.updates.setBuildProperties(buildid, properties)
 
     def addStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
