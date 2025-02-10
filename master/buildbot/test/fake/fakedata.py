@@ -93,9 +93,6 @@ class FakeUpdates(service.AsyncService):
         project='',
         src=None,
     ):
-        if properties is None:
-            properties = {}
-
         # double-check args, types, etc.
         if files is not None:
             self.testcase.assertIsInstance(files, list)
@@ -106,36 +103,46 @@ class FakeUpdates(service.AsyncService):
         self.testcase.assertIsInstance(revision, (type(None), str))
         self.testcase.assertIsInstance(when_timestamp, (type(None), int))
         self.testcase.assertIsInstance(branch, (type(None), str))
-
-        if callable(category):
-            pre_change = self.master.config.preChangeGenerator(
-                author=author,
-                committer=committer,
-                files=files,
-                comments=comments,
-                revision=revision,
-                when_timestamp=when_timestamp,
-                branch=branch,
-                revlink=revlink,
-                properties=properties,
-                repository=repository,
-                project=project,
-            )
-            category = category(pre_change)
-
-        self.testcase.assertIsInstance(category, (type(None), str))
         self.testcase.assertIsInstance(revlink, (type(None), str))
-        self.assertProperties(sourced=False, properties=properties)
+        if properties is not None:
+            self.assertProperties(sourced=False, properties=properties)
         self.testcase.assertIsInstance(repository, str)
         self.testcase.assertIsInstance(codebase, (type(None), str))
         self.testcase.assertIsInstance(project, str)
         self.testcase.assertIsInstance(src, (type(None), str))
 
-        # use locals() to ensure we get all of the args and don't forget if
-        # more are added
-        self.changesAdded.append(locals())
-        self.changesAdded[-1].pop('self')
-        return defer.succeed(len(self.changesAdded))
+        self.changesAdded.append({
+            'files': files,
+            'comments': comments,
+            'author': author,
+            'committer': committer,
+            'revision': revision,
+            'when_timestamp': when_timestamp,
+            'branch': branch,
+            'category': category,
+            'revlink': revlink,
+            'properties': properties.copy() if properties is not None else None,
+            'repository': repository,
+            'codebase': codebase,
+            'project': project,
+            'src': src,
+        })
+        return self.data.updates.addChange(
+            files=files,
+            comments=comments,
+            author=author,
+            committer=committer,
+            revision=revision,
+            when_timestamp=when_timestamp,
+            branch=branch,
+            category=category,
+            revlink=revlink,
+            properties=properties,
+            repository=repository,
+            codebase=codebase,
+            project=project,
+            src=src,
+        )
 
     def masterActive(self, name, masterid):
         self.testcase.assertIsInstance(name, str)

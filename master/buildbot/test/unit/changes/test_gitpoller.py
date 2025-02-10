@@ -691,7 +691,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/442'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                     'revlink': '',
@@ -707,7 +707,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/64a'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
                     'revlink': '',
@@ -723,7 +723,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/911'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
                     'revlink': '',
@@ -851,7 +851,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/442'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                     'revlink': '',
@@ -930,7 +930,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/442'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                     'revlink': '',
@@ -1005,7 +1005,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/442'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                     'revlink': '',
@@ -1478,7 +1478,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/442'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
                     'revlink': '',
@@ -1494,7 +1494,7 @@ class TestGitPoller(TestGitPollerBase):
                     'comments': 'hello!',
                     'files': ['/etc/64a'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': 'git@example.com:~foo/baz.git',
                     'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
                     'revlink': '',
@@ -1568,7 +1568,8 @@ class TestGitPoller(TestGitPollerBase):
             'refs/heads/master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
         })
 
-        added = self.master.data.updates.changesAdded
+        added = yield self.master.data.get(('changes',))
+        added = sorted(added, key=lambda c: c['changeid'])
         self.assertEqual(len(added), 2)
 
         self.assertEqual(added[0]['author'], 'by:4423cdbc')
@@ -1577,7 +1578,6 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[0]['comments'], 'hello!')
         self.assertEqual(added[0]['branch'], 'master')
         self.assertEqual(added[0]['files'], ['/etc/442'])
-        self.assertEqual(added[0]['src'], 'git')
         self.assertEqual(added[0]['category'], '4423cd')
 
         self.assertEqual(added[1]['author'], 'by:64a5dc2a')
@@ -1585,7 +1585,6 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[1]['when_timestamp'], 1273258009)
         self.assertEqual(added[1]['comments'], 'hello!')
         self.assertEqual(added[1]['files'], ['/etc/64a'])
-        self.assertEqual(added[1]['src'], 'git')
         self.assertEqual(added[1]['category'], '64a5dc')
 
     @async_to_deferred
@@ -2636,7 +2635,7 @@ class TestGitPollerBareRepository(
                     'committer': 'test user <user@example.com>',
                     'files': ['README.md'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': self.repo_url,
                     'revision': self.FIX_1_SHA,
                     'revlink': '',
@@ -2652,7 +2651,7 @@ class TestGitPollerBareRepository(
                     'committer': 'test user <user@example.com>',
                     'files': ['README.md'],
                     'project': '',
-                    'properties': {},
+                    'properties': None,
                     'repository': self.repo_url,
                     'revision': self.MERGE_FEATURE_1_SHA,
                     'revlink': '',
