@@ -26,6 +26,7 @@ from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 
 if TYPE_CHECKING:
     from buildbot.db.changesources import ChangeSourceModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Db2DataMixin:
@@ -93,24 +94,18 @@ class ChangeSource(base.ResourceType):
         return self.master.db.changesources.findChangeSourceId(name)
 
     @base.updateMethod
-    def trySetChangeSourceMaster(self, changesourceid: int, masterid: int) -> defer.Deferred[bool]:
+    @defer.inlineCallbacks
+    def trySetChangeSourceMaster(
+        self, changesourceid: int, masterid: int
+    ) -> InlineCallbacksType[bool]:
         # the db layer throws an exception if the claim fails; we translate
         # that to a straight true-false value. We could trap the exception
         # type, but that seems a bit too restrictive
-        d = self.master.db.changesources.setChangeSourceMaster(changesourceid, masterid)
-        # set is successful: deferred result is True
-        d.addCallback(lambda _: True)
-
-        @d.addErrback
-        def trapAlreadyClaimedError(why):
-            # the db layer throws an exception if the claim fails; we squash
-            # that error but let other exceptions continue upward
-            why.trap(ChangeSourceAlreadyClaimedError)
-
-            # set failed: deferred result is False
+        try:
+            yield self.master.db.changesources.setChangeSourceMaster(changesourceid, masterid)
+        except ChangeSourceAlreadyClaimedError:
             return False
-
-        return d
+        return True
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):
