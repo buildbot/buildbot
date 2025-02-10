@@ -44,10 +44,12 @@ class TestReconfigurableBaseScheduler(
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.master.running:
-            yield self.master.stopService()
+        @defer.inlineCallbacks
+        def stop_master():
+            if self.master.running:
+                yield self.master.stopService()
+
+        self.addCleanup(stop_master)
 
     @defer.inlineCallbacks
     def makeScheduler(self, name='testsched', builderNames=None, properties=None, codebases=None):
@@ -349,10 +351,9 @@ class TestReconfigurableBaseScheduler(
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
 
         # set the schedulerid, and claim the scheduler on another master
-        yield self.setSchedulerToMaster(RuntimeError())
+        yield self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
         sched.startService()
-        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertFalse(sched.isActive())
 
     @defer.inlineCallbacks
@@ -1189,10 +1190,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         sched = yield self.makeScheduler(name='n', builderNames=['a'])
 
         # set the schedulerid, and claim the scheduler on another master
-        yield self.setSchedulerToMaster(RuntimeError())
+        yield self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
         sched.startService()
-        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertFalse(sched.isActive())
 
     @defer.inlineCallbacks

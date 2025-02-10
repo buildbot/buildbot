@@ -462,7 +462,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
-        yield sched.setServiceParent(self.master)
+        yield self.attachScheduler(sched, self.OBJECTID, self.SCHEDULERID)
         yield self.master.startService()
         jobstr = self.makeNetstring(
             '3',
@@ -483,7 +483,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
-        yield sched.setServiceParent(self.master)
+        yield self.attachScheduler(sched, self.OBJECTID, self.SCHEDULERID)
         yield self.master.startService()
         jobstr = self.makeNetstring(
             '3',

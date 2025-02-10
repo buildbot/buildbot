@@ -42,7 +42,6 @@ class FakeUpdates(service.AsyncService):
         self.changesourceIds = {}
         self.masterStateChanges = []  # dictionaries
         self.builderIds = {}  # { name : id }; users can add builders here
-        self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
         self.workerIds = {}  # { name : id }; users can add workers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
@@ -365,7 +364,7 @@ class FakeUpdates(service.AsyncService):
         )
 
     def findSchedulerId(self, name):
-        return self.master.db.schedulers.findSchedulerId(name)
+        return self.data.updates.findSchedulerId(name)
 
     def findChangeSourceId(self, name):
         validation.verifyType(
@@ -380,13 +379,7 @@ class FakeUpdates(service.AsyncService):
         return self.data.updates.findBuilderId(name)
 
     def trySetSchedulerMaster(self, schedulerid, masterid):
-        currentMasterid = self.schedulerMasters.get(schedulerid)
-        if isinstance(currentMasterid, Exception):
-            return defer.fail(failure.Failure(currentMasterid))
-        if currentMasterid and masterid is not None:
-            return defer.succeed(False)
-        self.schedulerMasters[schedulerid] = masterid
-        return defer.succeed(True)
+        return self.data.updates.trySetSchedulerMaster(schedulerid, masterid)
 
     def trySetChangeSourceMaster(self, changesourceid, masterid):
         currentMasterid = self.changesourceMasters.get(changesourceid)
@@ -540,7 +533,7 @@ class FakeUpdates(service.AsyncService):
         self.missingWorkers.append((workerid, masterid, last_connection, notify))
 
     def schedulerEnable(self, schedulerid, v):
-        return self.master.db.schedulers.enable(schedulerid, v)
+        return self.data.updates.schedulerEnable(schedulerid, v)
 
     def set_worker_paused(self, workerid, paused, pause_reason=None):
         return self.master.db.workers.set_worker_paused(workerid, paused, pause_reason=pause_reason)
