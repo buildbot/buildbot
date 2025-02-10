@@ -23,7 +23,6 @@ from twisted.python import failure
 
 from buildbot.data import connector
 from buildbot.data import resultspec
-from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import service
 from buildbot.util.twisted import async_to_deferred
@@ -49,7 +48,6 @@ class FakeUpdates(service.AsyncService):
         self.workerIds = {}  # { name : id }; users can add workers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
-        self.claimedBuildRequests = set([])
         self.stepStateString = {}  # { stepid : string }
         self.stepUrls = {}  # { stepid : [(name,url)] }
         self.properties = []
@@ -212,25 +210,14 @@ class FakeUpdates(service.AsyncService):
             claimed_at,
             validation.NoneOk(validation.DateTimeValidator()),
         )
-        if not brids:
-            return True
-        try:
-            await self.master.db.buildrequests.claimBuildRequests(
-                brids=brids, claimed_at=claimed_at
-            )
-        except AlreadyClaimedError:
-            return False
-        self.claimedBuildRequests.update(set(brids))
-        return True
+        return await self.data.updates.claimBuildRequests(brids, claimed_at=claimed_at)
 
     @async_to_deferred
     async def unclaimBuildRequests(self, brids) -> None:
         validation.verifyType(
             self.testcase, 'brids', brids, validation.ListValidator(validation.IntValidator())
         )
-        self.claimedBuildRequests.difference_update(set(brids))
-        if brids:
-            await self.master.db.buildrequests.unclaimBuildRequests(brids)
+        return await self.data.updates.unclaimBuildRequests(brids)
 
     def completeBuildRequests(self, brids, results, complete_at=None):
         validation.verifyType(
@@ -243,10 +230,10 @@ class FakeUpdates(service.AsyncService):
             complete_at,
             validation.NoneOk(validation.DateTimeValidator()),
         )
-        return defer.succeed(True)
+        return self.data.updates.completeBuildRequests(brids, results, complete_at=complete_at)
 
     def rebuildBuildrequest(self, buildrequest):
-        return defer.succeed(None)
+        return self.data.updates.rebuildBuildrequest(buildrequest)
 
     @async_to_deferred
     async def update_project_info(

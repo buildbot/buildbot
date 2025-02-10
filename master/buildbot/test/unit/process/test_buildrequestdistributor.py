@@ -145,8 +145,16 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
         for name in names:
             yield self.createBuilder(name)
 
-    def assertMyClaims(self, brids):
-        self.assertEqual(self.master.data.updates.claimedBuildRequests, set(brids))
+    @defer.inlineCallbacks
+    def assert_claims(self, brids):
+        brs = yield self.master.data.get(('buildrequests',))
+        got_brids = [
+            br['buildrequestid']
+            for br in brs
+            if br['claimed_by_masterid'] == fakedb.FakeDBConnector.MASTER_ID
+        ]
+
+        self.assertEqual(list(set(got_brids)), list(set(brids)))
 
 
 class Test(TestBRDBase):
@@ -428,7 +436,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         await self.brd._maybeStartBuildsOnBuilder(self.bldr)
 
-        self.assertMyClaims(exp_claims)
+        await self.assert_claims(exp_claims)
         self.assertBuildsStarted(exp_builds)
 
     @defer.inlineCallbacks
@@ -664,13 +672,13 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         # first time around, only #11 stays claimed
         await self.brd._maybeStartBuildsOnBuilder(self.bldr)
-        self.assertMyClaims([11])  # claimed again so none taken!
+        await self.assert_claims([11])  # claimed again so none taken!
         self.assertBuildsStarted([('test-worker2', [10]), ('test-worker1', [11])])
 
         # second time around the #10 will pass, adding another request and it
         # is claimed
         await self.brd._maybeStartBuildsOnBuilder(self.bldr)
-        self.assertMyClaims([10, 11])
+        await self.assert_claims([10, 11])
         self.assertBuildsStarted([
             ('test-worker2', [10]),
             ('test-worker1', [11]),

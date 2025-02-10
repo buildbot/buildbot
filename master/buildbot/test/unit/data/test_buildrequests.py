@@ -498,14 +498,28 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             pass
 
     @defer.inlineCallbacks
-    def testFakeDataCompleteBuildRequests(self):
+    def test_complete_build_requests(self):
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Builder(id=77),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=101, buildsetid=8822, builderid=77),
+            fakedb.BuildRequest(id=102, buildsetid=8822, builderid=77),
+            fakedb.BuildRequestClaim(
+                brid=101, masterid=fakedb.FakeDBConnector.MASTER_ID, claimed_at=12345
+            ),
+            fakedb.BuildRequestClaim(
+                brid=102, masterid=fakedb.FakeDBConnector.MASTER_ID, claimed_at=12345
+            ),
+        ])
+
         res = yield self.master.data.updates.completeBuildRequests(
-            [44, 55], 12, complete_at=self.COMPLETE_AT
+            [101, 102], 12, complete_at=self.COMPLETE_AT
         )
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def testFakeDataCompleteBuildRequestsNoneArgs(self):
+    def test_complete_build_requests_no_brids(self):
         res = yield self.master.data.updates.completeBuildRequests([], 0)
         self.assertTrue(res)
 
