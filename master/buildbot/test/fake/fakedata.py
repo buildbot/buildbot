@@ -244,7 +244,7 @@ class FakeUpdates(service.AsyncService):
         description_format,
         description_html,
     ) -> None:
-        await self.master.db.projects.update_project_info(
+        return await self.data.updates.update_project_info(
             projectid, slug, description, description_format, description_html
         )
 
@@ -253,7 +253,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(
             self.testcase, 'auto_create', auto_create, validation.BooleanValidator()
         )
-        return self.master.db.projects.find_project_id(name)
+        return self.data.updates.find_project_id(name)
 
     @async_to_deferred
     async def add_commit(
