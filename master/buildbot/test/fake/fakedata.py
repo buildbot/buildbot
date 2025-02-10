@@ -33,8 +33,9 @@ class FakeUpdates(service.AsyncService):
     # unlike "real" update methods, all of the fake methods are here in a
     # single class.
 
-    def __init__(self, testcase):
+    def __init__(self, testcase, data):
         self.testcase = testcase
+        self.data = data
 
         # test cases should assert the values here:
         self.changesAdded = []  # Changes are numbered starting at 1.
@@ -646,13 +647,14 @@ class FakeDataConnector(service.AsyncMultiService):
     def __init__(self, master, testcase):
         super().__init__()
         self.setServiceParent(master)
-        self.updates = FakeUpdates(testcase)
-        self.updates.setServiceParent(self)
 
-        # get and control are delegated to a real connector,
+        # get, control and updates are delegated to a real connector,
         # after some additional assertions
         self.realConnector = connector.DataConnector()
         self.realConnector.setServiceParent(self)
+
+        self.updates = FakeUpdates(testcase, self.realConnector)
+        self.updates.setServiceParent(self)
         self.rtypes = self.realConnector.rtypes
 
     def _scanModule(self, mod):
