@@ -40,7 +40,6 @@ class BuilderMixin:
         self.factory = factory.BuildFactory()
         self.master = yield fakemaster.make_master(self, wantData=True)
         self.mq = self.master.mq
-        self.db = self.master.db
 
     # returns a Deferred that returns None
     def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False, **config_kwargs):
@@ -525,7 +524,7 @@ class TestGetOldestRequestTime(TestReactorMixin, BuilderMixin, unittest.TestCase
             fakedb.BuildRequestClaim(brid=444, masterid=master_id, claimed_at=2501),
             fakedb.BuildRequest(id=555, submitted_at=2800, builderid=182, buildsetid=11),
         ]
-        yield self.db.insert_test_data(self.base_rows)
+        yield self.master.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
     def test_gort_unclaimed(self):
@@ -574,7 +573,7 @@ class TestGetNewestCompleteTime(TestReactorMixin, BuilderMixin, unittest.TestCas
             fakedb.BuildRequest(id=444, submitted_at=2500, builderid=78, buildsetid=11),
             fakedb.BuildRequestClaim(brid=444, masterid=master_id, claimed_at=2501),
         ]
-        yield self.db.insert_test_data(self.base_rows)
+        yield self.master.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
     def test_gnct_completed(self):
@@ -614,7 +613,7 @@ class TestGetHighestPriority(TestReactorMixin, BuilderMixin, unittest.TestCase):
             fakedb.BuildRequest(id=555, submitted_at=2500, builderid=78, buildsetid=11),
             fakedb.BuildRequestClaim(brid=555, masterid=master_id, claimed_at=2501),
         ]
-        yield self.db.insert_test_data(self.base_rows)
+        yield self.master.db.insert_test_data(self.base_rows)
 
     @defer.inlineCallbacks
     def test_ghp_unclaimed(self):
@@ -637,7 +636,7 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
         self.setup_test_reactor()
         yield self.setUpBuilderMixin()
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Project(id=301, name='old_project'),
             fakedb.Project(id=302, name='new_project'),
         ])
