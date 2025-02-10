@@ -47,8 +47,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
     @defer.inlineCallbacks
     def setupDb(self):
-        self.db = self.master.db
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=97, results=SUCCESS, reason="testReason0"),
@@ -129,7 +128,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             fakedb.SourceStamp(id=235, patchid=99),
         ])
         for _id in (20, 21):
-            yield self.db.insert_test_data([
+            yield self.master.db.insert_test_data([
                 fakedb.BuildProperty(buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
                 fakedb.BuildProperty(buildid=_id, name="owner", value="him"),
@@ -573,7 +572,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_getResponsibleUsersForBuildWithBadOwner(self):
         self.setUpLogging()
         yield self.setupDb()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owner", value=["him"]),
         ])
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
@@ -583,7 +582,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     @defer.inlineCallbacks
     def test_getResponsibleUsersForBuildWithOwners(self):
         yield self.setupDb()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owners", value=["him", "her"]),
         ])
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
@@ -593,7 +592,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
     def test_get_responsible_users_for_buildset_with_owner(self):
         yield self.setupDb()
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildsetProperty(
                 buildsetid=98, property_name="owner", property_value='["buildset_owner", "fakedb"]'
             ),
