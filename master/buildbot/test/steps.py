@@ -28,6 +28,7 @@ from twisted.python.reflect import namedModule
 from buildbot.process import buildstep
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import statusToString
+from buildbot.test import fakedb
 from buildbot.test.fake import connection
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
@@ -685,6 +686,22 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
             with_secrets=with_secrets,
         )
 
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+        ])
+
         self.patch(runprocess, "create_process", self._patched_create_process)  # type: ignore[attr-defined]
         self._master_run_process_expect_env: dict[str, str] = {}
 
@@ -961,14 +978,13 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
                 raise AssertionError(f"{msg}; see logs")
 
             if exp_state_string:
-                stepStateString = self.master.data.updates.stepStateString
-                stepids = list(stepStateString)
-                assert stepids, "no step state strings were set"
+                step_data = yield self.master.data.get(('steps', step.stepid))
+                state_string = step_data['state_string']
+                self.assertIsNotNone(state_string, 'no step state strings were set')
                 self.assertEqual(
                     exp_state_string,
-                    stepStateString[stepids[0]],
-                    f"expected state_string {exp_state_string!r}, got "
-                    f"{stepStateString[stepids[0]]!r}",
+                    state_string,
+                    f"expected state_string {exp_state_string!r}, got {state_string!r}",
                 )
 
             if self._exp_result_summaries and (exp_summary := self._exp_result_summaries.pop(0)):

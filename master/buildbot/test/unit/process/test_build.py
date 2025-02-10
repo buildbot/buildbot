@@ -215,9 +215,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.build.text = []
         self.build.buildid = 666
 
-    def assertWorkerPreparationFailure(self, reason):
-        states = "".join(self.master.data.updates.stepStateString.values())
-        self.assertIn(states, reason)
+    @defer.inlineCallbacks
+    def assert_worker_preparation_failure(self, reason):
+        steps = yield self.master.data.get(('builds', self.build.buildid, 'steps'))
+        self.assertIn(steps[-1]['state_string'], reason)
 
     def create_fake_build_step(self):
         return create_step_from_step_or_factory(FakeBuildStep())
@@ -262,6 +263,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         self.assertIn('stop it', step.interrupted)
 
+    @defer.inlineCallbacks
     def test_build_retry_when_worker_substantiate_returns_false(self):
         b = self.build
 
@@ -269,24 +271,31 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.setStepFactories([FakeStepFactory(step)])
 
         self.workerforbuilder.substantiate_if_needed = lambda _: False
-        b.startBuild(self.workerforbuilder)
-        self.assertEqual(b.results, RETRY)
-        self.assertWorkerPreparationFailure('error while worker_prepare')
 
+        yield b.startBuild(self.workerforbuilder)
+        self.assertEqual(b.results, RETRY)
+        yield self.assert_worker_preparation_failure('error while worker_prepare')
+
+    @defer.inlineCallbacks
     def test_build_cancelled_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
         step = self.create_fake_build_step()
         b.setStepFactories([FakeStepFactory(step)])
 
-        d = defer.Deferred()
-        self.workerforbuilder.substantiate_if_needed = lambda _: d
-        b.startBuild(self.workerforbuilder)
-        b.stopBuild('Cancel Build', CANCELLED)
-        d.callback(False)
-        self.assertEqual(b.results, CANCELLED)
-        self.assertWorkerPreparationFailure('error while worker_prepare')
+        substantiation_d = defer.Deferred()
+        self.workerforbuilder.substantiate_if_needed = lambda _: substantiation_d
 
+        build_d = b.startBuild(self.workerforbuilder)
+        b.stopBuild('Cancel Build', CANCELLED)
+
+        substantiation_d.callback(False)
+        yield build_d
+
+        self.assertEqual(b.results, CANCELLED)
+        yield self.assert_worker_preparation_failure('pending')
+
+    @defer.inlineCallbacks
     def test_build_retry_when_worker_substantiate_returns_false_due_to_cancel(self):
         b = self.build
 
@@ -299,7 +308,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
         self.assertEqual(b.results, RETRY)
-        self.assertWorkerPreparationFailure('error while worker_prepare')
+        yield self.assert_worker_preparation_failure('pending')
 
     @defer.inlineCallbacks
     def testAlwaysRunStepStopBuild(self):

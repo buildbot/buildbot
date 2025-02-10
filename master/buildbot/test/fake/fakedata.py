@@ -42,8 +42,6 @@ class FakeUpdates(service.AsyncService):
         self.workerIds = {}  # { name : id }; users can add workers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
-        self.stepStateString = {}  # { stepid : string }
-        self.stepUrls = {}  # { stepid : [(name,url)] }
         self.missingWorkers = []
         # extra assertions
 
@@ -422,14 +420,13 @@ class FakeUpdates(service.AsyncService):
     def addStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid, validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name, validation.IdentifierValidator(50))
-        return defer.succeed((10, 1, name))
+        return self.data.updates.addStep(buildid, name)
 
     def addStepURL(self, stepid, name, url):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
         validation.verifyType(self.testcase, 'url', url, validation.StringValidator())
-        self.stepUrls.setdefault(stepid, []).append((name, url))
-        return defer.succeed(None)
+        return self.data.updates.addStepURL(stepid, name, url)
 
     def startStep(self, stepid, started_at=None, locks_acquired=False):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
@@ -439,7 +436,9 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(
             self.testcase, "locks_acquired", locks_acquired, validation.BooleanValidator()
         )
-        return defer.succeed(None)
+        return self.data.updates.startStep(
+            stepid, started_at=started_at, locks_acquired=locks_acquired
+        )
 
     def set_step_locks_acquired_at(self, stepid, locks_acquired_at=None):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
@@ -449,21 +448,22 @@ class FakeUpdates(service.AsyncService):
             locks_acquired_at,
             validation.NoneOk(validation.IntValidator()),
         )
-        return defer.succeed(None)
+        return self.data.updates.set_step_locks_acquired_at(
+            stepid, locks_acquired_at=locks_acquired_at
+        )
 
     def setStepStateString(self, stepid, state_string):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
         validation.verifyType(
             self.testcase, 'state_string', state_string, validation.StringValidator()
         )
-        self.stepStateString[stepid] = state_string
-        return defer.succeed(None)
+        return self.data.updates.setStepStateString(stepid, state_string)
 
     def finishStep(self, stepid, results, hidden):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
         validation.verifyType(self.testcase, 'results', results, validation.IntValidator())
         validation.verifyType(self.testcase, 'hidden', hidden, validation.BooleanValidator())
-        return defer.succeed(None)
+        return self.data.updates.finishStep(stepid, results, hidden)
 
     def addLog(self, stepid, name, type):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())

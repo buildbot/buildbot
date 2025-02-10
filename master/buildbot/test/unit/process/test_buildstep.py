@@ -42,8 +42,8 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.test import fakedb
 from buildbot.test.fake import fakebuild
-from buildbot.test.fake import fakemaster
 from buildbot.test.fake import worker
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectGlob
@@ -743,9 +743,21 @@ class TestBuildStep(
             lambda self: defer.succeed({'step': 'CS', 'build': 'CB'}),
         )
         step = create_step_from_step_or_factory(NewStyleStep())
-        step.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
+        step.master = self.master
         step.stepid = 13
         step.build = fakebuild.FakeBuild()
+
+        yield step.master.db.insert_test_data([
+            fakedb.Builder(id=77),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Master(id=88),
+            fakedb.Buildset(id=8822),
+            fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
+            fakedb.Build(
+                id=14, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=3
+            ),
+            fakedb.Step(id=13, buildid=14, number=9, name='make'),
+        ])
         return step
 
     @defer.inlineCallbacks
@@ -754,7 +766,8 @@ class TestBuildStep(
         step._running = True
         step.updateSummary()
         self.reactor.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateString[13], 'C')
+        step_data = yield self.master.data.get(('steps', 13))
+        self.assertEqual(step_data['state_string'], 'C')
 
     @defer.inlineCallbacks
     def test_updateSummary_running_empty_dict(self):
@@ -763,7 +776,8 @@ class TestBuildStep(
         step._running = True
         step.updateSummary()
         self.reactor.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateString[13], 'finished')
+        step_data = yield self.master.data.get(('steps', 13))
+        self.assertEqual(step_data['state_string'], 'finished')
 
     @defer.inlineCallbacks
     def test_updateSummary_running_not_unicode(self):
@@ -789,7 +803,8 @@ class TestBuildStep(
         step._running = False
         step.updateSummary()
         self.reactor.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateString[13], 'CS')
+        step_data = yield self.master.data.get(('steps', 13))
+        self.assertEqual(step_data['state_string'], 'CS')
 
     @defer.inlineCallbacks
     def test_updateSummary_finished_empty_dict(self):
@@ -798,7 +813,8 @@ class TestBuildStep(
         step._running = False
         step.updateSummary()
         self.reactor.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateString[13], 'finished')
+        step_data = yield self.master.data.get(('steps', 13))
+        self.assertEqual(step_data['state_string'], 'finished')
 
     @defer.inlineCallbacks
     def test_updateSummary_finished_not_dict(self):
