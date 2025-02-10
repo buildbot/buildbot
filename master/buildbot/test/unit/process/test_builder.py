@@ -39,7 +39,6 @@ class BuilderMixin:
     def setUpBuilderMixin(self):
         self.factory = factory.BuildFactory()
         self.master = yield fakemaster.make_master(self, wantData=True)
-        self.mq = self.master.mq
 
     # returns a Deferred that returns None
     def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False, **config_kwargs):

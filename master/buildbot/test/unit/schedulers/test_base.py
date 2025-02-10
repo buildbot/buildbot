@@ -233,9 +233,9 @@ class TestReconfigurableBaseScheduler(
         yield sched.startConsumingChanges(**kwargs)
 
         # check that it registered callbacks
-        self.assertEqual(len(self.mq.qrefs), 2)
+        self.assertEqual(len(self.master.mq.qrefs), 2)
 
-        qref = self.mq.qrefs[1]
+        qref = self.master.mq.qrefs[1]
         self.assertEqual(qref.filter, ('changes', None, 'new'))
 
         # invoke the callback with the change, and check the result
@@ -1072,9 +1072,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         yield sched.startConsumingChanges(**kwargs)
 
         # check that it registered callbacks
-        self.assertEqual(len(self.mq.qrefs), 2)
+        self.assertEqual(len(self.master.mq.qrefs), 2)
 
-        qref = self.mq.qrefs[1]
+        qref = self.master.mq.qrefs[1]
         self.assertEqual(qref.filter, ('changes', None, 'new'))
 
         # invoke the callback with the change, and check the result

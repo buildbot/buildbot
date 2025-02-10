@@ -81,8 +81,6 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
         yield self.master.db.insert_test_data(rows)
 
-        # set up a fake master
-        self.mq = self.master.mq
         yield scheduler.setServiceParent(self.master)
 
         if overrideBuildsetMethods:
