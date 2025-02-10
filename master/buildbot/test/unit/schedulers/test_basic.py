@@ -111,7 +111,7 @@ class BaseBasicScheduler(
         chd['changeid'] = chd['number']
         sourcestampid = chd['number'] + 100
         del chd['number']
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Change(sourcestampid=sourcestampid, **chd),
             fakedb.SourceStamp(id=sourcestampid),
         ])
@@ -136,7 +136,7 @@ class BaseBasicScheduler(
             fakedb.Change(changeid=20),
         ])
 
-        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
+        yield self.master.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
         yield self.master.startService()
 
@@ -154,7 +154,7 @@ class BaseBasicScheduler(
             fakedb.SourceStamp(id=92),
             fakedb.Change(changeid=20),
         ])
-        yield self.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
+        yield self.master.db.schedulers.classifyChanges(self.SCHEDULERID, {20: True})
 
         yield self.master.startService()
 
@@ -339,7 +339,7 @@ class SingleBranchScheduler(
         chd['changeid'] = chd['number']
         sourcestampid = chd['number'] + 100
         del chd['number']
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Change(sourcestampid=sourcestampid, **chd),
             fakedb.SourceStamp(id=sourcestampid),
         ])
@@ -432,7 +432,7 @@ class SingleBranchScheduler(
             codebases=self.codebases,
             createAbsoluteSourceStamps=True,
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')
         ])
         yield self.master.startService()
@@ -473,7 +473,7 @@ class SingleBranchScheduler(
             codebases=self.codebases,
             createAbsoluteSourceStamps=True,
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler'),
             fakedb.ObjectState(
                 objectid=self.OBJECTID,
@@ -547,7 +547,7 @@ class SingleBranchScheduler(
         sched = yield self.makeFullScheduler(
             name='test', builderNames=['test'], branch='master', priority=8
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')
         ])
 

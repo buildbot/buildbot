@@ -687,7 +687,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
     @defer.inlineCallbacks
     def test_extract_project_revision_no_build(self):
         yield self.insert_test_data([], SUCCESS)
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildsetProperty(
                 buildsetid=98, property_name="event.change.id", property_value='["12345", "fakedb"]'
             ),

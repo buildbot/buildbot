@@ -209,7 +209,7 @@ class TestReconfigurableBaseScheduler(
             assert changeid == 12934
             return defer.succeed(chdict)
 
-        self.db.changes.getChange = getChange
+        self.master.db.changes.getChange = getChange
 
         change = self.makeFakeChange(**change_kwargs)
         change.number = 12934
@@ -233,9 +233,9 @@ class TestReconfigurableBaseScheduler(
         yield sched.startConsumingChanges(**kwargs)
 
         # check that it registered callbacks
-        self.assertEqual(len(self.mq.qrefs), 2)
+        self.assertEqual(len(self.master.mq.qrefs), 2)
 
-        qref = self.mq.qrefs[1]
+        qref = self.master.mq.qrefs[1]
         self.assertEqual(qref.filter, ('changes', None, 'new'))
 
         # invoke the callback with the change, and check the result
@@ -475,7 +475,7 @@ class TestReconfigurableBaseScheduler(
         sched = yield self.makeScheduler(name='n', builderNames=['b'])
         yield self.master.startService()
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, sourcestampid=234),
         ])
@@ -501,7 +501,7 @@ class TestReconfigurableBaseScheduler(
         sched = yield self.makeScheduler(name='n', builderNames=['c'])
         yield self.master.startService()
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=14, sourcestampid=234),
         ])
@@ -531,7 +531,7 @@ class TestReconfigurableBaseScheduler(
         )
         yield self.master.startService()
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
             fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
         ])
@@ -563,7 +563,7 @@ class TestReconfigurableBaseScheduler(
         yield self.master.startService()
 
         # No codebaseGenerator means all changes have codebase == ''
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.SourceStamp(id=11),
             fakedb.SourceStamp(id=12),
@@ -604,7 +604,7 @@ class TestReconfigurableBaseScheduler(
         sched = yield self.makeScheduler(name='n', builderNames=['b', 'c'], codebases=codebases)
         yield self.master.startService()
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=912),
             fakedb.SourceStamp(id=913),
             fakedb.SourceStamp(id=914),
@@ -1048,7 +1048,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
             assert changeid == 12934
             return defer.succeed(chdict)
 
-        self.db.changes.getChange = getChange
+        self.master.db.changes.getChange = getChange
 
         change = self.makeFakeChange(**change_kwargs)
         change.number = 12934
@@ -1072,9 +1072,9 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         yield sched.startConsumingChanges(**kwargs)
 
         # check that it registered callbacks
-        self.assertEqual(len(self.mq.qrefs), 2)
+        self.assertEqual(len(self.master.mq.qrefs), 2)
 
-        qref = self.mq.qrefs[1]
+        qref = self.master.mq.qrefs[1]
         self.assertEqual(qref.filter, ('changes', None, 'new'))
 
         # invoke the callback with the change, and check the result
@@ -1310,7 +1310,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
         sched = yield self.makeScheduler(name='n', builderNames=['b'])
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, sourcestampid=234),
         ])
@@ -1334,7 +1334,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties(self):
         sched = yield self.makeScheduler(name='n', builderNames=['c'])
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=14, sourcestampid=234),
         ])
@@ -1362,7 +1362,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
             builderNames=['c'],
             properties={'virtual_builder_name': Interpolate("myproject-%(src::branch)s")},
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234, branch='dev1', project="linux"),
             fakedb.Change(changeid=14, sourcestampid=234, branch="dev1"),
         ])
@@ -1392,7 +1392,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
             name='n', builderNames=['b', 'c'], codebases={'cb': {'repository': 'http://repo'}}
         )
         # No codebaseGenerator means all changes have codebase == ''
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.SourceStamp(id=11),
             fakedb.SourceStamp(id=12),
@@ -1431,7 +1431,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
         # Scheduler gets codebases that can be used to create extra sourcestamps
         # for repositories that have no changes
         sched = yield self.makeScheduler(name='n', builderNames=['b', 'c'], codebases=codebases)
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=912),
             fakedb.SourceStamp(id=913),
             fakedb.SourceStamp(id=914),

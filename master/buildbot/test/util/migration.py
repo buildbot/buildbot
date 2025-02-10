@@ -51,7 +51,6 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
         self.master = yield fakemaster.make_master(
             self, wantDb=True, auto_upgrade=False, check_version=False
         )
-        self.db = self.master.db
 
     @defer.inlineCallbacks
     def do_test_migration(self, base_revision, target_revision, setup_thd_cb, verify_thd_cb):
@@ -67,9 +66,9 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
             conn.commit()
             setup_thd_cb(conn)
 
-        yield self.db.pool.do(setup_thd)
+        yield self.master.db.pool.do(setup_thd)
 
-        alembic_scripts = self.db.model.alembic_get_scripts()
+        alembic_scripts = self.master.db.model.alembic_get_scripts()
 
         def upgrade_thd(engine):
             with querylog.log_queries():
@@ -88,7 +87,7 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
 
                         conn.commit()
 
-        yield self.db.pool.do_with_engine(upgrade_thd)
+        yield self.master.db.pool.do_with_engine(upgrade_thd)
 
         def check_table_charsets_thd(conn: Connection):
             # charsets are only a problem for MySQL
@@ -108,10 +107,10 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
                     f"table {tbl} does not have the utf8 charset",
                 )
 
-        yield self.db.pool.do(check_table_charsets_thd)
+        yield self.master.db.pool.do(check_table_charsets_thd)
 
         def verify_thd(conn):
             with sautils.withoutSqliteForeignKeys(conn):
                 verify_thd_cb(conn)
 
-        yield self.db.pool.do(verify_thd)
+        yield self.master.db.pool.do(verify_thd)

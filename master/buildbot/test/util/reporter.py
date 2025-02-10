@@ -71,8 +71,7 @@ class ReporterTestMixin:
 
     @defer.inlineCallbacks
     def insert_buildrequest_new(self, insert_patch=False, **kwargs):
-        self.db = self.master.db
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -83,7 +82,7 @@ class ReporterTestMixin:
 
         patchid = 99 if insert_patch else None
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(
                 id=234,
@@ -110,7 +109,6 @@ class ReporterTestMixin:
     def insert_test_data(
         self, buildResults, finalResult, insertSS=True, parentPlan=False, insert_patch=False
     ):
-        self.db = self.master.db
         rows = [
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
@@ -213,7 +211,7 @@ class ReporterTestMixin:
             for k, v in self.reporter_test_props.items():
                 rows += [fakedb.BuildProperty(buildid=20 + i, name=k, value=v)]
 
-        yield self.db.insert_test_data(rows)
+        yield self.master.db.insert_test_data(rows)
 
         self.setup_fake_get_changes_for_build()
 

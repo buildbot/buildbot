@@ -45,7 +45,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Worker(id=13, name='wrk'),
@@ -68,8 +68,8 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetExisting(self):
-        self.db.buildrequests.claimBuildRequests([44], claimed_at=self.CLAIMED_AT)
-        self.db.buildrequests.completeBuildRequests([44], 75, complete_at=self.COMPLETE_AT)
+        self.master.db.buildrequests.claimBuildRequests([44], claimed_at=self.CLAIMED_AT)
+        self.master.db.buildrequests.completeBuildRequests([44], 75, complete_at=self.COMPLETE_AT)
         buildrequest = yield self.callGet(('buildrequests', 44))
         self.validateData(buildrequest)
         # check data formatting:
@@ -127,7 +127,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Builder(id=78, name='ccc'),
             fakedb.Builder(id=79, name='ddd'),

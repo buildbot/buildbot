@@ -905,7 +905,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         def getBuildset(bsid):
             return {"bsid": bsid}
 
-        self.db.buildsets.getBuildset = getBuildset
+        self.master.db.buildsets.getBuildset = getBuildset
 
         rbss = yield persp.perspective_try(*args, **kwargs)
 
