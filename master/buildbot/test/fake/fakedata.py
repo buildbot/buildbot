@@ -537,11 +537,9 @@ class FakeUpdates(service.AsyncService):
         )
         validation.verifyType(self.testcase, 'category', category, validation.StringValidator())
         validation.verifyType(self.testcase, 'value_unit', value_unit, validation.StringValidator())
-
-        test_result_setid = await self.master.db.test_result_sets.addTestResultSet(
+        return await self.data.updates.addTestResultSet(
             builderid, buildid, stepid, description, category, value_unit
         )
-        return test_result_setid
 
     @async_to_deferred
     async def completeTestResultSet(
@@ -563,16 +561,12 @@ class FakeUpdates(service.AsyncService):
             validation.NoneOk(validation.IntValidator()),
         )
 
-        await self.master.db.test_result_sets.completeTestResultSet(
-            test_result_setid, tests_passed, tests_failed
-        )
+        await self.data.updates.completeTestResultSet(test_result_setid, tests_passed, tests_failed)
 
     # methods from TestResult resource
     @async_to_deferred
     async def addTestResults(self, builderid, test_result_setid, result_values) -> None:
-        await self.master.db.test_results.addTestResults(
-            builderid, test_result_setid, result_values
-        )
+        await self.data.updates.addTestResults(builderid, test_result_setid, result_values)
 
 
 class FakeDataConnector(service.AsyncMultiService):
