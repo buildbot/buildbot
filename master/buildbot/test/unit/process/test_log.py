@@ -20,6 +20,7 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.process import log
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.reactor import TestReactorMixin
@@ -31,6 +32,19 @@ class Tests(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
+
+        master_id = fakedb.FakeDBConnector.MASTER_ID
+        self.master.db.insert_test_data([
+            fakedb.Master(id=master_id),
+            fakedb.Worker(id=47),
+            fakedb.Buildset(id=20),
+            fakedb.Builder(id=80, name='b1'),
+            fakedb.BuildRequest(id=41, buildsetid=20, builderid=80),
+            fakedb.Build(
+                id=30, buildrequestid=41, number=7, masterid=master_id, builderid=80, workerid=47
+            ),
+            fakedb.Step(id=27, buildid=30, number=1, name='make'),
+        ])
 
     @defer.inlineCallbacks
     def makeLog(self, type, logEncoding='utf-8'):
@@ -69,14 +83,23 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('world\nthis is a second line')  # unfinished
         yield _log.finish()
 
+        log_data = yield self.master.data.get(('logs', _log.logid))
+        log_content = yield self.master.data.get(('logs', _log.logid, 'contents'))
+
         self.assertEqual(
-            self.master.data.updates.logs[_log.logid],
+            log_data,
             {
-                'content': ['hello\n', 'hello cruel world\n', 'this is a second line\n'],
-                'finished': True,
-                'type': 't',
+                'complete': True,
+                'logid': 1,
                 'name': 'testlog',
+                'num_lines': 3,
+                'slug': 'testlog',
+                'stepid': 27,
+                'type': 't',
             },
+        )
+        self.assertEqual(
+            log_content['content'], 'hello\nhello cruel world\nthis is a second line\n'
         )
 
     @defer.inlineCallbacks
@@ -86,9 +109,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('$ and \xa2\n')
         yield _log.finish()
 
-        self.assertEqual(
-            self.master.data.updates.logs[_log.logid]['content'], ['$ and \N{CENT SIGN}\n']
-        )
+        log_content = yield self.master.data.get(('logs', _log.logid, 'contents'))
+        self.assertEqual(log_content['content'], '$ and \N{CENT SIGN}\n')
 
     @defer.inlineCallbacks
     def test_updates_unicode_input(self):
@@ -96,7 +118,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         _log.addContent('\N{SNOWMAN}\n')
         yield _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[_log.logid]['content'], ['\N{SNOWMAN}\n'])
+        log_content = yield self.master.data.get(('logs', _log.logid, 'contents'))
+        self.assertEqual(log_content['content'], '\N{SNOWMAN}\n')
 
     @defer.inlineCallbacks
     def test_subscription_plain(self):
@@ -163,22 +186,29 @@ class Tests(TestReactorMixin, unittest.TestCase):
     def test_updates_stream(self):
         _log = yield self.makeLog('s')
 
-        _log.addStdout('hello\n')
-        _log.addStdout('hello ')
-        _log.addStderr('oh noes!\n')
-        _log.addStdout('cruel world\n')
-        _log.addStderr('bad things!')  # unfinished
+        _log.addStdout('out1\n')
+        _log.addStdout('out2 ')
+        _log.addStderr('err2\n')
+        _log.addStdout('out3\n')
+        _log.addStderr('err3')  # unfinished
         yield _log.finish()
 
+        log_data = yield self.master.data.get(('logs', _log.logid))
+        log_content = yield self.master.data.get(('logs', _log.logid, 'contents'))
+
         self.assertEqual(
-            self.master.data.updates.logs[_log.logid],
+            log_data,
             {
-                'content': ['ohello\n', 'eoh noes!\n', 'ohello cruel world\n', 'ebad things!\n'],
-                'finished': True,
+                'complete': True,
+                'logid': 1,
                 'name': 'testlog',
+                'num_lines': 4,
+                'slug': 'testlog',
+                'stepid': 27,
                 'type': 's',
             },
         )
+        self.assertEqual(log_content['content'], 'oout1\neerr2\noout2 out3\neerr3\n')
 
     @defer.inlineCallbacks
     def test_unyielded_finish(self):

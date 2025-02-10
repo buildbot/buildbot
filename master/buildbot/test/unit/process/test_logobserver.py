@@ -21,6 +21,7 @@ from twisted.trial import unittest
 
 from buildbot.process import log
 from buildbot.process import logobserver
+from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
@@ -47,6 +48,22 @@ class TestLogObserver(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+            fakedb.Step(id=1, buildid=92),
+        ])
 
     @defer.inlineCallbacks
     def test_sequence(self):
@@ -98,6 +115,22 @@ class TestLineConsumerLogObesrver(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+            fakedb.Step(id=1, buildid=92),
+        ])
 
     @defer.inlineCallbacks
     def do_test_sequence(self, consumer):
@@ -171,6 +204,22 @@ class TestLogLineObserver(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+            fakedb.Step(id=1, buildid=92),
+        ])
 
     @defer.inlineCallbacks
     def test_sequence(self):
@@ -211,6 +260,22 @@ class TestOutputProgressObserver(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+            fakedb.Step(id=1, buildid=92),
+        ])
 
     @defer.inlineCallbacks
     def test_sequence(self):
@@ -231,6 +296,22 @@ class TestBufferObserver(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+            fakedb.Step(id=1, buildid=92),
+        ])
 
     @defer.inlineCallbacks
     def do_test_sequence(self, lo):

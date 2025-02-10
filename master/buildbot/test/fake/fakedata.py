@@ -18,8 +18,6 @@ from __future__ import annotations
 import datetime
 import json
 
-from twisted.internet import defer
-
 from buildbot.data import connector
 from buildbot.data import resultspec
 from buildbot.test.util import validation
@@ -40,8 +38,6 @@ class FakeUpdates(service.AsyncService):
         self.masterStateChanges = []  # dictionaries
         self.builderIds = {}  # { name : id }; users can add builders here
         self.workerIds = {}  # { name : id }; users can add workers here
-        # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
-        self.logs = {}
         self.missingWorkers = []
         # extra assertions
 
@@ -469,25 +465,21 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'stepid', stepid, validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name, validation.StringValidator())
         validation.verifyType(self.testcase, 'type', type, validation.IdentifierValidator(1))
-        logid = max([0, *list(self.logs)]) + 1
-        self.logs[logid] = {"name": name, "type": type, "content": [], "finished": False}
-        return defer.succeed(logid)
+        return self.data.updates.addLog(stepid, name, type)
 
     def finishLog(self, logid):
         validation.verifyType(self.testcase, 'logid', logid, validation.IntValidator())
-        self.logs[logid]['finished'] = True
-        return defer.succeed(None)
+        return self.data.updates.finishLog(logid)
 
     def compressLog(self, logid):
         validation.verifyType(self.testcase, 'logid', logid, validation.IntValidator())
-        return defer.succeed(None)
+        return self.data.updates.compressLog(logid)
 
     def appendLog(self, logid, content):
         validation.verifyType(self.testcase, 'logid', logid, validation.IntValidator())
         validation.verifyType(self.testcase, 'content', content, validation.StringValidator())
         self.testcase.assertEqual(content[-1], '\n')
-        self.logs[logid]['content'].append(content)
-        return defer.succeed(None)
+        return self.data.updates.appendLog(logid, content)
 
     def findWorkerId(self, name):
         validation.verifyType(
