@@ -32,28 +32,27 @@ class TestBadRows(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
 
     @defer.inlineCallbacks
     def test_bogus_row_no_source(self):
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel', property_value='"no source"'),
             fakedb.Change(changeid=13, sourcestampid=10),
         ])
 
-        c = yield self.db.changes.getChange(13)
+        c = yield self.master.db.changes.getChange(13)
 
         self.assertEqual(c.properties, {"devel": ('no source', 'Change')})
 
     @defer.inlineCallbacks
     def test_bogus_row_jsoned_list(self):
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel', property_value='[1, 2]'),
             fakedb.Change(changeid=13, sourcestampid=10),
         ])
 
-        c = yield self.db.changes.getChange(13)
+        c = yield self.master.db.changes.getChange(13)
 
         self.assertEqual(c.properties, {"devel": ([1, 2], 'Change')})
