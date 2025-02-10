@@ -82,7 +82,6 @@ class SchedulerMixin(interfaces.InterfaceTests):
         yield self.master.db.insert_test_data(rows)
 
         # set up a fake master
-        self.db = self.master.db
         self.mq = self.master.mq
         yield scheduler.setServiceParent(self.master)
 
@@ -120,13 +119,13 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 self.addedSourceStamps.append(kwargs)
                 return defer.succeed(300 + len(self.addedSourceStamps) - 1)
 
-            self.db.sourcestamps.addSourceStamp = fake_addSourceStamp
+            self.master.db.sourcestamps.addSourceStamp = fake_addSourceStamp
 
             def fake_addSourceStampSet():
                 self.addedSourceStampSets.append([])
                 return defer.succeed(400 + len(self.addedSourceStampSets) - 1)
 
-            self.db.sourcestamps.addSourceStampSet = fake_addSourceStampSet
+            self.master.db.sourcestamps.addSourceStampSet = fake_addSourceStampSet
 
         # patch methods to detect a failure to upcall the activate and
         # deactivate methods .. unless we're testing BaseScheduler
@@ -235,7 +234,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         if builderNames is None:
             builderNames = self.sched.builderNames
         builderids = []
-        builders = yield self.db.builders.getBuilders()
+        builders = yield self.master.db.builders.getBuilders()
         for builderName in builderNames:
             for bldrDict in builders:
                 if builderName == bldrDict.name:
