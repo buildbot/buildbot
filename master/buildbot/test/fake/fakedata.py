@@ -41,8 +41,6 @@ class FakeUpdates(service.AsyncService):
         self.changesAdded = []  # Changes are numbered starting at 1.
         # { name : id }; users can add changesources here
         self.changesourceIds = {}
-        self.buildsetsAdded = []  # Buildsets are numbered starting at 1
-        self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = []  # dictionaries
         self.schedulerIds = {}  # { name : id }; users can add schedulers here
         self.builderIds = {}  # { name : id }; users can add builders here
@@ -174,45 +172,34 @@ class FakeUpdates(service.AsyncService):
         parent_relationship=None,
         priority=0,
     ) -> tuple[int, dict[int, int]]:
-        if sourcestamps is None:
-            sourcestamps = []
-        if properties is None:
-            properties = {}
-        if builderids is None:
-            builderids = []
-        # assert types
         self.testcase.assertIsInstance(scheduler, str)
-        self.testcase.assertIsInstance(sourcestamps, list)
-        for ss in sourcestamps:
-            if not isinstance(ss, int) and not isinstance(ss, dict):
-                self.testcase.fail(f"{ss} ({type(ss)}) is not an integer or a dictionary")
-            del ss  # since we use locals(), below
+        self.testcase.assertIsInstance(sourcestamps, (type(None), list))
+        if sourcestamps is not None:
+            for ss in sourcestamps:
+                if not isinstance(ss, int) and not isinstance(ss, dict):
+                    self.testcase.fail(f"{ss} ({type(ss)}) is not an integer or a dictionary")
         self.testcase.assertIsInstance(reason, str)
-        self.assertProperties(sourced=True, properties=properties)
-        self.testcase.assertIsInstance(builderids, list)
+        if properties is not None:
+            self.assertProperties(sourced=True, properties=properties)
+        self.testcase.assertIsInstance(builderids, (type(None), list))
         self.testcase.assertIsInstance(external_idstring, (type(None), str))
 
-        self.buildsetsAdded.append(locals())
-        self.buildsetsAdded[-1].pop('self')
-
-        # call through to the db layer, since many scheduler tests expect to
-        # find the buildset in the db later - TODO fix this!
-        bsid, brids = await self.master.db.buildsets.addBuildset(
+        return await self.data.updates.addBuildset(
+            waited_for,
+            scheduler=scheduler,
             sourcestamps=sourcestamps,
             reason=reason,
             properties=properties,
             builderids=builderids,
-            waited_for=waited_for,
             external_idstring=external_idstring,
             rebuilt_buildid=rebuilt_buildid,
             parent_buildid=parent_buildid,
             parent_relationship=parent_relationship,
+            priority=priority,
         )
-        return (bsid, brids)
 
     def maybeBuildsetComplete(self, bsid):
-        self.maybeBuildsetCompleteCalls += 1
-        return defer.succeed(None)
+        return self.data.updates.maybeBuildsetComplete(bsid)
 
     @async_to_deferred
     async def claimBuildRequests(self, brids, claimed_at=None) -> bool:
