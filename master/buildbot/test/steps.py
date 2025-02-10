@@ -18,6 +18,7 @@ from __future__ import annotations
 import stat
 import tarfile
 from io import BytesIO
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -35,7 +36,15 @@ from buildbot.test.fake import worker
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
 from buildbot.util import unicode2bytes
+from buildbot.util.eventual import flushEventualQueue
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from twisted.trial import unittest
+
+    _TestBuildStepMixinBase = unittest.TestCase
+else:
+    _TestBuildStepMixinBase = object
 
 
 def _dict_diff(d1, d2):
@@ -644,7 +653,7 @@ class FakeRunProcess:
         pass
 
 
-class TestBuildStepMixin:
+class TestBuildStepMixin(_TestBuildStepMixinBase):
     """
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
@@ -703,6 +712,8 @@ class TestBuildStepMixin:
         self._exp_build_data: dict[str, tuple[object, str]] = {}
         self._exp_result_summaries: list[str] = []
         self._exp_build_result_summaries: list[str] = []
+
+        self.addCleanup(flushEventualQueue)
 
     def tear_down_test_build_step(self):  # pragma: no cover
         warn_deprecated(
