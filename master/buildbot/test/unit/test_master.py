@@ -115,6 +115,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
         yield self.data.setServiceParent(self.master)
 
+    @defer.inlineCallbacks
+    def assert_this_master_active(self, active):
+        masters = yield self.master.data.get(('masters', 1))
+        self.assertEqual(masters['active'], active)
+
     # tests
     @defer.inlineCallbacks
     def test_startup_bad_config(self):
@@ -162,20 +167,20 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
             'sqlite:///path-to-s3cr3t-db-file',
         )
 
-        self.assertTrue(self.master.data.updates.thisMasterActive)
+        yield self.assert_this_master_active(True)
         d = self.master.stopService()
         self.assertTrue(d.called)
         self.assertFalse(self.reactor.stop_called)
         self.assertLogged("BuildMaster is running")
 
         # check started/stopped messages
-        self.assertFalse(self.master.data.updates.thisMasterActive)
+        yield self.assert_this_master_active(False)
 
     @defer.inlineCallbacks
     def test_startup_ok_waitforshutdown(self):
         yield self.master.startService()
 
-        self.assertTrue(self.master.data.updates.thisMasterActive)
+        yield self.assert_this_master_active(True)
         # use fakebotmaster shutdown delaying
         self.master.botmaster.delayShutdown = True
         d = self.master.stopService()
@@ -183,7 +188,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.assertFalse(d.called)
 
         # master must only send shutdown once builds are completed
-        self.assertTrue(self.master.data.updates.thisMasterActive)
+        yield self.assert_this_master_active(True)
         self.master.botmaster.shutdownDeferred.callback(None)
         self.assertTrue(d.called)
 
@@ -191,7 +196,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         self.assertLogged("BuildMaster is running")
 
         # check started/stopped messages
-        self.assertFalse(self.master.data.updates.thisMasterActive)
+        yield self.assert_this_master_active(False)
 
     @defer.inlineCallbacks
     def test_reconfig(self):

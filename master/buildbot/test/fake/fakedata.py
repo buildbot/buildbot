@@ -149,17 +149,15 @@ class FakeUpdates(service.AsyncService):
         self.testcase.assertIsInstance(masterid, int)
         if masterid:
             self.testcase.assertEqual(masterid, 1)
-        self.thisMasterActive = True
-        return defer.succeed(None)
+        return self.data.updates.masterActive(name, masterid)
 
     def masterStopped(self, name, masterid):
         self.testcase.assertIsInstance(name, str)
         self.testcase.assertEqual(masterid, 1)
-        self.thisMasterActive = False
-        return defer.succeed(None)
+        return self.data.updates.masterStopped(name, masterid)
 
     def expireMasters(self, forceHouseKeeping=False):
-        return defer.succeed(None)
+        return self.data.updates.expireMasters(forceHouseKeeping=forceHouseKeeping)
 
     @async_to_deferred
     async def addBuildset(
