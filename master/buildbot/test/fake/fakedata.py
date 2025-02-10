@@ -355,13 +355,13 @@ class FakeUpdates(service.AsyncService):
         for n in builderNames:
             self.testcase.assertIsInstance(n, str)
         self.builderNames = builderNames
-        return defer.succeed(None)
+        return self.data.updates.updateBuilderList(masterid, builderNames)
 
     @async_to_deferred
     async def updateBuilderInfo(
         self, builderid, description, description_format, description_html, projectid, tags
     ) -> None:
-        await self.master.db.builders.updateBuilderInfo(
+        await self.data.updates.updateBuilderInfo(
             builderid, description, description_format, description_html, projectid, tags
         )
 
@@ -387,7 +387,7 @@ class FakeUpdates(service.AsyncService):
 
     def findBuilderId(self, name):
         validation.verifyType(self.testcase, 'builder name', name, validation.StringValidator())
-        return self.master.db.builders.findBuilderId(name)
+        return self.data.updates.findBuilderId(name)
 
     def trySetSchedulerMaster(self, schedulerid, masterid):
         currentMasterid = self.schedulerMasters.get(schedulerid)
