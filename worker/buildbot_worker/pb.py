@@ -28,6 +28,7 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.internet.base import DelayedCall
 from twisted.internet.endpoints import clientFromString
+from twisted.internet.error import ConnectionDone
 from twisted.python import log
 from twisted.spread import pb
 
@@ -176,7 +177,12 @@ class ProtocolCommandPb(ProtocolCommandBase):
         d_complete = self.command_ref.callRemote("complete", failure)
 
         yield d_update
-        yield d_complete
+        try:
+            yield d_complete
+        except ConnectionDone as e:
+            if not self.command.interrupted:
+                self._ack_failed(e, "ProtocolCommandPb.protocol_complete")
+                raise
 
     # Returns a Deferred
     def protocol_update_upload_file_close(self, writer):
