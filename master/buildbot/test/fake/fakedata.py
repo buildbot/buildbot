@@ -37,8 +37,6 @@ class FakeUpdates(service.AsyncService):
         self.changesAdded = []  # Changes are numbered starting at 1.
         self.masterStateChanges = []  # dictionaries
         self.builderIds = {}  # { name : id }; users can add builders here
-        self.workerIds = {}  # { name : id }; users can add workers here
-        self.missingWorkers = []
         # extra assertions
 
     def assertProperties(self, sourced, properties):
@@ -487,35 +485,35 @@ class FakeUpdates(service.AsyncService):
         )
         # this needs to actually get inserted into the db (fake or real) since
         # getWorker will get called later
-        return self.master.db.workers.findWorkerId(name)
+        return self.data.updates.findWorkerId(name)
 
     def workerConnected(self, workerid, masterid, workerinfo):
-        return self.master.db.workers.workerConnected(
+        return self.data.updates.workerConnected(
             workerid=workerid, masterid=masterid, workerinfo=workerinfo
         )
 
     def workerConfigured(self, workerid, masterid, builderids):
-        return self.master.db.workers.workerConfigured(
+        return self.data.updates.workerConfigured(
             workerid=workerid, masterid=masterid, builderids=builderids
         )
 
     def workerDisconnected(self, workerid, masterid):
-        return self.master.db.workers.workerDisconnected(workerid=workerid, masterid=masterid)
+        return self.data.updates.workerDisconnected(workerid=workerid, masterid=masterid)
 
     def deconfigureAllWorkersForMaster(self, masterid):
-        return self.master.db.workers.deconfigureAllWorkersForMaster(masterid=masterid)
+        return self.data.updates.deconfigureAllWorkersForMaster(masterid=masterid)
 
     def workerMissing(self, workerid, masterid, last_connection, notify):
-        self.missingWorkers.append((workerid, masterid, last_connection, notify))
+        return self.data.updates.workerMissing(workerid, masterid, last_connection, notify)
 
     def schedulerEnable(self, schedulerid, v):
         return self.data.updates.schedulerEnable(schedulerid, v)
 
     def set_worker_paused(self, workerid, paused, pause_reason=None):
-        return self.master.db.workers.set_worker_paused(workerid, paused, pause_reason=pause_reason)
+        return self.data.updates.set_worker_paused(workerid, paused, pause_reason)
 
     def set_worker_graceful(self, workerid, graceful):
-        return self.master.db.workers.set_worker_graceful(workerid, graceful)
+        return self.data.updates.set_worker_graceful(workerid, graceful)
 
     # methods form BuildData resource
     @async_to_deferred

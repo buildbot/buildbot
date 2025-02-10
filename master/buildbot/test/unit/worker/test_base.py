@@ -126,6 +126,7 @@ class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
         yield self.workers.setServiceParent(self.master)
         self.master.workers = self.workers
         yield self.wrk.setServiceParent(self.master.workers)
+        yield self.master.startService()
         self.conn = fakeprotocol.FakeConnection(self.wrk)
         yield self.wrk.attached(self.conn)
 
@@ -685,7 +686,9 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertNotEqual(worker.missing_timer, None)
         yield self.reactor.advance(1)
         self.assertEqual(worker.missing_timer, None)
-        self.assertEqual(len(self.master.data.updates.missingWorkers), 1)
+        self.assertEqual(
+            [key for key, _ in self.master.mq.productions], [('workers', '1', 'missing')]
+        )
 
     @defer.inlineCallbacks
     def test_missing_timer_stopped(self):
@@ -694,7 +697,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertNotEqual(worker.missing_timer, None)
         yield worker.stopService()
         self.assertEqual(worker.missing_timer, None)
-        self.assertEqual(len(self.master.data.updates.missingWorkers), 0)
+        self.assertEqual([key for key, _ in self.master.mq.productions], [])
 
     @defer.inlineCallbacks
     def test_worker_actions_stop(self):
