@@ -19,7 +19,6 @@ import datetime
 import json
 
 from twisted.internet import defer
-from twisted.python import failure
 
 from buildbot.data import connector
 from buildbot.data import resultspec
@@ -38,11 +37,8 @@ class FakeUpdates(service.AsyncService):
 
         # test cases should assert the values here:
         self.changesAdded = []  # Changes are numbered starting at 1.
-        # { name : id }; users can add changesources here
-        self.changesourceIds = {}
         self.masterStateChanges = []  # dictionaries
         self.builderIds = {}  # { name : id }; users can add builders here
-        self.changesourceMasters = {}  # { changesourceid : masterid }
         self.workerIds = {}  # { name : id }; users can add workers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
@@ -370,9 +366,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(
             self.testcase, 'changesource name', name, validation.StringValidator()
         )
-        if name not in self.changesourceIds:
-            self.changesourceIds[name] = max([0, *list(self.changesourceIds.values())]) + 1
-        return defer.succeed(self.changesourceIds[name])
+        return self.data.updates.findChangeSourceId(name)
 
     def findBuilderId(self, name):
         validation.verifyType(self.testcase, 'builder name', name, validation.StringValidator())
@@ -382,13 +376,7 @@ class FakeUpdates(service.AsyncService):
         return self.data.updates.trySetSchedulerMaster(schedulerid, masterid)
 
     def trySetChangeSourceMaster(self, changesourceid, masterid):
-        currentMasterid = self.changesourceMasters.get(changesourceid)
-        if isinstance(currentMasterid, Exception):
-            return defer.fail(failure.Failure(currentMasterid))
-        if currentMasterid and masterid is not None:
-            return defer.succeed(False)
-        self.changesourceMasters[changesourceid] = masterid
-        return defer.succeed(True)
+        return self.data.updates.trySetChangeSourceMaster(changesourceid, masterid)
 
     def addBuild(self, builderid, buildrequestid, workerid):
         validation.verifyType(self.testcase, 'builderid', builderid, validation.IntValidator())

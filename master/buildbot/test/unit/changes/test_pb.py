@@ -33,7 +33,6 @@ class TestPBChangeSource(
         "port": '9999',
         "user": 'alice',
         "passwd": 'sekrit',
-        "name": changesource.ChangeSourceMixin.DEFAULT_NAME,
     }
 
     EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
@@ -63,23 +62,26 @@ class TestPBChangeSource(
     def test_registration_no_userpass_no_global(self):
         return self._test_registration(None, exp_ConfigErrors=True)
 
+    @defer.inlineCallbacks
     def test_no_registration_if_master_already_claimed(self):
         # claim the CS on another master...
-        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
         # and then use the same args as one of the above success cases,
         # but expect that it will NOT register
-        return self._test_registration(None, **self.DEFAULT_CONFIG)
+        yield self._test_registration(None, **self.DEFAULT_CONFIG)
 
     @defer.inlineCallbacks
     def test_registration_later_if_master_can_do_it(self):
         # get the changesource running but not active due to the other master
-        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
-        yield self.attachChangeSource(pb.PBChangeSource(**self.DEFAULT_CONFIG))
+        yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        yield self.attachChangeSource(
+            pb.PBChangeSource(name=self.DEFAULT_NAME, **self.DEFAULT_CONFIG)
+        )
         self.startChangeSource()
         self.assertNotRegistered()
 
         # other master goes away
-        self.setChangeSourceToMaster(None)
+        yield self.setChangeSourceToMaster(None)
 
         # not quite enough time to cause it to activate
         self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
@@ -95,7 +97,7 @@ class TestPBChangeSource(
     ):
         cfg = mock.Mock()
         cfg.protocols = {'pb': {'port': workerPort}}
-        self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
+        self.attachChangeSource(pb.PBChangeSource(name=self.DEFAULT_NAME, **constr_kwargs))
 
         self.startChangeSource()
         if exp_ConfigErrors:
@@ -120,7 +122,9 @@ class TestPBChangeSource(
 
     @defer.inlineCallbacks
     def test_perspective(self):
-        yield self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
+        yield self.attachChangeSource(
+            pb.PBChangeSource('alice', 'sekrit', name=self.DEFAULT_NAME, port='8888')
+        )
         persp = self.changesource.getPerspective(mock.Mock(), 'alice')
         self.assertIsInstance(persp, pb.ChangePerspective)
 
@@ -151,7 +155,7 @@ class TestPBChangeSource(
     @defer.inlineCallbacks
     def test_reconfigService_no_change(self):
         config = mock.Mock()
-        yield self.attachChangeSource(pb.PBChangeSource(port='9876'))
+        yield self.attachChangeSource(pb.PBChangeSource(name=self.DEFAULT_NAME, port='9876'))
 
         self.startChangeSource()
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)
@@ -166,7 +170,7 @@ class TestPBChangeSource(
     def test_reconfigService_default_changed(self):
         config = mock.Mock()
         config.protocols = {'pb': {'port': '9876'}}
-        yield self.attachChangeSource(pb.PBChangeSource())
+        yield self.attachChangeSource(pb.PBChangeSource(name=self.DEFAULT_NAME))
 
         self.startChangeSource()
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)
@@ -189,8 +193,8 @@ class TestPBChangeSource(
         """reconfig one that's not active on this master"""
         config = mock.Mock()
         config.protocols = {'pb': {'port': '9876'}}
-        yield self.attachChangeSource(pb.PBChangeSource())
-        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        yield self.attachChangeSource(pb.PBChangeSource(name=self.DEFAULT_NAME))
+        yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         self.startChangeSource()
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)

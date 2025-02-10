@@ -37,13 +37,13 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
 
     @defer.inlineCallbacks
     def test_activation(self):
-        cs = self.Subclass(name="DummyCS")
+        cs = self.Subclass(name=self.DEFAULT_NAME)
         cs.activate = mock.Mock(return_value=defer.succeed(None))
         cs.deactivate = mock.Mock(return_value=defer.succeed(None))
 
         # set the changesourceid, and claim the changesource on another master
         yield self.attachChangeSource(cs)
-        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         yield cs.startService()
         self.reactor.advance(cs.POLL_INTERVAL_SEC / 2)
@@ -56,7 +56,7 @@ class TestChangeSource(changesource.ChangeSourceMixin, TestReactorMixin, unittes
 
         # clear that masterid
         yield cs.stopService()
-        self.setChangeSourceToMaster(None)
+        yield self.setChangeSourceToMaster(None)
 
         yield cs.startService()
         self.reactor.advance(cs.POLL_INTERVAL_SEC)
@@ -83,7 +83,7 @@ class TestReconfigurablePollingChangeSource(
 
         yield self.setUpChangeSource()
 
-        yield self.attachChangeSource(self.Subclass(name="DummyCS"))
+        yield self.attachChangeSource(self.Subclass(name=self.DEFAULT_NAME))
 
     @defer.inlineCallbacks
     def runClockFor(self, secs):
@@ -165,7 +165,7 @@ class TestReconfigurablePollingChangeSource(
 
         yield self.startChangeSource()
         yield self.changesource.reconfigServiceWithSibling(
-            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=False)
+            self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=False)
         )
 
         yield self.runClockFor(12)
@@ -185,7 +185,7 @@ class TestReconfigurablePollingChangeSource(
 
         yield self.startChangeSource()
         yield self.changesource.reconfigServiceWithSibling(
-            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=False)
+            self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=False)
         )
 
         yield self.runClockFor(12)
@@ -197,14 +197,14 @@ class TestReconfigurablePollingChangeSource(
     def test_poll_only_if_activated(self):
         """The polling logic only applies if the source actually starts!"""
 
-        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         loops = []
         self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         yield self.startChangeSource()
         yield self.changesource.reconfigServiceWithSibling(
-            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=False)
+            self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=False)
         )
 
         yield self.runClockFor(12)
@@ -219,7 +219,7 @@ class TestReconfigurablePollingChangeSource(
         self.changesource.poll = lambda: loops.append(self.reactor.seconds())
         yield self.startChangeSource()
         yield self.changesource.reconfigServiceWithSibling(
-            self.Subclass(name="DummyCS", pollInterval=5, pollAtLaunch=True)
+            self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=True)
         )
 
         yield self.runClockFor(12)
