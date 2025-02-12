@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import error
+from twisted.internet import threads
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.spread import pb
@@ -104,6 +105,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # This is really only a problem with old-style steps, which do not
         # wait for the Deferred from one method before invoking the next.
         self.loglock = defer.DeferredLock()
+        self.update_lock = defer.DeferredLock()
         self._line_boundary_finders: defaultdict[
             str,
             LineBoundaryFinder,
@@ -265,10 +267,12 @@ class RemoteCommand(base.RemoteCommandImpl):
             # log failure, terminate build, let worker retire the update
             self._finished(Failure())
 
-    def split_line(self, stream: str, text: str) -> str | None:
-        return self._line_boundary_finders[stream].append(text)
+    async def split_line(self, stream: str, text: str) -> str | None:
+        return await threads.deferToThread(self._line_boundary_finders[stream].append, text)
 
-    def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
+    @util.deferredLocked('update_lock')
+    @async_to_deferred
+    async def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
         """
         I am called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.sendUpdate} so
@@ -288,19 +292,19 @@ class RemoteCommand(base.RemoteCommandImpl):
                         value = decode(value)
                         if key in ['stdout', 'stderr', 'header']:
                             assert isinstance(value, str), type(value)
-                            whole_line = self.split_line(key, value)
+                            whole_line = await self.split_line(key, value)
                             if whole_line is not None:
-                                self.remoteUpdate(key, whole_line, False)
+                                await self.remoteUpdate(key, whole_line, False)
                         elif key == "log":
                             logname, data = value
                             assert isinstance(logname, str), type(logname)
                             assert isinstance(data, str), type(data)
-                            whole_line = self.split_line(logname, data)
+                            whole_line = await self.split_line(logname, data)
                             if whole_line is not None:
                                 value = (logname, whole_line)
-                                self.remoteUpdate(key, value, False)
+                                await self.remoteUpdate(key, value, False)
                         else:
-                            self.remoteUpdate(key, value, False)
+                            await self.remoteUpdate(key, value, False)
 
             except Exception:
                 # log failure, terminate build, let worker retire the update
@@ -310,7 +314,9 @@ class RemoteCommand(base.RemoteCommandImpl):
             max_updatenum = max(max_updatenum, num)
         return max_updatenum
 
-    def remote_complete(self, failure=None) -> None:
+    @util.deferredLocked('update_lock')
+    @async_to_deferred
+    async def remote_complete(self, failure=None) -> None:
         """
         Called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.commandComplete} to
