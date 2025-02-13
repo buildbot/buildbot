@@ -131,6 +131,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                 raise RuntimeError("rejecting duplicate worker")
             except defer.CancelledError:
                 old_conn.loseConnection()
+                old_conn.notifyDisconnected()
                 log.msg(
                     f"Connected worker '{workerName}' ping timed out after {self.PING_TIMEOUT} "
                     "seconds"
@@ -139,6 +140,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                 raise
             except Exception as e:
                 old_conn.loseConnection()
+                old_conn.notifyDisconnected()
                 log.msg(f"Got error while trying to ping connected worker {workerName}:{e}")
             log.msg(f"Old connection for '{workerName}' was lost, accepting new")
 
@@ -154,6 +156,9 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         self.connections[workerName] = conn
 
         def remove():
+            assert (
+                self.connections.get(workerName, None) == conn
+            ), f"Attempt to remove non-connection entry for {workerName}"
             del self.connections[workerName]
 
         conn.notifyOnDisconnect(remove)
