@@ -78,13 +78,13 @@ def createDB(config):
     # create a master with the default configuration, but with db_url
     # overridden
     master_cfg = config_master.MasterConfig()
-    master_cfg.db['db_url'] = config['db']
+    master_cfg.db.db_url = config['db']
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
     db = master.db
     yield db.setup(check_version=False, verbose=not config['quiet'])
     if not config['quiet']:
-        print(f"creating database ({master_cfg.db['db_url']})")
+        print(f"creating database ({master_cfg.db.db_url})")
     yield db.model.upgrade()
 
 

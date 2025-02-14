@@ -19,6 +19,7 @@ from contextlib import contextmanager
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import ProgrammingError
 
+from buildbot.config.master import DBConfig as MasterDBConfig
 from buildbot.config.master import MasterConfig
 from buildbot.db import enginestrategy
 from buildbot.db import model
@@ -57,18 +58,20 @@ class FakePool:
 
 
 class DbConfig:
+    db_config: MasterDBConfig
+
     def __init__(self, BuildmasterConfig, basedir, name="config"):
-        self.db_url = MasterConfig.getDbUrlFromConfig(BuildmasterConfig, throwErrors=False)
+        self.db_config = MasterConfig.get_dbconfig_from_config(BuildmasterConfig, throwErrors=False)
         self.basedir = basedir
         self.name = name
 
     def getDb(self):
         try:
             db = FakeDBConnector(
-                engine=enginestrategy.create_engine(self.db_url, basedir=self.basedir)
+                engine=enginestrategy.create_engine(self.db_config.db_url, basedir=self.basedir)
             )
         except Exception:
-            # db_url is probably trash. Just ignore, config.py db part will
+            # db_config.db_url is probably trash. Just ignore, config.py db part will
             # create proper message
             return None
 

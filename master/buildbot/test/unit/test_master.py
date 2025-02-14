@@ -53,7 +53,7 @@ class FailingLoader:
 class DefaultLoader:
     def loadConfig(self):
         master_cfg = MasterConfig()
-        master_cfg.db['db_url'] = Interpolate('sqlite:///path-to-%(secret:db_pwd)s-db-file')
+        master_cfg.db.db_url = Interpolate('sqlite:///path-to-%(secret:db_pwd)s-db-file')
         master_cfg.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
         return master_cfg
 
@@ -163,7 +163,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
         yield self.master.startService()
 
         self.assertEqual(
-            self.master.db.configured_url,
+            self.master.db.configured_db_config.db_url,
             'sqlite:///path-to-s3cr3t-db-file',
         )
 
@@ -231,15 +231,15 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, TestReactorMixin,
     @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = MasterConfig()
-        old.db['db_url'] = Interpolate('sqlite:///%(secret:db_pwd)s')
+        old.db.db_url = Interpolate('sqlite:///%(secret:db_pwd)s')
         old.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 's3cr3t'})]
         yield self.master.secrets_manager.setup()
         yield self.master.db.setup()
         yield self.master.reconfigServiceWithBuildbotConfig(old)
-        self.assertEqual(self.master.db.configured_url, 'sqlite:///s3cr3t')
+        self.assertEqual(self.master.db.configured_db_config.db_url, 'sqlite:///s3cr3t')
 
         new = MasterConfig()
-        new.db['db_url'] = old.db['db_url']
+        new.db.db_url = old.db.db_url
         new.secretsProviders = [FakeSecretStorage(secretdict={'db_pwd': 'other-s3cr3t'})]
 
         with self.assertRaises(config.ConfigErrors):

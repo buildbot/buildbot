@@ -150,7 +150,7 @@ def basicData(master):
             'distro': get_distro(),
         },
         'plugins': plugins_uses,
-        'db': master.config.db['db_url'].split("://")[0],
+        'db': master.config.db.db_url.split("://")[0],
         'mq': master.config.mq['type'],
         'www_plugins': list(master.config.www['plugins'].keys()),
     }
