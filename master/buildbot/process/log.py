@@ -86,6 +86,9 @@ class Log:
     def had_errors(self) -> bool:
         return self._had_errors
 
+    def flush(self):
+        return defer.succeed(None)
+
     @defer.inlineCallbacks
     def finish(self):
         assert not self._finishing, "Did you maybe forget to yield the method?"
@@ -129,11 +132,15 @@ class PlainLog(Log):
         return self.addRawLines(lines)
 
     @defer.inlineCallbacks
-    def finish(self):
+    def flush(self):
         lines = self.lbf.flush()
         if lines is not None:
             self.subPoint.deliver(None, lines)
             yield self.addRawLines(lines)
+
+    @defer.inlineCallbacks
+    def finish(self):
+        yield self.flush()
         yield super().finish()
 
 
@@ -209,12 +216,16 @@ class StreamLog(Log):
             text = self.decoder(text)
         return self._on_whole_lines('h', text)
 
-    @defer.inlineCallbacks
-    def finish(self):
+    def flush(self):
         for stream, lbf in self.lbfs.items():
             lines = lbf.flush()
             if lines is not None:
                 self._on_whole_lines(stream, lines)
+        return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def finish(self):
+        yield self.flush()
         yield super().finish()
 
 

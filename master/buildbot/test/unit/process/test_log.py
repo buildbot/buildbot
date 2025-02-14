@@ -211,6 +211,34 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(log_content['content'], 'oout1\neerr2\noout2 out3\neerr3\n')
 
     @defer.inlineCallbacks
+    def test_updates_flush(self):
+        _log = yield self.makeLog('s')
+
+        _log.addStdout('out1\n')
+        _log.addStdout('out2 ')
+        _log.addStderr('err2\n')
+        _log.addStdout('out3')
+        _log.addStderr('err3')  # unfinished
+        yield _log.flush()
+
+        log_data = yield self.master.data.get(('logs', _log.logid))
+        log_content = yield self.master.data.get(('logs', _log.logid, 'contents'))
+
+        self.assertEqual(
+            log_data,
+            {
+                'complete': False,
+                'logid': 1,
+                'name': 'testlog',
+                'num_lines': 4,
+                'slug': 'testlog',
+                'stepid': 27,
+                'type': 's',
+            },
+        )
+        self.assertEqual(log_content['content'], 'oout1\neerr2\noout2 out3\neerr3\n')
+
+    @defer.inlineCallbacks
     def test_unyielded_finish(self):
         _log = yield self.makeLog('s')
         _log.finish()

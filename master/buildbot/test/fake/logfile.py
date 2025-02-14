@@ -97,20 +97,21 @@ class FakeLogFile:
         self._on_whole_lines('e', text)
         return defer.succeed(None)
 
-    def flushFakeLogfile(self):
+    def had_errors(self):
+        return self._had_errors
+
+    def flush(self):
         for stream, lbf in self.lbfs.items():
             lines = lbf.flush()
             if lines is not None:
                 self.subPoint.deliver(stream, lines)
-
-    def had_errors(self):
-        return self._had_errors
+        return defer.succeed(None)
 
     @async_to_deferred
     async def finish(self) -> None:
         assert not self.finished
 
-        self.flushFakeLogfile()
+        await self.flush()
         self.finished = True
 
         # notify subscribers *after* finishing the log

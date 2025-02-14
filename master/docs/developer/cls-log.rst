@@ -50,6 +50,13 @@ Logs
         Note that no "rewinding" takes place: only log content added after the call to
         ``subscribe`` will be supplied to ``receiver``.
 
+    .. py:method:: flush()
+
+        :returns: Deferred
+
+        Flush any pending data to database. All unfinished lines will be terminated with newline
+        characters.
+
     .. py:method:: finish()
 
         :returns: Deferred
