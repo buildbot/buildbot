@@ -776,18 +776,13 @@ determines which steps to run. The skeleton of such a project would look like:
 Factory Workdir Functions
 -------------------------
 
-.. note::
-
-    While the factory workdir function is still supported, it is better to just use the fact that
-    workdir is a :index:`renderable <renderable>` attribute of a step. A Renderable has access to
-    much more contextual information and can also return a deferred. So you could say
-    ``build_factory.workdir = util.Interpolate("%(src:repository)s`` to achieve similar goal.
-
 It is sometimes helpful to have a build's workdir determined at runtime based on the parameters of
-the build. To accomplish this, set the ``workdir`` attribute of the build factory to a callable.
-That callable will be invoked with the list of :class:`SourceStamp` for the build, and should
-return the appropriate workdir. Note that the value must be returned immediately - Deferreds are
-not supported.
+the build. To accomplish this, set the ``workdir`` attribute of the build factory to a
+:index:`renderable <renderable>`.
+
+There is deprecated support for setting ``workdir`` to a callable. That callable will be invoked
+with the list of :class:`SourceStamp` for the build, and should return the appropriate workdir.
+Note that the value must be returned immediately - Deferreds are not supported.
 
 This can be useful, for example, in scenarios with multiple repositories submitting changes to
 Buildbot. In this case you likely will want to have a dedicated workdir per repository, since
