@@ -211,26 +211,39 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(log_content['content'], 'oout1\neerr2\noout2 out3\neerr3\n')
 
     @defer.inlineCallbacks
+    def test_updates_flush(self):
+        _log = yield self.makeLog('s')
+
+        _log.addStdout('out1\n')
+        _log.addStdout('out2 ')
+        _log.addStderr('err2\n')
+        _log.addStdout('out3')
+        _log.addStderr('err3')  # unfinished
+        yield _log.flush()
+
+        log_data = yield self.master.data.get(('logs', _log.logid))
+        log_content = yield self.master.data.get(('logs', _log.logid, 'contents'))
+
+        self.assertEqual(
+            log_data,
+            {
+                'complete': False,
+                'logid': 1,
+                'name': 'testlog',
+                'num_lines': 4,
+                'slug': 'testlog',
+                'stepid': 27,
+                'type': 's',
+            },
+        )
+        self.assertEqual(log_content['content'], 'oout1\neerr2\noout2 out3\neerr3\n')
+
+    @defer.inlineCallbacks
     def test_unyielded_finish(self):
         _log = yield self.makeLog('s')
         _log.finish()
         with self.assertRaises(AssertionError):
             yield _log.finish()
-
-    @defer.inlineCallbacks
-    def test_isFinished(self):
-        _log = yield self.makeLog('s')
-        self.assertFalse(_log.isFinished())
-        yield _log.finish()
-        self.assertTrue(_log.isFinished())
-
-    @defer.inlineCallbacks
-    def test_waitUntilFinished(self):
-        _log = yield self.makeLog('s')
-        d = _log.waitUntilFinished()
-        self.assertFalse(d.called)
-        yield _log.finish()
-        self.assertTrue(d.called)
 
 
 class InterfaceTests(interfaces.InterfaceTests):
@@ -261,8 +274,6 @@ class InterfaceTests(interfaces.InterfaceTests):
         def finish(self):
             pass
 
-    # IStatusLog
-
     def test_signature_getName(self):
         @self.assertArgSpecMatches(self.log.getName)
         def getName(self):
@@ -270,16 +281,6 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_getName(self):
         self.assertEqual(self.log.getName(), 'stdio')
-
-    def test_signature_isFinished(self):
-        @self.assertArgSpecMatches(self.log.isFinished)
-        def isFinished(self):
-            pass
-
-    def test_signature_waitUntilFinished(self):
-        @self.assertArgSpecMatches(self.log.waitUntilFinished)
-        def waitUntilFinished(self):
-            pass
 
     def test_signature_subscribe(self):
         @self.assertArgSpecMatches(self.log.subscribe)
