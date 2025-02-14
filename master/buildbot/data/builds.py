@@ -16,12 +16,14 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.data.resultspec import ResultSpec
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from buildbot.db.builds import BuildModel
@@ -140,6 +142,18 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         return res
 
 
+class BuildTriggeredBuildsEndpoint(Db2DataMixin, base.Endpoint):
+    kind = base.EndpointKind.COLLECTION
+    pathPatterns = """
+        /builds/n:buildid/triggered_builds
+    """
+
+    @async_to_deferred
+    async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:
+        builds = await self.master.db.builds.get_triggered_builds(kwargs['buildid'])
+        return [_db2data(b) for b in builds]
+
+
 class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
@@ -196,7 +210,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 class Build(base.ResourceType):
     name = "build"
     plural = "builds"
-    endpoints = [BuildEndpoint, BuildsEndpoint]
+    endpoints = [BuildEndpoint, BuildsEndpoint, BuildTriggeredBuildsEndpoint]
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid

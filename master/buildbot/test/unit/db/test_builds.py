@@ -13,14 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import resultspec
 from buildbot.db import builds
+from buildbot.db.builds import BuildModel
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
 TIME1 = 1304262222
@@ -598,4 +602,54 @@ class Tests(TestReactorMixin, unittest.TestCase):
             self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(
             sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[50], self.threeBdicts[51]]
+        )
+
+    @defer.inlineCallbacks
+    def test_get_triggered_builds(self):
+        yield self.db.insert_test_data(
+            self.backgroundData
+            + self.threeBuilds
+            + [
+                fakedb.Buildset(id=1000, parent_buildid=51),
+                fakedb.BuildRequest(id=1100, buildsetid=1000, builderid=77),
+                fakedb.BuildRequest(id=1101, buildsetid=1000, builderid=77),
+                fakedb.Build(id=1200, buildrequestid=1100, masterid=88, builderid=77, workerid=13),
+                fakedb.Build(id=1201, buildrequestid=1101, masterid=88, builderid=77, workerid=13),
+            ]
+        )
+
+        builds = yield self.db.builds.get_triggered_builds(50)
+        self.assertEqual(builds, [])
+
+        builds = yield self.db.builds.get_triggered_builds(51)
+        self.assertEqual(
+            builds,
+            [
+                BuildModel(
+                    id=1200,
+                    number=1200,
+                    builderid=77,
+                    buildrequestid=1100,
+                    workerid=13,
+                    masterid=88,
+                    started_at=datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=UTC),
+                    complete_at=None,
+                    locks_duration_s=0,
+                    state_string='test',
+                    results=None,
+                ),
+                BuildModel(
+                    id=1201,
+                    number=1201,
+                    builderid=77,
+                    buildrequestid=1101,
+                    workerid=13,
+                    masterid=88,
+                    started_at=datetime.datetime(2011, 5, 1, 15, 3, 42, tzinfo=UTC),
+                    complete_at=None,
+                    locks_duration_s=0,
+                    state_string='test',
+                    results=None,
+                ),
+            ],
         )
