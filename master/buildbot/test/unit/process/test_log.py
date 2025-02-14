@@ -218,13 +218,6 @@ class Tests(TestReactorMixin, unittest.TestCase):
             yield _log.finish()
 
     @defer.inlineCallbacks
-    def test_isFinished(self):
-        _log = yield self.makeLog('s')
-        self.assertFalse(_log.isFinished())
-        yield _log.finish()
-        self.assertTrue(_log.isFinished())
-
-    @defer.inlineCallbacks
     def test_waitUntilFinished(self):
         _log = yield self.makeLog('s')
         d = _log.waitUntilFinished()
@@ -261,8 +254,6 @@ class InterfaceTests(interfaces.InterfaceTests):
         def finish(self):
             pass
 
-    # IStatusLog
-
     def test_signature_getName(self):
         @self.assertArgSpecMatches(self.log.getName)
         def getName(self):
@@ -270,11 +261,6 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_getName(self):
         self.assertEqual(self.log.getName(), 'stdio')
-
-    def test_signature_isFinished(self):
-        @self.assertArgSpecMatches(self.log.isFinished)
-        def isFinished(self):
-            pass
 
     def test_signature_waitUntilFinished(self):
         @self.assertArgSpecMatches(self.log.waitUntilFinished)

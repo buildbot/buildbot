@@ -84,9 +84,6 @@ class Log:
 
     # completion
 
-    def isFinished(self) -> bool:
-        return self.finished
-
     def waitUntilFinished(self):
         d = defer.Deferred()
         if self.finished:

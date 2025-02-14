@@ -98,9 +98,6 @@ class FakeLogFile:
         self._on_whole_lines('e', text)
         return defer.succeed(None)
 
-    def isFinished(self):
-        return self.finished
-
     def waitUntilFinished(self):
         d = defer.Deferred()
         if self.finished:
