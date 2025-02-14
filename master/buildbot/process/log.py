@@ -37,7 +37,6 @@ class Log:
         self.subscriptions = {}
         self._finishing = False
         self.finished = False
-        self.finishWaiters = []
         self._had_errors = False
         self.lock = defer.DeferredLock()
         self.decoder = decoder
@@ -84,14 +83,6 @@ class Log:
 
     # completion
 
-    def waitUntilFinished(self):
-        d = defer.Deferred()
-        if self.finished:
-            d.succeed(None)
-        else:
-            self.finishWaiters.append(d)
-        return d
-
     def had_errors(self) -> bool:
         return self._had_errors
 
@@ -110,10 +101,6 @@ class Log:
         self.subPoint.deliver(None, None)
 
         yield self.subPoint.waitForDeliveriesToFinish()
-
-        # notify those waiting for finish
-        for d in self.finishWaiters:
-            d.callback(None)
 
         self._had_errors = len(self.subPoint.pop_exceptions()) > 0
 

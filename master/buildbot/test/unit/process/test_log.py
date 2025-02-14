@@ -217,14 +217,6 @@ class Tests(TestReactorMixin, unittest.TestCase):
         with self.assertRaises(AssertionError):
             yield _log.finish()
 
-    @defer.inlineCallbacks
-    def test_waitUntilFinished(self):
-        _log = yield self.makeLog('s')
-        d = _log.waitUntilFinished()
-        self.assertFalse(d.called)
-        yield _log.finish()
-        self.assertTrue(d.called)
-
 
 class InterfaceTests(interfaces.InterfaceTests):
     # for compatibility between old-style and new-style steps, both
@@ -261,11 +253,6 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_getName(self):
         self.assertEqual(self.log.getName(), 'stdio')
-
-    def test_signature_waitUntilFinished(self):
-        @self.assertArgSpecMatches(self.log.waitUntilFinished)
-        def waitUntilFinished(self):
-            pass
 
     def test_signature_subscribe(self):
         @self.assertArgSpecMatches(self.log.subscribe)
