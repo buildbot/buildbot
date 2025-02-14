@@ -46,6 +46,12 @@ The following methods of ``httpclientservice.HTTPClientService`` have been depre
 
 As a replacement, use ``httpclientservice.HTTPSession`` and call corresponding methods on it.
 
+Build factories
+===============
+
+``BuildFactory`` ``workdir`` attribute no longer supports callables. As a replacement, use a
+renderable instead.
+
 Database connectors
 ===================
 
