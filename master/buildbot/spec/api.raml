@@ -547,6 +547,13 @@ types:
                 is:
                 - bbget: {bbtype: test_result_set}
 
+        /triggered_builds:
+            description: |
+                This selects all builds that have been triggered by this particular build
+            get:
+                is:
+                - bbget: {bbtype: build}
+
 /buildsets:
     description: This path selects all buildsets
     get:
