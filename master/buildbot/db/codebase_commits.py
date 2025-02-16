@@ -46,6 +46,13 @@ class CodebaseCommitModel:
 UNKNOWN_COMMIT_ID = -1
 
 
+@dataclass
+class CommonCommitInfo:
+    common_commit_id: int
+    to1_commit_ids: list[int]
+    to2_commit_ids: list[int]
+
+
 class CodebaseCommitCache:
     def __init__(self) -> None:
         self._parents: dict[int, int] = {}
@@ -74,7 +81,7 @@ class CodebaseCommitCache:
         id2: int,
         get_parent_fallback: Callable[[int], Awaitable[int]],
         depth: int = 100,
-    ) -> tuple[int, list[int], list[int]] | None:
+    ) -> CommonCommitInfo | None:
         """
         Evaluates the commit graph and finds first parent of both id1 and id2 commits.
 
@@ -91,7 +98,7 @@ class CodebaseCommitCache:
             )
             if parent1 == UNKNOWN_COMMIT_ID:
                 return None
-            return (id1, [id1], [id1])
+            return CommonCommitInfo(id1, [id1], [id1])
 
         parent1 = id1
         parent2 = id2
@@ -105,7 +112,7 @@ class CodebaseCommitCache:
             known1.append(parent1)
 
         if parent2 in known1:
-            return (parent2, known1[known1.index(parent2) + 1 :: -1], known2)
+            return CommonCommitInfo(parent2, known1[known1.index(parent2) + 1 :: -1], known2)
 
         for i in range(depth):
             parent2_new = await self.get_parent_with_fallback(parent2, get_parent_fallback, None)
@@ -114,7 +121,7 @@ class CodebaseCommitCache:
             parent2 = parent2_new
             known2.append(parent2)
             if parent2 in known1:
-                return (parent2, known1[known1.index(parent2) :: -1], known2[::-1])
+                return CommonCommitInfo(parent2, known1[known1.index(parent2) :: -1], known2[::-1])
 
         return None
 
@@ -169,7 +176,7 @@ class CodebaseCommitsConnectorComponent(base.DBConnectorComponent):
     @async_to_deferred
     async def get_first_common_commit_with_ranges(
         self, first_commitid: int, last_commitid: int, depth: int = 100
-    ) -> tuple[int, list[int], list[int]] | None:
+    ) -> CommonCommitInfo | None:
         return await self._cache.first_common_parent_with_ranges(
             first_commitid, last_commitid, self._get_commit_parent_commitid, depth=depth
         )

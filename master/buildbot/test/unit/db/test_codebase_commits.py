@@ -19,6 +19,7 @@ from parameterized import parameterized
 from twisted.trial import unittest
 
 from buildbot.db import codebase_commits
+from buildbot.db.codebase_commits import CommonCommitInfo
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -78,14 +79,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertIsNone(r)
 
     @parameterized.expand([
-        ('same_commit', 110, 110, (110, [110], [110])),
-        ('same_branch1', 106, 110, (106, [106], [106, 107, 108, 109, 110])),
-        ('same_branch2', 110, 106, (106, [106, 107, 108, 109, 110], [106])),
-        ('different_branches', 110, 120, (108, [108, 109, 110], [108, 119, 120])),
+        ('same_commit', 110, 110, CommonCommitInfo(110, [110], [110])),
+        ('same_branch1', 106, 110, CommonCommitInfo(106, [106], [106, 107, 108, 109, 110])),
+        ('same_branch2', 110, 106, CommonCommitInfo(106, [106, 107, 108, 109, 110], [106])),
+        ('different_branches', 110, 120, CommonCommitInfo(108, [108, 109, 110], [108, 119, 120])),
     ])
     @async_to_deferred
     async def test_get_first_common_commit_with_ranges_does_same_c(
-        self, name: str, id1: int, id2: int, expected: tuple[int, list[int], list[int]]
+        self, name: str, id1: int, id2: int, expected: CommonCommitInfo
     ) -> None:
         r = await self.master.db.codebase_commits.get_first_common_commit_with_ranges(id1, id2)
         self.assertEqual(r, expected)

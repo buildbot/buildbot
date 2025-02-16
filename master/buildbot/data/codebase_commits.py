@@ -164,9 +164,9 @@ class CodebaseCommitsGraphEndpoint(base.Endpoint):
         if r is None:
             return None
         return {
-            'common': r[0],
-            'from1': r[1],
-            'from2': r[2],
+            'common': r.common_commit_id,
+            'from1': r.to1_commit_ids,
+            'from2': r.to2_commit_ids,
         }
 
 
