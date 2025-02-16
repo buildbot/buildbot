@@ -151,7 +151,9 @@ class CodebaseCommit(base.ResourceType):
 
 class CodebaseCommitsGraphEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = "/codebases/n:codebaseid/commits_common_parent/n:commitid1/n:commitid2"
+    pathPatterns = (
+        "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/commits_common_parent"
+    )
 
     @async_to_deferred
     async def get(self, resultSpec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
@@ -162,9 +164,9 @@ class CodebaseCommitsGraphEndpoint(base.Endpoint):
         if r is None:
             return None
         return {
-            'common': r[0],
-            'from1': r[1],
-            'from2': r[2],
+            'common': r.common_commit_id,
+            'to1': r.to1_commit_ids,
+            'to2': r.to2_commit_ids,
         }
 
 
@@ -175,7 +177,7 @@ class CodebaseCommitsGraph(base.ResourceType):
 
     class EntityType(types.Entity):
         common = types.Integer()
-        from1 = types.List(of=types.Integer())
-        from2 = types.List(of=types.Integer())
+        to1 = types.List(of=types.Integer())
+        to2 = types.List(of=types.Integer())
 
     entityType = EntityType(name)

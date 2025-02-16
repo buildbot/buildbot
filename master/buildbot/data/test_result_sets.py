@@ -16,11 +16,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from buildbot.db.test_result_sets import TestResultSetModel
@@ -90,6 +92,30 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
         return [self.db2data(model) for model in sets]
 
 
+class TestResultSetsFromCommitRangeEndpoint(Db2DataMixin, base.Endpoint):
+    kind = base.EndpointKind.COLLECTION
+    pathPatterns = """
+        /codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/test_result_sets
+        """
+
+    @async_to_deferred
+    async def get(self, result_spec, kwargs) -> list[dict[str, Any]]:
+        commit_from = int(kwargs.get('commitid1'))
+        commit_to = int(kwargs.get('commitid2'))
+        r = await self.master.db.codebase_commits.get_first_common_commit_with_ranges(
+            commit_from, commit_to
+        )
+        if r is None:
+            return []
+        if r.to2_commit_ids[0] != commit_from:
+            return []
+        commit_ids = r.to2_commit_ids
+        sets = await self.master.db.test_result_sets.get_test_result_sets_for_commits(
+            commit_ids=commit_ids
+        )
+        return [self.db2data(model) for model in sets]
+
+
 class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
@@ -105,7 +131,11 @@ class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint)
 class TestResultSet(base.ResourceType):
     name = "test_result_set"
     plural = "test_result_sets"
-    endpoints = [TestResultSetsEndpoint, TestResultSetEndpoint]
+    endpoints = [
+        TestResultSetsEndpoint,
+        TestResultSetsFromCommitRangeEndpoint,
+        TestResultSetEndpoint,
+    ]
     eventPathPatterns = """
         /test_result_sets/:test_result_setid
     """
