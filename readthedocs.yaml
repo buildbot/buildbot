@@ -8,3 +8,6 @@ build:
 python:
     install:
         - requirements: requirements-readthedocs.txt
+
+sphinx:
+    configuration: master/docs/conf.py
