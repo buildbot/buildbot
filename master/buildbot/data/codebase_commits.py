@@ -151,7 +151,9 @@ class CodebaseCommit(base.ResourceType):
 
 class CodebaseCommitsGraphEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = "/codebases/n:codebaseid/commits_common_parent/n:commitid1/n:commitid2"
+    pathPatterns = (
+        "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/commits_common_parent"
+    )
 
     @async_to_deferred
     async def get(self, resultSpec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:

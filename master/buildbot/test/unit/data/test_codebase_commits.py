@@ -131,7 +131,14 @@ class CodebaseCommitsGraphEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @async_to_deferred
     async def test_simple(self) -> None:
-        r = await self.callGet(('codebases', '13', 'commits_common_parent', '120', '110'))
+        r = await self.callGet((
+            'codebases',
+            '13',
+            'commit_range',
+            '120',
+            '110',
+            'commits_common_parent',
+        ))
 
         self.assertEqual(r, {'common': 108, 'from1': [108, 119, 120], 'from2': [108, 109, 110]})
 
