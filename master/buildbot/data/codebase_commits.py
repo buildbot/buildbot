@@ -165,8 +165,8 @@ class CodebaseCommitsGraphEndpoint(base.Endpoint):
             return None
         return {
             'common': r.common_commit_id,
-            'from1': r.to1_commit_ids,
-            'from2': r.to2_commit_ids,
+            'to1': r.to1_commit_ids,
+            'to2': r.to2_commit_ids,
         }
 
 
@@ -177,7 +177,7 @@ class CodebaseCommitsGraph(base.ResourceType):
 
     class EntityType(types.Entity):
         common = types.Integer()
-        from1 = types.List(of=types.Integer())
-        from2 = types.List(of=types.Integer())
+        to1 = types.List(of=types.Integer())
+        to2 = types.List(of=types.Integer())
 
     entityType = EntityType(name)

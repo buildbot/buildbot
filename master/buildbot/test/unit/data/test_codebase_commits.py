@@ -140,7 +140,7 @@ class CodebaseCommitsGraphEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'commits_common_parent',
         ))
 
-        self.assertEqual(r, {'common': 108, 'from1': [108, 119, 120], 'from2': [108, 109, 110]})
+        self.assertEqual(r, {'common': 108, 'to1': [108, 119, 120], 'to2': [108, 109, 110]})
 
 
 class CodebaseCommitTests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
