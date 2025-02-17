@@ -77,6 +77,6 @@ describe('Rest service', () => {
     const request = client.get('endpoint');
     request.cancel();
 
-    expect(request).rejects.toBeInstanceOf(Error);
+    await expect(request).rejects.toBeInstanceOf(Error);
   });
 });

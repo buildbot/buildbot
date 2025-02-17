@@ -48,7 +48,7 @@ describe('Web socket client', () => {
     expect(socket.sendQueue).toContain(JSON.stringify({'_id': 1}));
   });
 
-  it('should resolve the promise when a response message is received with code 200', () => {
+  it('should resolve the promise when a response message is received with code 200', async () => {
     const [client, socket] = createMockClient();
 
     socket.readyState = WebSocket.OPEN;
@@ -60,10 +60,10 @@ describe('Web socket client', () => {
     const response = JSON.stringify({_id: id, code: 200});
 
     socket.respond(response);
-    expect(promise).resolves.toEqual(undefined);
+    await expect(promise).resolves.toEqual(undefined);
   });
 
-  it('should reject the promise when a response message is received, but the code is not 200', () => {
+  it('should reject the promise when a response message is received, but the code is not 200', async () => {
     const [client, socket] = createMockClient();
 
     socket.readyState = WebSocket.OPEN;
@@ -73,7 +73,7 @@ describe('Web socket client', () => {
     // send a response message with status code 500
     const id = socket.parsedSendQueue[0]._id;
     socket.respond(JSON.stringify({_id: id, code: 500}));
-    expect(promise).rejects.toBeInstanceOf(Error);
+    await expect(promise).rejects.toBeInstanceOf(Error);
   });
 
 
