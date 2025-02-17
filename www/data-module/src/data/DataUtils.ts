@@ -21,24 +21,6 @@ export function copyOrSplit(arrayOrString: any) : string[] {
   }
 }
 
-// returns the type of the endpoint
-export function type(arg: string|string[]) {
-  let a = copyOrSplit(arg);
-  a = a.filter(e => e !== '*');
-  if (a.length === 0) {
-    throw Error("Parameter is empty array");
-  }
-  // if the argument count is even, the last argument is an id
-  if ((a.length % 2) === 0) {
-    a.pop();
-  }
-  let type = a.pop();
-  if (type === "contents") {
-    type = "logchunks";
-  }
-  return type!;
-}
-
 export function socketPath(arg: string | string[]) {
   const a = copyOrSplit(arg);
   // if the argument count is even, the last argument is an id

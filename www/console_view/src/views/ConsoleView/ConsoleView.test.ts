@@ -25,7 +25,7 @@ type TestBuilder = {
 }
 
 function testBuilderToReal(b: TestBuilder) {
-  return new Builder(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Builder(undefined as unknown as IDataAccessor, {
     builderid: b.builderid,
     description: "desc",
     masterids: [1],

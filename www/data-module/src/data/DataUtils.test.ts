@@ -16,7 +16,6 @@ import {
   restPath,
   socketPath,
   socketPathRE,
-  type
 } from "./DataUtils";
 
 describe('Data utils service', function() {
@@ -28,17 +27,6 @@ describe('Data utils service', function() {
 
       result = capitalize('t');
       expect(result).toBe('T');
-    })
-  );
-
-  describe('type(arg)', () =>
-
-    it('should return the type of the parameter endpoint', function() {
-      let result = type('asd/1');
-      expect(result).toBe('asd');
-
-      result = type('asd/1/bnm');
-      expect(result).toBe('bnm');
     })
   );
 

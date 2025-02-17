@@ -81,8 +81,8 @@ export class Forcescheduler extends BaseClass {
   @observable label!: string;
   @observable tooltip!: string;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, object.name);
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "forceschedulers", object.name);
     this.update(object);
     makeObservable(this);
   }
@@ -116,8 +116,8 @@ export class ForceschedulerDescriptor implements IDataDescriptor<Forcescheduler>
   restArrayField = "forceschedulers";
   fieldId: string = "name";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Forcescheduler(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Forcescheduler(accessor, object);
   }
 }
 

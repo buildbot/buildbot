@@ -31,8 +31,8 @@ export class Worker extends BaseClass {
   @observable graceful!: boolean;
   @observable workerinfo!: {[key: string]: any};
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.workerid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "workers", String(object.workerid));
     this.update(object);
     makeObservable(this);
   }
@@ -74,8 +74,8 @@ export class WorkerDescriptor implements IDataDescriptor<Worker> {
   restArrayField = "workers";
   fieldId: string = "workerid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Worker(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Worker(accessor, object);
   }
 }
 

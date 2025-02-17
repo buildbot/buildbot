@@ -22,8 +22,8 @@ export class Project extends BaseClass {
   @observable name!: string;
   @observable active!: boolean|null;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.projectid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "projects", String(object.projectid));
     this.update(object);
     makeObservable(this);
   }
@@ -65,8 +65,8 @@ export class ProjectDescriptor implements IDataDescriptor<Project> {
   restArrayField = "projects";
   fieldId: string = "projectid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Project(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Project(accessor, object);
   }
 }
 
