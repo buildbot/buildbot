@@ -14,7 +14,6 @@ import {
   numberOrString,
   parse,
   restPath,
-  singularType,
   socketPath,
   socketPathRE,
   type
@@ -40,17 +39,6 @@ describe('Data utils service', function() {
 
       result = type('asd/1/bnm');
       expect(result).toBe('bnm');
-    })
-  );
-
-  describe('singularType(arg)', () =>
-
-    it('should return the singular the type name of the parameter endpoint', function() {
-      let result = singularType('tests/1');
-      expect(result).toBe('test');
-
-      result = singularType('tests');
-      expect(result).toBe('test');
     })
   );
 

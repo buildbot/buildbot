@@ -39,25 +39,6 @@ export function type(arg: string|string[]) {
   return type!;
 }
 
-// singularize the type name
-export function singularType(arg: string | string[]) {
-  return type(arg).replace(/s$/, '');
-}
-
-export function className(arg: string | string[]) {
-  return capitalize(singularType(arg));
-}
-
-export function classId(arg: string | string[]) {
-  if (singularType(arg) === "forcescheduler") {
-    return "name";
-  }
-  if (singularType(arg) === "buildset") {
-    return "bsid";
-  }
-  return singularType(arg) + "id";
-}
-
 export function socketPath(arg: string | string[]) {
   const a = copyOrSplit(arg);
   // if the argument count is even, the last argument is an id
