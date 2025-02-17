@@ -18,8 +18,8 @@ export class Changesource extends BaseClass {
   @observable master!: any; // FIXME
   @observable name!: string;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.changesourceid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "changesources", String(object.changesourceid));
     this.update(object);
     makeObservable(this);
   }
@@ -47,8 +47,8 @@ export class ChangesourceDescriptor implements IDataDescriptor<Changesource> {
   restArrayField = "changesources";
   fieldId: string = "changesourceid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Changesource(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Changesource(accessor, object);
   }
 }
 

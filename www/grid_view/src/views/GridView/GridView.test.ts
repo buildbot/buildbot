@@ -74,7 +74,7 @@ type TestBuilderInfo = {
 };
 
 function testBuildsetToReal(bs: TestBuildset) {
-  return new Buildset(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Buildset(undefined as unknown as IDataAccessor, {
     bsid: bs.bsid,
     complete: false,
     complete_at: null,
@@ -98,7 +98,7 @@ function testBuildsetToReal(bs: TestBuildset) {
 };
 
 function testChangeToReal(c: TestChange) {
-  return new Change(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Change(undefined as unknown as IDataAccessor, {
     changeid: c.changeid,
     author: "author",
     branch: c.branch,
@@ -127,7 +127,7 @@ function testChangeToReal(c: TestChange) {
 }
 
 function testBuilderToReal(b: TestBuilder) {
-  return new Builder(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Builder(undefined as unknown as IDataAccessor, {
     builderid: b.builderid,
     description: "desc",
     masterids: [1],
@@ -137,7 +137,7 @@ function testBuilderToReal(b: TestBuilder) {
 }
 
 function testBuildrequestToReal(b: TestBuildrequest) {
-  return new Buildrequest(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Buildrequest(undefined as unknown as IDataAccessor, {
     buildrequestid: b.buildrequestid,
     builderid: b.builderid,
     buildsetid: b.buildsetid,
@@ -155,7 +155,7 @@ function testBuildrequestToReal(b: TestBuildrequest) {
 }
 
 function testBuildToReal(b: TestBuild) {
-  return new Build(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Build(undefined as unknown as IDataAccessor, {
     buildid: b.buildid,
     buildrequestid: b.buildrequestid,
     builderid: b.builderid,

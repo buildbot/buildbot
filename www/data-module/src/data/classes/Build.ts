@@ -29,8 +29,8 @@ export class Build extends BaseClass {
   @observable results!: number|null;
   @observable properties!: {[key: string]: any}; // for subscription to properties use getProperties()
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.buildid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "builds", String(object.buildid));
     this.update(object);
     makeObservable(this);
   }
@@ -94,8 +94,8 @@ export class BuildDescriptor implements IDataDescriptor<Build> {
   restArrayField = "builds";
   fieldId: string = "buildid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Build(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Build(accessor, object);
   }
 }
 

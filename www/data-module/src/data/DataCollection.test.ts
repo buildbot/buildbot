@@ -18,8 +18,8 @@ class TestDataClass extends BaseClass {
   testdata: string = '';
   testid: number = 0;
 
-  constructor(accessor: BaseDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.testid));
+  constructor(accessor: BaseDataAccessor, object: any) {
+    super(accessor, "tests", String(object.testid));
     this.update(object);
   }
 
@@ -33,8 +33,8 @@ class TestDescriptor implements IDataDescriptor<TestDataClass> {
   restArrayField = "tests";
   fieldId: string = 'testid';
 
-  parse(accessor: BaseDataAccessor, endpoint: string, object: any) {
-    return new TestDataClass(accessor, endpoint, object);
+  parse(accessor: BaseDataAccessor, object: any) {
+    return new TestDataClass(accessor, object);
   }
 }
 

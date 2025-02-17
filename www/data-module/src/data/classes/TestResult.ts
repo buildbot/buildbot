@@ -21,8 +21,10 @@ export class TestResult extends BaseClass {
   @observable line!: number|null;
   @observable value!: string;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.test_resultid));
+  constructor(accessor: IDataAccessor, object: any) {
+    // Note that the endpoint specified below is not valid. This is fine, as test results have
+    // no subresources.
+    super(accessor, "test_results", String(object.test_resultid));
     this.update(object);
     makeObservable(this);
   }
@@ -56,8 +58,8 @@ export class TestResultDescriptor implements IDataDescriptor<TestResult> {
   restArrayField = "test_results";
   fieldId: string = "test_resultid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new TestResult(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new TestResult(accessor, object);
   }
 }
 

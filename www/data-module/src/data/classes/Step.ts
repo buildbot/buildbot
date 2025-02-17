@@ -32,8 +32,8 @@ export class Step extends BaseClass {
   @observable state_string!: string;
   @observable urls!: StepUrl[];
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.stepid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "steps", String(object.stepid));
     this.update(object);
     makeObservable(this);
   }
@@ -87,8 +87,8 @@ export class StepDescriptor implements IDataDescriptor<Step> {
   restArrayField = "steps";
   fieldId: string = "stepid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Step(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Step(accessor, object);
   }
 }
 

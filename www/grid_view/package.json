@@ -37,6 +37,7 @@
     "buildbot-data-js": "link:../data-module",
     "buildbot-plugin-support": "link:../plugin_support",
     "buildbot-ui": "link:../ui",
+    "jsdom": "^25.0.0",
     "mobx": "^6.13.4",
     "mobx-react": "^9.1.1",
     "moment": "^2.29.4",

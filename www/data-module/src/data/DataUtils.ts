@@ -21,43 +21,6 @@ export function copyOrSplit(arrayOrString: any) : string[] {
   }
 }
 
-// returns the type of the endpoint
-export function type(arg: string|string[]) {
-  let a = copyOrSplit(arg);
-  a = a.filter(e => e !== '*');
-  if (a.length === 0) {
-    throw Error("Parameter is empty array");
-  }
-  // if the argument count is even, the last argument is an id
-  if ((a.length % 2) === 0) {
-    a.pop();
-  }
-  let type = a.pop();
-  if (type === "contents") {
-    type = "logchunks";
-  }
-  return type!;
-}
-
-// singularize the type name
-export function singularType(arg: string | string[]) {
-  return type(arg).replace(/s$/, '');
-}
-
-export function className(arg: string | string[]) {
-  return capitalize(singularType(arg));
-}
-
-export function classId(arg: string | string[]) {
-  if (singularType(arg) === "forcescheduler") {
-    return "name";
-  }
-  if (singularType(arg) === "buildset") {
-    return "bsid";
-  }
-  return singularType(arg) + "id";
-}
-
 export function socketPath(arg: string | string[]) {
   const a = copyOrSplit(arg);
   // if the argument count is even, the last argument is an id

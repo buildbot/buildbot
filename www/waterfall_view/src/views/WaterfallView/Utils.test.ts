@@ -29,7 +29,7 @@ type TestBuild = {
 
 
 function testBuildToReal(b: TestBuild) {
-  return new Build(undefined as unknown as IDataAccessor, 'a/1', {
+  return new Build(undefined as unknown as IDataAccessor, {
     buildid: b.buildid,
     buildrequestid: 100,
     builderid: b.builderid,

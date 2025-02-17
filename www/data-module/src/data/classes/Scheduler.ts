@@ -24,8 +24,8 @@ export class Scheduler extends BaseClass {
   @observable master!: SchedulerMaster | null;
   @observable enabled!: boolean;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.schedulerid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "schedulers", String(object.schedulerid));
     this.update(object);
     makeObservable(this);
   }
@@ -55,8 +55,8 @@ export class SchedulerDescriptor implements IDataDescriptor<Scheduler> {
   restArrayField = "schedulers";
   fieldId: string = "schedulerid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Scheduler(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Scheduler(accessor, object);
   }
 }
 

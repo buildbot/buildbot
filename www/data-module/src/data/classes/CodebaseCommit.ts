@@ -20,8 +20,8 @@ export class CodebaseCommit extends BaseClass {
   @observable revision!: string;
   @observable parent_commitid!: number|null;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.commitid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "commits", String(object.commitid));
     this.update(object);
     makeObservable(this);
   }
@@ -55,8 +55,8 @@ export class CodebaseCommitDescriptor implements IDataDescriptor<CodebaseCommit>
   restArrayField = "commits";
   fieldId: string = "commitid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new CodebaseCommit(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new CodebaseCommit(accessor, object);
   }
 }
 

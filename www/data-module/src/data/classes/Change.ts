@@ -30,8 +30,8 @@ export class Change extends BaseClass {
   @observable sourcestamp!: Sourcestamp;
   @observable when_timestamp!: number;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.changeid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "changes", String(object.changeid));
     this.update(object);
     makeObservable(this);
   }
@@ -91,8 +91,8 @@ export class ChangeDescriptor implements IDataDescriptor<Change> {
   restArrayField = "changes";
   fieldId: string = "changeid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Change(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Change(accessor, object);
   }
 }
 
