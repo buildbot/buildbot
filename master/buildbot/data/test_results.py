@@ -68,9 +68,9 @@ class TestResult(base.ResourceType):
     name = "test_result"
     plural = "test_results"
     endpoints = [TestResultsEndpoint]
-    eventPathPatterns = """
-        /test_result_sets/:test_result_setid/results
-    """
+    eventPathPatterns = [
+        "/test_result_sets/:test_result_setid/results",
+    ]
 
     class EntityType(types.Entity):
         test_resultid = types.Integer()

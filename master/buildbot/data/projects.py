@@ -85,9 +85,9 @@ class Project(base.ResourceType):
     name = "project"
     plural = "projects"
     endpoints = [ProjectEndpoint, ProjectsEndpoint]
-    eventPathPatterns = """
-        /projects/:projectid
-    """
+    eventPathPatterns = [
+        "/projects/:projectid",
+    ]
 
     class EntityType(types.Entity):
         projectid = types.Integer()

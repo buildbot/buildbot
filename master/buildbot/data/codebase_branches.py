@@ -78,9 +78,9 @@ class CodebaseBranch(base.ResourceType):
     name = "branch"
     plural = "branches"
     endpoints = [CodebaseBranchEndpoint, CodebaseBranchesEndpoint]
-    eventPathPatterns = """
-        /branches/:branchid
-    """
+    eventPathPatterns = [
+        "/branches/:branchid",
+    ]
 
     class EntityType(types.Entity):
         branchid = types.Integer()

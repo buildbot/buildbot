@@ -84,9 +84,9 @@ class Codebase(base.ResourceType):
     name = "codebase"
     plural = "codebases"
     endpoints = [CodebaseEndpoint, CodebasesEndpoint]
-    eventPathPatterns = """
-        /codebases/:codebaseid
-    """
+    eventPathPatterns = [
+        "/codebases/:codebaseid",
+    ]
 
     class EntityType(types.Entity):
         codebaseid = types.Integer()

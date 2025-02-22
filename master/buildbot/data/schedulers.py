@@ -91,9 +91,9 @@ class Scheduler(base.ResourceType):
     name = "scheduler"
     plural = "schedulers"
     endpoints = [SchedulerEndpoint, SchedulersEndpoint]
-    eventPathPatterns = """
-        /schedulers/:schedulerid
-    """
+    eventPathPatterns = [
+        "/schedulers/:schedulerid",
+    ]
 
     class EntityType(types.Entity):
         schedulerid = types.Integer()

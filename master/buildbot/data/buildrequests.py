@@ -174,11 +174,11 @@ class BuildRequest(base.ResourceType):
     name = "buildrequest"
     plural = "buildrequests"
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
-    eventPathPatterns = """
-        /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
-        /buildrequests/:buildrequestid
-        /builders/:builderid/buildrequests/:buildrequestid
-    """
+    eventPathPatterns = [
+        "/buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid",
+        "/buildrequests/:buildrequestid",
+        "/builders/:builderid/buildrequests/:buildrequestid",
+    ]
 
     class EntityType(types.Entity):
         buildrequestid = types.Integer()

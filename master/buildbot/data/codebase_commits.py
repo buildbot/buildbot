@@ -99,10 +99,10 @@ class CodebaseCommit(base.ResourceType):
     name = "commit"
     plural = "commits"
     endpoints = [CodebaseCommitEndpoint, CodebaseCommitByRevisionEndpoint, CodebaseCommitsEndpoint]
-    eventPathPatterns = """
-        /commits/:commitid
-        /codebases/:codebaseid/commits/:commitid
-    """
+    eventPathPatterns = [
+        "/commits/:commitid",
+        "/codebases/:codebaseid/commits/:commitid",
+    ]
 
     class EntityType(types.Entity):
         commitid = types.Integer()

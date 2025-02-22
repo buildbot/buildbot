@@ -136,9 +136,9 @@ class TestResultSet(base.ResourceType):
         TestResultSetsFromCommitRangeEndpoint,
         TestResultSetEndpoint,
     ]
-    eventPathPatterns = """
-        /test_result_sets/:test_result_setid
-    """
+    eventPathPatterns = [
+        "/test_result_sets/:test_result_setid",
+    ]
 
     class EntityType(types.Entity):
         test_result_setid = types.Integer()

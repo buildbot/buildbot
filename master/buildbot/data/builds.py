@@ -211,11 +211,11 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint, BuildTriggeredBuildsEndpoint]
-    eventPathPatterns = """
-        /builders/:builderid/builds/:number
-        /builds/:buildid
-        /workers/:workerid/builds/:buildid
-    """
+    eventPathPatterns = [
+        "/builders/:builderid/builds/:number",
+        "/builds/:buildid",
+        "/workers/:workerid/builds/:buildid",
+    ]
 
     class EntityType(types.Entity):
         buildid = types.Integer()
