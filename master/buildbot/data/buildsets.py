@@ -86,9 +86,9 @@ class Db2DataMixin:
 
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /buildsets/n:bsid
-    """
+    pathPatterns = [
+        "/buildsets/n:bsid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -99,9 +99,9 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /buildsets
-    """
+    pathPatterns = [
+        "/buildsets",
+    ]
     rootLinkName = 'buildsets'
 
     @defer.inlineCallbacks

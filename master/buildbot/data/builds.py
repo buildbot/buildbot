@@ -87,11 +87,11 @@ class Db2DataMixin:
 
 class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /builds/n:buildid
-        /builders/n:builderid/builds/n:build_number
-        /builders/s:buildername/builds/n:build_number
-    """
+    pathPatterns = [
+        "/builds/n:buildid",
+        "/builders/n:builderid/builds/n:build_number",
+        "/builders/s:buildername/builds/n:build_number",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -144,9 +144,9 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class BuildTriggeredBuildsEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /builds/n:buildid/triggered_builds
-    """
+    pathPatterns = [
+        "/builds/n:buildid/triggered_builds",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:
@@ -156,14 +156,14 @@ class BuildTriggeredBuildsEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /builds
-        /builders/n:builderid/builds
-        /builders/s:buildername/builds
-        /buildrequests/n:buildrequestid/builds
-        /changes/n:changeid/builds
-        /workers/n:workerid/builds
-    """
+    pathPatterns = [
+        "/builds",
+        "/builders/n:builderid/builds",
+        "/builders/s:buildername/builds",
+        "/buildrequests/n:buildrequestid/builds",
+        "/changes/n:changeid/builds",
+        "/workers/n:workerid/builds",
+    ]
     rootLinkName = 'builds'
 
     @defer.inlineCallbacks

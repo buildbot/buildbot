@@ -81,9 +81,9 @@ class FixerMixin:
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /changes/n:changeid
-    """
+    pathPatterns = [
+        "/changes/n:changeid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -95,12 +95,12 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
 class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /changes
-        /builders/n:builderid/builds/n:build_number/changes
-        /builds/n:buildid/changes
-        /sourcestamps/n:ssid/changes
-    """
+    pathPatterns = [
+        "/changes",
+        "/builders/n:builderid/builds/n:build_number/changes",
+        "/builds/n:buildid/changes",
+        "/sourcestamps/n:ssid/changes",
+    ]
     rootLinkName = 'changes'
 
     @defer.inlineCallbacks

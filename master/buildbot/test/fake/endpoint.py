@@ -47,10 +47,10 @@ stepData = {
 
 class TestsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-    /tests
-    /test
-    """
+    pathPatterns = [
+        "/tests",
+        "/test",
+    ]
     rootLinkName = 'tests'
 
     def get(self, resultSpec, kwargs):
@@ -60,7 +60,9 @@ class TestsEndpoint(base.Endpoint):
 
 class RawTestsEndpoint(base.Endpoint):
     kind = base.EndpointKind.RAW
-    pathPatterns = "/rawtest"
+    pathPatterns = [
+        "/rawtest",
+    ]
 
     def get(self, resultSpec, kwargs):
         return defer.succeed({"filename": "test.txt", "mime-type": "text/test", 'raw': 'value'})
@@ -68,7 +70,9 @@ class RawTestsEndpoint(base.Endpoint):
 
 class FailEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = "/test/fail"
+    pathPatterns = [
+        "/test/fail",
+    ]
 
     def get(self, resultSpec, kwargs):
         return defer.fail(RuntimeError('oh noes'))
@@ -76,10 +80,10 @@ class FailEndpoint(base.Endpoint):
 
 class TestEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-    /tests/n:testid
-    /test/n:testid
-    """
+    pathPatterns = [
+        "/tests/n:testid",
+        "/test/n:testid",
+    ]
 
     def get(self, resultSpec, kwargs):
         if kwargs['testid'] == 0:
@@ -94,7 +98,9 @@ class TestEndpoint(base.Endpoint):
 
 class StepsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = "/tests/n:testid/steps"
+    pathPatterns = [
+        "/tests/n:testid/steps",
+    ]
 
     def get(self, resultSpec, kwargs):
         data = [step for step in stepData.values() if step['testid'] == kwargs['testid']]
@@ -104,7 +110,9 @@ class StepsEndpoint(base.Endpoint):
 
 class StepEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = "/tests/n:testid/steps/n:stepid"
+    pathPatterns = [
+        "/tests/n:testid/steps/n:stepid",
+    ]
 
     def get(self, resultSpec, kwargs):
         if kwargs['testid'] == 0:

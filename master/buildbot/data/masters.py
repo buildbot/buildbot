@@ -45,10 +45,10 @@ def _db2data(model: MasterModel):
 
 class MasterEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /masters/n:masterid
-        /builders/n:builderid/masters/n:masterid
-    """
+    pathPatterns = [
+        "/masters/n:masterid",
+        "/builders/n:builderid/masters/n:masterid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -64,10 +64,10 @@ class MasterEndpoint(base.Endpoint):
 
 class MastersEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /masters
-        /builders/n:builderid/masters
-    """
+    pathPatterns = [
+        "/masters",
+        "/builders/n:builderid/masters",
+    ]
     rootLinkName = 'masters'
 
     @defer.inlineCallbacks

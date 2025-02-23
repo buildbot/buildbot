@@ -45,10 +45,10 @@ codebases_field_map = {
 
 class CodebaseEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /codebases/n:codebaseid
-        /projects/n:projectid/codebases/i:codebasename
-    """
+    pathPatterns = [
+        "/codebases/n:codebaseid",
+        "/projects/n:projectid/codebases/i:codebasename",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
@@ -69,9 +69,9 @@ class CodebaseEndpoint(base.Endpoint):
 class CodebasesEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'codebases'
-    pathPatterns = """
-        /codebases
-    """
+    pathPatterns = [
+        "/codebases",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:

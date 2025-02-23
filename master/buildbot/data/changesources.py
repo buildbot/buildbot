@@ -44,10 +44,10 @@ class Db2DataMixin:
 
 
 class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
-    pathPatterns = """
-        /changesources/n:changesourceid
-        /masters/n:masterid/changesources/n:changesourceid
-    """
+    pathPatterns = [
+        "/changesources/n:changesourceid",
+        "/masters/n:masterid/changesources/n:changesourceid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -60,10 +60,10 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
 
 class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /changesources
-        /masters/n:masterid/changesources
-    """
+    pathPatterns = [
+        "/changesources",
+        "/masters/n:masterid/changesources",
+    ]
     rootLinkName = 'changesources'
 
     @defer.inlineCallbacks

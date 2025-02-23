@@ -47,15 +47,15 @@ class Db2DataMixin:
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /steps/n:stepid
-        /builds/n:buildid/steps/i:step_name
-        /builds/n:buildid/steps/n:step_number
-        /builders/n:builderid/builds/n:build_number/steps/i:step_name
-        /builders/n:builderid/builds/n:build_number/steps/n:step_number
-        /builders/s:buildername/builds/n:build_number/steps/i:step_name
-        /builders/s:buildername/builds/n:build_number/steps/n:step_number
-        """
+    pathPatterns = [
+        "/steps/n:stepid",
+        "/builds/n:buildid/steps/i:step_name",
+        "/builds/n:buildid/steps/n:step_number",
+        "/builders/n:builderid/builds/n:build_number/steps/i:step_name",
+        "/builders/n:builderid/builds/n:build_number/steps/n:step_number",
+        "/builders/s:buildername/builds/n:build_number/steps/i:step_name",
+        "/builders/s:buildername/builds/n:build_number/steps/n:step_number",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -73,11 +73,11 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /builds/n:buildid/steps
-        /builders/n:builderid/builds/n:build_number/steps
-        /builders/s:buildername/builds/n:build_number/steps
-    """
+    pathPatterns = [
+        "/builds/n:buildid/steps",
+        "/builders/n:builderid/builds/n:build_number/steps",
+        "/builders/s:buildername/builds/n:build_number/steps",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

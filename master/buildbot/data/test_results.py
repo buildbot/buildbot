@@ -44,9 +44,9 @@ class Db2DataMixin:
 
 class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /test_result_sets/n:test_result_setid/results
-        """
+    pathPatterns = [
+        "/test_result_sets/n:test_result_setid/results",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

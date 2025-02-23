@@ -50,7 +50,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
         # this usually fails when a single-element pathPattern does not have a
         # trailing comma
-        pathPatterns = self.ep.pathPatterns.split()
+        pathPatterns = self.ep.pathPatterns
         for pp in pathPatterns:
             if pp == '/':
                 continue

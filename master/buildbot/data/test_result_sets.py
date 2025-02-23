@@ -47,13 +47,13 @@ class Db2DataMixin:
 
 class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /test_result_sets
-        /builders/n:builderid/test_result_sets
-        /builders/s:buildername/test_result_sets
-        /builds/n:buildid/test_result_sets
-        /steps/n:stepid/test_result_sets
-        """
+    pathPatterns = [
+        "/test_result_sets",
+        "/builders/n:builderid/test_result_sets",
+        "/builders/s:buildername/test_result_sets",
+        "/builds/n:buildid/test_result_sets",
+        "/steps/n:stepid/test_result_sets",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -94,9 +94,9 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
 
 class TestResultSetsFromCommitRangeEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/test_result_sets
-        """
+    pathPatterns = [
+        "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/test_result_sets",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec, kwargs) -> list[dict[str, Any]]:
@@ -118,9 +118,9 @@ class TestResultSetsFromCommitRangeEndpoint(Db2DataMixin, base.Endpoint):
 
 class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /test_result_sets/n:test_result_setid
-    """
+    pathPatterns = [
+        "/test_result_sets/n:test_result_setid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

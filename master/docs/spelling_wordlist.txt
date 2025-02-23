@@ -628,6 +628,7 @@ Patchset
 pathmatch
 pathname
 pathnames
+pathPatterns
 pb
 pbuilder
 pem

@@ -40,10 +40,10 @@ def project_db_to_data(model: ProjectModel, active=None):
 
 class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /projects/n:projectid
-        /projects/i:projectname
-    """
+    pathPatterns = [
+        "/projects/n:projectid",
+        "/projects/i:projectname",
+    ]
 
     @defer.inlineCallbacks
     def get(self, result_spec, kwargs):
@@ -60,9 +60,9 @@ class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
 class ProjectsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'projects'
-    pathPatterns = """
-        /projects
-    """
+    pathPatterns = [
+        "/projects",
+    ]
 
     @defer.inlineCallbacks
     def get(self, result_spec, kwargs):
