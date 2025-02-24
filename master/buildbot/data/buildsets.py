@@ -36,55 +36,55 @@ if TYPE_CHECKING:
     from buildbot.db.buildsets import BuildSetModel
 
 
-class Db2DataMixin:
-    @defer.inlineCallbacks
-    def db2data(self, model: BuildSetModel | None):
-        if not model:
-            return None
+@defer.inlineCallbacks
+def _db2data(model: BuildSetModel | None, master):
+    if not model:
+        return None
 
-        buildset = {
-            "bsid": model.bsid,
-            "external_idstring": model.external_idstring,
-            "reason": model.reason,
-            "submitted_at": datetime2epoch(model.submitted_at),
-            "complete": model.complete,
-            "complete_at": datetime2epoch(model.complete_at),
-            "results": model.results,
-            "parent_buildid": model.parent_buildid,
-            "parent_relationship": model.parent_relationship,
-            "rebuilt_buildid": model.rebuilt_buildid,
-        }
-
-        # gather the actual sourcestamps, in parallel
-        sourcestamps = []
-
-        @defer.inlineCallbacks
-        def getSs(ssid):
-            ss = yield self.master.data.get(('sourcestamps', str(ssid)))
-            sourcestamps.append(ss)
-
-        yield defer.DeferredList(
-            [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
-        )
-
-        buildset['sourcestamps'] = sourcestamps
-        return buildset
-
-    fieldMapping = {
-        'bsid': 'buildsets.id',
-        'external_idstring': 'buildsets.external_idstring',
-        'reason': 'buildsets.reason',
-        'rebuilt_buildid': 'buildsets.rebuilt_buildid',
-        'submitted_at': 'buildsets.submitted_at',
-        'complete': 'buildsets.complete',
-        'complete_at': 'buildsets.complete_at',
-        'results': 'buildsets.results',
-        'parent_buildid': 'buildsets.parent_buildid',
-        'parent_relationship': 'buildsets.parent_relationship',
+    buildset = {
+        "bsid": model.bsid,
+        "external_idstring": model.external_idstring,
+        "reason": model.reason,
+        "submitted_at": datetime2epoch(model.submitted_at),
+        "complete": model.complete,
+        "complete_at": datetime2epoch(model.complete_at),
+        "results": model.results,
+        "parent_buildid": model.parent_buildid,
+        "parent_relationship": model.parent_relationship,
+        "rebuilt_buildid": model.rebuilt_buildid,
     }
 
+    # gather the actual sourcestamps, in parallel
+    sourcestamps = []
 
-class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
+    @defer.inlineCallbacks
+    def getSs(ssid):
+        ss = yield master.data.get(('sourcestamps', str(ssid)))
+        sourcestamps.append(ss)
+
+    yield defer.DeferredList(
+        [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
+    )
+
+    buildset['sourcestamps'] = sourcestamps
+    return buildset
+
+
+buildset_field_mapping = {
+    'bsid': 'buildsets.id',
+    'external_idstring': 'buildsets.external_idstring',
+    'reason': 'buildsets.reason',
+    'rebuilt_buildid': 'buildsets.rebuilt_buildid',
+    'submitted_at': 'buildsets.submitted_at',
+    'complete': 'buildsets.complete',
+    'complete_at': 'buildsets.complete_at',
+    'results': 'buildsets.results',
+    'parent_buildid': 'buildsets.parent_buildid',
+    'parent_relationship': 'buildsets.parent_relationship',
+}
+
+
+class BuildsetEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = [
         "/buildsets/n:bsid",
@@ -93,11 +93,11 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
-        res = yield self.db2data(res)
+        res = yield _db2data(res, self.master)
         return res
 
 
-class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
+class BuildsetsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = [
         "/buildsets",
@@ -107,13 +107,13 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
-        resultSpec.fieldMapping = self.fieldMapping
+        resultSpec.fieldMapping = buildset_field_mapping
         buildsets = yield self.master.db.buildsets.getBuildsets(
             complete=complete, resultSpec=resultSpec
         )
 
         buildsets = yield defer.gatherResults(
-            [self.db2data(bs) for bs in buildsets], consumeErrors=True
+            [_db2data(bs, self.master) for bs in buildsets], consumeErrors=True
         )
 
         return buildsets

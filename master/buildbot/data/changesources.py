@@ -29,21 +29,20 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    @defer.inlineCallbacks
-    def db2data(self, dbdict: ChangeSourceModel):
-        master = None
-        if dbdict.masterid is not None and hasattr(self, 'master'):
-            master = yield self.master.data.get(('masters', dbdict.masterid))
-        data = {
-            'changesourceid': dbdict.id,
-            'name': dbdict.name,
-            'master': master,
-        }
-        return data
+@defer.inlineCallbacks
+def _db2data(master, dbdict: ChangeSourceModel):
+    dbmaster = None
+    if dbdict.masterid is not None:
+        dbmaster = yield master.data.get(('masters', dbdict.masterid))
+    data = {
+        'changesourceid': dbdict.id,
+        'name': dbdict.name,
+        'master': dbmaster,
+    }
+    return data
 
 
-class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
+class ChangeSourceEndpoint(base.Endpoint):
     pathPatterns = [
         "/changesources/n:changesourceid",
         "/masters/n:masterid/changesources/n:changesourceid",
@@ -55,10 +54,11 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if dbdict.masterid != kwargs['masterid']:
                 return None
-        return (yield self.db2data(dbdict)) if dbdict else None
+        return (yield _db2data(self.master, dbdict)) if dbdict else None
+        return (yield _db2data(self.master, dbdict)) if dbdict else None
 
 
-class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
+class ChangeSourcesEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = [
         "/changesources",
@@ -72,7 +72,9 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
             masterid=kwargs.get('masterid')
         )
         csdicts = yield defer.DeferredList(
-            [self.db2data(cs) for cs in changesources], consumeErrors=True, fireOnOneErrback=True
+            [_db2data(self.master, cs) for cs in changesources],
+            consumeErrors=True,
+            fireOnOneErrback=True,
         )
         return [r for (s, r) in csdicts]
 

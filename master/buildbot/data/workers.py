@@ -29,23 +29,22 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    def db2data(self, model: WorkerModel):
-        return {
-            'workerid': model.id,
-            'name': model.name,
-            'workerinfo': model.workerinfo,
-            'paused': model.paused,
-            "pause_reason": model.pause_reason,
-            'graceful': model.graceful,
-            'connected_to': [{'masterid': id} for id in model.connected_to],
-            'configured_on': [
-                {'masterid': c.masterid, 'builderid': c.builderid} for c in model.configured_on
-            ],
-        }
+def _db2data(model: WorkerModel):
+    return {
+        'workerid': model.id,
+        'name': model.name,
+        'workerinfo': model.workerinfo,
+        'paused': model.paused,
+        "pause_reason": model.pause_reason,
+        'graceful': model.graceful,
+        'connected_to': [{'masterid': id} for id in model.connected_to],
+        'configured_on': [
+            {'masterid': c.masterid, 'builderid': c.builderid} for c in model.configured_on
+        ],
+    }
 
 
-class WorkerEndpoint(Db2DataMixin, base.Endpoint):
+class WorkerEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = [
         "/workers/n:workerid",
@@ -67,7 +66,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             builderid=kwargs.get('builderid'),
         )
         if sldict:
-            return self.db2data(sldict)
+            return _db2data(sldict)
         return None
 
     @defer.inlineCallbacks
@@ -85,7 +84,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             raise exceptions.exceptions.InvalidPathError("worker not found")
 
 
-class WorkersEndpoint(Db2DataMixin, base.Endpoint):
+class WorkersEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'workers'
     pathPatterns = [
@@ -105,7 +104,7 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
             paused=paused,
             graceful=graceful,
         )
-        return [self.db2data(w) for w in workers_dicts]
+        return [_db2data(w) for w in workers_dicts]
 
 
 class MasterBuilderEntityType(types.Entity):

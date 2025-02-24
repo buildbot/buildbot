@@ -29,23 +29,22 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    def db2data(self, model: TestResultSetModel):
-        return {
-            'test_result_setid': model.id,
-            'builderid': model.builderid,
-            'buildid': model.buildid,
-            'stepid': model.stepid,
-            'description': model.description,
-            'category': model.category,
-            'value_unit': model.value_unit,
-            'tests_passed': model.tests_passed,
-            'tests_failed': model.tests_failed,
-            'complete': model.complete,
-        }
+def _db2data(model: TestResultSetModel):
+    return {
+        'test_result_setid': model.id,
+        'builderid': model.builderid,
+        'buildid': model.buildid,
+        'stepid': model.stepid,
+        'description': model.description,
+        'category': model.category,
+        'value_unit': model.value_unit,
+        'tests_passed': model.tests_passed,
+        'tests_failed': model.tests_failed,
+        'complete': model.complete,
+    }
 
 
-class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class TestResultSetsEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = [
         "/test_result_sets",
@@ -89,10 +88,10 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
                 complete=complete, result_spec=resultSpec
             )
 
-        return [self.db2data(model) for model in sets]
+        return [_db2data(model) for model in sets]
 
 
-class TestResultSetsFromCommitRangeEndpoint(Db2DataMixin, base.Endpoint):
+class TestResultSetsFromCommitRangeEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = [
         "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/test_result_sets",
@@ -113,10 +112,10 @@ class TestResultSetsFromCommitRangeEndpoint(Db2DataMixin, base.Endpoint):
         sets = await self.master.db.test_result_sets.get_test_result_sets_for_commits(
             commit_ids=commit_ids
         )
-        return [self.db2data(model) for model in sets]
+        return [_db2data(model) for model in sets]
 
 
-class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class TestResultSetEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = [
         "/test_result_sets/n:test_result_setid",
@@ -125,7 +124,7 @@ class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint)
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         model = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
-        return self.db2data(model) if model else None
+        return _db2data(model) if model else None
 
 
 class TestResultSet(base.ResourceType):

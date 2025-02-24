@@ -70,32 +70,32 @@ def _generate_filtered_properties(props: dict, filters: Sequence) -> dict | None
     return {k: v for k, v in props.items() if k in set_filters}
 
 
-class Db2DataMixin:
-    @defer.inlineCallbacks
-    def get_buildset_properties_filtered(self, buildsetid: int, filters: Sequence):
-        if not filters:
-            return None
-        assert hasattr(self, 'master')
-        props = yield self.master.db.buildsets.getBuildsetProperties(buildsetid)
-        return _generate_filtered_properties(props, filters)
-
-    fieldMapping = {
-        'buildrequestid': 'buildrequests.id',
-        'buildsetid': 'buildrequests.buildsetid',
-        'builderid': 'buildrequests.builderid',
-        'priority': 'buildrequests.priority',
-        'complete': 'buildrequests.complete',
-        'results': 'buildrequests.results',
-        'submitted_at': 'buildrequests.submitted_at',
-        'complete_at': 'buildrequests.complete_at',
-        'waited_for': 'buildrequests.waited_for',
-        # br claim
-        'claimed_at': 'buildrequest_claims.claimed_at',
-        'claimed_by_masterid': 'buildrequest_claims.masterid',
-    }
+buildrequests_field_mapping = {
+    'buildrequestid': 'buildrequests.id',
+    'buildsetid': 'buildrequests.buildsetid',
+    'builderid': 'buildrequests.builderid',
+    'priority': 'buildrequests.priority',
+    'complete': 'buildrequests.complete',
+    'results': 'buildrequests.results',
+    'submitted_at': 'buildrequests.submitted_at',
+    'complete_at': 'buildrequests.complete_at',
+    'waited_for': 'buildrequests.waited_for',
+    # br claim
+    'claimed_at': 'buildrequest_claims.claimed_at',
+    'claimed_by_masterid': 'buildrequest_claims.masterid',
+}
 
 
-class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
+@defer.inlineCallbacks
+def _get_buildset_properties_filtered(master, buildsetid: int, filters: Sequence):
+    if not filters:
+        return None
+
+    props = yield master.db.buildsets.getBuildsetProperties(buildsetid)
+    return _generate_filtered_properties(props, filters)
+
+
+class BuildRequestEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = [
         "/buildrequests/n:buildrequestid",
@@ -108,7 +108,9 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             return None
 
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
-        properties = yield self.get_buildset_properties_filtered(buildrequest.buildsetid, filters)
+        properties = yield _get_buildset_properties_filtered(
+            self.master, buildrequest.buildsetid, filters
+        )
         return _db2data(buildrequest, properties)
 
     @defer.inlineCallbacks
@@ -132,7 +134,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             raise ValueError(f"action: {action} is not supported")
 
 
-class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
+class BuildRequestsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = [
         "/buildrequests",
@@ -154,7 +156,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             claimed = resultSpec.popBooleanFilter('claimed')
 
         bsid = resultSpec.popOneFilter('buildsetid', 'eq')
-        resultSpec.fieldMapping = self.fieldMapping
+        resultSpec.fieldMapping = buildrequests_field_mapping
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             builderid=builderid,
             complete=complete,
@@ -165,7 +167,9 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         results = []
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
         for br in buildrequests:
-            properties = yield self.get_buildset_properties_filtered(br.buildsetid, filters)
+            properties = yield _get_buildset_properties_filtered(
+                self.master, br.buildsetid, filters
+            )
             results.append(_db2data(br, properties))
         return results
 

@@ -28,21 +28,20 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    def db2data(self, model: TestResultModel):
-        return {
-            'test_resultid': model.id,
-            'builderid': model.builderid,
-            'test_result_setid': model.test_result_setid,
-            'test_name': model.test_name,
-            'test_code_path': model.test_code_path,
-            'line': model.line,
-            'duration_ns': model.duration_ns,
-            'value': model.value,
-        }
+def _db2data(model: TestResultModel):
+    return {
+        'test_resultid': model.id,
+        'builderid': model.builderid,
+        'test_result_setid': model.test_result_setid,
+        'test_name': model.test_name,
+        'test_code_path': model.test_code_path,
+        'line': model.line,
+        'duration_ns': model.duration_ns,
+        'value': model.value,
+    }
 
 
-class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
+class TestResultsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = [
         "/test_result_sets/n:test_result_setid/results",
@@ -61,7 +60,7 @@ class TestResultsEndpoint(Db2DataMixin, base.Endpoint):
             set_dbdict.builderid, kwargs['test_result_setid'], result_spec=resultSpec
         )
 
-        return [self.db2data(result) for result in result_dbdicts]
+        return [_db2data(result) for result in result_dbdicts]
 
 
 class TestResult(base.ResourceType):
