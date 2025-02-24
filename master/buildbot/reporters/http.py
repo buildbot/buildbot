@@ -29,7 +29,15 @@ class HttpStatusPush(ReporterBase):
     secrets = ["auth"]
 
     def checkConfig(
-        self, serverUrl, auth=None, headers=None, debug=None, verify=None, generators=None, **kwargs
+        self,
+        serverUrl,
+        auth=None,
+        headers=None,
+        debug=None,
+        verify=None,
+        skip_encoding=False,
+        generators=None,
+        **kwargs,
     ):
         if generators is None:
             generators = self._create_default_generators()
@@ -38,7 +46,15 @@ class HttpStatusPush(ReporterBase):
 
     @defer.inlineCallbacks
     def reconfigService(
-        self, serverUrl, auth=None, headers=None, debug=None, verify=None, generators=None, **kwargs
+        self,
+        serverUrl,
+        auth=None,
+        headers=None,
+        debug=None,
+        verify=None,
+        skip_encoding=False,
+        generators=None,
+        **kwargs,
     ):
         self.debug = debug
         self.verify = verify
@@ -55,6 +71,7 @@ class HttpStatusPush(ReporterBase):
             headers=headers,
             debug=self.debug,
             verify=self.verify,
+            skip_encoding=skip_encoding,
         )
 
     def _create_default_generators(self):
