@@ -47,45 +47,29 @@ def _db2data(model: BuildModel):
         'properties': {},
     }
 
+def _generate_filtered_properties(props, filters):
+    """
+    This method returns Build's properties according to property filters.
 
-class Db2DataMixin:
-    def _generate_filtered_properties(self, props, filters):
-        """
-        This method returns Build's properties according to property filters.
+    .. seealso::
 
-        .. seealso::
+       `Official Documentation <https://docs.buildbot.net/latest/developer/rtype-build.html>`_
 
-            `Official Documentation <https://docs.buildbot.net/latest/developer/rtype-build.html>`_
+    :param props: The Build's properties as a dict (from db)
+    :param filters: Desired properties keys as a list (from API URI)
 
-        :param props: The Build's properties as a dict (from db)
-        :param filters: Desired properties keys as a list (from API URI)
-
-        """
-        # by default none properties are returned
-        if props and filters:
-            return (
-                props
-                if '*' in filters
-                else dict(((k, v) for k, v in props.items() if k in filters))
-            )
-        return None
-
-    fieldMapping = {
-        'buildid': 'builds.id',
-        'number': 'builds.number',
-        'builderid': 'builds.builderid',
-        'buildrequestid': 'builds.buildrequestid',
-        'workerid': 'builds.workerid',
-        'masterid': 'builds.masterid',
-        'started_at': 'builds.started_at',
-        'complete_at': 'builds.complete_at',
-        "locks_duration_s": "builds.locks_duration_s",
-        'state_string': 'builds.state_string',
-        'results': 'builds.results',
-    }
+    """
+    # by default none properties are returned
+    if props and filters:
+        return (
+            props
+            if '*' in filters
+            else dict(((k, v) for k, v in props.items() if k in filters))
+        )
+    return None
 
 
-class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class BuildEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /builds/n:buildid
@@ -114,7 +98,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                     props = yield self.master.db.builds.getBuildProperties(data['buildid'])
                 except (KeyError, TypeError):
                     props = {}
-                filtered_properties = self._generate_filtered_properties(props, filters)
+                filtered_properties = _generate_filtered_properties(props, filters)
                 if filtered_properties:
                     data['properties'] = filtered_properties
         return data
@@ -142,7 +126,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         return res
 
 
-class BuildTriggeredBuildsEndpoint(Db2DataMixin, base.Endpoint):
+class BuildTriggeredBuildsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds/n:buildid/triggered_builds
@@ -154,7 +138,7 @@ class BuildTriggeredBuildsEndpoint(Db2DataMixin, base.Endpoint):
         return [_db2data(b) for b in builds]
 
 
-class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds
@@ -165,6 +149,20 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         /workers/n:workerid/builds
     """
     rootLinkName = 'builds'
+
+    fieldMapping = {
+    'buildid': 'builds.id',
+    'number': 'builds.number',
+    'builderid': 'builds.builderid',
+    'buildrequestid': 'builds.buildrequestid',
+    'workerid': 'builds.workerid',
+    'masterid': 'builds.masterid',
+    'started_at': 'builds.started_at',
+    'complete_at': 'builds.complete_at',
+    "locks_duration_s": "builds.locks_duration_s",
+    'state_string': 'builds.state_string',
+    'results': 'builds.results',
+}
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -199,7 +197,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             # Avoid to request DB for Build's properties if not specified
             if filters:
                 props = yield self.master.db.builds.getBuildProperties(data["buildid"])
-                filtered_properties = self._generate_filtered_properties(props, filters)
+                filtered_properties = _generate_filtered_properties(props, filters)
                 if filtered_properties:
                     data["properties"] = filtered_properties
 
