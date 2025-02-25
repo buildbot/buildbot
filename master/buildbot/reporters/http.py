@@ -35,6 +35,7 @@ class HttpStatusPush(ReporterBase):
         headers=None,
         debug=None,
         verify=None,
+        cert=None,
         skip_encoding=False,
         generators=None,
         **kwargs,
@@ -52,12 +53,14 @@ class HttpStatusPush(ReporterBase):
         headers=None,
         debug=None,
         verify=None,
+        cert=None,
         skip_encoding=False,
         generators=None,
         **kwargs,
     ):
         self.debug = debug
         self.verify = verify
+        self.cert = cert
 
         if generators is None:
             generators = self._create_default_generators()
@@ -71,6 +74,7 @@ class HttpStatusPush(ReporterBase):
             headers=headers,
             debug=self.debug,
             verify=self.verify,
+            cert=self.cert,
             skip_encoding=skip_encoding,
         )
 
