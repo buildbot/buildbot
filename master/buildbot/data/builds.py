@@ -47,6 +47,20 @@ def _db2data(model: BuildModel):
         'properties': {},
     }
 
+builds_field_map = {
+    'buildid': 'builds.id',
+    'number': 'builds.number',
+    'builderid': 'builds.builderid',
+    'buildrequestid': 'builds.buildrequestid',
+    'workerid': 'builds.workerid',
+    'masterid': 'builds.masterid',
+    'started_at': 'builds.started_at',
+    'complete_at': 'builds.complete_at',
+    "locks_duration_s": "builds.locks_duration_s",
+    'state_string': 'builds.state_string',
+    'results': 'builds.results',
+}
+
 def _generate_filtered_properties(props, filters):
     """
     This method returns Build's properties according to property filters.
@@ -150,19 +164,7 @@ class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
     """
     rootLinkName = 'builds'
 
-    fieldMapping = {
-    'buildid': 'builds.id',
-    'number': 'builds.number',
-    'builderid': 'builds.builderid',
-    'buildrequestid': 'builds.buildrequestid',
-    'workerid': 'builds.workerid',
-    'masterid': 'builds.masterid',
-    'started_at': 'builds.started_at',
-    'complete_at': 'builds.complete_at',
-    "locks_duration_s": "builds.locks_duration_s",
-    'state_string': 'builds.state_string',
-    'results': 'builds.results',
-}
+    
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -179,7 +181,7 @@ class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
                     return []
             complete = resultSpec.popBooleanFilter("complete")
             buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
-            resultSpec.fieldMapping = self.fieldMapping
+            resultSpec.fieldMapping = builds_field_map
             builds = yield self.master.db.builds.getBuilds(
                 builderid=builderid,
                 buildrequestid=kwargs.get('buildrequestid', buildrequestid),
