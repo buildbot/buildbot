@@ -27,25 +27,24 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    def db2data(self, model: StepModel):
-        return {
-            'stepid': model.id,
-            'number': model.number,
-            'name': model.name,
-            'buildid': model.buildid,
-            'started_at': model.started_at,
-            "locks_acquired_at": model.locks_acquired_at,
-            'complete': model.complete_at is not None,
-            'complete_at': model.complete_at,
-            'state_string': model.state_string,
-            'results': model.results,
-            'urls': [{'name': item.name, 'url': item.url} for item in model.urls],
-            'hidden': model.hidden,
-        }
+def _db2data(model: StepModel):
+    return {
+        'stepid': model.id,
+        'number': model.number,
+        'name': model.name,
+        'buildid': model.buildid,
+        'started_at': model.started_at,
+        "locks_acquired_at": model.locks_acquired_at,
+        'complete': model.complete_at is not None,
+        'complete_at': model.complete_at,
+        'state_string': model.state_string,
+        'results': model.results,
+        'urls': [{'name': item.name, 'url': item.url} for item in model.urls],
+        'hidden': model.hidden,
+    }
 
 
-class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class StepEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /steps/n:stepid
@@ -61,17 +60,17 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            return self.db2data(dbdict) if dbdict else None
+            return _db2data(dbdict) if dbdict else None
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return None
         dbdict = yield self.master.db.steps.getStep(
             buildid=buildid, number=kwargs.get('step_number'), name=kwargs.get('step_name')
         )
-        return self.db2data(dbdict) if dbdict else None
+        return _db2data(dbdict) if dbdict else None
 
 
-class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class StepsEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /builds/n:buildid/steps
@@ -88,7 +87,7 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             if buildid is None:
                 return None
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
-        return [self.db2data(model) for model in steps]
+        return [_db2data(model) for model in steps]
 
 
 class UrlEntityType(types.Entity):
