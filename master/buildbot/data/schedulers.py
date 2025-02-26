@@ -29,22 +29,21 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    @defer.inlineCallbacks
-    def db2data(self, dbdict: SchedulerModel):
-        master = None
-        if dbdict.masterid is not None and hasattr(self, 'master'):
-            master = yield self.master.data.get(('masters', dbdict.masterid))
-        data = {
-            'schedulerid': dbdict.id,
-            'name': dbdict.name,
-            'enabled': dbdict.enabled,
-            'master': master,
-        }
-        return data
+@defer.inlineCallbacks
+def _db2data(master, dbdict: SchedulerModel):
+    dbmaster = None
+    if dbdict.masterid is not None:
+        dbmaster = yield master.data.get(('masters', dbdict.masterid))
+    data = {
+        'schedulerid': dbdict.id,
+        'name': dbdict.name,
+        'enabled': dbdict.enabled,
+        'master': dbmaster,
+    }
+    return data
 
 
-class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
+class SchedulerEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /schedulers/n:schedulerid
@@ -57,7 +56,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if dbdict.masterid != kwargs['masterid']:
                 return None
-        return (yield self.db2data(dbdict)) if dbdict else None
+        return (yield _db2data(self.master, dbdict)) if dbdict else None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -68,7 +67,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
         return None
 
 
-class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
+class SchedulersEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /schedulers
@@ -80,7 +79,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         schedulers = yield self.master.db.schedulers.getSchedulers(masterid=kwargs.get('masterid'))
         schdicts = yield defer.DeferredList(
-            [self.db2data(schdict) for schdict in schedulers],
+            [_db2data(self.master, schdict) for schdict in schedulers],
             consumeErrors=True,
             fireOnOneErrback=True,
         )

@@ -36,6 +36,40 @@ if TYPE_CHECKING:
     from buildbot.db.buildsets import BuildSetModel
 
 
+@defer.inlineCallbacks
+def _db2data(model: BuildSetModel | None, master):
+    if not model:
+        return None
+
+    buildset = {
+        "bsid": model.bsid,
+        "external_idstring": model.external_idstring,
+        "reason": model.reason,
+        "submitted_at": datetime2epoch(model.submitted_at),
+        "complete": model.complete,
+        "complete_at": datetime2epoch(model.complete_at),
+        "results": model.results,
+        "parent_buildid": model.parent_buildid,
+        "parent_relationship": model.parent_relationship,
+        "rebuilt_buildid": model.rebuilt_buildid,
+    }
+
+    # gather the actual sourcestamps, in parallel
+    sourcestamps = []
+
+    @defer.inlineCallbacks
+    def getSs(ssid):
+        ss = yield master.data.get(('sourcestamps', str(ssid)))
+        sourcestamps.append(ss)
+
+    yield defer.DeferredList(
+        [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
+    )
+
+    buildset['sourcestamps'] = sourcestamps
+    return buildset
+
+
 buildset_field_mapping = {
     'bsid': 'buildsets.id',
     'external_idstring': 'buildsets.external_idstring',
@@ -50,42 +84,7 @@ buildset_field_mapping = {
 }
 
 
-class BuildSetProcessor:
-    @defer.inlineCallbacks
-    def db2data(self, model: BuildSetModel | None):
-        if not model:
-            return None
-
-        buildset = {
-            "bsid": model.bsid,
-            "external_idstring": model.external_idstring,
-            "reason": model.reason,
-            "submitted_at": datetime2epoch(model.submitted_at),
-            "complete": model.complete,
-            "complete_at": datetime2epoch(model.complete_at),
-            "results": model.results,
-            "parent_buildid": model.parent_buildid,
-            "parent_relationship": model.parent_relationship,
-            "rebuilt_buildid": model.rebuilt_buildid,
-        }
-
-        # gather the actual sourcestamps, in parallel
-        sourcestamps = []
-
-        @defer.inlineCallbacks
-        def getSs(ssid):
-            ss = yield self.master.data.get(('sourcestamps', str(ssid)))
-            sourcestamps.append(ss)
-
-        yield defer.DeferredList(
-            [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
-        )
-
-        buildset['sourcestamps'] = sourcestamps
-        return buildset
-
-
-class BuildsetEndpoint(BuildSetProcessor, base.Endpoint):
+class BuildsetEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildsets/n:bsid
@@ -94,11 +93,11 @@ class BuildsetEndpoint(BuildSetProcessor, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
-        res = yield self.db2data(res)
+        res = yield _db2data(res, self.master)
         return res
 
 
-class BuildsetsEndpoint(BuildSetProcessor, base.Endpoint):
+class BuildsetsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /buildsets
@@ -114,7 +113,7 @@ class BuildsetsEndpoint(BuildSetProcessor, base.Endpoint):
         )
 
         buildsets = yield defer.gatherResults(
-            [self.db2data(bs) for bs in buildsets], consumeErrors=True
+            [_db2data(bs, self.master) for bs in buildsets], consumeErrors=True
         )
 
         return buildsets
