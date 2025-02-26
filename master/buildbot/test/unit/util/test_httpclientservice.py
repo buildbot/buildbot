@@ -143,6 +143,28 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
             headers={'Content-Type': 'application/json'},
         )
 
+    @defer.inlineCallbacks
+    def test_post_mtls(self):
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.parent,
+            'http://foo',
+            verify='/etc/pki/certbundle.pem',
+            cert=('/etc/pki/cert.pem', '/etc/pki/key.pem'),
+        )
+        with assertProducesWarning(DeprecationWarning):
+            yield self._http.post('/bar', json={'foo': 'bar'})
+        jsonStr = json.dumps({"foo": 'bar'})
+        jsonBytes = unicode2bytes(jsonStr)
+        self._http._txrequests_sessions[0].request.assert_called_once_with(
+            'post',
+            'http://foo/bar',
+            background_callback=mock.ANY,
+            data=jsonBytes,
+            verify='/etc/pki/certbundle.pem',
+            cert=('/etc/pki/cert.pem', '/etc/pki/key.pem'),
+            headers={'Content-Type': 'application/json'},
+        )
+
 
 class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
     @defer.inlineCallbacks

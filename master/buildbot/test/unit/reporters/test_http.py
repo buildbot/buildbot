@@ -39,7 +39,14 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
     @defer.inlineCallbacks
     def createReporter(self, auth=("username", "passwd"), headers=None, **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
-            self.master, self, "serv", auth=auth, headers=headers, debug=None, verify=None
+            self.master,
+            self,
+            "serv",
+            auth=auth,
+            headers=headers,
+            debug=None,
+            verify=None,
+            skipEncoding=False,
         )
 
         interpolated_auth = None
