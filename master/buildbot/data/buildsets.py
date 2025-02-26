@@ -36,7 +36,21 @@ if TYPE_CHECKING:
     from buildbot.db.buildsets import BuildSetModel
 
 
-class Db2DataMixin:
+buildset_field_mapping = {
+    'bsid': 'buildsets.id',
+    'external_idstring': 'buildsets.external_idstring',
+    'reason': 'buildsets.reason',
+    'rebuilt_buildid': 'buildsets.rebuilt_buildid',
+    'submitted_at': 'buildsets.submitted_at',
+    'complete': 'buildsets.complete',
+    'complete_at': 'buildsets.complete_at',
+    'results': 'buildsets.results',
+    'parent_buildid': 'buildsets.parent_buildid',
+    'parent_relationship': 'buildsets.parent_relationship',
+}
+
+
+class BuildSetProcessor:
     @defer.inlineCallbacks
     def db2data(self, model: BuildSetModel | None):
         if not model:
@@ -70,21 +84,8 @@ class Db2DataMixin:
         buildset['sourcestamps'] = sourcestamps
         return buildset
 
-    fieldMapping = {
-        'bsid': 'buildsets.id',
-        'external_idstring': 'buildsets.external_idstring',
-        'reason': 'buildsets.reason',
-        'rebuilt_buildid': 'buildsets.rebuilt_buildid',
-        'submitted_at': 'buildsets.submitted_at',
-        'complete': 'buildsets.complete',
-        'complete_at': 'buildsets.complete_at',
-        'results': 'buildsets.results',
-        'parent_buildid': 'buildsets.parent_buildid',
-        'parent_relationship': 'buildsets.parent_relationship',
-    }
 
-
-class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
+class BuildsetEndpoint(BuildSetProcessor, base.Endpoint):
     kind = base.EndpointKind.SINGLE
     pathPatterns = """
         /buildsets/n:bsid
@@ -97,7 +98,7 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
         return res
 
 
-class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
+class BuildsetsEndpoint(BuildSetProcessor, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     pathPatterns = """
         /buildsets
@@ -107,7 +108,7 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
-        resultSpec.fieldMapping = self.fieldMapping
+        resultSpec.fieldMapping = buildset_field_mapping
         buildsets = yield self.master.db.buildsets.getBuildsets(
             complete=complete, resultSpec=resultSpec
         )
