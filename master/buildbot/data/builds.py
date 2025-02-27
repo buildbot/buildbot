@@ -164,7 +164,6 @@ class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
     """
     rootLinkName = 'builds'
 
-    
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

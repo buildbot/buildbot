@@ -89,7 +89,7 @@ buildrequests_field_mapping = {
 def _get_buildset_properties_filtered(master, buildsetid: int, filters: Sequence):
     if not filters:
         return None
-    
+
     props = yield master.db.buildsets.getBuildsetProperties(buildsetid)
     return _generate_filtered_properties(props, filters)
 
