@@ -100,10 +100,10 @@ class Step(base.ResourceType):
     name = "step"
     plural = "steps"
     endpoints = [StepEndpoint, StepsEndpoint]
-    eventPathPatterns = """
-        /builds/:buildid/steps/:stepid
-        /steps/:stepid
-    """
+    eventPathPatterns = [
+        "/builds/:buildid/steps/:stepid",
+        "/steps/:stepid",
+    ]
 
     class EntityType(types.Entity):
         stepid = types.Integer()

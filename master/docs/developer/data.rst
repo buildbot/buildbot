@@ -285,7 +285,7 @@ In ``master/buildbot/data/pubs.py``, create a subclass of :py:class:`ResourceTyp
 
     .. py:attribute:: eventPathPatterns
 
-        :type: str
+        :type: list of strings
 
         This attribute should list the message routes where events should be sent, encoded as a REST like endpoint:
 

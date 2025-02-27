@@ -123,9 +123,9 @@ class Buildset(base.ResourceType):
     name = "buildset"
     plural = "buildsets"
     endpoints = [BuildsetEndpoint, BuildsetsEndpoint]
-    eventPathPatterns = """
-        /buildsets/:bsid
-    """
+    eventPathPatterns = [
+        "/buildsets/:bsid",
+    ]
 
     class EntityType(types.Entity):
         bsid = types.Integer()

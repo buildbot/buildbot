@@ -100,10 +100,10 @@ class Log(base.ResourceType):
     name = "log"
     plural = "logs"
     endpoints = [LogEndpoint, LogsEndpoint]
-    eventPathPatterns = """
-        /logs/:logid
-        /steps/:stepid/logs/:slug
-    """
+    eventPathPatterns = [
+        "/logs/:logid",
+        "/steps/:stepid/logs/:slug",
+    ]
 
     class EntityType(types.Entity):
         logid = types.Integer()

@@ -86,9 +86,9 @@ class Builder(base.ResourceType):
     name = "builder"
     plural = "builders"
     endpoints = [BuilderEndpoint, BuildersEndpoint]
-    eventPathPatterns = """
-        /builders/:builderid
-    """
+    eventPathPatterns = [
+        "/builders/:builderid",
+    ]
 
     class EntityType(types.Entity):
         builderid = types.Integer()

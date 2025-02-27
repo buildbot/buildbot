@@ -99,3 +99,9 @@ Reporters
 The ``add_logs`` argument of ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and
 ``BuildSetStatusGenerator`` has been removed. As a replacement, set ``want_logs_content`` of the
 passed message formatter.
+
+Data API
+========
+
+The multiline string type of ``ResourceType.eventPathPatterns`` attribute has been deprecated. Use
+list of strings type instead.

@@ -121,9 +121,9 @@ class Worker(base.ResourceType):
     name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
-    eventPathPatterns = """
-        /workers/:workerid
-    """
+    eventPathPatterns = [
+        "/workers/:workerid",
+    ]
 
     class EntityType(types.Entity):
         workerid = types.Integer()
