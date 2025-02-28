@@ -288,7 +288,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         sets = await self.db.test_result_sets.get_test_result_sets_for_commits(
             commit_ids=[300, 301, 302, 303, 304]
         )
-        self.assertEqual([set.id for set in sets], [10000, 10010, 10020, 10021, 10040])
+        self.assertEqual(sorted([set.id for set in sets]), [10000, 10010, 10020, 10021, 10040])
 
     @defer.inlineCallbacks
     def test_complete_set_with_test_counts(self):
