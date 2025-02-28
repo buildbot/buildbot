@@ -71,7 +71,9 @@ class ChangeSourcesEndpoint(base.Endpoint):
             masterid=kwargs.get('masterid')
         )
         csdicts = yield defer.DeferredList(
-            [_db2data(self.master, cs) for cs in changesources], consumeErrors=True, fireOnOneErrback=True
+            [_db2data(self.master, cs) for cs in changesources],
+            consumeErrors=True,
+            fireOnOneErrback=True,
         )
         return [r for (s, r) in csdicts]
 

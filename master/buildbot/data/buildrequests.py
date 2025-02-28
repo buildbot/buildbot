@@ -69,6 +69,7 @@ def _generate_filtered_properties(props: dict, filters: Sequence) -> dict | None
 
     return {k: v for k, v in props.items() if k in set_filters}
 
+
 buildrequests_field_mapping = {
     'buildrequestid': 'buildrequests.id',
     'buildsetid': 'buildrequests.buildsetid',
@@ -107,7 +108,9 @@ class BuildRequestEndpoint(base.Endpoint):
             return None
 
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
-        properties = yield _get_buildset_properties_filtered(self.master, buildrequest.buildsetid, filters)
+        properties = yield _get_buildset_properties_filtered(
+            self.master, buildrequest.buildsetid, filters
+        )
         return _db2data(buildrequest, properties)
 
     @defer.inlineCallbacks
@@ -164,7 +167,9 @@ class BuildRequestsEndpoint(base.Endpoint):
         results = []
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
         for br in buildrequests:
-            properties = yield _get_buildset_properties_filtered(self.master, br.buildsetid, filters)
+            properties = yield _get_buildset_properties_filtered(
+                self.master, br.buildsetid, filters
+            )
             results.append(_db2data(br, properties))
         return results
 

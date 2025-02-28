@@ -47,6 +47,7 @@ def _db2data(model: BuildModel):
         'properties': {},
     }
 
+
 builds_field_map = {
     'buildid': 'builds.id',
     'number': 'builds.number',
@@ -60,6 +61,7 @@ builds_field_map = {
     'state_string': 'builds.state_string',
     'results': 'builds.results',
 }
+
 
 def _generate_filtered_properties(props, filters):
     """
@@ -75,11 +77,7 @@ def _generate_filtered_properties(props, filters):
     """
     # by default none properties are returned
     if props and filters:
-        return (
-            props
-            if '*' in filters
-            else dict(((k, v) for k, v in props.items() if k in filters))
-        )
+        return props if '*' in filters else dict(((k, v) for k, v in props.items() if k in filters))
     return None
 
 
@@ -163,7 +161,6 @@ class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
         /workers/n:workerid/builds
     """
     rootLinkName = 'builds'
-
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
