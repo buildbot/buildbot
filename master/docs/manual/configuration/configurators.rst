@@ -13,9 +13,6 @@ Configurators are run (thus prioritized) in the order of the ``configurators`` l
 JanitorConfigurator
 ~~~~~~~~~~~~~~~~~~~
 
-Buildbot stores historical information in its database.
-In a large installation, these can quickly consume disk space, yet developers never consult this historical information in many cases.
-
 :bb:configurator:`JanitorConfigurator` creates a builder and :bb:sched:`Nightly` scheduler which will regularly remove old information.
 At the moment, it only supports cleaning of logs, but it will contain more features as we implement them.
 

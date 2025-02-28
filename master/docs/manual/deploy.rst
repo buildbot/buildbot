@@ -196,6 +196,15 @@ This can be accomplished by editing :file:`buildbot.tac`. It's already enabled i
 Change the line: `application.setComponent(ILogObserver, FileLogObserver(logfile).emit)`
 to: `application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)`
 
+.. _Deleting-old-logs:
+
+Deleting old logs
+~~~~~~~~~~~~~~~~~
+
+Buildbot stores historical information in its database.
+In a large installation, these can quickly consume disk space, yet developers never consult this historical information in many cases.
+Read more on how to remove obsolete information in: :bb:configurator:`JanitorConfigurator`.
+
 .. _Debugging-with-the-python-debugger:
 
 Debugging with the python debugger
