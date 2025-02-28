@@ -345,18 +345,19 @@ path. See that module's description for details.
 
     .. py:attribute:: pathPatterns
 
-        :type: string
+        :type: list of strings
 
         This attribute defines the path patterns which incoming paths must match to select this
         endpoint. Paths are specified as URIs, and can contain variables as parsed by
-        :py:class:`buildbot.util.pathmatch.Matcher`. Multiple paths are separated by whitespace.
+        :py:class:`buildbot.util.pathmatch.Matcher`. Each string in a list represents a path
+        pattern.
 
         For example, the following specifies two paths with the second having a single variable::
 
-            pathPatterns = """
-                /bugs
-                /component/i:component_name/bugs
-            """
+            pathPatterns = [
+                "/bugs",
+                "/component/i:component_name/bugs",
+            ]
 
     .. py:attribute:: rootLinkName
 

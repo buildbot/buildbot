@@ -41,11 +41,11 @@ def _db2data(builder: BuilderModel):
 
 class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /builders/n:builderid
-        /builders/s:buildername
-        /masters/n:masterid/builders/n:builderid
-    """
+    pathPatterns = [
+        "/builders/n:builderid",
+        "/builders/s:buildername",
+        "/masters/n:masterid/builders/n:builderid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -65,12 +65,12 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
 class BuildersEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'builders'
-    pathPatterns = """
-        /builders
-        /masters/n:masterid/builders
-        /projects/n:projectid/builders
-        /workers/n:workerid/builders
-    """
+    pathPatterns = [
+        "/builders",
+        "/masters/n:masterid/builders",
+        "/projects/n:projectid/builders",
+        "/workers/n:workerid/builders",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

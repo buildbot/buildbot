@@ -127,7 +127,7 @@ class SubResource:
 
 
 class Endpoint:
-    pathPatterns = ""
+    pathPatterns: list[str] | str = []
     rootLinkName: str | None = None
     isPseudoCollection = False
     kind = EndpointKind.SINGLE
@@ -156,7 +156,9 @@ class Endpoint:
         return action_method(args, kwargs)
 
     def __repr__(self):
-        return "endpoint for " + ",".join(self.pathPatterns.split())
+        if isinstance(self.pathPatterns, str):
+            self.pathPatterns = self.pathPatterns.split()
+        return "endpoint for " + ",".join(self.pathPatterns)
 
 
 class NestedBuildDataRetriever:

@@ -97,9 +97,9 @@ class Db2DataMixin:
 
 class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /buildrequests/n:buildrequestid
-    """
+    pathPatterns = [
+        "/buildrequests/n:buildrequestid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec: ResultSpec, kwargs):
@@ -134,10 +134,10 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /buildrequests
-        /builders/n:builderid/buildrequests
-    """
+    pathPatterns = [
+        "/buildrequests",
+        "/builders/n:builderid/buildrequests",
+    ]
     rootLinkName = 'buildrequests'
 
     @defer.inlineCallbacks

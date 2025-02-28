@@ -38,11 +38,11 @@ def _db2data(model: BuildDataModel):
 
 class BuildDatasNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /builders/n:builderid/builds/n:build_number/data
-        /builders/s:buildername/builds/n:build_number/data
-        /builds/n:buildid/data
-        """
+    pathPatterns = [
+        "/builders/n:builderid/builds/n:build_number/data",
+        "/builders/s:buildername/builds/n:build_number/data",
+        "/builds/n:buildid/data",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -58,11 +58,11 @@ class BuildDatasNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
 
 class BuildDataNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /builders/n:builderid/builds/n:build_number/data/i:name
-        /builders/s:buildername/builds/n:build_number/data/i:name
-        /builds/n:buildid/data/i:name
-    """
+    pathPatterns = [
+        "/builders/n:builderid/builds/n:build_number/data/i:name",
+        "/builders/s:buildername/builds/n:build_number/data/i:name",
+        "/builds/n:buildid/data/i:name",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -76,11 +76,11 @@ class BuildDataNoValueEndpoint(base.BuildNestingMixin, base.Endpoint):
 
 class BuildDataEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.RAW
-    pathPatterns = """
-        /builders/n:builderid/builds/n:build_number/data/i:name/value
-        /builders/s:buildername/builds/n:build_number/data/i:name/value
-        /builds/n:buildid/data/i:name/value
-    """
+    pathPatterns = [
+        "/builders/n:builderid/builds/n:build_number/data/i:name/value",
+        "/builders/s:buildername/builds/n:build_number/data/i:name/value",
+        "/builds/n:buildid/data/i:name/value",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

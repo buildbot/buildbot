@@ -28,6 +28,8 @@ from buildbot.data import types
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class Tests(interfaces.InterfaceTests):
@@ -188,6 +190,21 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
         # and that it added an attribute
         self.assertIsInstance(self.data.rtypes.test, TestResourceType)
 
+    def test_scanModule_path_pattern_multiline_string_deprecation(self):
+        mod = reflect.namedModule('buildbot.test.unit.data.test_connector')
+
+        TestEndpoint.pathPatterns = """
+            /test/n:testid
+            /test/n:testid/p1
+            /test/n:testid/p2
+        """
+
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern='.*Endpoint.pathPatterns as a multiline string is deprecated.*',
+        ):
+            self.data._scanModule(mod)
+
     def test_getEndpoint(self):
         ep = self.patchFooPattern()
         got = self.data.getEndpoint(('foo', '10', 'bar'))
@@ -238,7 +255,9 @@ class DataConnector(TestReactorMixin, unittest.TestCase):
 
 
 class TestsEndpoint(base.Endpoint):
-    pathPatterns = "/tests"
+    pathPatterns = [
+        "/tests",
+    ]
     rootLinkName = 'tests'
 
 
@@ -247,15 +266,17 @@ class TestsEndpointParentClass(base.Endpoint):
 
 
 class TestsEndpointSubclass(TestsEndpointParentClass):
-    pathPatterns = "/test/foo"
+    pathPatterns = [
+        "/test/foo",
+    ]
 
 
 class TestEndpoint(base.Endpoint):
-    pathPatterns = """
-        /test/n:testid
-        /test/n:testid/p1
-        /test/n:testid/p2
-    """
+    pathPatterns = [
+        "/test/n:testid",
+        "/test/n:testid/p1",
+        "/test/n:testid/p2",
+    ]
 
 
 class TestResourceType(base.ResourceType):

@@ -47,9 +47,9 @@ branches_field_map = {
 
 class CodebaseBranchEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /branches/n:branchid
-    """
+    pathPatterns = [
+        "/branches/n:branchid",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
@@ -61,9 +61,9 @@ class CodebaseBranchEndpoint(base.Endpoint):
 
 class CodebaseBranchesEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /codebases/n:codebaseid/branches
-    """
+    pathPatterns = [
+        "/codebases/n:codebaseid/branches",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:

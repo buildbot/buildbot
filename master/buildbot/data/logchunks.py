@@ -96,15 +96,15 @@ class LogChunkEndpoint(LogChunkEndpointBase):
     # offset/limit query params in ResultSpec
     kind = base.EndpointKind.SINGLE
     isPseudoCollection = True
-    pathPatterns = """
-        /logchunks
-        /logs/n:logid/contents
-        /steps/n:stepid/logs/i:log_slug/contents
-        /builds/n:buildid/steps/i:step_name/logs/i:log_slug/contents
-        /builds/n:buildid/steps/n:step_number/logs/i:log_slug/contents
-        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/contents
-        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/contents
-    """
+    pathPatterns = [
+        "/logchunks",
+        "/logs/n:logid/contents",
+        "/steps/n:stepid/logs/i:log_slug/contents",
+        "/builds/n:buildid/steps/i:step_name/logs/i:log_slug/contents",
+        "/builds/n:buildid/steps/n:step_number/logs/i:log_slug/contents",
+        "/builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/contents",
+        "/builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/contents",
+    ]
     rootLinkName = "logchunks"
 
     @defer.inlineCallbacks
@@ -137,14 +137,14 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     # Note that this is a singular endpoint, even though it overrides the
     # offset/limit query params in ResultSpec
     kind = base.EndpointKind.RAW
-    pathPatterns = """
-        /logs/n:logid/raw
-        /steps/n:stepid/logs/i:log_slug/raw
-        /builds/n:buildid/steps/i:step_name/logs/i:log_slug/raw
-        /builds/n:buildid/steps/n:step_number/logs/i:log_slug/raw
-        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/raw
-        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw
-    """
+    pathPatterns = [
+        "/logs/n:logid/raw",
+        "/steps/n:stepid/logs/i:log_slug/raw",
+        "/builds/n:buildid/steps/i:step_name/logs/i:log_slug/raw",
+        "/builds/n:buildid/steps/n:step_number/logs/i:log_slug/raw",
+        "/builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/raw",
+        "/builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -174,14 +174,14 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
     # Note that this is a singular endpoint, even though it overrides the
     # offset/limit query params in ResultSpec
     kind = base.EndpointKind.RAW_INLINE
-    pathPatterns = """
-        /logs/n:logid/raw_inline
-        /steps/n:stepid/logs/i:log_slug/raw_inline
-        /builds/n:buildid/steps/i:step_name/logs/i:log_slug/raw_inline
-        /builds/n:buildid/steps/n:step_number/logs/i:log_slug/raw_inline
-        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/raw_inline
-        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw_inline
-    """
+    pathPatterns = [
+        "/logs/n:logid/raw_inline",
+        "/steps/n:stepid/logs/i:log_slug/raw_inline",
+        "/builds/n:buildid/steps/i:step_name/logs/i:log_slug/raw_inline",
+        "/builds/n:buildid/steps/n:step_number/logs/i:log_slug/raw_inline",
+        "/builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/raw_inline",
+        "/builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw_inline",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

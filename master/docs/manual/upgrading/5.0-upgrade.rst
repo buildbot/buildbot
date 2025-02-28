@@ -103,5 +103,5 @@ passed message formatter.
 Data API
 ========
 
-The multiline string type of ``ResourceType.eventPathPatterns`` attribute has been deprecated. Use
-list of strings type instead.
+The multiline string type of ``ResourceType.eventPathPatterns`` and ``Enpoint.pathPatterns``
+attribute has been deprecated. Use list of strings type instead.

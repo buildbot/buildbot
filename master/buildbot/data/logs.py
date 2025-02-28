@@ -45,16 +45,16 @@ class EndpointMixin:
 
 class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /logs/n:logid
-        /steps/n:stepid/logs/i:log_slug
-        /builds/n:buildid/steps/i:step_name/logs/i:log_slug
-        /builds/n:buildid/steps/n:step_number/logs/i:log_slug
-        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug
-        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug
-        /builders/s:buildername/builds/n:build_number/steps/i:step_name/logs/i:log_slug
-        /builders/s:buildername/builds/n:build_number/steps/n:step_number/logs/i:log_slug
-    """
+    pathPatterns = [
+        "/logs/n:logid",
+        "/steps/n:stepid/logs/i:log_slug",
+        "/builds/n:buildid/steps/i:step_name/logs/i:log_slug",
+        "/builds/n:buildid/steps/n:step_number/logs/i:log_slug",
+        "/builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug",
+        "/builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug",
+        "/builders/s:buildername/builds/n:build_number/steps/i:step_name/logs/i:log_slug",
+        "/builders/s:buildername/builds/n:build_number/steps/n:step_number/logs/i:log_slug",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -73,15 +73,15 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /steps/n:stepid/logs
-        /builds/n:buildid/steps/i:step_name/logs
-        /builds/n:buildid/steps/n:step_number/logs
-        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs
-        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs
-        /builders/s:buildername/builds/n:build_number/steps/i:step_name/logs
-        /builders/s:buildername/builds/n:build_number/steps/n:step_number/logs
-    """
+    pathPatterns = [
+        "/steps/n:stepid/logs",
+        "/builds/n:buildid/steps/i:step_name/logs",
+        "/builds/n:buildid/steps/n:step_number/logs",
+        "/builders/n:builderid/builds/n:build_number/steps/i:step_name/logs",
+        "/builders/n:builderid/builds/n:build_number/steps/n:step_number/logs",
+        "/builders/s:buildername/builds/n:build_number/steps/i:step_name/logs",
+        "/builders/s:buildername/builds/n:build_number/steps/n:step_number/logs",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

@@ -110,9 +110,9 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
         name = "my"
 
     class MyEndpoint(base.Endpoint):
-        pathPatterns = """
-            /my/pattern
-        """
+        pathPatterns = [
+            "/my/pattern",
+        ]
 
     endpointClass = MyEndpoint
     resourceTypeClass = MyResourceType

@@ -52,9 +52,9 @@ commits_field_map = {
 
 class CodebaseCommitEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /commits/n:commitid
-    """
+    pathPatterns = [
+        "/commits/n:commitid",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
@@ -66,9 +66,9 @@ class CodebaseCommitEndpoint(base.Endpoint):
 
 class CodebaseCommitByRevisionEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /codebases/n:codebaseid/commits_by_revision/s:revision
-    """
+    pathPatterns = [
+        "/codebases/n:codebaseid/commits_by_revision/s:revision",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
@@ -82,9 +82,9 @@ class CodebaseCommitByRevisionEndpoint(base.Endpoint):
 
 class CodebaseCommitsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /codebases/n:codebaseid/commits
-    """
+    pathPatterns = [
+        "/codebases/n:codebaseid/commits",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:
@@ -151,9 +151,9 @@ class CodebaseCommit(base.ResourceType):
 
 class CodebaseCommitsGraphEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = (
-        "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/commits_common_parent"
-    )
+    pathPatterns = [
+        "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/commits_common_parent",
+    ]
 
     @async_to_deferred
     async def get(self, resultSpec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:

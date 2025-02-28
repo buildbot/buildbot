@@ -31,9 +31,9 @@ if TYPE_CHECKING:
 
 class BuildsetPropertiesEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /buildsets/n:bsid/properties
-    """
+    pathPatterns = [
+        "/buildsets/n:bsid/properties",
+    ]
 
     def get(self, resultSpec, kwargs):
         return self.master.db.buildsets.getBuildsetProperties(kwargs['bsid'])
@@ -41,10 +41,10 @@ class BuildsetPropertiesEndpoint(base.Endpoint):
 
 class BuildPropertiesEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /builders/n:builderid/builds/n:build_number/properties
-        /builds/n:buildid/properties
-    """
+    pathPatterns = [
+        "/builders/n:builderid/builds/n:build_number/properties",
+        "/builds/n:buildid/properties",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -56,11 +56,11 @@ class BuildPropertiesEndpoint(base.Endpoint):
 
 class PropertiesListEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /builds/n:buildid/property_list
-        /buildsets/n:bsid/properties_list
-        /changes/n:changeid/properties_list
-    """
+    pathPatterns = [
+        "/builds/n:buildid/property_list",
+        "/buildsets/n:bsid/properties_list",
+        "/changes/n:changeid/properties_list",
+    ]
     buildFieldMapping = {
         "name": "build_properties.name",
         "source": "build_properties.source",

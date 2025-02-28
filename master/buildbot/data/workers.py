@@ -47,16 +47,16 @@ class Db2DataMixin:
 
 class WorkerEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /workers/n:workerid
-        /workers/i:name
-        /masters/n:masterid/workers/n:workerid
-        /masters/n:masterid/workers/i:name
-        /masters/n:masterid/builders/n:builderid/workers/n:workerid
-        /masters/n:masterid/builders/n:builderid/workers/i:name
-        /builders/n:builderid/workers/n:workerid
-        /builders/n:builderid/workers/i:name
-    """
+    pathPatterns = [
+        "/workers/n:workerid",
+        "/workers/i:name",
+        "/masters/n:masterid/workers/n:workerid",
+        "/masters/n:masterid/workers/i:name",
+        "/masters/n:masterid/builders/n:builderid/workers/n:workerid",
+        "/masters/n:masterid/builders/n:builderid/workers/i:name",
+        "/builders/n:builderid/workers/n:workerid",
+        "/builders/n:builderid/workers/i:name",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -88,12 +88,12 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 class WorkersEndpoint(Db2DataMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'workers'
-    pathPatterns = """
-        /workers
-        /masters/n:masterid/workers
-        /masters/n:masterid/builders/n:builderid/workers
-        /builders/n:builderid/workers
-    """
+    pathPatterns = [
+        "/workers",
+        "/masters/n:masterid/workers",
+        "/masters/n:masterid/builders/n:builderid/workers",
+        "/builders/n:builderid/workers",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
