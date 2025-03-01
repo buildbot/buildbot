@@ -139,7 +139,7 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
         )
         resultid = results[0].id
         self.assertEqual(
-            results,
+            sorted(results, key=lambda test_result_model: test_result_model.id),
             [
                 TestResultModel(
                     id=resultid,
