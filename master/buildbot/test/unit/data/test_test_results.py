@@ -137,9 +137,10 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
         results = yield self.master.db.test_results.getTestResults(
             builderid=88, test_result_setid=13
         )
+        results = sorted(results, key=lambda result: result.id)
         resultid = results[0].id
         self.assertEqual(
-            sorted(results, key=lambda test_result_model: test_result_model.id),
+            results,
             [
                 TestResultModel(
                     id=resultid,
