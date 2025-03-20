@@ -20,12 +20,15 @@ feature.
 urllib supports http_proxy already. urllib is blocking and thus everything is done from a thread.
 """
 
+from __future__ import annotations
+
 import hashlib
 import inspect
 import json
 import os
 import platform
 import socket
+from typing import Any
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
@@ -41,7 +44,7 @@ from buildbot.www.config import get_environment_versions
 PHONE_HOME_URL = "https://events.buildbot.net/events/phone_home"
 
 
-def linux_distribution():
+def linux_distribution() -> tuple[str, str]:
     os_release = "/etc/os-release"
     meta_data = {}
     if os.path.exists(os_release):
@@ -63,31 +66,31 @@ def linux_distribution():
     return linux_id, linux_version
 
 
-def get_distro():
+def get_distro() -> str:
     system = platform.system()
     if system == "Linux":
-        dist = linux_distribution()
-        return f"{dist[0]}:{dist[1]}"
+        linux_dist = linux_distribution()
+        return f"{linux_dist[0]}:{linux_dist[1]}"
     elif system == "Windows":
-        dist = platform.win32_ver()
-        return f"{dist[0]}:{dist[1]}"
+        win_dist: Any = platform.win32_ver()
+        return f"{win_dist[0]}:{win_dist[1]}"
     elif system == "Java":
-        dist = platform.java_ver()
-        return f"{dist[0]}:{dist[1]}"
+        java_dist: Any = platform.java_ver()
+        return f"{java_dist[0]}:{java_dist[1]}"
     elif system == "Darwin":
-        dist = platform.mac_ver()
-        return f"{dist[0]}"
+        mac_dist: Any = platform.mac_ver()
+        return f"{mac_dist[0]}"
     # else:
     return ":".join(platform.uname()[0:1])
 
 
-def getName(obj):
+def getName(obj: Any) -> str:
     """This method finds the first parent class which is within the buildbot namespace
     it prepends the name with as many ">" as the class is subclassed
     """
 
     # elastic search does not like '.' in dict keys, so we replace by /
-    def sanitize(name):
+    def sanitize(name: str) -> str:
         return name.replace(".", "/")
 
     if isinstance(obj, _BuildStepFactory):
@@ -104,17 +107,16 @@ def getName(obj):
     return sanitize(type(obj).__name__)
 
 
-def countPlugins(plugins_uses, lst):
-    if isinstance(lst, dict):
-        lst = lst.values()
-    for i in lst:
+def countPlugins(plugins_uses: dict[str, int], lst: dict[str, Any] | list[Any]) -> None:
+    items: list[Any] = list(lst.values()) if isinstance(lst, dict) else lst
+    for i in items:
         name = getName(i)
         plugins_uses.setdefault(name, 0)
         plugins_uses[name] += 1
 
 
-def basicData(master):
-    plugins_uses = {}
+def basicData(master: Any) -> dict[str, Any]:
+    plugins_uses: dict[str, int] = {}
     countPlugins(plugins_uses, master.config.workers)
     countPlugins(plugins_uses, master.config.builders)
     countPlugins(plugins_uses, master.config.schedulers)
@@ -156,7 +158,7 @@ def basicData(master):
     }
 
 
-def fullData(master):
+def fullData(master: Any) -> dict[str, list[list[str]]]:
     """
     Send the actual configuration of the builders, how the steps are agenced.
     Note that full data will never send actual detail of what command is run, name of servers,
@@ -172,7 +174,7 @@ def fullData(master):
     return {'builders': builders}
 
 
-def computeUsageData(master):
+def computeUsageData(master: Any) -> dict[str, Any] | None:
     if master.config.buildbotNetUsageData is None:
         return None
     data = basicData(master)
@@ -186,11 +188,11 @@ def computeUsageData(master):
     return data
 
 
-def _sendWithUrlib(url, data):
-    data = json.dumps(data).encode()
-    clen = len(data)
+def _sendWithUrlib(url: str, data: dict[str, Any]) -> bytes | None:
+    encoded_data = json.dumps(data).encode()
+    clen = len(encoded_data)
     req = urllib_request.Request(
-        url, data, {'Content-Type': 'application/json', 'Content-Length': str(clen)}
+        url, encoded_data, {'Content-Type': 'application/json', 'Content-Length': str(clen)}
     )
     try:
         f = urllib_request.urlopen(req)
@@ -201,7 +203,7 @@ def _sendWithUrlib(url, data):
     return res
 
 
-def _sendWithRequests(url, data):
+def _sendWithRequests(url: str, data: dict[str, Any]) -> str | None:
     try:
         import requests  # pylint: disable=import-outside-toplevel
     except ImportError:
@@ -210,10 +212,10 @@ def _sendWithRequests(url, data):
     return r.text
 
 
-def _sendBuildbotNetUsageData(data):
+def _sendBuildbotNetUsageData(data: dict[str, Any]) -> None:
     log.msg(f"buildbotNetUsageData: sending {data}")
     # first try with requests, as this is the most stable http library
-    res = _sendWithRequests(PHONE_HOME_URL, data)
+    res: str | bytes | None = _sendWithRequests(PHONE_HOME_URL, data)
     # then we try with stdlib, which not always work with https
     if res is None:
         res = _sendWithUrlib(PHONE_HOME_URL, data)
@@ -229,7 +231,7 @@ def _sendBuildbotNetUsageData(data):
     log.msg("buildbotNetUsageData: buildbot.net said:", res)
 
 
-def sendBuildbotNetUsageData(master):
+def sendBuildbotNetUsageData(master: Any) -> None:
     if master.config.buildbotNetUsageData is None:
         return
     data = computeUsageData(master)
