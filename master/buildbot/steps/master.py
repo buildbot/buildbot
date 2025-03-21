@@ -49,6 +49,7 @@ class MasterShellCommand(BuildStep):
         self.usePTY = kwargs.pop('usePTY', 0)
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
         self.logEnviron = kwargs.pop('logEnviron', True)
+        self.runtime_timeout = kwargs.pop('runtime_timeout', 3600)
 
         super().__init__(**kwargs)
 
@@ -140,7 +141,6 @@ class MasterShellCommand(BuildStep):
         on_stdout = lambda data: self._deferwaiter.add(self.stdio_log.addStdout(data))
         on_stderr = lambda data: self._deferwaiter.add(self.stdio_log.addStderr(data))
 
-        # TODO add a timeout?
         self.process = runprocess.create_process(
             reactor,
             argv,
@@ -149,6 +149,7 @@ class MasterShellCommand(BuildStep):
             env=env,
             collect_stdout=on_stdout,
             collect_stderr=on_stderr,
+            runtime_timeout=self.runtime_timeout,
         )
 
         yield self.process.start()
