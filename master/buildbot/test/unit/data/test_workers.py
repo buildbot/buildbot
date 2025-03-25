@@ -125,7 +125,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data(testData)
+        yield self.master.db.insert_test_data(testData)
 
     @defer.inlineCallbacks
     def test_get_existing(self):
@@ -209,7 +209,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data(testData)
+        yield self.master.db.insert_test_data(testData)
 
     @defer.inlineCallbacks
     def test_get(self):

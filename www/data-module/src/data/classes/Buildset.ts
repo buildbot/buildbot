@@ -37,8 +37,8 @@ export class Buildset extends BaseClass {
   @observable sourcestamps!: BuildsetSourcestamps[];
   @observable submitted_at!: number|null;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.bsid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "buildsets", String(object.bsid));
     this.update(object);
     makeObservable(this);
   }
@@ -86,8 +86,8 @@ export class BuildsetDescriptor implements IDataDescriptor<Buildset> {
   restArrayField = "buildsets";
   fieldId: string = "bsid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Buildset(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Buildset(accessor, object);
   }
 }
 

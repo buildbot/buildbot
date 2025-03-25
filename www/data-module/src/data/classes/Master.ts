@@ -17,8 +17,8 @@ export class Master extends BaseClass {
   @observable last_active!: number|null;
   @observable name!: string;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.masterid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "masters", String(object.masterid));
     this.update(object);
     makeObservable(this);
   }
@@ -48,8 +48,8 @@ export class MasterDescriptor implements IDataDescriptor<Master> {
   restArrayField = "masters";
   fieldId: string = "masterid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Master(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Master(accessor, object);
   }
 }
 

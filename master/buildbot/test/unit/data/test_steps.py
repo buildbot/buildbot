@@ -40,7 +40,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
@@ -143,7 +143,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),

@@ -20,8 +20,8 @@ export class Log extends BaseClass {
   @observable stepid!: number;
   @observable type!: string;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.logid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "logs", String(object.logid));
     this.update(object);
     makeObservable(this);
   }
@@ -57,8 +57,8 @@ export class LogDescriptor implements IDataDescriptor<Log> {
   restArrayField = "logs";
   fieldId: string = "logid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Log(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Log(accessor, object);
   }
 }
 

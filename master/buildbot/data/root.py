@@ -23,7 +23,9 @@ from buildbot.warnings import warn_deprecated
 
 class RootEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = "/"
+    pathPatterns = [
+        "/",
+    ]
 
     def get(self, resultSpec, kwargs):
         warn_deprecated('4.3.0', 'the root endpoint with endpoint directory has been deprecated')
@@ -43,7 +45,9 @@ class Root(base.ResourceType):
 
 class SpecEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = "/application.spec"
+    pathPatterns = [
+        "/application.spec",
+    ]
 
     def get(self, resultSpec, kwargs):
         return defer.succeed(self.master.data.allEndpoints())

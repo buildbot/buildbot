@@ -5,16 +5,19 @@ Logs
 
 .. py:class:: Log
 
-    This class handles write-only access to log files from running build steps.
-    It does not provide an interface for reading logs - such access should occur directly through the Data API.
+    This class handles write-only access to log files from running build steps. It does not provide
+    an interface for reading logs - such access should occur directly through the Data API.
 
-    Instances of this class can only be created by the :py:meth:`~buildbot.process.buildstep.BuildStep.addLog` method of a build step.
+    Instances of this class can only be created by the
+    :py:meth:`~buildbot.process.buildstep.BuildStep.addLog` method of a build step.
 
     .. py:attribute:: name
 
         The name of the log.
         
-        Note that if you have a build step which outputs multiple logs, naming one of the logs ``Summary`` will cause  the Web UI to sort the summary log first in the list, and expand it so that the contents are immediately visible.  
+        Note that if you have a build step which outputs multiple logs, naming one of the logs
+        ``Summary`` will cause the Web UI to sort the summary log first in the list, and expand it
+        so that the contents are immediately visible.
 
     .. py:attribute:: type
 
@@ -34,15 +37,25 @@ Logs
 
         :param callable receiver: the function to call
 
-        Register ``receiver`` to be called with line-delimited chunks of log data.
-        The callable is invoked as ``receiver(stream, chunk)``, where the stream is indicated by a single character, or None for logs without streams.
-        The chunk is a single string containing an arbitrary number of log lines, and terminated with a newline.
-        When the logfile is finished, ``receiver`` will be invoked with ``None`` for both arguments.
+        Register ``receiver`` to be called with line-delimited chunks of log data. The callable is
+        invoked as ``receiver(stream, chunk)``, where the stream is indicated by a single
+        character, or None for logs without streams. The chunk is a single string containing an
+        arbitrary number of log lines, and terminated with a newline. When the logfile is finished,
+        ``receiver`` will be invoked with ``None`` for both arguments.
 
-        The callable cannot return a Deferred.
-        If it must perform some asynchronous operation, it will need to handle its own Deferreds, and be aware that multiple overlapping calls may occur.
+        The callable cannot return a Deferred. If it must perform some asynchronous operation, it
+        will need to handle its own Deferreds, and be aware that multiple overlapping calls may
+        occur.
 
-        Note that no "rewinding" takes place: only log content added after the call to ``subscribe`` will be supplied to ``receiver``.
+        Note that no "rewinding" takes place: only log content added after the call to
+        ``subscribe`` will be supplied to ``receiver``.
+
+    .. py:method:: flush()
+
+        :returns: Deferred
+
+        Flush any pending data to database. All unfinished lines will be terminated with newline
+        characters.
 
     .. py:method:: finish()
 
@@ -75,9 +88,9 @@ In use, callers will receive a subclass with methods appropriate for the log typ
 
 .. py:class:: StreamLog
 
-    This class handles logs containing three interleaved streams: stdout, stderr, and header.
-    The resulting log maintains data distinguishing these streams, so they can be filtered or displayed in different colors.
-    This class is used to represent the stdio log in most steps.
+    This class handles logs containing three interleaved streams: stdout, stderr, and header. The
+    resulting log maintains data distinguishing these streams, so they can be filtered or displayed
+    in different colors. This class is used to represent the stdio log in most steps.
 
     .. py:method:: addStdout(text)
 

@@ -27,8 +27,8 @@ export class Builder extends BaseClass {
   @observable tags!: string[];
   @observable projectid!: string|null;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.builderid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "builders", String(object.builderid));
     this.update(object);
     makeObservable(this);
   }
@@ -88,8 +88,8 @@ export class BuilderDescriptor implements IDataDescriptor<Builder> {
   restArrayField = "builders";
   fieldId: string = "builderid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Builder(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Builder(accessor, object);
   }
 }
 

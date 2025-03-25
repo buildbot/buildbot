@@ -46,6 +46,12 @@ The following methods of ``httpclientservice.HTTPClientService`` have been depre
 
 As a replacement, use ``httpclientservice.HTTPSession`` and call corresponding methods on it.
 
+Build factories
+===============
+
+``BuildFactory`` ``workdir`` attribute no longer supports callables. As a replacement, use a
+renderable instead.
+
 Database connectors
 ===================
 
@@ -93,3 +99,9 @@ Reporters
 The ``add_logs`` argument of ``BuildStatusGenerator``, ``BuildStartEndStatusGenerator`` and
 ``BuildSetStatusGenerator`` has been removed. As a replacement, set ``want_logs_content`` of the
 passed message formatter.
+
+Data API
+========
+
+The multiline string type of ``ResourceType.eventPathPatterns`` and ``Enpoint.pathPatterns``
+attribute has been deprecated. Use list of strings type instead.

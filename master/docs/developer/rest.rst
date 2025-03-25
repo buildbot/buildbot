@@ -26,18 +26,22 @@ The API described here is version 2.
 The ad-hoc API from Buildbot-0.8.x, version 1, is no longer supported [#apiv1]_.
 
 
-The policy for incrementing the version is when there is an incompatible change added.
-Removing a field or endpoint is considered incompatible change.
-Adding a field or endpoint is not considered incompatible, and thus will only be described as a change in release notes.
-The policy is that we will avoid as much as possible incrementing the version.
+The policy for incrementing the version is when there is an incompatible change added. Removing a
+field or endpoint is considered incompatible change. Adding a field or endpoint is not considered
+incompatible, and thus will only be described as a change in release notes. The policy is that we
+will avoid as much as possible incrementing the version.
 
-.. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.
+.. [#apiv1]
+
+    The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although
+    its root path was ``json``, not ``api/v1``.
 
 Getting
 ~~~~~~~
 
-To get data, issue a GET request to the appropriate path.
-For example, with a base URL of ``http://build.example.org/buildbot``, the list of masters for builder 9 is available at ``http://build.example.org/buildbot/api/v2/builders/9/masters``.
+To get data, issue a GET request to the appropriate path. For example, with a base URL of
+``http://build.example.org/buildbot``, the list of masters for builder 9 is available at
+``http://build.example.org/buildbot/api/v2/builders/9/masters``.
 
 .. bb:rtype:: collection
 
@@ -75,17 +79,18 @@ For example:
       ]
     }
 
-A response may optionally contain extra, related resources beyond those requested.
-The ``meta`` key contains metadata about the response, including the total count of resources in a collection.
+A response may optionally contain extra, related resources beyond those requested. The ``meta`` key
+contains metadata about the response, including the total count of resources in a collection.
 
-Several query parameters may be used to affect the results of a request.
-These parameters are applied in the order described (so, it is not possible to sort on a field that is not selected, for example).
+Several query parameters may be used to affect the results of a request. These parameters are
+applied in the order described (so, it is not possible to sort on a field that is not selected, for
+example).
 
 Field Selection
 ...............
 
-If only certain fields of each resource are required, the ``field`` query parameter can be used to select them.
-For example, the following will select just the names and id's of all schedulers:
+If only certain fields of each resource are required, the ``field`` query parameter can be used to
+select them. For example, the following will select just the names and id's of all schedulers:
 
 * ``http://build.example.org/api/v2/scheduler?field=name&field=schedulerid``
 
@@ -103,7 +108,8 @@ For example, ``http://build.example.org/api/v2/scheduler?name=smoketest`` select
 Filters can use any of the operators listed below, with query parameters of the form ``{field}__{operator}={value}``.
 
 ``eq``
-    equality, with the same parameter appearing one or multiple times, is equality with one of the given values (so `foo__eq=x&foo__eq=y` would match resources where foo is `x` or `y`)
+    equality, with the same parameter appearing one or multiple times, is equality with one of the
+    given values (so `foo__eq=x&foo__eq=y` would match resources where foo is `x` or `y`)
 ``ne``
     inequality, or set exclusion
 ``lt``
@@ -116,7 +122,9 @@ Filters can use any of the operators listed below, with query parameters of the 
     select resources where the field's value is greater than or equal to ``{value}``
 ``contains``
     Select resources where the field's value contains ``{value}``.
-    If the parameter is provided multiple times, results containing at least one of the values are returned (so `foo__contains=x&foo__contains=y` would match resources where foo contains `x`, `y` or both).
+    If the parameter is provided multiple times, results containing at least one of the values are
+    returned (so `foo__contains=x&foo__contains=y` would match resources where foo contains `x`, `y`
+    or both).
 
 For example:
 
@@ -128,9 +136,9 @@ Boolean values can be given as ``on``/``off``, ``true``/``false``, ``yes``/``no`
 Sorting
 .......
 
-Collection responses may be ordered with the ``order`` query parameter.
-This parameter takes a field name to sort on, optionally prefixed with ``-`` to reverse the sort.
-The parameter can appear multiple times, and will be sorted lexicographically with the fields arranged in the given order.
+Collection responses may be ordered with the ``order`` query parameter. This parameter takes a
+field name to sort on, optionally prefixed with ``-`` to reverse the sort. The parameter can appear
+multiple times, and will be sorted lexicographically with the fields arranged in the given order.
 For example:
 
 * ``http://build.example.org/api/v2/buildrequests?order=builderid&order=buildrequestid``
@@ -138,11 +146,11 @@ For example:
 Pagination
 ..........
 
-Collection responses may be paginated with the ``offset`` and ``limit`` query parameters.
-The offset is the 0-based index of the first result to include, after filtering and sorting.
-The limit is the maximum number of results to return.
-Some resource types may impose a maximum on the limit parameter; be sure to check the resulting links to determine whether further data is available.
-For example:
+Collection responses may be paginated with the ``offset`` and ``limit`` query parameters. The
+offset is the 0-based index of the first result to include, after filtering and sorting. The limit
+is the maximum number of results to return. Some resource types may impose a maximum on the limit
+parameter; be sure to check the resulting links to determine whether further data is available. For
+example:
 
 * ``http://build.example.org/api/v2/buildrequests?order=builderid&limit=10``
 * ``http://build.example.org/api/v2/buildrequests?order=builderid&offset=20&limit=10``
@@ -150,8 +158,9 @@ For example:
 Controlling
 ~~~~~~~~~~~
 
-Data API control operations are handled by POST requests using a simplified form of `JSONRPC 2.0 <http://www.jsonrpc.org/specification>`_.
-The JSONRPC "method" is mapped to the data API "action", and the parameters are passed to that application.
+Data API control operations are handled by POST requests using a simplified form of `JSONRPC 2.0
+<http://www.jsonrpc.org/specification>`_. The JSONRPC "method" is mapped to the data API "action",
+and the parameters are passed to that application.
 
 The following parts of the protocol are not supported:
 
@@ -174,8 +183,9 @@ A simple example:
 Authentication
 ~~~~~~~~~~~~~~
 
-Authentication to the REST API is performed in the same manner as authentication to the main web interface.
-Once credentials have been established, a cookie will be set, which must be sent to the Buildbot REST API with every request thereafter.
+Authentication to the REST API is performed in the same manner as authentication to the main web
+interface. Once credentials have been established, a cookie will be set, which must be sent to the
+Buildbot REST API with every request thereafter.
 
 .. code-block:: python
 
@@ -184,4 +194,5 @@ Once credentials have been established, a cookie will be set, which must be sent
     s.get("https://<buildbot_url>/auth/login", auth=('user', 'passwd'))
     builders = s.get("https://<buildbot_url>/api/v2/builders").json()
 
-For those Buildbot instances using OAuth2 authentication providers, it is at the moment not possible to access the authenticated API .
+For those Buildbot instances using OAuth2 authentication providers, it is at the moment not
+possible to access the authenticated API .

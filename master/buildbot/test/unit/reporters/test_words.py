@@ -57,6 +57,7 @@ class ContactMixin(TestReactorMixin, unittest.TestCase):
 
         yield self.master.db.insert_test_data(
             [
+                fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
                 fakedb.Master(id=88),
                 fakedb.Worker(id=13, name='w13'),
             ]

@@ -460,7 +460,8 @@ List of database-related changes in API (fallback for old API is provided):
 ``usePTY`` changes
 ------------------
 
-``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work, but discouraged).
+``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of
+``slave-config`` will still work, but discouraged).
 
 .. _Worker-Transition-Buildbot-Worker:
 
@@ -470,7 +471,8 @@ List of database-related changes in API (fallback for old API is provided):
 ``buildbot-slave`` package has been renamed to ``buildbot-worker``.
 
 ``buildbot-worker`` has backward incompatible changes and requires buildmaster >= 0.9.0b8.
-``buildbot-slave`` from 0.8.x will work with both 0.8.x and 0.9.x versions of buildmaster, so there is no need to upgrade currently deployed buildbot-slaves during switch from 0.8.x to 0.9.x.
+``buildbot-slave`` from 0.8.x will work with both 0.8.x and 0.9.x versions of buildmaster, so there
+is no need to upgrade currently deployed buildbot-slaves during switch from 0.8.x to 0.9.x.
 
 .. list-table:: Master/worker compatibility table
    :header-rows: 1
@@ -486,6 +488,8 @@ List of database-related changes in API (fallback for old API is provided):
      - no
      - yes
 
-``buildbot-worker`` doesn't support worker-side specification of ``usePTY`` (with ``--usepty`` command line switch of ``buildbot-worker create-worker``), you need to specify this option on master side.
+``buildbot-worker`` doesn't support worker-side specification of ``usePTY`` (with ``--usepty``
+command line switch of ``buildbot-worker create-worker``), you need to specify this option on
+master side.
 
 ``getSlaveInfo`` remote command was renamed to ``getWorkerInfo`` in ``buildbot-worker``.

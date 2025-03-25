@@ -168,8 +168,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
         if extra_build_properties is None:
             extra_build_properties = {}
 
-        self.db = self.master.db
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrkr'),
             fakedb.Buildset(id=98, results=results1, reason="testReason1"),
@@ -200,18 +199,18 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
             ),
         ])
         for build_id in (20, 21):
-            yield self.db.insert_test_data([
+            yield self.master.db.insert_test_data([
                 fakedb.BuildProperty(buildid=build_id, name="workername", value="wrkr"),
                 fakedb.BuildProperty(buildid=build_id, name="reason", value="because"),
             ])
 
             for name, value in extra_build_properties.items():
-                yield self.db.insert_test_data([
+                yield self.master.db.insert_test_data([
                     fakedb.BuildProperty(buildid=build_id, name=name, value=value),
                 ])
 
         if with_steps:
-            yield self.db.insert_test_data([
+            yield self.master.db.insert_test_data([
                 fakedb.Step(id=151, buildid=21, number=1, results=SUCCESS, name='first step'),
                 fakedb.Step(id=152, buildid=21, number=2, results=results2, name='second step'),
                 fakedb.Step(id=153, buildid=21, number=3, results=SUCCESS, name='third step'),

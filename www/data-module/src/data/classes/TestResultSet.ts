@@ -26,8 +26,8 @@ export class TestResultSet extends BaseClass {
   @observable tests_failed!: number|null;
   @observable complete!: boolean;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.test_result_setid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "test_result_sets", String(object.test_result_setid));
     this.update(object);
     makeObservable(this);
   }
@@ -73,8 +73,8 @@ export class TestResultSetDescriptor implements IDataDescriptor<TestResultSet> {
   restArrayField = "test_result_sets";
   fieldId: string = "test_result_setid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new TestResultSet(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new TestResultSet(accessor, object);
   }
 }
 

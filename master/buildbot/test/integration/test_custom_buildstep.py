@@ -81,11 +81,14 @@ class FailingCustomStep(buildstep.BuildStep):
 
 class RunSteps(RunFakeMasterTestCase):
     @defer.inlineCallbacks
-    def create_config_for_step(self, step):
+    def create_config_for_step(self, step, builder_kwargs=None):
         config_dict = {
             'builders': [
                 BuilderConfig(
-                    name="builder", workernames=["worker1"], factory=BuildFactory([step])
+                    name="builder",
+                    workernames=["worker1"],
+                    factory=BuildFactory([step]),
+                    **(builder_kwargs or {}),
                 ),
             ],
             'workers': [self.createLocalWorker('worker1')],
@@ -225,3 +228,12 @@ class RunSteps(RunFakeMasterTestCase):
                 'project': ('', 'Build'),
             },
         )
+
+    @defer.inlineCallbacks
+    def test_build_being_skipped_in_start(self):
+        builder_id = yield self.create_config_for_step(
+            SucceedingCustomStep(), builder_kwargs={"do_build_if": lambda x: False}
+        )
+
+        yield self.do_test_build(builder_id)
+        yield self.assertBuildResults(1, results.SKIPPED)

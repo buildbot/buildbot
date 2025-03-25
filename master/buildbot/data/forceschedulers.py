@@ -37,9 +37,9 @@ def forceScheduler2Data(sched):
 
 class ForceSchedulerEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /forceschedulers/i:schedulername
-    """
+    pathPatterns = [
+        "/forceschedulers/i:schedulername",
+    ]
 
     def findForceScheduler(self, schedulername):
         # eventually this may be db backed. This is why the API is async
@@ -71,10 +71,10 @@ class ForceSchedulerEndpoint(base.Endpoint):
 
 class ForceSchedulersEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /forceschedulers
-        /builders/:builderid/forceschedulers
-    """
+    pathPatterns = [
+        "/forceschedulers",
+        "/builders/:builderid/forceschedulers",
+    ]
     rootLinkName = 'forceschedulers'
 
     @defer.inlineCallbacks

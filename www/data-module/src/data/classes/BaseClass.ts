@@ -5,7 +5,6 @@
   Copyright Buildbot Team Members
 */
 
-import {type} from "../DataUtils";
 import {IDataAccessor} from "../DataAccessor";
 import {IDataDescriptor} from "./DataDescriptor";
 import {ControlParams, RequestQuery} from "../DataQuery";
@@ -21,11 +20,6 @@ export class BaseClass {
     this.accessor = accessor;
     this.id = id;
     this.endpoint = endpoint;
-
-    // reset endpoint to base
-    if (this.id !== null) {
-      this.endpoint = type(this.endpoint);
-    }
   }
 
   update(object: any) {

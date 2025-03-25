@@ -36,7 +36,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
@@ -131,6 +131,49 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.master.data.updates.rebuildBuildrequest.assert_called_with(buildrequest)
 
 
+class BuildTriggeredBuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+    endpointClass = builds.BuildTriggeredBuildsEndpoint
+    resourceTypeClass = builds.Build
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        yield self.setUpEndpoint()
+        yield self.master.db.insert_test_data([
+            fakedb.Master(id=88),
+            fakedb.Buildset(id=20),
+            fakedb.Builder(id=77, name="b1"),
+            fakedb.BuildRequest(id=40, buildsetid=20, builderid=77),
+            fakedb.BuildRequest(id=41, buildsetid=20, builderid=77),
+            fakedb.Worker(id=13, name='wrk'),
+            fakedb.Build(id=50, buildrequestid=41, masterid=88, builderid=77, workerid=13),
+            fakedb.Build(id=51, buildrequestid=40, masterid=88, builderid=77, workerid=13),
+            fakedb.Buildset(id=1000, parent_buildid=51),
+            fakedb.BuildRequest(id=1100, buildsetid=1000, builderid=77),
+            fakedb.BuildRequest(id=1101, buildsetid=1000, builderid=77),
+            fakedb.Build(id=1200, buildrequestid=1100, masterid=88, builderid=77, workerid=13),
+            fakedb.Build(id=1201, buildrequestid=1101, masterid=88, builderid=77, workerid=13),
+            fakedb.Buildset(id=1001, parent_buildid=51),
+            fakedb.BuildRequest(id=1110, buildsetid=1001, builderid=77),
+            fakedb.BuildRequest(id=1111, buildsetid=1001, builderid=77),
+            fakedb.Build(id=1210, buildrequestid=1110, masterid=88, builderid=77, workerid=13),
+            fakedb.Build(id=1211, buildrequestid=1111, masterid=88, builderid=77, workerid=13),
+        ])
+
+    @defer.inlineCallbacks
+    def test_get_not_existing(self):
+        builds = yield self.callGet(('builds', 50, 'triggered_builds'))
+        self.assertEqual(builds, [])
+
+    @defer.inlineCallbacks
+    def test_get(self):
+        builds = yield self.callGet(('builds', 51, 'triggered_builds'))
+
+        for build in builds:
+            self.validateData(build)
+
+        self.assertEqual(sorted([b['buildid'] for b in builds]), [1200, 1201, 1210, 1211])
+
+
 class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = builds.BuildsEndpoint
     resourceTypeClass = builds.Build
@@ -138,7 +181,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Builder(id=78, name='builder78'),
             fakedb.Builder(id=79, name='builder79'),

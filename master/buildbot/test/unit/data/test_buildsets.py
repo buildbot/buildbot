@@ -40,7 +40,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Buildset(id=13, reason='because I said so'),
             fakedb.SourceStamp(id=92),
             fakedb.SourceStamp(id=93),
@@ -77,7 +77,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=92),
             fakedb.Buildset(id=13, complete=True),
             fakedb.Buildset(id=14, complete=False),

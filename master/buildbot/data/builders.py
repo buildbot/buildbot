@@ -41,11 +41,11 @@ def _db2data(builder: BuilderModel):
 
 class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /builders/n:builderid
-        /builders/s:buildername
-        /masters/n:masterid/builders/n:builderid
-    """
+    pathPatterns = [
+        "/builders/n:builderid",
+        "/builders/s:buildername",
+        "/masters/n:masterid/builders/n:builderid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -65,12 +65,12 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
 class BuildersEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'builders'
-    pathPatterns = """
-        /builders
-        /masters/n:masterid/builders
-        /projects/n:projectid/builders
-        /workers/n:workerid/builders
-    """
+    pathPatterns = [
+        "/builders",
+        "/masters/n:masterid/builders",
+        "/projects/n:projectid/builders",
+        "/workers/n:workerid/builders",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -86,9 +86,9 @@ class Builder(base.ResourceType):
     name = "builder"
     plural = "builders"
     endpoints = [BuilderEndpoint, BuildersEndpoint]
-    eventPathPatterns = """
-        /builders/:builderid
-    """
+    eventPathPatterns = [
+        "/builders/:builderid",
+    ]
 
     class EntityType(types.Entity):
         builderid = types.Integer()
@@ -108,13 +108,19 @@ class Builder(base.ResourceType):
         self.produceEvent(builder, event)
 
     @base.updateMethod
-    def findBuilderId(self, name):
+    def findBuilderId(self, name: str) -> defer.Deferred[int]:
         return self.master.db.builders.findBuilderId(name)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def updateBuilderInfo(
-        self, builderid, description, description_format, description_html, projectid, tags
+        self,
+        builderid: int,
+        description: str | None,
+        description_format: str | None,
+        description_html: str | None,
+        projectid: int,
+        tags: list[int | str],
     ):
         ret = yield self.master.db.builders.updateBuilderInfo(
             builderid, description, description_format, description_html, projectid, tags
@@ -124,7 +130,7 @@ class Builder(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def updateBuilderList(self, masterid, builderNames):
+    def updateBuilderList(self, masterid: int, builderNames: list[str]):
         # get the "current" list of builders for this master, so we know what
         # changes to make.  Race conditions here aren't a great worry, as this
         # is the only master inserting or deleting these records.

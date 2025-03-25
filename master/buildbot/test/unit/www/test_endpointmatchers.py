@@ -29,7 +29,6 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/a/b/')
-        self.db = self.master.db
         self.matcher = self.makeMatcher()
         self.matcher.setAuthz(self.master.authz)
         yield self.insertData()
@@ -45,7 +44,7 @@ class EndpointBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def insertData(self):
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Builder(id=21, name="builder"),
             fakedb.SourceStamp(id=13, branch='secret'),
             fakedb.Master(id=1),

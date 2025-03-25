@@ -21,8 +21,8 @@ export class Sourcestamp extends BaseClass {
   @observable repository!: string;
   @observable revision!: string|null;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.ssid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "sourcestamps", String(object.ssid));
     this.update(object);
     makeObservable(this);
   }
@@ -60,8 +60,8 @@ export class SourcestampDescriptor implements IDataDescriptor<Sourcestamp> {
   restArrayField = "sourcestamps";
   fieldId: string = "ssid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Sourcestamp(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Sourcestamp(accessor, object);
   }
 }
 

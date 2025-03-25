@@ -40,8 +40,6 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
     def setUpEndpoint(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
-        self.db = self.master.db
-        self.mq = self.master.mq
         self.data = self.master.data
         self.matcher = pathmatch.Matcher()
 
@@ -52,7 +50,7 @@ class EndpointMixin(TestReactorMixin, interfaces.InterfaceTests):
 
         # this usually fails when a single-element pathPattern does not have a
         # trailing comma
-        pathPatterns = self.ep.pathPatterns.split()
+        pathPatterns = self.ep.pathPatterns
         for pp in pathPatterns:
             if pp == '/':
                 continue

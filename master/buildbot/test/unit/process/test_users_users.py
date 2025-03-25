@@ -30,7 +30,6 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
-        self.db = self.master.db
         self.test_sha = users.encrypt("cancer")
 
     @defer.inlineCallbacks
@@ -39,23 +38,23 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         for user in users_no_attrs:
             user.attributes = None
 
-        got_users = yield self.db.users.getUsers()
+        got_users = yield self.master.db.users.getUsers()
         self.assertEqual(got_users, users_no_attrs)
 
         for user in users:
-            got_user = yield self.db.users.getUser(user.uid)
+            got_user = yield self.master.db.users.getUser(user.uid)
             self.assertEqual(got_user, user)
 
     @defer.inlineCallbacks
     def test_createUserObject_no_src(self):
         yield users.createUserObject(self.master, "Tyler Durden", None)
-        got_users = yield self.db.users.getUsers()
+        got_users = yield self.master.db.users.getUsers()
         self.assertEqual(got_users, [])
 
     @defer.inlineCallbacks
     def test_createUserObject_unrecognized_src(self):
         yield users.createUserObject(self.master, "Tyler Durden", 'blah')
-        got_users = yield self.db.users.getUsers()
+        got_users = yield self.master.db.users.getUsers()
         self.assertEqual(got_users, [])
 
     @defer.inlineCallbacks
@@ -143,7 +142,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getUserContact_found(self):
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.User(uid=1, identifier='tdurden'),
             fakedb.UserInfo(uid=1, attr_type='svn', attr_data='tdurden'),
             fakedb.UserInfo(uid=1, attr_type='email', attr_data='tyler@mayhem.net'),
@@ -154,7 +153,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getUserContact_key_not_found(self):
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.User(uid=1, identifier='tdurden'),
             fakedb.UserInfo(uid=1, attr_type='svn', attr_data='tdurden'),
             fakedb.UserInfo(uid=1, attr_type='email', attr_data='tyler@mayhem.net'),

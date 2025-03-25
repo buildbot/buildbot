@@ -324,7 +324,7 @@ class NightlyTriggerable(
             '"branch": "br", "revision": "myrev"} ], {}, null, null ]'
         )
 
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(
                 objectid=self.SCHEDULERID, name='lastTrigger', value_json=value_json
@@ -360,7 +360,7 @@ class NightlyTriggerable(
             '[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", '
             '"branch": "br", "revision": "myrev"} }, {}, null, null ]'
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(
                 objectid=self.SCHEDULERID, name='lastTrigger', value_json=value_json
@@ -391,7 +391,7 @@ class NightlyTriggerable(
             minute=[5],
             codebases={'cb': {'repository': 'annoying'}},
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
@@ -438,7 +438,7 @@ class NightlyTriggerable(
             minute=[5],
             codebases={'cb': {'repository': 'annoying'}},
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
@@ -471,7 +471,7 @@ class NightlyTriggerable(
             minute=[5],
             codebases={'cb': {'repository': 'annoying'}},
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
@@ -538,7 +538,7 @@ class NightlyTriggerable(
             '"branch": "br", "revision": "myrev"} ], '
             '{"testprop": ["test", "TEST"]}, null, null ]'
         )
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(
                 objectid=self.SCHEDULERID, name='lastTrigger', value_json=value_json

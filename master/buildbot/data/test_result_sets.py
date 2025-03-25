@@ -16,41 +16,43 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from buildbot.db.test_result_sets import TestResultSetModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
-class Db2DataMixin:
-    def db2data(self, model: TestResultSetModel):
-        return {
-            'test_result_setid': model.id,
-            'builderid': model.builderid,
-            'buildid': model.buildid,
-            'stepid': model.stepid,
-            'description': model.description,
-            'category': model.category,
-            'value_unit': model.value_unit,
-            'tests_passed': model.tests_passed,
-            'tests_failed': model.tests_failed,
-            'complete': model.complete,
-        }
+def _db2data(model: TestResultSetModel):
+    return {
+        'test_result_setid': model.id,
+        'builderid': model.builderid,
+        'buildid': model.buildid,
+        'stepid': model.stepid,
+        'description': model.description,
+        'category': model.category,
+        'value_unit': model.value_unit,
+        'tests_passed': model.tests_passed,
+        'tests_failed': model.tests_failed,
+        'complete': model.complete,
+    }
 
 
-class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class TestResultSetsEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /test_result_sets
-        /builders/n:builderid/test_result_sets
-        /builders/s:buildername/test_result_sets
-        /builds/n:buildid/test_result_sets
-        /steps/n:stepid/test_result_sets
-        """
+    pathPatterns = [
+        "/test_result_sets",
+        "/builders/n:builderid/test_result_sets",
+        "/builders/s:buildername/test_result_sets",
+        "/builds/n:buildid/test_result_sets",
+        "/steps/n:stepid/test_result_sets",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -86,28 +88,56 @@ class TestResultSetsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint
                 complete=complete, result_spec=resultSpec
             )
 
-        return [self.db2data(model) for model in sets]
+        return [_db2data(model) for model in sets]
 
 
-class TestResultSetEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
+class TestResultSetsFromCommitRangeEndpoint(base.Endpoint):
+    kind = base.EndpointKind.COLLECTION
+    pathPatterns = [
+        "/codebases/n:codebaseid/commit_range/n:commitid1/n:commitid2/test_result_sets",
+    ]
+
+    @async_to_deferred
+    async def get(self, result_spec, kwargs) -> list[dict[str, Any]]:
+        commit_from = int(kwargs.get('commitid1'))
+        commit_to = int(kwargs.get('commitid2'))
+        r = await self.master.db.codebase_commits.get_first_common_commit_with_ranges(
+            commit_from, commit_to
+        )
+        if r is None:
+            return []
+        if r.to2_commit_ids[0] != commit_from:
+            return []
+        commit_ids = r.to2_commit_ids
+        sets = await self.master.db.test_result_sets.get_test_result_sets_for_commits(
+            commit_ids=commit_ids
+        )
+        return [_db2data(model) for model in sets]
+
+
+class TestResultSetEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /test_result_sets/n:test_result_setid
-    """
+    pathPatterns = [
+        "/test_result_sets/n:test_result_setid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         model = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
-        return self.db2data(model) if model else None
+        return _db2data(model) if model else None
 
 
 class TestResultSet(base.ResourceType):
     name = "test_result_set"
     plural = "test_result_sets"
-    endpoints = [TestResultSetsEndpoint, TestResultSetEndpoint]
-    eventPathPatterns = """
-        /test_result_sets/:test_result_setid
-    """
+    endpoints = [
+        TestResultSetsEndpoint,
+        TestResultSetsFromCommitRangeEndpoint,
+        TestResultSetEndpoint,
+    ]
+    eventPathPatterns = [
+        "/test_result_sets/:test_result_setid",
+    ]
 
     class EntityType(types.Entity):
         test_result_setid = types.Integer()
@@ -130,7 +160,15 @@ class TestResultSet(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+    def addTestResultSet(
+        self,
+        builderid: int,
+        buildid: int,
+        stepid: int,
+        description: str,
+        category: str,
+        value_unit: str,
+    ) -> InlineCallbacksType[int]:
         test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
             builderid, buildid, stepid, description, category, value_unit
         )
@@ -139,7 +177,12 @@ class TestResultSet(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
+    def completeTestResultSet(
+        self,
+        test_result_setid: int,
+        tests_passed: int | None = None,
+        tests_failed: int | None = None,
+    ) -> InlineCallbacksType[None]:
         yield self.master.db.test_result_sets.completeTestResultSet(
             test_result_setid, tests_passed, tests_failed
         )

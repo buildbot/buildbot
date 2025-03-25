@@ -25,6 +25,7 @@ from twisted.internet import defer
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
@@ -210,6 +211,24 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [self._model_from_row(row) for row in res.fetchall()]
 
         return self.db.pool.do(thd)
+
+    @async_to_deferred
+    async def get_triggered_builds(self, buildid: int) -> list[BuildModel]:
+        def thd(conn) -> list[BuildModel]:
+            j = self.db.model.buildsets
+            j = j.join(self.db.model.buildrequests)
+            j = j.join(self.db.model.builds)
+
+            q = (
+                sa.select(self.db.model.builds)
+                .select_from(j)
+                .where(self.db.model.buildsets.c.parent_buildid == buildid)
+            )
+
+            res = conn.execute(q)
+            return [self._model_from_row(row) for row in res.fetchall()]
+
+        return await self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
     def addBuild(

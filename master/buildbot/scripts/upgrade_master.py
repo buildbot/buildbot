@@ -77,7 +77,7 @@ def upgradeFiles(config):
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
-        db_url_cfg = master_cfg.db['db_url']
+        db_url_cfg = master_cfg.db.db_url
         if IRenderable.providedBy(db_url_cfg):
             # if it's a renderable, assume the password is rendered
             # so no need to try and strip it.

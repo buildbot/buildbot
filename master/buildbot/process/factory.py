@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from typing import Callable
 from typing import ClassVar
 from typing import Sequence
 
@@ -36,6 +37,7 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
+from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from buildbot.process.builder import Builder
@@ -74,6 +76,11 @@ class BuildFactory(util.ComparableMixin):
         b = self.buildClass(requests, builder)
         b.useProgress = self.useProgress
         b.workdir = self.workdir
+        if callable(self.workdir):
+            warn_deprecated(
+                '4.3.0',
+                'BuildFactory workdir callable support has been deprecated. Use renderables instead',
+            )
         b.setStepFactories(self.steps)
         return b
 
@@ -93,6 +100,9 @@ class BuildFactory(util.ComparableMixin):
             self.addStep(s)
         if withSecrets:
             self.addStep(RemoveWorkerFileSecret(withSecrets))
+
+    def setSkipBuildIf(self, predicate: Callable[[Build], bool]):
+        self.skipBuildIf = predicate
 
     @contextmanager
     def withSecrets(self, secrets):

@@ -17,8 +17,8 @@ export class CodebaseBranch extends BaseClass {
   @observable commitid!: number;
   @observable last_timestamp!: number;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.branchid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "branches", String(object.branchid));
     this.update(object);
     makeObservable(this);
   }
@@ -47,8 +47,8 @@ export class CodebaseBranchDescriptor implements IDataDescriptor<CodebaseBranch>
   restArrayField = "branches";
   fieldId: string = "branchid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new CodebaseBranch(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new CodebaseBranch(accessor, object);
   }
 }
 

@@ -462,7 +462,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
-        yield sched.setServiceParent(self.master)
+        yield self.attachScheduler(sched, self.OBJECTID, self.SCHEDULERID)
         yield self.master.startService()
         jobstr = self.makeNetstring(
             '3',
@@ -483,7 +483,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
-        yield sched.setServiceParent(self.master)
+        yield self.attachScheduler(sched, self.OBJECTID, self.SCHEDULERID)
         yield self.master.startService()
         jobstr = self.makeNetstring(
             '3',
@@ -905,7 +905,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         def getBuildset(bsid):
             return {"bsid": bsid}
 
-        self.db.buildsets.getBuildset = getBuildset
+        self.master.db.buildsets.getBuildset = getBuildset
 
         rbss = yield persp.perspective_try(*args, **kwargs)
 

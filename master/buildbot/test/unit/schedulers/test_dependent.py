@@ -143,7 +143,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         yield self.master.startService()
 
         # announce a buildset with a matching name..
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(
                 id=93,
                 revision='555',
@@ -173,7 +173,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
             yield self.assertBuildsetSubscriptions([])
 
         # pretend that the buildset is finished
-        yield self.db.buildsets.completeBuildset(bsid=44, results=results)
+        yield self.master.db.buildsets.completeBuildset(bsid=44, results=results)
         self.sendBuildsetMessage(results=results, complete=True)
 
         # and check whether a buildset was added in response
@@ -213,7 +213,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         sched = yield self.makeScheduler()
 
         # insert some state, with more bsids than exist
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=1234),
             fakedb.Buildset(id=11),
             fakedb.Buildset(id=13),

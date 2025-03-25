@@ -207,6 +207,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             projectid = yield self.master.data.updates.find_project_id(
                 codebase.project, auto_create=False
             )
+            if projectid is None:
+                raise RuntimeError(f'Project {codebase.project} is not configured')
+
             self._codebase_id = yield self.master.data.updates.find_codebase_id(
                 projectid=projectid, name=codebase.name
             )
@@ -602,16 +605,18 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             )
 
         last_commit_id = None
-        if self._codebase_id is not None:
+        if self._codebase_id is not None and change_count:
             rev = revList[0]
             parent_hashes = yield self._get_commit_parent_hashes(rev)
             parent_hash = parent_hashes.split()[0]
-            last_commit_id = yield self.master.data.get((
+            last_commit = yield self.master.data.get((
                 'codebases',
                 self._codebase_id,
                 'commits_by_revision',
                 parent_hash,
             ))
+            if last_commit is not None:
+                last_commit_id = last_commit['commitid']
 
         for rev in revList:
             dl = defer.DeferredList(

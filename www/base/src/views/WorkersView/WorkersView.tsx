@@ -115,7 +115,7 @@ export const WorkersView = observer(() => {
     }
     return Build.getAll(accessor, {query: {
       property: ["owners", "workername", "branch", ...getBuildLinkDisplayProperties()],
-      limit: 50,
+      limit: settings.getIntegerSetting("Workers.buildFetchLimit"),
       order: '-buildid',
       workerid: paginatedWorkerIds,
     }});
@@ -189,6 +189,11 @@ buildbotSetupPlugin((reg) => {
       name: 'page_size',
       caption: 'Number of workers to show per page',
       defaultValue: 100
+    }, {
+      type: 'integer',
+      name: 'buildFetchLimit',
+      caption: 'Maximum number of builds to fetch',
+      defaultValue: 50
     }]
   });
 });

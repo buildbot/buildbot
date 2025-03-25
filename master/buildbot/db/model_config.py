@@ -15,4 +15,5 @@
 
 property_name_length = 256
 property_source_length = 256
+step_name_length = 50
 hash_length = 40

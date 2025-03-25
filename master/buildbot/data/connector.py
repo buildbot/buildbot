@@ -92,7 +92,13 @@ class DataConnector(service.AsyncService):
                     # don't use inherited values for these parameters
                     clsdict = ep.__class__.__dict__
                     pathPatterns = clsdict.get('pathPatterns', '')
-                    pathPatterns = pathPatterns.split()
+                    if isinstance(pathPatterns, str):
+                        pathPatterns = pathPatterns.split()
+                        warn_deprecated(
+                            '4.3.0',
+                            'Endpoint.pathPatterns as a multiline string is deprecated. Use pathPatterns as a '
+                            'list of strings instead.',
+                        )
                     pathPatterns = [tuple(pp.split('/')[1:]) for pp in pathPatterns]
                     for pp in pathPatterns:
                         # special-case the root

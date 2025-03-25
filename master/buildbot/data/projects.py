@@ -40,10 +40,10 @@ def project_db_to_data(model: ProjectModel, active=None):
 
 class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /projects/n:projectid
-        /projects/i:projectname
-    """
+    pathPatterns = [
+        "/projects/n:projectid",
+        "/projects/i:projectname",
+    ]
 
     @defer.inlineCallbacks
     def get(self, result_spec, kwargs):
@@ -60,9 +60,9 @@ class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
 class ProjectsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'projects'
-    pathPatterns = """
-        /projects
-    """
+    pathPatterns = [
+        "/projects",
+    ]
 
     @defer.inlineCallbacks
     def get(self, result_spec, kwargs):
@@ -85,9 +85,9 @@ class Project(base.ResourceType):
     name = "project"
     plural = "projects"
     endpoints = [ProjectEndpoint, ProjectsEndpoint]
-    eventPathPatterns = """
-        /projects/:projectid
-    """
+    eventPathPatterns = [
+        "/projects/:projectid",
+    ]
 
     class EntityType(types.Entity):
         projectid = types.Integer()
@@ -112,7 +112,12 @@ class Project(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def update_project_info(
-        self, projectid, slug, description, description_format, description_html
+        self,
+        projectid: int,
+        slug: str,
+        description: str | None,
+        description_format: str | None,
+        description_html: str | None,
     ):
         yield self.master.db.projects.update_project_info(
             projectid, slug, description, description_format, description_html

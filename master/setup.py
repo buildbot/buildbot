@@ -497,6 +497,12 @@ setup_args = {
                         ],
                     ),
                     (
+                        'buildbot.process.codebase',
+                        [
+                            'Codebase',
+                        ],
+                    ),
+                    (
                         'buildbot.process.factory',
                         [
                             'BuildFactory',

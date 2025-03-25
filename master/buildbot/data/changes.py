@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -80,9 +81,9 @@ class FixerMixin:
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /changes/n:changeid
-    """
+    pathPatterns = [
+        "/changes/n:changeid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
@@ -94,12 +95,12 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
 class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /changes
-        /builders/n:builderid/builds/n:build_number/changes
-        /builds/n:buildid/changes
-        /sourcestamps/n:ssid/changes
-    """
+    pathPatterns = [
+        "/changes",
+        "/builders/n:builderid/builds/n:build_number/changes",
+        "/builds/n:buildid/changes",
+        "/sourcestamps/n:ssid/changes",
+    ]
     rootLinkName = 'changes'
 
     @defer.inlineCallbacks
@@ -131,9 +132,9 @@ class Change(base.ResourceType):
     name = "change"
     plural = "changes"
     endpoints = [ChangeEndpoint, ChangesEndpoint]
-    eventPathPatterns = """
-        /changes/:changeid
-    """
+    eventPathPatterns = [
+        "/changes/:changeid",
+    ]
 
     class EntityType(types.Entity):
         changeid = types.Integer()
@@ -159,21 +160,21 @@ class Change(base.ResourceType):
     @defer.inlineCallbacks
     def addChange(
         self,
-        files=None,
-        comments=None,
-        author=None,
-        committer=None,
-        revision=None,
-        when_timestamp=None,
-        branch=None,
-        category=None,
-        revlink='',
-        properties=None,
-        repository='',
-        codebase=None,
-        project='',
-        src=None,
-        _test_changeid=None,
+        files: list[str] | None = None,
+        comments: str | None = None,
+        author: str | None = None,
+        committer: str | None = None,
+        revision: str | None = None,
+        when_timestamp: int | None = None,
+        branch: str | None = None,
+        category: str | None = None,
+        revlink: str | None = '',
+        properties: dict[str, Any] | None = None,
+        repository: str = '',
+        codebase: str | None = None,
+        project: str = '',
+        src: str | None = None,
+        _test_changeid: int | None = None,
     ):
         metrics.MetricCountEvent.log("added_changes", 1)
 

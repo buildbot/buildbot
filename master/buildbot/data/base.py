@@ -26,6 +26,7 @@ from twisted.internet import defer
 
 from buildbot.data import exceptions
 from buildbot.util.twisted import async_to_deferred
+from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from typing import Any
@@ -52,7 +53,7 @@ class ResourceType:
     name: str | None = None
     plural: str | None = None
     endpoints: list[type[Endpoint]] = []
-    eventPathPatterns = ""
+    eventPathPatterns: list[str] | str = []
     entityType: types.Type | None = None
 
     def __init__(self, master: BuildMaster):
@@ -60,10 +61,15 @@ class ResourceType:
         self.compileEventPathPatterns()
 
     def compileEventPathPatterns(self):
-        # We'll run a single format, and then split the string
-        # to get the final event path tuple
+        # We'll run a single format, to get the final event path tuple
         pathPatterns = self.eventPathPatterns
-        pathPatterns = pathPatterns.split()
+        if isinstance(pathPatterns, str):
+            pathPatterns = pathPatterns.split()
+            warn_deprecated(
+                '4.3.0',
+                'ResourceType.eventPathPatterns as a multiline string is deprecated. Use '
+                'eventPathPatterns as a list of strings instead.',
+            )
         identifiers = re.compile(r':([^/]*)')
         for i, pp in enumerate(pathPatterns):
             pp = identifiers.sub(r'{\1}', pp)
@@ -121,7 +127,7 @@ class SubResource:
 
 
 class Endpoint:
-    pathPatterns = ""
+    pathPatterns: list[str] | str = []
     rootLinkName: str | None = None
     isPseudoCollection = False
     kind = EndpointKind.SINGLE
@@ -150,7 +156,9 @@ class Endpoint:
         return action_method(args, kwargs)
 
     def __repr__(self):
-        return "endpoint for " + ",".join(self.pathPatterns.split())
+        if isinstance(self.pathPatterns, str):
+            self.pathPatterns = self.pathPatterns.split()
+        return "endpoint for " + ",".join(self.pathPatterns)
 
 
 class NestedBuildDataRetriever:

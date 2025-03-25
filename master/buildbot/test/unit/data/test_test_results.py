@@ -33,7 +33,7 @@ class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
             fakedb.Buildset(id=20),
             fakedb.Builder(id=88, name='b1'),
@@ -137,6 +137,7 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
         results = yield self.master.db.test_results.getTestResults(
             builderid=88, test_result_setid=13
         )
+        results = sorted(results, key=lambda result: result.id)
         resultid = results[0].id
         self.assertEqual(
             results,

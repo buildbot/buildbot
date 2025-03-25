@@ -45,10 +45,10 @@ codebases_field_map = {
 
 class CodebaseEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /codebases/n:codebaseid
-        /projects/n:projectid/codebases/i:codebasename
-    """
+    pathPatterns = [
+        "/codebases/n:codebaseid",
+        "/projects/n:projectid/codebases/i:codebasename",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> dict[str, Any] | None:
@@ -69,9 +69,9 @@ class CodebaseEndpoint(base.Endpoint):
 class CodebasesEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
     rootLinkName = 'codebases'
-    pathPatterns = """
-        /codebases
-    """
+    pathPatterns = [
+        "/codebases",
+    ]
 
     @async_to_deferred
     async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:
@@ -84,9 +84,9 @@ class Codebase(base.ResourceType):
     name = "codebase"
     plural = "codebases"
     endpoints = [CodebaseEndpoint, CodebasesEndpoint]
-    eventPathPatterns = """
-        /codebases/:codebaseid
-    """
+    eventPathPatterns = [
+        "/codebases/:codebaseid",
+    ]
 
     class EntityType(types.Entity):
         codebaseid = types.Integer()
@@ -98,7 +98,7 @@ class Codebase(base.ResourceType):
 
     @async_to_deferred
     async def generate_event(self, _id: int, event: str) -> None:
-        codebase = await self.master.data.get(('codebase', str(_id)))
+        codebase = await self.master.data.get(('codebases', str(_id)))
         self.produceEvent(codebase, event)
 
     @base.updateMethod
@@ -118,5 +118,7 @@ class Codebase(base.ResourceType):
         projectid: int,
         slug: str,
     ) -> None:
-        await self.master.db.codebases.update_codebase_info(codebaseid, projectid, slug)
+        await self.master.db.codebases.update_codebase_info(
+            codebaseid=codebaseid, projectid=projectid, slug=slug
+        )
         await self.generate_event(codebaseid, "update")

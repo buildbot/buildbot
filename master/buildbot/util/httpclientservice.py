@@ -93,7 +93,14 @@ class HTTPClientService(service.SharedService):
     MAX_THREADS = 20
 
     def __init__(
-        self, base_url, auth=None, headers=None, verify=None, debug=False, skipEncoding=False
+        self,
+        base_url,
+        auth=None,
+        headers=None,
+        verify=None,
+        cert=None,
+        debug=False,
+        skipEncoding=False,
     ):
         super().__init__()
         self._session = HTTPSession(
@@ -102,6 +109,7 @@ class HTTPClientService(service.SharedService):
             auth=auth,
             headers=headers,
             verify=verify,
+            cert=cert,
             debug=debug,
             skip_encoding=skipEncoding,
         )
@@ -196,7 +204,11 @@ class HTTPClientService(service.SharedService):
         kwargs['background_callback'] = readContent
         if session.verify is False:
             kwargs['verify'] = False
+        elif session.verify:
+            kwargs['verify'] = session.verify
 
+        if session.cert:
+            kwargs['cert'] = session.cert
         if session._txrequests_session is None:
             session._txrequests_session = txrequests.Session(
                 pool=self._txrequests_pool, maxthreads=self.MAX_THREADS
@@ -240,7 +252,15 @@ class HTTPClientService(service.SharedService):
 
 class HTTPSession:
     def __init__(
-        self, http, base_url, auth=None, headers=None, verify=None, debug=False, skip_encoding=False
+        self,
+        http,
+        base_url,
+        auth=None,
+        headers=None,
+        verify=None,
+        cert=None,
+        debug=False,
+        skip_encoding=False,
     ):
         assert not base_url.endswith("/"), "baseurl should not end with /: " + base_url
         self.http = http
@@ -249,6 +269,7 @@ class HTTPSession:
         self.headers = headers
         self.pool = None
         self.verify = verify
+        self.cert = cert
         self.debug = debug
         self.skip_encoding = skip_encoding
 

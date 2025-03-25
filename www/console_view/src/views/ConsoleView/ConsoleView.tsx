@@ -205,7 +205,7 @@ function resolveFakeChange(codebase: string, revision: string, whenTimestamp: nu
   }
 
   const newChange = {
-    change: new Change(undefined as unknown as IDataAccessor, "a/1", {
+    change: new Change(undefined as unknown as IDataAccessor, {
       changeid: 0,
       author: "",
       branch: "",

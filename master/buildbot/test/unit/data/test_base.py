@@ -22,6 +22,8 @@ from buildbot.data import base
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
@@ -59,7 +61,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
-            name='singular', eventPathPatterns="/foo/:fooid/bar/:barid"
+            name='singular', eventPathPatterns=["/foo/:fooid/bar/:barid"]
         )
         master = yield fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
@@ -75,6 +77,19 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_compilePatterns(self):
         class MyResourceType(base.ResourceType):
+            eventPathPatterns = [
+                "/builder/:builderid/build/:number",
+                "/build/:buildid",
+            ]
+
+        master = yield fakemaster.make_master(self, wantMq=True)
+        master.mq.verifyMessages = False  # since this is a pretend message
+        inst = MyResourceType(master)
+        self.assertEqual(inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
+
+    @defer.inlineCallbacks
+    def test_compilePatterns_multiline_string_deprecation(self):
+        class MyResourceType(base.ResourceType):
             eventPathPatterns = """
                 /builder/:builderid/build/:number
                 /build/:buildid
@@ -82,7 +97,11 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
 
         master = yield fakemaster.make_master(self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
-        inst = MyResourceType(master)
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern='.*ResourceType.eventPathPatterns as a multiline string is deprecated.*',
+        ):
+            inst = MyResourceType(master)
         self.assertEqual(inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
 
 
@@ -91,9 +110,9 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
         name = "my"
 
     class MyEndpoint(base.Endpoint):
-        pathPatterns = """
-            /my/pattern
-        """
+        pathPatterns = [
+            "/my/pattern",
+        ]
 
     endpointClass = MyEndpoint
     resourceTypeClass = MyResourceType

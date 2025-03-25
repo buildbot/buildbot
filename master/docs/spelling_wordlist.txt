@@ -554,6 +554,7 @@ Msbuild
 MsBuild
 msg
 mtime
+mtls
 mtrlogobserver
 mulitple
 multi
@@ -627,6 +628,7 @@ Patchset
 pathmatch
 pathname
 pathnames
+pathPatterns
 pb
 pbuilder
 pem

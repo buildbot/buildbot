@@ -37,7 +37,6 @@ class Log:
         self.subscriptions = {}
         self._finishing = False
         self.finished = False
-        self.finishWaiters = []
         self._had_errors = False
         self.lock = defer.DeferredLock()
         self.decoder = decoder
@@ -84,19 +83,11 @@ class Log:
 
     # completion
 
-    def isFinished(self) -> bool:
-        return self.finished
-
-    def waitUntilFinished(self):
-        d = defer.Deferred()
-        if self.finished:
-            d.succeed(None)
-        else:
-            self.finishWaiters.append(d)
-        return d
-
     def had_errors(self) -> bool:
         return self._had_errors
+
+    def flush(self):
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def finish(self):
@@ -113,10 +104,6 @@ class Log:
         self.subPoint.deliver(None, None)
 
         yield self.subPoint.waitForDeliveriesToFinish()
-
-        # notify those waiting for finish
-        for d in self.finishWaiters:
-            d.callback(None)
 
         self._had_errors = len(self.subPoint.pop_exceptions()) > 0
 
@@ -145,11 +132,15 @@ class PlainLog(Log):
         return self.addRawLines(lines)
 
     @defer.inlineCallbacks
-    def finish(self):
+    def flush(self):
         lines = self.lbf.flush()
         if lines is not None:
             self.subPoint.deliver(None, lines)
             yield self.addRawLines(lines)
+
+    @defer.inlineCallbacks
+    def finish(self):
+        yield self.flush()
         yield super().finish()
 
 
@@ -225,12 +216,16 @@ class StreamLog(Log):
             text = self.decoder(text)
         return self._on_whole_lines('h', text)
 
-    @defer.inlineCallbacks
-    def finish(self):
+    def flush(self):
         for stream, lbf in self.lbfs.items():
             lines = lbf.flush()
             if lines is not None:
                 self._on_whole_lines(stream, lines)
+        return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def finish(self):
+        yield self.flush()
         yield super().finish()
 
 

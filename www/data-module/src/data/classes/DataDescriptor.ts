@@ -13,5 +13,5 @@ export interface IAnyDataDescriptor {
 
 export interface IDataDescriptor<T> extends IAnyDataDescriptor {
   fieldId: string;
-  parse(accessor: IDataAccessor, endpoint: string, object: any): T;
+  parse(accessor: IDataAccessor, object: any): T;
 }

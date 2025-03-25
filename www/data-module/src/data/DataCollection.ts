@@ -186,7 +186,7 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     }
 
     // add items that are not filtered out
-    const instance = this.descriptor.parse(this.accessor, this.endpoint, element);
+    const instance = this.descriptor.parse(this.accessor, element);
     this.byId.set(instance.id, instance);
     this.array.push(instance);
   }

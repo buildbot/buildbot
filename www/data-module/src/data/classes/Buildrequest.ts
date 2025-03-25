@@ -27,8 +27,8 @@ export class Buildrequest extends BaseClass {
   @observable submitted_at!: number;
   @observable waited_for!: boolean;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.buildrequestid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "buildrequests", String(object.buildrequestid));
     this.update(object);
     makeObservable(this);
   }
@@ -84,8 +84,8 @@ export class BuildrequestDescriptor implements IDataDescriptor<Buildrequest> {
   restArrayField = "buildrequests";
   fieldId: string = "buildrequestid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Buildrequest(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Buildrequest(accessor, object);
   }
 }
 

@@ -18,10 +18,12 @@ Buildbot's authentication subsystem is designed to support several authenticatio
     The Buildbot UI prompts for a username and password and the backend verifies them.
 
 * External authentication by an HTTP Proxy.
-    An HTTP proxy in front of Buildbot performs the authentication and passes the verified username to Buildbot in an HTTP Header.
+    An HTTP proxy in front of Buildbot performs the authentication and passes the verified username
+    to Buildbot in an HTTP Header.
 
 * Authentication by a third-party website.
-    Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworthy assertion of the user's identity from that site.
+    Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworthy
+    assertion of the user's identity from that site.
 
 Implementation
 --------------
@@ -34,18 +36,21 @@ Username / Password Authentication
 ----------------------------------
 
 In this mode, the Buildbot UI displays a form allowing the user to specify a username and password.
-When this form is submitted, the UI makes an AJAX call to ``/auth/login`` including HTTP Basic Authentication headers.
-The master verifies the contents of the header and updates the server-side session to indicate a successful login or to contain a failure message.
-Once the AJAX call is complete, the UI reloads the page, re-fetching ``/config.js``, which will include the username or failure message from the session.
+When this form is submitted, the UI makes an AJAX call to ``/auth/login`` including HTTP Basic
+Authentication headers. The master verifies the contents of the header and updates the server-side
+session to indicate a successful login or to contain a failure message. Once the AJAX call is
+complete, the UI reloads the page, re-fetching ``/config.js``, which will include the username or
+failure message from the session.
 
-Subsequent access is authorized based on the information in the session; the authentication credentials are not sent again.
+Subsequent access is authorized based on the information in the session; the authentication
+credentials are not sent again.
 
 External Authentication
 -----------------------
 
-Buildbot's web service can be run behind an HTTP proxy.
-Many such proxies can be configured to perform authentication on HTTP connections before forwarding the request to Buildbot.
-In these cases, the results of the authentication are passed to Buildbot in an HTTP header.
+Buildbot's web service can be run behind an HTTP proxy. Many such proxies can be configured to
+perform authentication on HTTP connections before forwarding the request to Buildbot. In these
+cases, the results of the authentication are passed to Buildbot in an HTTP header.
 
 In this mode, authentication proceeds as follows:
 
@@ -53,25 +58,30 @@ In this mode, authentication proceeds as follows:
 * The proxy negotiates authentication with the browser, as configured
 * Once the user is authenticated, the proxy forwards the request and the request goes to the Buildbot web service.
   The request includes a header, typically ``Remote-User``, containing the authenticated username.
-* Buildbot reads the header and optionally connects to another service to fetch additional user information about the user.
+* Buildbot reads the header and optionally connects to another service to fetch additional user
+  information about the user.
 * Buildbot stores all of the collected information in the server-side session.
 * The UI fetches ``/config.js``, which includes the user information from the server-side session.
 
-Note that in this mode, the HTTP proxy will send the header with every request, although it is only interpreted during the fetch of ``/config.js``.
+Note that in this mode, the HTTP proxy will send the header with every request, although it is only
+interpreted during the fetch of ``/config.js``.
 
 Kerberos Example
 ~~~~~~~~~~~~~~~~
 
-Kerberos is an authentication system which allows passwordless authentication on corporate networks.
-Users authenticate once on their desktop environment, and the OS, browser, webserver, and corporate directory cooperate in a secure manner to share the authentication to a webserver.
-This mechanism only takes care of the authentication problem, and no user information is shared other than the username.
-The kerberos authentication is supported by an Apache front-end in ``mod_kerberos``.
+Kerberos is an authentication system which allows passwordless authentication on corporate
+networks. Users authenticate once on their desktop environment, and the OS, browser, webserver, and
+corporate directory cooperate in a secure manner to share the authentication to a webserver. This
+mechanism only takes care of the authentication problem, and no user information is shared other
+than the username. The kerberos authentication is supported by an Apache front-end in
+``mod_kerberos``.
 
 Third-Party Authentication
 --------------------------
 
-Third-party authentication involves Buildbot redirecting a user's browser to another site to establish the user's identity.
-Once that is complete, that site redirects the user back to Buildbot, including a cryptographically signed assertion about the user's identity.
+Third-party authentication involves Buildbot redirecting a user's browser to another site to
+establish the user's identity. Once that is complete, that site redirects the user back to
+Buildbot, including a cryptographically signed assertion about the user's identity.
 
 The most common implementation of this sort of authentication is oAuth2.
 Many big internet service companies are providing oAuth2 services to identify their users.
@@ -94,7 +104,8 @@ Logout
 ------
 
 A "logout" button is available in the simple and third-party modes.
-Such a button doesn't make sense for external authentication, since the proxy will immediately re-authenticate the user.
+Such a button doesn't make sense for external authentication, since the proxy will immediately
+re-authenticate the user.
 
 This button fetches ``/auth/logout``, which destroys the server-side session.
 After this point, any stored authentication information is gone and the user is logged out.
@@ -102,4 +113,6 @@ After this point, any stored authentication information is gone and the user is 
 Future Additions
 ----------------
 
-* Use the User table in db: This is a very similar to the UserPasswordAuth use cases (form + local db verification). Eventually, this method will require some work on the UI in order to populate the db, add a "register" button, verification email, etc. This has to be done in a ui plugin.
+* Use the User table in db: This is a very similar to the UserPasswordAuth use cases (form + local
+  db verification). Eventually, this method will require some work on the UI in order to populate the
+  db, add a "register" button, verification email, etc. This has to be done in a ui plugin.

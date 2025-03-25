@@ -76,10 +76,10 @@ The following attributes can be set on a build factory after it is created, e.g.
 
 :attr:`workdir`
     (defaults to 'build'): workdir given to every build step created by this factory as default.
-    The workdir can be overridden in a build step definition.
+    The workdir can be overridden in a build step definition. The workdir can be renderable.
 
-    If this attribute is set to a string, that string will be used for constructing the workdir (worker base + builder builddir + workdir).
-    The attribute can also be a Python callable, for more complex cases, as described in :ref:`Factory-Workdir-Functions`.
+    The attribute will be used for constructing the workdir (worker base + builder builddir +
+    workdir).
 
 .. _DynamicBuildFactories:
 

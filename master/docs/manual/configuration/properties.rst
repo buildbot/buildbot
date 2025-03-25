@@ -5,14 +5,15 @@
 Properties
 ==========
 
-Build properties are a generalized way to provide configuration information to build steps; see :ref:`Build-Properties` for the conceptual overview of properties.
+Build properties are a generalized way to provide configuration information to build steps; see
+:ref:`Build-Properties` for the conceptual overview of properties.
 
 .. contents::
     :depth: 1
     :local:
 
-Some build properties come from external sources and are set before the build begins; others are set during the build and are available for later steps.
-The sources for properties are:
+Some build properties come from external sources and are set before the build begins; others are
+set during the build and are available for later steps. The sources for properties are:
 
 :bb:cfg:`global configuration <properties>`
     These properties apply to all builds.
@@ -36,7 +37,8 @@ forced builds
 If the same property is supplied in multiple places, the final appearance takes precedence.
 For example, a property set in a builder configuration will override the one supplied by the scheduler.
 
-Properties are stored internally in JSON format, so they are limited to basic types of data: numbers, strings, lists, and dictionaries.
+Properties are stored internally in JSON format, so they are limited to basic types of data:
+numbers, strings, lists, and dictionaries.
 
 .. index:: single: Properties; Common Properties
 
@@ -50,15 +52,19 @@ The following build properties are set when the build is started, and are availa
 .. index:: single: Properties; got_revision
 
 ``got_revision``
-    This property is set when a :class:`Source` step checks out the source tree, and provides the revision that was actually obtained from the VC system.
-    In general this should be the same as ``revision``, except for non-absolute sourcestamps, where ``got_revision`` indicates what revision was current when the checkout was performed.
-    This can be used to rebuild the same source code later.
+    This property is set when a :class:`Source` step checks out the source tree, and provides the
+    revision that was actually obtained from the VC system. In general this should be the same as
+    ``revision``, except for non-absolute sourcestamps, where ``got_revision`` indicates what
+    revision was current when the checkout was performed. This can be used to rebuild the same
+    source code later.
 
     .. note::
 
-       For some VC systems (Darcs in particular), the revision is a large string containing newlines, and is not suitable for interpolation into a filename.
+       For some VC systems (Darcs in particular), the revision is a large string containing
+       newlines, and is not suitable for interpolation into a filename.
 
-    For multi-codebase builds (where codebase is not the default `''`), this property is a dictionary, keyed by codebase.
+    For multi-codebase builds (where codebase is not the default `''`), this property is a
+    dictionary, keyed by codebase.
 
 .. index:: single: Properties; buildername
 
@@ -74,8 +80,9 @@ The following build properties are set when the build is started, and are availa
 .. index:: single: Properties; buildnumber
 
 ``buildnumber``
-    Each build gets a number, scoped to the :class:`Builder` (so the first build performed on any given :class:`Builder` will have a build number of 0).
-    This integer property contains the build's number.
+    Each build gets a number, scoped to the :class:`Builder` (so the first build performed on any
+    given :class:`Builder` will have a build number of 0). This integer property contains the
+    build's number.
 
 .. index:: single: Properties; workername
 
@@ -92,7 +99,8 @@ The following build properties are set when the build is started, and are availa
 
 .. index:: single: Properties; builddir
 
-For single codebase builds, where the codebase is `''`, the following :ref:`Source-Stamp-Attributes` are also available as properties: ``branch``, ``revision``, ``repository``, and ``project`` .
+For single codebase builds, where the codebase is `''`, the following :ref:`Source-Stamp-Attributes`
+are also available as properties: ``branch``, ``revision``, ``repository``, and ``project`` .
 
 .. _Source-Stamp-Attributes:
 
@@ -116,26 +124,29 @@ Source Stamp Attributes
 Using Properties in Steps
 -------------------------
 
-For the most part, properties are used to alter the behavior of build steps during a build.
-This is done by using :index:`renderables <renderable>` (objects implementing the :class:`~buildbot.interfaces.IRenderable` interface) as step parameters.
-When the step is started, each such object is rendered using the current values of the build properties, and the resultant rendering is substituted as the actual value of the step parameter.
+For the most part, properties are used to alter the behavior of build steps during a build. This is
+done by using :index:`renderables <renderable>` (objects implementing the
+:class:`~buildbot.interfaces.IRenderable` interface) as step parameters. When the step is started,
+each such object is rendered using the current values of the build properties, and the resultant
+rendering is substituted as the actual value of the step parameter.
 
 Buildbot offers several renderable object types covering common cases.
 It's also possible to :ref:`create custom renderables <Custom-Renderables>`.
 
 .. note::
 
-    Properties are defined while a build is in progress; their values are not available when the configuration file is parsed.
-    This can sometimes confuse newcomers to Buildbot!
-    In particular, the following is a common error:
+    Properties are defined while a build is in progress; their values are not available when the
+    configuration file is parsed. This can sometimes confuse newcomers to Buildbot! In particular,
+    the following is a common error:
 
     .. code-block:: python
 
         if Property('release_train') == 'alpha':
             f.addStep(...)
 
-    This does not work because the value of the property is not available when the ``if`` statement is executed.
-    However, Python will not detect this as an error - you will just never see the step added to the factory.
+    This does not work because the value of the property is not available when the ``if`` statement
+    is executed. However, Python will not detect this as an error - you will just never see the
+    step added to the factory.
 
 You can use renderables in most step parameters.
 Please file bugs for any parameters which do not accept renderables.
@@ -147,7 +158,8 @@ Please file bugs for any parameters which do not accept renderables.
 Property
 ++++++++
 
-The simplest renderable is :class:`Property`, which renders to the value of the property named by its argument:
+The simplest renderable is :class:`Property`, which renders to the value of the property named by
+its argument:
 
 .. code-block:: python
 
@@ -163,8 +175,9 @@ You can specify a default value by passing a ``default`` keyword argument:
     f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
                                  util.Property('warnings', default='none')]))
 
-The default value is used when the property doesn't exist, or when the value is something Python regards as ``False``.
-The ``defaultWhenFalse`` argument can be set to ``False`` to force Buildbot to use the default argument only if the parameter is not set:
+The default value is used when the property doesn't exist, or when the value is something Python
+regards as ``False``. The ``defaultWhenFalse`` argument can be set to ``False`` to force Buildbot
+to use the default argument only if the parameter is not set:
 
 .. code-block:: python
 
@@ -185,13 +198,14 @@ The default value can be a renderable itself, e.g.,
 Interpolate
 +++++++++++
 
-:class:`Property` can only be used to replace an entire argument: in the example above, it replaces an argument to ``echo``.
-Often, properties need to be interpolated into strings, instead.
-The tool for that job is :ref:`Interpolate`.
+:class:`Property` can only be used to replace an entire argument: in the example above, it replaces
+an argument to ``echo``. Often, properties need to be interpolated into strings, instead. The tool
+for that job is :ref:`Interpolate`.
 
-The more common pattern is to use Python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
-In this form, the property name goes in the parentheses, as above.
-A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
+The more common pattern is to use Python dictionary-style string interpolation by using the
+``%(prop:<propname>)s`` syntax. In this form, the property name goes in the parentheses, as above.
+A common mistake is to omit the trailing "s", leading to a rather obscure error from Python
+("ValueError: unsupported format character").
 
 .. code-block:: python
 
@@ -205,7 +219,9 @@ This example will result in a ``make`` command with an argument like ``REVISION=
 
 .. _Interpolate-DictStyle:
 
-The syntax of dictionary-style interpolation is a selector, followed by a colon, followed by a selector specific key, optionally followed by a colon and a string indicating how to interpret the value produced by the key.
+The syntax of dictionary-style interpolation is a selector, followed by a colon, followed by a
+selector specific key, optionally followed by a colon and a string indicating how to interpret the
+value produced by the key.
 
 The following selectors are supported.
 
@@ -233,8 +249,9 @@ The following ways of interpreting the value are available.
     ``replacement`` may be empty (default), ``%(prop:propname:-)s``.
 
 ``~replacement``
-    Like ``-replacement``, but only substitutes the value of the key if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be false, so such values will be replaced by ``replacement``.
+    Like ``-replacement``, but only substitutes the value of the key if it is something Python
+    regards as ``True``. Python considers ``None``, 0, empty lists, and the empty string to be
+    false, so such values will be replaced by ``replacement``.
 
 ``+replacement``
     If the key exists, substitute ``replacement``; otherwise, substitute an empty string.
@@ -242,10 +259,11 @@ The following ways of interpreting the value are available.
 ``?|sub_if_exists|sub_if_missing``
 
 ``#?|sub_if_true|sub_if_false``
-    Ternary substitution, depending on either the key being present (with ``?``, similar to ``+``) or being ``True`` (with ``#?``, like ``~``).
-    Notice that there is a pipe immediately following the question mark *and* between the two substitution alternatives.
-    The character that follows the question mark is used as the delimiter between the two alternatives.
-    In the above examples, it is a pipe, but any character other than ``(`` can be used.
+    Ternary substitution, depending on either the key being present (with ``?``, similar to ``+``)
+    or being ``True`` (with ``#?``, like ``~``). Notice that there is a pipe immediately following
+    the question mark *and* between the two substitution alternatives. The character that follows
+    the question mark is used as the delimiter between the two alternatives. In the above examples,
+    it is a pipe, but any character other than ``(`` can be used.
 
 .. note::
 
@@ -280,8 +298,9 @@ Example:
             'dist'
         ]))
 
-In addition, ``Interpolate`` supports using positional string interpolation.
-Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables) are given as subsequent arguments:
+In addition, ``Interpolate`` supports using positional string interpolation. Here, ``%s`` is used
+as a placeholder, and the substitutions (which may be renderables) are given as subsequent
+arguments:
 
 .. code-block:: python
 
@@ -295,8 +314,9 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may be rende
 
 .. note::
 
-   Like Python, you can use either positional interpolation *or* dictionary-style interpolation, but not both.
-   Thus you cannot use a string like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
+   Like Python, you can use either positional interpolation *or* dictionary-style interpolation,
+   but not both. Thus you cannot use a string like ``Interpolate("foo-%(src::revision)s-%s",
+   "branch")``.
 
 .. index:: single: Properties; Renderer
 
@@ -305,10 +325,11 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may be rende
 Renderer
 ++++++++
 
-While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
-The ``renderer`` decorator creates a renderable object whose rendering is obtained by calling the decorated function when the step to which it's passed begins.
-The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.
-For example:
+While Interpolate can handle many simple cases, and even some common conditionals, more complex
+cases are best handled with Python code. The ``renderer`` decorator creates a renderable object
+whose rendering is obtained by calling the decorated function when the step to which it's passed
+begins. The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use
+to examine the values of any and all properties. For example:
 
 .. code-block:: python
 
@@ -331,14 +352,15 @@ You can think of ``renderer`` as saying "call this function when the step starts
 
 .. note::
 
-    Since 0.9.3, renderer can itself return :class:`~buildbot.interfaces.IRenderable` objects or containers containing :class:`~buildbot.interfaces.IRenderable`.
+    Since 0.9.3, renderer can itself return :class:`~buildbot.interfaces.IRenderable` objects or
+    containers containing :class:`~buildbot.interfaces.IRenderable`.
 
-Optionally, extra arguments may be passed to the rendered function at any time by calling ``withArgs`` on the renderable object.
-The ``withArgs`` method accepts ``*args`` and ``**kwargs`` arguments which are stored in a new renderable object which is returned.
-The original renderable object is not modified.
-Multiple ``withArgs`` calls may be chained.
-The passed ``*args`` and ``**kwargs`` parameters are rendered and the results are passed to the rendered function at the time it is itself rendered.
-For example:
+Optionally, extra arguments may be passed to the rendered function at any time by calling
+``withArgs`` on the renderable object. The ``withArgs`` method accepts ``*args`` and ``**kwargs``
+arguments which are stored in a new renderable object which is returned. The original renderable
+object is not modified. Multiple ``withArgs`` calls may be chained. The passed ``*args`` and
+``**kwargs`` parameters are rendered and the results are passed to the rendered function at the
+time it is itself rendered. For example:
 
 .. code-block:: python
 
@@ -359,7 +381,8 @@ For example:
 
 .. note::
 
-    The rendering of the renderable object may happen at unexpected times, so it is best to ensure that the passed extra arguments are not changed.
+    The rendering of the renderable object may happen at unexpected times, so it is best to ensure
+    that the passed extra arguments are not changed.
 
 .. note::
 
@@ -372,15 +395,18 @@ For example:
 Transform
 +++++++++
 
-``Transform`` is an alternative to ``renderer``.
-While ``renderer`` is useful for creating new renderables, ``Transform`` is easier to use when you want to transform or combine the renderings of preexisting renderables.
+``Transform`` is an alternative to ``renderer``. While ``renderer`` is useful for creating new
+renderables, ``Transform`` is easier to use when you want to transform or combine the renderings of
+preexisting renderables.
 
-``Transform`` takes a function and any number of positional and keyword arguments.
-The function must either be a callable object or a renderable producing one.
-When rendered, a ``Transform`` first replaces all of its arguments that are renderables with their renderings, then calls the function, passing it the positional and keyword arguments, and returns the result as its own rendering.
+``Transform`` takes a function and any number of positional and keyword arguments. The function
+must either be a callable object or a renderable producing one. When rendered, a ``Transform``
+first replaces all of its arguments that are renderables with their renderings, then calls the
+function, passing it the positional and keyword arguments, and returns the result as its own
+rendering.
 
-For example, suppose ``my_path`` is a path on the worker, and you want to get it relative to the build directory.
-You can do it like this:
+For example, suppose ``my_path`` is a path on the worker, and you want to get it relative to the
+build directory. You can do it like this:
 
 .. code-block:: python
 
@@ -415,7 +441,8 @@ This is useful when a list-returning property is used in renderables.
 
 .. note::
 
-   ShellCommand automatically flattens nested lists in its ``command`` argument, so there is no need to use ``FlattenList`` for it.
+   ShellCommand automatically flattens nested lists in its ``command`` argument, so there is no
+   need to use ``FlattenList`` for it.
 
 WithProperties
 ++++++++++++++
@@ -437,13 +464,15 @@ Here, ``%s`` is used as a placeholder, and property names are given as subsequen
                 util.WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
                 "source"]))
 
-If this :class:`BuildStep` were used in a tree obtained from Git, it would create a tarball with a name like :file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
+If this :class:`BuildStep` were used in a tree obtained from Git, it would create a tarball with a
+name like :file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
 
 .. index:: unsupported format character
 
-The more common pattern is to use Python dictionary-style string interpolation by using the ``%(propname)s`` syntax.
-In this form, the property name goes in the parentheses, as above.
-A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
+The more common pattern is to use Python dictionary-style string interpolation by using the
+``%(propname)s`` syntax. In this form, the property name goes in the parentheses, as above. A
+common mistake is to omit the trailing "s", leading to a rather obscure error from Python
+("ValueError: unsupported format character").
 
 .. code-block:: python
 
@@ -464,28 +493,32 @@ The dictionary-style interpolation supports a number of more advanced syntaxes i
     ``replacement`` may be empty (``%(propname:-)s``)
 
 ``propname:~replacement``
-    Like ``propname:-replacement``, but only substitutes the value of property ``propname`` if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be false, so such values will be replaced by ``replacement``.
+    Like ``propname:-replacement``, but only substitutes the value of property ``propname`` if it
+    is something Python regards as ``True``. Python considers ``None``, 0, empty lists, and the
+    empty string to be false, so such values will be replaced by ``replacement``.
 
 ``propname:+replacement``
     If ``propname`` exists, substitute ``replacement``; otherwise, substitute an empty string.
 
-Although these are similar to shell substitutions, no other substitutions are currently supported, and ``replacement`` in the above cannot contain more substitutions.
+Although these are similar to shell substitutions, no other substitutions are currently supported,
+and ``replacement`` in the above cannot contain more substitutions.
 
-Note: like Python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
-Thus you cannot use a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
+Note: like Python, you can use either positional interpolation *or* dictionary-style interpolation,
+not both. Thus you cannot use a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
 .. _Custom-Renderables:
 
 Custom Renderables
 ++++++++++++++++++
 
-If the options described above are not sufficient, more complex substitutions can be achieved by writing custom renderables.
+If the options described above are not sufficient, more complex substitutions can be achieved by
+writing custom renderables.
 
-The :class:`~buildbot.interfaces.IRenderable` interface is simple - objects must provide a `getRenderingFor` method.
-The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return the rendered value or a deferred firing with one.
-You can pass instances of the class anywhere other renderables are accepted.
-For example:
+The :class:`~buildbot.interfaces.IRenderable` interface is simple - objects must provide a
+`getRenderingFor` method. The method should take one argument - an
+:class:`~buildbot.interfaces.IProperties` provider - and should return the rendered value or a
+deferred firing with one. You can pass instances of the class anywhere other renderables are
+accepted. For example:
 
 .. code-block:: python
 
@@ -528,7 +561,8 @@ This is equivalent to:
         return time.clock()
     ShellCommand(command=['make', util.Interpolate('TIME=%(kw:now)s', now=now)])
 
-Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you like), whereas a function decorated with :func:`renderer` can be used directly.
+Note that a custom renderable must be instantiated (and its constructor can take whatever arguments
+you like), whereas a function decorated with :func:`renderer` can be used directly.
 
 
 .. _URLForBuild:
@@ -551,8 +585,8 @@ For this, you can use a special custom renderer as following:
 Renderable Comparison
 +++++++++++++++++++++
 
-Its common to need to make basic comparison or calculation with properties.
-The :class:`Property` and :class:`Interpolate` objects contain necessary operator overloads to make this possible.
+Its common to need to make basic comparison or calculation with properties. The :class:`Property`
+and :class:`Interpolate` objects contain necessary operator overloads to make this possible.
 
 .. code-block:: python
 
@@ -560,7 +594,8 @@ The :class:`Property` and :class:`Interpolate` objects contain necessary operato
 
     ShellCommand(command=['make'], doStepIf=Interpolate("worker:os_id")  == 'ubuntu')
 
-In previous code, the value of the comparison can only be computed at runtime, so the result of the comparison is actually a renderable which will be computed at the start of the step.
+In previous code, the value of the comparison can only be computed at runtime, so the result of the
+comparison is actually a renderable which will be computed at the start of the step.
 
 .. code-block:: python
 
@@ -568,6 +603,8 @@ In previous code, the value of the comparison can only be computed at runtime, s
 
     ShellCommand(command=['make'], doStepIf=Interpolate("worker:os_id").in_(['debian', 'ubuntu']))
 
-'in' operator cannot be overloaded, so we add a simple ``in_`` method to :class:`Property` and :class:`Interpolate`.
+'in' operator cannot be overloaded, so we add a simple ``in_`` method to :class:`Property` and
+:class:`Interpolate`.
 
-Currently supported operators are ``in_``, ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``+``, ``-``, ``*``, ``/``, ``//``, ``%``.
+Currently supported operators are ``in_``, ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``+``,
+``-``, ``*``, ``/``, ``//``, ``%``.

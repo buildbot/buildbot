@@ -19,8 +19,8 @@ export class Codebase extends BaseClass {
   @observable slug!: string;
   @observable projectid!: number;
 
-  constructor(accessor: IDataAccessor, endpoint: string, object: any) {
-    super(accessor, endpoint, String(object.codebaseid));
+  constructor(accessor: IDataAccessor, object: any) {
+    super(accessor, "codebases", String(object.codebaseid));
     this.update(object);
     makeObservable(this);
   }
@@ -58,8 +58,8 @@ export class CodebaseDescriptor implements IDataDescriptor<Codebase> {
   restArrayField = "codebases";
   fieldId: string = "codebaseid";
 
-  parse(accessor: IDataAccessor, endpoint: string, object: any) {
-    return new Codebase(accessor, endpoint, object);
+  parse(accessor: IDataAccessor, object: any) {
+    return new Codebase(accessor, object);
   }
 }
 

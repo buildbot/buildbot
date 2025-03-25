@@ -152,15 +152,19 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.workers = workermanager.WorkerManager(self)
         yield self.workers.setServiceParent(self)
+        self.workers.reconfig_priority = 127
 
         self.change_svc = ChangeManager()
         yield self.change_svc.setServiceParent(self)
 
         self.botmaster = BotMaster()
         yield self.botmaster.setServiceParent(self)
+        # must be configured first so that projects and codebases are registered
+        self.botmaster.reconfig_priority = 1001
 
         self.machine_manager = MachineManager()
         yield self.machine_manager.setServiceParent(self)
+        self.machine_manager.reconfig_priority = self.workers.reconfig_priority + 1
 
         self.scheduler_manager = SchedulerManager()
         yield self.scheduler_manager.setServiceParent(self)

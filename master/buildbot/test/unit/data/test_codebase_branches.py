@@ -39,7 +39,7 @@ class CodebaseBranchEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1'),
             fakedb.CodebaseCommit(id=110, codebaseid=13),
@@ -48,7 +48,7 @@ class CodebaseBranchEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @async_to_deferred
     async def test_get_existing(self) -> None:
-        branch = await self.callGet(('codebases', 13, 'branches', 'branch1'))
+        branch = await self.callGet(('branches', 220))
 
         self.validateData(branch)
         self.assertEqual(
@@ -64,7 +64,7 @@ class CodebaseBranchEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @async_to_deferred
     async def test_get_missing(self) -> None:
-        branch = await self.callGet(('codebases', 13, 'branches', 'branch_not_existing'))
+        branch = await self.callGet(('branches', 234))
         self.assertIsNone(branch)
 
 
@@ -75,7 +75,7 @@ class CodebaseBranchesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1'),
             fakedb.CodebaseCommit(id=110, codebaseid=13),
@@ -146,7 +146,7 @@ class CodebaseBranchTests(interfaces.InterfaceTests, TestReactorMixin, unittest.
             commitid=111,
             last_timestamp=87654321,
         )
-        branch = await self.master.data.get(('codebases', 13, 'branches', 'branch1'))
+        branch = await self.master.data.get(('branches', 220))
         self.assertEqual(
             branch,
             {

@@ -38,7 +38,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
             fakedb.Change(
                 changeid=13,
@@ -72,7 +72,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpEndpoint()
-        yield self.db.insert_test_data([
+        yield self.master.db.insert_test_data([
             fakedb.Master(id=1),
             fakedb.Worker(id=1, name='wrk'),
             fakedb.SourceStamp(id=133),
@@ -115,12 +115,12 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_build(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(144)
+        fake_change = yield self.master.db.changes.getChangeFromSSid(144)
 
         mockGetChangeById = mock.Mock(
-            spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
+            spec=self.master.db.changes.getChangesForBuild, return_value=[fake_change]
         )
-        self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
+        self.patch(self.master.db.changes, 'getChangesForBuild', mockGetChangeById)
 
         changes = yield self.callGet(('builds', '1', 'changes'))
 
@@ -129,11 +129,11 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChanges_from_builder(self):
-        fake_change = yield self.db.changes.getChangeFromSSid(144)
+        fake_change = yield self.master.db.changes.getChangeFromSSid(144)
         mockGetChangeById = mock.Mock(
-            spec=self.db.changes.getChangesForBuild, return_value=[fake_change]
+            spec=self.master.db.changes.getChangesForBuild, return_value=[fake_change]
         )
-        self.patch(self.db.changes, 'getChangesForBuild', mockGetChangeById)
+        self.patch(self.master.db.changes, 'getChangesForBuild', mockGetChangeById)
 
         changes = yield self.callGet(('builders', '1', 'builds', '1', 'changes'))
         self.validateData(changes[0])

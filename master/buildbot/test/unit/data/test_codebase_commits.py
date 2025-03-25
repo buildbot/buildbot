@@ -39,7 +39,7 @@ class CodebaseCommitEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1'),
             fakedb.CodebaseCommit(id=110, codebaseid=13),
@@ -59,6 +59,7 @@ class CodebaseCommitEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                 'commitid': 110,
                 'committer': 'committer1',
                 'parent_commitid': None,
+                'revision': 'rev110',
                 'when_timestamp': 1234567,
             },
         )
@@ -76,7 +77,7 @@ class CodebaseCommitsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1'),
             fakedb.CodebaseCommit(id=106, codebaseid=13),
@@ -116,7 +117,7 @@ class CodebaseCommitsGraphEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @async_to_deferred
     async def setUp(self) -> None:  # type: ignore[override]
         await self.setUpEndpoint()
-        await self.db.insert_test_data([
+        await self.master.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
             fakedb.Codebase(id=13, projectid=7, name='codebase1'),
             fakedb.CodebaseCommit(id=106, codebaseid=13),
@@ -130,9 +131,16 @@ class CodebaseCommitsGraphEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @async_to_deferred
     async def test_simple(self) -> None:
-        r = await self.callGet(('codebases', '13', 'commits_common_parent', '120', '110'))
+        r = await self.callGet((
+            'codebases',
+            '13',
+            'commit_range',
+            '120',
+            '110',
+            'commits_common_parent',
+        ))
 
-        self.assertEqual(r, {'common': 108, 'from1': [108, 119, 120], 'from2': [108, 109, 110]})
+        self.assertEqual(r, {'common': 108, 'to1': [108, 119, 120], 'to2': [108, 109, 110]})
 
 
 class CodebaseCommitTests(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
@@ -186,6 +194,7 @@ class CodebaseCommitTests(interfaces.InterfaceTests, TestReactorMixin, unittest.
                     'committer': 'committer1',
                     'comments': 'comments1',
                     'when_timestamp': 12345678,
+                    'revision': 'rev120',
                     'parent_commitid': None,
                 }
             ],

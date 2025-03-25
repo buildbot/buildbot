@@ -3,11 +3,14 @@
 Metrics
 =======
 
-New in Buildbot 0.8.4 is support for tracking various performance metrics inside the buildbot master process.
-Currently, these are logged periodically according to the ``log_interval`` configuration setting of the :bb:cfg:`metrics` configuration.
+New in Buildbot 0.8.4 is support for tracking various performance metrics inside the buildbot
+master process. Currently, these are logged periodically according to the ``log_interval``
+configuration setting of the :bb:cfg:`metrics` configuration.
 
-The metrics subsystem is implemented in :mod:`buildbot.process.metrics`.
-It makes use of twisted's logging system to pass metrics data from all over Buildbot's code to a central :class:`MetricsLogObserver` object, which is available at ``BuildMaster.metrics`` or via ``Status.getMetrics()``.
+The metrics subsystem is implemented in :mod:`buildbot.process.metrics`. It makes use of twisted's
+logging system to pass metrics data from all over Buildbot's code to a central
+:class:`MetricsLogObserver` object, which is available at ``BuildMaster.metrics`` or via
+``Status.getMetrics()``.
 
 Metric Events
 -------------
@@ -51,14 +54,16 @@ There are three sub-classes implemented:
 Metric Handlers
 ---------------
 
-:class:`MetricsHandler` objects are responsible for collecting :class:`MetricEvent`\s of a specific type and keeping track of their values for future reporting.
-There are :class:`MetricsHandler` classes corresponding to each of the :class:`MetricEvent` types.
+:class:`MetricsHandler` objects are responsible for collecting :class:`MetricEvent`\s of a specific
+type and keeping track of their values for future reporting. There are :class:`MetricsHandler`
+classes corresponding to each of the :class:`MetricEvent` types.
 
 Metric Watchers
 ---------------
 
-Watcher objects can be added to :class:`MetricsHandlers` to be called when metric events of a certain type are received.
-Watchers are generally used to record alarm events in response to count or time events.
+Watcher objects can be added to :class:`MetricsHandlers` to be called when metric events of a
+certain type are received. Watchers are generally used to record alarm events in response to count
+or time events.
 
 Metric Helpers
 --------------
@@ -76,7 +81,8 @@ Metric Helpers
 
 :func:`Timer(name)`
     :class:`Timer` objects can be used to make timing events easier.
-    When ``Timer.stop()`` is called, a :class:`MetricTimeEvent` is logged with the elapsed time since ``timer.start()`` was called.
+    When ``Timer.stop()`` is called, a :class:`MetricTimeEvent` is logged with the elapsed time
+    since ``timer.start()`` was called.
 
     ::
 
@@ -92,7 +98,8 @@ Metric Helpers
             finally:
                 t.stop()
 
-    :class:`Timer` objects also provide a pair of decorators, :func:`startTimer`/\ :func:`stopTimer` to decorate other functions.
+    :class:`Timer` objects also provide a pair of decorators, :func:`startTimer`/\
+    :func:`stopTimer` to decorate other functions.
 
     ::
 
@@ -113,7 +120,8 @@ Metric Helpers
 
 :func:`timeMethod(name)`
     A function decorator that measures how long a function takes to execute.
-    Note that many functions in Buildbot return deferreds, so may return before all the work they set up has completed.
+    Note that many functions in Buildbot return deferreds, so may return before all the work they
+    set up has completed.
     Using an explicit :class:`Timer` is better in this case.
 
     ::

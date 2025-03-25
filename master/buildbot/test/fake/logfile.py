@@ -28,7 +28,6 @@ class FakeLogFile:
         self.stderr = ''
         self.lbfs = {}
         self.finished = False
-        self._finish_waiters = []
         self._had_errors = False
         self.subPoint = util.subscription.SubscriptionPoint(f"{name!r} log")
 
@@ -98,31 +97,21 @@ class FakeLogFile:
         self._on_whole_lines('e', text)
         return defer.succeed(None)
 
-    def isFinished(self):
-        return self.finished
+    def had_errors(self):
+        return self._had_errors
 
-    def waitUntilFinished(self):
-        d = defer.Deferred()
-        if self.finished:
-            d.succeed(None)
-        else:
-            self._finish_waiters.append(d)
-        return d
-
-    def flushFakeLogfile(self):
+    def flush(self):
         for stream, lbf in self.lbfs.items():
             lines = lbf.flush()
             if lines is not None:
                 self.subPoint.deliver(stream, lines)
-
-    def had_errors(self):
-        return self._had_errors
+        return defer.succeed(None)
 
     @async_to_deferred
     async def finish(self) -> None:
         assert not self.finished
 
-        self.flushFakeLogfile()
+        await self.flush()
         self.finished = True
 
         # notify subscribers *after* finishing the log
@@ -130,10 +119,6 @@ class FakeLogFile:
 
         await self.subPoint.waitForDeliveriesToFinish()
         self._had_errors = len(self.subPoint.pop_exceptions()) > 0
-
-        # notify those waiting for finish
-        for d in self._finish_waiters:
-            d.callback(None)
 
     def fakeData(self, header='', stdout='', stderr=''):
         if header:

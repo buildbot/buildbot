@@ -6,13 +6,15 @@ Worker Setup
 Creating a worker
 -----------------
 
-Typically, you will be adding a worker to an existing buildmaster, to provide additional architecture coverage.
-The Buildbot administrator will give you several pieces of information necessary to connect to the buildmaster.
-You should also be somewhat familiar with the project being tested so that you can troubleshoot build problems locally.
+Typically, you will be adding a worker to an existing buildmaster, to provide additional
+architecture coverage. The Buildbot administrator will give you several pieces of information
+necessary to connect to the buildmaster. You should also be somewhat familiar with the project
+being tested so that you can troubleshoot build problems locally.
 
 Buildbot exists to make sure that the project's stated ``how to build it`` process actually works.
 To this end, the worker should run in an environment just like that of your regular developers.
-Typically the project's build process is documented somewhere (:file:`README`, :file:`INSTALL`, etc), in a document that should mention all library dependencies and contain a basic set of build instructions.
+Typically the project's build process is documented somewhere (:file:`README`, :file:`INSTALL`, etc),
+in a document that should mention all library dependencies and contain a basic set of build instructions.
 This document will be useful as you configure the host and account in which worker runs.
 
 Here's a good checklist for setting up a worker:
@@ -21,40 +23,49 @@ Here's a good checklist for setting up a worker:
 
   It is recommended (although not mandatory) to set up a separate user account for the worker.
   This account is frequently named ``buildbot`` or ``worker``.
-  This serves to isolate your personal working environment from that of the worker's, and helps to minimize the security threat posed by letting possibly-unknown contributors run arbitrary code on your system.
+  This serves to isolate your personal working environment from that of the worker's, and helps to
+  minimize the security threat posed by letting possibly-unknown contributors run arbitrary code on
+  your system.
   The account should have a minimum of fancy init scripts.
 
 2. Install the Buildbot code
 
   Follow the instructions given earlier (:ref:`Installing-the-code`).
-  If you use a separate worker account, and you didn't install the Buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
+  If you use a separate worker account, and you didn't install the Buildbot code to a shared
+  location, then you will need to install it with ``--home=~`` for each account that needs it.
 
 3. Set up the host
 
   Make sure the host can actually reach the buildmaster.
-  Usually the buildmaster is running a status webserver on the same machine, so simply point your web browser at it and see if you can get there.
+  Usually the buildmaster is running a status webserver on the same machine, so simply point your
+  web browser at it and see if you can get there.
   Install whatever additional packages or libraries the project's INSTALL document advises.
-  (or not: if your worker is supposed to make sure that building without optional libraries still works, then don't install those libraries.)
+  (or not: if your worker is supposed to make sure that building without optional libraries still
+  works, then don't install those libraries.)
 
-  Again, these libraries don't necessarily have to be installed to a site-wide shared location, but they must be available to your build process.
-  Accomplishing this is usually very specific to the build process, so installing them to :file:`/usr` or :file:`/usr/local` is usually the best approach.
+  Again, these libraries don't necessarily have to be installed to a site-wide shared location, but
+  they must be available to your build process.
+  Accomplishing this is usually very specific to the build process, so installing them to
+  :file:`/usr` or :file:`/usr/local` is usually the best approach.
 
 4. Test the build process
 
   Follow the instructions in the :file:`INSTALL` document, in the worker's account.
   Perform a full CVS (or whatever) checkout, configure, make, run tests, etc.
   Confirm that the build works without manual fussing.
-  If it doesn't work when you do it manually, it will be unlikely to work when Buildbot attempts to do it in an automated fashion.
+  If it doesn't work when you do it manually, it will be unlikely to work when Buildbot attempts
+  to do it in an automated fashion.
 
 5. Choose a base directory
 
-  This should be somewhere in the worker's account, typically named after the project which is being tested.
-  The worker will not touch any file outside of this directory.
+  This should be somewhere in the worker's account, typically named after the project which is
+  being tested. The worker will not touch any file outside of this directory.
   Something like :file:`~/Buildbot` or :file:`~/Workers/fooproject` is appropriate.
 
 6. Get the buildmaster host/port, workername, and password
 
-  When the Buildbot admin configures the buildmaster to accept and use your worker, they will provide you with the following pieces of information:
+  When the Buildbot admin configures the buildmaster to accept and use your worker, they will
+  provide you with the following pieces of information:
 
   * your worker's name
   * the password assigned to your worker
@@ -66,31 +77,39 @@ Here's a good checklist for setting up a worker:
 
       :samp:`buildbot-worker create-worker {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}`
 
-  This will create the base directory and a collection of files inside, including the :file:`buildbot.tac` file that contains all the information you passed to the :command:`buildbot-worker` command.
+  This will create the base directory and a collection of files inside, including the
+  :file:`buildbot.tac` file that contains all the information you passed to the
+  :command:`buildbot-worker` command.
 
 8. Fill in the hostinfo files
 
-  When it first connects, the worker will send a few files up to the buildmaster which describe the host that it is running on.
-  These files are presented on the web status display so that developers have more information to reproduce any test failures that are witnessed by the Buildbot.
+  When it first connects, the worker will send a few files up to the buildmaster which describe the
+  host that it is running on. These files are presented on the web status display so that developers
+  have more information to reproduce any test failures that are witnessed by the Buildbot.
   There are sample files in the :file:`info` subdirectory of the Buildbot's base directory.
   You should edit these to correctly describe you and your host.
 
   :file:`{BASEDIR}/info/admin` should contain your name and email address.
-  This is the ``worker admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
+  This is the ``worker admin address``, and will be visible from the build status page (so you may
+  wish to munge it a bit if address-harvesting spambots are a concern).
 
-  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the Buildbot code which is running the worker.
+  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version,
+  memory size, CPU speed, versions of relevant libraries installed, and finally the version of the
+  Buildbot code which is running the worker.
 
-  The optional :file:`{BASEDIR}/info/access_uri` can specify a URI which will connect a user to the machine.
-  Many systems accept ``ssh://hostname`` URIs for this purpose.
+  The optional :file:`{BASEDIR}/info/access_uri` can specify a URI which will connect a user to the
+  machine. Many systems accept ``ssh://hostname`` URIs for this purpose.
 
-  If you run many workers, you may want to create a single :file:`~worker/info` file and share it among all the workers with symlinks.
+  If you run many workers, you may want to create a single :file:`~worker/info` file and share it
+  among all the workers with symlinks.
 
 .. _Worker-Options:
 
 Worker Options
 ~~~~~~~~~~~~~~
 
-There are a handful of options you might want to use when creating the worker with the :samp:`buildbot-worker create-worker <options> DIR <params>` command.
+There are a handful of options you might want to use when creating the worker with the
+:samp:`buildbot-worker create-worker <options> DIR <params>` command.
 You can type ``buildbot-worker create-worker --help`` for a summary.
 To use these, just include them on the ``buildbot-worker create-worker`` command line, like this
 
@@ -110,39 +129,52 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 .. option:: --no-logrotate
 
     This disables internal worker log management mechanism.
-    With this option worker does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
+    With this option worker does not override the default logfile name and its behaviour giving
+    a possibility to control those with command-line options of twistd daemon.
 
 .. option:: --umask
 
-    This is a string (generally an octal representation of an integer) which will cause the worker process' ``umask`` value to be set shortly after initialization.
-    The ``twistd`` daemonization utility forces the umask to 077 at startup (which means that all files created by the worker or its child processes will be unreadable by any user other than the worker account).
-    If you want build products to be readable by other accounts, you can add ``--umask=0o22`` to tell the worker to fix the umask after twistd clobbers it.
-    If you want build products to be *writable* by other accounts too, use ``--umask=0o000``, but this is likely to be a security problem.
+    This is a string (generally an octal representation of an integer) which will cause the worker
+    process' ``umask`` value to be set shortly after initialization.
+    The ``twistd`` daemonization utility forces the umask to 077 at startup (which means that all
+    files created by the worker or its child processes will be unreadable by any user other than
+    the worker account).
+    If you want build products to be readable by other accounts, you can add ``--umask=0o22`` to
+    tell the worker to fix the umask after twistd clobbers it.
+    If you want build products to be *writable* by other accounts too, use ``--umask=0o000``, but
+    this is likely to be a security problem.
 
 .. option:: --keepalive
 
-    This is a number that indicates how frequently ``keepalive`` messages should be sent from the worker to the buildmaster, expressed in seconds.
+    This is a number that indicates how frequently ``keepalive`` messages should be sent from the
+    worker to the buildmaster, expressed in seconds.
     The default (600) causes a message to be sent to the buildmaster at least once every 10 minutes.
     To set this to a lower value, use e.g. ``--keepalive=120``.
 
-    If the worker is behind a NAT box or stateful firewall, these messages may help to keep the connection alive: some NAT boxes tend to forget about a connection if it has not been used in a while.
-    When this happens, the buildmaster will think that the worker has disappeared, and builds will time out.
-    Meanwhile the worker will not realize that anything is wrong.
+    If the worker is behind a NAT box or stateful firewall, these messages may help to keep the
+    connection alive: some NAT boxes tend to forget about a connection if it has not been used in
+    a while.
+    When this happens, the buildmaster will think that the worker has disappeared, and builds will
+    time out. Meanwhile the worker will not realize that anything is wrong.
 
 .. option:: --maxdelay
 
-    This is a number that indicates the maximum amount of time the worker will wait between connection attempts, expressed in seconds.
-    The default (300) causes the worker to wait at most 5 minutes before trying to connect to the buildmaster again.
+    This is a number that indicates the maximum amount of time the worker will wait between
+    connection attempts, expressed in seconds.
+    The default (300) causes the worker to wait at most 5 minutes before trying to connect to the
+    buildmaster again.
 
 .. option:: --maxretries
 
-    This is a number that indicates the maximum number of times the worker will make connection attempts.
-    After that amount, the worker process will stop.
-    This option is useful for :ref:`Latent-Workers` to avoid consuming resources in case of misconfiguration or master failure.
+    This is a number that indicates the maximum number of times the worker will make connection
+    attempts. After that amount, the worker process will stop.
+    This option is useful for :ref:`Latent-Workers` to avoid consuming resources in case of
+    misconfiguration or master failure.
 
-    For VM based latent workers, the user is responsible for halting the system when the Buildbot worker has exited.
-    This feature is heavily OS dependent, and cannot be managed by the Buildbot worker.
-    For example, with systemd_, one can add ``ExecStopPost=shutdown now`` to the Buildbot worker service unit configuration.
+    For VM based latent workers, the user is responsible for halting the system when the Buildbot
+    worker has exited. This feature is heavily OS dependent, and cannot be managed by the Buildbot
+    worker. For example, with systemd_, one can add ``ExecStopPost=shutdown now`` to the Buildbot
+    worker service unit configuration.
 
     .. _systemd: https://www.freedesktop.org/software/systemd/man/systemd.service.html
 
@@ -159,9 +191,11 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 .. option:: --allow-shutdown
 
     Can also be passed directly to the worker constructor in :file:`buildbot.tac`.
-    If set, it allows the worker to initiate a graceful shutdown, meaning that it will ask the master to shut down the worker when the current build, if any, is complete.
+    If set, it allows the worker to initiate a graceful shutdown, meaning that it will ask the
+    master to shut down the worker when the current build, if any, is complete.
 
-    Setting allow_shutdown to ``file`` will cause the worker to watch :file:`shutdown.stamp` in basedir for updates to its mtime.
+    Setting allow_shutdown to ``file`` will cause the worker to watch :file:`shutdown.stamp` in
+    basedir for updates to its mtime.
     When the mtime changes, the worker will request a graceful shutdown from the master.
     The file does not need to exist prior to starting the worker.
 
@@ -175,20 +209,26 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 .. option:: --use-tls
 
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
-    If set, the generated connection string starts with ``tls`` instead of with ``tcp``, allowing encrypted connection to the buildmaster.
-    Make sure the worker trusts the buildmasters certificate. If you have an non-authoritative certificate (CA is self-signed) see option ``--connection-string`` and also Worker-TLS-Config_ below.
+    If set, the generated connection string starts with ``tls`` instead of with ``tcp``, allowing
+    encrypted connection to the buildmaster.
+    Make sure the worker trusts the buildmasters certificate. If you have an non-authoritative
+    certificate (CA is self-signed) see option ``--connection-string`` and also Worker-TLS-Config_
+    below.
 
 .. option:: --delete-leftover-dirs
 
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
     If set, unexpected directories in worker base directory will be removed.
-    Otherwise, a warning will be displayed in :file:`twistd.log` so that you can manually remove them.
+    Otherwise, a warning will be displayed in :file:`twistd.log` so that you can manually remove
+    them.
 
 .. option:: --connection-string
 
     Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
-    If set, the worker connection to master will be made using this ``connection_string``. See Worker-TLS-Config_ below for more details.
-    Note that this option will override required positional argument ``masterhost[:port]`` and also option ``--use-tls``.
+    If set, the worker connection to master will be made using this ``connection_string``.
+    See Worker-TLS-Config_ below for more details.
+    Note that this option will override required positional argument ``masterhost[:port]`` and also
+    option ``--use-tls``.
 
 .. option:: --proxy-connection-string
 
@@ -201,11 +241,14 @@ Other Worker Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``unicode_encoding``
-    This represents the encoding that Buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
+    This represents the encoding that Buildbot should use when converting unicode commandline
+    arguments into byte strings in order to pass to the operating system when spawning new processes.
 
-    The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on macOS is 'utf-8', and on Unix depends on your locale settings.
+    The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on
+    Windows is 'mbcs', on macOS is 'utf-8', and on Unix depends on your locale settings.
 
-    If you need a different encoding, this can be changed in your worker's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the Worker constructor.
+    If you need a different encoding, this can be changed in your worker's :file:`buildbot.tac`
+    file by adding a ``unicode_encoding`` argument to the Worker constructor.
 
 .. code-block:: python
 
@@ -223,9 +266,11 @@ Worker TLS Configuration
 
 
 ``connection_string``
-    For TLS connections to the master, the ``connection_string``-argument must be passed to the worker constructor. ``buildmaster_host`` and ``port`` must then be ``None``.
+    For TLS connections to the master, the ``connection_string``-argument must be passed to the
+    worker constructor. ``buildmaster_host`` and ``port`` must then be ``None``.
 
-    ``connection_string`` will be used to create a client endpoint with clientFromString_. An example of ``connection_string`` is ``"TLS:buildbot-master.com:9989"``.
+    ``connection_string`` will be used to create a client endpoint with clientFromString_. An
+    example of ``connection_string`` is ``"TLS:buildbot-master.com:9989"``.
 
     See more about how to formulate the connection string in ConnectionStrings_.
 
@@ -236,8 +281,8 @@ Worker TLS Configuration
         s = Worker(None, None, workername, passwd, basedir, keepalive,
                    connection_string='TLS:buildbot-master.com:9989')
 
-    Make sure the worker trusts the certificate of the master. If you have a non-authoritative certificate
-    (CA is self-signed), the trustRoots parameter can be used.
+    Make sure the worker trusts the certificate of the master. If you have a non-authoritative
+    certificate (CA is self-signed), the trustRoots parameter can be used.
 
     .. code-block:: python
 
@@ -282,7 +327,8 @@ Worker TLS Configuration
         -----END CERTIFICATE-----
 
 
-    Using TCP in ``connection_string`` is the equivalent to using the ``buildmaster_host`` and ``port`` arguments.
+    Using TCP in ``connection_string`` is the equivalent to using the ``buildmaster_host`` and
+    ``port`` arguments.
 
     .. code-block:: python
 

@@ -15,7 +15,8 @@ Here, we introduce an additional way of synchronisation, which is from the serve
 
 We use the message queue and the websocket interfaces to maintain synchronisation between the server and the client.
 
-The client application just needs to query the needed data using a highlevel API, and the data module uses the best approach to make the data always up to date.
+The client application just needs to query the needed data using a highlevel API, and the data
+module uses the best approach to make the data always up to date.
 
 Once the binding is set up by the controller, everything is automatically up to date.
 
@@ -29,7 +30,8 @@ Even a query to a single resource returns a collection.
 A collection is an Array subclass which has extra capabilities:
 
 - It listens to the event stream and is able to maintain itself up-to-date
-- It implements client side queries in order to guarantee up-to-date filtering, ordering and limiting queries.
+- It implements client side queries in order to guarantee up-to-date filtering, ordering and
+  limiting queries.
 - It has a fast access to each item it contains via its id.
 - It has its own event handlers so that the client code can react when the Collection is changing
 
@@ -67,8 +69,8 @@ Service API
 
 .. js:class:: DataService
 
-  DataService is the service used for accessing the Buildbot data API.
-  It has a modern interface for accessing data in such a way that the updating of the data via web socket is transparent.
+  DataService is the service used for accessing the Buildbot data API. It has a modern interface
+  for accessing data in such a way that the updating of the data via web socket is transparent.
 
   .. js:method:: open()
 
@@ -76,7 +78,8 @@ Service API
 
     Open a new accessor every time you need to update the data in a controller.
 
-    It registers on $destroy event on the scope, and thus automatically unsubscribes from updates when the data is not used anymore.
+    It registers on $destroy event on the scope, and thus automatically unsubscribes from updates
+    when the data is not used anymore.
 
     .. code-block:: javascript
 
@@ -93,7 +96,9 @@ Service API
 
   .. js:method:: getXs([id], [query])
 
-    ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Workers``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``.
+    ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``,
+    ``Workers``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``,
+    ``Sourcestamps``.
 
     It's highly advised to use these methods instead of the lower level ``get('string')``.
 
@@ -111,7 +116,8 @@ Service API
 
   .. js:method:: get(endpoint, [id], [query])
 
-    :returns: a collection; when the promise is resolved, the collection contains all the requested data
+    :returns: a collection; when the promise is resolved, the collection contains all the requested
+        data
 
     .. code-block:: javascript
 
@@ -173,8 +179,9 @@ Service API
 
   .. js:method:: close()
 
-    Forcefully unsubscribes this connection from auto-update.
-    Normally, this is done automatically on scope destruction, but sometimes, when you got enough data, you want to save bandwidth and disconnect the collection.
+    Forcefully unsubscribes this connection from auto-update. Normally, this is done automatically
+    on scope destruction, but sometimes, when you got enough data, you want to save bandwidth and
+    disconnect the collection.
 
   .. js:method:: put(object)
 
@@ -188,10 +195,9 @@ Service API
 
   .. js:method:: onNew = (object) ->
 
-    Callback method which is called when a new object arrives in the collection.
-    This can be called either when initial data is coming via REST API, or when data is coming via the event stream.
-    The affected object is given in parameter.
-    `this` context is the collection.
+    Callback method which is called when a new object arrives in the collection. This can be called
+    either when initial data is coming via REST API, or when data is coming via the event stream.
+    The affected object is given in parameter. `this` context is the collection.
 
   .. js:method:: onUpdate = (object) ->
 
@@ -209,9 +215,9 @@ Service API
 
   .. js:attribute:: $ready
 
-    Attribute similar to what ``ngResource`` provides.
-    True after first server interaction is completed, false before that.
-    Knowing if the Collection has been resolved is useful in data-binding (for example to display a loading graphic).
+    Attribute similar to what ``ngResource`` provides. True after first server interaction is
+    completed, false before that. Knowing if the Collection has been resolved is useful in
+    data-binding (for example to display a loading graphic).
 
 
 .. js:class:: Wrapper

@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -68,36 +70,36 @@ def _generate_filtered_properties(props: dict, filters: Sequence) -> dict | None
     return {k: v for k, v in props.items() if k in set_filters}
 
 
-class Db2DataMixin:
-    @defer.inlineCallbacks
-    def get_buildset_properties_filtered(self, buildsetid: int, filters: Sequence):
-        if not filters:
-            return None
-        assert hasattr(self, 'master')
-        props = yield self.master.db.buildsets.getBuildsetProperties(buildsetid)
-        return _generate_filtered_properties(props, filters)
-
-    fieldMapping = {
-        'buildrequestid': 'buildrequests.id',
-        'buildsetid': 'buildrequests.buildsetid',
-        'builderid': 'buildrequests.builderid',
-        'priority': 'buildrequests.priority',
-        'complete': 'buildrequests.complete',
-        'results': 'buildrequests.results',
-        'submitted_at': 'buildrequests.submitted_at',
-        'complete_at': 'buildrequests.complete_at',
-        'waited_for': 'buildrequests.waited_for',
-        # br claim
-        'claimed_at': 'buildrequest_claims.claimed_at',
-        'claimed_by_masterid': 'buildrequest_claims.masterid',
-    }
+buildrequests_field_mapping = {
+    'buildrequestid': 'buildrequests.id',
+    'buildsetid': 'buildrequests.buildsetid',
+    'builderid': 'buildrequests.builderid',
+    'priority': 'buildrequests.priority',
+    'complete': 'buildrequests.complete',
+    'results': 'buildrequests.results',
+    'submitted_at': 'buildrequests.submitted_at',
+    'complete_at': 'buildrequests.complete_at',
+    'waited_for': 'buildrequests.waited_for',
+    # br claim
+    'claimed_at': 'buildrequest_claims.claimed_at',
+    'claimed_by_masterid': 'buildrequest_claims.masterid',
+}
 
 
-class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
+@defer.inlineCallbacks
+def _get_buildset_properties_filtered(master, buildsetid: int, filters: Sequence):
+    if not filters:
+        return None
+
+    props = yield master.db.buildsets.getBuildsetProperties(buildsetid)
+    return _generate_filtered_properties(props, filters)
+
+
+class BuildRequestEndpoint(base.Endpoint):
     kind = base.EndpointKind.SINGLE
-    pathPatterns = """
-        /buildrequests/n:buildrequestid
-    """
+    pathPatterns = [
+        "/buildrequests/n:buildrequestid",
+    ]
 
     @defer.inlineCallbacks
     def get(self, resultSpec: ResultSpec, kwargs):
@@ -106,7 +108,9 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             return None
 
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
-        properties = yield self.get_buildset_properties_filtered(buildrequest.buildsetid, filters)
+        properties = yield _get_buildset_properties_filtered(
+            self.master, buildrequest.buildsetid, filters
+        )
         return _db2data(buildrequest, properties)
 
     @defer.inlineCallbacks
@@ -130,12 +134,12 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             raise ValueError(f"action: {action} is not supported")
 
 
-class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
+class BuildRequestsEndpoint(base.Endpoint):
     kind = base.EndpointKind.COLLECTION
-    pathPatterns = """
-        /buildrequests
-        /builders/n:builderid/buildrequests
-    """
+    pathPatterns = [
+        "/buildrequests",
+        "/builders/n:builderid/buildrequests",
+    ]
     rootLinkName = 'buildrequests'
 
     @defer.inlineCallbacks
@@ -152,7 +156,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             claimed = resultSpec.popBooleanFilter('claimed')
 
         bsid = resultSpec.popOneFilter('buildsetid', 'eq')
-        resultSpec.fieldMapping = self.fieldMapping
+        resultSpec.fieldMapping = buildrequests_field_mapping
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             builderid=builderid,
             complete=complete,
@@ -163,7 +167,9 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         results = []
         filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
         for br in buildrequests:
-            properties = yield self.get_buildset_properties_filtered(br.buildsetid, filters)
+            properties = yield _get_buildset_properties_filtered(
+                self.master, br.buildsetid, filters
+            )
             results.append(_db2data(br, properties))
         return results
 
@@ -172,11 +178,11 @@ class BuildRequest(base.ResourceType):
     name = "buildrequest"
     plural = "buildrequests"
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
-    eventPathPatterns = """
-        /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
-        /buildrequests/:buildrequestid
-        /builders/:builderid/buildrequests/:buildrequestid
-    """
+    eventPathPatterns = [
+        "/buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid",
+        "/buildrequests/:buildrequestid",
+        "/builders/:builderid/buildrequests/:buildrequestid",
+    ]
 
     class EntityType(types.Entity):
         buildrequestid = types.Integer()
@@ -221,7 +227,7 @@ class BuildRequest(base.ResourceType):
         return True
 
     @base.updateMethod
-    def claimBuildRequests(self, brids, claimed_at=None):
+    def claimBuildRequests(self, brids: list[int], claimed_at: datetime.datetime | None = None):
         return self.callDbBuildRequests(
             brids,
             self.master.db.buildrequests.claimBuildRequests,
@@ -231,14 +237,16 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def unclaimBuildRequests(self, brids):
+    def unclaimBuildRequests(self, brids: list[int]):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
             yield self.generateEvent(brids, "unclaimed")
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None):
+    def completeBuildRequests(
+        self, brids: list[int], results: int, complete_at: datetime.datetime | None = None
+    ):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
@@ -271,7 +279,7 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def rebuildBuildrequest(self, buildrequest):
+    def rebuildBuildrequest(self, buildrequest: dict[str, Any]):
         # goal is to make a copy of the original buildset
         buildset = yield self.master.data.get(('buildsets', buildrequest['buildsetid']))
         properties = yield self.master.data.get((
