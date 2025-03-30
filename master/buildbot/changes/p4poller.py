@@ -381,7 +381,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 path = m.group('path')
                 if path.startswith(self.p4base):
                     branch, file = self.split_file(path[len(self.p4base) :])
-                    if branch is None and file is None:
+                    if branch is None or file is None:
                         continue
                     if branch in branch_files:
                         branch_files[branch].append(file)
