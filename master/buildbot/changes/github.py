@@ -13,9 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Any
+from typing import Callable
 from typing import ClassVar
 from typing import Sequence
+from typing import cast
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -27,6 +32,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
 from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.util.state import StateMixin
+from buildbot.util.twisted import InlineCallbacksType
 
 log = Logger()
 
@@ -49,49 +55,49 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
     db_class_name = 'GitHubPullrequestPoller'
     property_basename = "github"
 
-    def __init__(self, owner, repo, **kwargs):
+    def __init__(self, owner: str, repo: str, **kwargs: Any) -> None:
         name = kwargs.get("name")
         if not name:
             kwargs["name"] = "GitHubPullrequestPoller:" + owner + "/" + repo
         super().__init__(owner, repo, **kwargs)
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        owner,
-        repo,
-        branches=None,
-        category='pull',
-        project=None,
-        baseURL=None,
-        pullrequest_filter=True,
-        token=None,
-        magic_link=False,
-        repository_type="https",
-        github_property_whitelist=None,
-        **kwargs,
-    ):
+        owner: str,
+        repo: str,
+        branches: list[str] | None = None,
+        category: str | Callable[[Any], Any] = 'pull',
+        project: str | None = None,
+        baseURL: str | None = None,
+        pullrequest_filter: bool | Callable[[Any], bool] = True,
+        token: str | None = None,
+        magic_link: bool = False,
+        repository_type: str = "https",
+        github_property_whitelist: list[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if repository_type not in ["https", "svn", "git", "ssh"]:
             config.error("repository_type must be one of {https, svn, git, ssh}")
         super().checkConfig(name=self.name, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        owner,
-        repo,
-        branches=None,
-        pollInterval=10 * 60,
-        category=None,
-        project=None,
-        baseURL=None,
-        pullrequest_filter=True,
-        token=None,
-        pollAtLaunch=False,
-        magic_link=False,
-        repository_type="https",
-        github_property_whitelist=None,
-        **kwargs,
-    ):
+        owner: str,
+        repo: str,
+        branches: list[str] | None = None,
+        pollInterval: int = 10 * 60,
+        category: str | Callable[[Any], Any] | None = None,
+        project: str | None = None,
+        baseURL: str | None = None,
+        pullrequest_filter: bool | Callable[[Any], bool] = True,
+        token: str | None = None,
+        pollAtLaunch: bool = False,
+        magic_link: bool = False,
+        repository_type: str = "https",
+        github_property_whitelist: list[str] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(name=self.name, **kwargs)
 
         if baseURL is None:
@@ -102,7 +108,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         http_headers = {'User-Agent': 'Buildbot'}
         if token is not None:
             token = yield self.renderSecrets(token)
-            http_headers.update({'Authorization': 'token ' + token})
+            # token is not None here, but mypy doesn't know that
+            http_headers.update({'Authorization': 'token ' + cast(str, token)})
 
         if github_property_whitelist is None:
             github_property_whitelist = []
@@ -129,11 +136,11 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         self.category = category if callable(category) else bytes2unicode(category)
         self.project = bytes2unicode(project)
 
-    def describe(self):
+    def describe(self) -> str:
         return f"GitHubPullrequestPoller watching the GitHub repository {self.owner}/{self.repo}"
 
     @defer.inlineCallbacks
-    def _getPullInformation(self, pull_number):
+    def _getPullInformation(self, pull_number: int) -> InlineCallbacksType[dict[str, Any]]:
         result = yield self._http.get(
             '/'.join(['/repos', self.owner, self.repo, 'pulls', str(pull_number)])
         )
@@ -141,7 +148,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         return my_json
 
     @defer.inlineCallbacks
-    def _getPulls(self):
+    def _getPulls(self) -> InlineCallbacksType[list[dict[str, Any]]]:
         log.debug(
             "GitHubPullrequestPoller: polling "
             f"GitHub repository {self.owner}/{self.repo}, branches: {self.branches}"
@@ -158,7 +165,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         return my_json
 
     @defer.inlineCallbacks
-    def _getFiles(self, prnumber):
+    def _getFiles(self, prnumber: int) -> InlineCallbacksType[list[str]]:
         result = yield self._http.get(
             "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'files'])
         )
@@ -167,7 +174,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         return [f["filename"] for f in my_json]
 
     @defer.inlineCallbacks
-    def _getCommitters(self, prnumber):
+    def _getCommitters(self, prnumber: int) -> InlineCallbacksType[list[list[str]]]:
         result = yield self._http.get(
             "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'])
         )
@@ -178,7 +185,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         ]
 
     @defer.inlineCallbacks
-    def _getAuthors(self, prnumber):
+    def _getAuthors(self, prnumber: int) -> InlineCallbacksType[list[list[str]]]:
         result = yield self._http.get(
             "/".join(['/repos', self.owner, self.repo, 'pulls', str(prnumber), 'commits'])
         )
@@ -187,7 +194,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         return [[a["commit"]["author"]["name"], a["commit"]["author"]["email"]] for a in my_json]
 
     @defer.inlineCallbacks
-    def _getCurrentRev(self, prnumber):
+    def _getCurrentRev(self, prnumber: int) -> InlineCallbacksType[str | None]:
         # Get currently assigned revision of PR number
 
         result = yield self._getStateObjectId()
@@ -195,14 +202,14 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         return rev
 
     @defer.inlineCallbacks
-    def _setCurrentRev(self, prnumber, rev):
+    def _setCurrentRev(self, prnumber: int, rev: str) -> InlineCallbacksType[None]:
         # Set the updated revision for PR number.
 
         result = yield self._getStateObjectId()
         yield self.master.db.state.setState(result, f'pull_request{prnumber}', rev)
 
     @defer.inlineCallbacks
-    def _getStateObjectId(self):
+    def _getStateObjectId(self) -> InlineCallbacksType[int]:
         # Return a deferred for object id in state db.
         result = yield self.master.db.state.getObjectId(
             f'{self.owner}/{self.repo}', self.db_class_name
@@ -210,7 +217,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         return result
 
     @defer.inlineCallbacks
-    def _processChanges(self, github_result):
+    def _processChanges(self, github_result: list[dict[str, Any]]) -> InlineCallbacksType[None]:
         for pr in github_result:
             # Track PRs for specified branches
             base_branch = pr['base']['ref']
@@ -244,7 +251,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                     project = pr['base']['repo']['full_name']
                 commits = pr['commits']
 
-                dl = defer.DeferredList(
+                dl: defer.Deferred[Any] = defer.DeferredList(
                     [
                         self._getAuthors(prnumber),
                         self._getCommitters(prnumber),
@@ -291,6 +298,6 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                 )
 
     @defer.inlineCallbacks
-    def poll(self):
+    def poll(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         result = yield self._getPulls()
         yield self._processChanges(result)
