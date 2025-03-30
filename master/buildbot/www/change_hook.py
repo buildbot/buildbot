@@ -38,7 +38,7 @@ class ChangeHookResource(resource.Resource):
     children = {}
     needsReconfig = True
 
-    def __init__(self, dialects=None, master=None):
+    def __init__(self, master, dialects=None):
         """
         The keys of 'dialects' select a modules to load under
         master/buildbot/www/hooks/
