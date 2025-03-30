@@ -157,7 +157,6 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = [
       "buildbot.asyncio",
-      "buildbot.changes.svnpoller",
       "buildbot.clients.sendchange",
       "buildbot.clients.tryclient",
       "buildbot.clients.usersclient",

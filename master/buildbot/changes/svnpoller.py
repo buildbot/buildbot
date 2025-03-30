@@ -16,10 +16,14 @@
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
 
+from __future__ import annotations
+
 import os
 import xml.dom.minidom
+from typing import Any
 from typing import ClassVar
 from typing import Sequence
+from typing import cast
 from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
@@ -29,16 +33,17 @@ from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
+from buildbot.util.twisted import InlineCallbacksType
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
 
 
-def split_file_alwaystrunk(path):
+def split_file_alwaystrunk(path: str) -> dict[str, str]:
     return {"path": path}
 
 
-def split_file_branches(path):
+def split_file_branches(path: str) -> tuple[str | None, str] | None:
     # turn "trunk/subdir/file.c" into (None, "subdir/file.c")
     # and "trunk/subdir/" into (None, "subdir/")
     # and "trunk/" into (None, "")
@@ -53,7 +58,7 @@ def split_file_branches(path):
     return None
 
 
-def split_file_projects_branches(path):
+def split_file_projects_branches(path: str) -> dict[str, str] | None:
     # turn projectname/trunk/subdir/file.c into dict(project=projectname,
     # branch=trunk, path=subdir/file.c)
     if "/" not in path:
@@ -93,32 +98,33 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
     parent = None  # filled in when we're added
     last_change = None
     loop = None
+    _prefix: str | None = None
 
-    def __init__(self, repourl, **kwargs):
+    def __init__(self, repourl: str, **kwargs: Any) -> None:
         name = kwargs.get('name', None)
         if name is None:
             kwargs['name'] = repourl
         super().__init__(repourl, **kwargs)
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        repourl,
-        split_file=None,
-        svnuser=None,
-        svnpasswd=None,
-        pollInterval=10 * 60,
-        histmax=100,
-        svnbin="svn",
-        revlinktmpl="",
-        category=None,
-        project="",
-        cachepath=None,
-        extra_args=None,
-        name=None,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-    ):
+        repourl: str,
+        split_file: Any = None,
+        svnuser: Any = None,
+        svnpasswd: Any = None,
+        pollInterval: int = 10 * 60,
+        histmax: int = 100,
+        svnbin: str = "svn",
+        revlinktmpl: str = "",
+        category: Any = None,
+        project: str = "",
+        cachepath: str | None = None,
+        extra_args: list[str] | None = None,
+        name: str | None = None,
+        pollAtLaunch: bool = False,
+        pollRandomDelayMin: int = 0,
+        pollRandomDelayMax: int = 0,
+    ) -> None:
         if name is None:
             name = repourl
 
@@ -131,25 +137,25 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         )
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        repourl,
-        split_file=None,
-        svnuser=None,
-        svnpasswd=None,
-        pollInterval=10 * 60,
-        histmax=100,
-        svnbin="svn",
-        revlinktmpl="",
-        category=None,
-        project="",
-        cachepath=None,
-        extra_args=None,
-        name=None,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-    ):
+        repourl: str,
+        split_file: Any = None,
+        svnuser: Any = None,
+        svnpasswd: Any = None,
+        pollInterval: int = 10 * 60,
+        histmax: int = 100,
+        svnbin: str = "svn",
+        revlinktmpl: str = "",
+        category: Any = None,
+        project: str = "",
+        cachepath: str | None = None,
+        extra_args: list[str] | None = None,
+        name: str | None = None,
+        pollAtLaunch: bool = False,
+        pollRandomDelayMin: int = 0,
+        pollRandomDelayMax: int = 0,
+    ) -> InlineCallbacksType[None]:
         if name is None:
             name = repourl
 
@@ -168,7 +174,6 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         self.svnbin = svnbin
         self.histmax = histmax
-        self._prefix = None
         self.category = category if callable(category) else util.bytes2unicode(category)
         self.project = util.bytes2unicode(project)
 
@@ -202,10 +207,10 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             pollRandomDelayMax=pollRandomDelayMax,
         )
 
-    def describe(self):
+    def describe(self) -> str:
         return f"SVNPoller: watching {self.repourl}"
 
-    def poll(self):
+    def poll(self) -> defer.Deferred[Any]:  # type: ignore[override]
         # Our return value is only used for unit testing.
 
         # we need to figure out the repository root, so we can figure out
@@ -246,22 +251,22 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         if not self._prefix:
             d.addCallback(lambda _: self.get_prefix())
 
-            @d.addCallback
-            def set_prefix(prefix):
+            @d.addCallback  # type: ignore[call-overload]
+            def set_prefix(prefix: str) -> None:
                 self._prefix = prefix
 
-        d.addCallback(self.get_logs)
-        d.addCallback(self.parse_logs)
-        d.addCallback(self.get_new_logentries)
-        d.addCallback(self.create_changes)
-        d.addCallback(self.submit_changes)
+        d.addCallback(self.get_logs)  # type: ignore[call-overload]
+        d.addCallback(self.parse_logs)  # type: ignore[call-overload]
+        d.addCallback(self.get_new_logentries)  # type: ignore[call-overload]
+        d.addCallback(self.create_changes)  # type: ignore[call-overload]
+        d.addCallback(self.submit_changes)  # type: ignore[call-overload]
         d.addCallback(self.finished_ok)
         # eat errors
         d.addErrback(log.err, 'SVNPoller: Error in  while polling')
         return d
 
     @defer.inlineCallbacks
-    def get_prefix(self):
+    def get_prefix(self) -> InlineCallbacksType[str]:
         command = [self.svnbin, "info", "--xml", "--non-interactive", self.repourl]
         if self.svnuser:
             command.append(f"--username={self.svnuser}")
@@ -309,7 +314,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         return prefix
 
     @defer.inlineCallbacks
-    def get_logs(self, _):
+    def get_logs(self, _: Any) -> InlineCallbacksType[str]:
         command = [self.svnbin, "log", "--xml", "--verbose", "--non-interactive"]
         if self.svnuser:
             command.extend([f"--username={self.svnuser}"])
@@ -332,7 +337,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
         return output
 
-    def parse_logs(self, output):
+    def parse_logs(self, output: str) -> list[xml.dom.minidom.Element]:
         # parse the XML output, return a list of <logentry> nodes
         try:
             doc = xml.dom.minidom.parseString(output)
@@ -342,7 +347,9 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         logentries = doc.getElementsByTagName("logentry")
         return logentries
 
-    def get_new_logentries(self, logentries):
+    def get_new_logentries(
+        self, logentries: list[xml.dom.minidom.Element]
+    ) -> list[xml.dom.minidom.Element]:
         last_change = old_last_change = self.last_change
 
         # given a list of logentries, calculate new_last_change, and
@@ -373,7 +380,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         log.msg(f'SVNPoller: _process_changes {old_last_change} .. {new_last_change}')
         return new_logentries
 
-    def _get_text(self, element, tag_name):
+    def _get_text(self, element: xml.dom.minidom.Element, tag_name: str) -> str:
         try:
             child_nodes = element.getElementsByTagName(tag_name)[0].childNodes
             text = "".join([t.data for t in child_nodes])
@@ -381,7 +388,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             text = "unknown"
         return text
 
-    def _transform_path(self, path):
+    def _transform_path(self, path: str) -> dict[str, str] | None:
         prefix = self._prefix or ""
         if not path.startswith(prefix):
             log.msg(
@@ -402,7 +409,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             where = {"branch": where[0], "path": where[1]}
         return where
 
-    def create_changes(self, new_logentries):
+    def create_changes(self, new_logentries: list[xml.dom.minidom.Element]) -> list[dict[str, Any]]:
         changes = []
 
         for el in new_logentries:
@@ -422,7 +429,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             # localtime (since this will get used to position the boxes on
             # the Waterfall display, etc). So ignore the date field, and
             # addChange will fill in with the current time
-            branches = {}
+            branches: dict[str | None, dict[str, Any]] = {}
             try:
                 pathlist = el.getElementsByTagName("paths")[0]
             except IndexError:  # weird, we got an empty revision
@@ -465,10 +472,10 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                             branches[branch][key] = where[key]
 
             for branch, info in branches.items():
-                action = info['action']
-                files = info['files']
+                action = info['action']  # type: ignore[assignment]
+                files = cast(list[bytes], info['files'])  # type: ignore[index]
 
-                number_of_directories_changed = info['number_of_directories']
+                number_of_directories_changed = info['number_of_directories']  # type: ignore[index]
                 number_of_files_changed = len(files)
 
                 if (
@@ -489,20 +496,20 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                         "branch": util.bytes2unicode(branch),
                         "revlink": revlink,
                         "category": self.category,
-                        "repository": util.bytes2unicode(info.get('repository', self.repourl)),
-                        "project": util.bytes2unicode(info.get('project', self.project)),
-                        "codebase": util.bytes2unicode(info.get('codebase', None)),
+                        "repository": util.bytes2unicode(info.get('repository', self.repourl)),  # type: ignore[call-overload]
+                        "project": util.bytes2unicode(info.get('project', self.project)),  # type: ignore[call-overload]
+                        "codebase": util.bytes2unicode(info.get('codebase', None)),  # type: ignore[call-overload]
                     }
                     changes.append(chdict)
 
         return changes
 
     @defer.inlineCallbacks
-    def submit_changes(self, changes):
+    def submit_changes(self, changes: list[dict[str, Any]]) -> InlineCallbacksType[None]:
         for chdict in changes:
             yield self.master.data.updates.addChange(src='svn', **chdict)
 
-    def finished_ok(self, res):
+    def finished_ok(self, res: Any) -> Any:
         if self.cachepath:
             with open(self.cachepath, "w", encoding='utf-8') as f:
                 f.write(str(self.last_change))
