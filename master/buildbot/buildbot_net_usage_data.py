@@ -190,7 +190,7 @@ def _sendWithUrlib(url, data):
     data = json.dumps(data).encode()
     clen = len(data)
     req = urllib_request.Request(
-        url, data, {'Content-Type': 'application/json', 'Content-Length': clen}
+        url, data, {'Content-Type': 'application/json', 'Content-Length': str(clen)}
     )
     try:
         f = urllib_request.urlopen(req)
