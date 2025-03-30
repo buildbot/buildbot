@@ -13,11 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import datetime
 import hashlib
 import json
+from typing import Any
+from typing import Callable
 from typing import ClassVar
+from typing import Pattern
 from typing import Sequence
 
 from twisted.internet import defer
@@ -36,9 +41,10 @@ from buildbot.util import runprocess
 from buildbot.util import watchdog
 from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.pullrequest import PullRequestMixin
+from buildbot.util.twisted import InlineCallbacksType
 
 
-def _canonicalize_event(event):
+def _canonicalize_event(event: dict) -> dict:
     """
     Return an event dictionary which is consistent between the gerrit
     event stream and the gerrit event log formats.
@@ -74,13 +80,13 @@ class GerritChangeFilter(ChangeFilter):
 
     def __init__(
         self,
-        branch=util.NotABranch,
-        branch_re=None,
-        branch_fn=None,
-        eventtype=None,
-        eventtype_re=None,
-        eventtype_fn=None,
-        **kw,
+        branch: Any = util.NotABranch,
+        branch_re: str | Pattern | None = None,
+        branch_fn: Callable[[str], bool] | None = None,
+        eventtype: str | None = None,
+        eventtype_re: str | Pattern | None = None,
+        eventtype_fn: Callable[[str], bool] | None = None,
+        **kw: Any,
     ):
         if eventtype is not None:
             kw.setdefault('property_eq', {})['event.type'] = eventtype
@@ -98,7 +104,7 @@ class GerritChangeFilter(ChangeFilter):
         self.eventtype_fn = eventtype_fn
         self.gerrit_branch_fn = branch_fn
 
-    def filter_change(self, change):
+    def filter_change(self, change: Any) -> bool:
         if self.eventtype_fn is not None:
             value = change.properties.getProperty('event.type', '')
             if not self.eventtype_fn(value):
@@ -113,7 +119,7 @@ class GerritChangeFilter(ChangeFilter):
 
         return super().filter_change(change)
 
-    def _get_repr_filters(self):
+    def _get_repr_filters(self) -> list[str]:
         filters = super()._get_repr_filters()
         if self.eventtype_fn is not None:
             filters.append(f'{self.eventtype_fn.__name__}(eventtype)')
@@ -122,7 +128,7 @@ class GerritChangeFilter(ChangeFilter):
         return filters
 
 
-def _gerrit_user_to_author(props, username="unknown"):
+def _gerrit_user_to_author(props: dict, username: str = "unknown") -> str:
     """
     Convert Gerrit account properties to Buildbot format
 
@@ -140,7 +146,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
     that will provide us gerrit events in json format."""
 
     compare_attrs: ClassVar[Sequence[str]] = ("gerritserver", "gerritport")
-    name = None
+    name: str | None = None  # type: ignore[assignment]
     # list of properties that are no of no use to be put in the event dict
     external_property_denylist = ["event.eventCreatedOn"]
     external_property_whitelist = ['*']
@@ -148,37 +154,37 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
 
     def checkConfig(
         self,
-        gitBaseURL=None,
-        handled_events=("patchset-created", "ref-updated"),
-        debug=False,
-        get_files=False,
-    ):
+        gitBaseURL: str | None = None,
+        handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
+        debug: bool = False,
+        get_files: bool = False,
+    ) -> None:  # type: ignore[override]  # checkConfig doesn't need to match supertype
         if gitBaseURL is None:
             config.error("gitBaseURL must be specified")
 
     def reconfigService(
         self,
-        gitBaseURL=None,
-        handled_events=("patchset-created", "ref-updated"),
-        debug=False,
-        get_files=False,
-    ):
+        gitBaseURL: str | None = None,
+        handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
+        debug: bool = False,
+        get_files: bool = False,
+    ) -> None:  # type: ignore[override]  # reconfigService doesn't need to match supertype
         self.gitBaseURL = gitBaseURL
         self.handled_events = list(handled_events)
         self._get_files = get_files
         self.debug = debug
 
-    def build_properties(self, event):
+    def build_properties(self, event: dict) -> dict:
         properties = self.extractProperties(event)
         properties["event.source"] = self.__class__.__name__
         if event['type'] in ('patchset-created', 'comment-added') and 'change' in event:
             properties['target_branch'] = event["change"]["branch"]
         return properties
 
-    def getFiles(self, change, patchset):
+    def getFiles(self, change: str, patchset: str) -> defer.Deferred:
         raise NotImplementedError
 
-    def eventReceived(self, event):
+    def eventReceived(self, event: dict) -> defer.Deferred:
         if event['type'] not in self.handled_events:
             if self.debug:
                 log.msg(f"the event type '{event['type']}' is not setup to handle")
@@ -192,18 +198,18 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
 
         return func(properties, event)
 
-    def get_branch_from_event(self, event):
+    def get_branch_from_event(self, event: dict) -> str:
         if event['type'] in ('patchset-created', 'comment-added'):
             return event["patchSet"]["ref"]
         return event["change"]["branch"]
 
-    def strip_refs_heads_from_branch(self, branch):
+    def strip_refs_heads_from_branch(self, branch: str) -> str:
         if branch.startswith('refs/heads/'):
             branch = branch[len('refs/heads/') :]
         return branch
 
     @defer.inlineCallbacks
-    def addChangeFromEvent(self, properties, event):
+    def addChangeFromEvent(self, properties: dict, event: dict) -> InlineCallbacksType[None]:
         if "change" not in event:
             if self.debug:
                 log.msg(f'unsupported event {event["type"]}')
@@ -235,9 +241,9 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             category=event["type"],
             properties=properties,
         )
-        return None
+        return
 
-    def eventReceived_ref_updated(self, properties, event):
+    def eventReceived_ref_updated(self, properties: dict, event: dict) -> defer.Deferred:
         ref = event["refUpdate"]
         author = "gerrit"
 
@@ -269,14 +275,14 @@ class GerritSshStreamEventsConnector:
     class LocalPP(LineProcessProtocol):
         MAX_STORED_OUTPUT_DEBUG_LINES = 20
 
-        def __init__(self, connector):
+        def __init__(self, connector: GerritSshStreamEventsConnector):
             super().__init__()
             self.connector = connector
             self._output_enabled = True
-            self._ended_deferred = defer.Deferred()
+            self._ended_deferred: defer.Deferred[None] = defer.Deferred()
 
         @defer.inlineCallbacks
-        def outLineReceived(self, line):
+        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:
             if self.connector.debug:
                 log.msg(
                     f"{self.connector.change_source.name} "
@@ -287,7 +293,7 @@ class GerritSshStreamEventsConnector:
             if self._output_enabled:
                 yield self.connector.on_line_received_cb(line)
 
-        def errLineReceived(self, line):
+        def errLineReceived(self, line: bytes) -> None:
             if self.connector.debug:
                 log.msg(
                     f"{self.connector.change_source.name} "
@@ -296,15 +302,15 @@ class GerritSshStreamEventsConnector:
             if self._output_enabled:
                 self.connector._append_line_for_debug(line)
 
-        def processEnded(self, status):
+        def processEnded(self, status: Any) -> None:
             super().processEnded(status)
             self._ended_deferred.callback(None)
             self.connector._stream_process_stopped()
 
-        def disable_output(self):
+        def disable_output(self) -> None:
             self._output_enabled = False
 
-        def wait(self):
+        def wait(self) -> defer.Deferred:
             return self._ended_deferred
 
     # (seconds) connections longer than this are considered good, and reset the backoff timer
@@ -326,16 +332,17 @@ class GerritSshStreamEventsConnector:
 
     def __init__(
         self,
-        reactor,
-        change_source,
-        gerritserver,
-        username,
-        gerritport=29418,
-        identity_file=None,
-        ssh_server_alive_interval_s=15,
-        ssh_server_alive_count_max=3,
-        on_process_start_cb=None,
-        on_line_received_cb=None,
+        reactor: Any,
+        change_source: Any,
+        gerritserver: str,
+        username: str,
+        *,
+        gerritport: int = 29418,
+        identity_file: str | None = None,
+        ssh_server_alive_interval_s: int | None = 15,
+        ssh_server_alive_count_max: int | None = 3,
+        on_process_start_cb: Callable[[], None],
+        on_line_received_cb: Callable[[bytes], defer.Deferred],
     ):
         self.reactor = reactor
         self.change_source = change_source
@@ -347,16 +354,16 @@ class GerritSshStreamEventsConnector:
         self.ssh_server_alive_count_max = ssh_server_alive_count_max
         self.on_process_start_cb = on_process_start_cb
         self.on_line_received_cb = on_line_received_cb
-        self._process = None
+        self._process: tuple[Any, Any] | None = None
         self._stream_process_timeout = self.STREAM_BACKOFF_MIN
-        self._last_lines_for_debug = []
+        self._last_lines_for_debug: list[bytes] = []
 
-    def start(self):
+    def start(self) -> None:
         self._want_process = True
         self.start_stream_process()
 
     @defer.inlineCallbacks
-    def stop(self):
+    def stop(self) -> InlineCallbacksType[None]:
         self._want_process = False
         if self._process is not None:
             self._process[0].disable_output()
@@ -364,7 +371,7 @@ class GerritSshStreamEventsConnector:
             yield self._process[0].wait()
 
     @defer.inlineCallbacks
-    def restart(self):
+    def restart(self) -> InlineCallbacksType[None]:
         if self._process is not None:
             self._process[0].disable_output()
             # Process will restart automatically
@@ -373,12 +380,12 @@ class GerritSshStreamEventsConnector:
         else:
             self.start()
 
-    def _append_line_for_debug(self, line):
+    def _append_line_for_debug(self, line: bytes) -> None:
         self._last_lines_for_debug.append(line)
         while len(self._last_lines_for_debug) > self.MAX_STORED_OUTPUT_DEBUG_LINES:
             self._last_lines_for_debug.pop(0)
 
-    def _build_gerrit_command(self, *gerrit_args):
+    def _build_gerrit_command(self, *gerrit_args: str) -> list[str]:
         """Get an ssh command list which invokes gerrit with the given args on the
         remote host"""
 
@@ -400,7 +407,7 @@ class GerritSshStreamEventsConnector:
         cmd.extend(gerrit_args)
         return cmd
 
-    def start_stream_process(self):
+    def start_stream_process(self) -> None:
         if self._process is not None:
             return
 
@@ -417,7 +424,7 @@ class GerritSshStreamEventsConnector:
         self._process = (protocol, self.reactor.spawnProcess(protocol, "ssh", cmd, env=None))
         self._last_lines_for_debug = []
 
-    def _stream_process_stopped(self):
+    def _stream_process_stopped(self) -> None:
         self._process = None
 
         # if the service is stopped, don't try to restart the process
@@ -454,7 +461,7 @@ class GerritSshStreamEventsConnector:
             self._stream_process_timeout = self.STREAM_BACKOFF_MIN
 
     @defer.inlineCallbacks
-    def get_files(self, change, patchset):
+    def get_files(self, change: str, patchset: str) -> InlineCallbacksType[list[str]]:
         cmd = self._build_gerrit_command(
             "query", str(change), "--format", "JSON", "--files", "--patch-sets"
         )
@@ -485,14 +492,14 @@ class GerritHttpEventLogPollerConnector:
 
     def __init__(
         self,
-        reactor,
-        change_source,
-        base_url,
-        auth,
-        get_last_event_ts,
-        first_fetch_lookback=FIRST_FETCH_LOOKBACK_DAYS,
-        on_lines_received_cb=None,
-    ):
+        reactor: Any,
+        change_source: Any,
+        base_url: str,
+        auth: Any,
+        get_last_event_ts: Callable[[], defer.Deferred[int] | int],
+        first_fetch_lookback: int,
+        on_lines_received_cb: Callable[[list[bytes]], defer.Deferred],
+    ) -> None:
         if base_url.endswith('/'):
             base_url = base_url[:-1]
         self._reactor = reactor
@@ -505,13 +512,13 @@ class GerritHttpEventLogPollerConnector:
         self._last_event_time = None
 
     @defer.inlineCallbacks
-    def setup(self):
+    def setup(self) -> InlineCallbacksType[None]:
         self._http = yield httpclientservice.HTTPSession(
             self._change_source.master.httpservice, self._base_url, auth=self._auth
         )
 
     @defer.inlineCallbacks
-    def poll(self):
+    def poll(self) -> InlineCallbacksType[None]:
         last_event_ts = yield self._get_last_event_ts()
         if last_event_ts is None:
             # If there is not last event time stored in the database, then set
@@ -537,7 +544,7 @@ class GerritHttpEventLogPollerConnector:
         yield self._on_lines_received_cb(lines.splitlines())
 
     @defer.inlineCallbacks
-    def get_files(self, change, patchset):
+    def get_files(self, change: str, patchset: str) -> InlineCallbacksType[list[str]]:
         res = yield self._http.get(f"/changes/{change}/revisions/{patchset}/files/")
         res = yield res.content()
         try:
@@ -548,22 +555,22 @@ class GerritHttpEventLogPollerConnector:
             return []
 
     @defer.inlineCallbacks
-    def do_poll(self):
+    def do_poll(self) -> InlineCallbacksType[None]:
         try:
             yield self.poll()
         except Exception as e:
             log.err(e, 'while polling for changes')
 
 
-def extract_gerrit_event_time(event):
+def extract_gerrit_event_time(event: dict) -> int:
     return event["eventCreatedOn"]
 
 
-def build_gerrit_event_hash(event):
+def build_gerrit_event_hash(event: dict) -> str:
     return hashlib.sha1(json.dumps(event, sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def is_event_valid(event):
+def is_event_valid(event: Any) -> bool:
     return isinstance(event, dict) and "type" in event and "eventCreatedOn" in event
 
 
@@ -584,12 +591,12 @@ class GerritChangeSource(GerritChangeSourceBase):
 
     name = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._stream_connector = None
-        self._poll_connector = None
+        self._stream_connector: GerritSshStreamEventsConnector | None = None
+        self._poll_connector: GerritHttpEventLogPollerConnector | None = None
 
-        self._queued_stream_events = []
+        self._queued_stream_events: list[tuple[int, dict]] = []
 
         # Events are received from stream event source continuously. If HTTP API is not available,
         # GerritChangeSource is always in this state.
@@ -607,38 +614,38 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._stream_messages_timeout = False
 
         # Used for polling if last event timestamp is unknown.
-        self._start_ts = None
+        self._start_ts: int | None = None
 
         # Stores newest events that have been published for further processing and have identical
         # timestamp. This is used to ensure that events are not duplicated across stream and
         # polled sources.
-        self._last_second_events = []
+        self._last_second_events: list[dict] = []
         # Contains hashes of self._last_second_events coming from previous run of this service.
         # self._last_second_events is not stored directly because of size considerations.
-        self._last_second_event_hashes = []
+        self._last_second_event_hashes: list[str] | None = []
 
-        self._last_event_ts = None
+        self._last_event_ts: int | None = None
         # Last event timestamp recorded to database. Equivalent to self._last_event_ts. Separate
         # variable is support single database transaction for message batches.
-        self._last_event_ts_saved = None
+        self._last_event_ts_saved: int | None = None
 
         self._deferwaiter = deferwaiter.DeferWaiter()
-        self._poll_handler = None
-        self._stream_activity_watchdog = None
+        self._poll_handler: deferwaiter.NonRepeatedActionHandler | None = None
+        self._stream_activity_watchdog: watchdog.Watchdog | None = None
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        gerritserver,
-        username,
-        gerritport=29418,
-        identity_file=None,
-        ssh_server_alive_interval_s=15,
-        ssh_server_alive_count_max=3,
-        http_url=None,
-        http_auth=None,
-        http_poll_interval=30,
-        **kwargs,
-    ):
+        gerritserver: str,
+        username: str,
+        gerritport: int = 29418,
+        identity_file: str | None = None,
+        ssh_server_alive_interval_s: int | None = 15,
+        ssh_server_alive_count_max: int | None = 3,
+        http_url: str | None = None,
+        http_auth: Any = None,
+        http_poll_interval: int = 30,
+        **kwargs: Any,
+    ) -> None:
         if self.name is None:
             self.name = f"GerritChangeSource:{username}@{gerritserver}:{gerritport}"
         if 'gitBaseURL' not in kwargs:
@@ -653,20 +660,20 @@ class GerritChangeSource(GerritChangeSourceBase):
         super().checkConfig(**kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        gerritserver,
-        username,
-        gerritport=29418,
-        identity_file=None,
-        name=None,
-        ssh_server_alive_interval_s=15,
-        ssh_server_alive_count_max=3,
-        http_url=None,
-        http_auth=None,
-        http_poll_interval=30,
-        **kwargs,
-    ):
+        gerritserver: str,
+        username: str,
+        gerritport: int = 29418,
+        identity_file: str | None = None,
+        name: str | None = None,
+        ssh_server_alive_interval_s: int | None = 15,
+        ssh_server_alive_count_max: int | None = 3,
+        http_url: str | None = None,
+        http_auth: Any = None,
+        http_poll_interval: int = 30,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = f"ssh://{username}@{gerritserver}:{gerritport}"
         self.gerritserver = gerritserver
@@ -709,7 +716,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._poll_handler = deferwaiter.NonRepeatedActionHandler(
             self.master.reactor,
             self._deferwaiter,
-            lambda: self._poll_connector.do_poll(),  # pylint: disable=unnecessary-lambda
+            lambda: self._poll_connector.do_poll(),  # type: ignore[union-attr]
         )
 
         if http_url is not None:
@@ -720,11 +727,11 @@ class GerritChangeSource(GerritChangeSourceBase):
                     self,
                     http_url + "/a",
                     http_auth,
-                    lambda: self._last_event_ts or self._start_ts,
+                    lambda: self._last_event_ts or self._start_ts or 0,  # 0 can't happen
                     first_fetch_lookback=0,
                     on_lines_received_cb=self._lines_received_poll,
                 )
-                yield self._poll_connector.setup()
+                yield self._poll_connector.setup()  # type: ignore[attr-defined]
             self._is_synchronized = False
         else:
             self._poll_connector = None
@@ -736,14 +743,21 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         yield super().reconfigService(**kwargs)
 
-    def activate(self):
+    def activate(self) -> defer.Deferred[None]:
+        assert self._stream_connector is not None
+        assert self._stream_activity_watchdog is not None
+
         self._is_synchronized = self._poll_connector is None
         self._stream_connector.start()
         self._stream_activity_watchdog.start()
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def deactivate(self):
+    def deactivate(self) -> InlineCallbacksType[None]:
+        assert self._stream_connector is not None
+        assert self._poll_handler is not None
+        assert self._stream_activity_watchdog is not None
+
         self._stream_activity_watchdog.stop()
         yield self._stream_connector.stop()  # Note that this immediately stops event acceptance
         self._poll_handler.stop()
@@ -758,22 +772,25 @@ class GerritChangeSource(GerritChangeSourceBase):
         else:
             yield self.master.db.state.setState(self._oid, "last_event_hashes", None)
 
-    def getFiles(self, change, patchset):
+    def getFiles(self, change: str, patchset: str) -> defer.Deferred:
+        assert self._stream_connector is not None
         return self._stream_connector.get_files(change, patchset)
 
-    def _no_stream_activity_timed_out(self):
+    def _no_stream_activity_timed_out(self) -> None:
+        assert self._poll_handler is not None
         if self._poll_connector is None:
             return
         self._stream_messages_timeout = True
         self._poll_handler.force()
 
-    def _stream_process_started(self):
+    def _stream_process_started(self) -> None:
+        assert self._poll_handler is not None
         if self._poll_connector is None:
             return
         self._is_synchronized = False
         self._poll_handler.force()
 
-    def _record_last_second_event(self, event, ts):
+    def _record_last_second_event(self, event: dict, ts: int) -> None:
         if self._last_event_ts != ts:
             self._last_event_ts = ts
             self._last_second_events.clear()
@@ -781,13 +798,16 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._last_second_events.append(event)
 
     @defer.inlineCallbacks
-    def _update_last_event_ts(self):
+    def _update_last_event_ts(self) -> InlineCallbacksType[None]:
         if self._last_event_ts != self._last_event_ts_saved:
             self._last_event_ts_saved = self._last_event_ts
             yield self.master.db.state.setState(self._oid, "last_event_ts", self._last_event_ts)
 
     @defer.inlineCallbacks
-    def _line_received_stream(self, line):
+    def _line_received_stream(self, line: bytes) -> InlineCallbacksType[None]:
+        assert self._poll_handler is not None
+        assert self._stream_activity_watchdog is not None
+
         self._stream_activity_watchdog.notify()
         try:
             event = json.loads(bytes2unicode(line))
@@ -815,7 +835,9 @@ class GerritChangeSource(GerritChangeSourceBase):
         yield self._update_last_event_ts()
         yield self.eventReceived(event)
 
-    def _filter_out_already_received_events(self, events):
+    def _filter_out_already_received_events(
+        self, events: list[tuple[int, dict]]
+    ) -> list[tuple[int, dict]]:
         if self._last_event_ts is None:
             return events
 
@@ -833,12 +855,16 @@ class GerritChangeSource(GerritChangeSourceBase):
             filtered_events.append((ts, event))
         return filtered_events
 
-    def _debug_log_polled_event(self, event):
+    def _debug_log_polled_event(self, event: dict) -> None:
         line = json.dumps(event, sort_keys=True)
-        log.msg(f"{self.change_source.name} accepted polled event: {line}")
+        log.msg(f"{self.name} accepted polled event: {line}")
 
     @defer.inlineCallbacks
-    def _lines_received_poll(self, lines):
+    def _lines_received_poll(self, lines: list[bytes]) -> InlineCallbacksType[None]:
+        assert self._stream_connector is not None
+        assert self._poll_handler is not None
+        assert self._stream_activity_watchdog is not None
+
         if self._is_synchronized and not self._stream_messages_timeout:
             return
 
@@ -930,7 +956,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             self._deferwaiter.add(self._stream_connector.restart())
             self._stream_activity_watchdog.start()
 
-    def describe(self):
+    def describe(self) -> str:
         status = ""
         if not self._stream_connector or not self._stream_connector._process:
             status = "[NOT CONNECTED - check log]"
@@ -944,29 +970,29 @@ class GerritEventLogPoller(GerritChangeSourceBase):
     POLL_INTERVAL_SEC = 30
     FIRST_FETCH_LOOKBACK_DAYS = 30
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        baseURL,
-        auth,
-        pollInterval=POLL_INTERVAL_SEC,
-        pollAtLaunch=True,
-        firstFetchLookback=FIRST_FETCH_LOOKBACK_DAYS,
-        **kwargs,
-    ):
+        baseURL: str,
+        auth: Any,
+        pollInterval: int = POLL_INTERVAL_SEC,
+        pollAtLaunch: bool = True,
+        firstFetchLookback: int = FIRST_FETCH_LOOKBACK_DAYS,
+        **kwargs: Any,
+    ) -> None:
         if self.name is None:
             self.name = f"GerritEventLogPoller:{baseURL}"
         super().checkConfig(**kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        baseURL,
-        auth,
-        pollInterval=POLL_INTERVAL_SEC,
-        pollAtLaunch=True,
-        firstFetchLookback=FIRST_FETCH_LOOKBACK_DAYS,
-        **kwargs,
-    ):
+        baseURL: str,
+        auth: Any,
+        pollInterval: int = POLL_INTERVAL_SEC,
+        pollAtLaunch: bool = True,
+        firstFetchLookback: int = FIRST_FETCH_LOOKBACK_DAYS,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(**kwargs)
 
         self._poll_interval = pollInterval
@@ -974,7 +1000,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
 
         self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
 
-        def get_last_event_ts():
+        def get_last_event_ts() -> defer.Deferred:
             return self.master.db.state.getState(self._oid, 'last_event_ts', None)
 
         self._connector = GerritHttpEventLogPollerConnector(
@@ -989,25 +1015,25 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         yield self._connector.setup()
         self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
 
-    def getFiles(self, change, patchset):
+    def getFiles(self, change: str, patchset: str) -> defer.Deferred:
         return self._connector.get_files(change, patchset)
 
-    def force(self):
+    def force(self) -> None:
         self._poller()
 
-    def activate(self):
+    def activate(self) -> defer.Deferred[None]:
         self._poller.start(interval=self._poll_interval, now=self._poll_at_launch)
         return defer.succeed(None)
 
-    def deactivate(self):
+    def deactivate(self) -> defer.Deferred:
         return self._poller.stop()
 
-    def describe(self):
+    def describe(self) -> str:
         msg = "GerritEventLogPoller watching the remote Gerrit repository {}"
         return msg.format(self.name)
 
     @defer.inlineCallbacks
-    def _lines_received(self, lines):
+    def _lines_received(self, lines: list[bytes]) -> InlineCallbacksType[None]:
         last_event_ts = None
         for line in lines:
             try:
