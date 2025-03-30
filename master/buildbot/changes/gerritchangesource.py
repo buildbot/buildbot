@@ -788,12 +788,12 @@ class GerritChangeSource(GerritChangeSourceBase):
         try:
             event = json.loads(bytes2unicode(line))
         except ValueError:
-            log.msg(f"{self.name}: bad json line: {line}")
+            log.msg(f"{self.name}: bad json line: {line!r}")
             return
 
         if not is_event_valid(event):
             if self.debug:
-                log.msg(f"no type in event {line}")
+                log.msg(f"no type in event {line!r}")
             return
 
         if not self._is_synchronized:
@@ -847,12 +847,12 @@ class GerritChangeSource(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"{self.name}: bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line!r}")
                 continue
 
             if not is_event_valid(event):
                 if self.debug:
-                    log.msg(f"no type in event {line}")
+                    log.msg(f"no type in event {line!r}")
                 continue
             events.append((extract_gerrit_event_time(event), event))
 
@@ -1008,12 +1008,12 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"{self.name}: bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line!r}")
                 continue
 
             if not is_event_valid(event):
                 if self.debug:
-                    log.msg(f"no type in event {line}")
+                    log.msg(f"no type in event {line!r}")
                 continue
 
             yield super().eventReceived(event)
