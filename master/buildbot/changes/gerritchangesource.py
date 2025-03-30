@@ -250,7 +250,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         # As a result it may appear that the change was not related to a Gerrit change and cause
         # reporters to not submit reviews for example.
         if 'patchset-created' in self.handled_events and ref['refName'].startswith('refs/changes/'):
-            return None
+            return defer.succeed(None)
 
         return self.master.data.updates.addChange(
             author=author,
@@ -740,6 +740,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._is_synchronized = self._poll_connector is None
         self._stream_connector.start()
         self._stream_activity_watchdog.start()
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -996,6 +997,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
 
     def activate(self):
         self._poller.start(interval=self._poll_interval, now=self._poll_at_launch)
+        return defer.succeed(None)
 
     def deactivate(self):
         return self._poller.stop()
