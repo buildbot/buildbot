@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import Any
+
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
@@ -22,49 +26,50 @@ from buildbot import config
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
+from buildbot.util.twisted import InlineCallbacksType
 
 
 @implementer(IChangeSource)
 class ChangeSource(service.ClusteredBuildbotService):
-    def describe(self):
-        pass
+    def describe(self) -> str:
+        return "ChangeSource"
 
     # activity handling
 
-    def activate(self):
+    def activate(self) -> defer.Deferred[None]:
         return defer.succeed(None)
 
-    def deactivate(self):
+    def deactivate(self) -> defer.Deferred[None]:
         return defer.succeed(None)
 
     # service handling
 
-    def _getServiceId(self):
+    def _getServiceId(self) -> defer.Deferred[int]:
         return self.master.data.updates.findChangeSourceId(self.name)
 
-    def _claimService(self):
+    def _claimService(self) -> defer.Deferred[bool]:
         return self.master.data.updates.trySetChangeSourceMaster(
             self.serviceid, self.master.masterid
         )
 
-    def _unclaimService(self):
+    def _unclaimService(self) -> defer.Deferred[bool]:
         return self.master.data.updates.trySetChangeSourceMaster(self.serviceid, None)
 
 
 class ReconfigurablePollingChangeSource(ChangeSource):
-    pollInterval = None
-    pollAtLaunch = None
-    pollRandomDelayMin = None
-    pollRandomDelayMax = None
+    pollInterval: int | None = None
+    pollAtLaunch: bool | None = None
+    pollRandomDelayMin: int | None = None
+    pollRandomDelayMax: int | None = None
 
     def checkConfig(
         self,
-        name=None,
-        pollInterval=60 * 10,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-    ):
+        name: str | None = None,
+        pollInterval: int = 60 * 10,
+        pollAtLaunch: bool = False,
+        pollRandomDelayMin: int = 0,
+        pollRandomDelayMax: int = 0,
+    ) -> None:  # type: ignore[override]
         super().checkConfig(name=name)
         if pollInterval < 0:
             config.error(f"interval must be >= 0: {pollInterval}")
@@ -80,12 +85,12 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     @defer.inlineCallbacks
     def reconfigService(
         self,
-        name=None,
-        pollInterval=60 * 10,
-        pollAtLaunch=False,
-        pollRandomDelayMin=0,
-        pollRandomDelayMax=0,
-    ):
+        name: str | None = None,
+        pollInterval: int = 60 * 10,
+        pollAtLaunch: bool = False,
+        pollRandomDelayMin: int = 0,
+        pollRandomDelayMax: int = 0,
+    ) -> InlineCallbacksType[None]:  # type: ignore[override]
         prevPollInterval = self.pollInterval
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
@@ -105,25 +110,26 @@ class ReconfigurablePollingChangeSource(ChangeSource):
                 random_delay_max=self.pollRandomDelayMax,
             )
 
-    def poll(self):
+    def poll(self) -> None:
         pass
 
     @poll_method
-    def doPoll(self):
+    def doPoll(self) -> defer.Deferred[Any]:
         d = defer.maybeDeferred(self.poll)
         d.addErrback(log.err, f'{self}: while polling for changes')
         return d
 
-    def force(self):
+    def force(self) -> None:
         self.doPoll()
 
-    def activate(self):
+    def activate(self) -> defer.Deferred[None]:
         self.doPoll.start(
             interval=self.pollInterval,
             now=self.pollAtLaunch,
             random_delay_min=self.pollRandomDelayMin,
             random_delay_max=self.pollRandomDelayMax,
         )
+        return defer.succeed(None)
 
-    def deactivate(self):
+    def deactivate(self) -> defer.Deferred[None]:
         return self.doPoll.stop()
