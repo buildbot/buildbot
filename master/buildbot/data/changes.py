@@ -18,6 +18,7 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Callable
 
 from twisted.internet import defer
 from twisted.python import log
@@ -167,7 +168,7 @@ class Change(base.ResourceType):
         revision: str | None = None,
         when_timestamp: int | None = None,
         branch: str | None = None,
-        category: str | None = None,
+        category: str | Callable | None = None,
         revlink: str | None = '',
         properties: dict[str, Any] | None = None,
         repository: str = '',
