@@ -65,7 +65,7 @@ class Match:
 
     def getOwner(self):
         if self.buildset:
-            return self.getOwnerFromBuildset(self.buildset)
+            return self.getOwnerFromBuildSet(self.buildset)
         elif self.buildrequest:
             return self.getOwnerFromBuildRequest(self.buildrequest)
         elif self.build:

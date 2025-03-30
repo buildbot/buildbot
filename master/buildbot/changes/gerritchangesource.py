@@ -175,6 +175,9 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             properties['target_branch'] = event["change"]["branch"]
         return properties
 
+    def getFiles(self, change, patchset):
+        raise NotImplementedError
+
     def eventReceived(self, event):
         if event['type'] not in self.handled_events:
             if self.debug:
@@ -247,7 +250,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         # As a result it may appear that the change was not related to a Gerrit change and cause
         # reporters to not submit reviews for example.
         if 'patchset-created' in self.handled_events and ref['refName'].startswith('refs/changes/'):
-            return None
+            return defer.succeed(None)
 
         return self.master.data.updates.addChange(
             author=author,
@@ -737,6 +740,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._is_synchronized = self._poll_connector is None
         self._stream_connector.start()
         self._stream_activity_watchdog.start()
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -788,12 +792,12 @@ class GerritChangeSource(GerritChangeSourceBase):
         try:
             event = json.loads(bytes2unicode(line))
         except ValueError:
-            log.msg(f"{self.name}: bad json line: {line}")
+            log.msg(f"{self.name}: bad json line: {line!r}")
             return
 
         if not is_event_valid(event):
             if self.debug:
-                log.msg(f"no type in event {line}")
+                log.msg(f"no type in event {line!r}")
             return
 
         if not self._is_synchronized:
@@ -847,12 +851,12 @@ class GerritChangeSource(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"{self.name}: bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line!r}")
                 continue
 
             if not is_event_valid(event):
                 if self.debug:
-                    log.msg(f"no type in event {line}")
+                    log.msg(f"no type in event {line!r}")
                 continue
             events.append((extract_gerrit_event_time(event), event))
 
@@ -993,6 +997,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
 
     def activate(self):
         self._poller.start(interval=self._poll_interval, now=self._poll_at_launch)
+        return defer.succeed(None)
 
     def deactivate(self):
         return self._poller.stop()
@@ -1008,12 +1013,12 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             try:
                 event = json.loads(bytes2unicode(line))
             except ValueError:
-                log.msg(f"{self.name}: bad json line: {line}")
+                log.msg(f"{self.name}: bad json line: {line!r}")
                 continue
 
             if not is_event_valid(event):
                 if self.debug:
-                    log.msg(f"no type in event {line}")
+                    log.msg(f"no type in event {line!r}")
                 continue
 
             yield super().eventReceived(event)

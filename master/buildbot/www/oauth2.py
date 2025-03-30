@@ -131,7 +131,7 @@ class OAuth2Auth(auth.AuthBase):
         error = token.get("error")
         if error:
             error_description = token.get("error_description") or error
-            msg = f"OAuth2 session: creation failed: {error_description}"
+            msg = f"OAuth2 session: creation failed: {error_description}".encode()
             raise Error(503, msg)
         s.params = {'access_token': token['access_token']}
         s.verify = self.ssl_verify

@@ -414,7 +414,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,
                 branch=bytes2unicode(branch),
-                category=bytes2unicode(self.category),
+                category=self.category,
                 project=bytes2unicode(self.project),
                 repository=bytes2unicode(self.repourl),
                 src='hg',

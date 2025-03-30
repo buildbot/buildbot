@@ -945,7 +945,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.www.change_hook",
       "buildbot.www.config",
       "buildbot.www.encoding",
-      "buildbot.www.graphql",
       "buildbot.www.hooks.base",
       "buildbot.www.hooks.bitbucketcloud",
       "buildbot.www.hooks.bitbucket",

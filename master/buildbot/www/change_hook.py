@@ -38,7 +38,7 @@ class ChangeHookResource(resource.Resource):
     children = {}
     needsReconfig = True
 
-    def __init__(self, dialects=None, master=None):
+    def __init__(self, master, dialects=None):
         """
         The keys of 'dialects' select a modules to load under
         master/buildbot/www/hooks/
@@ -154,7 +154,7 @@ class ChangeHookResource(resource.Resource):
         """
         uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
         if not uriRE:
-            msg = f"URI doesn't match change_hook regex: {request.uri}"
+            msg = f"URI doesn't match change_hook regex: {bytes2unicode(request.uri)}"
             log.msg(msg)
             raise ValueError(msg)
 

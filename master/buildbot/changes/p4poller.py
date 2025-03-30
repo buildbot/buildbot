@@ -57,7 +57,7 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
     def connectionMade(self):
         if self.stdin:
             if debug_logging:
-                log.msg(f"P4Poller: entering password for {self.p4base}: {self.stdin}")
+                log.msg(f"P4Poller: entering password for {self.p4base}: {self.stdin!r}")
             self.transport.write(self.stdin)
         self.transport.closeStdin()
 
@@ -68,12 +68,12 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         if debug_logging:
-            log.msg(f"P4Poller: login stdout for {self.p4base}: {data}")
+            log.msg(f"P4Poller: login stdout for {self.p4base}: {data!r}")
         self.stdout += data
 
     def errReceived(self, data):
         if debug_logging:
-            log.msg(f"P4Poller: login stderr for {self.p4base}: {data}")
+            log.msg(f"P4Poller: login stderr for {self.p4base}: {data!r}")
         self.stderr += data
 
 
@@ -340,8 +340,8 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             try:
                 result = bytes2unicode(result, self.encoding)
             except UnicodeError as ex:
-                log.msg(f"P4Poller: couldn't decode changelist description: {ex.encoding}")
-                log.msg(f"P4Poller: in object: {ex.object}")
+                log.msg(f"P4Poller: couldn't decode changelist description: {ex}")
+                log.msg(f"P4Poller: in object: {result}")
                 log.err(f"P4Poller: poll failed on {self.p4port}, {self.p4base}")
                 raise
 
@@ -381,7 +381,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 path = m.group('path')
                 if path.startswith(self.p4base):
                     branch, file = self.split_file(path[len(self.p4base) :])
-                    if branch is None and file is None:
+                    if branch is None or file is None:
                         continue
                     if branch in branch_files:
                         branch_files[branch].append(file)

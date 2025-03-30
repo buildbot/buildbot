@@ -64,7 +64,7 @@ class Change:
         change.revision = chdict.revision
         change.branch = chdict.branch
         change.category = chdict.category
-        change.revlink = chdict.revlink
+        change.revlink = chdict.revlink or ""
         change.repository = chdict.repository
         change.codebase = chdict.codebase
         change.project = chdict.project
@@ -165,21 +165,49 @@ class Change:
         )
 
     def __eq__(self, other):
+        if not isinstance(other, Change):
+            raise NotImplementedError
         return self.number == other.number
 
     def __ne__(self, other):
+        if not isinstance(other, Change):
+            raise NotImplementedError
         return self.number != other.number
 
     def __lt__(self, other):
+        if not isinstance(other, Change):
+            raise NotImplementedError
+        if self.number is None:
+            return False
+        if other.number is None:
+            return False
         return self.number < other.number
 
     def __le__(self, other):
+        if not isinstance(other, Change):
+            raise NotImplementedError
+        if self.number is None:
+            return other.number is None
+        if other.number is None:
+            return False
         return self.number <= other.number
 
     def __gt__(self, other):
+        if not isinstance(other, Change):
+            raise NotImplementedError
+        if self.number is None:
+            return False
+        if other.number is None:
+            return False
         return self.number > other.number
 
     def __ge__(self, other):
+        if not isinstance(other, Change):
+            raise NotImplementedError
+        if self.number is None:
+            return other.number is None
+        if other.number is None:
+            return False
         return self.number >= other.number
 
     def asText(self):
