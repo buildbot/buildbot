@@ -76,9 +76,9 @@ def scp_style_to_url_syntax(address, port=22, scheme='ssh'):
 
 def check_ssh_config(
     logname: str,
-    ssh_private_key: IRenderable | None,
-    ssh_host_key: IRenderable | None,
-    ssh_known_hosts: IRenderable | None,
+    ssh_private_key: IRenderable | str | None,
+    ssh_host_key: IRenderable | str | None,
+    ssh_known_hosts: IRenderable | str | None,
 ):
     if ssh_host_key is not None and ssh_private_key is None:
         config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
@@ -190,9 +190,9 @@ class GitStepMixin(GitMixin):
 
     def setup_git_auth(
         self,
-        ssh_private_key: IRenderable | None,
-        ssh_host_key: IRenderable | None,
-        ssh_known_hosts: IRenderable | None,
+        ssh_private_key: IRenderable | str | None,
+        ssh_host_key: IRenderable | str | None,
+        ssh_known_hosts: IRenderable | str | None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self._git_auth = GitStepAuth(
@@ -291,9 +291,9 @@ class AbstractGitAuth(ComparableMixin):
 
     def __init__(
         self,
-        ssh_private_key: IRenderable | None = None,
-        ssh_host_key: IRenderable | None = None,
-        ssh_known_hosts: IRenderable | None = None,
+        ssh_private_key: IRenderable | str | None = None,
+        ssh_host_key: IRenderable | str | None = None,
+        ssh_known_hosts: IRenderable | str | None = None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self.did_download_auth_files = False
@@ -558,9 +558,9 @@ class GitStepAuth(AbstractGitAuth):
         self,
         # step must implement all these types
         step: buildstep.BuildStep | GitStepMixin | CompositeStepMixin,
-        ssh_private_key: IRenderable | None = None,
-        ssh_host_key: IRenderable | None = None,
-        ssh_known_hosts: IRenderable | None = None,
+        ssh_private_key: IRenderable | str | None = None,
+        ssh_host_key: IRenderable | str | None = None,
+        ssh_known_hosts: IRenderable | str | None = None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self.step = step
@@ -688,9 +688,9 @@ class GitServiceAuth(AbstractGitAuth):
     def __init__(
         self,
         service: GitPoller,
-        ssh_private_key: IRenderable | None = None,
-        ssh_host_key: IRenderable | None = None,
-        ssh_known_hosts: IRenderable | None = None,
+        ssh_private_key: IRenderable | str | None = None,
+        ssh_host_key: IRenderable | str | None = None,
+        ssh_known_hosts: IRenderable | str | None = None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self._service = service
