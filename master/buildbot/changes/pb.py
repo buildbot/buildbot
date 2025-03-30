@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
 from typing import ClassVar
 from typing import Sequence
 
@@ -21,21 +24,23 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
+from buildbot.config.master import MasterConfig
 from buildbot.pbutil import NewCredPerspective
+from buildbot.util.twisted import InlineCallbacksType
 
 
 class ChangePerspective(NewCredPerspective):
-    def __init__(self, master, prefix):
+    def __init__(self, master: Any, prefix: str | None):
         self.master = master
         self.prefix = prefix
 
-    def attached(self, mind):
+    def attached(self, mind: Any) -> Any:
         return self
 
-    def detached(self, mind):
+    def detached(self, mind: Any) -> None:
         pass
 
-    def perspective_addChange(self, changedict):
+    def perspective_addChange(self, changedict: dict[str, Any]) -> defer.Deferred[None]:
         log.msg("perspective_addChange called")
 
         if 'revlink' in changedict and not changedict['revlink']:
@@ -101,7 +106,14 @@ class ChangePerspective(NewCredPerspective):
 class PBChangeSource(base.ChangeSource):
     compare_attrs: ClassVar[Sequence[str]] = ("user", "passwd", "port", "prefix", "port")
 
-    def __init__(self, user="change", passwd="changepw", port=None, prefix=None, name=None):
+    def __init__(
+        self,
+        user: str = "change",
+        passwd: str = "changepw",
+        port: int | str | None = None,
+        prefix: str | None = None,
+        name: str | None = None,
+    ):
         if name is None:
             if prefix:
                 name = f"PBChangeSource:{prefix}:{port}"
@@ -114,17 +126,17 @@ class PBChangeSource(base.ChangeSource):
         self.passwd = passwd
         self.port = port
         self.prefix = prefix
-        self.registration = None
-        self.registered_port = None
+        self.registration: Any = None
+        self.registered_port: int | str | None = None
 
-    def describe(self):
+    def describe(self) -> str:
         portname = self.registered_port
         d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
             d += f" (prefix '{self.prefix}')"
         return d
 
-    def _calculatePort(self, cfg):
+    def _calculatePort(self, cfg: MasterConfig) -> int | str | None:
         # calculate the new port, defaulting to the worker's PB port if
         # none was specified
         port = self.port
@@ -133,7 +145,9 @@ class PBChangeSource(base.ChangeSource):
         return port
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:  # type: ignore[override]
         port = self._calculatePort(new_config)
         if not port:
             config.error("No port specified for PBChangeSource, and no worker port configured")
@@ -146,15 +160,15 @@ class PBChangeSource(base.ChangeSource):
         yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         port = self._calculatePort(self.master.config)
         yield self._register(port)
 
-    def deactivate(self):
+    def deactivate(self) -> defer.Deferred[None]:
         return self._unregister()
 
     @defer.inlineCallbacks
-    def _register(self, port):
+    def _register(self, port: int | str | None) -> InlineCallbacksType[None]:
         if not port:
             return
         self.registered_port = port
@@ -162,7 +176,7 @@ class PBChangeSource(base.ChangeSource):
             port, self.user, self.passwd, self.getPerspective
         )
 
-    def _unregister(self):
+    def _unregister(self) -> defer.Deferred[None]:
         self.registered_port = None
         if self.registration:
             reg = self.registration
@@ -170,6 +184,6 @@ class PBChangeSource(base.ChangeSource):
             return reg.unregister()
         return defer.succeed(None)
 
-    def getPerspective(self, mind, username):
+    def getPerspective(self, mind: Any, username: str) -> ChangePerspective:
         assert username == self.user
         return ChangePerspective(self.master, self.prefix)

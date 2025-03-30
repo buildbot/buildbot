@@ -18,6 +18,7 @@ from __future__ import annotations
 import html
 import time
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -42,7 +43,7 @@ class Change:
     links: list[str] = []  # links are gone, but upgrade code expects this attribute
 
     @classmethod
-    def fromChdict(cls, master, chdict: ChangeModel) -> Change:
+    def fromChdict(cls, master: Any, chdict: ChangeModel) -> Change:
         """
         Class method to create a L{Change} from a L{ChangeModel} as returned
         by L{ChangesConnectorComponent.getChange}.
@@ -56,7 +57,7 @@ class Change:
         return cache.get(chdict.changeid, chdict=chdict, master=master)
 
     @classmethod
-    def _make_ch(cls, changeid: int, master, chdict: ChangeModel) -> defer.Deferred[Change]:
+    def _make_ch(cls, changeid: int, master: Any, chdict: ChangeModel) -> defer.Deferred[Change]:
         change = cls(None, None, None, _fromChdict=True)
         change.who = chdict.author
         change.committer = chdict.committer
@@ -85,21 +86,21 @@ class Change:
 
     def __init__(
         self,
-        who,
-        files,
-        comments,
-        committer=None,
-        revision=None,
-        when=None,
-        branch=None,
-        category=None,
-        revlink='',
-        properties=None,
-        repository='',
-        codebase='',
-        project='',
-        _fromChdict=False,
-    ):
+        who: str | None,
+        files: list[str] | None,
+        comments: str | None,
+        committer: str | None = None,
+        revision: str | None = None,
+        when: int | None = None,
+        branch: str | None = None,
+        category: str | None = None,
+        revlink: str = '',
+        properties: dict[str, Any] | None = None,
+        repository: str = '',
+        codebase: str = '',
+        project: str = '',
+        _fromChdict: bool = False,
+    ) -> None:
         if properties is None:
             properties = {}
         # skip all this madness if we're being built from the database
@@ -110,7 +111,7 @@ class Change:
         self.committer = committer
         self.comments = comments
 
-        def none_or_unicode(x):
+        def none_or_unicode(x: Any) -> str | None:
             if x is None:
                 return x
             return str(x)
@@ -138,7 +139,7 @@ class Change:
         # keep a sorted list of the files, for easier display
         self.files = sorted(files or [])
 
-    def __setstate__(self, dict):
+    def __setstate__(self, dict: dict[str, Any]) -> None:
         self.__dict__ = dict
         # Older Changes won't have a 'properties' attribute in them
         if not hasattr(self, 'properties'):
@@ -146,7 +147,7 @@ class Change:
         if not hasattr(self, 'revlink'):
             self.revlink = ""
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             "Change(revision=%r, who=%r, committer=%r, branch=%r, comments=%r, "
             + "when=%r, category=%r, project=%r, repository=%r, "
@@ -164,17 +165,17 @@ class Change:
             self.codebase,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
         return self.number == other.number
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
         return self.number != other.number
 
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
         if self.number is None:
@@ -183,7 +184,7 @@ class Change:
             return False
         return self.number < other.number
 
-    def __le__(self, other):
+    def __le__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
         if self.number is None:
@@ -192,7 +193,7 @@ class Change:
             return False
         return self.number <= other.number
 
-    def __gt__(self, other):
+    def __gt__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
         if self.number is None:
@@ -201,7 +202,7 @@ class Change:
             return False
         return self.number > other.number
 
-    def __ge__(self, other):
+    def __ge__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
         if self.number is None:
@@ -210,7 +211,7 @@ class Change:
             return False
         return self.number >= other.number
 
-    def asText(self):
+    def asText(self) -> str:
         data = ""
         data += "Files:\n"
         for f in self.files:
@@ -229,7 +230,7 @@ class Change:
         data += '\n\n'
         return data
 
-    def asDict(self):
+    def asDict(self) -> dict[str, Any]:
         """returns a dictionary with suitable info for html/mail rendering"""
         files = [{"name": f} for f in self.files]
         files.sort(key=lambda a: a['name'])
@@ -255,19 +256,19 @@ class Change:
         }
         return result
 
-    def getShortAuthor(self):
+    def getShortAuthor(self) -> str | None:
         return self.who
 
-    def getTime(self):
+    def getTime(self) -> str:
         if not self.when:
             return "?"
         return time.strftime("%a %d %b %Y %H:%M:%S", time.localtime(self.when))
 
-    def getTimes(self):
+    def getTimes(self) -> tuple[int | None, None]:
         return (self.when, None)
 
-    def getText(self):
-        return [html.escape(self.who)]
+    def getText(self) -> list[str]:
+        return [html.escape(self.who or "")]
 
-    def getLogs(self):
+    def getLogs(self) -> dict[str, Any]:
         return {}

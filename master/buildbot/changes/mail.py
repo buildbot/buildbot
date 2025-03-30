@@ -28,6 +28,7 @@ from email.iterators import body_line_iterator
 from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
+from typing import Any
 from typing import ClassVar
 from typing import Sequence
 
@@ -38,6 +39,7 @@ from zope.interface import implementer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
+from buildbot.util.twisted import InlineCallbacksType
 
 
 @implementer(IChangeSource)
@@ -48,7 +50,9 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     # twisted is marked as typed, but doesn't specify this type correctly
     name: str | None = 'MaildirSource'  # type: ignore[assignment]
 
-    def __init__(self, maildir, prefix=None, category='', repository=''):
+    def __init__(
+        self, maildir: str, prefix: str | None = None, category: str = '', repository: str = ''
+    ) -> None:
         super().__init__(maildir)
         self.prefix = prefix
         self.category = category
@@ -58,11 +62,11 @@ class MaildirSource(MaildirService, util.ComparableMixin):
                 f"MaildirSource: you probably want your prefix=('{prefix}') to end with a slash"
             )
 
-    def describe(self):
+    def describe(self) -> str:
         return f"{self.__class__.__name__} watching maildir '{self.basedir}'"
 
     @defer.inlineCallbacks
-    def messageReceived(self, filename):
+    def messageReceived(self, filename: str) -> InlineCallbacksType:
         with self.moveToCurDir(filename) as f:
             chtuple = self.parse_file(f, self.prefix)
 
@@ -75,21 +79,31 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         else:
             log.msg(f"no change found in maildir file '{filename}'")
 
-    def parse_file(self, fd, prefix=None):
+    def parse_file(self, fd: Any, prefix: str | None = None) -> tuple[str, dict[str, Any]] | None:
         m = message_from_file(fd)
         return self.parse(m, prefix)
+
+    def parse(self, m: Any, prefix: str | None = None) -> tuple[str, dict[str, Any]] | None:
+        raise NotImplementedError
 
 
 class CVSMaildirSource(MaildirSource):
     name = "CVSMaildirSource"
 
-    def __init__(self, maildir, prefix=None, category='', repository='', properties=None):
+    def __init__(
+        self,
+        maildir: str,
+        prefix: str | None = None,
+        category: str = '',
+        repository: str = '',
+        properties: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(maildir, prefix, category, repository)
         if properties is None:
             properties = {}
         self.properties = properties
 
-    def parse(self, m, prefix=None):
+    def parse(self, m: Any, prefix: str | None = None) -> tuple[str, dict[str, Any]] | None:
         """Parse messages sent by the 'buildbot-cvs-mail' program."""
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
@@ -250,15 +264,14 @@ class CVSMaildirSource(MaildirSource):
             comments += line
 
         comments = comments.rstrip() + "\n"
-        if comments == '\n':
-            comments = None
+
         return (
             'cvs',
             {
                 "author": author,
                 "committer": None,
                 "files": files,
-                "comments": comments,
+                "comments": None if comments == "\n" else comments,
                 "isdir": isdir,
                 "when": when,
                 "branch": branch,
@@ -300,7 +313,7 @@ class CVSMaildirSource(MaildirSource):
 class SVNCommitEmailMaildirSource(MaildirSource):
     name = "SVN commit-email.pl"
 
-    def parse(self, m, prefix=None):
+    def parse(self, m: Any, prefix: str | None = None) -> tuple[str, dict[str, Any]] | None:
         """Parse messages sent by the svn 'commit-email.pl' trigger."""
 
         # The mail is sent from the person doing the checkin. Assume that the
@@ -442,12 +455,19 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
     compare_attrs: ClassVar[Sequence[str]] = ("branchMap", "defaultBranch")
 
-    def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
+    def __init__(
+        self,
+        maildir: str,
+        prefix: str | None = None,
+        branchMap: dict[str, str] | None = None,
+        defaultBranch: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         self.branchMap = branchMap
         self.defaultBranch = defaultBranch
         super().__init__(maildir, prefix, **kwargs)
 
-    def parse(self, m, prefix=None):
+    def parse(self, m: Any, prefix: str | None = None) -> tuple[str, dict[str, Any]] | None:
         """Parse branch notification messages sent by Launchpad."""
 
         subject = m["subject"]
@@ -459,25 +479,25 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
         # Put these into a dictionary, otherwise we cannot assign them
         # from nested function definitions.
-        d = {'files': [], 'comments': ""}
+        d: dict[str, Any] = {'files': [], 'comments': ""}
         gobbler = None
         rev = None
         author = None
         when = util.now()
 
-        def gobble_comment(s):
+        def gobble_comment(s: str) -> None:
             d['comments'] += s + "\n"
 
-        def gobble_removed(s):
+        def gobble_removed(s: str) -> None:
             d['files'].append(f'{s} REMOVED')
 
-        def gobble_added(s):
+        def gobble_added(s: str) -> None:
             d['files'].append(f'{s} ADDED')
 
-        def gobble_modified(s):
+        def gobble_modified(s: str) -> None:
             d['files'].append(f'{s} MODIFIED')
 
-        def gobble_renamed(s):
+        def gobble_renamed(s: str) -> None:
             match = re.search(r"^(.+) => (.+)$", s)
             if match:
                 d['files'].append(f'{match.group(1)} RENAMED {match.group(2)}')
@@ -487,7 +507,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = str(lines.pop(0), "utf-8", errors="ignore")
+            line = str(lines.pop(0), encoding="utf-8", errors="ignore")  # type: ignore[call-overload]
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)
@@ -559,7 +579,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         return None
 
 
-def parseLaunchpadDate(datestr, tz_sign, tz_hours, tz_minutes):
+def parseLaunchpadDate(datestr: str, tz_sign: str, tz_hours: str, tz_minutes: str) -> float:
     time_no_tz = calendar.timegm(time.strptime(datestr, "%Y-%m-%d %H:%M:%S"))
     tz_delta = 60 * 60 * int(tz_sign + tz_hours) + 60 * int(tz_minutes)
     return time_no_tz - tz_delta
