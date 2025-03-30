@@ -147,7 +147,7 @@ class Tests(unittest.TestCase):
             (
                 'https://events.buildbot.net/events/phone_home',
                 b'{"foo": "bar"}',
-                {'Content-Length': 14, 'Content-Type': 'application/json'},
+                {'Content-Length': '14', 'Content-Type': 'application/json'},
             ),
         )
 
