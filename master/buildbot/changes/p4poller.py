@@ -57,7 +57,7 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
     def connectionMade(self):
         if self.stdin:
             if debug_logging:
-                log.msg(f"P4Poller: entering password for {self.p4base}: {self.stdin}")
+                log.msg(f"P4Poller: entering password for {self.p4base}: {self.stdin!r}")
             self.transport.write(self.stdin)
         self.transport.closeStdin()
 
@@ -68,12 +68,12 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         if debug_logging:
-            log.msg(f"P4Poller: login stdout for {self.p4base}: {data}")
+            log.msg(f"P4Poller: login stdout for {self.p4base}: {data!r}")
         self.stdout += data
 
     def errReceived(self, data):
         if debug_logging:
-            log.msg(f"P4Poller: login stderr for {self.p4base}: {data}")
+            log.msg(f"P4Poller: login stderr for {self.p4base}: {data!r}")
         self.stderr += data
 
 
