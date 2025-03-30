@@ -340,8 +340,8 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             try:
                 result = bytes2unicode(result, self.encoding)
             except UnicodeError as ex:
-                log.msg(f"P4Poller: couldn't decode changelist description: {ex.encoding}")
-                log.msg(f"P4Poller: in object: {ex.object}")
+                log.msg(f"P4Poller: couldn't decode changelist description: {ex}")
+                log.msg(f"P4Poller: in object: {result}")
                 log.err(f"P4Poller: poll failed on {self.p4port}, {self.p4base}")
                 raise
 
