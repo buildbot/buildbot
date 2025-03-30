@@ -100,6 +100,10 @@ class FakeWorker:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+    @property
+    def workername(self):
+        return self.name
+
 
 @implementer(interfaces.IMachine)
 class FakeMachine:

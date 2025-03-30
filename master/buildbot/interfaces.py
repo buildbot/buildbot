@@ -171,7 +171,8 @@ class ILogObserver(Interface):
 
 class IWorker(IPlugin):
     # callback methods from the manager
-    pass
+
+    workername = Attribute('workername', 'The worker name')
 
 
 class ILatentWorker(IWorker):

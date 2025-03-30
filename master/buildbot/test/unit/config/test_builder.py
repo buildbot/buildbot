@@ -47,11 +47,11 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             BuilderConfig(name="\N{SNOWMAN}".encode(), factory=self.factory, workernames=['a'])
 
     def test_no_factory(self):
-        with self.assertRaisesConfigError("builder 'a' has no factory"):
+        with self.assertRaisesConfigError("builder 'a': has no factory"):
             BuilderConfig(name='a', workernames=['a'])
 
     def test_wrong_type_factory(self):
-        with self.assertRaisesConfigError("builder 'a's factory is not"):
+        with self.assertRaisesConfigError("builder 'a': factory is not"):
             BuilderConfig(factory=[], name='a', workernames=['a'])
 
     def test_no_workernames(self):
