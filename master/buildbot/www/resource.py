@@ -27,13 +27,13 @@ from buildbot.util import unicode2bytes
 _CR_LF_RE = re.compile(rb"[\r\n]+.*")
 
 
-def protect_redirect_url(url):
+def protect_redirect_url(url: bytes) -> bytes:
     return _CR_LF_RE.sub(b"", url)
 
 
 class Redirect(Error):
     def __init__(self, url):
-        super().__init__(302, "redirect")
+        super().__init__(302, b"redirect")
         self.url = protect_redirect_url(unicode2bytes(url))
 
 
@@ -119,5 +119,5 @@ class RedirectResource(Resource):
 
     def render(self, request):
         redir = self.base_url + self.basepath
-        request.redirect(protect_redirect_url(redir))
+        request.redirect(protect_redirect_url(unicode2bytes(redir)))
         return redir
