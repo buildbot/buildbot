@@ -154,7 +154,7 @@ class ChangeHookResource(resource.Resource):
         """
         uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
         if not uriRE:
-            msg = f"URI doesn't match change_hook regex: {request.uri}"
+            msg = f"URI doesn't match change_hook regex: {bytes2unicode(request.uri)}"
             log.msg(msg)
             raise ValueError(msg)
 
