@@ -24,6 +24,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util.config import ConfiguredMixin
@@ -258,7 +259,9 @@ class AvatarResource(resource.Resource):
             raise self.cache[cache_key]
         for method in self.avatarMethods:
             try:
-                res = yield method.getUserAvatar(email, username, size, self.defaultAvatarFullUrl)
+                res = yield method.getUserAvatar(
+                    email, username, size, bytes2unicode(self.defaultAvatarFullUrl)
+                )
             except resource.Redirect as r:
                 self.cache[cache_key] = r
                 raise

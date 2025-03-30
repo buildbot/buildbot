@@ -69,7 +69,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
-        self.assertEqual(res, b"b'foo' 32 b'http://a/b/img/nobody.png'")
+        self.assertEqual(res, b"b'foo' 32 'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
     def test_custom_size(self):
@@ -80,7 +80,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo&size=64')
-        self.assertEqual(res, b"b'foo' 64 b'http://a/b/img/nobody.png'")
+        self.assertEqual(res, b"b'foo' 64 'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
     def test_invalid_size(self):
@@ -91,7 +91,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, b'/?email=foo&size=abcd')
-        self.assertEqual(res, b"b'foo' 32 b'http://a/b/img/nobody.png'")
+        self.assertEqual(res, b"b'foo' 32 'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
     def test_custom_not_found(self):
