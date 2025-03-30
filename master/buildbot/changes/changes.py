@@ -64,7 +64,7 @@ class Change:
         change.revision = chdict.revision
         change.branch = chdict.branch
         change.category = chdict.category
-        change.revlink = chdict.revlink
+        change.revlink = chdict.revlink or ""
         change.repository = chdict.repository
         change.codebase = chdict.codebase
         change.project = chdict.project
