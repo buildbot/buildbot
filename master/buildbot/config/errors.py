@@ -16,31 +16,32 @@
 from __future__ import annotations
 
 import contextlib
+from typing import Any
 
 
 class ConfigErrors(Exception):
-    def __init__(self, errors=None):
+    def __init__(self, errors: list[str] | None = None) -> None:
         if errors is None:
             errors = []
         self.errors = errors[:]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join(self.errors)
 
-    def addError(self, msg):
+    def addError(self, msg: str) -> None:
         self.errors.append(msg)
 
-    def merge(self, errors):
+    def merge(self, errors: ConfigErrors) -> None:
         self.errors.extend(errors.errors)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(len(self.errors))
 
 
 _errors: ConfigErrors | None = None
 
 
-def error(error, always_raise=False):
+def error(error: str, always_raise: bool = False) -> None:
     if _errors is not None and not always_raise:
         _errors.addError(error)
     else:
@@ -48,7 +49,7 @@ def error(error, always_raise=False):
 
 
 @contextlib.contextmanager
-def capture_config_errors(raise_on_error=False):
+def capture_config_errors(raise_on_error: bool = False) -> Any:
     global _errors
     prev_errors = _errors
     _errors = errors = ConfigErrors()

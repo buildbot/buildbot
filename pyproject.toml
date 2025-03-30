@@ -160,7 +160,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.clients.sendchange",
       "buildbot.clients.tryclient",
       "buildbot.clients.usersclient",
-      "buildbot.config.errors",
       "buildbot.config.master",
       "buildbot.configurators",
       "buildbot.configurators.janitor",
