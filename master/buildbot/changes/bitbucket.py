@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import time
 from datetime import datetime
+from typing import Any
+from typing import Callable
 from typing import ClassVar
 from typing import Sequence
 
@@ -30,6 +33,7 @@ from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
 from buildbot.util import httpclientservice
 from buildbot.util.pullrequest import PullRequestMixin
+from buildbot.util.twisted import InlineCallbacksType
 
 
 class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullRequestMixin):
@@ -47,46 +51,46 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
     db_class_name = 'BitbucketPullrequestPoller'
     property_basename = "bitbucket"
 
-    def __init__(self, owner, slug, **kwargs):
+    def __init__(self, owner: str, slug: str, **kwargs: Any):
         kwargs['name'] = self.build_name(owner, slug)
 
         self.initLock = defer.DeferredLock()
 
         super().__init__(owner, slug, **kwargs)
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        owner,
-        slug,
-        branch=None,
-        pollInterval=10 * 60,
-        useTimestamps=True,
-        category=None,
-        project='',
-        pullrequest_filter=True,
-        pollAtLaunch=False,
-        auth=None,
-        bitbucket_property_whitelist=None,
-    ):
+        owner: str,
+        slug: str,
+        branch: str | list[str] | None = None,
+        pollInterval: int = 10 * 60,
+        useTimestamps: bool = True,
+        category: str | Callable | None = None,
+        project: str = '',
+        pullrequest_filter: bool | Callable = True,
+        pollAtLaunch: bool = False,
+        auth: tuple[str, str] | None = None,
+        bitbucket_property_whitelist: list[str] | None = None,
+    ) -> None:  # type: ignore[override]
         super().checkConfig(
             name=self.build_name(owner, slug), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch
         )
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        owner,
-        slug,
-        branch=None,
-        pollInterval=10 * 60,
-        useTimestamps=True,
-        category=None,
-        project='',
-        pullrequest_filter=True,
-        pollAtLaunch=False,
-        auth=None,
-        bitbucket_property_whitelist=None,
-    ):
+        owner: str,
+        slug: str,
+        branch: str | list[str] | None = None,
+        pollInterval: int = 10 * 60,
+        useTimestamps: bool = True,
+        category: str | Callable | None = None,
+        project: str = '',
+        pullrequest_filter: bool | Callable = True,
+        pollAtLaunch: bool = False,
+        auth: tuple[str, str] | None = None,
+        bitbucket_property_whitelist: list[str] | None = None,
+    ) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.owner = owner
         self.slug = slug
         self.branch = branch
@@ -114,18 +118,19 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
             self.build_name(owner, slug), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch
         )
 
-    def build_name(self, owner, slug):
+    def build_name(self, owner: str, slug: str) -> str:
         return '/'.join([owner, slug])
 
-    def describe(self):
+    def describe(self) -> str:
         return (
             "BitbucketPullrequestPoller watching the "
             f"Bitbucket repository {self.owner}/{self.slug}, branch: {self.branch}"
         )
 
+    # mypy: disable-error-code="override"
     @deferredLocked('initLock')
     @defer.inlineCallbacks
-    def poll(self):
+    def poll(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         response = yield self._getChanges()
         if response.code != 200:
             log.err(
@@ -136,7 +141,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         json_result = yield response.json()
         yield self._processChanges(json_result)
 
-    def _getChanges(self):
+    def _getChanges(self) -> defer.Deferred:
         self.lastPoll = time.time()
         log.msg(
             "BitbucketPullrequestPoller: polling "
@@ -146,7 +151,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         return self._http.get(url, timeout=self.pollInterval)
 
     @defer.inlineCallbacks
-    def _processChanges(self, result):
+    def _processChanges(self, result: dict) -> InlineCallbacksType[None]:
         for pr in result['values']:
             branch = pr['source']['branch']['name']
             nr = int(pr['id'])
@@ -234,34 +239,34 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                         files=files,
                     )
 
-    def _getCurrentRev(self, pr_id):
+    def _getCurrentRev(self, pr_id: int) -> defer.Deferred:
         # Return a deferred datetime object for the given pull request number
         # or None.
         d = self._getStateObjectId()
 
         @d.addCallback
-        def oid_callback(oid):
+        def oid_callback(oid: int) -> defer.Deferred:
             current = self.master.db.state.getState(oid, f'pull_request{pr_id}', None)
 
             @current.addCallback
-            def result_callback(result):
+            def result_callback(result: str | None) -> str | None:
                 return result
 
             return current
 
         return d
 
-    def _setCurrentRev(self, pr_id, rev):
+    def _setCurrentRev(self, pr_id: int, rev: str) -> defer.Deferred:
         # Set the datetime entry for a specified pull request.
         d = self._getStateObjectId()
 
         @d.addCallback
-        def oid_callback(oid):
+        def oid_callback(oid: int) -> defer.Deferred:
             return self.master.db.state.setState(oid, f'pull_request{pr_id}', rev)
 
         return d
 
-    def _getStateObjectId(self):
+    def _getStateObjectId(self) -> defer.Deferred:
         # Return a deferred for object id in state db.
         return self.master.db.state.getObjectId(
             f'{self.owner}/{self.slug}#{self.branch}', self.db_class_name

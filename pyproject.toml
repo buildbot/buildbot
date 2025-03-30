@@ -157,7 +157,6 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = [
       "buildbot.asyncio",
-      "buildbot.changes.bitbucket",
       "buildbot.changes.changes",
       "buildbot.changes.filter",
       "buildbot.changes.gerritchangesource",
