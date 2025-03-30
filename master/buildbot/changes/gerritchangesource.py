@@ -175,6 +175,9 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
             properties['target_branch'] = event["change"]["branch"]
         return properties
 
+    def getFiles(self, change, patchset):
+        raise NotImplementedError
+
     def eventReceived(self, event):
         if event['type'] not in self.handled_events:
             if self.debug:
