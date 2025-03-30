@@ -49,6 +49,14 @@ class TestHgPollerBase(
         def _isRepositoryReady():
             return self.repo_ready
 
+        self.create_hgpoller()
+        yield self.poller.setServiceParent(self.master)
+        self.poller._isRepositoryReady = _isRepositoryReady
+
+        yield self.master.startService()
+        self.addCleanup(self.master.stopService)
+
+    def create_hgpoller(self):
         self.poller = hgpoller.HgPoller(
             self.remote_repo,
             usetimestamps=self.usetimestamps,
@@ -57,11 +65,6 @@ class TestHgPollerBase(
             bookmarks=self.bookmarks,
             revlink=lambda branch, revision: self.remote_hgweb.format(revision),
         )
-        yield self.poller.setServiceParent(self.master)
-        self.poller._isRepositoryReady = _isRepositoryReady
-
-        yield self.master.startService()
-        self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
     def check_current_rev(self, wished, branch='default'):
@@ -444,3 +447,18 @@ class HgPollerNoTimestamp(TestHgPoller):
     """Test HgPoller() without parsing revision commit timestamp"""
 
     usetimestamps = False
+
+
+class HgPollerCategoryCallable(TestHgPoller):
+    """Test HgPoller() with callable category"""
+
+    def create_hgpoller(self):
+        self.poller = hgpoller.HgPoller(
+            self.remote_repo,
+            usetimestamps=self.usetimestamps,
+            workdir='/some/dir',
+            branches=self.branches,
+            bookmarks=self.bookmarks,
+            category=lambda _: 'category',
+            revlink=lambda branch, revision: self.remote_hgweb.format(revision),
+        )
