@@ -39,6 +39,10 @@ class FakeWorker(service.BuildbotService):
         self.configured = True
         return defer.succeed(None)
 
+    @property
+    def workername(self):
+        return self.name
+
 
 class FakeWorker2(FakeWorker):
     pass
