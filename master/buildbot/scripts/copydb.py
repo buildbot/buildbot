@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import os
 import queue
+from typing import Any
+from typing import Callable
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -30,24 +32,25 @@ from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
 from buildbot.util import misc
+from buildbot.util.twisted import InlineCallbacksType
 
 
 @in_reactor
-def copy_database(config):  # pragma: no cover
+def copy_database(config: dict) -> defer.Deferred:  # pragma: no cover
     # we separate the actual implementation to protect unit tests
     # from @in_reactor which stops the reactor
     return _copy_database_in_reactor(config)
 
 
 @defer.inlineCallbacks
-def _copy_database_in_reactor(config):
+def _copy_database_in_reactor(config: dict) -> InlineCallbacksType[int]:
     if not base.checkBasedir(config):
         return 1
 
     print_debug = not config["quiet"]
     ignore_fk_error_rows = config['ignore-fk-error-rows']
 
-    def print_log(*args, **kwargs):
+    def print_log(*args: Any, **kwargs: Any) -> None:
         if print_debug:
             print(*args, **kwargs)
 
@@ -102,7 +105,13 @@ def _copy_database_in_reactor(config):
     return 0
 
 
-def _thd_check_row_foreign_keys(table_name, row_dict, column_name, id_rows, print_log):
+def _thd_check_row_foreign_keys(
+    table_name: str,
+    row_dict: dict[str, Any],
+    column_name: str,
+    id_rows: set[Any],
+    print_log: Callable[..., None],
+) -> bool:
     if column_name not in row_dict:
         return True
 
@@ -121,7 +130,13 @@ def _thd_check_row_foreign_keys(table_name, row_dict, column_name, id_rows, prin
     return True
 
 
-def _thd_check_rows_foreign_keys(table_name, row_dicts, column_name, id_rows, print_log):
+def _thd_check_rows_foreign_keys(
+    table_name: str,
+    row_dicts: list[dict[str, Any]],
+    column_name: str,
+    id_rows: set[Any],
+    print_log: Callable[..., None],
+) -> list[dict[str, Any]]:
     return [
         row_dict
         for row_dict in row_dicts
@@ -131,19 +146,19 @@ def _thd_check_rows_foreign_keys(table_name, row_dicts, column_name, id_rows, pr
 
 @defer.inlineCallbacks
 def _copy_single_table(
-    metadata,
-    src_db,
-    dst_db,
-    table_name,
-    buildset_to_parent_buildid,
-    buildset_to_rebuilt_buildid,
-    ignore_fk_error_rows,
-    print_log,
-):
+    metadata: Any,
+    src_db: Any,
+    dst_db: Any,
+    table_name: str,
+    buildset_to_parent_buildid: list[tuple[int, int]],
+    buildset_to_rebuilt_buildid: list[tuple[int, int]],
+    ignore_fk_error_rows: bool,
+    print_log: Callable[..., None],
+) -> InlineCallbacksType[None]:
     table = metadata.tables[table_name]
     column_keys = table.columns.keys()
 
-    rows_queue = queue.Queue(32)
+    rows_queue: queue.Queue[Any] = queue.Queue(32)
     written_count = [0]
     total_count = [0]
 
@@ -162,7 +177,7 @@ def _copy_single_table(
                 continue
             foreign_key_check_columns.append((column_name, fk.column))
 
-    def tdh_query_all_column_rows(conn, column):
+    def tdh_query_all_column_rows(conn: sa.engine.Connection, column: sa.Column) -> set[Any]:
         q = sa.select(column).select_from(column.table)
         result = conn.execute(q)
 
@@ -178,7 +193,7 @@ def _copy_single_table(
 
     got_error = False
 
-    def thd_write(conn):
+    def thd_write(conn: sa.engine.Connection) -> None:
         max_column_id = 0
 
         foreign_key_check_rows = []
@@ -263,9 +278,9 @@ def _copy_single_table(
             finally:
                 rows_queue.task_done()
 
-    def thd_read(conn):
+    def thd_read(conn: sa.engine.Connection) -> None:
         q = sa.select(sa.sql.func.count()).select_from(table)
-        total_count[0] = conn.execute(q).scalar()
+        total_count[0] = conn.execute(q).scalar() or 0
 
         result = conn.execute(sa.select(table))
         while not got_error:
@@ -291,7 +306,9 @@ def _copy_single_table(
 
 
 @defer.inlineCallbacks
-def _copy_database_with_db(src_db, dst_db, ignore_fk_error_rows, print_log):
+def _copy_database_with_db(
+    src_db: Any, dst_db: Any, ignore_fk_error_rows: bool, print_log: Callable[..., None]
+) -> InlineCallbacksType[None]:
     # Tables need to be specified in correct order so that tables that other tables depend on are
     # copied first.
     table_names = [
@@ -345,8 +362,8 @@ def _copy_database_with_db(src_db, dst_db, ignore_fk_error_rows, print_log):
     assert len(set(table_names)) == len(set(metadata.tables.keys()))
 
     # Not a dict so that the values are inserted back in predictable order
-    buildset_to_parent_buildid = []
-    buildset_to_rebuilt_buildid = []
+    buildset_to_parent_buildid: list[tuple[int, int]] = []
+    buildset_to_rebuilt_buildid: list[tuple[int, int]] = []
 
     for table_name in table_names:
         yield _copy_single_table(
@@ -360,7 +377,7 @@ def _copy_database_with_db(src_db, dst_db, ignore_fk_error_rows, print_log):
             print_log,
         )
 
-    def thd_write_buildset_parent_buildid(conn):
+    def thd_write_buildset_parent_buildid(conn: sa.engine.Connection) -> None:
         written_count = 0
         for rows in misc.chunkify_list(buildset_to_parent_buildid, 10000):
             q = model.Model.buildsets.update()
@@ -383,7 +400,7 @@ def _copy_database_with_db(src_db, dst_db, ignore_fk_error_rows, print_log):
 
     yield dst_db.pool.do(thd_write_buildset_parent_buildid)
 
-    def thd_write_buildset_rebuilt_buildid(conn):
+    def thd_write_buildset_rebuilt_buildid(conn: sa.engine.Connection) -> None:
         written_count = 0
         for rows in misc.chunkify_list(buildset_to_rebuilt_buildid, 10000):
             q = model.Model.buildsets.update()

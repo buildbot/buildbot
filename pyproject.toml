@@ -303,7 +303,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.scripts.base",
       "buildbot.scripts.checkconfig",
       "buildbot.scripts.cleanupdb",
-      "buildbot.scripts.copydb",
       "buildbot.scripts.create_master",
       "buildbot.scripts.dataspec",
       "buildbot.scripts.devproxy",
