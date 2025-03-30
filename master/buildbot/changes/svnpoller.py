@@ -382,15 +382,16 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         return text
 
     def _transform_path(self, path):
-        if not path.startswith(self._prefix):
+        prefix = self._prefix or ""
+        if not path.startswith(prefix):
             log.msg(
                 format="SVNPoller: ignoring path '%(path)s' which doesn't"
                 "start with prefix '%(prefix)s'",
                 path=path,
-                prefix=self._prefix,
+                prefix=prefix,
             )
             return None
-        relative_path = path[len(self._prefix) :]
+        relative_path = path[len(prefix) :]
         if relative_path.startswith("/"):
             relative_path = relative_path[1:]
         where = self.split_file(relative_path)
