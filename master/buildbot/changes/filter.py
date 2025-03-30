@@ -13,7 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
+from typing import Callable
 from typing import ClassVar
+from typing import Pattern
 from typing import Sequence
 
 from buildbot.util import ComparableMixin
@@ -40,37 +45,37 @@ class ChangeFilter(ComparableMixin):
 
     def __init__(
         self,
-        filter_fn=None,  # gets a Change object, returns boolean
-        project=None,
-        project_not_eq=None,
-        project_re=None,
-        project_not_re=None,
-        project_fn=None,
-        repository=None,
-        repository_not_eq=None,
-        repository_re=None,
-        repository_not_re=None,
-        repository_fn=None,
-        branch=NotABranch,
-        branch_not_eq=NotABranch,
-        branch_re=None,
-        branch_not_re=None,
-        branch_fn=None,
-        category=None,
-        category_not_eq=None,
-        category_re=None,
-        category_not_re=None,
-        category_fn=None,
-        codebase=None,
-        codebase_not_eq=None,
-        codebase_re=None,
-        codebase_not_re=None,
-        codebase_fn=None,
-        property_eq=None,
-        property_not_eq=None,
-        property_re=None,
-        property_not_re=None,
-    ):
+        filter_fn: Callable[[Any], bool] | None = None,  # gets a Change object, returns boolean
+        project: str | list[str] | None = None,
+        project_not_eq: str | list[str] | None = None,
+        project_re: str | Pattern | None = None,
+        project_not_re: str | Pattern | None = None,
+        project_fn: Callable[[str], bool] | None = None,
+        repository: str | list[str] | None = None,
+        repository_not_eq: str | list[str] | None = None,
+        repository_re: str | Pattern | None = None,
+        repository_not_re: str | Pattern | None = None,
+        repository_fn: Callable[[str], bool] | None = None,
+        branch: Any = NotABranch,
+        branch_not_eq: Any = NotABranch,
+        branch_re: str | Pattern | None = None,
+        branch_not_re: str | Pattern | None = None,
+        branch_fn: Callable[[str], bool] | None = None,
+        category: str | list[str] | None = None,
+        category_not_eq: str | list[str] | None = None,
+        category_re: str | Pattern | None = None,
+        category_not_re: str | Pattern | None = None,
+        category_fn: Callable[[str], bool] | None = None,
+        codebase: str | list[str] | None = None,
+        codebase_not_eq: str | list[str] | None = None,
+        codebase_re: str | Pattern | None = None,
+        codebase_not_re: str | Pattern | None = None,
+        codebase_fn: Callable[[str], bool] | None = None,
+        property_eq: dict[str, Any] | None = None,
+        property_not_eq: dict[str, Any] | None = None,
+        property_re: dict[str, str | Pattern] | None = None,
+        property_not_re: dict[str, str | Pattern] | None = None,
+    ) -> None:
         self.filter_fn = filter_fn
         self.project_fn = project_fn
         self.repository_fn = repository_fn
@@ -113,7 +118,7 @@ class ChangeFilter(ComparableMixin):
             property_eq, property_not_eq, property_re, property_not_re, 'property'
         )
 
-    def filter_change(self, change):
+    def filter_change(self, change: Any) -> bool:
         if self.filter_fn is not None and not self.filter_fn(change):
             return False
         if self.project_fn is not None and not self.project_fn(change.project):
@@ -137,7 +142,7 @@ class ChangeFilter(ComparableMixin):
                 return False
         return True
 
-    def _get_repr_filters(self):
+    def _get_repr_filters(self) -> list[str]:
         filters = []
         if self.filter_fn is not None:
             filters.append(f'{self.filter_fn.__name__}()')
@@ -155,11 +160,15 @@ class ChangeFilter(ComparableMixin):
         filters += [filter.describe() for filter in self.property_filters]
         return filters
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} on {' and '.join(self._get_repr_filters())}>"
 
     @staticmethod
-    def fromSchedulerConstructorArgs(change_filter=None, branch=NotABranch, categories=None):
+    def fromSchedulerConstructorArgs(
+        change_filter: ChangeFilter | None = None,
+        branch: Any = NotABranch,
+        categories: str | list[str] | None = None,
+    ) -> ChangeFilter | None:
         """
         Static method to create a filter based on constructor args
         change_filter, branch, and categories; use default values @code{None},
