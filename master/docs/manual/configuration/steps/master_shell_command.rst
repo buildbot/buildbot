@@ -51,3 +51,6 @@ In particular, numeric properties such as ``buildnumber`` must be substituted us
 
 ``interruptSignal``
    (optional) Signal to use to end the process if the step is interrupted.
+
+``runtime_timeout``
+   (optional) Timeout [s] after which the step is killed. Default is 3600 (1h).
