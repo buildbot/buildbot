@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import os
 from importlib.metadata import entry_points
 from io import BytesIO
 from io import StringIO
+from typing import Any
 from unittest import mock
 from urllib.parse import parse_qs
 from urllib.parse import unquote as urlunquote
@@ -30,8 +33,10 @@ from buildbot.test.fake import fakemaster
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.importlib_compat import entry_points_get
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 from buildbot.www import authz
+from buildbot.www.authz.authz import Authz
 
 
 class FakeSession:
@@ -139,7 +144,9 @@ class WwwTestMixin(RequiresWwwMixin):
     UUID = str(uuid1())
 
     @defer.inlineCallbacks
-    def make_master(self, wantGraphql=False, url=None, **kwargs):
+    def make_master(
+        self, wantGraphql: bool = False, url: str | None = None, **kwargs: Any
+    ) -> InlineCallbacksType[fakemaster.FakeMaster]:
         master = yield fakemaster.make_master(self, wantData=True, wantGraphql=wantGraphql)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
@@ -153,6 +160,7 @@ class WwwTestMixin(RequiresWwwMixin):
             master.config.buildbotURL = url
         self.master.session = FakeSession()
         self.master.authz = cfg["authz"]
+        assert isinstance(self.master.authz, Authz)
         self.master.authz.setMaster(self.master)
         return master
 
