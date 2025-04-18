@@ -13,16 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import authz
 from buildbot.www.authz.endpointmatchers import AnyControlEndpointMatcher
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher
+from buildbot.www.authz.endpointmatchers import EndpointMatcherBase
 from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import RebuildBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
@@ -35,7 +39,7 @@ from buildbot.www.authz.roles import RolesFromOwner
 
 class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         authzcfg = authz.Authz(
             # simple matcher with '*' glob character
@@ -83,7 +87,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 "email": "user@nine.com",
                 "groups": ["buildbot-nine-mergers", "buildbot-nine-developers"],
             },
-            "eightuser": {"email": "user@eight.com", "groups": ["buildbot-eight-deverlopers"]},
+            "eightuser": {"email": "user@eight.com", "groups": ["buildbot-eight-developers"]},
         }
         self.master = yield self.make_master(url='h:/a/b/', authz=authzcfg)
         self.authz = self.master.authz
@@ -107,18 +111,20 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             ),
         ])
 
-    def setAllowRules(self, allow_rules):
+    def setAllowRules(self, allow_rules: list[EndpointMatcherBase]) -> None:
         # we should add links to authz and master instances in each new rule
         for r in allow_rules:
             r.setAuthz(self.authz)
 
         self.authz.allowRules = allow_rules
 
-    def assertUserAllowed(self, ep, action, options, user):
+    def assertUserAllowed(self, ep: str, action: str, options: dict, user: str) -> defer.Deferred:
         return self.authz.assertUserAllowed(tuple(ep.split("/")), action, options, self.users[user])
 
     @defer.inlineCallbacks
-    def assertUserForbidden(self, ep, action, options, user):
+    def assertUserForbidden(
+        self, ep: str, action: str, options: dict, user: str
+    ) -> InlineCallbacksType[None]:
         try:
             yield self.authz.assertUserAllowed(
                 tuple(ep.split("/")), action, options, self.users[user]
@@ -129,7 +135,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.fail('authz.Forbidden with error "need to have role" was expected!')
 
     @defer.inlineCallbacks
-    def test_anyEndpoint(self):
+    def test_anyEndpoint(self) -> InlineCallbacksType[None]:
         # admin users can do anything
         yield self.assertUserAllowed("foo/bar", "get", {}, "homer")
         yield self.assertUserAllowed("foo/bar", "stop", {}, "moneypenny")
@@ -139,7 +145,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserForbidden("foo/bar", "stop", {}, "bond")
 
         # non-admin user cannot do any actions
-        allow_rules = [
+        allow_rules: list[EndpointMatcherBase] = [
             AnyEndpointMatcher(role="admins"),
         ]
         self.setAllowRules(allow_rules)
@@ -147,7 +153,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserForbidden("foo/bar", "stop", {}, "bond")
 
     @defer.inlineCallbacks
-    def test_stopBuild(self):
+    def test_stopBuild(self) -> InlineCallbacksType[None]:
         # admin can always stop
         yield self.assertUserAllowed("builds/13", "stop", {}, "homer")
         # owner can always stop
@@ -178,7 +184,7 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserForbidden("buildrequests/82", "stop", {}, "eightuser")
 
     @defer.inlineCallbacks
-    def test_rebuildBuild(self):
+    def test_rebuildBuild(self) -> InlineCallbacksType[None]:
         # admin can rebuild
         yield self.assertUserAllowed("builds/13", "rebuild", {}, "homer")
         # owner can always rebuild
@@ -204,9 +210,9 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserForbidden("builds/13", "rebuild", {}, "eightuser")
 
     @defer.inlineCallbacks
-    def test_fnmatchPatternRoleCheck(self):
+    def test_fnmatchPatternRoleCheck(self) -> InlineCallbacksType[None]:
         # defaultDeny is True by default so action is denied if no match
-        allow_rules = [AnyEndpointMatcher(role="[a,b]dmin?")]
+        allow_rules: list[EndpointMatcherBase] = [AnyEndpointMatcher(role="[a,b]dmin?")]
 
         self.setAllowRules(allow_rules)
 
@@ -220,12 +226,12 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
 
     @defer.inlineCallbacks
-    def test_regexPatternRoleCheck(self):
+    def test_regexPatternRoleCheck(self) -> InlineCallbacksType[None]:
         # change matcher
         self.authz.match = authz.reStrMatcher
 
         # defaultDeny is True by default so action is denied if no match
-        allow_rules = [
+        allow_rules: list[EndpointMatcherBase] = [
             AnyEndpointMatcher(role="(admin|agent)s"),
         ]
 
@@ -242,9 +248,9 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
 
     @defer.inlineCallbacks
-    def test_DefaultDenyFalseContinuesCheck(self):
+    def test_DefaultDenyFalseContinuesCheck(self) -> InlineCallbacksType[None]:
         # defaultDeny is True in the last rule so action is denied in the last check
-        allow_rules = [
+        allow_rules: list[EndpointMatcherBase] = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=False),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
             AnyEndpointMatcher(role="not-exists3", defaultDeny=True),
@@ -256,9 +262,9 @@ class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
 
     @defer.inlineCallbacks
-    def test_DefaultDenyTrueStopsCheckIfFailed(self):
+    def test_DefaultDenyTrueStopsCheckIfFailed(self) -> InlineCallbacksType[None]:
         # defaultDeny is True in the first rule so action is denied in the first check
-        allow_rules = [
+        allow_rules: list[EndpointMatcherBase] = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=True),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
             AnyEndpointMatcher(role="not-exists3", defaultDeny=False),
