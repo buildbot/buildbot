@@ -919,7 +919,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.util",
       "buildbot_worker.util.lineboundaries",
       "buildbot_worker.util._notifier",
-      "buildbot.www.hooks.bitbucketcloud",
       "buildbot.www.hooks.bitbucket",
       "buildbot.www.hooks.bitbucketserver",
       "buildbot.www.hooks.github",
