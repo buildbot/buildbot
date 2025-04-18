@@ -13,25 +13,31 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import inspect
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.data.exceptions import InvalidPathError
 from buildbot.util import bytes2unicode
+from buildbot.util.twisted import InlineCallbacksType
 
 
 class EndpointMatcherBase:
-    def __init__(self, role, defaultDeny=True):
+    def __init__(self, role: str, defaultDeny: bool = True) -> None:
         self.role = role
         self.defaultDeny = defaultDeny
         self.owner = None
 
-    def setAuthz(self, authz):
+    def setAuthz(self, authz: Any) -> None:
         self.authz = authz
         self.master = authz.master
 
-    def match(self, ep, action="get", options=None):
+    def match(
+        self, ep: str, action: str = "get", options: dict[str, Any] | None = None
+    ) -> defer.Deferred[Match | None]:
         if options is None:
             options = {}
         try:
@@ -47,7 +53,7 @@ class EndpointMatcherBase:
             return defer.succeed(None)
         return defer.succeed(None)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # a repr for debugging. displays the class, and string attributes
         args = []
         for k, v in self.__dict__.items():
@@ -57,13 +63,19 @@ class EndpointMatcherBase:
 
 
 class Match:
-    def __init__(self, master, build=None, buildrequest=None, buildset=None):
+    def __init__(
+        self,
+        master: Any,
+        build: dict[str, Any] | None = None,
+        buildrequest: dict[str, Any] | None = None,
+        buildset: dict[str, Any] | None = None,
+    ) -> None:
         self.master = master
         self.build = build
         self.buildrequest = buildrequest
         self.buildset = buildset
 
-    def getOwner(self):
+    def getOwner(self) -> defer.Deferred[str | None]:
         if self.buildset:
             return self.getOwnerFromBuildSet(self.buildset)
         elif self.buildrequest:
@@ -73,13 +85,15 @@ class Match:
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def getOwnerFromBuild(self, build):
+    def getOwnerFromBuild(self, build: dict[str, Any]) -> InlineCallbacksType[str | None]:
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         owner = yield self.getOwnerFromBuildRequest(br)
         return owner
 
     @defer.inlineCallbacks
-    def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
+    def getOwnerFromBuildsetOrBuildRequest(
+        self, buildsetorbuildrequest: dict[str, Any]
+    ) -> InlineCallbacksType[str | None]:
         props = yield self.master.data.get((
             "buildsets",
             buildsetorbuildrequest['buildsetid'],
@@ -94,30 +108,36 @@ class Match:
 
 
 class AnyEndpointMatcher(EndpointMatcherBase):
-    def match(self, ep, action="get", options=None):
+    def match(
+        self, ep: str, action: str = "get", options: dict[str, Any] | None = None
+    ) -> defer.Deferred[Match | None]:
         return defer.succeed(Match(self.master))
 
 
 class AnyControlEndpointMatcher(EndpointMatcherBase):
-    def match(self, ep, action="", options=None):
+    def match(
+        self, ep: str, action: str = "", options: dict[str, Any] | None = None
+    ) -> defer.Deferred[Match | None]:
         if bytes2unicode(action).lower() != "get":
             return defer.succeed(Match(self.master))
         return defer.succeed(None)
 
 
 class StopBuildEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, builder=None, **kwargs):
+    def __init__(self, builder: str | None = None, **kwargs: Any) -> None:
         self.builder = builder
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
-    def matchFromBuilderId(self, builderid):
-        builder = yield self.master.data.get(('builders', builderid))
+    def matchFromBuilderId(self, builderid: int) -> InlineCallbacksType[bool]:
+        builder = yield self.master.data.get(('builders', int(builderid)))
         buildername = builder['name']
         return self.authz.match(buildername, self.builder)
 
     @defer.inlineCallbacks
-    def match_BuildEndpoint_stop(self, epobject, epdict, options):
+    def match_BuildEndpoint_stop(
+        self, epobject: Any, epdict: dict[str, Any], options: dict[str, Any]
+    ) -> InlineCallbacksType[Match | None]:
         build = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
@@ -132,7 +152,9 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         return None
 
     @defer.inlineCallbacks
-    def match_BuildRequestEndpoint_stop(self, epobject, epdict, options):
+    def match_BuildRequestEndpoint_stop(
+        self, epobject: Any, epdict: dict[str, Any], options: dict[str, Any]
+    ) -> InlineCallbacksType[Match | None]:
         buildrequest = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
@@ -148,12 +170,14 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class ForceBuildEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, builder=None, **kwargs):
+    def __init__(self, builder: str | None = None, **kwargs: Any) -> None:
         self.builder = builder
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
-    def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
+    def match_ForceSchedulerEndpoint_force(
+        self, epobject: Any, epdict: dict[str, Any], options: dict[str, Any]
+    ) -> InlineCallbacksType[Match | None]:
         if self.builder is None:
             # no filtering needed: we match without querying!
             return Match(self.master)
@@ -169,18 +193,20 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class RebuildBuildEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, builder=None, **kwargs):
+    def __init__(self, builder: str | None = None, **kwargs: Any) -> None:
         self.builder = builder
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
-    def matchFromBuilderId(self, builderid):
+    def matchFromBuilderId(self, builderid: int) -> InlineCallbacksType[bool]:
         builder = yield self.master.data.get(('builders', builderid))
         buildername = builder['name']
         return self.authz.match(buildername, self.builder)
 
     @defer.inlineCallbacks
-    def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
+    def match_BuildEndpoint_rebuild(
+        self, epobject: Any, epdict: dict[str, Any], options: dict[str, Any]
+    ) -> InlineCallbacksType[Match | None]:
         build = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
@@ -196,7 +222,9 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class EnableSchedulerEndpointMatcher(EndpointMatcherBase):
-    def match_SchedulerEndpoint_enable(self, epobject, epdict, options):
+    def match_SchedulerEndpoint_enable(
+        self, epobject: Any, epdict: dict[str, Any], options: dict[str, Any]
+    ) -> defer.Deferred[Match]:
         return defer.succeed(Match(self.master))
 
 
@@ -205,7 +233,13 @@ class EnableSchedulerEndpointMatcher(EndpointMatcherBase):
 
 
 class ViewBuildsEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, branch=None, project=None, builder=None, **kwargs):
+    def __init__(
+        self,
+        branch: str | None = None,
+        project: str | None = None,
+        builder: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self.branch = branch
         self.project = project
@@ -213,6 +247,6 @@ class ViewBuildsEndpointMatcher(EndpointMatcherBase):
 
 
 class BranchEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, branch, **kwargs):
+    def __init__(self, branch: str, **kwargs: Any) -> None:
         self.branch = branch
         super().__init__(**kwargs)

@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import fnmatch
 import re
+from typing import Any
+from typing import Callable
+from typing import cast
 
 from twisted.internet import defer
 from twisted.web.error import Error
@@ -23,29 +27,35 @@ from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www.authz.roles import RolesFromOwner
 
 
 class Forbidden(Error):
-    def __init__(self, msg):
+    def __init__(self, msg: bytes) -> None:
         super().__init__(403, msg)
 
 
 # fnmatch and re.match are reversed API, we cannot just rename them
-def fnmatchStrMatcher(value, match):
+def fnmatchStrMatcher(value: str, match: str) -> bool:
     return fnmatch.fnmatch(value, match)
 
 
-def reStrMatcher(value, match):
-    return re.match(match, value)
+def reStrMatcher(value: str, match: str) -> bool:
+    return cast(bool, re.match(match, value))
 
 
 @implementer(IConfigured)
 class Authz:
-    def getConfigDict(self):
+    def getConfigDict(self) -> dict:
         return {}
 
-    def __init__(self, allowRules=None, roleMatchers=None, stringsMatcher=fnmatchStrMatcher):
+    def __init__(
+        self,
+        allowRules: list[Any] | None = None,
+        roleMatchers: list[Any] | None = None,
+        stringsMatcher: Callable[[str, str], bool] = fnmatchStrMatcher,
+    ) -> None:
         self.match = stringsMatcher
         if allowRules is None:
             allowRules = []
@@ -55,25 +65,27 @@ class Authz:
         self.roleMatchers = [r for r in roleMatchers if not isinstance(r, RolesFromOwner)]
         self.ownerRoleMatchers = [r for r in roleMatchers if isinstance(r, RolesFromOwner)]
 
-    def setMaster(self, master):
+    def setMaster(self, master: Any) -> None:
         self.master = master
         for r in self.roleMatchers + self.ownerRoleMatchers + self.allowRules:
             r.setAuthz(self)
 
-    def getRolesFromUser(self, userDetails):
+    def getRolesFromUser(self, userDetails: dict[str, Any]) -> set[str]:
         roles = set()
         for roleMatcher in self.roleMatchers:
             roles.update(set(roleMatcher.getRolesFromUser(userDetails)))
         return roles
 
-    def getOwnerRolesFromUser(self, userDetails, owner):
+    def getOwnerRolesFromUser(self, userDetails: dict[str, Any], owner: str | None) -> set[str]:
         roles = set()
         for roleMatcher in self.ownerRoleMatchers:
             roles.update(set(roleMatcher.getRolesFromUser(userDetails, owner)))
         return roles
 
     @defer.inlineCallbacks
-    def assertUserAllowed(self, ep, action, options, userDetails):
+    def assertUserAllowed(
+        self, ep: str, action: str, options: dict[str, Any], userDetails: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
         roles = self.getRolesFromUser(userDetails)
         for rule in self.allowRules:
             match = yield rule.match(ep, action, options)
