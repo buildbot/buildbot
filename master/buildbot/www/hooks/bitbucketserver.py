@@ -15,12 +15,20 @@
 # Copyright Mamba Team
 
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.python import log
+from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 from buildbot.util.pullrequest import PullRequestMixin
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
@@ -32,7 +40,7 @@ _HEADER_EVENT = b'X-Event-Key'
 class BitbucketServerEventHandler(PullRequestMixin):
     property_basename = "bitbucket"
 
-    def __init__(self, master, options=None):
+    def __init__(self, master: BuildMaster, options: dict[str, Any] | None = None):
         if options is None:
             options = {}
         self.master = master
@@ -42,9 +50,13 @@ class BitbucketServerEventHandler(PullRequestMixin):
         self._codebase = self.options.get('codebase', None)
         self.external_property_whitelist = self.options.get('bitbucket_property_whitelist', [])
 
-    def process(self, request):
+    def process(self, request: Request) -> tuple[list[dict[str, Any]], str]:
         payload = self._get_payload(request)
-        event_type = bytes2unicode(request.getHeader(_HEADER_EVENT))
+        header = request.getHeader(_HEADER_EVENT)
+        if header is None:
+            raise ValueError(f'Header {_HEADER_EVENT.decode()} is not present')
+
+        event_type = bytes2unicode(header)
         log.msg(f"Processing event {_HEADER_EVENT.decode()}: {event_type}")
         event_type = event_type.replace(":", "_")
         handler = getattr(self, f'handle_{event_type}', None)
@@ -54,30 +66,33 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
         return handler(payload)
 
-    def _get_payload(self, request):
-        content = request.content.read()
-        content = bytes2unicode(content)
-        content_type = request.getHeader(b'Content-Type')
-        content_type = bytes2unicode(content_type)
+    def _get_payload(self, request: Request) -> dict[str, Any]:
+        assert request.content is not None
+
+        content = bytes2unicode(request.content.read())
+        content_type = bytes2unicode(request.getHeader(b'Content-Type'))
+
         if content_type.startswith('application/json'):
             payload = json.loads(content)
         else:
-            raise ValueError(f'Unknown content type: {content_type}')
+            raise ValueError(f'Unknown content type: {content_type!r}')
 
         log.msg(f"Payload: {payload}")
 
         return payload
 
-    def handle_repo_refs_changed(self, payload):
+    def handle_repo_refs_changed(self, payload: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
         return self._handle_repo_refs_changed_common(payload)
 
-    def handle_repo_push(self, payload):
+    def handle_repo_push(self, payload: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
         # repo:push works exactly like repo:refs_changed, but is no longer documented (not even
         # in the historical documentation of old versions of Bitbucket Server). The old code path
         # has been preserved for backwards compatibility.
         return self._handle_repo_refs_changed_common(payload)
 
-    def _handle_repo_refs_changed_common(self, payload):
+    def _handle_repo_refs_changed_common(
+        self, payload: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], str]:
         changes = []
         project = payload['repository']['project']['name']
         repo_url = payload['repository']['links']['self'][0]['href']
@@ -119,31 +134,41 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
         return (changes, payload['repository']['scmId'])
 
-    def handle_pullrequest_created(self, payload):
+    def handle_pullrequest_created(
+        self, payload: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], str]:
         return self.handle_pullrequest(
             payload, GIT_MERGE_REF.format(int(payload['pullrequest']['id'])), "pull-created"
         )
 
-    def handle_pullrequest_updated(self, payload):
+    def handle_pullrequest_updated(
+        self, payload: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], str]:
         return self.handle_pullrequest(
             payload, GIT_MERGE_REF.format(int(payload['pullrequest']['id'])), "pull-updated"
         )
 
-    def handle_pullrequest_fulfilled(self, payload):
+    def handle_pullrequest_fulfilled(
+        self, payload: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], str]:
         return self.handle_pullrequest(
             payload,
             GIT_BRANCH_REF.format(payload['pullrequest']['toRef']['branch']['name']),
             "pull-fulfilled",
         )
 
-    def handle_pullrequest_rejected(self, payload):
+    def handle_pullrequest_rejected(
+        self, payload: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], str]:
         return self.handle_pullrequest(
             payload,
             GIT_BRANCH_REF.format(payload['pullrequest']['fromRef']['branch']['name']),
             "pull-rejected",
         )
 
-    def handle_pullrequest(self, payload, refname, category):
+    def handle_pullrequest(
+        self, payload: dict[str, Any], refname: str, category: str
+    ) -> tuple[list[dict[str, Any]], str]:
         pr_number = int(payload['pullrequest']['id'])
         repo_url = payload['repository']['links']['self'][0]['href']
         repo_url = repo_url.rstrip('browse')
@@ -170,7 +195,7 @@ class BitbucketServerEventHandler(PullRequestMixin):
 
         return [change], payload['repository']['scmId']
 
-    def getChanges(self, request):
+    def getChanges(self, request: Request) -> tuple[list[dict[str, Any]], str]:
         return self.process(request)
 
 

@@ -921,4 +921,4 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         request.received_headers[b'Content-Type'] = b'invalid/content'
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.data.updates.changesAdded), 0)
-        self.assertEqual(request.written, b"Unknown content type: invalid/content")
+        self.assertEqual(request.written, b"Unknown content type: 'invalid/content'")
