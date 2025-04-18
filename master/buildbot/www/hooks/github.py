@@ -14,27 +14,38 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import hmac
 import json
 import logging
 import re
 from hashlib import sha1
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 
 from dateutil.parser import parse as dateparse
 from twisted.internet import defer
+from twisted.internet.defer import Deferred
 from twisted.python import log
+from twisted.web.server import Request
 
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util.pullrequest import PullRequestMixin
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www.hooks.base import BaseHookHandler
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'
 
-DEFAULT_SKIPS_PATTERN = (r'\[ *skip *ci *\]', r'\[ *ci *skip *\]')
+DEFAULT_SKIPS_PATTERN: list[str] = [r'\[ *skip *ci *\]', r'\[ *ci *skip *\]']
 DEFAULT_GITHUB_API_URL = 'https://api.github.com'
 
 
@@ -43,17 +54,17 @@ class GitHubEventHandler(PullRequestMixin):
 
     def __init__(
         self,
-        secret,
-        strict,
-        codebase=None,
-        github_property_whitelist=None,
-        master=None,
-        skips=None,
-        github_api_endpoint=None,
-        pullrequest_ref=None,
-        token=None,
-        debug=False,
-        verify=True,
+        secret: str | None,
+        strict: bool,
+        codebase: str | Callable | None = None,
+        github_property_whitelist: list[str] | None = None,
+        master: BuildMaster | None = None,
+        skips: list[str] | None = None,
+        github_api_endpoint: str | None = None,
+        pullrequest_ref: str | None = None,
+        token: str | None = None,
+        debug: bool = False,
+        verify: bool = True,
     ):
         if github_property_whitelist is None:
             github_property_whitelist = []
@@ -77,11 +88,10 @@ class GitHubEventHandler(PullRequestMixin):
         self.verify = verify
 
     @defer.inlineCallbacks
-    def process(self, request):
+    def process(self, request: Request) -> InlineCallbacksType[tuple[list[dict[str, Any]], str]]:
         payload = yield self._get_payload(request)
 
-        event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2unicode(event_type)
+        event_type = bytes2unicode(request.getHeader(_HEADER_EVENT))
         log.msg(f"X-GitHub-Event: {event_type}", logLevel=logging.DEBUG)
 
         handler = getattr(self, f'handle_{event_type}', None)
@@ -93,12 +103,11 @@ class GitHubEventHandler(PullRequestMixin):
         return result
 
     @defer.inlineCallbacks
-    def _get_payload(self, request):
-        content = request.content.read()
-        content = bytes2unicode(content)
+    def _get_payload(self, request: Request) -> InlineCallbacksType[dict[str, Any]]:
+        assert request.content is not None
 
-        signature = request.getHeader(_HEADER_SIGNATURE)
-        signature = bytes2unicode(signature)
+        content = bytes2unicode(request.content.read())
+        signature = bytes2unicode(request.getHeader(_HEADER_SIGNATURE))
 
         if not signature and self._strict:
             raise ValueError('Request has no required signature')
@@ -120,7 +129,7 @@ class GitHubEventHandler(PullRequestMixin):
                 unicode2bytes(rendered_secret), msg=unicode2bytes(content), digestmod=sha1
             )
 
-            def _cmp(a, b):
+            def _cmp(a: str, b: str) -> bool:
                 return hmac.compare_digest(a, b)
 
             if not _cmp(bytes2unicode(mac.hexdigest()), hexdigest):
@@ -139,15 +148,15 @@ class GitHubEventHandler(PullRequestMixin):
 
         return payload
 
-    def handle_ping(self, _, __):
+    def handle_ping(self, _: dict[str, Any], __: str) -> tuple[list[dict[str, Any]], str]:
         return [], 'git'
 
-    def handle_workflow_run(self, _, __):
+    def handle_workflow_run(self, _: dict[str, Any], __: str) -> tuple[list[dict[str, Any]], str]:
         return [], 'git'
 
-    def handle_push(self, payload, event):
+    def handle_push(self, payload: dict[str, Any], event: str) -> tuple[list[dict[str, Any]], str]:
         # This field is unused:
-        user = None
+        user: str | None = None
         # user = payload['pusher']['name']
         repo = payload['repository']['name']
         repo_url = payload['repository']['html_url']
@@ -164,8 +173,10 @@ class GitHubEventHandler(PullRequestMixin):
         return changes, 'git'
 
     @defer.inlineCallbacks
-    def handle_pull_request(self, payload, event):
-        changes = []
+    def handle_pull_request(
+        self, payload: dict[str, Any], event: str
+    ) -> InlineCallbacksType[tuple[list[dict[str, Any]], str]]:
+        changes: list[dict[str, Any]] = []
         number = payload['number']
         refname = f'refs/pull/{number}/{self.pullrequest_ref}'
         basename = payload['pull_request']['base']['ref']
@@ -225,11 +236,12 @@ class GitHubEventHandler(PullRequestMixin):
         return (changes, 'git')
 
     @defer.inlineCallbacks
-    def _get_commit_msg(self, repo, sha):
+    def _get_commit_msg(self, repo: str, sha: str) -> InlineCallbacksType[str]:
         """
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         """
+        assert self.master is not None
 
         headers = {
             'User-Agent': 'Buildbot',
@@ -258,13 +270,15 @@ class GitHubEventHandler(PullRequestMixin):
         return 'No message field'
 
     @defer.inlineCallbacks
-    def _get_pr_files(self, repo, number):
+    def _get_pr_files(self, repo: str, number: int) -> InlineCallbacksType[list[str]]:
         """
         Get Files that belong to the Pull Request
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         :param number: the pull request number.
         """
+        assert self.master is not None
+
         headers = {"User-Agent": "Buildbot"}
         if self._token:
             p = Properties()
@@ -297,7 +311,16 @@ class GitHubEventHandler(PullRequestMixin):
         log.msg(f'Failed fetching PR files: response code {res.code}')
         return []
 
-    def _process_change(self, payload, user, repo, repo_url, project, event, properties):
+    def _process_change(
+        self,
+        payload: dict[str, Any],
+        user: str | None,
+        repo: str,
+        repo_url: str,
+        project: str,
+        event: str,
+        properties: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -306,7 +329,7 @@ class GitHubEventHandler(PullRequestMixin):
                 Python Object that represents the JSON sent by GitHub Service
                 Hook.
         """
-        changes = []
+        changes: list[dict[str, Any]] = []
         refname = payload['ref']
 
         # We only care about regular heads or tags
@@ -368,13 +391,14 @@ class GitHubEventHandler(PullRequestMixin):
 
         return changes
 
-    def _has_skip(self, msg):
+    def _has_skip(self, msg: str) -> bool:
         """
         The message contains the skipping keyword or not.
 
         :return type: Bool
         """
-        for skip in self.skips:
+        skips = self.skips or []
+        for skip in skips:
             if re.search(skip, msg):
                 return True
         return False
@@ -386,10 +410,10 @@ class GitHubEventHandler(PullRequestMixin):
 
 
 class GitHubHandler(BaseHookHandler):
-    def __init__(self, master, options):
+    def __init__(self, master: BuildMaster, options: dict[str, Any] | None):
         if options is None:
             options = {}
-        super().__init__(master, options)
+        super().__init__(master, options)  # type: ignore[arg-type]
 
         klass = options.get('class', GitHubEventHandler)
         klass_kwargs = {
@@ -407,7 +431,7 @@ class GitHubHandler(BaseHookHandler):
         handler = klass(options.get('secret', None), options.get('strict', False), **klass_kwargs)
         self.handler = handler
 
-    def getChanges(self, request):
+    def getChanges(self, request: Request) -> Deferred[tuple[list[dict[str, Any]], str]]:  # type: ignore[override]
         return self.handler.process(request)
 
 
