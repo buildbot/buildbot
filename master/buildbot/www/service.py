@@ -20,11 +20,15 @@ import datetime
 import os
 from binascii import hexlify
 from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import cast
 
 import jwt
 import twisted
 from packaging.version import parse as parse_version
 from twisted.application import strports
+from twisted.application.internet import StreamServerEndpointService
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -41,10 +45,12 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
 from buildbot.www import config as wwwconfig
+from buildbot.www import resource as buildbot_resource
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
@@ -67,7 +73,7 @@ class BuildbotSession(server.Session):
     # us with few choice.
     expDelay = datetime.timedelta(weeks=1)
 
-    def __init__(self, site, token=None):
+    def __init__(self, site: BuildbotSite, token: str | None = None) -> None:
         """
         Initialize a session with a unique ID for that session.
         """
@@ -82,10 +88,10 @@ class BuildbotSession(server.Session):
         else:
             self._defaultValue()
 
-    def _defaultValue(self):
+    def _defaultValue(self) -> None:
         self.user_info = {"anonymous": True}
 
-    def _fromToken(self, token):
+    def _fromToken(self, token: str) -> None:
         try:
             decoded = jwt.decode(
                 token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM]
@@ -104,7 +110,7 @@ class BuildbotSession(server.Session):
         # might raise KeyError: will be caught by caller, which makes the token invalid
         self.user_info = decoded['user_info']
 
-    def updateSession(self, request):
+    def updateSession(self, request: server.Request) -> None:
         """
         Update the cookie after session object was modified
         @param request: the request object which should get a new cookie
@@ -119,21 +125,21 @@ class BuildbotSession(server.Session):
         else:
             cookieString = b"TWISTED_SECURE_SESSION"
 
-        cookiename = b"_".join([cookieString, *request.sitepath])
+        cookiename = b"_".join([cookieString, *request.sitepath])  # type: ignore[attr-defined]
         request.addCookie(cookiename, self.uid, path=b"/", secure=secure)
 
-    def expire(self):
+    def expire(self) -> None:
         # caller must still call self.updateSession() to actually expire it
         self._defaultValue()
 
-    def notifyOnExpire(self, callback):
+    def notifyOnExpire(self, callback: Callable) -> None:
         raise NotImplementedError("BuildbotSession can't support notify on session expiration")
 
-    def touch(self):
+    def touch(self) -> None:
         pass
 
     @property
-    def uid(self):
+    def uid(self) -> str:
         """uid is now generated automatically according to the claims.
 
         This should actually only be used for cookie generation
@@ -156,26 +162,28 @@ class BuildbotSite(server.Site):
 
     master: BuildMaster | None = None
 
-    def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
+    def __init__(
+        self, root: resource.Resource, logPath: str | None, rotateLength: int, maxRotatedFiles: int
+    ) -> None:
         super().__init__(root, logPath=logPath)
         self.rotateLength = rotateLength
         self.maxRotatedFiles = maxRotatedFiles
-        self.session_secret = None
+        self.session_secret: str | None = None
 
-    def _openLogFile(self, path):
+    def _openLogFile(self, path: str | bytes) -> LogFile:
         self._nativeize = True
         return LogFile.fromFullPath(
             path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles
         )
 
-    def getResourceFor(self, request):
+    def getResourceFor(self, request: server.Request) -> resource.Resource:
         request.responseHeaders.removeHeader('Server')
         return server.Site.getResourceFor(self, request)
 
-    def setSessionSecret(self, secret):
+    def setSessionSecret(self, secret: str) -> None:
         self.session_secret = secret
 
-    def makeSession(self):
+    def makeSession(self) -> BuildbotSession:
         """
         Generate a new Session instance, but not store it for future reference
         (because it will be used by another master instance)
@@ -183,7 +191,7 @@ class BuildbotSite(server.Site):
         """
         return BuildbotSession(self)
 
-    def getSession(self, uid):
+    def getSession(self, uid: str) -> BuildbotSession:
         """
         Get a previously generated session.
         @param uid: Unique ID of the session (a JWT token).
@@ -194,25 +202,29 @@ class BuildbotSite(server.Site):
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+    _getPort: Callable[[], Any]
     name: str | None = 'www'  # type: ignore[assignment]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.port = None
-        self.port_service = None
-        self.site = None
+        self.port_service: StreamServerEndpointService | None = None
+        self.reconfigurableResources: (
+            list[buildbot_resource.Resource] | tuple[buildbot_resource.Resource, ...]
+        ) = []
+        self.site: BuildbotSite | None = None
 
         # load the apps early, in case something goes wrong in Python land
         self.apps = get_plugins('www', None, load_now=True)
         self.base_plugin_name = 'base'
 
     @property
-    def auth(self):
+    def auth(self) -> Any:
         return self.master.config.www['auth']
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config: Any) -> InlineCallbacksType[None]:
         www = new_config.www
 
         self.authz = www.get('authz')
@@ -250,10 +262,10 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 # returned by endpoint.listen().  But only for tests.
                 if port == "tcp:0:interface=127.0.0.1":
                     if hasattr(self.port_service, 'endpoint'):
-                        old_listen = self.port_service.endpoint.listen
+                        old_listen: Any = self.port_service.endpoint.listen
 
                         @defer.inlineCallbacks
-                        def listen(factory):
+                        def listen(factory: Any) -> InlineCallbacksType[Any]:
                             port = yield old_listen(factory)
                             self._getPort = lambda: port
                             return port
@@ -262,7 +274,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     else:
                         # older twisted's just have the port sitting there
                         # as an instance attribute
-                        self._getPort = lambda: self.port_service._port
+                        self._getPort = lambda: self.port_service._port  # type: ignore[union-attr]
 
                 yield self.port_service.setServiceParent(self)
 
@@ -271,13 +283,13 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         yield super().reconfigServiceWithBuildbotConfig(new_config)
 
-    def getPortnum(self):
+    def getPortnum(self) -> int:
         # for tests, when the configured port is 0 and the kernel selects a
         # dynamic port.  This will fail if the monkeypatch in reconfigService
         # was not made.
         return self._getPort().getHost().port
 
-    def refresh_base_plugin_name(self, new_config):
+    def refresh_base_plugin_name(self, new_config: Any) -> None:
         if 'base_react' in new_config.www.get('plugins', {}):
             config.error(
                 "'base_react' plugin is no longer supported. Use 'base' plugin in master.cfg "
@@ -286,7 +298,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             )
         self.base_plugin_name = 'base'
 
-    def configPlugins(self, root, new_config):
+    def configPlugins(self, root: resource.Resource, new_config: Any) -> None:
         plugin_root = root
         current_version = parse_version(twisted.__version__)
         if current_version < parse_version("22.10.0"):
@@ -296,7 +308,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         else:
             from twisted.web.pages import notFound
 
-            plugin_root = notFound()
+            plugin_root = cast(resource.Resource, notFound())
         root.putChild(b"plugins", plugin_root)
 
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
@@ -312,10 +324,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         for plugin_name in set(self.apps.names) - known_plugins:
             log.msg(f"NOTE: www plugin {plugin_name!r} is installed but not configured")
 
-    def setupSite(self, new_config):
+    def setupSite(self, new_config: Any) -> None:
         self.refresh_base_plugin_name(new_config)
 
-        self.reconfigurableResources = []
+        assert isinstance(self.reconfigurableResources, list)
+        self.reconfigurableResources.clear()
 
         # we're going to need at least the base plugin (buildbot-www or buildbot-www-react)
         if self.base_plugin_name not in self.apps:
@@ -348,13 +361,13 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         root.putChild(b'sse', sse.EventResource(self.master))
 
         # /change_hook
-        resource_obj = change_hook.ChangeHookResource(master=self.master)
+        resource_obj: resource.IResource = change_hook.ChangeHookResource(master=self.master)
 
         # FIXME: this does not work with reconfig
-        change_hook_auth = new_config.www.get('change_hook_auth')
+        change_hook_auth: list | None = new_config.www.get('change_hook_auth')
         if change_hook_auth is not None:
             resource_obj = self.setupProtectedResource(resource_obj, change_hook_auth)
-        root.putChild(b"change_hook", resource_obj)
+        root.putChild(b"change_hook", cast(resource.Resource, resource_obj))
 
         self.root = root
 
@@ -374,7 +387,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             root, logPath=httplog, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles
         )
 
-        self.site.sessionFactory = None
+        assert self.site is not None
+
+        self.site.sessionFactory = None  # type: ignore[assignment]
 
         # Make sure site.master is set. It is required for poller change_hook
         self.site.master = self.master
@@ -382,11 +397,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # case some dynamically created resources try to get reconfigs)
         self.reconfigurableResources = tuple(self.reconfigurableResources)
 
-    def resourceNeedsReconfigs(self, resource):
+    def resourceNeedsReconfigs(self, resource: buildbot_resource.Resource) -> None:
         # flag this resource as needing to know when a reconfig occurs
+        assert isinstance(self.reconfigurableResources, list), (
+            "www Resources can no longer be reconfigured"
+        )
         self.reconfigurableResources.append(resource)
 
-    def reconfigSite(self, new_config):
+    def reconfigSite(self, new_config: Any) -> None:
         self.refresh_base_plugin_name(new_config)
 
         root = self.apps.get(self.base_plugin_name).resource
@@ -400,11 +418,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             rsrc.reconfigResource(new_config)
 
     @defer.inlineCallbacks
-    def makeSessionSecret(self):
+    def makeSessionSecret(self) -> InlineCallbacksType[None]:
         state = self.master.db.state
         objectid = yield state.getObjectId("www", "buildbot.www.service.WWWService")
 
-        def create_session_secret():
+        def create_session_secret() -> str:
             # Bootstrap: We need to create a key, that will be shared with other masters
             # and other runs of this master
 
@@ -414,9 +432,13 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         session_secret = yield state.atomicCreateState(
             objectid, "session_secret", create_session_secret
         )
+
+        assert self.site is not None
         self.site.setSessionSecret(session_secret)
 
-    def setupProtectedResource(self, resource_obj, checkers):
+    def setupProtectedResource(
+        self, resource_obj: resource.IResource, checkers: list
+    ) -> resource.IResource:
         @implementer(IRealm)
         class SimpleRealm:
             """
@@ -424,7 +446,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             users.
             """
 
-            def requestAvatar(self, avatarId, mind, *interfaces):
+            def requestAvatar(
+                self, avatarId: Any, mind: Any, *interfaces: Any
+            ) -> tuple[Any, Any, Callable[[], None]]:
                 if resource.IResource in interfaces:
                     return (resource.IResource, resource_obj, lambda: None)
                 raise NotImplementedError()
@@ -434,10 +458,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         wrapper = guard.HTTPAuthSessionWrapper(portal, [credentialFactory])
         return wrapper
 
-    def getUserInfos(self, request):
+    def getUserInfos(self, request: server.Request) -> dict[str, Any]:
         session = request.getSession()
         return session.user_info
 
-    def assertUserAllowed(self, request, ep, action, options):
+    def assertUserAllowed(
+        self, request: server.Request, ep: str, action: str, options: dict[str, Any]
+    ) -> bool:
         user_info = self.getUserInfos(request)
         return self.authz.assertUserAllowed(ep, action, options, user_info)
