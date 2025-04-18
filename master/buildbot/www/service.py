@@ -19,6 +19,7 @@ import calendar
 import datetime
 import os
 from binascii import hexlify
+from typing import TYPE_CHECKING
 
 import jwt
 import twisted
@@ -47,6 +48,9 @@ from buildbot.www import config as wwwconfig
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 # as per:
 # http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
@@ -149,6 +153,8 @@ class BuildbotSite(server.Site):
     """A custom Site for Buildbot needs.
     Supports rotating logs, and JWT sessions
     """
+
+    master: BuildMaster | None = None
 
     def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
         super().__init__(root, logPath=logPath)

@@ -17,24 +17,36 @@
 # the door" and trigger a change source to poll.
 
 
+from __future__ import annotations
+
+from typing import Any
+from typing import cast
+
+from twisted.internet import defer
+from twisted.web.server import Request
+
 from buildbot.changes.base import ReconfigurablePollingChangeSource
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
+from buildbot.www.service import BuildbotSite
 
 
 class PollingHandler(BaseHookHandler):
-    def getChanges(self, req):
-        change_svc = req.site.master.change_svc
+    def getChanges(self, req: Request) -> defer.Deferred[tuple[list[dict[str, Any]], str | None]]:
+        site = cast(BuildbotSite, req.site)
+        assert site.master is not None
+        change_svc = site.master.change_svc
+        assert req.args is not None
         poll_all = b"poller" not in req.args
 
         allow_all = True
-        allowed = []
+        allowed: list[bytes] = []
         if isinstance(self.options, dict) and b"allowed" in self.options:
             allow_all = False
             allowed = self.options[b"allowed"]
 
-        pollers = []
+        pollers: list[ReconfigurablePollingChangeSource] = []
 
         for source in change_svc:
             if not isinstance(source, ReconfigurablePollingChangeSource):
