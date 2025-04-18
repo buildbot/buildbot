@@ -13,7 +13,11 @@
 #
 # Copyright  Team Members
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
@@ -23,47 +27,52 @@ from twisted.python import log
 
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
+from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
+    from buildbot.mq.base import QueueRef
 
 
 class Subscription:
-    def __init__(self, query, id):
+    def __init__(self, query: str, id: str):
         self.query = query
         self.id = id
         self.last_value_chksum = None
 
 
 class WsProtocol(WebSocketServerProtocol):
-    def __init__(self, master):
+    def __init__(self, master: BuildMaster):
         super().__init__()
         self.master = master
-        self.qrefs = {}
+        self.qrefs: dict[str, QueueRef] | None = {}
         self.debug = self.master.config.www.get("debug", False)
 
-    def to_json(self, msg):
+    def to_json(self, msg: dict[str, Any]) -> bytes:
         return json.dumps(msg, default=toJson, separators=(",", ":")).encode()
 
-    def send_json_message(self, **msg):
+    def send_json_message(self, **msg: Any) -> defer.Deferred:
         return self.sendMessage(self.to_json(msg))
 
-    def send_error(self, error, code, _id):
+    def send_error(self, error: str, code: int, _id: str | None) -> defer.Deferred:
         return self.send_json_message(error=error, code=code, _id=_id)
 
-    def onMessage(self, frame, isBinary):
+    def onMessage(self, frame: bytes, isBinary: bool) -> defer.Deferred | None:
         """
         Parse the incoming request.
         """
         if self.debug:
-            log.msg(f"FRAME {frame}")
+            log.msg(f"FRAME {bytes2unicode(frame)}")
 
-        frame = json.loads(bytes2unicode(frame))
-        _id = frame.get("_id")
-        _type = frame.pop("type", None)
+        frame_dict = json.loads(bytes2unicode(frame))
+        _id = frame_dict.get("_id")
+        _type = frame_dict.pop("type", None)
         if _id is None and _type is None:
             return self.send_error(
                 error="no '_id' or 'type' in websocket frame", code=400, _id=None
             )
 
-        cmd = frame.pop("cmd", None)
+        cmd = frame_dict.pop("cmd", None)
         if cmd is None:
             return self.send_error(error="no 'cmd' in websocket frame", code=400, _id=None)
         cmdmeth = "cmd_" + cmd
@@ -72,7 +81,7 @@ class WsProtocol(WebSocketServerProtocol):
         if meth is None:
             return self.send_error(error=f"no such command type '{cmd}'", code=404, _id=_id)
         try:
-            return meth(**frame)
+            return meth(**frame_dict)
         except TypeError as e:
             return self.send_error(error=f"Invalid method argument '{e!s}'", code=400, _id=_id)
         except Exception as e:
@@ -81,20 +90,20 @@ class WsProtocol(WebSocketServerProtocol):
 
     # legacy protocol methods
 
-    def ack(self, _id):
+    def ack(self, _id: str) -> defer.Deferred:
         return self.send_json_message(msg="OK", code=200, _id=_id)
 
-    def parsePath(self, path):
-        path = path.split("/")
-        return tuple(str(p) if p != "*" else None for p in path)
+    def parsePath(self, path: str) -> tuple[str | None, ...]:
+        path_parts = path.split("/")
+        return tuple(str(p) if p != "*" else None for p in path_parts)
 
-    def isPath(self, path):
+    def isPath(self, path: Any) -> bool:
         if not isinstance(path, str):
             return False
         return True
 
     @defer.inlineCallbacks
-    def cmd_startConsuming(self, path, _id):
+    def cmd_startConsuming(self, path: str, _id: str) -> InlineCallbacksType[None]:
         if not self.isPath(path):
             yield self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
             return
@@ -104,7 +113,7 @@ class WsProtocol(WebSocketServerProtocol):
             yield self.ack(_id=_id)
             return
 
-        def callback(key, message):
+        def callback(key: list[str], message: Any) -> defer.Deferred:
             # protocol is deliberately concise in size
             return self.send_json_message(k="/".join(key), m=message)
 
@@ -120,7 +129,7 @@ class WsProtocol(WebSocketServerProtocol):
             self.ack(_id=_id)
 
     @defer.inlineCallbacks
-    def cmd_stopConsuming(self, path, _id):
+    def cmd_stopConsuming(self, path: str, _id: str) -> InlineCallbacksType[None]:
         if not self.isPath(path):
             yield self.send_json_message(error=f"invalid path format '{path!s}'", code=400, _id=_id)
             return
@@ -133,10 +142,10 @@ class WsProtocol(WebSocketServerProtocol):
             return
         yield self.send_json_message(error=f"path was not consumed '{path!s}'", code=400, _id=_id)
 
-    def cmd_ping(self, _id):
+    def cmd_ping(self, _id: str) -> None:
         self.send_json_message(msg="pong", code=200, _id=_id)
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason: Any) -> None:
         if self.debug:
             log.msg("connection lost", system=self)
         if self.qrefs is not None:
@@ -145,23 +154,23 @@ class WsProtocol(WebSocketServerProtocol):
 
         self.qrefs = None  # to be sure we don't add any more
 
-    def onConnect(self, request):
+    def onConnect(self, request: Any) -> None:
         return None
 
 
 class WsProtocolFactory(WebSocketServerFactory):
-    def __init__(self, master):
+    def __init__(self, master: Any):
         super().__init__()
         self.master = master
         pingInterval = self.master.config.www.get("ws_ping_interval", 0)
         self.setProtocolOptions(webStatus=False, autoPingInterval=pingInterval)
 
-    def buildProtocol(self, addr):
+    def buildProtocol(self, addr: Any) -> WsProtocol:
         p = WsProtocol(self.master)
         p.factory = self
         return p
 
 
 class WsResource(WebSocketResource):
-    def __init__(self, master):
+    def __init__(self, master: Any):
         super().__init__(WsProtocolFactory(master))
