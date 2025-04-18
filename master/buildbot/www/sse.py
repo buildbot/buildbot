@@ -70,7 +70,6 @@ class EventResource(resource.Resource):
         request.setResponseCode(code)
         request.setHeader(b'content-type', b'text/plain; charset=utf-8')
         request.write(msg)
-        return
 
     def render(self, request):
         consumer = None
@@ -92,10 +91,12 @@ class EventResource(resource.Resource):
                 cid = path[0]
                 path = path[1:]
                 if cid not in self.consumers:
-                    return self.finish(request, 400, b"unknown uuid")
+                    self.finish(request, 400, b"unknown uuid")
+                    return None
                 consumer = self.consumers[cid]
             else:
-                return self.finish(request, 400, b"need uuid")
+                self.finish(request, 400, b"need uuid")
+                return None
 
         pathref = b"/".join(path)
         path = self.decodePath(path)
@@ -117,14 +118,17 @@ class EventResource(resource.Resource):
 
                 d.addErrback(log.err, "while calling startConsuming")
             except NotImplementedError:
-                return self.finish(request, 404, b"not implemented")
+                self.finish(request, 404, b"not implemented")
+                return None
             except InvalidPathError:
-                return self.finish(request, 404, b"not implemented")
+                self.finish(request, 404, b"not implemented")
+                return None
         elif command == b"remove":
             try:
                 consumer.stopConsuming(pathref)
             except KeyError:
-                return self.finish(request, 404, b"consumer is not listening to this event")
+                self.finish(request, 404, b"consumer is not listening to this event")
+                return None
 
         if command == b"listen":
             self.consumers[cid] = consumer
