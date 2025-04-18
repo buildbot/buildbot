@@ -16,19 +16,28 @@
 # note: this file is based on github.py
 
 
+from __future__ import annotations
+
 import json
 import re
+from typing import Any
 
 from dateutil.parser import parse as dateparse
+from twisted.internet import defer
 from twisted.python import log
+from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
 
 class GitoriousHandler(BaseHookHandler):
-    def getChanges(self, request):
-        payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
+    def getChanges(
+        self, request: Request
+    ) -> defer.Deferred[tuple[list[dict[str, Any]], str | None]]:
+        args: dict[bytes, list[bytes]] = request.args or {}
+        payload_bytes = args.get(b'payload', [b'{}'])[0]
+        payload = json.loads(bytes2unicode(payload_bytes))
         user = payload['repository']['owner']['name']
         repo = payload['repository']['name']
         repo_url = payload['repository']['url']
@@ -36,9 +45,11 @@ class GitoriousHandler(BaseHookHandler):
 
         changes = self.process_change(payload, user, repo, repo_url, project)
         log.msg(f"Received {len(changes)} changes from gitorious")
-        return (changes, 'git')
+        return defer.succeed((changes, 'git'))
 
-    def process_change(self, payload, user, repo, repo_url, project):
+    def process_change(
+        self, payload: dict[str, Any], user: str, repo: str, repo_url: str, project: str
+    ) -> list[dict[str, Any]]:
         changes = []
         newrev = payload['after']
 
@@ -48,7 +59,7 @@ class GitoriousHandler(BaseHookHandler):
             return []
         else:
             for commit in payload['commits']:
-                files = []
+                files: list[str] = []
                 # Gitorious doesn't send these, maybe later
                 # if 'added' in commit:
                 #     files.extend(commit['added'])

@@ -919,7 +919,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.util",
       "buildbot_worker.util.lineboundaries",
       "buildbot_worker.util._notifier",
-      "buildbot.www.hooks.gitorious",
       "buildbot.www.hooks.poller",
       "buildbot.www.ldapuserinfo",
       "buildbot.www.oauth2",
