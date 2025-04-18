@@ -18,8 +18,12 @@
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
 
+from __future__ import annotations
+
 import re
 from datetime import datetime
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -29,7 +33,11 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import resource
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 
 class ChangeHookResource(resource.Resource):
@@ -38,7 +46,7 @@ class ChangeHookResource(resource.Resource):
     children = {}
     needsReconfig = True
 
-    def __init__(self, master, dialects=None):
+    def __init__(self, master: BuildMaster, dialects: dict[str, Any] | None = None):
         """
         The keys of 'dialects' select a modules to load under
         master/buildbot/www/hooks/
@@ -50,24 +58,24 @@ class ChangeHookResource(resource.Resource):
         if dialects is None:
             dialects = {}
         self.dialects = dialects
-        self._dialect_handlers = {}
+        self._dialect_handlers: dict[str, Any] = {}
         self.request_dialect = None
         self._plugins = get_plugins("webhooks")
 
-    def reconfigResource(self, new_config):
+    def reconfigResource(self, new_config: Any) -> None:
         self.dialects = new_config.www.get('change_hook_dialects', {})
 
-    def getChild(self, name, request):
+    def getChild(self, name: bytes, request: server.Request) -> Any:
         return self
 
-    def render_GET(self, request):
+    def render_GET(self, request: server.Request) -> int:
         """
         Responds to events and starts the build process
           different implementations can decide on what methods they will accept
         """
         return self.render_POST(request)
 
-    def render_POST(self, request):
+    def render_POST(self, request: server.Request) -> int:
         """
         Responds to events and starts the build process
           different implementations can decide on what methods they will accept
@@ -81,11 +89,11 @@ class ChangeHookResource(resource.Resource):
         except Exception:
             d = defer.fail()
 
-        def ok(_):
+        def ok(_: Any) -> None:
             request.setResponseCode(202)
             request.finish()
 
-        def err(why):
+        def err(why: Any) -> None:
             code = 500
             if why.check(ValueError):
                 code = 400
@@ -102,7 +110,7 @@ class ChangeHookResource(resource.Resource):
         return server.NOT_DONE_YET
 
     @defer.inlineCallbacks
-    def getAndSubmitChanges(self, request):
+    def getAndSubmitChanges(self, request: server.Request) -> InlineCallbacksType[None]:
         changes, src = yield self.getChanges(request)
         if not changes:
             request.write(b"no change found")
@@ -110,7 +118,7 @@ class ChangeHookResource(resource.Resource):
             yield self.submitChanges(changes, request, src)
             request.write(unicode2bytes(f"{len(changes)} change found"))
 
-    def makeHandler(self, dialect):
+    def makeHandler(self, dialect: str) -> Any:
         """create and cache the handler object for this dialect"""
         if dialect not in self.dialects:
             m = f"The dialect specified, '{dialect}', wasn't whitelisted in change_hook"
@@ -139,7 +147,9 @@ class ChangeHookResource(resource.Resource):
         return self._dialect_handlers[dialect]
 
     @defer.inlineCallbacks
-    def getChanges(self, request):
+    def getChanges(
+        self, request: server.Request
+    ) -> InlineCallbacksType[tuple[list[dict[str, Any]], Any]]:
         """
         Take the logic from the change hook, and then delegate it
         to the proper handler
@@ -172,7 +182,9 @@ class ChangeHookResource(resource.Resource):
         return (changes, src)
 
     @defer.inlineCallbacks
-    def submitChanges(self, changes, request, src):
+    def submitChanges(
+        self, changes: list[dict[str, Any]], request: server.Request, src: Any
+    ) -> InlineCallbacksType[None]:
         for chdict in changes:
             when_timestamp = chdict.get('when_timestamp')
             if isinstance(when_timestamp, datetime):

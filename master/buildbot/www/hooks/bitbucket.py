@@ -14,11 +14,15 @@
 # Copyright Buildbot Team Members
 # Copyright 2013 (c) Mamba Team
 
+from __future__ import annotations
 
 import json
+from typing import Any
 
 from dateutil.parser import parse as dateparse
+from twisted.internet import defer
 from twisted.python import log
+from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
@@ -27,7 +31,9 @@ _HEADER_EVENT = b'X-Event-Key'
 
 
 class BitBucketHandler(BaseHookHandler):
-    def getChanges(self, request):
+    def getChanges(
+        self, request: Request
+    ) -> defer.Deferred[tuple[list[dict[str, Any]], str | None]]:
         """Catch a POST request from BitBucket and start a build process
 
         Check the URL below if you require more information about payload
@@ -37,12 +43,12 @@ class BitBucketHandler(BaseHookHandler):
         :param options: additional options
         """
 
-        event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2unicode(event_type)
+        assert request.args is not None
+
+        event_type = bytes2unicode(request.getHeader(_HEADER_EVENT))
         payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
         repo_url = f"{payload['canon_url']}{payload['repository']['absolute_url']}"
-        project = request.args.get(b'project', [b''])[0]
-        project = bytes2unicode(project)
+        project = bytes2unicode(request.args.get(b'project', [b''])[0])
 
         changes = []
         for commit in payload['commits']:
@@ -63,7 +69,7 @@ class BitBucketHandler(BaseHookHandler):
             log.msg(f"New revision: {commit['node']}")
 
         log.msg(f'Received {len(changes)} changes from bitbucket')
-        return (changes, payload['repository']['scm'])
+        return defer.succeed((changes, payload['repository']['scm']))
 
 
 bitbucket = BitBucketHandler

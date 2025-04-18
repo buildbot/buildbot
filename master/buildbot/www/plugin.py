@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import sys
 
 from twisted.web import static
@@ -28,7 +30,7 @@ else:
 
 
 class Application:
-    def __init__(self, package_name, description, ui=True):
+    def __init__(self, package_name: str, description: str, ui: bool = True) -> None:
         self.description = description
         self.version = importlib_resources.files(package_name).joinpath("VERSION")
         self.version = bytes2unicode(self.version.read_bytes())
@@ -36,13 +38,13 @@ class Application:
         self.resource = static.File(self.static_dir)
         self.ui = ui
 
-    def setMaster(self, master):
+    def setMaster(self, master: object) -> None:
         self.master = master
 
-    def setConfiguration(self, config):
+    def setConfiguration(self, config: object) -> None:
         self.config = config
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             "www.plugin.Application(version={version}, "
             "description={description}, "

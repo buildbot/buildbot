@@ -24,9 +24,13 @@
 # `unicode` and `raw_*` attributes for `bytes`.
 
 
+from __future__ import annotations
+
 import importlib
+from typing import Any
 from urllib.parse import urlparse
 
+from twisted.internet import defer
 from twisted.internet import threads
 
 from buildbot.util import bytes2unicode
@@ -45,21 +49,21 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
 
     def __init__(
         self,
-        uri,
-        bindUser,
-        bindPw,
-        accountBase,
-        accountPattern,
-        accountFullName,
-        accountEmail,
-        groupBase=None,
-        groupMemberPattern=None,
-        groupName=None,
-        avatarPattern=None,
-        avatarData=None,
-        accountExtraFields=None,
-        tls=None,
-    ):
+        uri: str,
+        bindUser: str | None,
+        bindPw: str | None,
+        accountBase: str,
+        accountPattern: str,
+        accountFullName: str,
+        accountEmail: str,
+        groupBase: str | None = None,
+        groupMemberPattern: str | None = None,
+        groupName: str | None = None,
+        avatarPattern: str | None = None,
+        avatarData: str | None = None,
+        accountExtraFields: list[str] | None = None,
+        tls: object | None = None,
+    ) -> None:
         # Throw import error now that this is being used
         if not ldap3:
             importlib.import_module('ldap3')
@@ -89,7 +93,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         self.ldap_encoding = ldap3.get_config_parameter('DEFAULT_SERVER_ENCODING')
         self.tls = tls
 
-    def connectLdap(self):
+    def connectLdap(self) -> ldap3.Connection:
         server = urlparse(self.uri)
         netloc = server.netloc.split(":")
         # define the server and the connection
@@ -115,16 +119,22 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         )
         return c
 
-    def search(self, c, base, filterstr='f', attributes=None):
+    def search(
+        self,
+        c: ldap3.Connection,
+        base: str | None,
+        filterstr: str | None = 'f',
+        attributes: list[str | None] | None = None,
+    ) -> list:
         c.search(base, filterstr, ldap3.SUBTREE, attributes=attributes)
         return c.response
 
-    def getUserInfo(self, username):
+    def getUserInfo(self, username: str) -> defer.Deferred:
         username = bytes2unicode(username)
 
-        def thd():
+        def thd() -> dict[str, object]:
             c = self.connectLdap()
-            infos = {'username': username}
+            infos: dict[str, Any] = {'username': username}
             pattern = self.accountPattern % {"username": username}
             res = self.search(
                 c,
@@ -136,7 +146,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                 raise KeyError(f"ldap search \"{pattern}\" returned {len(res)} results")
             dn, ldap_infos = res[0]['dn'], res[0]['attributes']
 
-            def getFirstLdapInfo(x):
+            def getFirstLdapInfo(x: list | None) -> str | None:
                 if isinstance(x, list):
                     x = x[0] if x else None
                 return x
@@ -162,7 +172,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
 
         return threads.deferToThread(thd)
 
-    def findAvatarMime(self, data):
+    def findAvatarMime(self, data: bytes) -> tuple[bytes, bytes] | None:
         # http://en.wikipedia.org/wiki/List_of_file_signatures
         if data.startswith(b"\xff\xd8\xff"):
             return (b"image/jpeg", data)
@@ -173,18 +183,18 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         # ignore unknown image format
         return None
 
-    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
-        if username:
-            username = bytes2unicode(username)
-        if email:
-            email = bytes2unicode(email)
+    def getUserAvatar(
+        self, email: bytes, username: bytes | None, size: int, defaultAvatarUrl: str
+    ) -> defer.Deferred:
+        username_str = bytes2unicode(username) if username is not None else None
+        email_str = bytes2unicode(email) if email is not None else None
 
-        def thd():
+        def thd() -> tuple[bytes, bytes] | None:
             c = self.connectLdap()
-            if username:
-                pattern = self.accountPattern % {"username": username}
-            elif email:
-                pattern = self.avatarPattern % {"email": email}
+            if username_str:
+                pattern = self.accountPattern % {"username": username_str}
+            elif email_str:
+                pattern = self.avatarPattern % {"email": email_str}  # type: ignore[operator]
             else:
                 return None
             res = self.search(c, self.accountBase, pattern, attributes=[self.avatarData])

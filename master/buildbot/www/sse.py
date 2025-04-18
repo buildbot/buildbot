@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import uuid
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.python import log
 from twisted.web import resource
@@ -25,13 +29,19 @@ from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
+    from buildbot.mq.base import QueueRef
+
 
 class Consumer:
-    def __init__(self, request):
+    qrefs: dict[bytes, QueueRef]
+
+    def __init__(self, request: server.Request):
         self.request = request
         self.qrefs = {}
 
-    def stopConsuming(self, key=None):
+    def stopConsuming(self, key: bytes | None = None) -> None:
         if key is not None:
             self.qrefs[key].stopConsuming()
         else:
@@ -39,7 +49,7 @@ class Consumer:
                 qref.stopConsuming()
             self.qrefs = {}
 
-    def onMessage(self, event, data):
+    def onMessage(self, event: list[str], data: Any) -> None:
         request = self.request
         key = [bytes2unicode(e) for e in event]
         msg = {"key": key, "message": data}
@@ -47,35 +57,34 @@ class Consumer:
         request.write(b"data: " + unicode2bytes(json.dumps(msg, default=toJson)) + b"\n")
         request.write(b"\n")
 
-    def registerQref(self, path, qref):
+    def registerQref(self, path: bytes, qref: QueueRef) -> None:
         self.qrefs[path] = qref
 
 
 class EventResource(resource.Resource):
     isLeaf = True
+    consumers: dict[bytes, Consumer]
 
-    def __init__(self, master):
+    def __init__(self, master: BuildMaster):
         super().__init__()
 
         self.master = master
         self.consumers = {}
 
-    def decodePath(self, path):
-        for i, p in enumerate(path):
-            if p == b'*':
-                path[i] = None
-        return path
+    def decodePath(self, path: list[bytes]) -> list[bytes | None]:
+        return [None if p == b'*' else p for p in path]
 
-    def finish(self, request, code, msg):
+    def finish(self, request: server.Request, code: int, msg: bytes) -> None:
         request.setResponseCode(code)
         request.setHeader(b'content-type', b'text/plain; charset=utf-8')
         request.write(msg)
-        return
 
-    def render(self, request):
-        consumer = None
+    def render(self, request: server.Request) -> int | None:
+        consumer: Consumer | None = None
         command = b"listen"
-        path = request.postpath
+        path: list[bytes] | None = request.postpath
+        assert path is not None
+
         if path and path[-1] == b'':
             path = path[:-1]
 
@@ -92,39 +101,47 @@ class EventResource(resource.Resource):
                 cid = path[0]
                 path = path[1:]
                 if cid not in self.consumers:
-                    return self.finish(request, 400, b"unknown uuid")
+                    self.finish(request, 400, b"unknown uuid")
+                    return None
                 consumer = self.consumers[cid]
             else:
-                return self.finish(request, 400, b"need uuid")
+                self.finish(request, 400, b"need uuid")
+                return None
+
+        assert consumer is not None
 
         pathref = b"/".join(path)
-        path = self.decodePath(path)
+        decoded_path = self.decodePath(path)
 
-        if command == b"add" or (command == b"listen" and path):
+        if command == b"add" or (command == b"listen" and decoded_path):
             options = request.args
+            assert options is not None
             for k in options:
                 if len(options[k]) == 1:
                     options[k] = options[k][1]
 
             try:
                 d = self.master.mq.startConsuming(
-                    consumer.onMessage, tuple(bytes2unicode(p) for p in path)
+                    consumer.onMessage, tuple(bytes2unicode(p) for p in decoded_path)
                 )
 
                 @d.addCallback
-                def register(qref):
+                def register(qref: QueueRef) -> None:
                     consumer.registerQref(pathref, qref)
 
                 d.addErrback(log.err, "while calling startConsuming")
             except NotImplementedError:
-                return self.finish(request, 404, b"not implemented")
+                self.finish(request, 404, b"not implemented")
+                return None
             except InvalidPathError:
-                return self.finish(request, 404, b"not implemented")
+                self.finish(request, 404, b"not implemented")
+                return None
         elif command == b"remove":
             try:
                 consumer.stopConsuming(pathref)
             except KeyError:
-                return self.finish(request, 404, b"consumer is not listening to this event")
+                self.finish(request, 404, b"consumer is not listening to this event")
+                return None
 
         if command == b"listen":
             self.consumers[cid] = consumer
@@ -136,7 +153,7 @@ class EventResource(resource.Resource):
             d = request.notifyFinish()
 
             @d.addBoth
-            def onEndRequest(_):
+            def onEndRequest(_: Any) -> None:
                 consumer.stopConsuming()
                 del self.consumers[cid]
 

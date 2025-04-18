@@ -14,8 +14,13 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import json
 import os
+import typing
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.web.error import Error
@@ -24,8 +29,11 @@ from buildbot.interfaces import IConfigured
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
-def get_environment_versions():
+
+def get_environment_versions() -> list[tuple[str, str]]:
     import sys  # pylint: disable=import-outside-toplevel
 
     import twisted  # pylint: disable=import-outside-toplevel
@@ -44,7 +52,7 @@ def get_environment_versions():
     ]
 
 
-def get_www_frontend_config_dict(master, www_config):
+def get_www_frontend_config_dict(master: BuildMaster, www_config: dict[str, Any]) -> dict[str, Any]:
     # This config is shared with the frontend.
     config = dict(www_config)
 
@@ -70,8 +78,8 @@ def get_www_frontend_config_dict(master, www_config):
     return config
 
 
-def serialize_www_frontend_config_dict_to_json(config):
-    def to_json(obj):
+def serialize_www_frontend_config_dict_to_json(config: dict[str, Any]) -> str:
+    def to_json(obj: Any) -> dict[str, Any] | str:
         obj = IConfigured(obj).getConfigDict()
         if isinstance(obj, dict):
             return obj
@@ -98,7 +106,7 @@ _known_theme_variables = (
 )
 
 
-def serialize_www_frontend_theme_to_css(config, indent):
+def serialize_www_frontend_theme_to_css(config: dict[str, Any], indent: int) -> str:
     theme_config = config.get('theme', {})
 
     return ('\n' + ' ' * indent).join([
@@ -106,7 +114,7 @@ def serialize_www_frontend_theme_to_css(config, indent):
     ])
 
 
-def replace_placeholder_range(string, start, end, replacement):
+def replace_placeholder_range(string: str, start: str, end: str, replacement: str) -> str:
     # Simple string replacement is much faster than a multiline regex
     i1 = string.find(start)
     i2 = string.find(end)
@@ -118,14 +126,14 @@ def replace_placeholder_range(string, start, end, replacement):
 class ConfigResource(resource.Resource):
     needsReconfig = True
 
-    def reconfigResource(self, new_config):
+    def reconfigResource(self, new_config: Any) -> None:
         self.frontend_config = get_www_frontend_config_dict(self.master, new_config.www)
 
-    def render_GET(self, request):
+    def render_GET(self, request: Any) -> int:
         return self.asyncRenderHelper(request, self.do_render)
 
-    def do_render(self, request):
-        config = {}
+    def do_render(self, request: Any) -> defer.Deferred:
+        config: dict[str, Any] = {}
         request.setHeader(b"content-type", b'application/json')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
 
@@ -141,21 +149,21 @@ class IndexResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
 
-    def __init__(self, master, staticdir):
+    def __init__(self, master: BuildMaster, staticdir: str) -> None:
         super().__init__(master)
         self.static_dir = staticdir
         with open(os.path.join(self.static_dir, 'index.html')) as index_f:
             self.index_template = index_f.read()
 
-    def reconfigResource(self, new_config):
+    def reconfigResource(self, new_config: Any) -> None:
         self.config = new_config.www
         self.frontend_config = get_www_frontend_config_dict(self.master, self.config)
 
-    def render_GET(self, request):
+    def render_GET(self, request: Any) -> int:
         return self.asyncRenderHelper(request, self.renderIndex)
 
     @defer.inlineCallbacks
-    def renderIndex(self, request):
+    def renderIndex(self, request: Any) -> typing.Generator[Any, None, bytes]:
         config = {}
         request.setHeader(b"content-type", b'text/html')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
