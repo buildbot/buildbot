@@ -126,7 +126,7 @@ class WsProtocol(WebSocketServerProtocol):
             return
 
         # only succeed if path has been started
-        if path in self.qrefs:
+        if self.qrefs is not None and path in self.qrefs:
             qref = self.qrefs.pop(path)
             yield qref.stopConsuming()
             yield self.ack(_id=_id)
@@ -139,8 +139,9 @@ class WsProtocol(WebSocketServerProtocol):
     def connectionLost(self, reason):
         if self.debug:
             log.msg("connection lost", system=self)
-        for qref in self.qrefs.values():
-            qref.stopConsuming()
+        if self.qrefs is not None:
+            for qref in self.qrefs.values():
+                qref.stopConsuming()
 
         self.qrefs = None  # to be sure we don't add any more
 
