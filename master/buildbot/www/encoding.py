@@ -16,8 +16,10 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from twisted.web import iweb
+from twisted.web.http import Request
 from zope.interface import implementer
 
 try:
@@ -33,14 +35,12 @@ except ImportError:
 
 @implementer(iweb._IRequestEncoderFactory)
 class _EncoderFactoryBase:
-    def __init__(
-        self, encoding_type: bytes, encoder_class: type[iweb._IRequestEncoder] | None
-    ) -> None:
+    def __init__(self, encoding_type: bytes, encoder_class: type[_EncoderBase] | None) -> None:
         self.encoding_type = encoding_type
         self.encoder_class = encoder_class
         self.check_regex = re.compile(rb"(:?^|[\s,])" + encoding_type + rb"(:?$|[\s,])")
 
-    def encoderForRequest(self, request):
+    def encoderForRequest(self, request: Request) -> _EncoderBase | None:
         """
         Check the headers if the client accepts encoding, and encodes the
         request if so.
@@ -50,14 +50,14 @@ class _EncoderFactoryBase:
 
         acceptHeaders = b",".join(request.requestHeaders.getRawHeaders(b"accept-encoding", []))
         if self.check_regex.search(acceptHeaders):
-            encoding = request.responseHeaders.getRawHeaders(b"content-encoding")
-            if encoding:
-                encoding = b",".join([*encoding, self.encoding_type])
+            src_encodings = request.responseHeaders.getRawHeaders(b"content-encoding")
+            if src_encodings:
+                encoding = b",".join([*src_encodings, self.encoding_type])
             else:
                 encoding = self.encoding_type
 
             request.responseHeaders.setRawHeaders(b"content-encoding", [encoding])
-            return self.encoder_class(request)
+            return self.encoder_class(request) if self.encoder_class is not None else None
         return None
 
 
@@ -73,7 +73,7 @@ class ZstandardEncoderFactory(_EncoderFactoryBase):
 
 @implementer(iweb._IRequestEncoder)
 class _EncoderBase:
-    def __init__(self, request) -> None:
+    def __init__(self, request: Request) -> None:
         self._request = request
 
     def _compress(self, data: bytes) -> bytes:
@@ -82,7 +82,7 @@ class _EncoderBase:
     def _flush(self) -> bytes:
         return b''
 
-    def encode(self, data):
+    def encode(self, data: bytes) -> bytes:
         """
         Write to the request, automatically compressing data on the fly.
         """
@@ -92,7 +92,7 @@ class _EncoderBase:
             self._request.responseHeaders.removeHeader(b"content-length")
         return self._compress(data)
 
-    def finish(self):
+    def finish(self) -> bytes:
         """
         Finish handling the request request, flushing any data from the buffer.
         """
@@ -100,7 +100,7 @@ class _EncoderBase:
 
 
 class _BrotliEncoder(_EncoderBase):
-    def __init__(self, request):
+    def __init__(self, request: Request) -> None:
         super().__init__(request)
         self._compressor = brotli.Compressor() if brotli is not None else None
 
@@ -118,20 +118,23 @@ class _BrotliEncoder(_EncoderBase):
 
 
 class _ZstdEncoder(_EncoderBase):
-    def __init__(self, request):
+    def __init__(self, request: Request) -> None:
         super().__init__(request)
-        self._compressor = (
+        self._compressor: Any | None = (
             zstandard.ZstdCompressor(write_content_size=True) if zstandard is not None else None
         )
-        self._compressobj = self._compressor.compressobj() if zstandard is not None else None
+        self._compressobj: Any | None = (
+            self._compressor.compressobj() if self._compressor is not None else None
+        )
 
     def _compress(self, data: bytes) -> bytes:
         if self._compressor is not None:
-            return self._compressobj.compress(data)
+            return self._compressobj.compress(data) if self._compressobj is not None else data
         return data
 
     def _flush(self) -> bytes:
         if self._compressor is not None:
+            assert self._compressobj is not None
             c_data = self._compressobj.flush()
             self._compressor = None
             self._compressobj = None
