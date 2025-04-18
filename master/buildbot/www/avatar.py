@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
 import hashlib
+from typing import TYPE_CHECKING
+from typing import Any
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 from urllib.parse import urlparse
@@ -28,13 +32,21 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util.config import ConfiguredMixin
+from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import resource
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 
 class AvatarBase(ConfiguredMixin):
     name = "noavatar"
 
-    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+    master: BuildMaster | None = None
+
+    def getUserAvatar(
+        self, email: bytes, username: bytes | None, size: int, defaultAvatarUrl: str
+    ) -> Any:
         raise NotImplementedError()
 
 
@@ -43,15 +55,17 @@ class AvatarGitHub(AvatarBase):
 
     DEFAULT_GITHUB_API_URL = 'https://api.github.com'
 
+    client: httpclientservice.HTTPSession | None = None
+
     def __init__(
         self,
-        github_api_endpoint=None,
-        token=None,
-        client_id=None,
-        client_secret=None,
-        debug=False,
-        verify=True,
-    ):
+        github_api_endpoint: str | None = None,
+        token: str | None = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        debug: bool = False,
+        verify: bool = True,
+    ) -> None:
         self.github_api_endpoint = github_api_endpoint
         if github_api_endpoint is None:
             self.github_api_endpoint = self.DEFAULT_GITHUB_API_URL
@@ -62,8 +76,9 @@ class AvatarGitHub(AvatarBase):
         if client_id:
             if token:
                 config.error('client_id and client_secret must not be provided when token is')
+            # We know client_id and client_secret are not None here because of the check above
             self.client_creds = base64.b64encode(
-                b':'.join(cred.encode('utf-8') for cred in (client_id, client_secret))
+                b':'.join(cred.encode('utf-8') for cred in (client_id, client_secret))  # type: ignore[union-attr]
             ).decode('ascii')
         self.debug = debug
         self.verify = verify
@@ -72,7 +87,9 @@ class AvatarGitHub(AvatarBase):
         self.client = None
 
     @defer.inlineCallbacks
-    def _get_http_client(self):
+    def _get_http_client(self) -> InlineCallbacksType[httpclientservice.HTTPSession]:
+        assert self.master is not None
+
         if self.client is not None:
             return self.client
 
@@ -95,7 +112,7 @@ class AvatarGitHub(AvatarBase):
         return self.client
 
     @defer.inlineCallbacks
-    def _get_avatar_by_username(self, username):
+    def _get_avatar_by_username(self, username: str) -> InlineCallbacksType[str | None]:
         headers = {
             'Accept': 'application/vnd.github.v3+json',
         }
@@ -114,7 +131,7 @@ class AvatarGitHub(AvatarBase):
         return None
 
     @defer.inlineCallbacks
-    def _search_avatar_by_user_email(self, email):
+    def _search_avatar_by_user_email(self, email: str) -> InlineCallbacksType[str | None]:
         headers = {
             'Accept': 'application/vnd.github.v3+json',
         }
@@ -134,7 +151,7 @@ class AvatarGitHub(AvatarBase):
         return None
 
     @defer.inlineCallbacks
-    def _search_avatar_by_commit(self, email):
+    def _search_avatar_by_commit(self, email: str) -> InlineCallbacksType[str | None]:
         headers = {
             'Accept': 'application/vnd.github.v3+json,application/vnd.github.cloak-preview',
         }
@@ -162,7 +179,7 @@ class AvatarGitHub(AvatarBase):
         log.msg(f'Failed searching user by commit: response code {res.code}')
         return None
 
-    def _add_size_to_url(self, avatar, size):
+    def _add_size_to_url(self, avatar: str, size: int) -> str:
         parts = urlparse(avatar)
         query = parts.query
         if query:
@@ -178,21 +195,20 @@ class AvatarGitHub(AvatarBase):
         ))
 
     @defer.inlineCallbacks
-    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
-        avatar = None
-        if username:
-            username = username.decode('utf-8')
-        if email:
-            email = email.decode('utf-8')
+    def getUserAvatar(
+        self, email: bytes, username: bytes | None, size: int, defaultAvatarUrl: str
+    ) -> InlineCallbacksType[Any | None]:
+        username_str = username.decode('utf-8') if username else None
+        email_str = email.decode('utf-8') if email else None
 
-        if username:
-            avatar = yield self._get_avatar_by_username(username)
-        if not avatar and email:
-            # Try searching a user with said mail
-            avatar = yield self._search_avatar_by_user_email(email)
-        if not avatar and email:
+        avatar: str | None = None
+        if username_str:
+            avatar = yield self._get_avatar_by_username(username_str)
+        if not avatar and email_str:
+            avatar = yield self._search_avatar_by_user_email(email_str)
+        if not avatar and email_str:
             # No luck, try to find a commit with this email
-            avatar = yield self._search_avatar_by_commit(email)
+            avatar = yield self._search_avatar_by_commit(email_str)
 
         if not avatar:
             # No luck
@@ -210,13 +226,15 @@ class AvatarGravatar(AvatarBase):
     # just use same default as github (retro)
     default = "retro"
 
-    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+    def getUserAvatar(
+        self, email: bytes, username: bytes | None, size: int, defaultAvatarUrl: str
+    ) -> Any:
         # construct the url
         emailBytes = unicode2bytes(email.lower())
         emailHash = hashlib.md5(emailBytes)
         gravatar_url = "//www.gravatar.com/avatar/"
         gravatar_url += emailHash.hexdigest() + "?"
-        if self.default != "url":
+        if self.default != "url":  # type: ignore[comparison-overlap]
             defaultAvatarUrl = self.default
         url = {'d': defaultAvatarUrl, 's': str(size)}
         sorted_url = sorted(url.items(), key=lambda x: x[0])
@@ -229,24 +247,31 @@ class AvatarResource(resource.Resource):
     needsReconfig = True
     defaultAvatarUrl = b"img/nobody.png"
 
-    def reconfigResource(self, new_config):
-        self.avatarMethods = new_config.www.get('avatar_methods', [])
+    avatarMethods: list[AvatarBase] = []
+    defaultAvatarFullUrl: bytes
+    cache: dict[tuple[bytes, bytes | None, int], Any]
+
+    def reconfigResource(self, new_config: Any) -> None:
+        avatar_methods = new_config.www.get('avatar_methods', [])
         self.defaultAvatarFullUrl = urljoin(
             unicode2bytes(new_config.buildbotURL), unicode2bytes(self.defaultAvatarUrl)
         )
         self.cache = {}
+
         # ensure the avatarMethods is a iterable
-        if isinstance(self.avatarMethods, AvatarBase):
-            self.avatarMethods = (self.avatarMethods,)
+        if isinstance(avatar_methods, AvatarBase):
+            self.avatarMethods = [avatar_methods]
+        else:
+            self.avatarMethods = avatar_methods
 
         for method in self.avatarMethods:
             method.master = self.master
 
-    def render_GET(self, request):
+    def render_GET(self, request: Any) -> Any:
         return self.asyncRenderHelper(request, self.renderAvatar)
 
     @defer.inlineCallbacks
-    def renderAvatar(self, request):
+    def renderAvatar(self, request: Any) -> InlineCallbacksType[Any]:
         email = request.args.get(b"email", [b""])[0]
         size = request.args.get(b"size", [32])[0]
         try:
