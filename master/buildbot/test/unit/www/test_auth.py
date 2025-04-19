@@ -118,7 +118,7 @@ class RemoteUserAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[Any]:  # type: ignore[override]
         self.setup_test_reactor()
-        self.auth = auth.RemoteUserAuth(header=b'HDR')
+        self.auth = auth.RemoteUserAuth(header='HDR')
         yield self.make_master()
         self.request = self.make_request(b'/')
 
@@ -248,7 +248,7 @@ class PreAuthenticatedLoginResource(
     def setUp(self) -> InlineCallbacksType[Any]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpAuthResource()
-        self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
+        self.rsrc = auth.PreAuthenticatedLoginResource(self.master, b'him')
 
     @defer.inlineCallbacks
     def test_render(self) -> InlineCallbacksType[None]:
