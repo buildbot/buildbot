@@ -197,7 +197,9 @@ class HTPasswdAuth(TwistedICredAuthBase):
 
 
 class UserPasswordAuth(TwistedICredAuthBase):
-    def __init__(self, users: dict[str, str] | list[tuple[str, str]], **kwargs: Any) -> None:
+    def __init__(
+        self, users: dict[str, str | bytes] | list[tuple[str, str | bytes]], **kwargs: Any
+    ) -> None:
         if isinstance(users, dict):
             users_dict = {user: unicode2bytes(pw) for user, pw in users.items()}
         elif isinstance(users, list):
