@@ -93,7 +93,7 @@ class AuthBase(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_updateUserInfo(self) -> InlineCallbacksType[None]:
         self.auth.userInfoProvider = auth.UserInfoProviderBase()
-        self.auth.userInfoProvider.getUserInfo = lambda un: {'info': un}  # type: ignore[assignment]
+        self.auth.userInfoProvider.getUserInfo = lambda username: defer.succeed({'info': username})  # type: ignore[method-assign]
         self.req.session.user_info = {'username': 'elvira'}
         yield self.auth.updateUserInfo(self.req)
         self.assertEqual(self.req.session.user_info, {'info': 'elvira', 'username': 'elvira'})
