@@ -132,10 +132,10 @@ class SVNExtractor(SourceStampExtractor):
     patchlevel = 0
     vcexe = "svn"
 
+    @defer.inlineCallbacks
     def getBaseRevision(self):
-        d = self.dovc(["status", "-u"])
-        d.addCallback(self.parseStatus)
-        return d
+        stdout = yield self.dovc(["status", "-u"])
+        self.parseStatus(stdout)
 
     def parseStatus(self, res):
         # svn shows the base revision for each file that has been modified or
@@ -173,15 +173,14 @@ class BzrExtractor(SourceStampExtractor):
     patchlevel = 0
     vcexe = "bzr"
 
+    @defer.inlineCallbacks
     def getBaseRevision(self):
-        d = self.dovc(["revision-info", "-rsubmit:"])
-        d.addCallback(self.get_revision_number)
-        return d
+        stdout = yield self.dovc(["revision-info", "-rsubmit:"])
+        self.get_revision_number(stdout)
 
     def get_revision_number(self, out):
         _, revid = out.split()
         self.baserev = 'revid:' + revid
-        return
 
     @defer.inlineCallbacks
     def getPatch(self):
@@ -240,10 +239,10 @@ class PerforceExtractor(SourceStampExtractor):
     patchlevel = 0
     vcexe = "p4"
 
+    @defer.inlineCallbacks
     def getBaseRevision(self):
-        d = self.dovc(["changes", "-m1", "..."])
-        d.addCallback(self.parseStatus)
-        return d
+        stdout = yield self.dovc(["changes", "-m1", "..."])
+        self.parseStatus(stdout)
 
     def parseStatus(self, res):
         #
@@ -290,13 +289,10 @@ class DarcsExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "darcs"
 
+    @defer.inlineCallbacks
     def getBaseRevision(self):
-        d = self.dovc(["changes", "--context"])
-        d.addCallback(self.parseStatus)
-        return d
-
-    def parseStatus(self, res):
-        self.baserev = res  # the whole context file
+        stdout = yield self.dovc(["changes", "--context"])
+        self.baserev = stdout  # the whole context file
 
     @defer.inlineCallbacks
     def getPatch(self):
@@ -309,17 +305,17 @@ class GitExtractor(SourceStampExtractor):
     vcexe = "git"
     config = None
 
+    @defer.inlineCallbacks
     def getBaseRevision(self):
         # If a branch is specified, parse out the rev it points to
         # and extract the local name.
         if self.branch:
-            d = self.dovc(["rev-parse", self.branch])
-            d.addCallback(self.override_baserev)
-            d.addCallback(self.extractLocalBranch)
-            return d
-        d = self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
-        d.addCallback(self.parseStatus)
-        return d
+            stdout = yield self.dovc(["rev-parse", self.branch])
+            self.override_baserev(stdout)
+            yield self.extractLocalBranch(None)
+            return
+        stdout = yield self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
+        yield self.parseStatus(stdout)
 
     # remove remote-prefix from self.branch (assumes format <prefix>/<branch>)
     # this uses "git remote" to retrieve all configured remote names
@@ -404,10 +400,10 @@ class MonotoneExtractor(SourceStampExtractor):
     patchlevel = 0
     vcexe = "mtn"
 
+    @defer.inlineCallbacks
     def getBaseRevision(self):
-        d = self.dovc(["automate", "get_base_revision_id"])
-        d.addCallback(self.parseStatus)
-        return d
+        stdout = yield self.dovc(["automate", "get_base_revision_id"])
+        self.parseStatus(stdout)
 
     def parseStatus(self, output):
         hash = output.strip()
