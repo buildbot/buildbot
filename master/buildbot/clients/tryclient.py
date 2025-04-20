@@ -350,6 +350,7 @@ class GitExtractor(SourceStampExtractor):
                 self.config[parts[0]] = parts[1]
         return self.config
 
+    @defer.inlineCallbacks
     def parseTrackingBranch(self, res):
         # If we're tracking a remote, consider that the base.
         remote = self.config.get(b"branch." + self.branch + b".remote")
@@ -360,9 +361,8 @@ class GitExtractor(SourceStampExtractor):
         else:
             baserev = b"master"
 
-        d = self.dovc(["rev-parse", baserev])
-        d.addCallback(self.override_baserev)
-        return d
+        stdout = yield self.dovc(["rev-parse", baserev])
+        self.override_baserev(stdout)
 
     def override_baserev(self, res):
         self.baserev = bytes2unicode(res).strip()
