@@ -77,19 +77,19 @@ class SourceStampExtractor:
         stdout, _, __ = yield utils.getProcessOutputAndValue(self.exe, cmd, env=env, path=self.treetop)
         return stdout
 
+    @defer.inlineCallbacks
     def get(self):
         """Return a Deferred that fires with a SourceStamp instance."""
-        d = self.getBaseRevision()
-        d.addCallback(self.getPatch)
-        d.addCallback(self.done)
-        return d
+        yield self.getBaseRevision()
+        yield self.getPatch()
+        return self.done()
 
     def readPatch(self, diff, patchlevel):
         if not diff:
             diff = None
         self.patch = (patchlevel, diff)
 
-    def done(self, res):
+    def done(self):
         if not self.repository:
             self.repository = self.treetop
         # TODO: figure out the branch and project too
@@ -112,7 +112,7 @@ class CVSExtractor(SourceStampExtractor):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         # the -q tells CVS to not announce each directory as it works
         if self.branch is not None:
             # 'cvs diff' won't take both -r and -D at the same time (it
@@ -164,7 +164,7 @@ class SVNExtractor(SourceStampExtractor):
         sys.exit(1)
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc(["diff", f"-r{self.baserev}"])
         self.readPatch(stdout, self.patchlevel)
 
@@ -184,7 +184,7 @@ class BzrExtractor(SourceStampExtractor):
         return
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc(["diff", f"-r{self.baserev}.."])
         self.readPatch(stdout, self.patchlevel)
 
@@ -231,7 +231,7 @@ class MercurialExtractor(SourceStampExtractor):
         self.baserev = m.group(0)
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc(["diff", "-r", self.baserev])
         self.readPatch(stdout, self.patchlevel)
 
@@ -281,7 +281,7 @@ class PerforceExtractor(SourceStampExtractor):
         self.patch = (patchlevel, unicode2bytes(mpatch))
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc(["diff"])
         self.readPatch(stdout, self.patchlevel)
 
@@ -299,7 +299,7 @@ class DarcsExtractor(SourceStampExtractor):
         self.baserev = res  # the whole context file
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc(["diff", "-u"])
         self.readPatch(stdout, self.patchlevel)
 
@@ -388,7 +388,7 @@ class GitExtractor(SourceStampExtractor):
         sys.exit(1)
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc([
             "diff",
             "--src-prefix=a/",
@@ -416,7 +416,7 @@ class MonotoneExtractor(SourceStampExtractor):
         self.baserev = hash
 
     @defer.inlineCallbacks
-    def getPatch(self, res):
+    def getPatch(self):
         stdout = yield self.dovc(["diff"])
         self.readPatch(stdout, self.patchlevel)
 
