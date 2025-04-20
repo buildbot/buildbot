@@ -225,6 +225,7 @@ class CompositeStepMixin:
         self.rc_log = yield self.addLog(logname)
         return self.rc_log
 
+    @defer.inlineCallbacks
     def runRemoteCommand(
         self, cmd, args, abandonOnFailure=True, evaluateCommand=lambda cmd: cmd.didFail()
     ):
@@ -232,15 +233,11 @@ class CompositeStepMixin:
         cmd = remotecommand.RemoteCommand(cmd, args)
         if hasattr(self, "rc_log"):
             cmd.useLog(self.rc_log, False)
-        d = self.runCommand(cmd)
-
-        def commandComplete(cmd):
-            if abandonOnFailure and cmd.didFail():
-                raise buildstep.BuildStepFailed()
-            return evaluateCommand(cmd)
-
-        d.addCallback(lambda res: commandComplete(cmd))
-        return d
+        yield self.runCommand(cmd)
+        if abandonOnFailure and cmd.didFail():
+            raise buildstep.BuildStepFailed()
+        res = yield evaluateCommand(cmd)
+        return res
 
     def runRmdir(self, dir, timeout=None, **kwargs):
         """remove a directory from the worker"""
