@@ -17,6 +17,7 @@
 # no current implementation utilizes it aside from scripts.runner.
 
 from twisted.cred import credentials
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 
@@ -34,20 +35,13 @@ class UsersClient:
         self.password = password
         self.port = int(port)
 
+    @defer.inlineCallbacks
     def send(self, op, bb_username, bb_password, ids, info):
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(self.username, self.password))
         reactor.connectTCP(self.host, self.port, f)
 
-        @d.addCallback
-        def call_commandline(remote):
-            d = remote.callRemote("commandline", op, bb_username, bb_password, ids, info)
-
-            @d.addCallback
-            def returnAndLose(res):
-                remote.broker.transport.loseConnection()
-                return res
-
-            return d
-
-        return d
+        remote = yield d
+        res = yield remote.callRemote("commandline", op, bb_username, bb_password, ids, info)
+        remote.broker.transport.loseConnection()
+        return res
