@@ -333,12 +333,12 @@ class GitExtractor(SourceStampExtractor):
                 self.branch = self.branch[len(r) + 1 :]
                 break
 
+    @defer.inlineCallbacks
     def readConfig(self):
         if self.config:
-            return defer.succeed(self.config)
-        d = self.dovc(["config", "-l"])
-        d.addCallback(self.parseConfig)
-        return d
+            return self.config
+        stdout = yield self.dovc(["config", "-l"])
+        return self.parseConfig(stdout)
 
     def parseConfig(self, res):
         self.config = {}
