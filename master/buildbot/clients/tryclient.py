@@ -312,19 +312,18 @@ class GitExtractor(SourceStampExtractor):
         if self.branch:
             stdout = yield self.dovc(["rev-parse", self.branch])
             self.override_baserev(stdout)
-            yield self.extractLocalBranch(None)
+            yield self.extractLocalBranch()
             return
         stdout = yield self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
         yield self.parseStatus(stdout)
 
     # remove remote-prefix from self.branch (assumes format <prefix>/<branch>)
     # this uses "git remote" to retrieve all configured remote names
-    def extractLocalBranch(self, res):
+    @defer.inlineCallbacks
+    def extractLocalBranch(self):
         if '/' in self.branch:
-            d = self.dovc(["remote"])
-            d.addCallback(self.fixBranch)
-            return d
-        return None
+            stdout = yield self.dovc(["remote"])
+            self.fixBranch(stdout)
 
     # strip remote prefix from self.branch
     def fixBranch(self, remotes):
