@@ -215,20 +215,19 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
 
     # Scheduler methods
 
+    @defer.inlineCallbacks
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
         # change filter.
         if self.branch is not Timed.NoBranch and change.branch != self.branch:
-            return defer.succeed(None)  # don't care about this change
+            return  # don't care about this change
 
-        d = self.master.db.schedulers.classifyChanges(self.serviceid, {change.number: important})
+        yield self.master.db.schedulers.classifyChanges(self.serviceid, {change.number: important})
 
         if self.createAbsoluteSourceStamps:
-            d.addCallback(lambda _: self.recordChange(change))
-
-        return d
+            yield self.recordChange(change)
 
     @defer.inlineCallbacks
     def startBuild(self):
