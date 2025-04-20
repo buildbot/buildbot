@@ -111,6 +111,7 @@ class CVSExtractor(SourceStampExtractor):
         self.baserev = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime(now()))
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
         # the -q tells CVS to not announce each directory as it works
         if self.branch is not None:
@@ -123,9 +124,8 @@ class CVSExtractor(SourceStampExtractor):
             output("Sorry, CVS 'try' builds don't work with branches")
             sys.exit(1)
         args = ['-q', 'diff', '-u', '-D', self.baserev]
-        d = self.dovc(args)
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(args)
+        self.readPatch(stdout, self.patchlevel)
 
 
 class SVNExtractor(SourceStampExtractor):
@@ -163,10 +163,10 @@ class SVNExtractor(SourceStampExtractor):
         output(b"Could not find 'Status against revision' in SVN output: " + res)
         sys.exit(1)
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc(["diff", f"-r{self.baserev}"])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(["diff", f"-r{self.baserev}"])
+        self.readPatch(stdout, self.patchlevel)
 
 
 class BzrExtractor(SourceStampExtractor):
@@ -183,10 +183,10 @@ class BzrExtractor(SourceStampExtractor):
         self.baserev = 'revid:' + revid
         return
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc(["diff", f"-r{self.baserev}.."])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(["diff", f"-r{self.baserev}.."])
+        self.readPatch(stdout, self.patchlevel)
 
 
 class MercurialExtractor(SourceStampExtractor):
@@ -230,10 +230,10 @@ class MercurialExtractor(SourceStampExtractor):
             raise RuntimeError(f"Revision {output!r} is not in the right format")
         self.baserev = m.group(0)
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc(["diff", "-r", self.baserev])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(["diff", "-r", self.baserev])
+        self.readPatch(stdout, self.patchlevel)
 
 
 class PerforceExtractor(SourceStampExtractor):
@@ -280,10 +280,10 @@ class PerforceExtractor(SourceStampExtractor):
             sys.exit(1)
         self.patch = (patchlevel, unicode2bytes(mpatch))
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc(["diff"])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(["diff"])
+        self.readPatch(stdout, self.patchlevel)
 
 
 class DarcsExtractor(SourceStampExtractor):
@@ -298,10 +298,10 @@ class DarcsExtractor(SourceStampExtractor):
     def parseStatus(self, res):
         self.baserev = res  # the whole context file
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc(["diff", "-u"])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(["diff", "-u"])
+        self.readPatch(stdout, self.patchlevel)
 
 
 class GitExtractor(SourceStampExtractor):
@@ -387,8 +387,9 @@ class GitExtractor(SourceStampExtractor):
         output(b"Could not find current GIT branch: " + res)
         sys.exit(1)
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc([
+        stdout = yield self.dovc([
             "diff",
             "--src-prefix=a/",
             "--dst-prefix=b/",
@@ -396,8 +397,7 @@ class GitExtractor(SourceStampExtractor):
             "--no-ext-diff",
             self.baserev,
         ])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        self.readPatch(stdout, self.patchlevel)
 
 
 class MonotoneExtractor(SourceStampExtractor):
@@ -415,10 +415,10 @@ class MonotoneExtractor(SourceStampExtractor):
             self.baserev = None
         self.baserev = hash
 
+    @defer.inlineCallbacks
     def getPatch(self, res):
-        d = self.dovc(["diff"])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
+        stdout = yield self.dovc(["diff"])
+        self.readPatch(stdout, self.patchlevel)
 
 
 def getSourceStamp(vctype, treetop, branch=None, repository=None):
