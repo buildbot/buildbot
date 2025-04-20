@@ -18,6 +18,7 @@ import json
 
 import sqlalchemy as sa
 import sqlalchemy.exc
+from twisted.internet import defer
 
 from buildbot.db import base
 
@@ -31,11 +32,11 @@ class ObjDict(dict):
 
 
 class StateConnectorComponent(base.DBConnectorComponent):
+    @defer.inlineCallbacks
     def getObjectId(self, name, class_name):
         # defer to a cached method that only takes one parameter (a tuple)
-        d = self._getObjectId((name, class_name))
-        d.addCallback(lambda objdict: objdict['id'])
-        return d
+        objdict = yield self._getObjectId((name, class_name))
+        return objdict['id']
 
     # returns a Deferred that returns a value
     @base.cached('objectids')
