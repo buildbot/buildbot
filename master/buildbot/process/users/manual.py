@@ -219,13 +219,9 @@ class CommandlineUserManager(service.AsyncMultiService):
         )
         yield super().startService()
 
+    @defer.inlineCallbacks
     def stopService(self):
-        d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)
+        yield defer.maybeDeferred(service.AsyncMultiService.stopService, self)
 
-        @d.addCallback
-        def unreg(_):
-            if self.registration:
-                return self.registration.unregister()
-            return None
-
-        return d
+        if self.registration:
+            yield self.registration.unregister()

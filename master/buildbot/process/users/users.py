@@ -85,6 +85,7 @@ def _extractContact(user: UserModel | None, contact_types, uid):
     return contact
 
 
+@defer.inlineCallbacks
 def getUserContact(master, contact_types, uid):
     """
     This is a simple getter function that returns a user attribute
@@ -103,9 +104,9 @@ def getUserContact(master, contact_types, uid):
 
     @returns: string of contact information or None via deferred
     """
-    d = master.db.users.getUser(uid)
-    d.addCallback(_extractContact, contact_types, uid)
-    return d
+    user = yield master.db.users.getUser(uid)
+    contact = _extractContact(user, contact_types, uid)
+    return contact
 
 
 def encrypt(passwd):

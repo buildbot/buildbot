@@ -802,15 +802,15 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
                 if key not in self.interpolations:
                     config.error(f"invalid Interpolate default type '{repl[0]}'")
 
+    @defer.inlineCallbacks
     def getRenderingFor(self, build):
         props = build.getProperties()
         if self.args:
-            d = props.render(self.args)
-            d.addCallback(lambda args: self.fmtstring % tuple(args))
+            args = yield props.render(self.args)
+            return self.fmtstring % tuple(args)
         else:
-            d = props.render(self.interpolations)
-            d.addCallback(lambda res: self.fmtstring % res)
-        return d
+            res = yield props.render(self.interpolations)
+            return self.fmtstring % res
 
 
 @implementer(IRenderable)
@@ -869,14 +869,10 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
         self.nestedlist = nestedlist
         self.types = types
 
+    @defer.inlineCallbacks
     def getRenderingFor(self, props):
-        d = props.render(self.nestedlist)
-
-        @d.addCallback
-        def flat(r):
-            return flatten(r, self.types)
-
-        return d
+        r = yield props.render(self.nestedlist)
+        return flatten(r, self.types)
 
     def __add__(self, b):
         if isinstance(b, FlattenList):
