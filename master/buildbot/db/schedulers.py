@@ -145,7 +145,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def findSchedulerId(self, name: str) -> int:
+    def findSchedulerId(self, name: str) -> defer.Deferred[int]:
         tbl = self.db.model.schedulers
         name_hash = hash_columns(name)
         return self.findSomethingId(
