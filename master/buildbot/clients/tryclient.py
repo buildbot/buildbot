@@ -74,7 +74,9 @@ class SourceStampExtractor:
 
         # 'bzr diff' sets rc=1 if there were any differences.
         # cvs does something similar, so don't bother requiring rc=0.
-        stdout, _, __ = yield utils.getProcessOutputAndValue(self.exe, cmd, env=env, path=self.treetop)
+        stdout, _, __ = yield utils.getProcessOutputAndValue(
+            self.exe, cmd, env=env, path=self.treetop
+        )
         return stdout
 
     @defer.inlineCallbacks
@@ -367,6 +369,7 @@ class GitExtractor(SourceStampExtractor):
     def override_baserev(self, res):
         self.baserev = bytes2unicode(res).strip()
 
+    @defer.inlineCallbacks
     def parseStatus(self, res):
         # The current branch is marked by '*' at the start of the
         # line, followed by the branch name and the SHA1.
@@ -376,9 +379,9 @@ class GitExtractor(SourceStampExtractor):
         if m:
             self.baserev = m.group(2)
             self.branch = m.group(1)
-            d = self.readConfig()
-            d.addCallback(self.parseTrackingBranch)
-            return d
+            config = yield self.readConfig()
+            yield self.parseTrackingBranch(config)
+            return
         output(b"Could not find current GIT branch: " + res)
         sys.exit(1)
 
@@ -637,9 +640,7 @@ class Try(pb.Referenceable):
             f"{self.builderNames}\n{ss.patch[1]}"
         )
         self.buildsetStatus = FakeBuildSetStatus()
-        d = defer.Deferred()
-        d.callback(True)
-        return d
+        return defer.succeed(True)
 
     def deliver_job_ssh(self):
         tryhost = self.getopt("host")
