@@ -65,19 +65,16 @@ class SourceStampExtractor:
             sys.exit(1)
         self.exe = exes[0]
 
+    @defer.inlineCallbacks
     def dovc(self, cmd):
         """This accepts the arguments of a command, without the actual
         command itself."""
         env = os.environ.copy()
         env['LC_ALL'] = "C"
-        d = utils.getProcessOutputAndValue(self.exe, cmd, env=env, path=self.treetop)
-        d.addCallback(self._didvc, cmd)
-        return d
 
-    def _didvc(self, res, cmd):
-        stdout, _, __ = res
         # 'bzr diff' sets rc=1 if there were any differences.
         # cvs does something similar, so don't bother requiring rc=0.
+        stdout, _, __ = yield utils.getProcessOutputAndValue(self.exe, cmd, env=env, path=self.treetop)
         return stdout
 
     def get(self):
