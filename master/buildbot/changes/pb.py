@@ -40,7 +40,8 @@ class ChangePerspective(NewCredPerspective):
     def detached(self, mind: Any) -> None:
         pass
 
-    def perspective_addChange(self, changedict: dict[str, Any]) -> defer.Deferred[None]:
+    @defer.inlineCallbacks
+    def perspective_addChange(self, changedict: dict[str, Any]) -> InlineCallbacksType[None]:
         log.msg("perspective_addChange called")
 
         if 'revlink' in changedict and not changedict['revlink']:
@@ -95,12 +96,7 @@ class ChangePerspective(NewCredPerspective):
             log.msg("Found links: " + repr(changedict['links']))
             del changedict['links']
 
-        d = self.master.data.updates.addChange(**changedict)
-
-        # set the return value to None, so we don't get users depending on
-        # getting a changeid
-        d.addCallback(lambda _: None)
-        return d
+        yield self.master.data.updates.addChange(**changedict)
 
 
 class PBChangeSource(base.ChangeSource):
