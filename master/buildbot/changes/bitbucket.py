@@ -239,32 +239,20 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
                         files=files,
                     )
 
-    def _getCurrentRev(self, pr_id: int) -> defer.Deferred:
+    @defer.inlineCallbacks
+    def _getCurrentRev(self, pr_id: int) -> InlineCallbacksType[str | None]:
         # Return a deferred datetime object for the given pull request number
         # or None.
-        d = self._getStateObjectId()
+        oid: int = yield self._getStateObjectId()
+        result = yield self.master.db.state.getState(oid, f'pull_request{pr_id}', None)
+        return result
 
-        @d.addCallback
-        def oid_callback(oid: int) -> defer.Deferred:
-            current = self.master.db.state.getState(oid, f'pull_request{pr_id}', None)
-
-            @current.addCallback
-            def result_callback(result: str | None) -> str | None:
-                return result
-
-            return current
-
-        return d
-
-    def _setCurrentRev(self, pr_id: int, rev: str) -> defer.Deferred:
+    @defer.inlineCallbacks
+    def _setCurrentRev(self, pr_id: int, rev: str) -> InlineCallbacksType[bool]:
         # Set the datetime entry for a specified pull request.
-        d = self._getStateObjectId()
-
-        @d.addCallback
-        def oid_callback(oid: int) -> defer.Deferred:
-            return self.master.db.state.setState(oid, f'pull_request{pr_id}', rev)
-
-        return d
+        oid: int = yield self._getStateObjectId()
+        success = yield self.master.db.state.setState(oid, f'pull_request{pr_id}', rev)
+        return success
 
     def _getStateObjectId(self) -> defer.Deferred:
         # Return a deferred for object id in state db.

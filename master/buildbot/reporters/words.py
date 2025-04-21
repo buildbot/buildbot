@@ -1249,8 +1249,9 @@ class StatusBot(service.AsyncMultiService):
         )
         return d
 
+    @defer.inlineCallbacks
     def getLastCompletedBuild(self, builderid):
-        d = self.master.data.get(
+        res = yield self.master.data.get(
             ('builds',),
             filters=[
                 resultspec.Filter('builderid', 'eq', [builderid]),
@@ -1260,13 +1261,9 @@ class StatusBot(service.AsyncMultiService):
             limit=1,
         )
 
-        @d.addCallback
-        def listAsOneOrNone(res):
-            if res:
-                return res[0]
-            return None
-
-        return d
+        if res:
+            return res[0]
+        return None
 
     def getCurrentBuildstep(self, build):
         d = self.master.data.get(

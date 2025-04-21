@@ -643,7 +643,7 @@ class TestSVNPoller(
         self.assertEqual(s.last_change, 33)
 
         s.last_change = 44
-        s.finished_ok(None)
+        s.finished_ok()
         with open(cachepath, encoding='utf-8') as f:
             self.assertEqual(f.read().strip(), '44')
 

@@ -472,16 +472,13 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         if wfb.worker:
             wfb.worker.releaseLocks()
 
+    @defer.inlineCallbacks
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        d = self.master.data.updates.unclaimBuildRequests(brids)
+        yield self.master.data.updates.unclaimBuildRequests(brids)
 
-        @d.addCallback
-        def notify(_):
-            pass  # XXX method does not exist
-            # self._msg_buildrequests_unclaimed(build.requests)
-
-        return d
+        # XXX method does not exist
+        # self._msg_buildrequests_unclaimed(build.requests)
 
     # Build Creation
 

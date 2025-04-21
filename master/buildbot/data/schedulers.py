@@ -119,22 +119,13 @@ class Scheduler(base.ResourceType):
         return self.master.db.schedulers.findSchedulerId(name)
 
     @base.updateMethod
-    def trySetSchedulerMaster(self, schedulerid: int, masterid: int) -> defer.Deferred:
-        d = self.master.db.schedulers.setSchedulerMaster(schedulerid, masterid)
-
-        # set is successful: deferred result is True
-        d.addCallback(lambda _: True)
-
-        @d.addErrback
-        def trapAlreadyClaimedError(why):
-            # the db layer throws an exception if the claim fails; we squash
-            # that error but let other exceptions continue upward
-            why.trap(SchedulerAlreadyClaimedError)
-
-            # set failed: deferred result is False
+    @defer.inlineCallbacks
+    def trySetSchedulerMaster(self, schedulerid: int, masterid: int) -> InlineCallbacksType[bool]:
+        try:
+            yield self.master.db.schedulers.setSchedulerMaster(schedulerid, masterid)
+        except SchedulerAlreadyClaimedError:
             return False
-
-        return d
+        return True
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):

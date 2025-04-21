@@ -144,18 +144,14 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             yield self.startConsumingEnableEvents()
         return None
 
+    @defer.inlineCallbacks
     def _enabledCallback(self, key, msg):
         if msg['enabled']:
             self.enabled = True
-            d = self.activate()
+            yield self.activate()
         else:
-            d = self.deactivate()
-
-            def fn(x):
-                self.enabled = False
-
-            d.addCallback(fn)
-        return d
+            yield self.deactivate()
+            self.enabled = False
 
     @defer.inlineCallbacks
     def deactivate(self):

@@ -20,6 +20,7 @@ import itertools
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
+from twisted.internet import defer
 
 from buildbot.util import service
 from buildbot.util import unicode2bytes
@@ -76,10 +77,12 @@ class DBConnectorComponent(service.AsyncService):
         return value
 
     # returns a Deferred that returns a value
+    @defer.inlineCallbacks
     def findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True):
-        d = self.findOrCreateSomethingId(tbl, whereclause, insert_values, _race_hook, autoCreate)
-        d.addCallback(lambda pair: pair[0])
-        return d
+        pair = yield self.findOrCreateSomethingId(
+            tbl, whereclause, insert_values, _race_hook, autoCreate
+        )
+        return pair[0]
 
     def findOrCreateSomethingId(
         self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True

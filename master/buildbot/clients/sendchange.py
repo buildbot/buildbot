@@ -12,8 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from twisted.cred import credentials
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 
@@ -28,6 +28,7 @@ class Sender:
         self.port = int(self.port)
         self.encoding = encoding
 
+    @defer.inlineCallbacks
     def send(
         self,
         branch,
@@ -79,10 +80,6 @@ class Sender:
         d = f.login(credentials.UsernamePassword(self.username, self.password))
         reactor.connectTCP(self.host, self.port, f)
 
-        @d.addCallback
-        def call_addChange(remote):
-            d = remote.callRemote('addChange', change)
-            d.addCallback(lambda res: remote.broker.transport.loseConnection())
-            return d
-
-        return d
+        remote = yield d
+        yield remote.callRemote('addChange', change)
+        yield remote.broker.transport.loseConnection()

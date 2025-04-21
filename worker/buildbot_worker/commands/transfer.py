@@ -345,6 +345,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         d.addCallbacks(_done, _err)
         return None
 
+    @defer.inlineCallbacks
     def _readBlock(self):
         """Read a block of data from the remote reader."""
 
@@ -363,9 +364,8 @@ class WorkerFileDownloadCommand(TransferCommand):
                 self.rc = 1
             return True
         else:
-            d = self.protocol_command.protocol_update_read_file(self.reader, length)
-            d.addCallback(self._writeData)
-            return d
+            data = yield self.protocol_command.protocol_update_read_file(self.reader, length)
+            return self._writeData(data)
 
     def _writeData(self, data):
         if self.debug:

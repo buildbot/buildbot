@@ -78,6 +78,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
             msg,
         )
 
+    @defer.inlineCallbacks
     def test_run(self):
         cmd = self.make_command(DummyCommand, {'stdout': 'yay'})
         self.assertState(True, False, False, False, "setup called by constructor")
@@ -89,17 +90,11 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         # allow the command to finish and check the result
         cmd.finishCommand()
 
-        def check(_):
-            self.assertState(True, False, True, False, "started and not running when done")
+        yield d
+        self.assertState(True, False, True, False, "started and not running when done")
+        self.assertUpdates([('stdout', 'yay')], "updates processed")
 
-        d.addCallback(check)
-
-        def checkresult(_):
-            self.assertUpdates([('stdout', 'yay')], "updates processed")
-
-        d.addCallback(checkresult)
-        return d
-
+    @defer.inlineCallbacks
     def test_run_failure(self):
         cmd = self.make_command(DummyCommand, {})
         self.assertState(True, False, False, False, "setup called by constructor")
@@ -111,16 +106,10 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         # fail the command with an exception, and check the result
         cmd.failCommand()
 
-        def check(_):
-            self.assertState(True, False, True, False, "started and not running when done")
-
-        d.addErrback(check)
-
-        def checkresult(_):
-            self.assertUpdates([], "updates processed")
-
-        d.addCallback(checkresult)
-        return d
+        with self.assertRaises(RuntimeError):
+            yield d
+        self.assertState(True, False, True, False, "started and not running when done")
+        self.assertUpdates([], "updates processed")
 
     def test_run_interrupt(self):
         cmd = self.make_command(DummyCommand, {})

@@ -210,7 +210,8 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
     def describe(self) -> str:
         return f"SVNPoller: watching {self.repourl}"
 
-    def poll(self) -> defer.Deferred[Any]:  # type: ignore[override]
+    @defer.inlineCallbacks
+    def poll(self) -> InlineCallbacksType[Any]:  # type: ignore[override]
         # Our return value is only used for unit testing.
 
         # we need to figure out the repository root, so we can figure out
@@ -247,23 +248,18 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         else:
             log.msg("SVNPoller: polling")
 
-        d = defer.succeed(None)
-        if not self._prefix:
-            d.addCallback(lambda _: self.get_prefix())
+        try:
+            if not self._prefix:
+                self._prefix = yield self.get_prefix()
 
-            @d.addCallback  # type: ignore[call-overload]
-            def set_prefix(prefix: str) -> None:
-                self._prefix = prefix
-
-        d.addCallback(self.get_logs)  # type: ignore[call-overload]
-        d.addCallback(self.parse_logs)  # type: ignore[call-overload]
-        d.addCallback(self.get_new_logentries)  # type: ignore[call-overload]
-        d.addCallback(self.create_changes)  # type: ignore[call-overload]
-        d.addCallback(self.submit_changes)  # type: ignore[call-overload]
-        d.addCallback(self.finished_ok)
-        # eat errors
-        d.addErrback(log.err, 'SVNPoller: Error in  while polling')
-        return d
+            output = yield self.get_logs()
+            logentries = yield self.parse_logs(output)
+            new_logentries = self.get_new_logentries(logentries)
+            changes = self.create_changes(new_logentries)
+            yield self.submit_changes(changes)
+            self.finished_ok()
+        except Exception as e:
+            log.err(e, 'SVNPoller: Error in  while polling')
 
     @defer.inlineCallbacks
     def get_prefix(self) -> InlineCallbacksType[str]:
@@ -314,7 +310,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         return prefix
 
     @defer.inlineCallbacks
-    def get_logs(self, _: Any) -> InlineCallbacksType[str]:
+    def get_logs(self) -> InlineCallbacksType[str]:
         command = [self.svnbin, "log", "--xml", "--verbose", "--non-interactive"]
         if self.svnuser:
             command.extend([f"--username={self.svnuser}"])
@@ -509,10 +505,9 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         for chdict in changes:
             yield self.master.data.updates.addChange(src='svn', **chdict)
 
-    def finished_ok(self, res: Any) -> Any:
+    def finished_ok(self) -> None:
         if self.cachepath:
             with open(self.cachepath, "w", encoding='utf-8') as f:
                 f.write(str(self.last_change))
 
-        log.msg(f"SVNPoller: finished polling {res}")
-        return res
+        log.msg("SVNPoller: finished polling")

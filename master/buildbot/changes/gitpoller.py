@@ -493,30 +493,26 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         d = self._dovccmd('log', args, path=self.workdir)
         return d  # type: ignore[return-value]
 
-    def _get_commit_timestamp(self, rev: str) -> defer.Deferred[int | None]:
+    @defer.inlineCallbacks
+    def _get_commit_timestamp(self, rev: str) -> InlineCallbacksType[int | None]:
         # unix timestamp
         args = ['--no-walk', r'--format=%ct', rev, '--']
-        d = self._dovccmd('log', args, path=self.workdir)
+        git_output = yield self._dovccmd('log', args, path=self.workdir)
+        if self.usetimestamps:
+            try:
+                stamp = int(git_output)
+            except Exception as e:
+                log.msg(
+                    f'gitpoller: caught exception converting output \'{git_output}\' to timestamp'
+                )
+                raise e
+            return stamp
+        return None
 
-        @d.addCallback
-        def process(git_output: str) -> int | None:
-            if self.usetimestamps:
-                try:
-                    stamp = int(git_output)
-                except Exception as e:
-                    log.msg(
-                        f'gitpoller: caught exception converting output \'{git_output}\' to '
-                        'timestamp'
-                    )
-                    raise e
-                return stamp
-            return None
-
-        return d  # type: ignore[return-value]
-
-    def _get_commit_files(self, rev: str) -> defer.Deferred[list[str]]:
+    @defer.inlineCallbacks
+    def _get_commit_files(self, rev: str) -> InlineCallbacksType[list[str]]:
         args = ['--name-only', '--no-walk', r'--format=%n', '-m', '--first-parent', rev, '--']
-        d = self._dovccmd('log', args, path=self.workdir)
+        git_output = yield self._dovccmd('log', args, path=self.workdir)
 
         def decode_file(file: str) -> str:
             # git use octal char sequences in quotes when non ASCII
@@ -527,26 +523,16 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
                 )
             return bytes2unicode(file, encoding=self.encoding)
 
-        @d.addCallback
-        def process(git_output: str) -> list[str]:
-            fileList = [
-                decode_file(file) for file in [s for s in git_output.splitlines() if len(s)]
-            ]
-            return fileList
+        fileList = [decode_file(file) for file in [s for s in git_output.splitlines() if len(s)]]
+        return fileList
 
-        return d  # type: ignore[return-value]
-
-    def _get_commit_author(self, rev: str) -> defer.Deferred[str]:
+    @defer.inlineCallbacks
+    def _get_commit_author(self, rev: str) -> InlineCallbacksType[str]:
         args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
-        d = self._dovccmd('log', args, path=self.workdir)
-
-        @d.addCallback
-        def process(git_output: str) -> str:
-            if not git_output:
-                raise OSError('could not get commit author for rev')
-            return git_output
-
-        return d
+        git_output = yield self._dovccmd('log', args, path=self.workdir)
+        if not git_output:
+            raise OSError('could not get commit author for rev')
+        return git_output
 
     @defer.inlineCallbacks
     def _get_commit_committer(self, rev: str) -> InlineCallbacksType[str]:
