@@ -22,6 +22,7 @@ from twisted.spread import pb
 
 from buildbot.pbutil import decode
 from buildbot.util import deferwaiter
+from buildbot.worker import AbstractWorker
 from buildbot.worker.protocols import base
 
 
@@ -147,6 +148,12 @@ class Connection(base.Connection, pb.Avatar):
     # keepalive handling
 
     def _do_keepalive(self):
+        if not self.worker or (
+            isinstance(self.worker, AbstractWorker) and self.worker.isConnected() != self
+        ):
+            self.loseConnection()
+            self.notifyDisconnected()
+            return defer.fail(None)
         return self.mind.callRemote('print', message="keepalive")
 
     def stopKeepaliveTimer(self):
