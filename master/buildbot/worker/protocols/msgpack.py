@@ -201,13 +201,13 @@ class Connection(base.Connection):
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
+        assert self.path_cls is not None
+
         yield self._set_worker_settings()
 
-        basedir = self.info['basedir']
+        basedir = self.path_cls(self.info['basedir'])
         builder_names = [name for name, _ in builders]
-        self.builder_basedirs = {
-            name: self.path_module.join(basedir, builddir) for name, builddir in builders
-        }
+        self.builder_basedirs = {name: basedir.joinpath(builddir) for name, builddir in builders}
 
         wanted_dirs = {builddir for _, builddir in builders}
         wanted_dirs.add('info')
@@ -222,7 +222,7 @@ class Connection(base.Connection):
             'op': 'start_command',
             'command_id': command_id,
             'command_name': 'listdir',
-            'args': {'path': basedir},
+            'args': {'path': str(basedir)},
         })
 
         # wait until command is over to get the update request message with args['files']
@@ -240,7 +240,7 @@ class Connection(base.Connection):
                     # dictionary with key 'stat'. 'stat' value is a tuple of 10 elements, where
                     # first element is File mode. It goes to S_ISDIR(mode) to check if path is
                     # a directory so that files are not deleted
-                    path = self.path_module.join(basedir, dir)
+                    path = str(basedir.joinpath(dir))
                     command, command_id = self.create_remote_command(
                         self.worker.workername,
                         ['stat'],
@@ -274,9 +274,7 @@ class Connection(base.Connection):
             })
             yield command.wait_until_complete()
 
-        paths_to_mkdir = [
-            self.path_module.join(basedir, dir) for dir in sorted(list(dirs_to_mkdir))
-        ]
+        paths_to_mkdir = [str(basedir.joinpath(dir)) for dir in sorted(list(dirs_to_mkdir))]
         if paths_to_mkdir:
             # make wanted builder directories which do not exist in worker yet
             command, command_id = self.create_remote_command(
@@ -297,84 +295,80 @@ class Connection(base.Connection):
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         if commandName == "mkdir":
             if isinstance(args['dir'], list):
-                args['paths'] = [
-                    self.path_module.join(self.builder_basedirs[builderName], dir)
-                    for dir in args['dir']
-                ]
+                builder_basedir = self._get_builder_basedir(builderName)
+                args['paths'] = [str(builder_basedir.joinpath(dir)) for dir in args['dir']]
             else:
-                args['paths'] = [
-                    self.path_module.join(self.builder_basedirs[builderName], args['dir'])
-                ]
+                builder_basedir = self._get_builder_basedir(builderName)
+                args['paths'] = [str(builder_basedir.joinpath(args['dir']))]
             del args['dir']
 
         if commandName == "rmdir":
+            builder_basedir = self._get_builder_basedir(builderName)
             if isinstance(args['dir'], list):
-                args['paths'] = [
-                    self.path_module.join(self.builder_basedirs[builderName], dir)
-                    for dir in args['dir']
-                ]
+                args['paths'] = [str(builder_basedir.joinpath(dir)) for dir in args['dir']]
             else:
-                args['paths'] = [
-                    self.path_module.join(self.builder_basedirs[builderName], args['dir'])
-                ]
+                args['paths'] = [str(builder_basedir.joinpath(args['dir']))]
             del args['dir']
 
         if commandName == "cpdir":
-            args['from_path'] = self.path_module.join(
-                self.builder_basedirs[builderName], args['fromdir']
-            )
-            args['to_path'] = self.path_module.join(
-                self.builder_basedirs[builderName], args['todir']
-            )
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['from_path'] = str(builder_basedir.joinpath(args['fromdir']))
+            args['to_path'] = str(builder_basedir.joinpath(args['todir']))
             del args['fromdir']
             del args['todir']
 
         if commandName == "stat":
-            args['path'] = self.path_module.join(
-                self.builder_basedirs[builderName], args.get('workdir', ''), args['file']
-            )
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(builder_basedir.joinpath(args.get('workdir', ''), args['file']))
             del args['file']
 
         if commandName == "glob":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['path'])
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(builder_basedir.joinpath(args['path']))
 
         if commandName == "listdir":
-            args['path'] = self.path_module.join(self.builder_basedirs[builderName], args['dir'])
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(builder_basedir.joinpath(args['dir']))
             del args['dir']
 
         if commandName == "rmfile":
-            args['path'] = self.path_module.join(
-                self.builder_basedirs[builderName],
-                self.path_expanduser(args['path'], self.info['environ']),
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(
+                builder_basedir.joinpath(self.path_expanduser(args['path'], self.info['environ']))
             )
 
         if commandName == "shell":
-            args['workdir'] = self.path_module.join(
-                self.builder_basedirs[builderName], args['workdir']
-            )
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['workdir'] = str(builder_basedir.joinpath(args['workdir']))
 
         if commandName == "uploadFile":
             commandName = "upload_file"
-            args['path'] = self.path_module.join(
-                self.builder_basedirs[builderName],
-                args['workdir'],
-                self.path_expanduser(args['workersrc'], self.info['environ']),
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(
+                builder_basedir.joinpath(
+                    args['workdir'],
+                    self.path_expanduser(args['workersrc'], self.info['environ']),
+                )
             )
 
         if commandName == "uploadDirectory":
             commandName = "upload_directory"
-            args['path'] = self.path_module.join(
-                self.builder_basedirs[builderName],
-                args['workdir'],
-                self.path_expanduser(args['workersrc'], self.info['environ']),
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(
+                builder_basedir.joinpath(
+                    args['workdir'],
+                    self.path_expanduser(args['workersrc'], self.info['environ']),
+                )
             )
 
         if commandName == "downloadFile":
             commandName = "download_file"
-            args['path'] = self.path_module.join(
-                self.builder_basedirs[builderName],
-                args['workdir'],
-                self.path_expanduser(args['workerdest'], self.info['environ']),
+            builder_basedir = self._get_builder_basedir(builderName)
+            args['path'] = str(
+                builder_basedir.joinpath(
+                    args['workdir'],
+                    self.path_expanduser(args['workerdest'], self.info['environ']),
+                )
             )
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
@@ -431,3 +425,7 @@ class Connection(base.Connection):
     def get_peer(self):
         p = self.protocol.transport.getPeer()
         return f"{p.host}:{p.port}"
+
+    def _get_builder_basedir(self, builder_name: str) -> PurePath:
+        assert self.path_cls is not None
+        return self.path_cls(self.builder_basedirs[builder_name])
