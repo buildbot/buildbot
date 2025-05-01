@@ -1,0 +1,2 @@
+``Build`` now has a mutable ``env`` attribute, deep copied from the ``Builder``'s ``BuilderConfig.env``.
+This allow steps to mutate their current build's env if needed.

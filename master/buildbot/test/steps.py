@@ -764,7 +764,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
         build.getWorkerCommandVersion = getWorkerVersion
         build.workerEnvironment = worker_env.copy()
-        build.builder.config.env = worker_env.copy()
+        build.env = worker_env.copy()
 
         return build
 

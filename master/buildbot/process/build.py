@@ -15,9 +15,11 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from functools import reduce
 from pathlib import PurePath
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import cast
 
 from twisted.internet import defer
@@ -134,6 +136,10 @@ class Build(properties.PropertiesMixin):
 
         # tracks the config version for locks
         self.config_version = builder.config_version
+
+        self.env: dict[str, Any] = {}
+        if builder.config is not None:
+            self.env.update(deepcopy(builder.config.env))
 
     def getProperties(self):
         return self.properties
