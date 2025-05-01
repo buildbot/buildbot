@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 import stat
+from pathlib import PurePath
+from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 from typing import Any
 
 from twisted.internet import defer
@@ -112,6 +115,7 @@ class Connection(base.Connection):
         self._keepalive_action_handler = deferwaiter.RepeatedActionHandler(
             master.reactor, self._keepalive_waiter, self.keepalive_interval, self._do_keepalive
         )
+        self.path_cls: type[PurePath] | None = None
 
     # methods called by the BuildbotWebSocketServerProtocol
 
@@ -165,10 +169,12 @@ class Connection(base.Connection):
         if worker_system == "nt":
             self.path_module = namedModule("ntpath")
             self.path_expanduser = path_expand_user.nt_expanduser
+            self.path_cls = PureWindowsPath
         else:
             # most everything accepts / as separator, so posix should be a reasonable fallback
             self.path_module = namedModule("posixpath")
             self.path_expanduser = path_expand_user.posix_expanduser
+            self.path_cls = PurePosixPath
         return self.info
 
     def _set_worker_settings(self):

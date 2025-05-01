@@ -16,6 +16,7 @@
 
 import platform
 import textwrap
+from pathlib import PureWindowsPath
 
 from twisted.internet import error
 from twisted.python import reflect
@@ -51,6 +52,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
         if _is_windows:
             workspace_dir = r'C:\Users\username\Workspace'
             self.build.path_module = reflect.namedModule("ntpath")
+            self.build.path_cls = PureWindowsPath
         self.build.setProperty('builddir', workspace_dir, 'P4')
 
     def test_no_empty_step_config(self):

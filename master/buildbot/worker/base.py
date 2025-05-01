@@ -16,6 +16,9 @@
 from __future__ import annotations
 
 import time
+from pathlib import PurePath
+from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 
 from twisted.internet import defer
 from twisted.internet.base import DelayedCall
@@ -58,6 +61,8 @@ class AbstractWorker(service.BuildbotService):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._deferwaiter = deferwaiter.DeferWaiter()
+
+        self.PathCls: type[PurePath] | None = None
 
     def checkConfig(
         self,
@@ -469,10 +474,15 @@ class AbstractWorker(service.BuildbotService):
 
         if self.worker_system == "nt":
             self.path_module = namedModule("ntpath")
+            # NOTE: See PurePath.__new__ which uses
+            # `PureWindowsPath if os.name == 'nt' else PurePosixPath`
+            self.path_cls = PureWindowsPath
         else:
             # most everything accepts / as separator, so posix should be a
             # reasonable fallback
             self.path_module = namedModule("posixpath")
+            self.path_cls = PurePosixPath
+
         log.msg("bot attached")
         self.messageReceivedFromWorker()
         self.stopMissingTimer()

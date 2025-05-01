@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import PurePosixPath
 
 from twisted.internet import defer
 from twisted.python.filepath import FilePath
@@ -53,6 +54,7 @@ class FakeWorker:
     def attached(self, conn):
         self.worker_system = 'posix'
         self.path_module = os.path
+        self.path_cls = PurePosixPath
         self.workerid = 1234
         self.worker_basedir = '/wrk'
         return defer.succeed(None)

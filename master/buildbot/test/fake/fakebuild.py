@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import posixpath
+from pathlib import PurePosixPath
 from unittest import mock
 
 from buildbot import config
@@ -42,6 +43,7 @@ class FakeBuild(properties.PropertiesMixin):
             name='bldr', workernames=['a'], factory=factory.BuildFactory()
         )
         self.path_module = posixpath
+        self.path_cls = PurePosixPath
         self.buildid = 92
         self.number = 13
         self.workdir = 'build'
