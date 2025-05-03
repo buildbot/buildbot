@@ -388,7 +388,7 @@ class Build(properties.PropertiesMixin):
         # locks.
         # we cannot use a real step as we don't have a worker yet.
         self._preparation_step = cast(
-            buildstep.BuildStep,
+            "buildstep.BuildStep",
             buildstep.create_step_from_step_or_factory(
                 buildstep.BuildStep(name="worker_preparation")
             ),
@@ -410,7 +410,7 @@ class Build(properties.PropertiesMixin):
             # it may happen that more builds are cleared to start than there are free locks. In
             # such case some of the builds will be blocked and wait for the locks.
             self._locks_acquire_step = cast(
-                buildstep.BuildStep,
+                "buildstep.BuildStep",
                 buildstep.create_step_from_step_or_factory(
                     buildstep.BuildStep(name="locks_acquire")
                 ),

@@ -27,16 +27,17 @@ from buildbot.changes.base import ReconfigurablePollingChangeSource
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
-from buildbot.www.service import BuildbotSite
 
 if TYPE_CHECKING:
     from twisted.internet import defer
     from twisted.web.server import Request
 
+    from buildbot.www.service import BuildbotSite
+
 
 class PollingHandler(BaseHookHandler):
     def getChanges(self, req: Request) -> defer.Deferred[tuple[list[dict[str, Any]], str | None]]:
-        site = cast(BuildbotSite, req.site)
+        site = cast("BuildbotSite", req.site)
         assert site.master is not None
         change_svc = site.master.change_svc
         assert req.args is not None

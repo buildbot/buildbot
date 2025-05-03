@@ -63,7 +63,7 @@ class BaseHookHandler:
                 value = value[0]  # type: ignore[index]
             return bytes2unicode(value)
 
-        args = cast(dict[bytes, list[bytes]], request.args)
+        args = cast('dict[bytes, list[bytes]]', request.args)
         # first, convert files, links and properties
         files = None
         if args.get(b'files'):

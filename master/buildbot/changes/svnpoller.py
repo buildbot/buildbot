@@ -472,7 +472,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
             for branch, info in branches.items():
                 action = info['action']  # type: ignore[assignment]
-                files = cast(list[bytes], info['files'])  # type: ignore[index]
+                files = cast("list[bytes]", info['files'])  # type: ignore[index]
 
                 number_of_directories_changed = info['number_of_directories']  # type: ignore[index]
                 number_of_files_changed = len(files)

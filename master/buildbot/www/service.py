@@ -277,7 +277,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         else:
             from twisted.web.pages import notFound
 
-            plugin_root = cast(resource.Resource, notFound())
+            plugin_root = cast("resource.Resource", notFound())
         root.putChild(b"plugins", plugin_root)
 
         known_plugins = set(new_config.www.get('plugins', {})) | set([self.base_plugin_name])
@@ -336,7 +336,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         change_hook_auth: list | None = new_config.www.get('change_hook_auth')
         if change_hook_auth is not None:
             resource_obj = self.setupProtectedResource(resource_obj, change_hook_auth)
-        root.putChild(b"change_hook", cast(resource.Resource, resource_obj))
+        root.putChild(b"change_hook", cast("resource.Resource", resource_obj))
 
         self.root = root
 

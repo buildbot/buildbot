@@ -45,7 +45,7 @@ def fnmatchStrMatcher(value: str, match: str) -> bool:
 
 
 def reStrMatcher(value: str, match: str) -> bool:
-    return cast(bool, re.match(match, value))
+    return cast("bool", re.match(match, value))
 
 
 @implementer(IConfigured)
