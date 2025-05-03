@@ -19,7 +19,6 @@ Support for running 'shell commands'
 
 from __future__ import annotations
 
-import datetime
 import os
 import pprint
 import re
@@ -31,6 +30,7 @@ import sys
 import traceback
 from codecs import getincrementaldecoder
 from tempfile import NamedTemporaryFile
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -46,6 +46,9 @@ from buildbot_worker.compat import bytes2NativeString
 from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.exceptions import AbandonChain
+
+if TYPE_CHECKING:
+    import datetime
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process

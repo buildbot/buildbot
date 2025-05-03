@@ -15,14 +15,17 @@
 
 from __future__ import annotations
 
-import datetime
 import json
+from typing import TYPE_CHECKING
 
 from buildbot.data import connector
 from buildbot.data import resultspec
 from buildbot.test.util import validation
 from buildbot.util import service
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    import datetime
 
 
 class FakeUpdates(service.AsyncService):

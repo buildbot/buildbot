@@ -22,8 +22,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
@@ -35,6 +34,10 @@ from twisted.internet.task import Clock
 from twisted.python import log
 from twisted.python.failure import Failure
 from zope.interface import implementer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from collections.abc import Sequence
 
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295

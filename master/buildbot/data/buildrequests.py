@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -28,6 +27,7 @@ from buildbot.db.buildrequests import NotClaimedError
 from buildbot.process.results import RETRY
 
 if TYPE_CHECKING:
+    import datetime
     from typing import Sequence
 
     from buildbot.data.resultspec import ResultSpec
