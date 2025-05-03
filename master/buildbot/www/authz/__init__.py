@@ -3,4 +3,4 @@ from buildbot.www.authz.authz import Forbidden
 from buildbot.www.authz.authz import fnmatchStrMatcher
 from buildbot.www.authz.authz import reStrMatcher
 
-__all__ = ["Authz", "fnmatchStrMatcher", "reStrMatcher", "Forbidden"]
+__all__ = ["Authz", "Forbidden", "fnmatchStrMatcher", "reStrMatcher"]

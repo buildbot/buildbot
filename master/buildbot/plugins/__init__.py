@@ -26,14 +26,14 @@ from buildbot.plugins.db import get_plugins
 
 __all__ = [
     'changes',
+    'reporters',
     'schedulers',
+    'secrets',
+    'statistics',
     'steps',
     'util',
-    'reporters',
-    'statistics',
-    'worker',
-    'secrets',
     'webhooks',
+    'worker',
 ]
 
 
