@@ -68,12 +68,10 @@ def get_www_frontend_config_dict(master: BuildMaster, www_config: dict[str, Any]
     config['multiMaster'] = master.config.multiMaster
 
     # delete things that may contain secrets
-    if 'change_hook_dialects' in config:
-        del config['change_hook_dialects']
+    config.pop('change_hook_dialects', None)
 
     # delete things that may contain information about the serving host
-    if 'custom_templates_dir' in config:
-        del config['custom_templates_dir']
+    config.pop('custom_templates_dir', None)
 
     return config
 
