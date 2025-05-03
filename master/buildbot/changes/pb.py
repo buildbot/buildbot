@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
 from typing import Sequence
@@ -24,9 +25,11 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
-from buildbot.config.master import MasterConfig
 from buildbot.pbutil import NewCredPerspective
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.config.master import MasterConfig
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class ChangePerspective(NewCredPerspective):

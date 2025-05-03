@@ -32,11 +32,11 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util.config import ConfiguredMixin
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import resource
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class AvatarBase(ConfiguredMixin):

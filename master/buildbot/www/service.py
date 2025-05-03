@@ -45,7 +45,6 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
@@ -57,6 +56,7 @@ from buildbot.www import ws
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BuildbotSession(server.Session):

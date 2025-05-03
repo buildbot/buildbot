@@ -28,6 +28,7 @@ from email.iterators import body_line_iterator
 from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
 from typing import Sequence
@@ -39,7 +40,9 @@ from zope.interface import implementer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @implementer(IChangeSource)

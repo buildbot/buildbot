@@ -36,11 +36,11 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util.pullrequest import PullRequestMixin
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www.hooks.base import BaseHookHandler
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'

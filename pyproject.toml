@@ -36,7 +36,6 @@ target-version = "py38"
         "RUF012", # mutable-class-default
         "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
 
-        "TC001", # typing-only-first-party-import
         "TC002", # typing-only-third-party-import
         "TC003", # typing-only-standard-library-import
         "TC006", # runtime-cast-value

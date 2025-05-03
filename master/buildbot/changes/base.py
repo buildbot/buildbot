@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
@@ -26,7 +27,9 @@ from buildbot import config
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @implementer(IChangeSource)

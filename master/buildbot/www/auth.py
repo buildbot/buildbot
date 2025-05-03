@@ -19,6 +19,7 @@ from __future__ import annotations
 import re
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import cast
@@ -45,8 +46,10 @@ from zope.interface import implementer
 from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import resource
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class AuthRootResource(resource.Resource):

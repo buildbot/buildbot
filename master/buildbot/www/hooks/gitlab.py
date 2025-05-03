@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 
 from dateutil.parser import parse as dateparse
@@ -27,8 +28,10 @@ from twisted.web.server import Request
 
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www.hooks.base import BaseHookHandler
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 _HEADER_EVENT = b'X-Gitlab-Event'
 _HEADER_GITLAB_TOKEN = b'X-Gitlab-Token'

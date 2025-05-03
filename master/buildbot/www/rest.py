@@ -40,7 +40,6 @@ from buildbot.data.resultspec import ResultSpec
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
 from buildbot.www.encoding import BrotliEncoderFactory
@@ -54,6 +53,7 @@ if TYPE_CHECKING:
     from buildbot.data.base import Endpoint
     from buildbot.data.resultspec import ResultSpec
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BadJsonRpc2(Exception):

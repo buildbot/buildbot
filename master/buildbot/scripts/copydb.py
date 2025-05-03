@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import queue
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 
@@ -32,7 +33,9 @@ from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
 from buildbot.util import misc
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @in_reactor

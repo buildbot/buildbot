@@ -16,13 +16,16 @@
 from __future__ import annotations
 
 import inspect
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.data.exceptions import InvalidPathError
 from buildbot.util import bytes2unicode
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class EndpointMatcherBase:

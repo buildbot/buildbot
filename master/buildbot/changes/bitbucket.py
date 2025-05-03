@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -33,7 +34,9 @@ from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
 from buildbot.util import httpclientservice
 from buildbot.util.pullrequest import PullRequestMixin
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullRequestMixin):

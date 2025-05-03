@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import time
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -30,7 +31,9 @@ from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
 from buildbot.util import runprocess
 from buildbot.util.state import StateMixin
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):

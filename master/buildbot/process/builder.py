@@ -26,7 +26,6 @@ from twisted.python import log
 
 from buildbot import interfaces
 from buildbot.data import resultspec
-from buildbot.data.workers import Worker
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
@@ -42,6 +41,7 @@ from buildbot.util.render_description import render_description
 if TYPE_CHECKING:
     from buildbot.config.builder import BuilderConfig
     from buildbot.config.master import MasterConfig
+    from buildbot.data.workers import Worker
     from buildbot.master import BuildMaster
 
 

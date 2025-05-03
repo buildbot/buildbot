@@ -22,6 +22,7 @@ from __future__ import annotations
 import datetime
 import os
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -40,7 +41,9 @@ from buildbot import util
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 debug_logging = False
 
