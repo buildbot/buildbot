@@ -26,7 +26,6 @@ from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.internet.base import ReactorBase
 from twisted.python import deprecate
 from twisted.python import log
 from twisted.python import versions
@@ -72,6 +71,7 @@ from buildbot.util.test_result_submitter import TestResultSubmitter
 if TYPE_CHECKING:
     from typing import TypeVar
 
+    from twisted.internet.base import ReactorBase
     from typing_extensions import Self
 
     from buildbot.interfaces import IBuildStep

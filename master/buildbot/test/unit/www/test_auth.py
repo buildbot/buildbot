@@ -25,7 +25,6 @@ from twisted.cred.credentials import UsernamePassword
 from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
 from twisted.trial import unittest
-from twisted.web import server
 from twisted.web.error import Error
 from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
@@ -36,6 +35,8 @@ from buildbot.test.util import www
 from buildbot.www import auth
 
 if TYPE_CHECKING:
+    from twisted.web import server
+
     from buildbot.test.fake.fakemaster import FakeMaster
     from buildbot.util.twisted import InlineCallbacksType
 

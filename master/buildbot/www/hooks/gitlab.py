@@ -24,13 +24,14 @@ from typing import Any
 from dateutil.parser import parse as dateparse
 from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
-from twisted.web.server import Request
 
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
 if TYPE_CHECKING:
+    from twisted.web.server import Request
+
     from buildbot.util.twisted import InlineCallbacksType
 
 _HEADER_EVENT = b'X-Gitlab-Event'

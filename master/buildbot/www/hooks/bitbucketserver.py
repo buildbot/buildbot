@@ -22,12 +22,13 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.python import log
-from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 from buildbot.util.pullrequest import PullRequestMixin
 
 if TYPE_CHECKING:
+    from twisted.web.server import Request
+
     from buildbot.master import BuildMaster
 
 GIT_BRANCH_REF = "refs/heads/{}"

@@ -17,15 +17,18 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 from typing import Any
 
 from dateutil.parser import parse as dateparse
 from twisted.internet import defer
 from twisted.python import log
-from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
+
+if TYPE_CHECKING:
+    from twisted.web.server import Request
 
 _HEADER_EVENT = b'X-Event-Key'
 

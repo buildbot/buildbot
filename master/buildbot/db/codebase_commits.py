@@ -21,13 +21,13 @@ from typing import Any
 from typing import Awaitable
 from typing import Callable
 
-import sqlalchemy as sa
-from twisted.internet import defer
-
 from buildbot.db import base
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    import sqlalchemy as sa
+    from twisted.internet import defer
+
     from buildbot.data.resultspec import ResultSpec
 
 

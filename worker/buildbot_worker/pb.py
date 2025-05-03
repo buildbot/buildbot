@@ -26,7 +26,6 @@ from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
-from twisted.internet.base import DelayedCall
 from twisted.internet.endpoints import clientFromString
 from twisted.python import log
 from twisted.spread import pb
@@ -46,6 +45,8 @@ from buildbot_worker.pbutil import decode
 from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
 if TYPE_CHECKING:
+    from twisted.internet.base import DelayedCall
+
     from buildbot.master import BuildMaster
 
 

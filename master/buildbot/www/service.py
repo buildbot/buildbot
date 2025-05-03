@@ -28,7 +28,6 @@ import jwt
 import twisted
 from packaging.version import parse as parse_version
 from twisted.application import strports
-from twisted.application.internet import StreamServerEndpointService
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -55,6 +54,8 @@ from buildbot.www import sse
 from buildbot.www import ws
 
 if TYPE_CHECKING:
+    from twisted.application.internet import StreamServerEndpointService
+
     from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
 

@@ -34,7 +34,6 @@ from twisted.internet import interfaces
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
-from twisted.python.failure import Failure
 
 from buildbot import config
 from buildbot import util
@@ -43,6 +42,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
 
 if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+
     from buildbot.util.twisted import InlineCallbacksType
 
 debug_logging = False

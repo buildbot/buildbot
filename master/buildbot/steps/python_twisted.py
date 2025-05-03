@@ -19,9 +19,9 @@ BuildSteps that are specific to the Twisted source tree
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
-from twisted.internet.base import ReactorBase
 from twisted.python import log
 
 from buildbot import util
@@ -32,6 +32,9 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps import shell
+
+if TYPE_CHECKING:
+    from twisted.internet.base import ReactorBase
 
 
 class HLint(buildstep.ShellMixin, buildstep.BuildStep):
