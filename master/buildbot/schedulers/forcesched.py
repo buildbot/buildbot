@@ -811,7 +811,7 @@ class ForceScheduler(base.ReconfigurableBaseScheduler):
                 collector=collector,
                 kwargs=kwargs,
             )
-        changeids = [type(a) == int and a or a.number for a in changeids]
+        changeids = [(type(a) == int and a) or a.number for a in changeids]
 
         real_properties = Properties()
         for pname, pvalue in properties.items():

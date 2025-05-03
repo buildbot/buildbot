@@ -87,7 +87,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
         if cmd.didFail():
             return FAILURE
 
-        self.descriptionDone = f"{self.warnings} hlin{self.warnings == 1 and 't' or 'ts'}"
+        self.descriptionDone = f"{self.warnings} hlin{(self.warnings == 1 and 't') or 'ts'}"
 
         if self.warnings:
             return WARNINGS
@@ -378,7 +378,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             if parsed:
                 results = SUCCESS
                 if total:
-                    desc_parts += [str(total), total == 1 and "test" or "tests", "passed"]
+                    desc_parts += [str(total), (total == 1 and "test") or "tests", "passed"]
                 else:
                     desc_parts += ["no tests", "run"]
             else:
@@ -390,14 +390,14 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             if parsed:
                 desc_parts += ["tests"]
                 if failures:
-                    desc_parts += [str(failures), failures == 1 and "failure" or "failures"]
+                    desc_parts += [str(failures), (failures == 1 and "failure") or "failures"]
                 if errors:
-                    desc_parts += [str(errors), errors == 1 and "error" or "errors"]
+                    desc_parts += [str(errors), (errors == 1 and "error") or "errors"]
             else:
                 desc_parts += ["tests", "failed"]
 
         if counts['skips']:
-            desc_parts += [str(counts['skips']), counts['skips'] == 1 and "skip" or "skips"]
+            desc_parts += [str(counts['skips']), (counts['skips'] == 1 and "skip") or "skips"]
         if counts['expectedFailures']:
             desc_parts += [
                 str(counts['expectedFailures']),

@@ -396,7 +396,7 @@ class TelegramContact(Contact):
     @Contact.overrideCommand
     def command_STOP(self, args, **kwargs):
         argv = self.splitArgs(args)
-        if len(argv) >= 3 or argv and argv[0] != 'build':
+        if len(argv) >= 3 or (argv and argv[0] != 'build'):
             super().command_STOP(args)
             return
         argv = argv[1:]

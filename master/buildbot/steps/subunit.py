@@ -150,18 +150,18 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
 
         if not count:
             if total:
-                summary += f' {total} {total == 1 and "test" or "tests"} passed'
+                summary += f' {total} {(total == 1 and "test") or "tests"} passed'
             else:
                 summary += " no tests run"
         else:
             summary += f" Total {total} test(s)"
             if failures:
-                summary += f' {failures} {failures == 1 and "failure" or "failures"}'
+                summary += f' {failures} {(failures == 1 and "failure") or "failures"}'
             if errors:
-                summary += f' {errors} {errors == 1 and "error" or "errors"}'
+                summary += f' {errors} {(errors == 1 and "error") or "errors"}'
 
         if skips:
-            summary += f' {skips} {skips == 1 and "skip" or "skips"}'
+            summary += f' {skips} {(skips == 1 and "skip") or "skips"}'
 
         # TODO: expectedFailures/unexpectedSuccesses
 

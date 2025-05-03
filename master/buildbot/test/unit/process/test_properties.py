@@ -839,7 +839,7 @@ class TestWithProperties(unittest.TestCase):
 
     @defer.inlineCallbacks
     def testLambdaHasattr(self):
-        command = WithProperties('%(foo)s', foo=lambda b: b.hasProperty('x') and 'x' or 'y')
+        command = WithProperties('%(foo)s', foo=lambda b: (b.hasProperty('x') and 'x') or 'y')
         res = yield self.build.render(command)
         self.assertEqual(res, 'y')
 

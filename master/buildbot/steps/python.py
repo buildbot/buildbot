@@ -388,7 +388,7 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
             if defines[key] is None:
                 command.extend(['-D', key])
             elif isinstance(defines[key], bool):
-                command.extend(['-D', f'{key}={defines[key] and 1 or 0}'])
+                command.extend(['-D', f'{key}={(defines[key] and 1) or 0}'])
             else:
                 command.extend(['-D', f'{key}={defines[key]}'])
 

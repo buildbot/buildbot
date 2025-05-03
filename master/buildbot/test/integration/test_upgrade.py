@@ -129,7 +129,7 @@ class UpgradeTestMixin(TestReactorMixin):
                     [
                         {
                             "name": idx.name,
-                            "unique": idx.unique and 1 or 0,
+                            "unique": (idx.unique and 1) or 0,
                             "column_names": sorted([c.name for c in idx.columns]),
                         }
                         for idx in tbl.indexes
@@ -161,7 +161,7 @@ class UpgradeTestMixin(TestReactorMixin):
                     for name in got_names & exp_names:
                         gi = {
                             "name": name,
-                            "unique": got_info[name]['unique'] and 1 or 0,
+                            "unique": (got_info[name]['unique'] and 1) or 0,
                             "column_names": sorted(got_info[name]['column_names']),
                         }
                         ei = exp_info[name]
