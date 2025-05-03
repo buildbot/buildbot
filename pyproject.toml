@@ -37,7 +37,6 @@ target-version = "py38"
         "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
 
         # from upgrade 0.7.4 to 0.11.8
-        "PLW1508", # invalid-envvar-default
         "RUF021", # parenthesize-chained-operators
         "RUF022", # unsorted-dunder-all
         "RUF023", # unsorted-dunder-slots

@@ -456,7 +456,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     # note that freebsd workers will not like when there are too many parallel connections
     # we can change this test via environment variable
-    NUM_PARALLEL = os.environ.get("BBTEST_NUM_PARALLEL", 5)
+    NUM_PARALLEL = int(os.environ.get("BBTEST_NUM_PARALLEL", "5"))
 
     @defer.inlineCallbacks
     def test_lots(self):
