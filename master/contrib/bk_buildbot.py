@@ -138,7 +138,7 @@ class ChangeSender:
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for k in changes.keys():
-                print("[%10s]: %s" % (k, changes[k]))
+                print(f"[{k:>10}]: {changes[k]}")
             print("*NOT* sending any changes")
             return
 

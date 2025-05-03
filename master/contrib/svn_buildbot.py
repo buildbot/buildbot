@@ -259,10 +259,10 @@ class ChangeSender:
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for i, c in enumerate(changes):
-                print("CHANGE #%d" % (i + 1))
+                print(f"CHANGE #{(i + 1)}")
                 keys = sorted(c.keys())
                 for k in keys:
-                    print("[%10s]: %s" % (k, c[k]))
+                    print(f"[{k:>10}]: {c[k]}")
             print("*NOT* sending any changes")
             return
 
