@@ -22,7 +22,7 @@ log = Logger()
 
 
 class LineBoundaryFinder:
-    __slots__ = ['max_line_length', 'newline_re', 'partial_line', 'warned', 'time']
+    __slots__ = ['max_line_length', 'newline_re', 'partial_line', 'time', 'warned']
 
     def __init__(self, max_line_length, newline_re):
         # split at reasonable line length.

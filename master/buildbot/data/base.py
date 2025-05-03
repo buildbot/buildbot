@@ -177,12 +177,12 @@ class NestedBuildDataRetriever:
     """
 
     __slots__ = (
-        'master',
         'args',
-        'step_dict',
         'build_dict',
         'builder_dict',
         'log_dict',
+        'master',
+        'step_dict',
         'worker_dict',
     )
 
@@ -386,7 +386,7 @@ class BuildNestingMixin:
 
 
 class ListResult(UserList):
-    __slots__ = ['offset', 'total', 'limit']
+    __slots__ = ['limit', 'offset', 'total']
 
     def __init__(self, values, offset=None, total=None, limit=None):
         super().__init__(values)

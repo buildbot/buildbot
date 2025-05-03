@@ -37,7 +37,6 @@ target-version = "py38"
         "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
 
         # from upgrade 0.7.4 to 0.11.8
-        "RUF023", # unsorted-dunder-slots
         "RUF046", # unnecessary-cast-to-int
         "RUF051", # if-key-in-dict-del
         "UP031", # printf-string-formatting

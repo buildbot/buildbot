@@ -24,7 +24,7 @@ from buildbot.worker.protocols import pb as bbpb
 
 
 class WorkerRegistration:
-    __slots__ = ['master', 'worker', 'pbReg', 'msgpack_reg']
+    __slots__ = ['master', 'msgpack_reg', 'pbReg', 'worker']
 
     def __init__(self, master, worker):
         self.master = master
