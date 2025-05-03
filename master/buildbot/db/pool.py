@@ -196,8 +196,8 @@ class DBThreadPool:
         self,
         with_engine: bool,
         callable: Callable[Concatenate[sa.engine.Engine | sa.engine.Connection, _P], _T],
-        args: _P.args,
-        kwargs: _P.kwargs,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> _T:
         # try to call callable(arg, *args, **kwargs) repeatedly until no
         # OperationalErrors occur, where arg is either the engine (with_engine)
@@ -287,8 +287,8 @@ class DBThreadPool:
             self.__thd,  # type: ignore[arg-type]
             False,
             callable,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
 
     def do_with_engine(
@@ -303,6 +303,6 @@ class DBThreadPool:
             self.__thd,  # type: ignore[arg-type]
             True,
             callable,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
