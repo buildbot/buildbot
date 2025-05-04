@@ -156,11 +156,7 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot_worker.base",
       "buildbot_worker.interfaces",
-      "buildbot_worker.msgpack",
-      "buildbot_worker.null",
-      "buildbot_worker.pb",
       "buildbot_worker.runprocess",
       "buildbot_worker.scripts.windows_service",
       "buildbot_worker.test.unit.test_bot_Worker",
