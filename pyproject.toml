@@ -157,7 +157,6 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = [
       "buildbot_worker.scripts.windows_service",
-      "buildbot_worker",
       "buildbot.asyncio",
       "buildbot.clients.sendchange",
       "buildbot.clients.tryclient",
@@ -852,7 +851,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.worker.protocols.pb",
       "buildbot.worker.upcloud",
       "buildbot",
-      "worker.buildbot_worker",
     ]
     disallow_untyped_calls = false
     disallow_untyped_defs = false
