@@ -176,8 +176,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.test.unit.test_commands_fs",
       "buildbot_worker.test.unit.test_commands_registry",
       "buildbot_worker.test.unit.test_commands_shell",
-      "buildbot_worker.test.unit.test_commands_transfer",
-      "buildbot_worker.test.unit.test_commands_utils",
       "buildbot_worker.test.unit.test_msgpack",
       "buildbot_worker.test.unit.test_runprocess",
       "buildbot_worker",
