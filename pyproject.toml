@@ -163,7 +163,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.commands.shell",
       "buildbot_worker.commands.transfer",
       "buildbot_worker.commands.utils",
-      "buildbot_worker.compat",
       "buildbot_worker.exceptions",
       "buildbot_worker.interfaces",
       "buildbot_worker.msgpack",
