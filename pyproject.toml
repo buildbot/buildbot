@@ -194,7 +194,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.test.util.sourcecommand",
       "buildbot_worker.test.util.test_buffer_manager",
       "buildbot_worker.test",
-      "buildbot_worker.tunnel",
       "buildbot_worker.util.buffer_manager",
       "buildbot_worker.util",
       "buildbot_worker",
