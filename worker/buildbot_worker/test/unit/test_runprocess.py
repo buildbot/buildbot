@@ -50,6 +50,7 @@ except ImportError:
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
     from twisted.internet.interfaces import IProcessProtocol
+    from twisted.internet.interfaces import IProcessTransport
     from twisted.internet.interfaces import IReactorTime
 
     from buildbot_worker.util.twisted import InlineCallbacksType
@@ -467,7 +468,13 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             "DOESNT_FIND": "-${DOESNT_EXISTS}-",
         }
         s = runprocess.RunProcess(
-            0, stdoutCommand('hello'), self.basedir, 'utf-8', self.send_update, environ=environ
+            0,
+            stdoutCommand('hello'),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            # FIXME RunProcess environ should be a Mapping
+            environ=environ,  # type: ignore[arg-type]
         )
 
         yield s.start()
@@ -542,7 +549,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                 environ={"BUILD_NUMBER": 13},
             )
 
-    def _test_spawnAsBatch(self, cmd: Sequence[str], comspec: str) -> None:
+    def _test_spawnAsBatch(self, cmd: Sequence[str], comspec: str) -> IProcessTransport:
         def spawnProcess(
             processProtocol: IProcessProtocol,
             executable: bytes | str,
@@ -578,16 +585,16 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         # Assert that the process completed successfully
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
-    def test_spawnAsBatchCommandString(self) -> None:
+    def test_spawnAsBatchCommandString(self) -> IProcessTransport:
         return self._test_spawnAsBatch("dir c:/", "cmd.exe")
 
-    def test_spawnAsBatchCommandList(self) -> None:
+    def test_spawnAsBatchCommandList(self) -> IProcessTransport:
         return self._test_spawnAsBatch(stdoutCommand('hello'), "cmd.exe /c")
 
-    def test_spawnAsBatchCommandWithNonAscii(self) -> None:
+    def test_spawnAsBatchCommandWithNonAscii(self) -> IProcessTransport:
         return self._test_spawnAsBatch("echo \u6211", "cmd.exe")
 
-    def test_spawnAsBatchCommandListWithNonAscii(self) -> None:
+    def test_spawnAsBatchCommandListWithNonAscii(self) -> IProcessTransport:
         return self._test_spawnAsBatch(['echo', "\u6211"], "cmd.exe /c")
 
 
@@ -755,6 +762,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             def _mock_signalProcess(sig: str) -> None:
                 if sig == "TERM":
                     self.receivedSIGTERM = True
+                assert process is not None
                 process.signalProcess(sig)
 
             mock_process.signalProcess = _mock_signalProcess
