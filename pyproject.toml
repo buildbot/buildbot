@@ -186,7 +186,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.test.unit.test_msgpack",
       "buildbot_worker.test.unit.test_runprocess",
       "buildbot_worker.test.util.command",
-      "buildbot_worker.test",
       "buildbot_worker",
       "buildbot.asyncio",
       "buildbot.clients.sendchange",
