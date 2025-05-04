@@ -18,6 +18,7 @@ import os.path
 import shutil
 import signal
 from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.application import service
 from twisted.application.internet import ClientService
@@ -46,6 +47,7 @@ from buildbot_worker.tunnel import HTTPTunnelEndpoint
 
 if TYPE_CHECKING:
     from twisted.internet.base import DelayedCall
+    from twisted.internet.interfaces import IReactorTime
 
     from buildbot.master import BuildMaster
 
@@ -540,7 +542,7 @@ class BotFactory(AutoLoginPBFactory):
     keepaliveTimer: DelayedCall | None = None
     perspective: pb.Avatar | None = None
 
-    _reactor = reactor
+    _reactor = cast("IReactorTime", reactor)
 
     def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay, retryPolicy=None):
         AutoLoginPBFactory.__init__(self, retryPolicy=retryPolicy)
