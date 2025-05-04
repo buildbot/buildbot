@@ -1,4 +1,0 @@
-# update schedule, default is not set
-# the bot will visit the repo once and bundle all updates in a single PR for the given
-# day/week/month
-schedule: "every two weeks" # allowed ["every day", "every week", "every two weeks", "every month"]

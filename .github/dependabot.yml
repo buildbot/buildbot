@@ -1,0 +1,48 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
+    groups:
+      minor-upgrades:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
+    directories:
+      - "e2e/"
+      - "www/**"
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
+    groups:
+      minor-upgrades:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "**/*"
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
+    groups:
+      minor-upgrades:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
+    groups:
+      minor-upgrades:
+        update-types:
+          - "minor"
+          - "patch"
