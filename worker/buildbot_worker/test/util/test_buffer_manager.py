@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import Any
 
 from twisted.trial import unittest
 
@@ -20,18 +23,18 @@ from buildbot_worker.util import buffer_manager
 
 
 class BufferManager(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
-        self.results_collected = []
+    def setUp(self) -> None:
+        self.results_collected: list[list[tuple[str, Any]]] = []
         self.setup_test_reactor()
 
-    def message_consumer(self, msg_data):
+    def message_consumer(self, msg_data: list[tuple[str, Any]]) -> None:
         self.results_collected.append(msg_data)
 
-    def assert_sent_messages(self, expected):
+    def assert_sent_messages(self, expected: list[list[tuple[str, Any]]]) -> None:
         self.assertEqual(self.results_collected, expected)
         self.results_collected = []
 
-    def test_append_message_rc_fits_in_buffer(self):
+    def test_append_message_rc_fits_in_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("rc", 1)
@@ -40,7 +43,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("rc", 1)]])
 
-    def test_append_message_log_in_one_msg(self):
+    def test_append_message_log_in_one_msg(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -51,10 +54,13 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
 
         manager.flush()
         self.assert_sent_messages([
-            [("stdout", ('12\n', [2], [1.0])), ("log", ('log_test', ('text\n', [4], [0.0])))]
+            [
+                ("stdout", ('12\n', [2], [1.0])),
+                ("log", ('log_test', ('text\n', [4], [0.0]))),
+            ]
         ])
 
-    def test_append_message_rc_in_one_msg(self):
+    def test_append_message_rc_in_one_msg(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -66,7 +72,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("stdout", ('12\n', [2], [1.0])), ("rc", 1)]])
 
-    def test_append_message_log_exceeds_buffer(self):
+    def test_append_message_log_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -78,7 +84,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("log", ('log_test', ('tex\n', [4], [0.0])))]])
 
-    def test_append_message_rc_exceeds_buffer(self):
+    def test_append_message_rc_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -90,7 +96,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("rc", 1)]])
 
-    def test_append_two_messages_rc_exceeds_buffer(self):
+    def test_append_two_messages_rc_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 15, 5)
 
         manager.append("rc", 1)
@@ -102,7 +108,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_two_messages_rc_fits_in_buffer(self):
+    def test_append_two_messages_rc_fits_in_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("rc", 1)
@@ -114,7 +120,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("rc", 1), ("rc", 0)]])
 
-    def test_append_message_exceeds_buffer(self):
+    def test_append_message_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ('12345\n', [5], [1.0]))
@@ -123,7 +129,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_message_fits_in_buffer(self):
+    def test_append_message_fits_in_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 18, 5)
 
         manager.append("stdout", ("1\n", [1], [1.0]))
@@ -136,7 +142,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_two_messages_exceeds_buffer(self):
+    def test_append_two_messages_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ("1\n", [1], [1.0]))
@@ -148,7 +154,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[('stdout', ('22\n', [2], [2.0]))]])
 
-    def test_append_two_messages_same_logname_log_joined(self):
+    def test_append_two_messages_same_logname_log_joined(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("log", ("log_test", ("1\n", [1], [1.0])))
@@ -160,7 +166,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("log", ("log_test", ("1\n2\n", [1, 3], [1.0, 2.0])))]])
 
-    def test_append_two_messages_same_logname_joined(self):
+    def test_append_two_messages_same_logname_joined(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("stdout", ("1\n", [1], [1.0]))
@@ -172,7 +178,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([[("stdout", ("1\n2\n", [1, 3], [1.0, 2.0]))]])
 
-    def test_append_two_messages_same_logname_log_joined_many_lines(self):
+    def test_append_two_messages_same_logname_log_joined_many_lines(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 80, 5)
 
         manager.append("log", ("log_test", ("1\n2\n", [1, 3], [1.0, 2.0])))
@@ -186,7 +192,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
             [("log", ("log_test", ("1\n2\n3\n4\n", [1, 3, 5, 7], [1.0, 2.0, 3.0, 4.0])))]
         ])
 
-    def test_append_two_messages_same_logname_joined_many_lines(self):
+    def test_append_two_messages_same_logname_joined_many_lines(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 80, 5)
 
         manager.append("stdout", ("1\n2\n", [1, 3], [1.0, 2.0]))
@@ -200,7 +206,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
             [("stdout", ("1\n2\n3\n4\n", [1, 3, 5, 7], [1.0, 2.0, 3.0, 4.0]))]
         ])
 
-    def test_append_three_messages_not_same_logname_log_not_joined(self):
+    def test_append_three_messages_not_same_logname_log_not_joined(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 70, 5)
 
         manager.append("log", ("log_test", ("1\n", [1], [1.0])))
@@ -221,7 +227,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
             ]
         ])
 
-    def test_append_three_messages_not_same_logname_not_joined(self):
+    def test_append_three_messages_not_same_logname_not_joined(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 60, 5)
 
         manager.append("stdout", ("1\n", [1], [1.0]))
@@ -242,7 +248,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
             ]
         ])
 
-    def test_append_two_messages_same_logname_log_exceeds_buffer(self):
+    def test_append_two_messages_same_logname_log_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("log", ("log_test", ("1234\n", [4], [1.0])))
@@ -254,7 +260,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_two_messages_same_logname_exceeds_buffer(self):
+    def test_append_two_messages_same_logname_exceeds_buffer(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ("1234\n", [4], [1.0]))
@@ -266,7 +272,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_exceeds_buffer_log_long_line_first_line_too_long(self):
+    def test_append_exceeds_buffer_log_long_line_first_line_too_long(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append(
@@ -288,11 +294,12 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_exceeds_buffer_long_line_first_line_too_long(self):
+    def test_append_exceeds_buffer_long_line_first_line_too_long(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append(
-            "stdout", ("tbe5\nta4\ntbe5\nt3\ntd4\n", [4, 8, 13, 16, 20], [1.0, 2.0, 3.0, 4.0, 5.0])
+            "stdout",
+            ("tbe5\nta4\ntbe5\nt3\ntd4\n", [4, 8, 13, 16, 20], [1.0, 2.0, 3.0, 4.0, 5.0]),
         )
 
         self.assert_sent_messages([
@@ -306,7 +313,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_exceeds_buffer_log_long_line_middle_line_too_long(self):
+    def test_append_exceeds_buffer_log_long_line_middle_line_too_long(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append(
@@ -328,11 +335,12 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_exceeds_buffer_long_line_middle_line_too_long(self):
+    def test_append_exceeds_buffer_long_line_middle_line_too_long(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append(
-            "stdout", ("t3\nta4\ntbe5\nt3\ntd4\n", [2, 6, 11, 14, 18], [1.0, 2.0, 3.0, 4.0, 5.0])
+            "stdout",
+            ("t3\nta4\ntbe5\nt3\ntd4\n", [2, 6, 11, 14, 18], [1.0, 2.0, 3.0, 4.0, 5.0]),
         )
 
         self.assert_sent_messages([
@@ -346,7 +354,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_long_line_log_concatenate(self):
+    def test_append_long_line_log_concatenate(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 60, 5)
 
         manager.append(
@@ -370,7 +378,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_long_line_concatenate(self):
+    def test_append_long_line_concatenate(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 60, 5)
 
         manager.append(
@@ -391,7 +399,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_log_not_fitting_line_after_fitting_line(self):
+    def test_append_log_not_fitting_line_after_fitting_line(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("log", ("log_test", ("12\n", [4], [1.0])))
@@ -406,7 +414,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_not_fitting_line_after_fitting_line(self):
+    def test_append_not_fitting_line_after_fitting_line(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ("12\n", [4], [1.0]))
@@ -421,7 +429,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_timeout_fits_in_buffer_timeout_expires_with_message(self):
+    def test_append_timeout_fits_in_buffer_timeout_expires_with_message(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -439,7 +447,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_timeout_fits_in_buffer_two_messages_before_timeout_expires(self):
+    def test_append_timeout_fits_in_buffer_two_messages_before_timeout_expires(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -458,7 +466,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_timeout_two_messages_timeout_expires_with_single_message(self):
+    def test_append_timeout_two_messages_timeout_expires_with_single_message(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 40, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
@@ -476,7 +484,7 @@ class BufferManager(TestReactorMixin, unittest.TestCase):
         manager.flush()
         self.assert_sent_messages([])
 
-    def test_append_timeout_long_line_flushes_short_line_before_timeout(self):
+    def test_append_timeout_long_line_flushes_short_line_before_timeout(self) -> None:
         manager = buffer_manager.BufferManager(self.reactor, self.message_consumer, 20, 5)
 
         manager.append("stdout", ('12\n', [2], [1.0]))
