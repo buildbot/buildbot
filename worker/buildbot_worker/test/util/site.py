@@ -12,26 +12,39 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.python.failure import Failure
+from twisted.web.http import _GenericHTTPChannelProtocol
 from twisted.web.server import Site
+
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IAddress
+    from twisted.internet.protocol import Protocol
 
 
 class SiteWithClose(Site):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
-        self._protocols = []
 
-    def buildProtocol(self, addr):
+        self._protocols: list[Protocol | None] = []
+
+    def buildProtocol(self, addr: IAddress) -> Protocol | None:
         p = super().buildProtocol(addr)
         self._protocols.append(p)
         return p
 
-    def close_connections(self):
+    def close_connections(self) -> None:
         for p in self._protocols:
+            assert p is not None
             p.connectionLost(Failure(RuntimeError("Closing down at the end of test")))
             # There is currently no other way to force all pending server-side connections to
             # close.
+            assert isinstance(p, _GenericHTTPChannelProtocol)
+            assert p._channel.transport is not None
+
             p._channel.transport.connectionLost(
                 Failure(RuntimeError("Closing down at the end of test"))
             )
