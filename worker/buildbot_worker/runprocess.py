@@ -31,6 +31,7 @@ import traceback
 from codecs import getincrementaldecoder
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -57,6 +58,10 @@ if runtime.platformType == 'win32':
     import win32con
     import win32job
     import win32process
+
+
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IReactorTime
 
 
 def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
@@ -271,7 +276,7 @@ class RunProcess:
     elapsedTime: datetime.timedelta | None = None
 
     # For scheduling future events
-    _reactor = reactor
+    _reactor: IReactorTime = cast("IReactorTime", reactor)
 
     # I wish we had easy access to CLOCK_MONOTONIC in Python:
     # http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
