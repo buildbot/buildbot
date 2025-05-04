@@ -12,10 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import signal
 import time
+from typing import Any
 
 from buildbot_worker.scripts import base
 
@@ -26,7 +28,8 @@ class WorkerNotRunning(Exception):
     """
 
 
-def stopWorker(basedir, quiet, signame="TERM"):
+# TODO: change type to `signame: signal.Signals`
+def stopWorker(basedir: str, quiet: bool, signame: str = "TERM") -> int:
     """
     Stop worker process by sending it a signal.
 
@@ -71,7 +74,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
     return 1
 
 
-def stop(config, signame="TERM"):
+def stop(config: dict[str, Any], signame: str = "TERM") -> int:
     quiet = config['quiet']
     basedir = config['basedir']
 

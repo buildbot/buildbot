@@ -17,6 +17,7 @@ import errno
 import os
 import signal
 import time
+from typing import Any
 
 from twisted.trial import unittest
 
@@ -37,13 +38,13 @@ class TestStopWorker(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Test
 
     PID = 9876
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpStdoutAssertions()
 
         # patch os.chdir() to do nothing
         self.patch(os, "chdir", mock.Mock())
 
-    def test_no_pid_file(self):
+    def test_no_pid_file(self) -> None:
         """
         test calling stopWorker() when no pid file is present
         """
@@ -53,15 +54,15 @@ class TestStopWorker(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Test
 
         # check that stop() raises WorkerNotRunning exception
         with self.assertRaises(stop.WorkerNotRunning):
-            stop.stopWorker(None, False)
+            stop.stopWorker("", False)
 
     @compat.skipUnlessPlatformIs("posix")
-    def test_successful_stop(self):
+    def test_successful_stop(self) -> None:
         """
         test stopWorker() on a successful worker stop
         """
 
-        def emulated_kill(pid, sig):
+        def emulated_kill(pid: Any, sig: int) -> None:
             if sig == 0:
                 # when probed if a signal can be send to the process
                 # emulate that it is dead with 'No such process' error
@@ -79,14 +80,14 @@ class TestStopWorker(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Test
 
         # check that stopWorker() sends expected signal to right PID
         # and print correct message to stdout
-        exit_code = stop.stopWorker(None, False)
+        exit_code = stop.stopWorker("", False)
         self.assertEqual(exit_code, 0)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM), mock.call(self.PID, 0)])
 
         self.assertStdoutEqual(f"worker process {self.PID} is dead\n")
 
     @compat.skipUnlessPlatformIs("posix")
-    def test_stop_timeout(self):
+    def test_stop_timeout(self) -> None:
         """
         test stopWorker() when stop timeouts
         """
@@ -103,7 +104,7 @@ class TestStopWorker(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Test
 
         # check that stopWorker() sends expected signal to right PID
         # and print correct message to stdout
-        exit_code = stop.stopWorker(None, False)
+        exit_code = stop.stopWorker("", False)
         self.assertEqual(exit_code, 1)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM), mock.call(self.PID, 0)])
 
@@ -117,7 +118,7 @@ class TestStop(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.TestC
 
     config = {"basedir": "dummy", "quiet": False}
 
-    def test_bad_basedir(self):
+    def test_bad_basedir(self) -> None:
         """
         test calling stop() with invalid basedir path
         """
@@ -131,7 +132,7 @@ class TestStop(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.TestC
         # check that isWorkerDir was called with correct argument
         self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
-    def test_no_worker_running(self):
+    def test_no_worker_running(self) -> None:
         """
         test calling stop() when no worker is running
         """
@@ -149,7 +150,7 @@ class TestStop(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.TestC
 
         self.assertStdoutEqual("worker not running\n")
 
-    def test_successful_stop(self):
+    def test_successful_stop(self) -> None:
         """
         test calling stop() when worker is running
         """
@@ -167,7 +168,7 @@ class TestStop(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.TestC
             self.config["basedir"], self.config["quiet"], "TERM"
         )
 
-    def test_failed_stop(self):
+    def test_failed_stop(self) -> None:
         """
         test failing stop()
         """

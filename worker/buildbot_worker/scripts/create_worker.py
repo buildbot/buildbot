@@ -12,8 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buildbot_worker.scripts.base import Options
 
 workerTACTemplate = [
     """
@@ -85,7 +90,7 @@ class CreateWorkerError(Exception):
     """
 
 
-def _make_tac(config):
+def _make_tac(config: Options) -> str:
     if config['relocatable']:
         config['basedir'] = '.'
 
@@ -104,7 +109,7 @@ def _make_tac(config):
     return "".join(workerTAC) % config
 
 
-def _makeBaseDir(basedir, quiet):
+def _makeBaseDir(basedir: str, quiet: bool) -> None:
     """
     Make worker base directory if needed.
 
@@ -127,7 +132,7 @@ def _makeBaseDir(basedir, quiet):
         raise CreateWorkerError(f"error creating directory {basedir}") from exception
 
 
-def _makeBuildbotTac(basedir, tac_file_contents, quiet):
+def _makeBuildbotTac(basedir: str, tac_file_contents: str, quiet: bool) -> None:
     """
     Create buildbot.tac file. If buildbot.tac file already exists with
     different contents, create buildbot.tac.new instead.
@@ -166,7 +171,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         raise CreateWorkerError(f"could not write {tacfile}") from exception
 
 
-def _makeInfoFiles(basedir, quiet):
+def _makeInfoFiles(basedir: str, quiet: bool) -> None:
     """
     Create info/* files inside basedir.
 
@@ -177,7 +182,7 @@ def _makeInfoFiles(basedir, quiet):
                              writing info files
     """
 
-    def createFile(path, file, contents):
+    def createFile(path: str, file: str, contents: str) -> bool:
         filepath = os.path.join(path, file)
 
         if os.path.exists(filepath):
@@ -219,7 +224,7 @@ def _makeInfoFiles(basedir, quiet):
         print(f"Please edit the files in {path} appropriately.")
 
 
-def createWorker(config):
+def createWorker(config: Options) -> int:
     basedir = config['basedir']
     quiet = config['quiet']
 

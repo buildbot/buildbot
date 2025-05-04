@@ -33,14 +33,14 @@ class TestRestart(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.Te
 
     config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpStdoutAssertions()
 
         # patch start.startWorker() to do nothing
         self.startWorker = mock.Mock()
         self.patch(start, "startWorker", self.startWorker)
 
-    def test_bad_basedir(self):
+    def test_bad_basedir(self) -> None:
         """
         test calling restart() with invalid basedir path
         """
@@ -54,7 +54,7 @@ class TestRestart(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.Te
         # check that isWorkerDir was called with correct argument
         self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
-    def test_no_worker_running(self):
+    def test_no_worker_running(self) -> None:
         """
         test calling restart() when no worker is running
         """
@@ -75,7 +75,7 @@ class TestRestart(misc.IsWorkerDirMixin, misc.StdoutAssertionsMixin, unittest.Te
             "no old worker process found to stop\nnow restarting worker process..\n"
         )
 
-    def test_restart(self):
+    def test_restart(self) -> None:
         """
         test calling restart() when worker is running
         """

@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import textwrap
+from typing import NoReturn
 
 from twisted.python import log
 from twisted.python import reflect
@@ -55,7 +56,7 @@ class MakerBase(usage.Options):
 
     opt_h = usage.Options.opt_help
 
-    def parseArgs(self, *args):
+    def parseArgs(self, *args: str) -> None:
         if args:
             self['basedir'] = args[0]
         else:
@@ -64,7 +65,7 @@ class MakerBase(usage.Options):
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         self['basedir'] = os.path.abspath(self['basedir'])
 
 
@@ -75,14 +76,14 @@ class StartOptions(MakerBase):
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot-worker start [<basedir>]"
 
 
 class StopOptions(MakerBase):
     subcommandFunction = "buildbot_worker.scripts.stop.stop"
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot-worker stop [<basedir>]"
 
 
@@ -93,7 +94,7 @@ class RestartOptions(MakerBase):
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot-worker restart [<basedir>]"
 
 
@@ -157,7 +158,7 @@ class CreateWorkerOptions(MakerBase):
     yourself.
     """)
 
-    def validateMasterArgument(self, master_arg):
+    def validateMasterArgument(self, master_arg: str) -> tuple[str, int]:
         """
         Parse the <master> argument.
 
@@ -169,6 +170,7 @@ class CreateWorkerOptions(MakerBase):
         if master_arg[:5] == "http:":
             raise usage.UsageError("<master> is not a URL - do not use URL")
 
+        port: str | int
         if master_arg.startswith("[") and "]" in master_arg:
             # detect ipv6 address with format [2001:1:2:3:4::1]:4321
             master, port_tmp = master_arg.split("]")
@@ -193,18 +195,16 @@ class CreateWorkerOptions(MakerBase):
         if not master:
             raise usage.UsageError(f"invalid <master> argument '{master_arg}'")
         try:
-            port = int(port)
+            return master, int(port)
         except ValueError as e:
             raise usage.UsageError(f"invalid master port '{port}', needs to be a number") from e
 
-        return master, port
-
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return (
             "Usage:    buildbot-worker create-worker [options] <basedir> <master> <name> <passwd>"
         )
 
-    def parseArgs(self, *args):
+    def parseArgs(self, *args: str) -> None:
         if len(args) != 4:
             raise usage.UsageError("incorrect number of arguments")
         basedir, master, name, passwd = args
@@ -213,7 +213,7 @@ class CreateWorkerOptions(MakerBase):
         self['name'] = name
         self['passwd'] = passwd
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         MakerBase.postOptions(self)
 
         # check and convert numeric parameters
@@ -247,21 +247,21 @@ class Options(usage.Options):
         ['restart', None, RestartOptions, "Restart a worker"],
     ]
 
-    def opt_version(self):
+    def opt_version(self) -> NoReturn:  # type: ignore[misc]
         import buildbot_worker  # pylint: disable=import-outside-toplevel
 
         print(f"worker version: {buildbot_worker.version}")
         usage.Options.opt_version(self)
 
-    def opt_verbose(self):
+    def opt_verbose(self) -> None:
         log.startLogging(sys.stderr)
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         if not hasattr(self, 'subOptions'):
             raise usage.UsageError("must specify a command")
 
 
-def run():
+def run() -> NoReturn:
     config = Options()
     try:
         config.parseOptions()

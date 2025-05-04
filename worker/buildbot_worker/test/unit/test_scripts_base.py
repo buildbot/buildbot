@@ -26,7 +26,7 @@ from buildbot_worker.test.util import misc
 class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     """Test buildbot_worker.scripts.base.isWorkerDir()"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         # capture output to stdout
         self.mocked_stdout = NativeStringIO()
         self.patch(sys, "stdout", self.mocked_stdout)
@@ -34,13 +34,13 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Tes
         # generate OS specific relative path to buildbot.tac inside basedir
         self.tac_file_path = os.path.join("testdir", "buildbot.tac")
 
-    def assertReadErrorMessage(self, strerror):
+    def assertReadErrorMessage(self, strerror: str) -> None:
         expected_message = f"error reading '{self.tac_file_path}': {strerror}\ninvalid worker directory 'testdir'\n"
         self.assertEqual(
             self.mocked_stdout.getvalue(), expected_message, "unexpected error message on stdout"
         )
 
-    def test_open_error(self):
+    def test_open_error(self) -> None:
         """Test that open() errors are handled."""
 
         # patch open() to raise IOError
@@ -55,7 +55,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Tes
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 
-    def test_read_error(self):
+    def test_read_error(self) -> None:
         """Test that read() errors on buildbot.tac file are handled."""
 
         # patch open() to return file object that raises IOError on read()
@@ -70,7 +70,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Tes
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 
-    def test_unexpected_tac_contents(self):
+    def test_unexpected_tac_contents(self) -> None:
         """Test that unexpected contents in buildbot.tac is handled."""
 
         # patch open() to return file with unexpected contents
@@ -89,7 +89,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin, unittest.Tes
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 
-    def test_workerdir_good(self):
+    def test_workerdir_good(self) -> None:
         """Test checking valid worker directory."""
 
         # patch open() to return file with valid worker tac contents

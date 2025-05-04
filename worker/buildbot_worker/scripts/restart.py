@@ -15,13 +15,16 @@
 
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
+from __future__ import annotations
+
+from typing import Any
 
 from buildbot_worker.scripts import base
 from buildbot_worker.scripts import start
 from buildbot_worker.scripts import stop
 
 
-def restart(config):
+def restart(config: dict[str, Any]) -> int:
     quiet = config['quiet']
     basedir = config['basedir']
 

@@ -29,7 +29,7 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
     Test buildbot_worker.scripts.startup.startCommand()
     """
 
-    def test_start_command_bad_basedir(self):
+    def test_start_command_bad_basedir(self) -> None:
         """
         test calling startCommand() with invalid basedir path
         """
@@ -44,7 +44,7 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         # check that isWorkerDir was called with correct argument
         self.isWorkerDir.assert_called_once_with("dummy")
 
-    def test_start_command_good(self):
+    def test_start_command_good(self) -> None:
         """
         test successful startCommand() call
         """
