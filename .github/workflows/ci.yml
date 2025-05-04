@@ -9,10 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  win:
-    name: Win / python ${{ matrix.python-version }}
-    runs-on: windows-2022
-
+  ci:
     strategy:
       fail-fast: false
       matrix:
@@ -23,6 +20,12 @@ jobs:
           - "3.12"
           - "3.13"
           - "3.14"
+        os:
+          - ubuntu-24.04-arm
+          - windows-2022
+
+    name: ${{ matrix.os }} / python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
 
     env:
       # Needed to ignore specific warns, otherwise, it'll warn a generic message
@@ -50,6 +53,10 @@ jobs:
           python -m pip install -r requirements-pip.txt
           python -m pip install -r requirements-ci.txt
           python -m pip list
+
+      - name: "Check PyWin32"
+        if: ${{ startsWith(matrix.os, 'windows-') }}
+        run: |
           # Check that pywin32 is properly installed
           python -c "import win32api"
 
@@ -57,8 +64,15 @@ jobs:
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
         timeout-minutes: 30
 
-  win-sandboxed-worker:
-    runs-on: windows-latest
+  sandboxed-worker:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04-arm
+          - windows-latest
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: "actions/checkout@v6"
@@ -81,4 +95,4 @@ jobs:
       - run: pyinstaller pyinstaller/buildbot-worker.spec
       - run: trial --reporter=text --rterrors buildbot.test.integration.interop
         env:
-          SANDBOXED_WORKER_PATH: "${{ github.workspace }}/dist/buildbot-worker.exe"
+          SANDBOXED_WORKER_PATH: "${{ github.workspace }}/dist/buildbot-worker${{ startsWith(matrix.os, 'windows-') && '.exe' || '' }}"
