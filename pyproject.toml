@@ -166,8 +166,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.compat",
       "buildbot_worker.exceptions",
       "buildbot_worker.interfaces",
-      "buildbot_worker.monkeypatches.testcase_assert",
-      "buildbot_worker.monkeypatches",
       "buildbot_worker.msgpack",
       "buildbot_worker.null",
       "buildbot_worker.pb",
