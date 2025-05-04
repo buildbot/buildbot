@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import Any
 
 import buildbot_worker.commands.fs
 import buildbot_worker.commands.shell
@@ -36,10 +39,10 @@ commandRegistry = {
 }
 
 
-def getFactory(command):
+def getFactory(command: str) -> Any:
     factory = commandRegistry[command]
     return factory
 
 
-def getAllCommandNames():
+def getAllCommandNames() -> list[str]:
     return list(commandRegistry)
