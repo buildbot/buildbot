@@ -164,7 +164,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.msgpack",
       "buildbot_worker.null",
       "buildbot_worker.pb",
-      "buildbot_worker.runprocess",
       "buildbot_worker.scripts.windows_service",
       "buildbot_worker.test.unit.test_bot_Worker",
       "buildbot_worker.test.unit.test_bot",
