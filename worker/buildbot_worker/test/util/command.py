@@ -12,14 +12,30 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import shutil
+from typing import TYPE_CHECKING
+from typing import cast
+
+from twisted.trial.unittest import TestCase
 
 import buildbot_worker.runprocess
 from buildbot_worker.commands import utils
 from buildbot_worker.test.fake import runprocess
 from buildbot_worker.test.fake.protocolcommand import FakeProtocolCommand
+
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import Sequence
+    from typing import TypeVar
+
+    from twisted.internet.defer import Deferred
+
+    from buildbot_worker.commands.base import Command
+
+    CommandType = TypeVar("CommandType", bound=Command)
 
 
 class CommandTestMixin:
@@ -27,7 +43,9 @@ class CommandTestMixin:
     Support for testing Command subclasses.
     """
 
-    def setUpCommand(self):
+    runprocess_patched: bool = False
+
+    def setUpCommand(self) -> None:
         """
         Get things ready to test a Command
 
@@ -36,6 +54,8 @@ class CommandTestMixin:
             self.basedir_workdir -- os.path.join(self.basedir, 'workdir')
             self.basedir_source -- os.path.join(self.basedir, 'source')
         """
+        assert isinstance(self, TestCase)
+
         self.basedir = os.path.abspath('basedir')
         self.basedir_workdir = os.path.join(self.basedir, 'workdir')
         self.basedir_source = os.path.join(self.basedir, 'source')
@@ -44,7 +64,7 @@ class CommandTestMixin:
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
-        def cleanup():
+        def cleanup() -> None:
             """
             Call this from the tearDown method to clean up any leftover workdirs and do
             any additional cleanup required.
@@ -59,7 +79,12 @@ class CommandTestMixin:
 
         self.addCleanup(cleanup)
 
-    def make_command(self, cmdclass, args, makedirs=False):
+    def make_command(
+        self,
+        cmdclass: type[CommandType],
+        args: dict[str, Any],
+        makedirs: bool = False,
+    ) -> CommandType:
         """
         Create a new command object, creating the necessary arguments.  The
         cmdclass argument is the Command class, and args is the args dict
@@ -88,24 +113,25 @@ class CommandTestMixin:
 
         return self.cmd
 
-    def run_command(self):
+    def run_command(self) -> Deferred[int]:
         """
         Run the command created by make_command.  Returns a deferred that will fire
         on success or failure.
         """
         return self.cmd.doStart()
 
-    def get_updates(self):
+    def get_updates(self) -> Sequence[tuple[str, Any] | str]:
         """
         Return the updates made so far
         """
         return self.protocol_command.updates
 
-    def assertUpdates(self, updates, msg=None):
+    def assertUpdates(self, updates: list[tuple[str, Any] | str], msg: str | None = None) -> None:
         """
         Asserts that self.get_updates() matches updates, ignoring elapsed time data
         """
-        my_updates = []
+        assert isinstance(self, TestCase)
+        my_updates: list[tuple[str, Any] | str] = []
         for update in self.get_updates():
             try:
                 if "elapsed" in update:
@@ -115,32 +141,41 @@ class CommandTestMixin:
             my_updates.append(update)
         self.assertEqual(my_updates, updates, msg)
 
-    def add_update(self, upd):
+    def add_update(self, upd: tuple[str, Any] | str) -> None:
         self.protocol_command.updates.append(upd)
 
-    def patch_runprocess(self, *expectations):
+    def patch_runprocess(self, *expectations: runprocess.Expect) -> None:
         """
         Patch a fake RunProcess class in, and set the given expectations.
         """
+        assert isinstance(self, TestCase)
+
         self.patch(buildbot_worker.runprocess, 'RunProcess', runprocess.FakeRunProcess)
-        buildbot_worker.runprocess.RunProcess.expect(*expectations)
+        cast(
+            "runprocess.FakeRunProcess",
+            buildbot_worker.runprocess.RunProcess,
+        ).expect(*expectations)
         self.runprocess_patched = True
 
-    def patch_getCommand(self, name, result):
+    def patch_getCommand(self, name: str, result: str) -> None:
         """
         Patch utils.getCommand to return RESULT for NAME
         """
+        assert isinstance(self, TestCase)
+
         old_getCommand = utils.getCommand
 
-        def new_getCommand(n):
+        def new_getCommand(n: str) -> str:
             if n == name:
                 return result
             return old_getCommand(n)
 
         self.patch(utils, 'getCommand', new_getCommand)
 
-    def clean_environ(self):
+    def clean_environ(self) -> None:
         """
         Temporarily clean out os.environ to { 'PWD' : '.' }
         """
+        assert isinstance(self, TestCase)
+
         self.patch(os, 'environ', {'PWD': '.'})
