@@ -12,11 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot_worker.util.deferwaiter import DeferWaiter
+
+if TYPE_CHECKING:
+    from buildbot_worker.util.twisted import InlineCallbacksType
 
 
 class TestException(Exception):
@@ -24,7 +30,7 @@ class TestException(Exception):
 
 
 class WaiterTests(unittest.TestCase):
-    def test_add_deferred_called(self):
+    def test_add_deferred_called(self) -> None:
         w = DeferWaiter()
         w.add(defer.succeed(None))
         self.assertFalse(w.has_waited())
@@ -32,7 +38,7 @@ class WaiterTests(unittest.TestCase):
         d = w.wait()
         self.assertTrue(d.called)
 
-    def test_add_non_deferred(self):
+    def test_add_non_deferred(self) -> None:
         w = DeferWaiter()
         w.add(2)
         self.assertFalse(w.has_waited())
@@ -40,10 +46,10 @@ class WaiterTests(unittest.TestCase):
         d = w.wait()
         self.assertTrue(d.called)
 
-    def test_add_deferred_not_called_and_call_later(self):
+    def test_add_deferred_not_called_and_call_later(self) -> None:
         w = DeferWaiter()
 
-        d1 = defer.Deferred()
+        d1: defer.Deferred[None] = defer.Deferred()
         w.add(d1)
         self.assertTrue(w.has_waited())
 
@@ -55,10 +61,10 @@ class WaiterTests(unittest.TestCase):
         self.assertTrue(d.called)
 
     @defer.inlineCallbacks
-    def test_passes_result(self):
+    def test_passes_result(self) -> InlineCallbacksType[None]:
         w = DeferWaiter()
 
-        d1 = defer.Deferred()
+        d1: defer.Deferred[int] = defer.Deferred()
         w.add(d1)
 
         d1.callback(123)
@@ -69,10 +75,10 @@ class WaiterTests(unittest.TestCase):
         self.assertTrue(d.called)
 
     @defer.inlineCallbacks
-    def test_cancel_not_called(self):
+    def test_cancel_not_called(self) -> InlineCallbacksType[None]:
         w = DeferWaiter()
 
-        d1 = defer.Deferred()
+        d1: defer.Deferred[None] = defer.Deferred()
         w.add(d1)
         self.assertTrue(w.has_waited())
 
@@ -87,10 +93,10 @@ class WaiterTests(unittest.TestCase):
         self.flushLoggedErrors(defer.CancelledError)
 
     @defer.inlineCallbacks
-    def test_cancel_called(self):
+    def test_cancel_called(self) -> InlineCallbacksType[None]:
         w = DeferWaiter()
 
-        d1_waited = defer.Deferred()
+        d1_waited: defer.Deferred[defer.Deferred[None]] = defer.Deferred()
         d1 = defer.succeed(None)
         d1.addCallback(lambda _: d1_waited)
         w.add(d1)

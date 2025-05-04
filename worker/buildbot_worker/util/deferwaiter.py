@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 # this is a copy of buildbot.util.Notifier
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import overload
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -21,15 +25,23 @@ from twisted.python import log
 
 from buildbot_worker.util import Notifier
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import TypeVar
+
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
+    _T = TypeVar('_T')
+
 
 class DeferWaiter:
     """This class manages a set of Deferred objects and allows waiting for their completion"""
 
-    def __init__(self):
-        self._waited = {}
-        self._finish_notifier = Notifier()
+    def __init__(self) -> None:
+        self._waited: dict[int, defer.Deferred] = {}
+        self._finish_notifier: Notifier[None] = Notifier()
 
-    def _finished(self, result, d):
+    def _finished(self, result: _T, d: defer.Deferred) -> _T:
         # most likely nothing is consuming the errors, so do it here
         if isinstance(result, failure.Failure):
             log.err(result)
@@ -39,7 +51,13 @@ class DeferWaiter:
             self._finish_notifier.notify(None)
         return result
 
-    def add(self, d):
+    @overload
+    def add(self, d: defer.Deferred[_T]) -> defer.Deferred[_T]: ...
+
+    @overload
+    def add(self, d: Any) -> None: ...
+
+    def add(self, d: defer.Deferred[_T] | Any) -> defer.Deferred[_T] | None:
         if not isinstance(d, defer.Deferred):
             return None
 
@@ -47,16 +65,16 @@ class DeferWaiter:
         d.addBoth(self._finished, d)
         return d
 
-    def cancel(self):
+    def cancel(self) -> None:
         for d in list(self._waited.values()):
             d.cancel()
         self._waited.clear()
 
-    def has_waited(self):
+    def has_waited(self) -> bool:
         return bool(self._waited)
 
     @defer.inlineCallbacks
-    def wait(self):
+    def wait(self) -> InlineCallbacksType[None]:
         if not self._waited:
             return
         yield self._finish_notifier.wait()
