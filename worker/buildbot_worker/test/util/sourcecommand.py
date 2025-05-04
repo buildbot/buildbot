@@ -21,6 +21,7 @@ from twisted.trial.unittest import TestCase
 from buildbot_worker.test.util import command
 
 if TYPE_CHECKING:
+    from typing import Any
     from typing import TypeVar
 
     _T = TypeVar('_T')
@@ -32,13 +33,13 @@ class SourceCommandTestMixin(command.CommandTestMixin):
     Support for testing Source Commands; an extension of CommandTestMixin
     """
 
-    def make_command(  # type: ignore[no-untyped-def]
+    def make_command(
         self,
-        cmdclass,
-        args,
+        cmdclass: type[command.CommandType],
+        args: dict[str, Any],
         makedirs: bool = False,
         initial_sourcedata: str = '',
-    ) -> None:
+    ) -> command.CommandType:
         """
         Same as the parent class method, but this also adds some source-specific
         patches:
@@ -49,7 +50,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
         * doCopy - invokes RunProcess(0, ['copy', cmd.srcdir, cmd.workdir])
         """
 
-        cmd = command.CommandTestMixin.make_command(self, cmdclass, args, makedirs)
+        cmd = super().make_command(cmdclass, args, makedirs)
 
         # note that these patches are to an *instance*, not a class, so there
         # is no need to use self.patch() to reverse them
@@ -61,13 +62,15 @@ class SourceCommandTestMixin(command.CommandTestMixin):
                 raise OSError("File not found")
             return self.sourcedata
 
-        cmd.readSourcedata = readSourcedata
+        cmd.readSourcedata = readSourcedata  # type: ignore[attr-defined]
 
         def writeSourcedata(res: _T) -> _T:
-            self.sourcedata = cmd.sourcedata
+            self.sourcedata = cmd.sourcedata  # type: ignore[attr-defined]
             return res
 
-        cmd.writeSourcedata = writeSourcedata
+        cmd.writeSourcedata = writeSourcedata  # type: ignore[attr-defined]
+
+        return cmd
 
     def check_sourcedata(self, _: _T, expected_sourcedata: None) -> _T:
         """
