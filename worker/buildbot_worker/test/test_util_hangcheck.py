@@ -2,6 +2,11 @@
 Tests for `buildbot_worker.util._hangcheck`.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import cast
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint
@@ -9,6 +14,7 @@ from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.error import ConnectionDone
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import Clock
+from twisted.internet.testing import StringTransport
 from twisted.python.failure import Failure
 from twisted.spread.pb import PBClientFactory
 from twisted.trial.unittest import TestCase
@@ -26,8 +32,13 @@ except ImportError:
     from twisted.test.proto_helpers import AccumulatingProtocol
     from twisted.test.proto_helpers import StringTransport
 
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IReactorTime
 
-def assert_clock_idle(case, clock):
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
+
+def assert_clock_idle(case: TestCase, clock: IReactorTime) -> None:
     """
     Assert that the given clock doesn't have any pending delayed
     calls.
@@ -47,7 +58,7 @@ class HangCheckTests(TestCase):
     # the default timeout.
     timeout = 20
 
-    def test_disconnects(self):
+    def test_disconnects(self) -> None:
         """
         When connecting to a server that doesn't send any data,
         the protocol disconnects after the timeout.
@@ -56,14 +67,14 @@ class HangCheckTests(TestCase):
         protocol = HangCheckProtocol(Protocol(), reactor=clock)
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
 
         clock.advance(120)
         self.assertTrue(transport.disconnecting)
         assert_clock_idle(self, clock)
 
-    def test_transport(self):
+    def test_transport(self) -> None:
         """
         The transport passed to the underlying protocol is
         the underlying transport.
@@ -73,12 +84,12 @@ class HangCheckTests(TestCase):
         protocol = HangCheckProtocol(wrapped_protocol, reactor=clock)
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
 
         self.assertIdentical(wrapped_protocol.transport, transport)
 
-    def test_forwards_data(self):
+    def test_forwards_data(self) -> None:
         """
         Data received by the protocol gets passed to the wrapped
         protocol.
@@ -88,13 +99,13 @@ class HangCheckTests(TestCase):
         protocol = HangCheckProtocol(wrapped_protocol, reactor=clock)
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
         protocol.dataReceived(b'some-data')
 
         self.assertEqual(wrapped_protocol.data, b"some-data")
 
-    def test_data_cancels_timeout(self):
+    def test_data_cancels_timeout(self) -> None:
         """
         When data is received, the timeout is canceled
         """
@@ -102,12 +113,12 @@ class HangCheckTests(TestCase):
         protocol = HangCheckProtocol(Protocol(), reactor=clock)
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
         protocol.dataReceived(b'some-data')
         assert_clock_idle(self, clock)
 
-    def test_calls_callback(self):
+    def test_calls_callback(self) -> None:
         """
         When connecting to a server that doesn't send any data,
         the protocol calls the hung callback.
@@ -121,14 +132,14 @@ class HangCheckTests(TestCase):
         )
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
 
         clock.advance(120)
         self.assertEqual(results, [True])
         assert_clock_idle(self, clock)
 
-    def test_disconnect_forwarded(self):
+    def test_disconnect_forwarded(self) -> None:
         """
         If the connection is closed, the underlying protocol is informed.
         """
@@ -137,18 +148,19 @@ class HangCheckTests(TestCase):
         protocol = HangCheckProtocol(wrapped_protocol, reactor=clock)
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
         reason = ConnectionDone("Bye.")
         protocol.connectionLost(Failure(reason))
 
         self.assertTrue(wrapped_protocol.closed)
+        assert wrapped_protocol.closedReason is not None
         self.assertEqual(
             wrapped_protocol.closedReason.value,
             reason,
         )
 
-    def test_disconnect_cancels_timeout(self):
+    def test_disconnect_cancels_timeout(self) -> None:
         """
         If the connection is closed, the hang check is cancelled.
         """
@@ -159,13 +171,13 @@ class HangCheckTests(TestCase):
         )
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
         protocol.connectionLost(Failure(ConnectionDone("Bye.")))
 
         assert_clock_idle(self, clock)
 
-    def test_data_and_disconnect(self):
+    def test_data_and_disconnect(self) -> None:
         """
         If the connection receives data and then is closed, no error results.
         """
@@ -176,7 +188,7 @@ class HangCheckTests(TestCase):
         )
         transport = StringTransport()
 
-        transport.protocol = protocol
+        transport.protocol = protocol  # type: ignore[attr-defined]
         protocol.makeConnection(transport)
         protocol.dataReceived(b"some-data")
         protocol.connectionLost(Failure(ConnectionDone("Bye.")))
@@ -185,7 +197,11 @@ class HangCheckTests(TestCase):
 
 
 @defer.inlineCallbacks
-def connected_server_and_client(case, server_factory, client_factory):
+def connected_server_and_client(
+    case: TestCase,
+    server_factory: SiteWithClose,
+    client_factory: HangCheckFactory,
+) -> InlineCallbacksType[None]:
     """
     Create a server and client connected to that server.
 
@@ -218,12 +234,12 @@ class EndToEndHangCheckTests(TestCase):
     timeout = 20
 
     @defer.inlineCallbacks
-    def test_http(self):
+    def test_http(self) -> InlineCallbacksType[None]:
         """
         When connecting to a HTTP server, a PB connection times
         out.
         """
-        result = defer.Deferred()
+        result: defer.Deferred[None] = defer.Deferred()
 
         site = SiteWithClose(Data("", "text/plain"))
         client = HangCheckFactory(PBClientFactory(), lambda: result.callback(None))
@@ -236,11 +252,11 @@ class EndToEndHangCheckTests(TestCase):
             client,
         )
 
-        def cancel_all():
+        def cancel_all() -> None:
             result.cancel()
             d_connected.cancel()
 
-        timer = reactor.callLater(2, cancel_all)
+        timer = cast("IReactorTime", reactor).callLater(2, cancel_all)
 
         try:
             yield result
@@ -250,4 +266,4 @@ class EndToEndHangCheckTests(TestCase):
             d_connected.cancel()
             timer.cancel()
 
-        yield site.close_connections()
+        site.close_connections()
