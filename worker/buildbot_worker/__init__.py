@@ -17,6 +17,7 @@
 #
 # We can't put this method in utility modules, because they import dependency packages
 #
+from __future__ import annotations
 
 import datetime
 import os
@@ -26,7 +27,7 @@ from subprocess import STDOUT
 from subprocess import Popen
 
 
-def gitDescribeToPep440(version):
+def gitDescribeToPep440(version: str) -> str | None:
     # git describe produce version in the form: v0.9.8-20-gf0f45ca
     # where 20 is the number of commit since last release, and gf0f45ca is the short commit id
     # preceded by 'g'
@@ -52,9 +53,9 @@ def gitDescribeToPep440(version):
     return v
 
 
-def mTimeVersion(init_file):
+def mTimeVersion(init_file: str) -> str:
     cwd = os.path.dirname(os.path.abspath(init_file))
-    m = 0
+    m = 0.0
     for root, _, files in os.walk(cwd):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
@@ -63,7 +64,9 @@ def mTimeVersion(init_file):
     return d.strftime("%Y.%m.%d")
 
 
-def getVersionFromArchiveId(git_archive_id='$Format:%ct %(describe:abbrev=10)$'):
+def getVersionFromArchiveId(
+    git_archive_id: str = '$Format:%ct %(describe:abbrev=10)$',
+) -> str | None:
     """Extract the tag if a source is from git archive.
 
     When source is exported via `git archive`, the git_archive_id init value is modified
@@ -91,7 +94,7 @@ def getVersionFromArchiveId(git_archive_id='$Format:%ct %(describe:abbrev=10)$')
     return None
 
 
-def getVersion(init_file):
+def getVersion(init_file: str) -> str:
     """
     Return BUILDBOT_VERSION environment variable, content of VERSION file, git
     tag or '0.0.0' meaning we could not find the version, but the output still has to be valid
