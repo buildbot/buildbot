@@ -366,8 +366,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             )
             if projectid is None:
                 raise RuntimeError(
-                    'Could not find project {codebase_config.project} '
-                    'for codebase {codebase_config.name'
+                    f'Could not find project {codebase_config.project} '
+                    f'for codebase {codebase_config.name}'
                 )
 
             codebaseid = await self.master.data.updates.find_codebase_id(
