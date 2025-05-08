@@ -159,7 +159,7 @@ class WsProtocol(WebSocketServerProtocol):
 
 
 class WsProtocolFactory(WebSocketServerFactory):
-    def __init__(self, master: Any):
+    def __init__(self, master: BuildMaster):
         super().__init__()
         self.master = master
         pingInterval = self.master.config.www.get("ws_ping_interval", 0)
@@ -172,5 +172,5 @@ class WsProtocolFactory(WebSocketServerFactory):
 
 
 class WsResource(WebSocketResource):
-    def __init__(self, master: Any):
+    def __init__(self, master: BuildMaster):
         super().__init__(WsProtocolFactory(master))
