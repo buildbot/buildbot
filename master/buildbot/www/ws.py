@@ -41,6 +41,21 @@ class Subscription:
         self.last_value_chksum = None
 
 
+def parse_cookies(header_value: str) -> dict[str, str]:
+    cookies: dict[str, str] = {}
+
+    # autobahn appends multiple cookies using ','
+    for kv1 in header_value.split(","):
+        for kv in kv1.split(";"):
+            kv = kv.lstrip()
+            try:
+                k, v = kv.split("=", 1)
+                cookies[k] = v
+            except ValueError:
+                pass
+    return cookies
+
+
 class WsProtocol(WebSocketServerProtocol):
     def __init__(self, master: BuildMaster):
         super().__init__()

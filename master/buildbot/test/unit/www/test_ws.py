@@ -138,3 +138,29 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             json.dumps({"cmd": 'stopConsuming', "path": 'builds/*/*', "_id": 2}), False
         )
         self.assert_called_with_json(self.proto.sendMessage, {"msg": "OK", "code": 200, "_id": 2})
+
+
+class TestParseCookies(unittest.TestCase):
+    def test_parse_cookies_single(self):
+        result = ws.parse_cookies("name=value")
+        self.assertEqual(result, {"name": "value"})
+
+    def test_parse_cookies_multiple_comma(self):
+        result = ws.parse_cookies("name1=value1,name2=value2")
+        self.assertEqual(result, {"name1": "value1", "name2": "value2"})
+
+    def test_parse_cookies_multiple_semicolon(self):
+        result = ws.parse_cookies("name1=value1; name2=value2")
+        self.assertEqual(result, {"name1": "value1", "name2": "value2"})
+
+    def test_parse_cookies_mixed_separators(self):
+        result = ws.parse_cookies("name1=value1,name2=value2; name3=value3")
+        self.assertEqual(result, {"name1": "value1", "name2": "value2", "name3": "value3"})
+
+    def test_parse_cookies_malformed(self):
+        result = ws.parse_cookies("name1=value1; invalid; name2=value2")
+        self.assertEqual(result, {"name1": "value1", "name2": "value2"})
+
+    def test_parse_cookies_empty(self):
+        result = ws.parse_cookies("")
+        self.assertEqual(result, {})
