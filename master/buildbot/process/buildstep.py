@@ -71,6 +71,10 @@ from buildbot.util import flatten
 from buildbot.util.test_result_submitter import TestResultSubmitter
 
 if TYPE_CHECKING:
+    from typing import TypeVar
+
+    from typing_extensions import Self
+
     from buildbot.interfaces import IBuildStep
     from buildbot.master import BuildMaster
     from buildbot.process.build import Build
@@ -78,6 +82,8 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
     from buildbot.worker.base import AbstractWorker
     from buildbot.worker.protocols.base import Connection
+
+    BuildStepType = TypeVar('BuildStepType', bound="BuildStep")
 
 
 class BuildStepFailed(Exception):
@@ -163,10 +169,10 @@ class BuildStepWrapperMixin:
 
 # This is also needed for comparisons to work because ComparableMixin requires type(x) and
 # x.__class__ to be equal in order to perform comparison at all.
-_buildstep_wrapper_cache: dict[int, type[BuildStep]] = {}
+_buildstep_wrapper_cache: dict[int, type] = {}
 
 
-def _create_buildstep_wrapper_class(klass: type[BuildStep]) -> type[BuildStep]:
+def _create_buildstep_wrapper_class(klass: type[BuildStepType]) -> type[BuildStepType]:
     class_id = id(klass)
     cached = _buildstep_wrapper_cache.get(class_id, None)
     if cached is not None:
@@ -174,7 +180,7 @@ def _create_buildstep_wrapper_class(klass: type[BuildStep]) -> type[BuildStep]:
 
     wrapper = type(klass.__qualname__, (BuildStepWrapperMixin, klass), {})
     _buildstep_wrapper_cache[class_id] = wrapper
-    return wrapper
+    return cast("type[BuildStepType]", wrapper)
 
 
 @implementer(interfaces.IBuildStep)
@@ -320,7 +326,7 @@ class BuildStep(
         )
         self._test_result_submitters: dict[int, TestResultSubmitter] = {}
 
-    def __new__(klass: type[BuildStep], *args: Any, **kwargs: Any) -> BuildStep:
+    def __new__(klass: type[Self], *args: Any, **kwargs: Any) -> Self:
         # The following code prevents changing BuildStep attributes after an instance
         # is created during config time. Such attribute changes don't affect the factory,
         # so they will be lost when actual build step is created.
