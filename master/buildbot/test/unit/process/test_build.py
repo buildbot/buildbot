@@ -15,6 +15,7 @@
 
 import operator
 import posixpath
+from pathlib import PurePosixPath
 from unittest.mock import Mock
 from unittest.mock import call
 
@@ -378,6 +379,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.builder.config.workerbuilddir = 'test'
         self.workerforbuilder.worker.worker_basedir = "/srv/buildbot/worker"
         self.workerforbuilder.worker.path_module = posixpath
+        self.workerforbuilder.worker.path_cls = PurePosixPath
         b.getProperties = Mock()
         b.setProperty = Mock()
 

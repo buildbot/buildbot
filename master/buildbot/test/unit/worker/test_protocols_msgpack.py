@@ -15,6 +15,7 @@
 
 import os
 import stat
+from pathlib import PurePath
 from unittest import mock
 
 from parameterized import parameterized
@@ -194,6 +195,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.conn.info = {'basedir': 'testdir'}
         self.conn.info['delete_leftover_dirs'] = delete_leftover_dirs
         self.conn.path_module = os.path
+        self.conn.path_cls = PurePath
         d = self.conn.remoteSetBuilderList(builders)
         return d
 

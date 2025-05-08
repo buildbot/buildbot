@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from functools import reduce
+from pathlib import PurePath
 from typing import TYPE_CHECKING
 from typing import cast
 
@@ -284,6 +285,7 @@ class Build(properties.PropertiesMixin):
     def setupWorkerForBuilder(self, workerforbuilder: AbstractWorkerForBuilder):
         assert workerforbuilder.worker is not None
         self.path_module = workerforbuilder.worker.path_module
+        self.path_cls: type[PurePath] | None = workerforbuilder.worker.path_cls
         self.workername = workerforbuilder.worker.workername
         self.worker_info = workerforbuilder.worker.info
 

@@ -1,0 +1,2 @@
+Add a ``path_cls`` attribute, being either a ``PureWindowsPath`` or ``PurePosixPath`` depending on the worker system.
+Should replace usage of ``path_module``, providing better ergonomics and typing.

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from pathlib import PureWindowsPath
+
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
@@ -101,6 +103,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
             )
         )
         self.build.path_module = namedModule('ntpath')
+        self.build.path_cls = PureWindowsPath
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['hg', '--verbose', '--version']).exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', log_environ=True).exit(1),

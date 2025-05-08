@@ -19,6 +19,7 @@ import os
 import re
 import stat
 from pathlib import Path
+from pathlib import PurePath
 from typing import TYPE_CHECKING
 from typing import ClassVar
 from typing import Sequence
@@ -618,6 +619,12 @@ class GitStepAuth(AbstractGitAuth):
     def _path_module(self):
         assert isinstance(self.step, buildstep.BuildStep) and self.step.build is not None
         return self.step.build.path_module
+
+    @property
+    def _path_cls(self) -> type[PurePath]:
+        assert isinstance(self.step, buildstep.BuildStep) and self.step.build is not None
+        assert self.step.build.path_cls is not None
+        return self.step.build.path_cls
 
     @property
     def _master(self):

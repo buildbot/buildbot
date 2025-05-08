@@ -18,6 +18,8 @@ from __future__ import annotations
 import stat
 import tarfile
 from io import BytesIO
+from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -1162,9 +1164,11 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         self.worker.worker_system = system
         if system == 'nt':
             self.build.path_module = namedModule('ntpath')
+            self.build.path_cls = PureWindowsPath
             self.worker.worker_basedir = '\\wrk'
         else:
             self.build.path_module = namedModule('posixpath')
+            self.build.path_cls = PurePosixPath
             self.worker.worker_basedir = '/wrk'
 
     def interrupt_nth_remote_command(self, number):

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from pathlib import PureWindowsPath
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.internet import error
@@ -533,6 +535,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
         self.build.path_module = namedModule("ntpath")
+        self.build.path_cls = PureWindowsPath
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', log_environ=True).exit(1),

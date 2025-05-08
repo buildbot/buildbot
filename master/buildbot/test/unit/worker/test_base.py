@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from pathlib import PurePath
 from unittest import mock
 
 from parameterized import parameterized
@@ -66,6 +67,12 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
     def test_attr_path_module(self):
         yield self.callAttached()
         self.assertTrue(hasattr(self.wrk, 'path_module'))
+
+    @defer.inlineCallbacks
+    def test_attr_path_cls(self):
+        yield self.callAttached()
+        path_cls = self.wrk.path_cls
+        self.assertTrue(issubclass(path_cls, PurePath))
 
     @defer.inlineCallbacks
     def test_attr_worker_system(self):

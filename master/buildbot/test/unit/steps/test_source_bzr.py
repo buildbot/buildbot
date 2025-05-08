@@ -15,6 +15,7 @@
 
 
 import os
+from pathlib import PureWindowsPath
 
 from twisted.internet import error
 from twisted.python.reflect import namedModule
@@ -69,6 +70,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
         self.build.path_module = namedModule('ntpath')
+        self.build.path_cls = PureWindowsPath
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['bzr', '--version']).exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', log_environ=True).exit(1),
