@@ -23,6 +23,7 @@ from typing import Any
 from typing import Callable
 from typing import cast
 
+import jwt
 import twisted
 from packaging.version import parse as parse_version
 from twisted.cred.checkers import FilePasswordDB
@@ -33,6 +34,7 @@ from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
+from twisted.python import log
 from twisted.web.error import Error
 from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import DigestCredentialFactory
@@ -258,3 +260,42 @@ class LogoutResource(resource.Resource):
         session.updateSession(request)
         request.redirect(_redirect(self.master, request).url)
         return b''
+
+
+# as per:
+# http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
+# we need 128 bit key for HS256
+SESSION_SECRET_LENGTH = 128
+SESSION_SECRET_ALGORITHM = "HS256"
+
+
+def parse_user_info_from_token(token: str, session_secret: str) -> dict[str, Any]:
+    try:
+        decoded = jwt.decode(token, session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
+    except jwt.exceptions.ExpiredSignatureError as e:
+        raise KeyError(str(e)) from e
+    except jwt.exceptions.InvalidSignatureError as e:
+        log.msg(
+            e,
+            "Web request has been rejected.Signature verification failed while decoding JWT.",
+        )
+        raise KeyError(str(e)) from e
+    except Exception as e:
+        log.err(e, "while decoding JWT session")
+        raise KeyError(str(e)) from e
+    # might raise KeyError: will be caught by caller, which makes the token invalid
+    return decoded['user_info']
+
+
+def build_anonymous_user_info() -> dict[str, Any]:
+    return {'anonymous': True}
+
+
+def build_cookie_name(is_secure: bool, sitepath: list[bytes]) -> bytes:
+    # we actually need to copy some hardcoded constants from twisted :-(
+    if not is_secure:
+        cookie_string = b"TWISTED_SESSION"
+    else:
+        cookie_string = b"TWISTED_SECURE_SESSION"
+
+    return b"_".join([cookie_string, *sitepath])

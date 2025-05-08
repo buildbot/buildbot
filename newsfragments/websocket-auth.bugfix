@@ -1,0 +1,1 @@
+Websocket connections no longer allow unauthenticated users to connect if authorization is setup.

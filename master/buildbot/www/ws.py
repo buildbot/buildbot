@@ -22,12 +22,23 @@ from typing import Any
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
+from autobahn.websocket.types import ConnectionDeny
+from autobahn.websocket.types import ConnectionRequest
 from twisted.internet import defer
 from twisted.python import log
+
+try:
+    from twisted.internet.interfaces import ISSLTransport
+
+    _HAS_SSL = True
+except ImportError:
+    _HAS_SSL = False
+
 
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util.twisted import InlineCallbacksType
+from buildbot.www import auth
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
@@ -39,6 +50,28 @@ class Subscription:
         self.query = query
         self.id = id
         self.last_value_chksum = None
+
+
+def parse_cookies(header_value: str) -> dict[str, str]:
+    cookies: dict[str, str] = {}
+
+    # autobahn appends multiple cookies using ','
+    for kv1 in header_value.split(","):
+        for kv in kv1.split(";"):
+            kv = kv.lstrip()
+            try:
+                k, v = kv.split("=", 1)
+                cookies[k] = v
+            except ValueError:
+                pass
+    return cookies
+
+
+def get_ws_sitepath(path: str) -> list[bytes]:
+    parts = path.split('/')
+    if len(parts) > 0 and parts[-1] == 'ws':
+        parts.pop()
+    return [p.encode('utf-8') for p in parts if p]
 
 
 class WsProtocol(WebSocketServerProtocol):
@@ -154,12 +187,31 @@ class WsProtocol(WebSocketServerProtocol):
 
         self.qrefs = None  # to be sure we don't add any more
 
-    def onConnect(self, request: Any) -> None:
-        return None
+    def is_secure(self) -> bool:
+        return _HAS_SSL and ISSLTransport.providedBy(self.transport)
+
+    @defer.inlineCallbacks
+    def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:
+        www = self.master.www
+        sitepath = get_ws_sitepath(request.path)
+
+        cookies = parse_cookies(request.headers.get('cookie', ''))
+        token = cookies.get(auth.build_cookie_name(self.is_secure(), sitepath).decode('utf-8'))
+
+        try:
+            if token is None:
+                user_info = auth.build_anonymous_user_info()
+            else:
+                user_info = auth.parse_user_info_from_token(token, www.site.session_secret)
+
+            # assume that if user cannot access /masters endpoint, then it can't access anything
+            yield www.authz.assertUserAllowed('masters', 'get', {}, user_info)
+        except Exception as e:
+            raise ConnectionDeny(403, "Forbidden") from e
 
 
 class WsProtocolFactory(WebSocketServerFactory):
-    def __init__(self, master: Any):
+    def __init__(self, master: BuildMaster):
         super().__init__()
         self.master = master
         pingInterval = self.master.config.www.get("ws_ping_interval", 0)
@@ -172,5 +224,5 @@ class WsProtocolFactory(WebSocketServerFactory):
 
 
 class WsResource(WebSocketResource):
-    def __init__(self, master: Any):
+    def __init__(self, master: BuildMaster):
         super().__init__(WsProtocolFactory(master))

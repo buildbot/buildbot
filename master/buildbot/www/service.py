@@ -58,12 +58,6 @@ from buildbot.www import ws
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
 
-# as per:
-# http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
-# we need 128 bit key for HS256
-SESSION_SECRET_LENGTH = 128
-SESSION_SECRET_ALGORITHM = "HS256"
-
 
 class BuildbotSession(server.Session):
     # We deviate a bit from the twisted API in order to implement that.
@@ -84,49 +78,23 @@ class BuildbotSession(server.Session):
         # server.Session parent class constructor
         components.Componentized.__init__(self)
         if token:
-            self._fromToken(token)
+            self._set_user_info_from_token(token)
         else:
             self._defaultValue()
 
     def _defaultValue(self) -> None:
-        self.user_info = {"anonymous": True}
+        self.user_info = auth.build_anonymous_user_info()
 
-    def _fromToken(self, token: str) -> None:
-        try:
-            decoded = jwt.decode(
-                token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM]
-            )
-        except jwt.exceptions.ExpiredSignatureError as e:
-            raise KeyError(str(e)) from e
-        except jwt.exceptions.InvalidSignatureError as e:
-            log.msg(
-                e,
-                "Web request has been rejected.Signature verification failed while decoding JWT.",
-            )
-            raise KeyError(str(e)) from e
-        except Exception as e:
-            log.err(e, "while decoding JWT session")
-            raise KeyError(str(e)) from e
-        # might raise KeyError: will be caught by caller, which makes the token invalid
-        self.user_info = decoded['user_info']
+    def _set_user_info_from_token(self, token: str) -> None:
+        self.user_info = auth.parse_user_info_from_token(token, self.site.session_secret)
 
     def updateSession(self, request: server.Request) -> None:
         """
         Update the cookie after session object was modified
         @param request: the request object which should get a new cookie
         """
-        # we actually need to copy some hardcoded constants from twisted :-(
-
-        # Make sure we aren't creating a secure session on a non-secure page
-        secure = request.isSecure()
-
-        if not secure:
-            cookieString = b"TWISTED_SESSION"
-        else:
-            cookieString = b"TWISTED_SECURE_SESSION"
-
-        cookiename = b"_".join([cookieString, *request.sitepath])  # type: ignore[attr-defined]
-        request.addCookie(cookiename, self.uid, path=b"/", secure=secure)
+        cookiename = auth.build_cookie_name(request.isSecure(), request.sitepath)  # type: ignore[attr-defined]
+        request.addCookie(cookiename, self.uid, path=b"/", secure=request.isSecure())
 
     def expire(self) -> None:
         # caller must still call self.updateSession() to actually expire it
@@ -152,7 +120,7 @@ class BuildbotSession(server.Session):
             'exp': calendar.timegm(datetime.datetime.timetuple(exp)),
         }
 
-        return jwt.encode(claims, self.site.session_secret, algorithm=SESSION_SECRET_ALGORITHM)
+        return jwt.encode(claims, self.site.session_secret, algorithm=auth.SESSION_SECRET_ALGORITHM)
 
 
 class BuildbotSite(server.Site):
@@ -427,7 +395,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # and other runs of this master
 
             # we encode that in hex for db storage convenience
-            return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
+            return bytes2unicode(hexlify(os.urandom(int(auth.SESSION_SECRET_LENGTH / 8))))
 
         session_secret = yield state.atomicCreateState(
             objectid, "session_secret", create_session_secret
