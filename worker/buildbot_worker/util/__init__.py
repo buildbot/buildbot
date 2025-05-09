@@ -21,12 +21,12 @@ from ._hangcheck import HangCheckFactory
 from ._notifier import Notifier
 
 __all__ = [
-    "remove_userpassword",
-    "now",
-    "Obfuscated",
-    "rewrap",
     "HangCheckFactory",
     "Notifier",
+    "Obfuscated",
+    "now",
+    "remove_userpassword",
+    "rewrap",
 ]
 
 

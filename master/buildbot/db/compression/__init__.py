@@ -21,8 +21,8 @@ from buildbot.db.compression.protocol import CompressorInterface
 from buildbot.db.compression.zstd import ZStdCompressor
 
 __all__ = [
-    'BrotliCompressor',
     'BZipCompressor',
+    'BrotliCompressor',
     'CompressorInterface',
     'GZipCompressor',
     'LZ4Compressor',

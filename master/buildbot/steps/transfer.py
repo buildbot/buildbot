@@ -575,8 +575,7 @@ class JSONStringDownload(StringDownload):
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
-        if 's' in buildstep_kwargs:
-            del buildstep_kwargs['s']
+        buildstep_kwargs.pop('s', None)
         super().__init__(s=o, workerdest=workerdest, **buildstep_kwargs)
 
     @defer.inlineCallbacks
@@ -594,8 +593,7 @@ class JSONPropertiesDownload(StringDownload):
         if workerdest is None:
             raise TypeError("__init__() takes at least 2 arguments")
 
-        if 's' in buildstep_kwargs:
-            del buildstep_kwargs['s']
+        buildstep_kwargs.pop('s', None)
         super().__init__(s=None, workerdest=workerdest, **buildstep_kwargs)
 
     @defer.inlineCallbacks

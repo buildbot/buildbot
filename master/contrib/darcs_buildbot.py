@@ -102,7 +102,7 @@ def getChangesFromCommand(cmd, count):
 
 
 def getSomeChanges(count):
-    cmd = "darcs changes --last=%d --xml-output --summary" % count
+    cmd = f"darcs changes --last={count} --xml-output --summary"
     return getChangesFromCommand(cmd, count)
 
 
@@ -131,7 +131,7 @@ def findNewChanges():
         if 2 * lookback > 100:
             raise RuntimeError(
                 "unable to find our most recent change "
-                "(%s) in the last %d changes" % (lastchange, lookback)
+                f"({lastchange}) in the last {lookback} changes"
             )
         lookback = 2 * lookback
 
@@ -149,7 +149,7 @@ def sendChanges(master):
     elif len(changes) == 1:
         print("sending 1 change to buildmaster:")
     else:
-        print("sending %d changes to buildmaster:" % len(changes))
+        print(f"sending {len(changes)} changes to buildmaster:")
 
     # the Darcs Source class expects revision to be a context, not a
     # hash of a patch (which is what we have in c['revision']).  For
@@ -174,7 +174,7 @@ def sendChanges(master):
     def printSuccess(res):
         num_changes = len(changes)
         if num_changes > 1:
-            print("%d changes sent successfully" % num_changes)
+            print(f"{num_changes} changes sent successfully")
         elif num_changes == 1:
             print("change sent successfully")
         else:

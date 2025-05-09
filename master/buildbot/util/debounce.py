@@ -28,14 +28,14 @@ PH_RUNNING_QUEUED = 3
 
 class Debouncer:
     __slots__ = [
-        'phase',
-        'timer',
-        'wait',
-        'function',
-        'stopped',
         'completeDeferreds',
+        'function',
         'get_reactor',
+        'phase',
+        'stopped',
+        'timer',
         'until_idle',
+        'wait',
     ]
 
     def __init__(self, wait, function, get_reactor, until_idle):

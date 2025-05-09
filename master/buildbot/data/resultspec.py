@@ -215,7 +215,7 @@ class ReverseComparator:
 
 
 class ResultSpec:
-    __slots__ = ['filters', 'fields', 'properties', 'order', 'limit', 'offset', 'fieldMapping']
+    __slots__ = ['fieldMapping', 'fields', 'filters', 'limit', 'offset', 'order', 'properties']
 
     def __init__(
         self, filters=None, fields=None, properties=None, order=None, limit=None, offset=None

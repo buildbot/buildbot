@@ -98,7 +98,9 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
         setattr(self.master.db.builds, dbMethodName, m)
         res = yield method(*args, **kwargs)
         self.assertIdentical(res, rv)
-        m.assert_called_with(*(exp_args or args), **((exp_kwargs is None) and kwargs or exp_kwargs))
+        m.assert_called_with(
+            *(exp_args or args), **(((exp_kwargs is None) and kwargs) or exp_kwargs)
+        )
 
     def test_signature_setBuildProperty(self):
         @self.assertArgSpecMatches(

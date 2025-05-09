@@ -148,7 +148,7 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             self.ExpectShell(command=["repo", "manifest", "-r", "-o", "manifest-original.xml"]),
         ]
         for i, command in enumerate(commands):
-            self.expect_commands(command.exit(which_fail == i and 1 or 0))
+            self.expect_commands(command.exit((which_fail == i and 1) or 0))
             if which_fail == i and breakatfail:
                 break
 

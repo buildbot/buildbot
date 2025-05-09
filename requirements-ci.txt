@@ -10,8 +10,8 @@ coverage==7.6.1; python_version < "3.9" # pyup: ignore
 docker==7.1.0
 hvac==2.3.0
 ldap3==2.9.1
-mypy==1.13.0
-mypy-zope==1.0.9
+mypy==1.15.0
+mypy-zope==1.0.11
 psutil==6.1.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
@@ -65,7 +65,7 @@ pytz==2024.2
 PyYAML==6.0.2
 requests==2.32.3
 responses==0.25.3
-ruff==0.7.4
+ruff==0.11.8
 s3transfer==0.10.4
 service-identity==24.2.0
 setuptools-trial==0.6.0

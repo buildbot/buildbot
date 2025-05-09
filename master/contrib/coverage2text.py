@@ -32,7 +32,7 @@ class MyReporter(SummaryReporter):
 
         # Prepare the formatting strings
         max_name = max([len(cu.name) for cu in self.code_units] + [5])
-        fmt_name = "%%- %ds  " % max_name
+        fmt_name = f"%- {max_name}s  "
         fmt_err = "%s   %s: %s\n"
         header1 = (fmt_name % "") + "     Statements    "
         header2 = (fmt_name % "Name") + " Uncovered  Covered"

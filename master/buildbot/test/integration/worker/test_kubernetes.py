@@ -45,7 +45,7 @@ from buildbot.worker import kubernetes
 #  - 'minikube ssh' to get a shell into the minikube VM
 
 # following environment variable can be used to stress concurrent worker startup
-NUM_CONCURRENT = int(os.environ.get("KUBE_TEST_NUM_CONCURRENT_BUILD", 1))
+NUM_CONCURRENT = int(os.environ.get("KUBE_TEST_NUM_CONCURRENT_BUILD", "1"))
 
 
 class KubernetesMaster(RunMasterBase):

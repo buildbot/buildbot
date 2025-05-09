@@ -60,7 +60,7 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 
 class QueueRef(base.QueueRef):
-    __slots__ = ['mq', 'filter']
+    __slots__ = ['filter', 'mq']
 
     def __init__(self, mq, callback, filter):
         super().__init__(callback)

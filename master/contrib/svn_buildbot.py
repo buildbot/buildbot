@@ -212,7 +212,7 @@ class ChangeSender:
         # now create the Change dictionaries
         changes = []
         encoding = opts['encoding']
-        for branch in files_per_branch.keys():
+        for branch, branch_files in files_per_branch.items():
             d = {
                 'who': text_type(who, encoding=encoding),
                 'repository': text_type(worker_repo, encoding=encoding),
@@ -227,7 +227,7 @@ class ChangeSender:
                 d['branch'] = branch
 
             files = []
-            for file in files_per_branch[branch]:
+            for file in branch_files:
                 files.append(text_type(file, encoding=encoding))
             d['files'] = files
 
@@ -259,10 +259,10 @@ class ChangeSender:
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for i, c in enumerate(changes):
-                print("CHANGE #%d" % (i + 1))
+                print(f"CHANGE #{(i + 1)}")
                 keys = sorted(c.keys())
                 for k in keys:
-                    print("[%10s]: %s" % (k, c[k]))
+                    print(f"[{k:>10}]: {c[k]}")
             print("*NOT* sending any changes")
             return
 
