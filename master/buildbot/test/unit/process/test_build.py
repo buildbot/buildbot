@@ -111,6 +111,7 @@ class FakeBuilder:
         self.config = Mock()
         self.config.workerbuilddir = 'wbd'
         self.config.description = 'builder-description'
+        self.config.env = {}
         self.name = 'fred'
         self.master = master
         self.botmaster = master.botmaster
@@ -901,6 +902,22 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.flushLoggedErrors(TestException)
 
         self.assertEqual(get_active_builds(), 0)
+
+    def test_build_env_mutation_not_propagated(self):
+        builder = FakeBuilder(self.master)
+        builder.config.env['PATH'] = ['/a/b/c', '/d/e/f']
+        build = Build(self.build.requests, builder)
+
+        # build correctly inherited
+        self.assertEqual(build.env['PATH'], ['/a/b/c', '/d/e/f'])
+        # should NOT be the same object
+        self.assertIsNot(build.env['PATH'], builder.config.env['PATH'])
+
+        # mutate build.env
+        build.env['PATH'].insert(0, '/x/y/z')
+
+        self.assertEqual(build.env['PATH'], ['/x/y/z', '/a/b/c', '/d/e/f'])
+        self.assertEqual(builder.config.env['PATH'], ['/a/b/c', '/d/e/f'])
 
 
 class TestMultipleSourceStamps(TestReactorMixin, unittest.TestCase):

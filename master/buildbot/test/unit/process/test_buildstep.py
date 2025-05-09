@@ -1455,7 +1455,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_env(self):
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env={'BAR': 'BAR'}))
-        self.build.builder.config.env = {'FOO': 'FOO'}
+        self.build.env = {'FOO': 'FOO'}
         self.expect_commands(
             ExpectShell(
                 workdir='wkdir', command=['cmd', 'arg'], env={'FOO': 'FOO', 'BAR': 'BAR'}

@@ -57,6 +57,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.properties = props
         self.master = None
         self.config_version = 0
+        self.env = {}
 
     def getProperties(self):
         return self.properties

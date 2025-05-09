@@ -311,6 +311,7 @@ Encodings
 endsWith
 entityType
 entrypoint
+env
 ep
 eq
 errback
