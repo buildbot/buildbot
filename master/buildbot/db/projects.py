@@ -16,12 +16,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from twisted.internet import defer
+from typing import TYPE_CHECKING
 
 from buildbot.db import base
 from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 
 @dataclass

@@ -28,7 +28,6 @@ import jwt
 import twisted
 from packaging.version import parse as parse_version
 from twisted.application import strports
-from twisted.application.internet import StreamServerEndpointService
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -45,7 +44,6 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
@@ -56,7 +54,10 @@ from buildbot.www import sse
 from buildbot.www import ws
 
 if TYPE_CHECKING:
+    from twisted.application.internet import StreamServerEndpointService
+
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BuildbotSession(server.Session):

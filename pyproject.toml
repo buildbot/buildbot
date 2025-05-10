@@ -3,7 +3,7 @@ line-length = 100
 target-version = "py38"
 
 [tool.ruff.lint]
-    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B", "RUF", "FA"]
+    select = ["W", "E", "F", "I", "PL", "UP", "T100", "B", "RUF", "FA", "TC"]
     ignore = [
         "E711", # comparison to None should be 'if cond is None:'
         "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
@@ -35,6 +35,8 @@ target-version = "py38"
         # Might be nice to have in future, but requires significant refactoring for now.
         "RUF012", # mutable-class-default
         "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
+
+        "TC006", # runtime-cast-value
     ]
 
 [tool.ruff.lint.isort]

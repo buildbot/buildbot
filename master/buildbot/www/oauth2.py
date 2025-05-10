@@ -35,12 +35,12 @@ import buildbot
 from buildbot import config
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 from buildbot.www import resource
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 log = Logger()

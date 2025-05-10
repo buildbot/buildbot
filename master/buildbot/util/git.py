@@ -35,13 +35,13 @@ from buildbot.process.properties import Properties
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import ComparableMixin
 from buildbot.util import bytes2unicode
-from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.misc import writeLocalFile
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from buildbot.changes.gitpoller import GitPoller
     from buildbot.interfaces import IRenderable
+    from buildbot.util.git_credential import GitCredentialOptions
 
 RC_SUCCESS = 0
 

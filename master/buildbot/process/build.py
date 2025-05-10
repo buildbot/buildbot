@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import reduce
-from pathlib import PurePath
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import cast
@@ -49,6 +48,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
+    from pathlib import PurePath
+
     from buildbot.interfaces import IBuildStep
     from buildbot.locks import BaseLockId
     from buildbot.process.builder import Builder

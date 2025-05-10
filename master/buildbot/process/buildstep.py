@@ -26,7 +26,6 @@ from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.internet.base import ReactorBase
 from twisted.python import deprecate
 from twisted.python import log
 from twisted.python import versions
@@ -46,7 +45,6 @@ from buildbot.config.checks import check_param_str_none
 from buildbot.db import model_config
 from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerSetupError
-from buildbot.locks import BaseLock
 from buildbot.process import log as plog
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -73,9 +71,11 @@ from buildbot.util.test_result_submitter import TestResultSubmitter
 if TYPE_CHECKING:
     from typing import TypeVar
 
+    from twisted.internet.base import ReactorBase
     from typing_extensions import Self
 
     from buildbot.interfaces import IBuildStep
+    from buildbot.locks import BaseLock
     from buildbot.master import BuildMaster
     from buildbot.process.build import Build
     from buildbot.process.log import StreamLog

@@ -15,12 +15,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
-from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):

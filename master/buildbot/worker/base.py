@@ -19,9 +19,9 @@ import time
 from pathlib import PurePath
 from pathlib import PurePosixPath
 from pathlib import PureWindowsPath
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
-from twisted.internet.base import DelayedCall
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from zope.interface import implementer
@@ -34,6 +34,9 @@ from buildbot.util import Notifier
 from buildbot.util import bytes2unicode
 from buildbot.util import deferwaiter
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from twisted.internet.base import DelayedCall
 
 
 @implementer(IWorker)

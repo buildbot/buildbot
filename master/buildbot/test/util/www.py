@@ -20,6 +20,7 @@ import os
 from importlib.metadata import entry_points
 from io import BytesIO
 from io import StringIO
+from typing import TYPE_CHECKING
 from typing import Any
 from unittest import mock
 from urllib.parse import parse_qs
@@ -33,10 +34,12 @@ from buildbot.test.fake import fakemaster
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.util.importlib_compat import entry_points_get
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 from buildbot.www import authz
 from buildbot.www.authz.authz import Authz
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class FakeSession:

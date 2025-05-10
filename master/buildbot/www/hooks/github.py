@@ -27,20 +27,21 @@ from typing import Callable
 
 from dateutil.parser import parse as dateparse
 from twisted.internet import defer
-from twisted.internet.defer import Deferred
 from twisted.python import log
-from twisted.web.server import Request
 
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util.pullrequest import PullRequestMixin
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www.hooks.base import BaseHookHandler
 
 if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+    from twisted.web.server import Request
+
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'

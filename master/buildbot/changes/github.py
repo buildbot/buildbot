@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -32,7 +33,9 @@ from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
 from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.util.state import StateMixin
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 log = Logger()
 

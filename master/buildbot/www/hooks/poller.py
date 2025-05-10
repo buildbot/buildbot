@@ -19,17 +19,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import cast
-
-from twisted.internet import defer
-from twisted.web.server import Request
 
 from buildbot.changes.base import ReconfigurablePollingChangeSource
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
 from buildbot.www.service import BuildbotSite
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
+    from twisted.web.server import Request
 
 
 class PollingHandler(BaseHookHandler):

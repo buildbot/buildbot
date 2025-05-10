@@ -18,10 +18,10 @@ import os
 import re
 import sys
 from io import StringIO
+from typing import TYPE_CHECKING
 from typing import Any
 from unittest import mock
 
-from twisted.application.service import Service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -44,6 +44,9 @@ from buildbot.util.twisted import any_to_async
 from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.local import LocalWorker
 from buildbot_worker.bot import Worker
+
+if TYPE_CHECKING:
+    from twisted.application.service import Service
 
 
 @implementer(IConfigLoader)

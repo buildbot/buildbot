@@ -16,11 +16,14 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.web import iweb
-from twisted.web.http import Request
 from zope.interface import implementer
+
+if TYPE_CHECKING:
+    from twisted.web.http import Request
 
 try:
     import brotli

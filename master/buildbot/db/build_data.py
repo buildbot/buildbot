@@ -16,15 +16,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from twisted.internet import defer
 from twisted.python import deprecate
 from twisted.python import versions
 
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 
 @dataclass

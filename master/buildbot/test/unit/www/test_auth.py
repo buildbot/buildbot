@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
+from typing import TYPE_CHECKING
 from typing import Any
 from unittest import mock
 
@@ -24,17 +25,20 @@ from twisted.cred.credentials import UsernamePassword
 from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
 from twisted.trial import unittest
-from twisted.web import server
 from twisted.web.error import Error
 from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 
-from buildbot.test.fake.fakemaster import FakeMaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
+
+if TYPE_CHECKING:
+    from twisted.web import server
+
+    from buildbot.test.fake.fakemaster import FakeMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class AuthResourceMixin(ABC):

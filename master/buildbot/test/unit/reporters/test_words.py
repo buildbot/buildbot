@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from unittest import mock
@@ -30,7 +31,9 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import datetime2epoch
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class ContactMixin(TestReactorMixin, unittest.TestCase):

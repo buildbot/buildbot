@@ -37,12 +37,12 @@ except ImportError:
 
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import auth
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
     from buildbot.mq.base import QueueRef
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Subscription:

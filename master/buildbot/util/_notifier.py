@@ -21,11 +21,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Generic
 from typing import TypeVar
 
 from twisted.internet.defer import Deferred
-from twisted.python.failure import Failure
+
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
 
 _SelfResultT = TypeVar("_SelfResultT")
 

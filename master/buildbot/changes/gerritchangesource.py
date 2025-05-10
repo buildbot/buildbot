@@ -19,6 +19,7 @@ import copy
 import datetime
 import hashlib
 import json
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -41,7 +42,9 @@ from buildbot.util import runprocess
 from buildbot.util import watchdog
 from buildbot.util.protocol import LineProcessProtocol
 from buildbot.util.pullrequest import PullRequestMixin
-from buildbot.util.twisted import InlineCallbacksType
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 def _canonicalize_event(event: dict) -> dict:

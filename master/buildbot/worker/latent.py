@@ -18,10 +18,10 @@ from __future__ import annotations
 import enum
 import random
 import string
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
-from twisted.internet.base import DelayedCall
 from twisted.python import failure
 from twisted.python import log
 from zope.interface import implementer
@@ -32,6 +32,9 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
 from buildbot.worker.base import AbstractWorker
+
+if TYPE_CHECKING:
+    from twisted.internet.base import DelayedCall
 
 
 class States(enum.Enum):

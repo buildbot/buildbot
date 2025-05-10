@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import fnmatch
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import cast
@@ -27,8 +28,10 @@ from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.util import unicode2bytes
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www.authz.roles import RolesFromOwner
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Forbidden(Error):

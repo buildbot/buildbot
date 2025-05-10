@@ -15,13 +15,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.www import authz
 from buildbot.www.authz.endpointmatchers import AnyControlEndpointMatcher
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
@@ -35,6 +36,9 @@ from buildbot.www.authz.roles import RolesFromDomain
 from buildbot.www.authz.roles import RolesFromEmails
 from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Authz(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):

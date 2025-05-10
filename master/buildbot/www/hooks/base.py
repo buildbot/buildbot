@@ -27,11 +27,12 @@ from typing import Any
 from typing import cast
 
 from twisted.internet import defer
-from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 
 if TYPE_CHECKING:
+    from twisted.web.server import Request
+
     from buildbot.master import BuildMaster
 
 

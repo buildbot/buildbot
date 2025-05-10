@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.python import log
-from twisted.web.server import Request
 
 from buildbot.util import bytes2unicode
 from buildbot.util.pullrequest import PullRequestMixin
@@ -35,6 +34,8 @@ _HEADER_EVENT = b'X-Event-Key'
 
 
 if TYPE_CHECKING:
+    from twisted.web.server import Request
+
     from buildbot.master import BuildMaster
 
 
