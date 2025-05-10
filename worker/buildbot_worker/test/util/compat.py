@@ -15,14 +15,24 @@
 
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.python import runtime
 
+if TYPE_CHECKING:
+    from typing import Callable
+    from typing import Literal
+    from typing import TypeVar
 
-def skipUnlessPlatformIs(platform):
-    def closure(test):
+    _T = TypeVar('_T')
+
+
+def skipUnlessPlatformIs(platform: Literal["posix", "win32"]) -> Callable[[_T], _T]:
+    def closure(test: _T) -> _T:
         if runtime.platformType != platform:
-            test.skip = f"not a {platform} platform"
+            test.skip = f"not a {platform} platform"  # type: ignore[attr-defined]
         return test
 
     return closure

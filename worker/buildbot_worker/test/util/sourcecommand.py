@@ -12,16 +12,33 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from twisted.trial.unittest import TestCase
 
 from buildbot_worker.test.util import command
 
+if TYPE_CHECKING:
+    from typing import TypeVar
 
+    _T = TypeVar('_T')
+
+
+# TODO: Remove unused?
 class SourceCommandTestMixin(command.CommandTestMixin):
     """
     Support for testing Source Commands; an extension of CommandTestMixin
     """
 
-    def make_command(self, cmdclass, args, makedirs=False, initial_sourcedata=''):
+    def make_command(  # type: ignore[no-untyped-def]
+        self,
+        cmdclass,
+        args,
+        makedirs: bool = False,
+        initial_sourcedata: str = '',
+    ) -> None:
         """
         Same as the parent class method, but this also adds some source-specific
         patches:
@@ -39,23 +56,24 @@ class SourceCommandTestMixin(command.CommandTestMixin):
 
         self.sourcedata = initial_sourcedata
 
-        def readSourcedata():
+        def readSourcedata() -> str:
             if self.sourcedata is None:
                 raise OSError("File not found")
             return self.sourcedata
 
         cmd.readSourcedata = readSourcedata
 
-        def writeSourcedata(res):
+        def writeSourcedata(res: _T) -> _T:
             self.sourcedata = cmd.sourcedata
             return res
 
         cmd.writeSourcedata = writeSourcedata
 
-    def check_sourcedata(self, _, expected_sourcedata):
+    def check_sourcedata(self, _: _T, expected_sourcedata: None) -> _T:
         """
         Assert that the sourcedata (from the patched functions - see
         make_command) is correct.  Use this as a deferred callback.
         """
+        assert isinstance(self, TestCase)
         self.assertEqual(self.sourcedata, expected_sourcedata)
         return _
