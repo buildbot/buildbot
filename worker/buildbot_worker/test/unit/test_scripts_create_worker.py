@@ -12,8 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 from twisted.trial import unittest
 
@@ -25,8 +27,15 @@ try:
 except ImportError:
     from unittest import mock
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import Literal
+    from typing import Mapping
 
-def _regexp_path(name, *names):
+    from buildbot_worker.scripts.base import Options
+
+
+def _regexp_path(name: str, *names: str) -> str:
     """
     Join two or more path components and create a regexp that will match that
     path.
@@ -36,7 +45,7 @@ def _regexp_path(name, *names):
 
 class TestDefaultOptionsMixin:
     # default options and required arguments
-    options = {
+    options: Options = {
         # flags
         "no-logrotate": False,
         "relocatable": False,
@@ -69,7 +78,12 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
     Test buildbot_worker.scripts.create_worker._make_tac()
     """
 
-    def assert_tac_file_contents(self, tac_contents, expected_args, relocate=None):
+    def assert_tac_file_contents(
+        self,
+        tac_contents: str,
+        expected_args: Mapping[str, Any],
+        relocate: str | None = None,
+    ) -> None:
         """
         Check that generated TAC file is a valid Python script and it does what
         is typical for TAC file logic. Mainly create instance of Worker with
@@ -140,7 +154,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
             "defined \"application\" variable in .tac file is not Application instance",
         )
 
-    def test_default_tac_contents(self):
+    def test_default_tac_contents(self) -> None:
         """
         test that with default options generated TAC file is valid.
         """
@@ -148,7 +162,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assert_tac_file_contents(tac_contents, self.options)
 
-    def test_backslash_in_basedir(self):
+    def test_backslash_in_basedir(self) -> None:
         """
         test that using backslash (typical for Windows platform) in basedir
         won't break generated TAC file.
@@ -160,7 +174,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_quotes_in_basedir(self):
+    def test_quotes_in_basedir(self) -> None:
         """
         test that using quotes in basedir won't break generated TAC file.
         """
@@ -171,7 +185,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_double_quotes_in_basedir(self):
+    def test_double_quotes_in_basedir(self) -> None:
         """
         test that using double quotes at begin and end of basedir won't break
         generated TAC file.
@@ -183,7 +197,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_special_characters_in_options(self):
+    def test_special_characters_in_options(self) -> None:
         """
         test that using special characters in options strings won't break
         generated TAC file.
@@ -199,7 +213,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_flags_with_non_default_values(self):
+    def test_flags_with_non_default_values(self) -> None:
         """
         test that flags with non-default values will be correctly written to
         generated TAC file.
@@ -213,7 +227,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_log_rotate(self):
+    def test_log_rotate(self) -> None:
         """
         test that when --no-logrotate options is not used, correct tac file
         is generated.
@@ -226,7 +240,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         self.assertIn("from twisted.python.logfile import LogFile", tac_contents)
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_no_log_rotate(self):
+    def test_no_log_rotate(self) -> None:
         """
         test that when --no-logrotate options is used, correct tac file
         is generated.
@@ -239,7 +253,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         self.assertNotIn("from twisted.python.logfile import LogFile", tac_contents)
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_relocatable_true(self):
+    def test_relocatable_true(self) -> None:
         """
         test that when --relocatable option is True, worker is created from
         generated TAC file with correct basedir argument before and after
@@ -257,7 +271,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         options["basedir"] = _relocate
         self.assert_tac_file_contents(tac_contents, options, relocate=_relocate)
 
-    def test_relocatable_false(self):
+    def test_relocatable_false(self) -> None:
         """
         test that when --relocatable option is False, worker is created from
         generated TAC file with the same basedir argument before and after
@@ -274,7 +288,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         _relocate = os.path.join(os.getcwd(), "worker2")
         self.assert_tac_file_contents(tac_contents, options, relocate=_relocate)
 
-    def test_options_with_non_default_values(self):
+    def test_options_with_non_default_values(self) -> None:
         """
         test that options with non-default values will be correctly written to
         generated TAC file and used as argument of Worker.
@@ -309,7 +323,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         options["maxretries"] = 1
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_umask_octal_value(self):
+    def test_umask_octal_value(self) -> None:
         """
         test that option umask with octal value will be correctly written to
         generated TAC file and used as argument of Worker.
@@ -323,7 +337,7 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
         options["umask"] = 18
         self.assert_tac_file_contents(tac_contents, options)
 
-    def test_connection_string(self):
+    def test_connection_string(self) -> None:
         """
         test that when --connection-string options is used, correct tac file
         is generated.
@@ -343,7 +357,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
     Test buildbot_worker.scripts.create_worker._makeBaseDir()
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         # capture stdout
         self.setUpStdoutAssertions()
 
@@ -351,7 +365,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.mkdir = mock.Mock()
         self.patch(os, "mkdir", self.mkdir)
 
-    def testBasedirExists(self):
+    def testBasedirExists(self) -> None:
         """
         test calling _makeBaseDir() on existing base directory
         """
@@ -365,7 +379,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
         # check that os.mkdir was not called
         self.assertFalse(self.mkdir.called, "unexpected call to os.mkdir()")
 
-    def testBasedirExistsQuiet(self):
+    def testBasedirExistsQuiet(self) -> None:
         """
         test calling _makeBaseDir() on existing base directory with
         quiet flag enabled
@@ -380,7 +394,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
         # check that os.mkdir was not called
         self.assertFalse(self.mkdir.called, "unexpected call to os.mkdir()")
 
-    def testBasedirCreated(self):
+    def testBasedirCreated(self) -> None:
         """
         test creating new base directory with _makeBaseDir()
         """
@@ -394,7 +408,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
         # check that correct message was printed to stdout
         self.assertStdoutEqual("mkdir dummy\n")
 
-    def testBasedirCreatedQuiet(self):
+    def testBasedirCreatedQuiet(self) -> None:
         """
         test creating new base directory with _makeBaseDir()
         and quiet flag enabled
@@ -409,7 +423,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
         # check that nothing was printed to stdout
         self.assertWasQuiet()
 
-    def testMkdirError(self):
+    def testMkdirError(self) -> None:
         """
         test that _makeBaseDir() handles error creating directory correctly
         """
@@ -430,7 +444,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
     Test buildbot_worker.scripts.create_worker._makeBuildbotTac()
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         # capture stdout
         self.setUpStdoutAssertions()
 
@@ -441,7 +455,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         # generate OS specific relative path to buildbot.tac inside basedir
         self.tac_file_path = _regexp_path("bdir", "buildbot.tac")
 
-    def testTacOpenError(self):
+    def testTacOpenError(self) -> None:
         """
         test that _makeBuildbotTac() handles open() errors on buildbot.tac
         """
@@ -454,7 +468,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
-    def testTacReadError(self):
+    def testTacReadError(self) -> None:
         """
         test that _makeBuildbotTac() handles read() errors on buildbot.tac
         """
@@ -467,7 +481,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
-    def testTacWriteError(self):
+    def testTacWriteError(self) -> None:
         """
         test that _makeBuildbotTac() handles write() errors on buildbot.tac
         """
@@ -480,7 +494,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         with self.assertRaisesRegex(create_worker.CreateWorkerError, expected_message):
             create_worker._makeBuildbotTac("bdir", "contents", False)
 
-    def checkTacFileCorrect(self, quiet):
+    def checkTacFileCorrect(self, quiet: bool) -> None:
         """
         Utility function to test calling _makeBuildbotTac() on base directory
         with existing buildbot.tac file, which does not need to be changed.
@@ -503,21 +517,21 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
         else:
             self.assertStdoutEqual("buildbot.tac already exists and is correct\n")
 
-    def testTacFileCorrect(self):
+    def testTacFileCorrect(self) -> None:
         """
         call _makeBuildbotTac() on base directory which contains a buildbot.tac
         file, which does not need to be changed
         """
         self.checkTacFileCorrect(False)
 
-    def testTacFileCorrectQuiet(self):
+    def testTacFileCorrectQuiet(self) -> None:
         """
         call _makeBuildbotTac() on base directory which contains a buildbot.tac
         file, which does not need to be changed. Check that quite flag works
         """
         self.checkTacFileCorrect(True)
 
-    def checkDiffTacFile(self, quiet):
+    def checkDiffTacFile(self, quiet: bool) -> None:
         """
         Utility function to test calling _makeBuildbotTac() on base directory
         with a buildbot.tac file, with does needs to be changed.
@@ -548,21 +562,21 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest
                 "not touching existing buildbot.tac\ncreating buildbot.tac.new instead\n"
             )
 
-    def testDiffTacFile(self):
+    def testDiffTacFile(self) -> None:
         """
         call _makeBuildbotTac() on base directory which contains a buildbot.tac
         file, with does needs to be changed.
         """
         self.checkDiffTacFile(False)
 
-    def testDiffTacFileQuiet(self):
+    def testDiffTacFileQuiet(self) -> None:
         """
         call _makeBuildbotTac() on base directory which contains a buildbot.tac
         file, with does needs to be changed. Check that quite flag works
         """
         self.checkDiffTacFile(True)
 
-    def testNoTacFile(self):
+    def testNoTacFile(self) -> None:
         """
         call _makeBuildbotTac() on base directory with no buildbot.tac file
         """
@@ -585,11 +599,11 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
     Test buildbot_worker.scripts.create_worker._makeInfoFiles()
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         # capture stdout
         self.setUpStdoutAssertions()
 
-    def checkMkdirError(self, quiet):
+    def checkMkdirError(self, quiet: bool) -> None:
         """
         Utility function to test _makeInfoFiles() when os.mkdir() fails.
 
@@ -615,19 +629,19 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
         else:
             self.assertStdoutEqual("mkdir {}\n".format(os.path.join("bdir", "info")))
 
-    def testMkdirError(self):
+    def testMkdirError(self) -> None:
         """
         test _makeInfoFiles() when os.mkdir() fails
         """
         self.checkMkdirError(False)
 
-    def testMkdirErrorQuiet(self):
+    def testMkdirErrorQuiet(self) -> None:
         """
         test _makeInfoFiles() when os.mkdir() fails and quiet flag is enabled
         """
         self.checkMkdirError(True)
 
-    def checkIOError(self, error_type, quiet):
+    def checkIOError(self, error_type: Literal["open", "write"], quiet: bool) -> None:
         """
         Utility function to test _makeInfoFiles() when open() or write() fails.
 
@@ -668,31 +682,31 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
                 )
             )
 
-    def testOpenError(self):
+    def testOpenError(self) -> None:
         """
         test _makeInfoFiles() when open() fails
         """
         self.checkIOError("open", False)
 
-    def testOpenErrorQuiet(self):
+    def testOpenErrorQuiet(self) -> None:
         """
         test _makeInfoFiles() when open() fails and quiet flag is enabled
         """
         self.checkIOError("open", True)
 
-    def testWriteError(self):
+    def testWriteError(self) -> None:
         """
         test _makeInfoFiles() when write() fails
         """
         self.checkIOError("write", False)
 
-    def testWriteErrorQuiet(self):
+    def testWriteErrorQuiet(self) -> None:
         """
         test _makeInfoFiles() when write() fails and quiet flag is enabled
         """
         self.checkIOError("write", True)
 
-    def checkCreatedSuccessfully(self, quiet):
+    def checkCreatedSuccessfully(self, quiet: bool) -> None:
         """
         Utility function to test _makeInfoFiles() when called on
         base directory that does not have 'info' sub-directory.
@@ -746,20 +760,20 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin, misc.FileIOMixin, unittest.T
                 )
             )
 
-    def testCreatedSuccessfully(self):
+    def testCreatedSuccessfully(self) -> None:
         """
         test calling _makeInfoFiles() on basedir without 'info' directory
         """
         self.checkCreatedSuccessfully(False)
 
-    def testCreatedSuccessfullyQuiet(self):
+    def testCreatedSuccessfullyQuiet(self) -> None:
         """
         test calling _makeInfoFiles() on basedir without 'info' directory
         and quiet flag is enabled
         """
         self.checkCreatedSuccessfully(True)
 
-    def testInfoDirExists(self):
+    def testInfoDirExists(self) -> None:
         """
         test calling _makeInfoFiles() on basedir with fully populated
         'info' directory
@@ -777,11 +791,11 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin, unit
     Test buildbot_worker.scripts.create_worker.createWorker()
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         # capture stdout
         self.setUpStdoutAssertions()
 
-    def setUpMakeFunctions(self, exception=None):
+    def setUpMakeFunctions(self, exception: BaseException | None = None) -> None:
         """
         patch create_worker._make*() functions with a mocks
 
@@ -796,7 +810,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin, unit
         self._makeInfoFiles = mock.Mock(side_effect=exception)
         self.patch(create_worker, "_makeInfoFiles", self._makeInfoFiles)
 
-    def assertMakeFunctionsCalls(self, basedir, tac_contents, quiet):
+    def assertMakeFunctionsCalls(self, basedir: str, tac_contents: str, quiet: bool) -> None:
         """
         assert that create_worker._make*() were called with specified arguments
         """
@@ -804,7 +818,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin, unit
         self._makeBuildbotTac.assert_called_once_with(basedir, tac_contents, quiet)
         self._makeInfoFiles.assert_called_once_with(basedir, quiet)
 
-    def testCreateError(self):
+    def testCreateError(self) -> None:
         """
         test that errors while creating worker directory are handled
         correctly by createWorker()
@@ -818,7 +832,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin, unit
         # check that correct error message was printed on stdout
         self.assertStdoutEqual("err-msg\nfailed to configure worker in bdir\n")
 
-    def testMinArgs(self):
+    def testMinArgs(self) -> None:
         """
         test calling createWorker() with only required arguments
         """
@@ -837,7 +851,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, TestDefaultOptionsMixin, unit
         # check that correct info message was printed
         self.assertStdoutEqual("worker configured in bdir\n")
 
-    def testQuiet(self):
+    def testQuiet(self) -> None:
         """
         test calling createWorker() with --quiet flag
         """

@@ -12,17 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import sys
 import time
+from typing import TYPE_CHECKING
+from typing import cast
 
 from buildbot_worker.scripts import base
 from buildbot_worker.util import rewrap
 
+if TYPE_CHECKING:
+    from typing import Any
+
+    from twisted.internet.interfaces import IReactorCore
+    from twisted.python.failure import Failure
+
 
 class Follower:
-    def follow(self):
+    def follow(self) -> int:
         from twisted.internet import reactor
 
         from buildbot_worker.scripts.logwatcher import LogWatcher
@@ -32,17 +41,17 @@ class Follower:
         lw = LogWatcher("twistd.log")
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
-        reactor.run()
+        cast("IReactorCore", reactor).run()
         return self.rc
 
-    def _success(self, processtype):
+    def _success(self, processtype: str) -> None:
         from twisted.internet import reactor
 
         print(f"The {processtype} appears to have (re)started correctly.")
         self.rc = 0
-        reactor.stop()
+        cast("IReactorCore", reactor).stop()
 
-    def _failure(self, why):
+    def _failure(self, why: Failure) -> None:
         from twisted.internet import reactor
 
         from buildbot_worker.scripts.logwatcher import WorkerTimeoutError
@@ -73,10 +82,10 @@ class Follower:
             )
             print(why)
         self.rc = 1
-        reactor.stop()
+        cast("IReactorCore", reactor).stop()
 
 
-def startCommand(config):
+def startCommand(config: dict[str, Any]) -> int:
     basedir = config['basedir']
     if not base.isWorkerDir(basedir):
         return 1
@@ -84,7 +93,7 @@ def startCommand(config):
     return startWorker(basedir, config['quiet'], config['nodaemon'])
 
 
-def startWorker(basedir, quiet, nodaemon):
+def startWorker(basedir: str, quiet: bool, nodaemon: bool) -> int:
     """
     Start worker process.
 
@@ -121,11 +130,10 @@ def startWorker(basedir, quiet, nodaemon):
     # this is the child: give the logfile-watching parent a chance to start
     # watching it before we start the daemon
     time.sleep(0.2)
-    launch(nodaemon)
-    return None
+    return launch(nodaemon)
 
 
-def launch(nodaemon):
+def launch(nodaemon: bool) -> int:
     sys.path.insert(0, os.path.abspath(os.getcwd()))
 
     # see if we can launch the application without actually having to
@@ -148,3 +156,4 @@ def launch(nodaemon):
 
     sys.argv = argv
     run()
+    return 0

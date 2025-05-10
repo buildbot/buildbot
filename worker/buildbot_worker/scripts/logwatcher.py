@@ -12,22 +12,51 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import platform
+from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
 from twisted.internet import reactor
+from twisted.internet.interfaces import ITransport
 from twisted.protocols.basic import LineOnlyReceiver
 from twisted.python.failure import Failure
+from zope.interface import implementer
 
 from buildbot_worker.compat import unicode2bytes
 
+if TYPE_CHECKING:
+    from typing import Iterable
 
+    from twisted.internet.interfaces import IAddress
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorProcess
+    from twisted.internet.interfaces import IReactorTime
+
+
+@implementer(ITransport)
 class FakeTransport:
     disconnecting = False
+
+    def write(self, data: bytes) -> None:
+        raise NotImplementedError()
+
+    def writeSequence(self, data: Iterable[bytes]) -> None:
+        raise NotImplementedError()
+
+    def loseConnection(self) -> None:
+        raise NotImplementedError()
+
+    def getPeer(self) -> IAddress:
+        raise NotImplementedError()
+
+    def getHost(self) -> IAddress:
+        raise NotImplementedError()
 
 
 class WorkerTimeoutError(Exception):
@@ -35,11 +64,13 @@ class WorkerTimeoutError(Exception):
 
 
 class TailProcess(protocol.ProcessProtocol):
-    def outReceived(self, data):
+    lw: LogWatcher
+
+    def outReceived(self, data: bytes) -> None:
         self.lw.dataReceived(unicode2bytes(data))
 
-    def errReceived(self, data):
-        print(f"ERR: '{data}'")
+    def errReceived(self, data: bytes) -> None:
+        print(f"ERR: '{data!r}'")
 
 
 class LogWatcher(LineOnlyReceiver):
@@ -47,15 +78,17 @@ class LogWatcher(LineOnlyReceiver):
     TIMEOUT_DELAY = 10.0
     delimiter = unicode2bytes(os.linesep)
 
-    def __init__(self, logfile):
+    def __init__(self, logfile: str) -> None:
         self.logfile = logfile
         self.in_reconfig = False
         self.transport = FakeTransport()
         self.pp = TailProcess()
         self.pp.lw = self
-        self.timer = None
+        self.timer: IDelayedCall | None = None
 
-    def start(self):
+        self.d: defer.Deferred[str]
+
+    def start(self) -> defer.Deferred[str]:
         # If the log file doesn't exist, create it now.
         if not os.path.exists(self.logfile):
             open(self.logfile, 'a').close()
@@ -71,7 +104,7 @@ class LogWatcher(LineOnlyReceiver):
             tailBin = "/bin/tail"
         else:
             tailBin = "/usr/bin/tail"
-        self.p = reactor.spawnProcess(
+        self.p = cast("IReactorProcess", reactor).spawnProcess(
             self.pp,
             tailBin,
             ("tail", "-f", "-n", "0", self.logfile),
@@ -81,17 +114,17 @@ class LogWatcher(LineOnlyReceiver):
         d = defer.maybeDeferred(self._start)
         return d
 
-    def _start(self):
+    def _start(self) -> defer.Deferred[str]:
         self.d = defer.Deferred()
-        self.timer = reactor.callLater(self.TIMEOUT_DELAY, self.timeout)
+        self.timer = cast("IReactorTime", reactor).callLater(self.TIMEOUT_DELAY, self.timeout)
         return self.d
 
-    def timeout(self):
+    def timeout(self) -> None:
         self.timer = None
         e = WorkerTimeoutError()
         self.finished(Failure(e))
 
-    def finished(self, results):
+    def finished(self, results: str | Failure) -> None:
         try:
             self.p.signalProcess("KILL")
         except error.ProcessExitedAlready:
@@ -103,7 +136,7 @@ class LogWatcher(LineOnlyReceiver):
         self.in_reconfig = False
         self.d.callback(results)
 
-    def lineReceived(self, line):
+    def lineReceived(self, line: bytes) -> None:
         if not self.running:
             return None
         if b"Log opened." in line:

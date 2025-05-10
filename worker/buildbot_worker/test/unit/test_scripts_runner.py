@@ -18,6 +18,9 @@ from __future__ import annotations
 import os
 import sys
 from typing import Callable
+from typing import Mapping
+from typing import NoReturn
+from typing import cast
 
 from twisted.python import log
 from twisted.python import usage
@@ -33,7 +36,8 @@ except ImportError:
 
 
 class OptionsMixin:
-    def assertOptions(self, opts, exp):
+    def assertOptions(self, opts: Mapping, exp: Mapping) -> None:
+        assert isinstance(self, unittest.TestCase)
         got = {k: opts[k] for k in exp}
         if got != exp:
             msg = []
@@ -55,30 +59,34 @@ class BaseDirTestsMixin:
     # the options class to instantiate for test cases
     options_class: type[usage.Options] | None = None
 
-    def setUp(self):
+    def setUp(self) -> None:
+        assert isinstance(self, unittest.TestCase)
         self.patch(os, "getcwd", lambda: self.GETCWD_PATH)
         self.patch(os.path, "abspath", lambda path: self.ABSPATH_PREFIX + path)
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> usage.Options:
         assert self.options_class is not None
 
         opts = self.options_class()
         opts.parseOptions(args)
         return opts
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
+        assert isinstance(self, unittest.TestCase)
         opts = self.parse()
         self.assertEqual(
             opts["basedir"], self.ABSPATH_PREFIX + self.GETCWD_PATH, "unexpected basedir path"
         )
 
-    def test_basedir_arg(self):
+    def test_basedir_arg(self) -> None:
+        assert isinstance(self, unittest.TestCase)
         opts = self.parse(self.MY_BASEDIR)
         self.assertEqual(
             opts["basedir"], self.ABSPATH_PREFIX + self.MY_BASEDIR, "unexpected basedir path"
         )
 
-    def test_too_many_args(self):
+    def test_too_many_args(self) -> None:
+        assert isinstance(self, unittest.TestCase)
         with self.assertRaisesRegex(usage.UsageError, "I wasn't expecting so many arguments"):
             self.parse("arg1", "arg2")
 
@@ -98,7 +106,7 @@ class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 
     options_class = runner.StopOptions
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.StopOptions()
         self.assertIn('buildbot-worker stop', opts.getSynopsis())
 
@@ -110,11 +118,11 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     options_class = runner.StartOptions
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.StartOptions()
         self.assertIn('buildbot-worker start', opts.getSynopsis())
 
-    def test_all_args(self):
+    def test_all_args(self) -> None:
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
         self.assertOptions(
             opts,
@@ -129,11 +137,11 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     options_class = runner.RestartOptions
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.RestartOptions()
         self.assertIn('buildbot-worker restart', opts.getSynopsis())
 
-    def test_all_args(self):
+    def test_all_args(self) -> None:
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
         self.assertOptions(
             opts,
@@ -148,20 +156,20 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     req_args = ["bdir", "mstr:5678", "name", "pswd"]
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.CreateWorkerOptions:
         opts = runner.CreateWorkerOptions()
         opts.parseOptions(args)
         return opts
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "incorrect number of arguments"):
             self.parse()
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.CreateWorkerOptions()
         self.assertIn('buildbot-worker create-worker', opts.getSynopsis())
 
-    def test_min_args(self):
+    def test_min_args(self) -> None:
         # patch runner.MakerBase.postOptions() so that 'basedir'
         # argument will not be converted to absolute path
         self.patch(runner.MakerBase, "postOptions", mock.Mock())
@@ -171,7 +179,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             {"basedir": "bdir", "host": "mstr", "port": 5678, "name": "name", "passwd": "pswd"},
         )
 
-    def test_all_args(self):
+    def test_all_args(self) -> None:
         # patch runner.MakerBase.postOptions() so that 'basedir'
         # argument will not be converted to absolute path
         self.patch(runner.MakerBase, "postOptions", mock.Mock())
@@ -209,61 +217,61 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             },
         )
 
-    def test_master_url(self):
+    def test_master_url(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "<master> is not a URL - do not use URL"):
             self.parse("a", "http://b.c", "d", "e")
 
-    def test_inv_keepalive(self):
+    def test_inv_keepalive(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "keepalive parameter needs to be a number"):
             self.parse("--keepalive=X", *self.req_args)
 
-    def test_inv_maxdelay(self):
+    def test_inv_maxdelay(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "maxdelay parameter needs to be a number"):
             self.parse("--maxdelay=X", *self.req_args)
 
-    def test_inv_log_size(self):
+    def test_inv_log_size(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "log-size parameter needs to be a number"):
             self.parse("--log-size=X", *self.req_args)
 
-    def test_inv_log_count(self):
+    def test_inv_log_count(self) -> None:
         with self.assertRaisesRegex(
             usage.UsageError, "log-count parameter needs to be a number or None"
         ):
             self.parse("--log-count=X", *self.req_args)
 
-    def test_inv_numcpus(self):
+    def test_inv_numcpus(self) -> None:
         with self.assertRaisesRegex(
             usage.UsageError, "numcpus parameter needs to be a number or None"
         ):
             self.parse("--numcpus=X", *self.req_args)
 
-    def test_inv_umask(self):
+    def test_inv_umask(self) -> None:
         with self.assertRaisesRegex(
             usage.UsageError, "umask parameter needs to be a number or None"
         ):
             self.parse("--umask=X", *self.req_args)
 
-    def test_inv_umask2(self):
+    def test_inv_umask2(self) -> None:
         with self.assertRaisesRegex(
             usage.UsageError, "umask parameter needs to be a number or None"
         ):
             self.parse("--umask=022", *self.req_args)
 
-    def test_inv_allow_shutdown(self):
+    def test_inv_allow_shutdown(self) -> None:
         with self.assertRaisesRegex(
             usage.UsageError, "allow-shutdown needs to be one of 'signal' or 'file'"
         ):
             self.parse("--allow-shutdown=X", *self.req_args)
 
-    def test_too_few_args(self):
+    def test_too_few_args(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "incorrect number of arguments"):
             self.parse("arg1", "arg2")
 
-    def test_too_many_args(self):
+    def test_too_many_args(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "incorrect number of arguments"):
             self.parse("extra_arg", *self.req_args)
 
-    def test_validateMasterArgument_no_port(self):
+    def test_validateMasterArgument_no_port(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> argument without port specified.
@@ -275,7 +283,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             "incorrect master host and/or port",
         )
 
-    def test_validateMasterArgument_empty_master(self):
+    def test_validateMasterArgument_empty_master(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> without host part specified.
@@ -284,7 +292,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         with self.assertRaisesRegex(usage.UsageError, "invalid <master> argument ':1234'"):
             opts.validateMasterArgument(":1234")
 
-    def test_validateMasterArgument_inv_port(self):
+    def test_validateMasterArgument_inv_port(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> without with unparsable port part
@@ -295,7 +303,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         ):
             opts.validateMasterArgument("host:apple")
 
-    def test_validateMasterArgument_ok(self):
+    def test_validateMasterArgument_ok(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> with host and port parts specified.
@@ -307,7 +315,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             "incorrect master host and/or port",
         )
 
-    def test_validateMasterArgument_ipv4(self):
+    def test_validateMasterArgument_ipv4(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> with ipv4 host specified.
@@ -319,7 +327,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             "incorrect master host and/or port",
         )
 
-    def test_validateMasterArgument_ipv4_port(self):
+    def test_validateMasterArgument_ipv4_port(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> with ipv4 host and port parts specified.
@@ -331,7 +339,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             "incorrect master host and/or port",
         )
 
-    def test_validateMasterArgument_ipv6(self):
+    def test_validateMasterArgument_ipv6(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> with ipv6 host specified.
@@ -343,7 +351,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             "incorrect master host and/or port",
         )
 
-    def test_validateMasterArgument_ipv6_port(self):
+    def test_validateMasterArgument_ipv6_port(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> with ipv6 host and port parts specified.
@@ -355,7 +363,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
             "incorrect master host and/or port",
         )
 
-    def test_validateMasterArgument_ipv6_no_bracket(self):
+    def test_validateMasterArgument_ipv6_no_bracket(self) -> None:
         """
         test calling CreateWorkerOptions.validateMasterArgument()
         on <master> with ipv6 without [] specified.
@@ -374,28 +382,28 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
     Test buildbot_worker.scripts.runner.Options class.
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpStdoutAssertions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.Options:
         opts = runner.Options()
         opts.parseOptions(args)
         return opts
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "must specify a command"):
             self.parse()
 
-    def test_version(self):
+    def test_version(self) -> None:
         exception = self.assertRaises(SystemExit, self.parse, '--version')
         self.assertEqual(exception.code, 0, "unexpected exit code")
         self.assertInStdout('worker version:')
 
-    def test_verbose(self):
+    def test_verbose(self) -> None:
         self.patch(log, 'startLogging', mock.Mock())
         with self.assertRaises(usage.UsageError):
             self.parse("--verbose")
-        log.startLogging.assert_called_once_with(sys.stderr)
+        cast("mock.Mock", log.startLogging).assert_called_once_with(sys.stderr)
 
 
 # used by TestRun.test_run_good to patch in a callback
@@ -407,7 +415,7 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
     Test buildbot_worker.scripts.runner.run()
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpStdoutAssertions()
 
     class TestSubCommand(usage.Options):
@@ -422,15 +430,15 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         optFlags = [["suboptions", None, None]]
 
-        def postOptions(self):
+        def postOptions(self) -> NoReturn:
             if self["suboptions"]:
                 self.subOptions = "SubOptionUsage"
             raise usage.UsageError("usage-error-message")
 
-        def __str__(self):
+        def __str__(self) -> str:
             return "GeneralUsage"
 
-    def test_run_good(self):
+    def test_run_good(self) -> None:
         """
         Test successful invocation of worker command.
         """
@@ -450,7 +458,7 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
         subcommand_func.assert_called_once_with({'test-opt': 1})
         self.assertEqual(exception.code, 42, "unexpected exit code")
 
-    def test_run_bad_noargs(self):
+    def test_run_bad_noargs(self) -> None:
         """
         Test handling of invalid command line arguments.
         """
@@ -466,7 +474,7 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
             "unexpected error message on stdout",
         )
 
-    def test_run_bad_suboption(self):
+    def test_run_bad_suboption(self) -> None:
         """
         Test handling of invalid command line arguments in a suboption.
         """
