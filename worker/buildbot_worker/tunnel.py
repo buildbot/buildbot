@@ -56,7 +56,8 @@ class HTTPTunnelClient(protocol.Protocol):
         # process data from the proxy server
         _, status, _ = data.split(b"\r\n")[0].split(b" ", 2)
         if status != b"200":
-            return self.transport.loseConnection()
+            self.transport.loseConnection()
+            return
 
         self._proxyWrappedProtocol = self.factory._proxyWrappedFactory.buildProtocol(
             self.transport.getPeer()
@@ -71,7 +72,8 @@ class HTTPTunnelClient(protocol.Protocol):
         # forward those to the wrapped protocol.
         remaining_data = data.split(b"\r\n\r\n", 2)[1]
         if remaining_data:
-            return self._proxyWrappedProtocol.dataReceived(remaining_data)
+            self._proxyWrappedProtocol.dataReceived(remaining_data)
+            return
 
         return None
 
