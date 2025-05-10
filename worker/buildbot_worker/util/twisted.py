@@ -13,11 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-import unittest
+"""Copied from buildbot.util.twisted"""
+
+from __future__ import annotations
+
+from typing import Any
+from typing import Generator
+from typing import TypeVar
+from typing import Union
+
+from twisted.internet import defer
+from typing_extensions import ParamSpec
+
+_T = TypeVar('_T')
+_P = ParamSpec('_P')
 
 
-def patch():
-    hasAssertRaisesRegex = getattr(unittest.TestCase, "assertRaisesRegex", None)
-    if not hasAssertRaisesRegex:
-        # Python 2.6 and Python 2.7
-        unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+InlineCallbacksType = Generator[Union[Any, defer.Deferred[Any]], Any, _T]

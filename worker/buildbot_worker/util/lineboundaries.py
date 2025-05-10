@@ -12,28 +12,35 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 from twisted.logger import Logger
 
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
 log = Logger()
+
+
+LineInfo: TypeAlias = "tuple[str, list[int], list[float]]"
 
 
 class LineBoundaryFinder:
     __slots__ = ['max_line_length', 'newline_re', 'partial_line', 'time', 'warned']
 
-    def __init__(self, max_line_length, newline_re):
+    def __init__(self, max_line_length: int, newline_re: str) -> None:
         # split at reasonable line length.
         # too big lines will fill master's memory, and slow down the UI too much.
         self.max_line_length = max_line_length
         self.newline_re = re.compile(newline_re)
         self.partial_line = ""
         self.warned = False
-        self.time = None
+        self.time: float | None = None
 
-    def append(self, text, time):
+    def append(self, text: str, time: float) -> LineInfo | None:
         # returns a tuple containing three elements:
         # - text: string containing one or more lines
         # - lf_positions: newline position in returned string
@@ -43,14 +50,16 @@ class LineBoundaryFinder:
         if self.partial_line:
             had_partial_line = True
             text = self.partial_line + text
+            assert self.time is not None
             time_partial_line = self.time
 
         text = self.newline_re.sub('\n', text)
 
         lf_positions = self.get_lf_positions(text)
 
-        ret_lines = []  # lines with appropriate number of symbols and their separators \n
-        ret_indexes = []  # ret_indexes is a list of '\n' symbols
+        # lines with appropriate number of symbols and their separators \n
+        ret_lines: list[str] = []
+        ret_indexes: list[int] = []  # ret_indexes is a list of '\n' symbols
         ret_text_length = -1
         ret_line_count = 0
 
@@ -85,6 +94,8 @@ class LineBoundaryFinder:
             times = []
             if ret_line_count > 1:
                 times = [time] * (ret_line_count - 1)
+
+            assert time_partial_line is not None
             line_times = [time_partial_line, *times]
         else:
             line_times = ret_line_count * [time]
@@ -101,9 +112,9 @@ class LineBoundaryFinder:
 
         return (ret_text, ret_indexes, line_times)
 
-    def get_lf_positions(self, text):
+    def get_lf_positions(self, text: str) -> list[int]:
         lf_position = 0
-        lf_positions = []
+        lf_positions: list[int] = []
         while lf_position != -1:
             lf_position = text.find('\n', lf_position)
             if lf_position < 0:
@@ -112,7 +123,8 @@ class LineBoundaryFinder:
             lf_position = lf_position + 1
         return lf_positions
 
-    def flush(self):
+    def flush(self) -> LineInfo | None:
         if self.partial_line != "":
+            assert self.time is not None
             return self.append('\n', self.time)
         return None

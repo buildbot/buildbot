@@ -7,12 +7,28 @@ server, neither side will talk, leading to a hung connection. This
 wrapper will disconnect in that case, and inform the caller.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import cast
+
 from twisted.internet.interfaces import IProtocol
 from twisted.internet.interfaces import IProtocolFactory
 from twisted.python.components import proxyForInterface
 
+if TYPE_CHECKING:
+    from typing import Callable
 
-def _noop():
+    from twisted.internet.interfaces import IAddress
+    from twisted.internet.interfaces import IConnector
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorTime
+    from twisted.internet.interfaces import ITransport
+    from twisted.internet.protocol import ClientFactory
+    from twisted.python.failure import Failure
+
+
+def _noop() -> None:
     pass
 
 
@@ -24,14 +40,19 @@ class HangCheckProtocol(
     the other end doesn't send data within a given timeout.
     """
 
-    transport = None
-    _hungConnectionTimer = None
+    transport: ITransport | None = None
+    _hungConnectionTimer: IDelayedCall | None = None
 
     # hung connections wait for a relatively long time, since a busy master may
     # take a while to get back to us.
     _HUNG_CONNECTION_TIMEOUT = 120
 
-    def __init__(self, wrapped_protocol, hung_callback=_noop, reactor=None):
+    def __init__(
+        self,
+        wrapped_protocol: IProtocol,
+        hung_callback: Callable[[], None] = _noop,
+        reactor: IReactorTime | None = None,
+    ) -> None:
         """
         :param IProtocol wrapped_protocol: The protocol to wrap.
         :param hung_callback: Called when the connection has hung.
@@ -40,12 +61,15 @@ class HangCheckProtocol(
             the hang check.
         """
         if reactor is None:
-            from twisted.internet import reactor
+            from twisted.internet import reactor as default_reactor
+
+            reactor = cast("IReactorTime", default_reactor)
+
         self._wrapped_protocol = wrapped_protocol
         self._reactor = reactor
         self._hung_callback = hung_callback
 
-    def makeConnection(self, transport):
+    def makeConnection(self, transport: ITransport) -> None:
         # Note that we don't wrap the transport for the protocol,
         # because we only care about noticing data received, not
         # sent.
@@ -53,29 +77,30 @@ class HangCheckProtocol(
         super().makeConnection(transport)
         self._startHungConnectionTimer()
 
-    def dataReceived(self, data):
+    def dataReceived(self, data: bytes) -> None:
         self._stopHungConnectionTimer()
         super().dataReceived(data)
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason: Failure) -> None:
         self._stopHungConnectionTimer()
         super().connectionLost(reason)
 
-    def _startHungConnectionTimer(self):
+    def _startHungConnectionTimer(self) -> None:
         """
         Start a timer to detect if the connection is hung.
         """
 
-        def hungConnection():
+        def hungConnection() -> None:
             self._hung_callback()
             self._hungConnectionTimer = None
-            self.transport.loseConnection()
+            if self.transport is not None:
+                self.transport.loseConnection()
 
         self._hungConnectionTimer = self._reactor.callLater(
             self._HUNG_CONNECTION_TIMEOUT, hungConnection
         )
 
-    def _stopHungConnectionTimer(self):
+    def _stopHungConnectionTimer(self) -> None:
         """
         Cancel the hang check timer, since we have received data or
         been closed.
@@ -94,7 +119,11 @@ class HangCheckFactory(
     timeout.
     """
 
-    def __init__(self, wrapped_factory, hung_callback):
+    def __init__(
+        self,
+        wrapped_factory: ClientFactory,
+        hung_callback: Callable[[], None],
+    ) -> None:
         """
         :param IProtocolFactory wrapped_factory: The factory to wrap.
         :param hung_callback: Called when the connection has hung.
@@ -103,18 +132,20 @@ class HangCheckFactory(
         self._wrapped_factory = wrapped_factory
         self._hung_callback = hung_callback
 
-    def buildProtocol(self, addr):
+    def buildProtocol(self, addr: IAddress) -> HangCheckProtocol | None:
         protocol = self._wrapped_factory.buildProtocol(addr)
+        if protocol is None:
+            return None
         return HangCheckProtocol(protocol, hung_callback=self._hung_callback)
 
     # This is used as a ClientFactory, which doesn't have a specific interface, so forward the
     # additional methods.
 
-    def startedConnecting(self, connector):
+    def startedConnecting(self, connector: IConnector) -> None:
         self._wrapped_factory.startedConnecting(connector)
 
-    def clientConnectionFailed(self, connector, reason):
+    def clientConnectionFailed(self, connector: IConnector, reason: Failure) -> None:
         self._wrapped_factory.clientConnectionFailed(connector, reason)
 
-    def clientConnectionLost(self, connector, reason):
+    def clientConnectionLost(self, connector: IConnector, reason: Failure) -> None:
         self._wrapped_factory.clientConnectionLost(connector, reason)

@@ -18,27 +18,37 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Generic
+from typing import TypeVar
 
 from twisted.internet.defer import Deferred
 
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
 
-class Notifier:
+_SelfResultT = TypeVar("_SelfResultT")
+
+
+class Notifier(Generic[_SelfResultT]):
     # this is a copy of buildbot.util.Notifier
 
-    def __init__(self):
-        self._waiters = []
+    def __init__(self) -> None:
+        self._waiters: list[Deferred[_SelfResultT]] = list()
 
-    def wait(self):
-        d = Deferred()
+    def wait(self) -> Deferred[_SelfResultT]:
+        d: Deferred[_SelfResultT] = Deferred()
         self._waiters.append(d)
         return d
 
-    def notify(self, result):
-        waiters = self._waiters
-        self._waiters = []
-        for waiter in waiters:
-            waiter.callback(result)
+    def notify(self, result: _SelfResultT | Failure) -> None:
+        if self._waiters:
+            waiters = self._waiters
+            self._waiters = []
+            for waiter in waiters:
+                waiter.callback(result)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self._waiters)

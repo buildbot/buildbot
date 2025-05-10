@@ -18,10 +18,28 @@ Helpers for handling compatibility differences
 between Python 2 and Python 3.
 """
 
+from __future__ import annotations
+
 from io import StringIO as NativeStringIO
+from typing import TYPE_CHECKING
+from typing import overload
+
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import TypeVar
+
+    _T = TypeVar('_T')
 
 
-def bytes2NativeString(x, encoding='utf-8'):
+@overload
+def bytes2NativeString(x: bytes, encoding: str = 'utf-8') -> str: ...
+
+
+@overload
+def bytes2NativeString(x: _T, encoding: str = 'utf-8') -> _T: ...
+
+
+def bytes2NativeString(x: _T, encoding: str = 'utf-8') -> str | _T:
     """
     Convert C{bytes} to a native C{str}.
 
@@ -42,7 +60,15 @@ def bytes2NativeString(x, encoding='utf-8'):
     return x
 
 
-def unicode2bytes(x, encoding='utf-8', errors='strict'):
+@overload
+def unicode2bytes(x: str, encoding: str = 'utf-8', errors: str = 'strict') -> bytes: ...
+
+
+@overload
+def unicode2bytes(x: _T, encoding: str = 'utf-8', errors: str = 'strict') -> _T: ...
+
+
+def unicode2bytes(x: str | _T, encoding: str = 'utf-8', errors: str = 'strict') -> bytes | _T:
     """
     Convert a unicode string to C{bytes}.
 
@@ -52,11 +78,19 @@ def unicode2bytes(x, encoding='utf-8', errors='strict'):
     @return: a string of type C{bytes}
     """
     if isinstance(x, str):
-        x = x.encode(encoding, errors)
+        return x.encode(encoding, errors)
     return x
 
 
-def bytes2unicode(x, encoding='utf-8', errors='strict'):
+@overload
+def bytes2unicode(x: None, encoding: str = 'utf-8', errors: str = 'strict') -> None: ...
+
+
+@overload
+def bytes2unicode(x: Any, encoding: str = 'utf-8', errors: str = 'strict') -> str: ...
+
+
+def bytes2unicode(x: Any | None, encoding: str = 'utf-8', errors: str = 'strict') -> str | None:
     """
     Convert a C{bytes} to a unicode string.
 
@@ -66,7 +100,9 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     @return: a unicode string of type C{unicode} on Python 2, or
              C{str} on Python 3.
     """
-    if isinstance(x, (str, type(None))):
+    if x is None:
+        return None
+    if isinstance(x, str):
         return x
     return str(x, encoding, errors)
 

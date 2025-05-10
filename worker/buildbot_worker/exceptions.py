@@ -21,5 +21,5 @@ class AbandonChain(Exception):
     is the 'rc' - the non-zero exit code of the failing ShellCommand.
     The second is an optional error message."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<AbandonChain rc={self.args[0]}>"
