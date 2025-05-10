@@ -501,7 +501,7 @@ class BuildStep(
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
         assert self.build is not None
-        name = yield cast(defer.Deferred[str], self.build.render(self.name))
+        name = yield cast('defer.Deferred[str]', self.build.render(self.name))
         name = self.build.setUniqueStepName(name)
         self.name = name
         assert self.master is not None
@@ -527,7 +527,7 @@ class BuildStep(
             if isinstance(self.doStepIf, bool):
                 doStep = self.doStepIf
             else:
-                doStep = cast(bool, (yield self.doStepIf(self)))
+                doStep = cast('bool', (yield self.doStepIf(self)))
 
             if doStep:
                 yield self._setup_locks()
@@ -837,7 +837,7 @@ class BuildStep(
             raise BuildStepCancelled
         assert self.master is not None
         logid = yield self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), 't')
-        _log = cast(plog.PlainLog, self._newLog(name, 't', logid))
+        _log = cast('plog.PlainLog', self._newLog(name, 't', logid))
         yield _log.addContent(text)
         yield _log.finish()
 
@@ -847,7 +847,7 @@ class BuildStep(
             raise BuildStepCancelled
         assert self.master is not None
         logid = yield self.master.data.updates.addLog(self.stepid, util.bytes2unicode(name), 'h')
-        _log = cast(plog.HtmlLog, self._newLog(name, 'h', logid))
+        _log = cast('plog.HtmlLog', self._newLog(name, 'h', logid))
         yield _log.addContent(bytes2unicode(html))
         yield _log.finish()
 

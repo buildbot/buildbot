@@ -409,9 +409,9 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
         )
         # retrieve auth files
         with tmp_dir as tmp_path:
-            yield self._git_auth.download_auth_files_if_needed(cast(str, tmp_path))
+            yield self._git_auth.download_auth_files_if_needed(cast("str", tmp_path))
 
-            refs, trim_ref_head = yield self._get_refs(cast(str, tmp_path))
+            refs, trim_ref_head = yield self._get_refs(cast("str", tmp_path))
 
             # Nothing to fetch and process.
             if not refs:

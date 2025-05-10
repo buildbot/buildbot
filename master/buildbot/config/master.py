@@ -123,7 +123,7 @@ def loadConfigDict(basedir: str, configFileName: str) -> tuple[str, dict[str, An
             always_raise=True,
         )
 
-    return filename, cast(dict[str, Any], localDict['BuildmasterConfig'])
+    return filename, cast('dict[str, Any]', localDict['BuildmasterConfig'])
 
 
 @implementer(interfaces.IConfigLoader)

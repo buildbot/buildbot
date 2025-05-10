@@ -112,7 +112,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
         if token is not None:
             token = yield self.renderSecrets(token)
             # token is not None here, but mypy doesn't know that
-            http_headers.update({'Authorization': 'token ' + cast(str, token)})
+            http_headers.update({'Authorization': 'token ' + cast("str", token)})
 
         if github_property_whitelist is None:
             github_property_whitelist = []
