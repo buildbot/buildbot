@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -19,17 +22,24 @@ from twisted.trial import unittest
 from buildbot_worker.commands.base import Command
 from buildbot_worker.test.util.command import CommandTestMixin
 
+if TYPE_CHECKING:
+    from typing import Any
+
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
 # set up a fake Command subclass to test the handling in Command.  Think of
 # this as testing Command's subclassability.
 
 
 class DummyCommand(Command):
-    def setup(self, args):
+    def setup(self, args: Any) -> None:
         self.setup_done = True
         self.interrupted = False
         self.started = False
 
-    def start(self):
+        self.cmd_deferred: defer.Deferred[None] | None = None
+
+    def start(self) -> defer.Deferred[None]:
         self.started = True
         data = []
         for key, value in self.args.items():
@@ -38,16 +48,18 @@ class DummyCommand(Command):
         self.cmd_deferred = defer.Deferred()
         return self.cmd_deferred
 
-    def interrupt(self):
+    def interrupt(self) -> None:
         self.interrupted = True
         self.finishCommand()
 
-    def finishCommand(self):
+    def finishCommand(self) -> None:
+        assert self.cmd_deferred is not None
         d = self.cmd_deferred
         self.cmd_deferred = None
         d.callback(None)
 
-    def failCommand(self):
+    def failCommand(self) -> None:
+        assert self.cmd_deferred is not None
         d = self.cmd_deferred
         self.cmd_deferred = None
         d.errback(RuntimeError("forced failure"))
@@ -58,10 +70,18 @@ class DummyArgsCommand(DummyCommand):
 
 
 class TestDummyCommand(CommandTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpCommand()
 
-    def assertState(self, setup_done, running, started, interrupted, msg=None):
+    def assertState(
+        self,
+        setup_done: bool,
+        running: bool,
+        started: bool,
+        interrupted: bool,
+        msg: str | None = None,
+    ) -> None:
+        assert isinstance(self.cmd, DummyCommand)
         self.assertEqual(
             {
                 'setup_done': self.cmd.setup_done,
@@ -79,7 +99,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_run(self):
+    def test_run(self) -> InlineCallbacksType[None]:
         cmd = self.make_command(DummyCommand, {'stdout': 'yay'})
         self.assertState(True, False, False, False, "setup called by constructor")
 
@@ -95,7 +115,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         self.assertUpdates([('stdout', 'yay')], "updates processed")
 
     @defer.inlineCallbacks
-    def test_run_failure(self):
+    def test_run_failure(self) -> InlineCallbacksType[None]:
         cmd = self.make_command(DummyCommand, {})
         self.assertState(True, False, False, False, "setup called by constructor")
 
@@ -111,7 +131,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         self.assertState(True, False, True, False, "started and not running when done")
         self.assertUpdates([], "updates processed")
 
-    def test_run_interrupt(self):
+    def test_run_interrupt(self) -> defer.Deferred[int]:
         cmd = self.make_command(DummyCommand, {})
         self.assertState(True, False, False, False, "setup called by constructor")
 
@@ -123,13 +143,13 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         cmd.doInterrupt()
         self.assertTrue(cmd.interrupted)
 
-        def check(_):
+        def check(_: Any) -> None:
             self.assertState(True, False, True, True, "finishes with interrupted set")
 
         d.addCallback(check)
         return d
 
-    def test_required_args(self):
+    def test_required_args(self) -> None:
         self.make_command(DummyArgsCommand, {'workdir': '.'})
         try:
             self.make_command(DummyArgsCommand, {'stdout': 'boo'})

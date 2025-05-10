@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import sys
 from typing import Any
+from typing import NoReturn
 
 import twisted
 from twisted.trial import unittest
@@ -27,7 +28,7 @@ from buildbot_worker import monkeypatches
 monkeypatches.patch_all()
 
 
-def add_debugging_monkeypatches():
+def add_debugging_monkeypatches() -> None:
     """
     DO NOT CALL THIS DIRECTLY
 
@@ -39,25 +40,30 @@ def add_debugging_monkeypatches():
     old_startService = Service.startService
     old_stopService = Service.stopService
 
-    def startService(self):
+    def startService(self: Service) -> None:
         assert not self.running
         return old_startService(self)
 
-    def stopService(self):
+    def stopService(self: Service) -> None:
         assert self.running
         return old_stopService(self)
 
-    Service.startService = startService
-    Service.stopService = stopService
+    Service.startService = startService  # type: ignore[method-assign]
+    Service.stopService = stopService  # type: ignore[method-assign]
 
     # versions of Twisted before 9.0.0 did not have a UnitTest.patch that worked
     # on Python-2.7
-    if twisted.version.major <= 9 and sys.version_info[:2] == (2, 7):
+    # TODO: Drop this?
+    if (
+        isinstance(twisted.version.major, int)
+        and twisted.version.major <= 9
+        and sys.version_info[:2] == (2, 7)
+    ):
 
-        def nopatch(self, *args):
+        def nopatch(self: unittest.TestCase, *args: Any) -> NoReturn:
             raise unittest.SkipTest('unittest.TestCase.patch is not available')
 
-        unittest.TestCase.patch = nopatch
+        unittest.TestCase.patch = nopatch  # type: ignore[assignment, method-assign]
 
 
 add_debugging_monkeypatches()

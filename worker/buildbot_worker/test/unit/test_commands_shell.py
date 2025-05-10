@@ -12,8 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -22,13 +24,16 @@ from buildbot_worker.commands import shell
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util.command import CommandTestMixin
 
+if TYPE_CHECKING:
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
 
 class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpCommand()
 
     @defer.inlineCallbacks
-    def test_simple(self):
+    def test_simple(self) -> InlineCallbacksType[None]:
         workdir = os.path.join(self.basedir, 'workdir')
         self.make_command(
             shell.WorkerShellCommand, {'command': ['echo', 'hello'], 'workdir': workdir}

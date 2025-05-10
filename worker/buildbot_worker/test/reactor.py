@@ -12,13 +12,29 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import threads
 from twisted.python import threadpool
+from twisted.trial.unittest import TestCase
 
 from buildbot_worker.test.fake.reactor import NonThreadPool
 from buildbot_worker.test.fake.reactor import TestReactor
+
+if TYPE_CHECKING:
+    from typing import Callable
+    from typing import TypeVar
+
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorFromThreads
+    from twisted.python.threadpool import ThreadPool
+    from typing_extensions import ParamSpec
+
+    _T = TypeVar('_T')
+    _P = ParamSpec('_P')
 
 
 class TestReactorMixin:
@@ -27,13 +43,22 @@ class TestReactorMixin:
     at the end
     """
 
-    def setup_test_reactor(self):
+    def setup_test_reactor(self) -> None:
+        assert isinstance(self, TestCase)
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
 
-        def deferToThread(f, *args, **kwargs):
+        def deferToThread(
+            f: Callable[_P, _T],
+            *args: _P.args,
+            **kwargs: _P.kwargs,
+        ) -> Deferred[_T]:
             return threads.deferToThreadPool(
-                self.reactor, self.reactor.getThreadPool(), f, *args, **kwargs
+                cast("IReactorFromThreads", self.reactor),
+                cast("ThreadPool", self.reactor.getThreadPool()),
+                f,
+                *args,
+                **kwargs,
             )
 
         self.patch(threads, 'deferToThread', deferToThread)

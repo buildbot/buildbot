@@ -17,8 +17,15 @@
 # pylint: disable=no-self-argument
 # pylint: disable=no-method-argument
 # pylint: disable=inherit-non-class
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from zope.interface import Interface
+
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
 
 
 class IWorkerCommand(Interface):
@@ -26,7 +33,10 @@ class IWorkerCommand(Interface):
     subclasses. It specifies how the worker can start, interrupt, and
     query the various Commands running on behalf of the buildmaster."""
 
-    def __init__(builder, command_id, args):
+    # FIXME: Implementer do not implement this at all
+    # builder here is supposed to be a `buildbot_worker.base.WorkerForBuilderBase`
+    # but buildbot_worker.base.Command (only implementer) has `protocol_command: ProtocolCommandBase,`
+    def __init__(builder, command_id: str, args: Any) -> None:  # type: ignore[no-untyped-def]
         """Create the Command. 'builder' is a reference to the parent
         buildbot_worker.base.WorkerForBuilderBase instance, which will be
         used to send status updates (by calling builder.sendStatus).
@@ -37,12 +47,12 @@ class IWorkerCommand(Interface):
 
         This method is not intended to be subclassed."""
 
-    def setup(args):
+    def setup(args: dict[str, Any]) -> None:
         """This method is provided for subclasses to override, to extract
         parameters from the 'args' dictionary. The default implementation does
         nothing. It will be called from __init__"""
 
-    def start():
+    def start() -> Deferred[None] | None:
         """Begin the command, and return a Deferred.
 
         While the command runs, it should send status updates to the
@@ -59,7 +69,7 @@ class IWorkerCommand(Interface):
 
         """
 
-    def interrupt():
+    def interrupt() -> Deferred[None] | None:
         """This is called to tell the Command that the build is being stopped
         and therefore the command should be terminated as quickly as
         possible. The command may continue to send status updates, up to and

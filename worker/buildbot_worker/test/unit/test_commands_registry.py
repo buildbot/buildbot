@@ -20,18 +20,18 @@ from buildbot_worker.commands import shell
 
 
 class Registry(unittest.TestCase):
-    def test_getFactory(self):
+    def test_getFactory(self) -> None:
         factory = registry.getFactory('shell')
         self.assertEqual(factory, shell.WorkerShellCommand)
 
-    def test_getFactory_KeyError(self):
+    def test_getFactory_KeyError(self) -> None:
         with self.assertRaises(KeyError):
             registry.getFactory('nosuchcommand')
 
-    def test_getAllCommandNames(self):
+    def test_getAllCommandNames(self) -> None:
         self.assertTrue('shell' in registry.getAllCommandNames())
 
-    def test_all_commands_exist(self):
+    def test_all_commands_exist(self) -> None:
         # if this doesn't raise a KeyError, then we're good
         for n in registry.getAllCommandNames():
             registry.getFactory(n)

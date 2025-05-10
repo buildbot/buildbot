@@ -15,6 +15,9 @@
 
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
+from __future__ import annotations
+
+from typing import Any
 
 from twisted.internet import defer
 
@@ -24,16 +27,16 @@ class FakeRemote:
     Wrap a local object to make it look like it's remote
     """
 
-    def __init__(self, original, method_prefix="remote_"):
+    def __init__(self, original: object, method_prefix: str = "remote_") -> None:
         self.original = original
         self.method_prefix = method_prefix
 
-    def callRemote(self, meth, *args, **kwargs):
+    def callRemote(self, meth: str, *args: Any, **kwargs: Any) -> defer.Deferred[Any]:
         fn = getattr(self.original, self.method_prefix + meth)
         return defer.maybeDeferred(fn, *args, **kwargs)
 
-    def notifyOnDisconnect(self, what):
+    def notifyOnDisconnect(self, what: Any) -> None:
         pass
 
-    def dontNotifyOnDisconnect(self, what):
+    def dontNotifyOnDisconnect(self, what: Any) -> None:
         pass

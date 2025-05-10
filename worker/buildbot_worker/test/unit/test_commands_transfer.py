@@ -12,12 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import io
 import os
 import re
 import shutil
 import tarfile
+from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -29,6 +32,14 @@ from buildbot_worker.commands import transfer
 from buildbot_worker.test.fake.remote import FakeRemote
 from buildbot_worker.test.util.command import CommandTestMixin
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import Callable
+
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
 
 class FakeMasterMethods:
     # a fake to represent any of:
@@ -36,13 +47,13 @@ class FakeMasterMethods:
     # - FileDirectoryWriter
     # - FileReader
 
-    def __init__(self, add_update):
+    def __init__(self, add_update: Callable[[tuple[str, Any] | str], None]) -> None:
         self.add_update = add_update
 
         self.delay_write = False
         self.count_writes = False
         self.keep_data = False
-        self.write_out_of_space_at = None
+        self.write_out_of_space_at: int | None = None
 
         self.delay_read = False
         self.count_reads = False
@@ -53,7 +64,7 @@ class FakeMasterMethods:
         self.read = False
         self.data = b''
 
-    def remote_write(self, data):
+    def remote_write(self, data: bytes) -> defer.Deferred[None] | None:
         if self.write_out_of_space_at is not None:
             self.write_out_of_space_at -= len(data)
             if self.write_out_of_space_at <= 0:
@@ -69,12 +80,12 @@ class FakeMasterMethods:
             self.data += data
 
         if self.delay_write:
-            d = defer.Deferred()
-            reactor.callLater(0.01, d.callback, None)
+            d: defer.Deferred[None] = defer.Deferred()
+            cast("IReactorTime", reactor).callLater(0.01, d.callback, None)
             return d
         return None
 
-    def remote_read(self, length):
+    def remote_read(self, length: int) -> defer.Deferred[bytes] | bytes | str:
         if self.count_reads:
             self.add_update(f'read {length}')
         elif not self.read:
@@ -86,26 +97,26 @@ class FakeMasterMethods:
 
         _slice, self.data = self.data[:length], self.data[length:]
         if self.delay_read:
-            d = defer.Deferred()
-            reactor.callLater(0.01, d.callback, _slice)
+            d: defer.Deferred[bytes] = defer.Deferred()
+            cast("IReactorTime", reactor).callLater(0.01, d.callback, _slice)
             return d
         return _slice
 
-    def remote_unpack(self):
+    def remote_unpack(self) -> defer.Deferred[None] | None:
         self.add_update('unpack')
         if self.unpack_fail:
             return defer.fail(failure.Failure(RuntimeError("out of space")))
         return None
 
-    def remote_utime(self, accessed_modified):
+    def remote_utime(self, accessed_modified: tuple[float]) -> None:
         self.add_update(f'utime - {accessed_modified[0]}')
 
-    def remote_close(self):
+    def remote_close(self) -> None:
         self.add_update('close')
 
 
 class TestUploadFile(CommandTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpCommand()
 
         self.fakemaster = FakeMasterMethods(self.add_update)
@@ -122,12 +133,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         with open(self.datafile, mode="wb") as f:
             f.write(b"this is some data\n" * 10)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
 
     @defer.inlineCallbacks
-    def test_simple(self):
+    def test_simple(self) -> InlineCallbacksType[None]:
         self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -154,7 +165,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_truncated(self):
+    def test_truncated(self) -> InlineCallbacksType[None]:
         self.fakemaster.count_writes = True  # get actual byte counts
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -181,7 +192,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_missing(self):
+    def test_missing(self) -> InlineCallbacksType[None]:
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data-nosuch'))
         self.make_command(
             transfer.WorkerFileUploadCommand,
@@ -205,7 +216,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_out_of_space(self):
+    def test_out_of_space(self) -> InlineCallbacksType[None]:
         self.fakemaster.write_out_of_space_at = 70
         self.fakemaster.count_writes = True  # get actual byte counts
 
@@ -232,7 +243,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_interrupted(self):
+    def test_interrupted(self) -> InlineCallbacksType[None]:
         self.fakemaster.delay_write = True  # write very slowly
 
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -250,11 +261,11 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         # wait a jiffy..
-        interrupt_d = defer.Deferred()
-        reactor.callLater(0.01, interrupt_d.callback, None)
+        interrupt_d: defer.Deferred[None] = defer.Deferred()
+        cast("IReactorTime", reactor).callLater(0.01, interrupt_d.callback, None)
 
         # and then interrupt the step
-        def do_interrupt(_):
+        def do_interrupt(_: Any) -> defer.Deferred[None] | None:
             return self.cmd.interrupt()
 
         interrupt_d.addCallback(do_interrupt)
@@ -269,7 +280,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_timestamp(self):
+    def test_timestamp(self) -> InlineCallbacksType[None]:
         self.fakemaster.count_writes = True  # get actual byte counts
         timestamp = (os.path.getatime(self.datafile), os.path.getmtime(self.datafile))
 
@@ -299,7 +310,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
 
 class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpCommand()
 
         self.fakemaster = FakeMasterMethods(self.add_update)
@@ -314,12 +325,12 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         with open(os.path.join(self.datadir, "bb"), mode="wb") as f:
             f.write(b"and a little b" * 17)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
 
     @defer.inlineCallbacks
-    def test_simple(self, compress=None):
+    def test_simple(self, compress: str | None = None) -> InlineCallbacksType[None]:
         self.fakemaster.keep_data = True
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
         self.make_command(
@@ -354,16 +365,16 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         f.close()
 
     # try it again with bz2 and gzip
-    def test_simple_bz2(self):
+    def test_simple_bz2(self) -> defer.Deferred[None]:
         return self.test_simple('bz2')
 
-    def test_simple_gz(self):
+    def test_simple_gz(self) -> defer.Deferred[None]:
         return self.test_simple('gz')
 
     # except bz2 can't operate in stream mode on py24
 
     @defer.inlineCallbacks
-    def test_out_of_space_unpack(self):
+    def test_out_of_space_unpack(self) -> InlineCallbacksType[None]:
         self.fakemaster.keep_data = True
         self.fakemaster.unpack_fail = True
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
@@ -392,12 +403,12 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
 
 class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpCommand()
         self.fakemaster = FakeMasterMethods(self.add_update)
 
     @defer.inlineCallbacks
-    def test_directory_not_available(self):
+    def test_directory_not_available(self) -> InlineCallbacksType[None]:
         path = os.path.join(self.basedir, 'workdir', os.path.expanduser('data'))
 
         self.make_command(
@@ -425,7 +436,7 @@ class TestWorkerDirectoryUploadNoDir(CommandTestMixin, unittest.TestCase):
 
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpCommand()
 
         self.fakemaster = FakeMasterMethods(self.add_update)
@@ -435,12 +446,12 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
 
     @defer.inlineCallbacks
-    def test_simple(self):
+    def test_simple(self) -> InlineCallbacksType[None]:
         self.fakemaster.count_reads = True  # get actual byte counts
         self.fakemaster.data = test_data = b'1234' * 13
         assert len(self.fakemaster.data) == 52
@@ -469,7 +480,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             self.assertEqual(os.stat(datafile).st_mode & 0o777, 0o777)
 
     @defer.inlineCallbacks
-    def test_mkdir(self):
+    def test_mkdir(self) -> InlineCallbacksType[None]:
         self.fakemaster.data = test_data = b'hi'
 
         path = os.path.join(
@@ -496,8 +507,8 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.assertEqual(datafileContent, test_data)
 
     @defer.inlineCallbacks
-    def test_failure(self):
-        self.fakemaster.data = 'hi'
+    def test_failure(self) -> InlineCallbacksType[None]:
+        self.fakemaster.data = b'hi'
 
         os.makedirs(os.path.join(self.basedir, 'dir'))
         path = os.path.join(self.basedir, os.path.expanduser('dir'))
@@ -524,7 +535,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_truncated(self):
+    def test_truncated(self) -> InlineCallbacksType[None]:
         self.fakemaster.data = test_data = b'tenchars--' * 10
 
         path = os.path.join(self.basedir, os.path.expanduser('data'))
@@ -558,7 +569,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.assertEqual(data, test_data[:50])
 
     @defer.inlineCallbacks
-    def test_interrupted(self):
+    def test_interrupted(self) -> InlineCallbacksType[None]:
         self.fakemaster.data = b'tenchars--' * 100  # 1k
         self.fakemaster.delay_read = True  # read very slowly
 
@@ -577,11 +588,11 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         # wait a jiffy..
-        interrupt_d = defer.Deferred()
-        reactor.callLater(0.01, interrupt_d.callback, None)
+        interrupt_d: defer.Deferred[None] = defer.Deferred()
+        cast("IReactorTime", reactor).callLater(0.01, interrupt_d.callback, None)
 
         # and then interrupt the step
-        def do_interrupt(_):
+        def do_interrupt(_: Any) -> defer.Deferred[None] | None:
             return self.cmd.interrupt()
 
         interrupt_d.addCallback(do_interrupt)

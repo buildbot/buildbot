@@ -12,10 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import base64
 import os
 import time
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Iterable
+from typing import Sequence
+from typing import cast
 
 from parameterized import parameterized
 from twisted.application import service
@@ -42,22 +48,28 @@ from buildbot_worker.msgpack import decode_http_authorization_header
 from buildbot_worker.msgpack import encode_http_authorization_header
 from buildbot_worker.pb import BotMsgpack
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
 
 class TestHttpAuthorization(unittest.TestCase):
     maxDiff = None
 
-    def test_encode(self):
+    def test_encode(self) -> None:
         result = encode_http_authorization_header(b'name', b'pass')
         self.assertEqual(result, 'Basic bmFtZTpwYXNz')
 
         result = encode_http_authorization_header(b'name2', b'pass2')
         self.assertEqual(result, 'Basic bmFtZTI6cGFzczI=')
 
-    def test_encode_username_contains_colon(self):
+    def test_encode_username_contains_colon(self) -> None:
         with self.assertRaises(ValueError):
             encode_http_authorization_header(b'na:me', b'pass')
 
-    def test_decode(self):
+    def test_decode(self) -> None:
         result = decode_http_authorization_header(
             encode_http_authorization_header(b'name', b'pass')
         )
@@ -69,18 +81,18 @@ class TestHttpAuthorization(unittest.TestCase):
         )
         self.assertEqual(result, ('name', 'pa:ss'))
 
-    def test_contains_no__basic(self):
+    def test_contains_no__basic(self) -> None:
         with self.assertRaises(ValueError):
             decode_http_authorization_header('Test bmFtZTpwYXNzOjI=')
 
         with self.assertRaises(ValueError):
             decode_http_authorization_header('TestTest bmFtZTpwYXNzOjI=')
 
-    def test_contains_forbidden_character(self):
+    def test_contains_forbidden_character(self) -> None:
         with self.assertRaises(ValueError):
             decode_http_authorization_header('Basic test%test')
 
-    def test_credentials_do_not_contain_colon(self):
+    def test_credentials_do_not_contain_colon(self) -> None:
         value = 'Basic ' + base64.b64encode(b'TestTestTest').decode()
         with self.assertRaises(ValueError):
             decode_http_authorization_header(value)
@@ -90,23 +102,24 @@ class TestException(Exception):
     pass
 
 
+# FIXME: Copied from test.unit.test_bot but unused?
 class FakeStep:
     "A fake master-side BuildStep that records its activities."
 
-    def __init__(self):
-        self.finished_d = defer.Deferred()
-        self.actions = []
+    def __init__(self) -> None:
+        self.finished_d: defer.Deferred[None] = defer.Deferred()
+        self.actions: list[list[Any]] = []
 
-    def wait_for_finish(self):
+    def wait_for_finish(self) -> Deferred:
         return self.finished_d
 
-    def remote_update(self, updates):
+    def remote_update(self, updates: Iterable[Sequence[Any]]) -> None:
         for update in updates:
             if 'elapsed' in update[0]:
                 update[0]['elapsed'] = 1
         self.actions.append(["update", updates])
 
-    def remote_complete(self, f):
+    def remote_complete(self, f: Any) -> None:
         self.actions.append(["complete", f])
         self.finished_d.callback(None)
 
@@ -118,7 +131,7 @@ class FakeBot(base.BotBase):
 class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.TestCase):
     maxDiff = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.protocol = BuildbotWebSocketClientProtocol()
         self.protocol.sendMessage = mock.Mock()
         self.protocol.factory = mock.Mock()
@@ -129,37 +142,37 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.dict_def = {}
         self.protocol.sendClose = mock.Mock()
 
-        def mock_util_now(_reactor=None):
+        def mock_util_now(_reactor: Any = None) -> float:
             return 0
 
         # patch util.now function to never let tests access the time module of the code
         self.patch(util, 'now', mock_util_now)
 
-        self.list_send_message_args = []
+        self.list_send_message_args: list[Any] = []
 
-        def send_message_test(payload, isBinary):
+        def send_message_test(payload: Any, isBinary: bool) -> None:
             msg = msgpack.unpackb(payload, raw=False)
             self.list_send_message_args.append(msg)
 
         self.protocol.sendMessage = send_message_test
 
-    def assert_sent_messages(self, msgs_expected):
+    def assert_sent_messages(self, msgs_expected: list[Any]) -> None:
         # checks, what messages has been called in sendMessage
         self.assertEqual(msgs_expected, self.list_send_message_args)
         self.list_send_message_args[:] = []
 
-    def setup_with_worker_for_builder(self):
+    def setup_with_worker_for_builder(self) -> None:
         self.protocol.onOpen()
         # we are not interested in list_send_message_args before onMessage was called by test
         self.list_send_message_args[:] = []
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         service.MultiService.startService(self.protocol.factory.buildbot_bot)
 
-        self.protocol.factory.buildbot_bot.builder_protocol_command = {'test_builder': None}
-        self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}
+        self.protocol.factory.buildbot_bot.builder_protocol_command = {'test_builder': None}  # type: ignore[attr-defined]
+        self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_call_get_worker_info_success(self):
+    def test_call_get_worker_info_success(self) -> InlineCallbacksType[None]:
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo = mock.Mock()
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo.return_value = {
             'test': 'data_about_worker'
@@ -175,7 +188,10 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assertEqual(self.list_send_message_args, [msgs_expected])
 
     @defer.inlineCallbacks
-    def send_message(self, message):
+    def send_message(
+        self,
+        message: dict[str, Any],
+    ) -> InlineCallbacksType[None]:
         self.protocol.onMessage(msgpack.packb(message), True)
         yield self.protocol._deferwaiter.wait()
 
@@ -196,7 +212,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ('response_seq_number', {'op': 'response'}),
     ])
     @defer.inlineCallbacks
-    def test_msg(self, name, msg):
+    def test_msg(self, name: str, msg: Any) -> InlineCallbacksType[None]:
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         with mock.patch('twisted.python.log.msg') as mock_log:
             yield self.send_message(msg)
@@ -248,7 +264,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ),
     ])
     @defer.inlineCallbacks
-    def test_missing_parameter(self, command, msg, missing_parameter):
+    def test_missing_parameter(
+        self,
+        command: str,
+        msg: Any,
+        missing_parameter: str,
+    ) -> InlineCallbacksType[None]:
         self.protocol.onOpen()
         # we are not interested in list_send_message_args before onMessage was called by test
         self.list_send_message_args[:] = []
@@ -263,7 +284,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     @defer.inlineCallbacks
-    def test_on_message_unrecognized_command(self):
+    def test_on_message_unrecognized_command(self) -> InlineCallbacksType[None]:
         self.protocol.onOpen()
         # we are not interested in list_send_message_args before onMessage was called by test
         self.list_send_message_args[:] = []
@@ -279,7 +300,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             }
         ])
 
-    def test_authorization_header(self):
+    def test_authorization_header(self) -> None:
         result = self.protocol.onConnecting('test')
 
         self.assertEqual(
@@ -288,7 +309,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def test_call_print_success(self):
+    def test_call_print_success(self) -> InlineCallbacksType[None]:
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         with mock.patch('twisted.python.log.msg') as mock_log:
             yield self.send_message({'op': 'print', 'seq_number': 0, 'message': 'test_message'})
@@ -297,7 +318,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([{'op': 'response', 'seq_number': 0, 'result': None}])
 
     @defer.inlineCallbacks
-    def test_call_keepalive(self):
+    def test_call_keepalive(self) -> InlineCallbacksType[None]:
         with mock.patch('twisted.python.log.msg') as mock_log:
             yield self.send_message({'op': 'keepalive', 'seq_number': 0})
             mock_log.assert_any_call("Connection keepalive confirmed.")
@@ -305,7 +326,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assert_sent_messages([{'op': 'response', 'seq_number': 0, 'result': None}])
 
     @defer.inlineCallbacks
-    def test_call_start_command_success(self):
+    def test_call_start_command_success(self) -> InlineCallbacksType[None]:
         self.setup_with_worker_for_builder()
 
         # check if directory was created
@@ -320,7 +341,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             mkdir.assert_called()
 
     @defer.inlineCallbacks
-    def test_call_start_command_failed(self):
+    def test_call_start_command_failed(self) -> InlineCallbacksType[None]:
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -353,7 +374,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             {'op': 'response', 'result': None, 'seq_number': 1},
         ])
 
-        def create_msg(seq_number):
+        def create_msg(seq_number: int) -> dict[str, Any]:
             return {'op': 'response', 'seq_number': seq_number, 'result': None}
 
         yield self.send_message(create_msg(0))
@@ -363,7 +384,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.assertEqual(self.list_send_message_args, [])
 
     @defer.inlineCallbacks
-    def test_call_start_command_shell_success(self):
+    def test_call_start_command_shell_success(self) -> InlineCallbacksType[None]:
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -402,7 +423,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     @defer.inlineCallbacks
-    def test_call_start_command_shell_success_logs(self):
+    def test_call_start_command_shell_success_logs(self) -> InlineCallbacksType[None]:
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -445,7 +466,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     @defer.inlineCallbacks
-    def test_start_command_shell_success_updates_single(self):
+    def test_start_command_shell_success_updates_single(self) -> InlineCallbacksType[None]:
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
 
@@ -482,7 +503,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     @defer.inlineCallbacks
-    def test_call_shutdown_success(self):
+    def test_call_shutdown_success(self) -> InlineCallbacksType[None]:
         # shutdown stops reactor, we can not test it so we just mock
         self.protocol.factory.buildbot_bot.remote_shutdown = mock.Mock()
 
@@ -491,7 +512,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.buildbot_bot.remote_shutdown.assert_called()
 
     @defer.inlineCallbacks
-    def test_call_interrupt_command_no_command_to_interrupt(self):
+    def test_call_interrupt_command_no_command_to_interrupt(self) -> InlineCallbacksType[None]:
         self.setup_with_worker_for_builder()
         self.protocol.factory.command.doInterrupt = mock.Mock()
 
@@ -508,7 +529,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.command.doInterrupt.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_call_interrupt_command_success(self):
+    def test_call_interrupt_command_success(self) -> InlineCallbacksType[None]:
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
         self.protocol.factory.command.doInterrupt = mock.Mock()
@@ -529,8 +550,8 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         })
 
         # wait a jiffy..
-        d = defer.Deferred()
-        reactor.callLater(0.01, d.callback, None)
+        d: defer.Deferred[None] = defer.Deferred()
+        cast("IReactorTime", reactor).callLater(0.01, d.callback, None)
         yield d
 
         self.assert_sent_messages([{'op': 'response', 'seq_number': 1, 'result': None}])

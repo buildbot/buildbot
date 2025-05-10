@@ -12,12 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import glob
 import os
 import platform
 import shutil
 import sys
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import threads
@@ -27,6 +30,12 @@ from buildbot_worker import runprocess
 from buildbot_worker.commands import base
 from buildbot_worker.commands import utils
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+    from twisted.python.failure import Failure
+
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
 
 class MakeDirectory(base.Command):
     header = "mkdir"
@@ -34,7 +43,7 @@ class MakeDirectory(base.Command):
     # args['paths'] specifies the absolute paths of directories to create
     requiredArgs = ['paths']
 
-    def start(self):
+    def start(self) -> None:
         paths = self.args['paths']
 
         for dirname in paths:
@@ -57,11 +66,11 @@ class RemoveDirectory(base.Command):
     # args['paths'] specifies the absolute paths of directories or files to remove
     requiredArgs = ['paths']
 
-    def setup(self, args):
+    def setup(self, args: dict[str, Any]) -> None:
         self.logEnviron = args.get('logEnviron', True)
 
     @defer.inlineCallbacks
-    def start(self):
+    def start(self) -> InlineCallbacksType[None]:
         args = self.args
         dirnames = args['paths']
 
@@ -80,14 +89,14 @@ class RemoveDirectory(base.Command):
 
         self.sendStatus([('rc', self.rc)])
 
-    def removeSingleDir(self, path):
+    def removeSingleDir(self, path: str) -> Deferred[int]:
         if runtime.platformType != "posix":
             d = threads.deferToThread(utils.rmdirRecursive, path)
 
-            def cb(_):
+            def cb(_: Any) -> int:
                 return 0  # rc=0
 
-            def eb(f):
+            def eb(f: Failure) -> int:
                 self.sendStatus([('header', 'exception from rmdirRecursive\n' + f.getTraceback())])
                 return -1  # rc=-1
 
@@ -98,7 +107,12 @@ class RemoveDirectory(base.Command):
         return d
 
     @defer.inlineCallbacks
-    def _clobber(self, dummy, path, chmodDone=False):
+    def _clobber(
+        self,
+        dummy: int | None,
+        path: str,
+        chmodDone: bool = False,
+    ) -> InlineCallbacksType[int]:
         command = ["rm", "-rf", path]
 
         c = runprocess.RunProcess(
@@ -127,7 +141,7 @@ class RemoveDirectory(base.Command):
         return rc
 
     @defer.inlineCallbacks
-    def _tryChmod(self, rc, path):
+    def _tryChmod(self, rc: int, path: str) -> InlineCallbacksType[int]:
         assert isinstance(rc, int)
         if rc == 0:
             return 0
@@ -166,10 +180,10 @@ class CopyDirectory(base.Command):
     # are required.
     requiredArgs = ['to_path', 'from_path']
 
-    def setup(self, args):
+    def setup(self, args: dict[str, Any]) -> None:
         self.logEnviron = args.get('logEnviron', True)
 
-    def start(self):
+    def start(self) -> Deferred[None]:
         args = self.args
 
         from_path = self.args['from_path']
@@ -181,17 +195,17 @@ class CopyDirectory(base.Command):
         if runtime.platformType != "posix":
             d = threads.deferToThread(shutil.copytree, from_path, to_path)
 
-            def cb(_):
+            def cb(_: Any) -> int:
                 return 0  # rc=0
 
-            def eb(f):
+            def eb(f: Failure) -> int:
                 self.sendStatus([('header', 'exception from copytree\n' + f.getTraceback())])
                 return -1  # rc=-1
 
             d.addCallbacks(cb, eb)
 
             @d.addCallback
-            def send_rc(rc):
+            def send_rc(rc: int) -> None:
                 self.sendStatus([('rc', rc)])
 
         else:
@@ -234,7 +248,7 @@ class StatFile(base.Command):
     # args['path'] absolute path of a file
     requireArgs = ['path']
 
-    def start(self):
+    def start(self) -> None:
         filename = self.args['path']
 
         try:
@@ -254,7 +268,7 @@ class GlobPath(base.Command):
     # args['path'] shell-style path specification of a pattern
     requiredArgs = ['path']
 
-    def start(self):
+    def start(self) -> None:
         pathname = self.args['path']
 
         try:
@@ -274,7 +288,7 @@ class ListDir(base.Command):
     # args['path'] absolute path of the directory to list
     requireArgs = ['path']
 
-    def start(self):
+    def start(self) -> None:
         dirname = self.args['path']
 
         try:
@@ -294,7 +308,7 @@ class RemoveFile(base.Command):
     # args['path'] absolute path of a file to delete
     requiredArgs = ['path']
 
-    def start(self):
+    def start(self) -> None:
         pathname = self.args['path']
 
         try:
