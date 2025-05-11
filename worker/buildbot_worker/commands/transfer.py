@@ -162,7 +162,7 @@ class WorkerFileUploadCommand(TransferCommand):
             if self.stderr is None:
                 self.stderr = f'Maximum filesize reached, truncating file \'{self.path}\''
                 self.rc = 1
-            data = ''
+            data = b''
         else:
             data = self.fp.read(length)
 
