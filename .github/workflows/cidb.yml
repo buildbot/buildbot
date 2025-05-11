@@ -11,7 +11,7 @@ permissions:
 jobs:
   db:
     name: DB / ${{ matrix.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -26,9 +26,9 @@ jobs:
             database: mariadb:lts
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: healthcheck.sh --connect --innodb_initialized
-            
-          - name: MySQL 5
-            database: mysql:5
+
+          - name: MySQL LTS
+            database: mysql:lts
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: mysqladmin --protocol tcp ping
 
@@ -37,13 +37,13 @@ jobs:
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: mysqladmin --protocol tcp ping
 
-          - name: PostgreSQL 12 / psycopg2
-            database: postgres:12
+          - name: PostgreSQL 13 / psycopg2
+            database: postgres:13
             connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
-          - name: PostgreSQL 12 / pg8000
-            database: postgres:12
+          - name: PostgreSQL 13 / pg8000
+            database: postgres:13
             connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
@@ -85,12 +85,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt-get install aspell aspell-en enchant iamerican ispell
+      - run: sudo apt-get install aspell aspell-en iamerican ispell
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: 'pip'
           cache-dependency-path: |
             requirements-ci.txt
