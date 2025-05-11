@@ -22,8 +22,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -39,6 +42,21 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from collections.abc import Sequence
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import TypeVar
+
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorTime
+    from typing_extensions import ParamSpec
+
+    from buildbot.util.twisted import ThreadPool
+    from buildbot_worker.util.twisted import InlineCallbacksType
+
+    _T = TypeVar('_T')
+    _P = ParamSpec('_P')
+
+
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295
 # https://twistedmatrix.com/trac/ticket/8296
@@ -50,9 +68,9 @@ class CoreReactor:
     Partial implementation of ``IReactorCore``.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._triggers = {}
+        self._triggers: dict[str, _ThreePhaseEvent] = {}
 
     def addSystemEventTrigger(
         self, phase: str, eventType: str, callable: Callable, *args: object, **kw: object
@@ -60,12 +78,12 @@ class CoreReactor:
         event = self._triggers.setdefault(eventType, _ThreePhaseEvent())
         return eventType, event.addTrigger(phase, callable, *args, **kw)
 
-    def removeSystemEventTrigger(self, triggerID):
+    def removeSystemEventTrigger(self, triggerID: tuple[str, Any]) -> None:
         eventType, handle = triggerID
         event = self._triggers.setdefault(eventType, _ThreePhaseEvent())
         event.removeTrigger(handle)
 
-    def fireSystemEvent(self, eventType):
+    def fireSystemEvent(self, eventType: str) -> None:
         event = self._triggers.get(eventType)
         if event is not None:
             event.fireEvent()
@@ -107,10 +125,16 @@ class NonThreadPool:
 
     calls = 0
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         pass
 
-    def callInThreadWithCallback(self, onResult, func, *args, **kw):
+    def callInThreadWithCallback(
+        self,
+        onResult: Callable[[bool, Failure | _T], None],
+        func: Callable[_P, _T],
+        *args: _P.args,
+        **kw: _P.kwargs,
+    ) -> None:
         self.calls += 1
         try:
             result = func(*args, **kw)
@@ -122,10 +146,10 @@ class NonThreadPool:
         else:
             onResult(True, result)
 
-    def start(self):
+    def start(self) -> None:
         pass
 
-    def stop(self):
+    def stop(self) -> None:
         pass
 
 
@@ -148,19 +172,19 @@ class NonReactor:
         callable(*args, **kwargs)
         return None
 
-    def getThreadPool(self):
-        return NonThreadPool()
+    def getThreadPool(self) -> ThreadPool:
+        return cast("ThreadPool", NonThreadPool())
 
 
 class TestReactor(NonReactor, CoreReactor, Clock):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # whether there are calls that should run right now
         self._pendingCurrentCalls = False
         self.stop_called = False
 
-    def _executeCurrentDelayedCalls(self):
+    def _executeCurrentDelayedCalls(self) -> None:
         while self.getDelayedCalls():
             first = sorted(self.getDelayedCalls(), key=lambda a: a.getTime())[0]
             if first.getTime() > self.seconds():
@@ -170,7 +194,12 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         self._pendingCurrentCalls = False
 
     @defer.inlineCallbacks
-    def _catchPrintExceptions(self, what, *a, **kw):
+    def _catchPrintExceptions(
+        self,
+        what: Callable[_P, None | defer.Deferred[None]],
+        *a: _P.args,
+        **kw: _P.kwargs,
+    ) -> InlineCallbacksType[None]:
         try:
             r = what(*a, **kw)
             if isinstance(r, defer.Deferred):
@@ -179,7 +208,13 @@ class TestReactor(NonReactor, CoreReactor, Clock):
             log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise
 
-    def callLater(self, when, what, *a, **kw):
+    def callLater(
+        self,
+        delay: float,
+        callable: Callable[..., object],
+        *args: object,
+        **kw: object,
+    ) -> IDelayedCall:
         # Buildbot often uses callLater(0, ...) to defer execution of certain
         # code to the next iteration of the reactor. This means that often
         # there are pending callbacks registered to the reactor that might
@@ -191,12 +226,12 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         #
         # Additionally, we wrap all calls with a function that prints any
         # unhandled exceptions
-        if when <= 0 and not self._pendingCurrentCalls:
-            reactor.callLater(0, self._executeCurrentDelayedCalls)
+        if delay <= 0 and not self._pendingCurrentCalls:
+            cast("IReactorTime", reactor).callLater(0, self._executeCurrentDelayedCalls)
 
-        return super().callLater(when, self._catchPrintExceptions, what, *a, **kw)
+        return super().callLater(delay, self._catchPrintExceptions, callable, *args, **kw)
 
-    def stop(self):
+    def stop(self) -> None:
         # first fire pending calls until the current time. Note that the real
         # reactor only advances until the current time in the case of shutdown.
         self.advance(0)

@@ -12,8 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
+
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import Callable
+    from typing import ClassVar
+    from typing import Literal
+
+    from typing_extensions import Self
 
 
 class Expect:
@@ -35,14 +46,14 @@ class Expect:
     are not omitted.
     """
 
-    def __init__(self, command, workdir, **kwargs):
-        self.kwargs = {"command": command, "workdir": workdir}
+    def __init__(self, command: str | list[str], workdir: str, **kwargs: Any) -> None:
+        self.kwargs: dict[str, Any] = {"command": command, "workdir": workdir}
         self.kwargs.update(kwargs)
 
-        self.result = None
-        self.status_updates = []
+        self.result: tuple[Literal['c'], int] | tuple[Literal['e'], BaseException] | None = None
+        self.status_updates: list[list[tuple[str, Any]]] = []
 
-    def __str__(self):
+    def __str__(self) -> str:
         other_kwargs = self.kwargs.copy()
         del other_kwargs['command']
         del other_kwargs['workdir']
@@ -50,19 +61,19 @@ class Expect:
             self.kwargs['command'], self.kwargs['workdir'], other_kwargs, self.result
         )
 
-    def update(self, key, value):
+    def update(self, key: str, value: Any) -> Self:
         self.status_updates.append([(key, value)])
         return self
 
-    def updates(self, updates):
+    def updates(self, updates: list[tuple[str, Any]]) -> Self:
         self.status_updates.append(updates)
         return self
 
-    def exit(self, rc_code):
+    def exit(self, rc_code: int) -> Self:
         self.result = ('c', rc_code)
         return self
 
-    def exception(self, error):
+    def exception(self, error: BaseException) -> Self:
         self.result = ('e', error)
         return self
 
@@ -80,8 +91,10 @@ class FakeRunProcess:
     Note that this handles sendStderr/sendStdout and keepStderr/keepStdout properly.
     """
 
+    _expectations: ClassVar[list[Expect]]
+
     @classmethod
-    def expect(cls, *expectations):
+    def expect(cls, *expectations: Expect) -> None:
         """
         Set the expectations for this test run
         """
@@ -90,7 +103,7 @@ class FakeRunProcess:
         cls._expectations.reverse()
 
     @classmethod
-    def test_done(cls):
+    def test_done(cls) -> None:
         """
         Indicate that this test is finished; if any expected instantiations
         have not taken place, this will raise the appropriate AssertionError.
@@ -99,13 +112,21 @@ class FakeRunProcess:
             raise AssertionError(f"{len(cls._expectations)} expected instances not created")
         del cls._expectations
 
-    def __init__(self, command_id, command, workdir, unicode_encoding, send_update, **kwargs):
+    def __init__(
+        self,
+        command_id: int,
+        command: list[str | bytes] | str | bytes,
+        workdir: str,
+        unicode_encoding: str,
+        send_update: Callable[[list[tuple[str, Any]]], None],
+        **kwargs: Any,
+    ) -> None:
         kwargs['command'] = command
         kwargs['workdir'] = workdir
 
         # the default values for the constructor kwargs; if we got a default
         # value in **kwargs and didn't expect anything, well count that as OK
-        default_values = {
+        default_values: dict[str, Any] = {
             "environ": None,
             "sendStdout": True,
             "sendStderr": True,
@@ -156,7 +177,9 @@ class FakeRunProcess:
         self.stdout = ''
         self.stderr = ''
 
-    def start(self):
+        self.run_deferred: defer.Deferred[int] | None = None
+
+    def start(self) -> defer.Deferred[int]:
         # figure out the stdio-related parameters
         keepStdout = self._exp.kwargs.get('keepStdout', False)
         keepStderr = self._exp.kwargs.get('keepStderr', False)
@@ -194,13 +217,16 @@ class FakeRunProcess:
 
         return d
 
-    def _finished(self):
+    def _finished(self) -> None:
+        assert self._exp.result and self._exp.result[0] is not None
+        assert self.run_deferred is not None
         if self._exp.result[0] == 'e':
             self.run_deferred.errback(self._exp.result[1])
         else:
             self.run_deferred.callback(self._exp.result[1])
 
-    def kill(self, reason):
+    def kill(self, reason: str) -> None:
         self.send_update([('header', 'killing')])
         self.send_update([('rc', -1)])
+        assert self.run_deferred is not None
         self.run_deferred.callback(-1)
