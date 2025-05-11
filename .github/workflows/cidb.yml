@@ -11,7 +11,7 @@ permissions:
 jobs:
   db:
     name: DB / ${{ matrix.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -85,7 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt-get install aspell aspell-en enchant iamerican ispell
+      - run: sudo apt-get install aspell aspell-en iamerican ispell
 
       - name: Set up Python
         uses: actions/setup-python@v5
