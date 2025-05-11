@@ -1,0 +1,28 @@
+<div>
+    <!-- Create a table of builds organised by builders in column-->
+    <table class="table table-sm table-striped table-hover">
+        <tr>
+            <!-- Generate the table header with name of builders -->
+            {% for builder in builders %}
+            <th>
+                {{builder.name}}
+            </th>
+            {% endfor %}
+        </tr>
+        {% for build in builds %}
+        <tr>
+            {% for builder in builders %}
+            <th>
+                {% if build.builderid == builder.builderid %}
+                    <a class="bb-badge-round results_{{build.results_text | upper}}"
+                        href="#/builders/{{build.builderid}}/builds/{{build.number}}"
+                    >
+                        {{build.number}}
+                    </a>
+               {% endif %}
+            </th>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>

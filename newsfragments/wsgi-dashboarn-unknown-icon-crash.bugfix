@@ -1,0 +1,1 @@
+Fixed crash when WSGI dashboard uses non-existent icon. A default icon is now used instead (#7435).
