@@ -179,7 +179,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
             log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise
 
-    def callLater(self, when, what, *a, **kw):
+    def callLater(self, delay, callable, *args, **kw):
         # Buildbot often uses callLater(0, ...) to defer execution of certain
         # code to the next iteration of the reactor. This means that often
         # there are pending callbacks registered to the reactor that might
@@ -191,10 +191,10 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         #
         # Additionally, we wrap all calls with a function that prints any
         # unhandled exceptions
-        if when <= 0 and not self._pendingCurrentCalls:
+        if delay <= 0 and not self._pendingCurrentCalls:
             reactor.callLater(0, self._executeCurrentDelayedCalls)
 
-        return super().callLater(when, self._catchPrintExceptions, what, *a, **kw)
+        return super().callLater(delay, self._catchPrintExceptions, callable, *args, **kw)
 
     def stop(self):
         # first fire pending calls until the current time. Note that the real
