@@ -26,9 +26,9 @@ jobs:
             database: mariadb:lts
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: healthcheck.sh --connect --innodb_initialized
-            
-          - name: MySQL 5
-            database: mysql:5
+
+          - name: MySQL LTS
+            database: mysql:lts
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: mysqladmin --protocol tcp ping
 
