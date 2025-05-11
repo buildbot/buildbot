@@ -22,6 +22,7 @@ import {IconType} from "react-icons";
 import {CancellablePromise, capitalize} from "buildbot-data-js";
 import {LoadingIndicator} from "buildbot-ui";
 import {buildbotSetupPlugin} from "buildbot-plugin-support";
+import {FaExclamationCircle} from "react-icons/fa";
 
 function getWsgiUrl(location: Location, name: string) {
   let pathname = location.pathname;
@@ -102,7 +103,8 @@ buildbotSetupPlugin((reg, config) => {
     // @ts-ignore
     const icon: IconType|undefined = fa['Fa' + capitalize(dashboard.icon)];
     if (icon === undefined) {
-      throw Error(`Could not find icon ${dashboard.icon}`);
+      icon = FaExclamationCircle;
+      console.log(`Error in WSGI plugin ${name}: Could not find icon ${dashboard.icon}`);
     }
 
     reg.registerMenuGroup({
