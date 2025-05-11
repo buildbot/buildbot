@@ -37,13 +37,13 @@ jobs:
             connection: 'mysql+mysqldb://buildbot:buildbot@127.0.0.1:3306/bbtest?storage_engine=InnoDB'
             check: mysqladmin --protocol tcp ping
 
-          - name: PostgreSQL 12 / psycopg2
-            database: postgres:12
+          - name: PostgreSQL 13 / psycopg2
+            database: postgres:13
             connection: 'postgresql+psycopg2://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
-          - name: PostgreSQL 12 / pg8000
-            database: postgres:12
+          - name: PostgreSQL 13 / pg8000
+            database: postgres:13
             connection: 'postgresql+pg8000://buildbot:buildbot@127.0.0.1:5432/bbtest'
             check: pg_isready
 
