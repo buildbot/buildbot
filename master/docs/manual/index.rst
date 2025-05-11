@@ -11,7 +11,7 @@ Buildbot Manual
    concepts
    secretsmanagement
    configuration/index
-   customization
+   customization/index
    cmdline
    resources
    optimization

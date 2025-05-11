@@ -2,7 +2,7 @@
 How to package Buildbot plugins
 ===============================
 
-If you customized an existing component (see :doc:`../manual/customization`) or created a new component that you believe might be useful for others, you have two options:
+If you customized an existing component (see :doc:`../manual/customization/index`) or created a new component that you believe might be useful for others, you have two options:
 
 * submit the change to the Buildbot main tree, however you need to adhere to certain requirements (see :doc:`style`)
 * prepare a Python package that contains the functionality you created
