@@ -44,9 +44,7 @@ def getCommand(name):
 
 # this just keeps pyflakes happy on non-Windows systems
 if runtime.platformType != 'win32':
-    WindowsError: type | None = RuntimeError
-else:
-    WindowsError = None
+    WindowsError = OSError
 
 
 if runtime.platformType == 'win32':  # pragma: no cover
