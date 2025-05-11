@@ -12,19 +12,43 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import cast
+
+if TYPE_CHECKING:
+    from typing import Any
+    from typing import Callable
+
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot_worker.util.lineboundaries import LineInfo
 
 
 class BufferManager:
-    def __init__(self, reactor, message_consumer, buffer_size, buffer_timeout):
+    def __init__(
+        self,
+        reactor: IReactorTime,
+        message_consumer: Callable[[list[tuple[str, Any]]], None],
+        buffer_size: int,
+        buffer_timeout: float,
+    ) -> None:
         self._reactor = reactor
         self._buflen = 0
-        self._buffered = []
+        self._buffered: list[tuple[str, Any]] = []
         self._buffer_size = buffer_size
         self._buffer_timeout = buffer_timeout
-        self._send_message_timer = None
+        self._send_message_timer: IDelayedCall | None = None
         self._message_consumer = message_consumer
 
-    def join_line_info(self, previous_line_info, new_line_info):
+    # TODO: Move to lineboundaries?
+    def join_line_info(
+        self,
+        previous_line_info: LineInfo,
+        new_line_info: LineInfo,
+    ) -> LineInfo:
         previous_line_text = previous_line_info[0]
         len_previous_line_text = len(previous_line_text)
         new_line_text = previous_line_text + new_line_info[0]
@@ -39,7 +63,11 @@ class BufferManager:
 
         return (new_line_text, new_line_indexes, new_time_indexes)
 
-    def buffered_append_maybe_join_lines(self, logname, msg_data):
+    def buffered_append_maybe_join_lines(
+        self,
+        logname: str,
+        msg_data: tuple[str, LineInfo] | LineInfo,
+    ) -> None:
         # if logname is the same as before: join message's line information with previous one
         if len(self._buffered) > 0 and self._buffered[-1][0] == logname:
             # different data format, when logname is 'log'
@@ -48,23 +76,25 @@ class BufferManager:
             # e.g. data = ('test_log', ('hello\n', [5], [0.0]))
             udpate_output = self._buffered[-1][1]
             if logname == "log":
+                msg_data = cast("tuple[str, LineInfo]", msg_data)
                 if udpate_output[0] == msg_data[0]:
                     joined_line_info = self.join_line_info(udpate_output[1], msg_data[1])
                     self._buffered[-1] = (logname, (msg_data[0], joined_line_info))
                     return
             else:
+                msg_data = cast("LineInfo", msg_data)
                 joined_line_info = self.join_line_info(udpate_output, msg_data)
                 self._buffered[-1] = (logname, joined_line_info)
                 return
         self._buffered.append((logname, msg_data))
 
-    def setup_timeout(self):
+    def setup_timeout(self) -> None:
         if not self._send_message_timer:
             self._send_message_timer = self._reactor.callLater(
                 self._buffer_timeout, self.send_message_from_buffer
             )
 
-    def append(self, logname, data):
+    def append(self, logname: str, data: LineInfo | tuple[str, LineInfo] | int) -> None:
         # add data to the buffer for logname
         # keep appending to self._buffered until it gets longer than BUFFER_SIZE
         # which requires emptying the buffer by sending the message to the master
@@ -75,10 +105,12 @@ class BufferManager:
             len_data = 20
         else:
             if logname == "log":
+                data = cast("tuple[str, LineInfo]", data)
                 # different data format, when logname is 'log'
                 # e.g. data = ('test_log', ('hello\n', [5], [0.0]))
                 len_data = len(data[1][0]) + 8 * (len(data[1][1]) + len(data[1][2]))
             else:
+                data = cast("LineInfo", data)
                 len_data = len(data[0]) + 8 * (len(data[1]) + len(data[2]))
 
         space_left = self._buffer_size - self._buflen
@@ -88,6 +120,7 @@ class BufferManager:
             if not is_log_message:
                 self._buffered.append((logname, data))
             else:
+                assert not isinstance(data, int)
                 self.buffered_append_maybe_join_lines(logname, data)
             self._buflen += len_data
             self.setup_timeout()
@@ -106,8 +139,11 @@ class BufferManager:
             return
 
         if logname == "log":
+            data = cast("tuple[str, LineInfo]", data)
             log = data[0]
             data = data[1]
+
+        data = cast("LineInfo", data)
 
         pos_start = 0
         while pos_start < len(data[1]):
@@ -148,6 +184,7 @@ class BufferManager:
             else:
                 line_info = (data[0][:pos_substring_end], data[1][:pos_end], data[2][:pos_end])
 
+            msg_data: tuple[str, LineInfo] | LineInfo
             if logname == "log":
                 msg_data = (log, line_info)
             else:
@@ -156,7 +193,7 @@ class BufferManager:
             self.send_message([(logname, msg_data)])
             pos_start = pos_end
 
-    def send_message_from_buffer(self):
+    def send_message_from_buffer(self) -> None:
         self.send_message(self._buffered)
         self._buffered = []
         self._buflen = 0
@@ -166,11 +203,14 @@ class BufferManager:
                 self._send_message_timer.cancel()
             self._send_message_timer = None
 
-    def send_message(self, data_to_send):
+    def send_message(
+        self,
+        data_to_send: list[tuple[str, tuple[str, LineInfo] | LineInfo | int]],
+    ) -> None:
         if len(data_to_send) == 0:
             return
         self._message_consumer(data_to_send)
 
-    def flush(self):
+    def flush(self) -> None:
         if len(self._buffered) > 0:
             self.send_message_from_buffer()
