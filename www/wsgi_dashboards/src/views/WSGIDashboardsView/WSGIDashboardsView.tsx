@@ -91,6 +91,17 @@ export default function WSGIDashboardsView({name}: WSGIDashboardsViewProps) {
   )
 }
 
+function getIcon(iconNames: string[]) : IconType|undefined {
+  for (const iconName in iconNames) {
+    // @ts-ignore
+    const icon = fa[iconName];
+    if (icon !== undefined) {
+      return icon;
+    }
+  }
+  return undefined
+}
+
 buildbotSetupPlugin((reg, config) => {
   const wsgi_dashboards = config.plugins['wsgi_dashboards'];
 
@@ -100,8 +111,12 @@ buildbotSetupPlugin((reg, config) => {
     if (caption == null) { caption = capitalize(name); }
     if (dashboard.order == null) { dashboard.order = 5; }
 
-    // @ts-ignore
-    const icon: IconType|undefined = fa['Fa' + capitalize(dashboard.icon)];
+    const iconNames = [
+      'Fa' + capitalize(dashboard.icon),
+      String(dashboard.icon),
+    ];
+
+    let icon = getIcon(iconNames);
     if (icon === undefined) {
       icon = FaExclamationCircle;
       console.log(`Error in WSGI plugin ${name}: Could not find icon ${dashboard.icon}`);
