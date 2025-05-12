@@ -15,6 +15,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -23,6 +27,17 @@ from zope.interface import implementer
 from buildbot_worker import util
 from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.interfaces import IWorkerCommand
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorTime
+    from twisted.python.failure import Failure
+
+    from buildbot_worker.base import ProtocolCommandBase
+
+    _T = TypeVar("_T")
 
 # The following identifier should be updated each time this file is changed
 command_version = "3.3"
@@ -137,13 +152,18 @@ class Command:
     # set by Builder, cleared on shutdown or when the Deferred fires
     running = False
 
-    _reactor = reactor
+    _reactor: IReactorTime = cast("IReactorTime", reactor)
 
-    def __init__(self, protocol_command, command_id, args):
+    def __init__(
+        self,
+        protocol_command: ProtocolCommandBase,
+        command_id: str,
+        args: Any,
+    ) -> None:
         self.protocol_command = protocol_command
         self.command_id = command_id  # just for logging
         self.args = args
-        self.startTime = None
+        self.startTime: float | None = None
 
         missingArgs = [arg for arg in self.requiredArgs if arg not in args]
         if missingArgs:
@@ -152,18 +172,19 @@ class Command:
             )
         self.setup(args)
 
-    def log_msg(self, msg, *args):
+    def log_msg(self, msg: str, *args: Any) -> None:
         log.msg(f"(command {self.command_id}): {msg}", *args)
 
-    def setup(self, args):
+    def setup(self, args: dict[str, Any]) -> None:
         """Override this in a subclass to extract items from the args dict."""
 
-    def doStart(self):
+    def doStart(self) -> Deferred:
         self.running = True
         self.startTime = util.now(self._reactor)
         d = defer.maybeDeferred(self.start)
 
-        def commandComplete(res):
+        def commandComplete(res: _T) -> _T:
+            assert self.startTime is not None
             self.sendStatus([("elapsed", util.now(self._reactor) - self.startTime)])
             self.running = False
             return res
@@ -171,7 +192,7 @@ class Command:
         d.addBoth(commandComplete)
         return d
 
-    def start(self):
+    def start(self) -> Deferred[None] | None:
         """Start the command. This method should return a Deferred that will
         fire when the command has completed. The Deferred's argument will be
         ignored.
@@ -179,7 +200,7 @@ class Command:
         This method should be overridden by subclasses."""
         raise NotImplementedError("You must implement this in a subclass")
 
-    def sendStatus(self, status):
+    def sendStatus(self, status: list[Any]) -> None:
         """Send a status update to the master."""
         if self.debug:
             self.log_msg(f"sendStatus: {status}")
@@ -188,18 +209,18 @@ class Command:
             return
         self.protocol_command.send_update(status)
 
-    def doInterrupt(self):
+    def doInterrupt(self) -> None:
         self.running = False
         self.interrupt()
 
-    def interrupt(self):
+    def interrupt(self) -> Deferred[None] | None:
         """Override this in a subclass to allow commands to be interrupted.
         May be called multiple times, test and set self.interrupted=True if
         this matters."""
 
     # utility methods, mostly used by WorkerShellCommand and the like
 
-    def _abandonOnFailure(self, rc):
+    def _abandonOnFailure(self, rc: int) -> int:
         if not isinstance(rc, int):
             self.log_msg(f"weird, _abandonOnFailure was given rc={rc} ({type(rc)})")
         assert isinstance(rc, int)
@@ -207,10 +228,10 @@ class Command:
             raise AbandonChain(rc)
         return rc
 
-    def _sendRC(self, res):
+    def _sendRC(self, res: int) -> None:
         self.sendStatus([('rc', 0)])
 
-    def _checkAbandoned(self, why):
+    def _checkAbandoned(self, why: Failure) -> None:
         self.log_msg("_checkAbandoned", why)
         why.trap(AbandonChain)
         self.log_msg(" abandoning chain", why.value)

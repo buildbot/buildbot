@@ -157,11 +157,6 @@ plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = [
       "buildbot_worker.base",
-      "buildbot_worker.commands.base",
-      "buildbot_worker.commands.fs",
-      "buildbot_worker.commands.registry",
-      "buildbot_worker.commands.shell",
-      "buildbot_worker.commands.transfer",
       "buildbot_worker.interfaces",
       "buildbot_worker.msgpack",
       "buildbot_worker.null",
@@ -171,7 +166,6 @@ plugins = "mypy_zope:plugin"
       "buildbot_worker.scripts.windows_service",
       "buildbot_worker.test.unit.test_bot_Worker",
       "buildbot_worker.test.unit.test_bot",
-      "buildbot_worker.test.unit.test_msgpack",
       "buildbot_worker",
       "buildbot.asyncio",
       "buildbot.clients.sendchange",
