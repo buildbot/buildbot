@@ -15,12 +15,7 @@
 
 from __future__ import annotations
 
-import sys
 from typing import Any
-from typing import NoReturn
-
-import twisted
-from twisted.trial import unittest
 
 from buildbot_worker import monkeypatches
 
@@ -50,20 +45,6 @@ def add_debugging_monkeypatches() -> None:
 
     Service.startService = startService  # type: ignore[method-assign]
     Service.stopService = stopService  # type: ignore[method-assign]
-
-    # versions of Twisted before 9.0.0 did not have a UnitTest.patch that worked
-    # on Python-2.7
-    # TODO: Drop this?
-    if (
-        isinstance(twisted.version.major, int)
-        and twisted.version.major <= 9
-        and sys.version_info[:2] == (2, 7)
-    ):
-
-        def nopatch(self: unittest.TestCase, *args: Any) -> NoReturn:
-            raise unittest.SkipTest('unittest.TestCase.patch is not available')
-
-        unittest.TestCase.patch = nopatch  # type: ignore[assignment, method-assign]
 
 
 add_debugging_monkeypatches()
