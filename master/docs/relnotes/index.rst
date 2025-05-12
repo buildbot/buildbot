@@ -8,6 +8,73 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.3.0`` ( ``2025-05-12`` )
+=====================================
+
+Bug fixes
+---------
+
+- Improved handling of not found exceptions when stopping containers in Docker latent worker.
+- Fixed garbage output from ANSI escape code sequences in build step logs (:bug:`7852`)
+- Fixed ``AuthorizedKeysManhole`` not picking up the specified ``ssh_host_keydir``
+- Fixed deprecation warnings being incorrectly raised as errors
+- Fixed Git step failures when checking out commits containing LFS objects that require
+  authentication
+- Fixed crashes when using callable categories with HgPoller
+- :py:class:`~buildbot.reporters.http.HttpStatusPush` now correctly exposes and passes through the
+  `skip_encoding` parameter
+- Implemented bold text style in build step logs (:issue:`7853`)
+- Websocket connections no longer allow unauthenticated users to connect when authorization is
+   enabled
+
+
+Changes
+-------
+
+- ``Build`` now has a mutable ``env`` attribute, which is deep copied from the ``Builder``'s
+  ``BuilderConfig.env``. This allows steps to modify their current build's environment if needed.
+
+
+Features
+--------
+
+- Added a ``Build.do_build`` field and ``BuilderConfig.do_build_if`` to allow skipping entire builds
+- Added support for configuring the database engine via the ``db.engine_kwargs`` configuration key
+- Added support for tracking exact commits within codebases
+- :py:class:`~buildbot.util.httpclientservice.HTTPSession` now supports mTLS.
+  :py:class:`~buildbot.reporters.http.HttpStatusPush` now supports mTLS endpoints by accepting
+  client certificates via the `cert` parameter (as either a combined file or tuple)
+- Added a ``Log.flush()`` method to flush incomplete log lines without finishing the log
+- Added a `runtime_timeout` argument to `MasterShellCommand` :issue:`8377`
+- Added a `builds/<buildid>/triggered_builds` Data API endpoint to retrieve builds triggered by
+  a specific build
+
+
+Misc
+----
+
+- Added a ``path_cls`` attribute (either ``PureWindowsPath`` or ``PurePosixPath`` depending on
+  worker OS). This will replace ``path_module`` usage with better ergonomics and typing support.
+
+
+Deprecations and Removals
+-------------------------
+
+- BuildFactory workdir callable support has been deprecated. Use renderables instead.
+- Endpoint.pathPatterns as a multiline string has been deprecated. Use list of strings instead.
+- ResourceType.eventPathPatterns as a multiline string has been deprecated. Use list of strings instead.
+- DataConnector.produceEvent() has been deprecated. Use Data API update methods as replacement.
+- The ``rootlinks`` Data and REST API endpoint has been deprecated
+- Buildbot Master now requires Python 3.9 or newer.
+  Python 3.8 is no longer supported.
+- Raising ``NotImplementedError`` from ``reconfigServiceWithSibling`` or
+  ``reconfigService`` has been deprecated. Use ``canReconfigWithSibling()`` that returns ``False`` as
+  a replacement.
+- ``buildbot.schedulers.base.BaseScheduler`` has been deprecated. Replace uses of it with
+  ``ReconfigurableBaseScheduler``.
+- Old location of ``Dependent`` scheduler has been deprecated. Instead of
+  ``buildbot.schedulers.basic.Dependent`` use ``buildbot.plugins.schedulers.Dependent``.
+
 Buildbot ``4.2.1`` ( ``2025-01-10`` )
 =====================================
 

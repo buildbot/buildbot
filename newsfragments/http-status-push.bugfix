@@ -1,1 +1,0 @@
-:py:class:`~buildbot.reporters.http.HttpStatusPush` now exposes and passes through `skip_encoding` parameter correctly
