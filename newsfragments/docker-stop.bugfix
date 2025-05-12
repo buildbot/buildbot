@@ -1,1 +1,0 @@
-:py:class:`DockerLatentWorker`: Handle not found exception better when stopping container.

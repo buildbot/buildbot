@@ -1,1 +1,0 @@
-ResourceType.eventPathPatterns as a multiline string has been deprecated. Use list of strings instead.

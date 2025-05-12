@@ -1,1 +1,0 @@
-Endpoint.pathPatterns as a multiline string has been deprecated. Use list of strings instead.

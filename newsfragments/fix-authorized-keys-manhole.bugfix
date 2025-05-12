@@ -1,1 +1,0 @@
-Fix ``AuthorizedKeysManhole`` not picking up the given ``ssh_host_keydir``
