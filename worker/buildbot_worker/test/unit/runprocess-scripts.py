@@ -111,7 +111,7 @@ def wait_for_pid_death_and_write_pidfile_and_sleep() -> NoReturn:
 
 @script
 def double_fork() -> NoReturn:
-    if os.name == 'posix':
+    if sys.platform != "win32":
         # when using a PTY, the child process will get SIGHUP when the
         # parent process exits, so ignore that.
         signal.signal(signal.SIGHUP, signal.SIG_IGN)

@@ -213,7 +213,8 @@ if runtime.platformType == 'posix':
             # this will cause the child to be the leader of its own process group;
             # it's also spelled setpgrp() on BSD, but this spelling seems to work
             # everywhere
-            os.setpgid(0, 0)
+            if sys.platform != "win32":
+                os.setpgid(0, 0)
 
 
 class RunProcessPP(protocol.ProcessProtocol):
