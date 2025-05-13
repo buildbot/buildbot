@@ -54,16 +54,15 @@ Then run:
 
 This will create the required tags, make documentation, copy it to bbdocs repo and push everything.
 
-Step 5: Draft a new release and wait for CircleCi to create release tarballs
+Step 5: Draft a new release and wait for Github Actions to create release tarballs
 ----------------------------------------------------------------------------
 
-The push of tags created during step 3 will activate CircleCi configuration that generates tarballs and uploads them to GitHub.
-CircleCi will automatically publish a new release when uploading assets.
 The release notes must be added manually by drafting a release on the GitHub UI at https://github.com/buildbot/buildbot/releases.
 
-If you draft the release and publish it before CircleCi, make sure the release name matches the git tag.
+Make sure the release name matches the git tag.
 This is a requirement for subsequent release scripts to work.
-Manual publishing is preferred, because the releases created by CircleCi don't contain release notes, thus GitHub notifications are not informative.
+
+Once done, publish the release to trigger the 'release' Github workflow, which will build the tarballs and add them to the release.
 
 Step 6: Upload release to PyPI
 ------------------------------

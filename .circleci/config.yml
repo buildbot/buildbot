@@ -3,6 +3,9 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2
+# This job was moved to .github/workflows/release.yml
+# Keeping a no-op as CircleCI might be needed for previous versions
+# so can't be disabled yet
 jobs:
   build:
     docker:
@@ -14,77 +17,9 @@ jobs:
       SQLALCHEMY_WARN_20: 1
 
     steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - 37-dependencies-{{ checksum "requirements-ci.txt" }}-{{ checksum "requirements-cidocs.txt" }}-{{ checksum "requirements-pip.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - 37-dependencies-
-
       - run:
-          name: install dependencies
-          command: |
-            env
-            python3.9 -m venv .venv
-            . .venv/bin/activate
-            pip install -r requirements-pip.txt
-            pip install -r requirements-ci.txt
-            pip install -r requirements-cidocs.txt
-            pip install pyinstaller==6.9.0
-
-      - save_cache:
-          paths:
-            - .venv
-          key: 3-dependencies-{{ checksum "requirements-ci.txt" }}-{{ checksum "requirements-cidocs.txt" }}-{{ checksum "requirements-pip.txt" }}
-      - run:
-          name: run tests
-          command: |
-            . .venv/bin/activate
-            make tarballs
-            # Note that installing www/base depends on frontend_deps target being built, which is
-            # a dependency of the tarballs target.
-            pip install -e www/base
-            pyinstaller pyinstaller/buildbot-worker.spec
-            # we test the new generated binary with the global virtualenv
-            SANDBOXED_WORKER_PATH=`pwd`/dist/buildbot-worker trial --reporter=text --rterrors buildbot.test.integration.interop
-      - persist_to_workspace:
-          root: dist
-          paths: .
-      - store_artifacts:
-          path: dist
-          destination: dist
-
-  # publish pipeline that is run on tags
-  publish:
-    docker:
-      # image that can push to github
-      - image: cibuilds/github:0.10
-    steps:
-      - attach_workspace:
-          at: dist
-      - run:
-          name: upload binaries to github release
-          command: |
-            env
-            # rename the buildbot-worker pyinstaller binary
-            mv dist/buildbot-worker dist/buildbot-worker-linux-amd64-$CIRCLE_TAG.bin
-            # upload the github release binary
-            ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $CIRCLE_TAG dist/
+          name: no-op
+          command: echo no-op
 
 workflows:
   version: 2
-  build-deploy:
-    jobs:
-      - build:
-          filters:
-            tags:
-              only: /v.*/
-      - publish:
-          requires: [build]
-          filters:
-            tags:
-              only: /v.*/
-            branches:
-              ignore: /.*/
