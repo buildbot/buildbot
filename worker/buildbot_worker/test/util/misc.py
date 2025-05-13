@@ -31,7 +31,6 @@ from buildbot_worker.scripts import base
 
 if TYPE_CHECKING:
     from typing import Any
-    from typing import Callable
 
 
 def nl(s: str | Any) -> str | Any:
@@ -66,26 +65,6 @@ class IsWorkerDirMixin:
         self.isWorkerDir = mock.Mock(return_value=return_value)
         assert isinstance(self, TestCase)
         self.patch(base, "isWorkerDir", self.isWorkerDir)
-
-
-class PatcherMixin:
-    """
-    Mix this in to get a few special-cased patching methods
-    """
-
-    def patch_os_uname(self, replacement: Callable[[], os.uname_result]) -> None:
-        # twisted's 'patch' doesn't handle the case where an attribute
-        # doesn't exist..
-        assert isinstance(self, TestCase)
-        if hasattr(os, 'uname'):
-            self.patch(os, 'uname', replacement)
-        else:
-
-            def cleanup() -> None:
-                del os.uname
-
-            self.addCleanup(cleanup)
-            os.uname = replacement
 
 
 class FileIOMixin:

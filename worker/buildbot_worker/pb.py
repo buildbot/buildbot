@@ -17,6 +17,7 @@ from __future__ import annotations
 import os.path
 import shutil
 import signal
+import sys
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
@@ -865,8 +866,13 @@ class Worker(WorkerBase):
         WorkerBase.startService(self)
 
         if self.allow_shutdown == 'signal':
-            log.msg("Setting up SIGHUP handler to initiate shutdown")
-            signal.signal(signal.SIGHUP, self._handleSIGHUP)
+            if sys.platform != "win32":
+                log.msg("Setting up SIGHUP handler to initiate shutdown")
+                signal.signal(signal.SIGHUP, self._handleSIGHUP)
+            else:
+                raise ValueError(
+                    f"Shutdown method 'signal' is not available on this platform ({sys.platform})"
+                )
         elif self.allow_shutdown == 'file':
             log.msg(f"Watching {self.shutdown_file}'s mtime to initiate shutdown")
             if os.path.exists(self.shutdown_file):

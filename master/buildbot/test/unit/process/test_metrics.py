@@ -15,6 +15,7 @@
 
 import gc
 import sys
+from unittest import skipIf
 
 from twisted.internet import defer
 from twisted.internet import task
@@ -167,11 +168,12 @@ class TestPeriodicChecks(TestMetricBase):
         self.assertEqual(report['counters']['gc.garbage'], 2)
         self.assertEqual(report['alarms']['gc.garbage'][0], 'WARN')
 
+    @skipIf(
+        sys.platform != 'linux',
+        "only available on linux platforms",
+    )
     def testGetRSS(self):
         self.assertTrue(metrics._get_rss() > 0)
-
-    if sys.platform != 'linux':
-        testGetRSS.skip = "only available on linux platforms"
 
 
 class TestReconfig(TestMetricBase):

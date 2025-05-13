@@ -17,7 +17,6 @@ from __future__ import annotations
 import os
 import pprint
 import re
-import signal
 import sys
 import time
 from typing import TYPE_CHECKING
@@ -598,18 +597,15 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return self._test_spawnAsBatch(['echo', "\u6211"], "cmd.exe /c")
 
 
-class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
-    timeout = 60  # takes a while on oversubscribed test machines
-
-    if runtime.platformType != "posix":
-        skip = "not a POSIX platform"
+class _TestPlatformKillingBase(BasedirMixin, unittest.TestCase):
+    timeout = 10
 
     def setUp(self) -> None:
         self.pidfiles: list[str] = []
         self.setUpBasedir()
         self.updates: list[Any] = []
 
-    def send_update(self, status: list[tuple[str, int] | tuple[str, str]]) -> None:
+    def send_update(self, status: Any) -> None:
         self.updates.append(status)
 
     def tearDown(self) -> None:
@@ -618,13 +614,16 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             if not os.path.exists(pidfile):
                 continue
             with open(pidfile) as f:
-                pid = f.read()
-            if not pid:
+                pid_str = f.read()
+            if not pid_str:
                 return
+            pid = int(pid_str)
             try:
-                os.kill(int(pid), signal.SIGKILL)
-            except OSError:
+                psutil.Process(pid).kill()
+            except psutil.NoSuchProcess:
                 pass
+            while psutil.pid_exists(pid):
+                time.sleep(0.01)
 
         # and clean up leftover pidfiles
         for pidfile in self.pidfiles:
@@ -633,14 +632,14 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
         self.tearDownBasedir()
 
-    def newPidfile(self) -> str:
+    def new_pid_file(self) -> str:
         pidfile = os.path.abspath(f"test-{len(self.pidfiles)}.pid")
         if os.path.exists(pidfile):
             os.unlink(pidfile)
         self.pidfiles.append(pidfile)
         return pidfile
 
-    def waitForPidfile(self, pidfile: str) -> Deferred:
+    def wait_for_pidfile(self, pidfile: str) -> Deferred[int]:
         # wait for a pidfile, and return the pid via a Deferred
         until = time.time() + self.timeout
         d: defer.Deferred[int] = defer.Deferred()
@@ -666,24 +665,15 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         poll()  # poll right away
         return d
 
-    def assertAlive(self, pid: int) -> None:
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            self.fail(f"pid {pid} still alive")
+    def assert_alive(self, pid: int) -> None:
+        if not psutil.pid_exists(pid):
+            self.fail(f"pid {pid} dead, but expected it to be alive")
 
-    def assertDead(self, pid: int, timeout: int = 5) -> None:
+    def assert_dead(self, pid: int, timeout: int = 5) -> None:
         log.msg(f"checking pid {pid!r}")
 
-        def check() -> bool:
-            try:
-                os.kill(pid, 0)
-            except OSError:
-                return True  # dead
-            return False  # alive
-
         # check immediately
-        if check():
+        if not psutil.pid_exists(pid):
             return
 
         # poll every 100'th of a second; this allows us to test for
@@ -692,9 +682,28 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         until = time.time() + timeout
         while time.time() < until:
             time.sleep(0.01)
-            if check():
+            if not psutil.pid_exists(pid):
                 return
         self.fail(f"pid {pid} still alive after {timeout}s")
+
+
+class TestPOSIXKilling(_TestPlatformKillingBase):
+    timeout = 60  # takes a while on oversubscribed test machines
+
+    if runtime.platformType != "posix":
+        skip = "not a POSIX platform"
+
+    def newPidfile(self) -> str:
+        return self.new_pid_file()
+
+    def waitForPidfile(self, pidfile: str) -> Deferred[int]:
+        return self.wait_for_pidfile(pidfile)
+
+    def assertAlive(self, pid: int) -> None:
+        self.assert_alive(pid)
+
+    def assertDead(self, pid: int, timeout: int = 5) -> None:
+        self.assert_dead(pid, timeout=timeout)
 
     # tests
 
@@ -903,95 +912,9 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             self.assertDead(self.child_pid)
 
 
-class TestWindowsKilling(BasedirMixin, unittest.TestCase):
+class TestWindowsKilling(_TestPlatformKillingBase):
     if runtime.platformType != "win32":
         skip = "not a Windows platform"
-
-    def setUp(self) -> None:
-        self.pidfiles: list[str] = []
-        self.setUpBasedir()
-        self.updates: list[Any] = []
-
-    def send_update(self, status: Any) -> None:
-        self.updates.append(status)
-
-    def tearDown(self) -> None:
-        # make sure all of the subprocesses are dead
-        for pidfile in self.pidfiles:
-            if not os.path.exists(pidfile):
-                continue
-            with open(pidfile) as f:
-                pid_str = f.read()
-            if not pid_str:
-                return
-            pid = int(pid_str)
-            try:
-                psutil.Process(pid).kill()
-            except psutil.NoSuchProcess:
-                pass
-            while psutil.pid_exists(pid):
-                time.sleep(0.01)
-
-        # and clean up leftover pidfiles
-        for pidfile in self.pidfiles:
-            if os.path.exists(pidfile):
-                os.unlink(pidfile)
-
-        self.tearDownBasedir()
-
-    def new_pid_file(self) -> str:
-        pidfile = os.path.abspath(f"test-{len(self.pidfiles)}.pid")
-        if os.path.exists(pidfile):
-            os.unlink(pidfile)
-        self.pidfiles.append(pidfile)
-        return pidfile
-
-    def wait_for_pidfile(self, pidfile: str) -> Deferred[int]:
-        # wait for a pidfile, and return the pid via a Deferred
-        until = time.time() + 10
-        d: defer.Deferred[int] = defer.Deferred()
-
-        poll_reactor: IReactorTime = cast("IReactorTime", reactor)
-
-        def poll() -> None:
-            if poll_reactor.seconds() > until:
-                d.errback(RuntimeError(f"pidfile {pidfile} never appeared"))
-                return
-            if os.path.exists(pidfile):
-                try:
-                    with open(pidfile) as f:
-                        pid = int(f.read())
-                except (OSError, TypeError, ValueError):
-                    pid = None
-
-                if pid is not None:
-                    d.callback(pid)
-                    return
-            poll_reactor.callLater(0.01, poll)
-
-        poll()  # poll right away
-        return d
-
-    def assert_alive(self, pid: int) -> None:
-        if not psutil.pid_exists(pid):
-            self.fail(f"pid {pid} dead, but expected it to be alive")
-
-    def assert_dead(self, pid: int, timeout: int = 5) -> None:
-        log.msg(f"checking pid {pid!r}")
-
-        # check immediately
-        if not psutil.pid_exists(pid):
-            return
-
-        # poll every 100'th of a second; this allows us to test for
-        # processes that have been killed, but where the signal hasn't
-        # been delivered yet
-        until = time.time() + timeout
-        while time.time() < until:
-            time.sleep(0.01)
-            if not psutil.pid_exists(pid):
-                return
-        self.fail(f"pid {pid} still alive after {timeout}s")
 
     # tests
 

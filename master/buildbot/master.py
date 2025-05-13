@@ -15,6 +15,7 @@
 
 
 import os
+import platform
 import signal
 import socket
 
@@ -121,9 +122,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         check_functional_environment(self.config)
 
         # figure out local hostname
-        try:
-            self.hostname = os.uname()[1]  # only on unix
-        except AttributeError:
+        self.hostname = platform.uname()[1]
+        if not self.hostname:
             self.hostname = socket.getfqdn()
 
         # public attributes

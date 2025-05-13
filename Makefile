@@ -101,8 +101,8 @@ ruff:
 	ruff format .
 
 mypy:
-	(cd ./master && mypy --config-file ../pyproject.toml buildbot)
-	(cd ./worker && mypy --config-file ../pyproject.toml buildbot_worker)
+	mypy --platform linux --config-file ./pyproject.toml master/buildbot worker/buildbot_worker
+	mypy --platform win32 --config-file ./pyproject.toml master/buildbot worker/buildbot_worker
 
 docker: docker-buildbot-worker docker-buildbot-master
 	echo done

@@ -40,6 +40,12 @@ if TYPE_CHECKING:
 # utils
 
 
+def _alarm(seconds: int) -> int:
+    if not hasattr(signal, 'alarm'):
+        return 0
+    return signal.alarm(seconds)
+
+
 def invoke_script(function: str, *args: str) -> None:
     cmd = [sys.executable, __file__, function, *list(args)]
     if os.name == 'nt':
@@ -66,7 +72,7 @@ def write_pidfile(pidfile: str) -> None:
 
 
 def sleep_forever() -> NoReturn:
-    signal.alarm(110)  # die after 110 seconds
+    _alarm(110)  # die after 110 seconds
     while True:
         time.sleep(10)
 
@@ -111,7 +117,7 @@ def wait_for_pid_death_and_write_pidfile_and_sleep() -> NoReturn:
 
 @script
 def double_fork() -> NoReturn:
-    if os.name == 'posix':
+    if sys.platform != "win32":
         # when using a PTY, the child process will get SIGHUP when the
         # parent process exits, so ignore that.
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
@@ -139,10 +145,7 @@ def assert_stdin_closed() -> None:
 
 # make sure this process dies if necessary
 
-if not hasattr(signal, 'alarm'):
-    signal.alarm = lambda t: 0
-signal.alarm(110)  # die after 110 seconds
-
+_alarm(110)  # die after 110 seconds
 # dispatcher
 
 script_fns[sys.argv[1]]()

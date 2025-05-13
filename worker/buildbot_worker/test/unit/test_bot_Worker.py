@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import socket
 from typing import TYPE_CHECKING
@@ -29,7 +30,6 @@ from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot_worker import bot
-from buildbot_worker.test.util import misc
 
 try:
     from unittest.mock import Mock
@@ -39,7 +39,6 @@ except ImportError:
 if TYPE_CHECKING:
     from typing import Any
     from typing import Callable
-    from typing import NoReturn
 
     from twisted.internet.interfaces import IListeningPort
     from twisted.internet.interfaces import IReactorTCP
@@ -98,7 +97,7 @@ class MasterRealm:
         return defer.maybeDeferred(transport.loseConnection)
 
 
-class TestWorker(misc.PatcherMixin, unittest.TestCase):
+class TestWorker(unittest.TestCase):
     def setUp(self) -> None:
         self.realm: MasterRealm | None = None
         self.worker: bot.Worker | None = None
@@ -251,7 +250,10 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         return d
 
     def test_recordHostname_uname(self) -> None:
-        self.patch_os_uname(lambda: os.uname_result(('0', 'test-hostname.domain.com', '', '', '')))
+        def _uname() -> os.uname_result:
+            return os.uname_result(('0', 'test-hostname.domain.com', '', '', ''))
+
+        self.patch(platform, 'uname', _uname)
 
         self.worker = bot.Worker(
             "127.0.0.1",
@@ -269,10 +271,10 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.assertEqual(twistdHostname, 'test-hostname.domain.com')
 
     def test_recordHostname_getfqdn(self) -> None:
-        def missing() -> NoReturn:
-            raise AttributeError
+        def _uname() -> os.uname_result:
+            return os.uname_result(('', '', '', '', ''))
 
-        self.patch_os_uname(missing)
+        self.patch(platform, 'uname', _uname)
         self.patch(socket, "getfqdn", lambda: 'test-hostname.domain.com')
 
         self.worker = bot.Worker(

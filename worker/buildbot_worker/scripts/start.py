@@ -116,9 +116,7 @@ def startWorker(basedir: str, quiet: bool, nodaemon: bool) -> int:
         return launch(nodaemon)
 
     # we probably can't do this os.fork under windows
-    from twisted.python.runtime import platformType
-
-    if platformType == "win32":
+    if sys.platform == "win32":
         return launch(nodaemon)
 
     # fork a child to launch the daemon, while the parent process tails the
