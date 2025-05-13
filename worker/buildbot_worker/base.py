@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import multiprocessing
 import os.path
+import platform
 import socket
 import sys
 import time
@@ -344,9 +345,8 @@ class WorkerBase(service.MultiService):
         log.msg("recording hostname in twistd.hostname")
         filename = os.path.join(basedir, "twistd.hostname")
 
-        try:
-            hostname = os.uname()[1]  # only on unix
-        except AttributeError:
+        hostname = platform.uname()[1]
+        if not hostname:
             # this tends to fail on non-connected hosts, e.g., laptops
             # on planes
             hostname = socket.getfqdn()
