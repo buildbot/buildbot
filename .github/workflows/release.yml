@@ -1,0 +1,82 @@
+name: Build release artifacts
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Needed to ignore specific warns, otherwise, it'll warn a generic message
+  SQLALCHEMY_WARN_20: 1
+
+permissions:
+  contents: write
+
+jobs:
+  build-worker-bin:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - os: ubuntu-latest
+          name: linux
+          ext: ''
+          dist-suffix: .bin
+        - os: windows-latest
+          name: windows
+          ext: .exe
+          dist-suffix: ''
+
+    runs-on: ${{ matrix.os }}
+    env:
+      WORKER_BIN_NAME: buildbot-worker-${{ matrix.name }}-${{ github.event.release.tag_name || 'None' }}${{ matrix.dist-suffix }}${{ matrix.ext }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            worker/setup.py
+      - run: python -m pip install -r requirements-pip.txt
+      - run: python -m pip install -r requirements-ci.txt
+      - run: pipx install pyinstaller==6.13.0
+      - run: pyinstaller pyinstaller/buildbot-worker.spec
+      - run: mv "dist/buildbot-worker${{ matrix.ext }}" "dist/${{ env.WORKER_BIN_NAME }}"
+      - name: upload worker bin
+        if: ${{ github.event.release.tag_name && true || false }}
+        run: gh release upload ${{ github.event.release.tag_name }} "dist/${{ env.WORKER_BIN_NAME }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  build-tarballs:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.artifact-upload-step.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            master/setup.py
+            worker/setup.py
+      - run: python -m pip install -r requirements-pip.txt
+      - run: python -m pip install -r requirements-ci.txt
+      # needed by maketarballs
+      - run: pipx install virtualenv
+      - run: make tarballs
+      - name: upload tarballs
+        if: ${{ github.event.release.tag_name && true || false }}
+        run: gh release upload ${{ github.event.release.tag_name }} dist/*
+        env:
+          GH_TOKEN: ${{ github.token }}
