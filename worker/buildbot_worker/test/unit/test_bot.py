@@ -68,11 +68,7 @@ ID_LIKE=generic
 PRETTY_NAME="Test 1.0 Generic"
 VERSION_ID="1"
 """)
-        self.real_bot = pb.BotPbLike(
-            self.basedir,
-            # FIXME: probably was for `delete_leftover_dirs`
-            False,  # type: ignore[arg-type]
-        )
+        self.real_bot = pb.BotPbLike(self.basedir)
         self.real_bot.setOsReleaseFile(f"{self.basedir}/test-release-file")
         self.real_bot.startService()
         self.addCleanup(self.real_bot.stopService)
@@ -226,11 +222,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.bot = FakeBot(
-            self.basedir,
-            # FIXME: probably was for `delete_leftover_dirs`
-            False,  # type: ignore[arg-type]
-        )
+        self.bot = FakeBot(self.basedir)
         self.bot.startService()
         self.addCleanup(self.bot.stopService)
 
