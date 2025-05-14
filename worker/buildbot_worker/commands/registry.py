@@ -14,13 +14,16 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 import buildbot_worker.commands.fs
 import buildbot_worker.commands.shell
 import buildbot_worker.commands.transfer
 
-commandRegistry = {
+if TYPE_CHECKING:
+    from buildbot_worker.commands.base import Command
+
+commandRegistry: dict[str, type[Command]] = {
     # command name : fully qualified factory (callable)
     "shell": buildbot_worker.commands.shell.WorkerShellCommand,
     "uploadFile": buildbot_worker.commands.transfer.WorkerFileUploadCommand,
@@ -39,9 +42,8 @@ commandRegistry = {
 }
 
 
-def getFactory(command: str) -> Any:
-    factory = commandRegistry[command]
-    return factory
+def getFactory(command: str) -> type[Command]:
+    return commandRegistry[command]
 
 
 def getAllCommandNames() -> list[str]:

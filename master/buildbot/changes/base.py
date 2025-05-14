@@ -72,7 +72,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         pollAtLaunch: bool = False,
         pollRandomDelayMin: int = 0,
         pollRandomDelayMax: int = 0,
-    ) -> None:  # type: ignore[override]
+    ) -> None:
         super().checkConfig(name=name)
         if pollInterval < 0:
             config.error(f"interval must be >= 0: {pollInterval}")
@@ -93,7 +93,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         pollAtLaunch: bool = False,
         pollRandomDelayMin: int = 0,
         pollRandomDelayMax: int = 0,
-    ) -> InlineCallbacksType[None]:  # type: ignore[override]
+    ) -> InlineCallbacksType[None]:
         prevPollInterval = self.pollInterval
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch

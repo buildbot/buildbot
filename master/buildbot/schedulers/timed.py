@@ -573,7 +573,7 @@ class NightlyBase(Timed):
 
 
 class Nightly(NightlyBase):
-    def checkConfig(  # type: ignore[override]
+    def checkConfig(
         self,
         *args: Any,
         reason="The Nightly scheduler named '%(name)s' triggered this build",
@@ -582,7 +582,7 @@ class Nightly(NightlyBase):
         super().checkConfig(*args, reason=reason, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(  # type: ignore[override]
+    def reconfigService(
         self,
         *args: Any,
         reason="The Nightly scheduler named '%(name)s' triggered this build",
@@ -597,7 +597,7 @@ class NightlyTriggerable(NightlyBase):
         super().__init__(*args, **kwargs)
         self._lastTrigger = None
 
-    def checkConfig(  # type: ignore[override]
+    def checkConfig(
         self,
         *args: Any,
         reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
@@ -606,7 +606,7 @@ class NightlyTriggerable(NightlyBase):
         super().checkConfig(*args, reason=reason, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(  # type: ignore[override]
+    def reconfigService(
         self,
         *args: Any,
         reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",

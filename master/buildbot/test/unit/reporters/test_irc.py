@@ -33,7 +33,7 @@ from buildbot.test.util import config
 from buildbot.util import service
 
 
-class TestIrcContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
+class TestIrcContact(ContactMixin, unittest.TestCase):
     channelClass = irc.IRCChannel
     contactClass = irc.IRCContact
 

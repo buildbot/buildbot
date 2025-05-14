@@ -101,7 +101,7 @@ class MigrateTestMixin(TestReactorMixin, dirs.DirsMixin):
                 res = r.fetchone()
                 assert res is not None
                 create_table = res[1]
-                self.assertIn(  # type: ignore[attr-defined]
+                self.assertIn(
                     'DEFAULT CHARSET=utf8',
                     create_table,
                     f"table {tbl} does not have the utf8 charset",

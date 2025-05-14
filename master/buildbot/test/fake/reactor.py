@@ -145,7 +145,7 @@ class NonReactor:
     def callInThread(self, callable: Callable[..., Any], *args, **kwargs: object) -> None:
         callable(*args, **kwargs)
 
-    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:  # type: ignore[override]
+    def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:
         callable(*args, **kwargs)
 
     def getThreadPool(self):

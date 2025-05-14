@@ -414,7 +414,7 @@ class GitHubHandler(BaseHookHandler):
     def __init__(self, master: BuildMaster, options: dict[str, Any] | None):
         if options is None:
             options = {}
-        super().__init__(master, options)  # type: ignore[arg-type]
+        super().__init__(master, options)
 
         klass = options.get('class', GitHubEventHandler)
         klass_kwargs = {

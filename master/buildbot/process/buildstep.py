@@ -448,7 +448,7 @@ class BuildStep(
 
     @defer.inlineCallbacks
     def getBuildResultSummary(self) -> InlineCallbacksType[dict[str, str]]:
-        summary: dict[str, str] = yield self.getResultSummary()  # type: ignore[misc]
+        summary: dict[str, str] = yield self.getResultSummary()
         assert isinstance(self.updateBuildSummaryPolicy, list)
         if (
             self.results in self.updateBuildSummaryPolicy
@@ -470,14 +470,14 @@ class BuildStep(
             )
 
         if not self._running:
-            summary = yield self.getResultSummary()  # type: ignore[misc]
+            summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
                 raise TypeError(
                     'getResultSummary must return a dictionary: '
                     + methodInfo(self.getResultSummary)
                 )
         else:
-            summary = yield self.getCurrentSummary()  # type: ignore[misc]
+            summary = yield self.getCurrentSummary()
             if not isinstance(summary, dict):
                 raise TypeError(
                     'getCurrentSummary must return a dictionary: '
@@ -1062,7 +1062,7 @@ class ShellMixin:
         if stdioLogName is not None:
             # Reuse an existing log if possible; otherwise, create one.
             try:
-                stdio = yield self.getLog(stdioLogName)  # type: ignore[misc]
+                stdio = yield self.getLog(stdioLogName)
             except KeyError:
                 stdio = yield self.addLog(stdioLogName)  # type: ignore[attr-defined]
 

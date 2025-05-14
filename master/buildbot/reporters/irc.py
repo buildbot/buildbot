@@ -132,7 +132,7 @@ class IRCContact(Contact):
         for channel in args:
             self.bot.join(channel)
 
-    command_JOIN.usage = "join #channel - join a channel #channel"  # type: ignore[attr-defined]
+    command_JOIN.usage = "join #channel - join a channel #channel"
 
     @dangerousCommand
     def command_LEAVE(self, args, **kwargs):
@@ -141,7 +141,7 @@ class IRCContact(Contact):
         for channel in args:
             self.bot.leave(channel)
 
-    command_LEAVE.usage = "leave #channel - leave a channel #channel"  # type: ignore[attr-defined]
+    command_LEAVE.usage = "leave #channel - leave a channel #channel"
 
     @defer.inlineCallbacks
     def command_MUTE(self, args, **kwargs):

@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from twisted.python.failure import Failure
     from twisted.spread.pb import RemoteReference
 
+    from buildbot_worker.base import BotBase
     from buildbot_worker.util.twisted import InlineCallbacksType
 
 
@@ -61,11 +62,6 @@ def encode_http_authorization_header(name: bytes, password: bytes) -> str:
         raise ValueError("Username is not allowed to contain a colon.")
     userpass = name + b':' + password
     return 'Basic ' + base64.b64encode(userpass).decode()
-
-
-# FIXME: Never used? Self in non method function?
-def remote_print(self: Any, message: str) -> None:
-    log.msg(f"WorkerForBuilder.remote_print({self.name}): message from master: {message}")
 
 
 class ProtocolCommandMsgpack(ProtocolCommandBase):
@@ -350,6 +346,14 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
+    def _response_handler(self, msg: MessageType) -> None:
+        # stop waiting for a response of this command
+        waiter = self.seq_num_to_waiters_map.pop(msg['seq_number'])
+        if "is_exception" in msg:
+            waiter.errback(RemoteWorkerError(msg['result']))
+        else:
+            waiter.callback(msg['result'])
+
     def send_response_msg(
         self,
         msg: MessageType,
@@ -375,31 +379,23 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         if 'seq_number' not in msg or 'op' not in msg:
             log.msg(f'Invalid message from master: {msg}')
             return
-        if msg['op'] == "print":
-            # FIXME: either ignore call_print retval, or make it await
-            self._deferwaiter.add(self.call_print(msg))  # type: ignore[func-returns-value]
-        elif msg['op'] == "keepalive":
-            # FIXME: either ignore call_keepalive retval, or make it await
-            self._deferwaiter.add(self.call_keepalive(msg))  # type: ignore[func-returns-value]
-        elif msg['op'] == "set_worker_settings":
-            # FIXME: either ignore call_set_worker_settings retval, or make it await
-            self._deferwaiter.add(self.call_set_worker_settings(msg))  # type: ignore[func-returns-value]
-        elif msg['op'] == "get_worker_info":
-            self._deferwaiter.add(self.call_get_worker_info(msg))
-        elif msg['op'] == "start_command":
-            self._deferwaiter.add(self.call_start_command(msg))
-        elif msg['op'] == "shutdown":
-            self._deferwaiter.add(self.call_shutdown(msg))
-        elif msg['op'] == "interrupt_command":
-            self._deferwaiter.add(self.call_interrupt_command(msg))
-        elif msg['op'] == "response":
-            seq_number = msg['seq_number']
-            if "is_exception" in msg:
-                self.seq_num_to_waiters_map[seq_number].errback(RemoteWorkerError(msg['result']))
-            else:
-                self.seq_num_to_waiters_map[seq_number].callback(msg['result'])
-            # stop waiting for a response of this command
-            del self.seq_num_to_waiters_map[seq_number]
+
+        message_handlers: dict[
+            str,
+            Callable[[BuildbotWebSocketClientProtocol.MessageType], None | Deferred[None]],
+        ] = {
+            "print": self.call_print,
+            "keepalive": self.call_keepalive,
+            "set_worker_settings": self.call_set_worker_settings,
+            "get_worker_info": self.call_get_worker_info,
+            "start_command": self.call_start_command,
+            "shutdown": self.call_shutdown,
+            "interrupt_command": self.call_interrupt_command,
+            "response": self._response_handler,
+        }
+        handler = message_handlers.get(msg['op'])
+        if handler is not None:
+            self._deferwaiter.add(handler(msg))
         else:
             self.send_response_msg(
                 msg,
@@ -429,5 +425,21 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
 
 class BuildbotWebSocketClientFactory(WebSocketClientFactory):
+    protocol: type[BuildbotWebSocketClientProtocol] = BuildbotWebSocketClientProtocol
+
+    def __init__(
+        self,
+        *args: Any,
+        buildbot_bot: BotBase,
+        name: bytes,
+        password: bytes,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.buildbot_bot = buildbot_bot
+        self.name = name
+        self.password = password
+
     def waitForCompleteShutdown(self) -> None:
         pass

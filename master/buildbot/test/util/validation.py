@@ -231,7 +231,7 @@ class JsonValidator(Validator):
 
 
 class PatchValidator(Validator):
-    name: str | None = 'patch'  # type: ignore[assignment]
+    name: str | None = 'patch'
 
     validator = DictValidator(
         body=NoneOk(BinaryValidator()),

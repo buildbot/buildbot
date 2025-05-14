@@ -39,7 +39,7 @@ from buildbot.util import bytes2unicode
 try:
     import requests
 except ImportError:
-    requests = None  # type: ignore[assignment]
+    requests = None
 
 
 if requests:

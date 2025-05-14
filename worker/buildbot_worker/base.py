@@ -313,7 +313,7 @@ class WorkerBase(service.MultiService):
 
     def __init__(
         self,
-        name: str | None,
+        name: str,
         basedir: str,
         bot_class: type[BotBase],
         umask: int | None = None,

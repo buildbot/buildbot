@@ -62,7 +62,7 @@ class BaseBasicScheduler(base.ReconfigurableBaseScheduler):
         self._stable_timers = defaultdict(lambda: None)
         self._stable_timers_lock = defer.DeferredLock()
 
-    def checkConfig(  # type: ignore[override]
+    def checkConfig(
         self,
         shouldntBeSet=NotSet,
         treeStableTimer=None,
@@ -84,7 +84,7 @@ class BaseBasicScheduler(base.ReconfigurableBaseScheduler):
         super().checkConfig(builderNames=builderNames, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(  # type: ignore[override]
+    def reconfigService(
         self,
         shouldntBeSet=NotSet,
         treeStableTimer=None,

@@ -74,7 +74,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         pollAtLaunch: bool = False,
         auth: tuple[str, str] | None = None,
         bitbucket_property_whitelist: list[str] | None = None,
-    ) -> None:  # type: ignore[override]
+    ) -> None:
         super().checkConfig(
             name=self.build_name(owner, slug), pollInterval=pollInterval, pollAtLaunch=pollAtLaunch
         )
@@ -93,7 +93,7 @@ class BitbucketPullrequestPoller(base.ReconfigurablePollingChangeSource, PullReq
         pollAtLaunch: bool = False,
         auth: tuple[str, str] | None = None,
         bitbucket_property_whitelist: list[str] | None = None,
-    ) -> InlineCallbacksType[None]:  # type: ignore[override]
+    ) -> InlineCallbacksType[None]:
         self.owner = owner
         self.slug = slug
         self.branch = branch

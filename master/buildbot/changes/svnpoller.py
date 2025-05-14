@@ -471,10 +471,10 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                             branches[branch][key] = where[key]
 
             for branch, info in branches.items():
-                action = info['action']  # type: ignore[assignment]
-                files = cast(list[bytes], info['files'])  # type: ignore[index]
+                action = info['action']
+                files = cast(list[bytes], info['files'])
 
-                number_of_directories_changed = info['number_of_directories']  # type: ignore[index]
+                number_of_directories_changed = info['number_of_directories']
                 number_of_files_changed = len(files)
 
                 if (
@@ -495,9 +495,9 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                         "branch": util.bytes2unicode(branch),
                         "revlink": revlink,
                         "category": self.category,
-                        "repository": util.bytes2unicode(info.get('repository', self.repourl)),  # type: ignore[call-overload]
-                        "project": util.bytes2unicode(info.get('project', self.project)),  # type: ignore[call-overload]
-                        "codebase": util.bytes2unicode(info.get('codebase', None)),  # type: ignore[call-overload]
+                        "repository": util.bytes2unicode(info.get('repository', self.repourl)),
+                        "project": util.bytes2unicode(info.get('project', self.project)),
+                        "codebase": util.bytes2unicode(info.get('codebase', None)),
                     }
                     changes.append(chdict)
 

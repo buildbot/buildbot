@@ -46,7 +46,7 @@ class NoSuchMaildir(Exception):
 
 class MaildirService(service.BuildbotService):
     pollInterval = 10  # only used if we don't have DNotify
-    name: str | None = 'MaildirService'  # type: ignore
+    name: str | None = 'MaildirService'
 
     def __init__(self, basedir=None):
         super().__init__()

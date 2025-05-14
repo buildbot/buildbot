@@ -19,7 +19,7 @@ from buildbot.util import service
 
 
 class MachineManager(service.BuildbotServiceManager):
-    name: str | None = 'MachineManager'  # type: ignore[assignment]
+    name: str | None = 'MachineManager'
     managed_services_name = 'machines'
     config_attr = 'machines'
 

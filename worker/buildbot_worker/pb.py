@@ -508,11 +508,10 @@ class BotMsgpack(BotBase):
         # Make any currently-running command die, with no further status
         # output. This is used when the worker is shutting down or the
         # connection to the master has been lost.
-        # FIXME: missing `.values()` here
-        for protocol_command in self.protocol_commands:
-            protocol_command.builder_is_running = False  # type: ignore[attr-defined]
-            log.msg(f"stopCommand: halting current command {protocol_command.command}")  # type: ignore[attr-defined]
-            protocol_command.command.doInterrupt()  # type: ignore[attr-defined]
+        for protocol_command in self.protocol_commands.values():
+            protocol_command.builder_is_running = False
+            log.msg(f"stopCommand: halting current command {protocol_command.command}")
+            protocol_command.command.doInterrupt()
         self.protocol_commands = {}
 
     def calculate_basedir(self, builddir: str | bytes) -> str:
@@ -719,7 +718,7 @@ class Worker(WorkerBase):
         self,
         buildmaster_host: str | None,
         port: int | None,
-        name: str | None,
+        name: str,
         passwd: str,
         basedir: str,
         keepalive: float | None,
@@ -733,7 +732,7 @@ class Worker(WorkerBase):
         allow_shutdown: str | None = None,
         maxRetries: int | None = None,
         connection_string: str | None = None,
-        path: None = None,
+        path: str | None = None,
         delete_leftover_dirs: bool = False,
         proxy_connection_string: str | None = None,
     ) -> None:
@@ -762,8 +761,8 @@ class Worker(WorkerBase):
         if keepalive == 0:
             keepalive = None
 
-        name: bytes | None = unicode2bytes(name, self.bot.unicode_encoding)  # type: ignore[no-redef]
-        passwd: bytes = unicode2bytes(passwd, self.bot.unicode_encoding)  # type: ignore[no-redef]
+        name_b = unicode2bytes(name, self.bot.unicode_encoding)
+        passwd_b = unicode2bytes(passwd, self.bot.unicode_encoding)
 
         self.numcpus = numcpus
         self.shutdown_loop: task.LoopingCall | None = None
@@ -794,9 +793,8 @@ class Worker(WorkerBase):
             assert self.bot is None or isinstance(self.bot, (BotPb))
             bf.startLogin(
                 credentials.UsernamePassword(
-                    # FIXME: should assert name is not None ? Or not login if name is None?
-                    name,  # type: ignore[arg-type]
-                    passwd,  # type: ignore[arg-type]
+                    name_b,
+                    passwd_b,
                 ),
                 client=self.bot,
             )
@@ -811,11 +809,12 @@ class Worker(WorkerBase):
                     ws_conn_string += '/'
                 ws_conn_string += path
 
-            bf = self.bf = BuildbotWebSocketClientFactory(ws_conn_string)
-            bf.protocol = BuildbotWebSocketClientProtocol
-            self.bf.buildbot_bot = self.bot
-            self.bf.name = name
-            self.bf.password = passwd
+            bf = self.bf = BuildbotWebSocketClientFactory(
+                ws_conn_string,
+                buildbot_bot=self.bot,
+                name=name_b,
+                password=passwd_b,
+            )
         else:
             raise ValueError(f'Unknown protocol {protocol}')
 

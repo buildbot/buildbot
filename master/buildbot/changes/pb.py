@@ -146,7 +146,7 @@ class PBChangeSource(base.ChangeSource):
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(
         self, new_config: MasterConfig
-    ) -> InlineCallbacksType[None]:  # type: ignore[override]
+    ) -> InlineCallbacksType[None]:
         port = self._calculatePort(new_config)
         if not port:
             config.error("No port specified for PBChangeSource, and no worker port configured")

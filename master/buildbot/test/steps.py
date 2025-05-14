@@ -704,7 +704,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
             ),
         ])
 
-        self.patch(runprocess, "create_process", self._patched_create_process)  # type: ignore[attr-defined]
+        self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env: dict[str, str] = {}
 
         self._worker_version = None

@@ -150,8 +150,7 @@ class WorkerFileUploadCommand(TransferCommand):
         return d
 
     def _loop(self, fire_when_done: Deferred[None]) -> None:
-        # FIXME: _writeBlock should return bool OR Deferred[bool] not union of them
-        d: Deferred[bool] = defer.maybeDeferred(self._writeBlock)  # type: ignore[call-overload]
+        d = self._writeBlock()
 
         def _done(finished: bool) -> None:
             if finished:
@@ -165,7 +164,8 @@ class WorkerFileUploadCommand(TransferCommand):
         d.addCallbacks(_done, _err)
         return None
 
-    def _writeBlock(self) -> Deferred[bool] | bool:
+    @defer.inlineCallbacks
+    def _writeBlock(self) -> InlineCallbacksType[bool]:
         """Write a block of data to the remote writer"""
 
         if self.interrupted or self.fp is None:
@@ -196,9 +196,10 @@ class WorkerFileUploadCommand(TransferCommand):
         if self.remaining is not None:
             self.remaining = self.remaining - len(data)
             assert self.remaining >= 0
-        d = self.do_protocol_write(data)
-        d.addCallback(lambda res: False)
-        return d
+
+        yield self.do_protocol_write(data)
+
+        return False
 
     def do_protocol_write(self, data: bytes) -> Deferred:
         return self.protocol_command.protocol_update_upload_file_write(self.writer, data)  # type: ignore[attr-defined]

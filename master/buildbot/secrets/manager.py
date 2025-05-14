@@ -30,7 +30,7 @@ class SecretManager(service.BuildbotServiceManager):
     Secret manager
     """
 
-    name: str | None = 'secrets'  # type: ignore[assignment]
+    name: str | None = 'secrets'
     config_attr = "secretsProviders"
 
     @defer.inlineCallbacks

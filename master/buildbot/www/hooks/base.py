@@ -60,7 +60,7 @@ class BaseHookHandler:
             Make sure to properly decode bytes to unicode strings.
             """
             if isinstance(value, type([])):
-                value = value[0]  # type: ignore[index]
+                value = value[0]
             return bytes2unicode(value)
 
         args = cast(dict[bytes, list[bytes]], request.args)
