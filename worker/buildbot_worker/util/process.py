@@ -23,7 +23,7 @@ _ENV_VAR_PATTERN = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
 
 def compute_environ(
-    environ: Mapping[str, str | list[str] | int | None] | None = None,
+    environ: Mapping[str, str | list[str] | None] | None = None,
 ) -> dict[str, str]:
     new_environ = os.environ.copy()
     if not environ:

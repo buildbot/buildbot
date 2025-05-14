@@ -544,7 +544,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                 self.basedir,
                 'utf-8',
                 self.send_update,
-                environ={"BUILD_NUMBER": 13},
+                # test wrong type handling
+                environ={"BUILD_NUMBER": 13},  # type: ignore[dict-item]
             )
 
     def _test_spawnAsBatch(self, cmd: Sequence[str], comspec: str) -> IProcessTransport:

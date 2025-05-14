@@ -316,7 +316,7 @@ class RunProcess:
         workdir: str,
         unicode_encoding: str,
         send_update: Callable,
-        environ: Mapping[str, str | list[str] | int | None] | None = None,
+        environ: Mapping[str, str | list[str] | None] | None = None,
         sendStdout: bool = True,
         sendStderr: bool = True,
         sendRC: bool | int = True,
