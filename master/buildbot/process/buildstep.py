@@ -75,6 +75,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from buildbot.interfaces import IBuildStep
+    from buildbot.interfaces import IProperties
     from buildbot.locks import BaseLock
     from buildbot.master import BuildMaster
     from buildbot.process.build import Build
@@ -393,7 +394,7 @@ class BuildStep(
     def workdir(self, workdir: str) -> None:
         self._workdir = workdir
 
-    def getProperties(self) -> properties.Properties:
+    def getProperties(self) -> IProperties:
         assert self.build is not None
         return self.build.getProperties()
 
@@ -860,7 +861,7 @@ class BuildStep(
         except Exception:
             log.err(Failure(), "error while formatting exceptions")
 
-    def addLogWithException(self, why: Failure, logprefix: str = "") -> defer.Deferred[None]:
+    def addLogWithException(self, why: Exception, logprefix: str = "") -> defer.Deferred[None]:
         return self.addLogWithFailure(Failure(why), logprefix)
 
     def addLogObserver(self, logname: str, observer: interfaces.ILogObserver) -> None:
