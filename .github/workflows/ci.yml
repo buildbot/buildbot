@@ -50,3 +50,29 @@ jobs:
       - name: "Run tests for ${{ matrix.python-version }}"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
         timeout-minutes: 30
+
+  win-sandboxed-worker:
+    runs-on: windows-latest
+
+    steps:
+      - uses: "actions/checkout@v4"
+      - uses: "actions/setup-python@v5"
+        with:
+          python-version: ">=3"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            requirements-ci-pyinstaller.txt
+            master/setup.py
+            worker/setup.py
+            pkg/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          python -m pip install -r requirements-ci-pyinstaller.txt
+      - run: pyinstaller pyinstaller/buildbot-worker.spec
+      - run: trial --reporter=text --rterrors buildbot.test.integration.interop
+        env:
+          SANDBOXED_WORKER_PATH: "${{ github.workspace }}/dist/buildbot-worker.exe"
