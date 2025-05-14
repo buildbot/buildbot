@@ -23,14 +23,16 @@ _ENV_VAR_PATTERN = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
 
 def compute_environ(
-    environ: Mapping[str, str | list[str] | None] | None = None,
+    environ: Mapping[str, str | list[str] | None] | None,
+    os_environ: Mapping[str, str],
+    pathsep: str = os.pathsep,
 ) -> dict[str, str]:
-    new_environ = os.environ.copy()
+    new_environ = {k: v for k, v in os_environ.items()}
     if not environ:
         return new_environ
 
     def subst(match: re.Match[str]) -> str:
-        return os.environ.get(match.group(1), "")
+        return os_environ.get(match.group(1), "")
 
     for key, value in environ.items():
         if value is None:
@@ -45,7 +47,7 @@ def compute_environ(
             # accepting lists.  I like lists better.
             # If it's not a string, treat it as a sequence to be
             # turned in to a string.
-            value = os.pathsep.join(value)
+            value = pathsep.join(value)
 
         if not isinstance(value, str):
             raise RuntimeError(f"'env' values must be strings or lists; key '{key}' is incorrect")
@@ -55,6 +57,6 @@ def compute_environ(
     # Special case for PYTHONPATH
     # If overriden, make sure it's still present
     if "PYTHONPATH" in environ:
-        new_environ['PYTHONPATH'] += os.pathsep + os.environ.get("PYTHONPATH", "")
+        new_environ['PYTHONPATH'] += pathsep + os_environ.get("PYTHONPATH", "")
 
     return new_environ

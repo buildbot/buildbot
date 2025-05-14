@@ -395,7 +395,7 @@ class RunProcess:
         if not os.path.exists(workdir):
             os.makedirs(workdir)
 
-        self.environ = compute_environ(environ)
+        self.environ = compute_environ(environ, os.environ)
         self.initialStdin = to_bytes(initialStdin)
         self.logEnviron = logEnviron
         self.timeout = timeout
