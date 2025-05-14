@@ -67,7 +67,7 @@ class ComparableMixin(unittest.TestCase):
         # setting compare_attrs as an instance method doesn't
         # affect the outcome of the comparison
         another_f123 = self.Foo(1, 2, 3)
-        another_f123.compare_attrs = ("b", "a")  # type: ignore
+        another_f123.compare_attrs = ("b", "a")
         self.assertEqual(self.f123, another_f123)
 
     def test_ne_importantDifferences(self):

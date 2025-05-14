@@ -234,7 +234,7 @@ class AvatarGravatar(AvatarBase):
         emailHash = hashlib.md5(emailBytes)
         gravatar_url = "//www.gravatar.com/avatar/"
         gravatar_url += emailHash.hexdigest() + "?"
-        if self.default != "url":  # type: ignore[comparison-overlap]
+        if self.default != "url":
             defaultAvatarUrl = self.default
         url = {'d': defaultAvatarUrl, 's': str(size)}
         sorted_url = sorted(url.items(), key=lambda x: x[0])

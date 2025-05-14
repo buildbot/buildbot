@@ -207,7 +207,7 @@ class ContactMixin(TestReactorMixin, unittest.TestCase):
         ])
 
 
-class TestContact(ContactMixin, unittest.TestCase):  # type: ignore[misc]
+class TestContact(ContactMixin, unittest.TestCase):
     def test_channel_service(self):
         self.assertTrue(self.contact.channel.running)
         self.contact.channel.stopService()

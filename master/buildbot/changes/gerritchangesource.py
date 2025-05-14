@@ -161,7 +161,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
         debug: bool = False,
         get_files: bool = False,
-    ) -> None:  # type: ignore[override]  # checkConfig doesn't need to match supertype
+    ) -> None:
         if gitBaseURL is None:
             config.error("gitBaseURL must be specified")
 
@@ -171,7 +171,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
         debug: bool = False,
         get_files: bool = False,
-    ) -> None:  # type: ignore[override]  # reconfigService doesn't need to match supertype
+    ) -> None:
         self.gitBaseURL = gitBaseURL
         self.handled_events = list(handled_events)
         self._get_files = get_files
@@ -734,7 +734,7 @@ class GerritChangeSource(GerritChangeSourceBase):
                     first_fetch_lookback=0,
                     on_lines_received_cb=self._lines_received_poll,
                 )
-                yield self._poll_connector.setup()  # type: ignore[attr-defined]
+                yield self._poll_connector.setup()
             self._is_synchronized = False
         else:
             self._poll_connector = None

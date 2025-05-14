@@ -267,7 +267,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             if has_ssh_private_key:
                 raise OSError('SSH private keys require Git 2.3.0 or newer')
 
-    def activate(self) -> defer.Deferred[None]:  # type: ignore[override]
+    def activate(self) -> defer.Deferred[None]:
         try:
             self.lastRev = None
 
@@ -491,7 +491,7 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
     def _get_commit_comments(self, rev: str) -> defer.Deferred[str]:
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
-        return d  # type: ignore[return-value]
+        return d
 
     @defer.inlineCallbacks
     def _get_commit_timestamp(self, rev: str) -> InlineCallbacksType[int | None]:

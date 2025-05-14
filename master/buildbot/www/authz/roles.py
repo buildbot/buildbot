@@ -80,7 +80,7 @@ class RolesFromOwner(RolesFromBase):
         super().__init__()
         self.role = role
 
-    def getRolesFromUser(self, userDetails: dict[str, Any], owner: str | None = None) -> list[str]:  # type: ignore[override]
+    def getRolesFromUser(self, userDetails: dict[str, Any], owner: str | None = None) -> list[str]:
         if 'email' in userDetails:
             if userDetails['email'] == owner and owner is not None:
                 return [self.role]
