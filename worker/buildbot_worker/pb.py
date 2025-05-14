@@ -733,7 +733,7 @@ class Worker(WorkerBase):
         allow_shutdown: str | None = None,
         maxRetries: int | None = None,
         connection_string: str | None = None,
-        path: None = None,
+        path: str | None = None,
         delete_leftover_dirs: bool = False,
         proxy_connection_string: str | None = None,
     ) -> None:
