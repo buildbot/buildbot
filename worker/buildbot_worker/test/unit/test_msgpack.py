@@ -19,8 +19,6 @@ import os
 import time
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Iterable
-from typing import Sequence
 from typing import cast
 
 from parameterized import parameterized
@@ -49,7 +47,6 @@ from buildbot_worker.msgpack import encode_http_authorization_header
 from buildbot_worker.pb import BotMsgpack
 
 if TYPE_CHECKING:
-    from twisted.internet.defer import Deferred
     from twisted.internet.interfaces import IReactorTime
 
     from buildbot_worker.util.twisted import InlineCallbacksType
@@ -100,28 +97,6 @@ class TestHttpAuthorization(unittest.TestCase):
 
 class TestException(Exception):
     pass
-
-
-# FIXME: Copied from test.unit.test_bot but unused?
-class FakeStep:
-    "A fake master-side BuildStep that records its activities."
-
-    def __init__(self) -> None:
-        self.finished_d: defer.Deferred[None] = defer.Deferred()
-        self.actions: list[list[Any]] = []
-
-    def wait_for_finish(self) -> Deferred:
-        return self.finished_d
-
-    def remote_update(self, updates: Iterable[Sequence[Any]]) -> None:
-        for update in updates:
-            if 'elapsed' in update[0]:
-                update[0]['elapsed'] = 1
-        self.actions.append(["update", updates])
-
-    def remote_complete(self, f: Any) -> None:
-        self.actions.append(["complete", f])
-        self.finished_d.callback(None)
 
 
 class FakeBot(base.BotBase):
