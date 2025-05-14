@@ -810,11 +810,12 @@ class Worker(WorkerBase):
                     ws_conn_string += '/'
                 ws_conn_string += path
 
-            bf = self.bf = BuildbotWebSocketClientFactory(ws_conn_string)
-            bf.protocol = BuildbotWebSocketClientProtocol
-            self.bf.buildbot_bot = self.bot
-            self.bf.name = name_b
-            self.bf.password = passwd_b
+            bf = self.bf = BuildbotWebSocketClientFactory(
+                ws_conn_string,
+                buildbot_bot=self.bot,
+                name=name_b,
+                password=passwd_b,
+            )
         else:
             raise ValueError(f'Unknown protocol {protocol}')
 

@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from twisted.python.failure import Failure
     from twisted.spread.pb import RemoteReference
 
+    from buildbot_worker.base import BotBase
     from buildbot_worker.util.twisted import InlineCallbacksType
 
 
@@ -424,5 +425,21 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
 
 class BuildbotWebSocketClientFactory(WebSocketClientFactory):
+    protocol: type[BuildbotWebSocketClientProtocol] = BuildbotWebSocketClientProtocol
+
+    def __init__(
+        self,
+        *args: Any,
+        buildbot_bot: BotBase,
+        name: bytes,
+        password: bytes,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.buildbot_bot = buildbot_bot
+        self.name = name
+        self.password = password
+
     def waitForCompleteShutdown(self) -> None:
         pass
