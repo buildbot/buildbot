@@ -22,8 +22,9 @@ import re
 def compute_environ(
     environ: dict[str, str | list[str] | int | None] | None = None,
 ) -> dict[str, str]:
+    new_environ = os.environ.copy()
     if not environ:
-        return os.environ.copy()
+        return new_environ
 
     for key, v in environ.items():
         if isinstance(v, list):
@@ -45,18 +46,15 @@ def compute_environ(
     def subst(match: re.Match[str]) -> str:
         return os.environ.get(match.group(1), "")
 
-    newenv = {}
-    for key in os.environ:
-        # setting a key to None will delete it from the worker
-        # environment
-        if key not in environ or environ[key] is not None:
-            newenv[key] = os.environ[key]
     for key, v in environ.items():
-        if v is not None:
-            if not isinstance(v, str):
-                raise RuntimeError(
-                    f"'env' values must be strings or lists; key '{key}' is incorrect"
-                )
-            newenv[key] = p.sub(subst, v)
+        if v is None:
+            # setting a key to None will delete it from the worker
+            # environment
+            new_environ.pop(key, None)
+            continue
 
-    return newenv
+        if not isinstance(v, str):
+            raise RuntimeError(f"'env' values must be strings or lists; key '{key}' is incorrect")
+        new_environ[key] = p.sub(subst, v)
+
+    return new_environ
