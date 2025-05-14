@@ -26,15 +26,6 @@ def compute_environ(
     if not environ:
         return new_environ
 
-    for key, v in environ.items():
-        if isinstance(v, list):
-            # Need to do os.pathsep translation.  We could either do that
-            # by replacing all incoming ':'s with os.pathsep, or by
-            # accepting lists.  I like lists better.
-            # If it's not a string, treat it as a sequence to be
-            # turned in to a string.
-            environ[key] = os.pathsep.join(v)
-
     # do substitution on variable values matching pattern: ${name}
     p = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
@@ -47,6 +38,14 @@ def compute_environ(
             # environment
             new_environ.pop(key, None)
             continue
+
+        if isinstance(v, list):
+            # Need to do os.pathsep translation.  We could either do that
+            # by replacing all incoming ':'s with os.pathsep, or by
+            # accepting lists.  I like lists better.
+            # If it's not a string, treat it as a sequence to be
+            # turned in to a string.
+            v = os.pathsep.join(v)
 
         if not isinstance(v, str):
             raise RuntimeError(f"'env' values must be strings or lists; key '{key}' is incorrect")
