@@ -63,11 +63,6 @@ def encode_http_authorization_header(name: bytes, password: bytes) -> str:
     return 'Basic ' + base64.b64encode(userpass).decode()
 
 
-# FIXME: Never used? Self in non method function?
-def remote_print(self: Any, message: str) -> None:
-    log.msg(f"WorkerForBuilder.remote_print({self.name}): message from master: {message}")
-
-
 class ProtocolCommandMsgpack(ProtocolCommandBase):
     def __init__(
         self,
