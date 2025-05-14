@@ -48,6 +48,7 @@ from buildbot_worker.compat import bytes2NativeString
 from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.exceptions import AbandonChain
+from buildbot_worker.util.process import compute_environ
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process
@@ -395,44 +396,8 @@ class RunProcess:
         self.max_line_kill = False
         if not os.path.exists(workdir):
             os.makedirs(workdir)
-        if environ:
-            for key, v in environ.items():
-                if isinstance(v, list):
-                    # Need to do os.pathsep translation.  We could either do that
-                    # by replacing all incoming ':'s with os.pathsep, or by
-                    # accepting lists.  I like lists better.
-                    # If it's not a string, treat it as a sequence to be
-                    # turned in to a string.
 
-                    # TODO: replace `os.pathsep.join(environ[key])` -> `os.pathsep.join(v)`
-                    environ[key] = os.pathsep.join(environ[key])  # type: ignore[arg-type]
-
-            if "PYTHONPATH" in environ:
-                environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"  # type: ignore[operator]
-
-            # do substitution on variable values matching pattern: ${name}
-            p = re.compile(r'\${([0-9a-zA-Z_]*)}')
-
-            def subst(match: re.Match[str]) -> str:
-                return os.environ.get(match.group(1), "")
-
-            newenv = {}
-            for key in os.environ:
-                # setting a key to None will delete it from the worker
-                # environment
-                if key not in environ or environ[key] is not None:
-                    newenv[key] = os.environ[key]
-            for key, v in environ.items():
-                if v is not None:
-                    if not isinstance(v, str):
-                        raise RuntimeError(
-                            f"'env' values must be strings or lists; key '{key}' is incorrect"
-                        )
-                    newenv[key] = p.sub(subst, v)
-
-            self.environ = newenv
-        else:  # not environ
-            self.environ = os.environ.copy()
+        self.environ = compute_environ(environ)
         self.initialStdin = to_bytes(initialStdin)
         self.logEnviron = logEnviron
         self.timeout = timeout
