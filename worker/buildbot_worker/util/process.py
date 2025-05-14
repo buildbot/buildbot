@@ -18,6 +18,8 @@ from __future__ import annotations
 import os
 import re
 
+_ENV_VAR_PATTERN = re.compile(r'\${([0-9a-zA-Z_]*)}')
+
 
 def compute_environ(
     environ: dict[str, str | list[str] | int | None] | None = None,
@@ -26,30 +28,28 @@ def compute_environ(
     if not environ:
         return new_environ
 
-    # do substitution on variable values matching pattern: ${name}
-    p = re.compile(r'\${([0-9a-zA-Z_]*)}')
-
     def subst(match: re.Match[str]) -> str:
         return os.environ.get(match.group(1), "")
 
-    for key, v in environ.items():
-        if v is None:
+    for key, value in environ.items():
+        if value is None:
             # setting a key to None will delete it from the worker
             # environment
             new_environ.pop(key, None)
             continue
 
-        if isinstance(v, list):
+        if isinstance(value, list):
             # Need to do os.pathsep translation.  We could either do that
             # by replacing all incoming ':'s with os.pathsep, or by
             # accepting lists.  I like lists better.
             # If it's not a string, treat it as a sequence to be
             # turned in to a string.
-            v = os.pathsep.join(v)
+            value = os.pathsep.join(value)
 
-        if not isinstance(v, str):
+        if not isinstance(value, str):
             raise RuntimeError(f"'env' values must be strings or lists; key '{key}' is incorrect")
-        new_environ[key] = p.sub(subst, v)
+        # substitute ${name} patterns with envvar value
+        new_environ[key] = _ENV_VAR_PATTERN.sub(subst, value)
 
     # Special case for PYTHONPATH
     # If overriden, make sure it's still present
