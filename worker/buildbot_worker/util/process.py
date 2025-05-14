@@ -33,9 +33,7 @@ def compute_environ(
             # accepting lists.  I like lists better.
             # If it's not a string, treat it as a sequence to be
             # turned in to a string.
-
-            # TODO: replace `os.pathsep.join(environ[key])` -> `os.pathsep.join(v)`
-            environ[key] = os.pathsep.join(environ[key])  # type: ignore[arg-type]
+            environ[key] = os.pathsep.join(v)
 
     if "PYTHONPATH" in environ:
         environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"  # type: ignore[operator]
