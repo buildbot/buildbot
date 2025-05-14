@@ -37,7 +37,7 @@ class BotNull(BotPbLike):
 class LocalWorker(WorkerBase):
     def __init__(
         self,
-        name: str | None,
+        name: str,
         basedir: str,
         umask: int | None = None,
         unicode_encoding: str | None = None,
