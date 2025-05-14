@@ -472,8 +472,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             self.basedir,
             'utf-8',
             self.send_update,
-            # FIXME RunProcess environ should be a Mapping
-            environ=environ,  # type: ignore[arg-type]
+            environ=environ,
         )
 
         yield s.start()

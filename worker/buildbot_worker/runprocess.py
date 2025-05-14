@@ -32,6 +32,7 @@ from codecs import getincrementaldecoder
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 from typing import Iterable
+from typing import Mapping
 from typing import cast
 
 from twisted.internet import defer
@@ -315,10 +316,7 @@ class RunProcess:
         workdir: str,
         unicode_encoding: str,
         send_update: Callable,
-        # FIXME: this should be a Mapping, as it should NOT mutate `environ` in place
-        # Would also make the value type covariant, meaning caller can send a
-        # dict with value type a subset of what is handled here
-        environ: dict[str, str | list[str] | int | None] | None = None,
+        environ: Mapping[str, str | list[str] | int | None] | None = None,
         sendStdout: bool = True,
         sendStderr: bool = True,
         sendRC: bool | int = True,
