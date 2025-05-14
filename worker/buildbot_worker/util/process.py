@@ -35,9 +35,6 @@ def compute_environ(
             # turned in to a string.
             environ[key] = os.pathsep.join(v)
 
-    if "PYTHONPATH" in environ:
-        environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"  # type: ignore[operator]
-
     # do substitution on variable values matching pattern: ${name}
     p = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
@@ -54,5 +51,10 @@ def compute_environ(
         if not isinstance(v, str):
             raise RuntimeError(f"'env' values must be strings or lists; key '{key}' is incorrect")
         new_environ[key] = p.sub(subst, v)
+
+    # Special case for PYTHONPATH
+    # If overriden, make sure it's still present
+    if "PYTHONPATH" in environ:
+        new_environ['PYTHONPATH'] += os.pathsep + os.environ.get("PYTHONPATH", "")
 
     return new_environ
