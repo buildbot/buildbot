@@ -27,16 +27,15 @@ from zope.interface import Interface
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
 
+    from buildbot_worker.base import ProtocolCommandBase
+
 
 class IWorkerCommand(Interface):
     """This interface is implemented by all of the worker's Command
     subclasses. It specifies how the worker can start, interrupt, and
     query the various Commands running on behalf of the buildmaster."""
 
-    # FIXME: Implementer do not implement this at all
-    # builder here is supposed to be a `buildbot_worker.base.WorkerForBuilderBase`
-    # but buildbot_worker.base.Command (only implementer) has `protocol_command: ProtocolCommandBase,`
-    def __init__(builder, command_id: str, args: Any) -> None:  # type: ignore[no-untyped-def]
+    def __init__(protocol_command: ProtocolCommandBase, command_id: str, args: Any) -> None:
         """Create the Command. 'builder' is a reference to the parent
         buildbot_worker.base.WorkerForBuilderBase instance, which will be
         used to send status updates (by calling builder.sendStatus).
