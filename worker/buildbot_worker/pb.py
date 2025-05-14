@@ -508,11 +508,10 @@ class BotMsgpack(BotBase):
         # Make any currently-running command die, with no further status
         # output. This is used when the worker is shutting down or the
         # connection to the master has been lost.
-        # FIXME: missing `.values()` here
-        for protocol_command in self.protocol_commands:
-            protocol_command.builder_is_running = False  # type: ignore[attr-defined]
-            log.msg(f"stopCommand: halting current command {protocol_command.command}")  # type: ignore[attr-defined]
-            protocol_command.command.doInterrupt()  # type: ignore[attr-defined]
+        for protocol_command in self.protocol_commands.values():
+            protocol_command.builder_is_running = False
+            log.msg(f"stopCommand: halting current command {protocol_command.command}")
+            protocol_command.command.doInterrupt()
         self.protocol_commands = {}
 
     def calculate_basedir(self, builddir: str | bytes) -> str:
