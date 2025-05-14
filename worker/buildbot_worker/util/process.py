@@ -17,12 +17,13 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Mapping
 
 _ENV_VAR_PATTERN = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
 
 def compute_environ(
-    environ: dict[str, str | list[str] | int | None] | None = None,
+    environ: Mapping[str, str | list[str] | int | None] | None = None,
 ) -> dict[str, str]:
     new_environ = os.environ.copy()
     if not environ:
