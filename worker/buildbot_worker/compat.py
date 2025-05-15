@@ -20,7 +20,6 @@ between Python 2 and Python 3.
 
 from __future__ import annotations
 
-from io import StringIO as NativeStringIO
 from typing import TYPE_CHECKING
 from typing import overload
 
@@ -78,4 +77,4 @@ def bytes2unicode(x: Any | None, encoding: str = 'utf-8', errors: str = 'strict'
     return str(x, encoding, errors)
 
 
-__all__ = ["NativeStringIO", "bytes2unicode", "unicode2bytes"]
+__all__ = ["bytes2unicode", "unicode2bytes"]
