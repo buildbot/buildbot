@@ -1,0 +1,1 @@
+Work around bug in Twisted 24.7 or newer that causes failures for old (pre Buildbot 0.9) workers to connect to the master.

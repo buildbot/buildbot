@@ -72,9 +72,35 @@ def patch_config_for_unit_tests():
     set_is_in_unit_tests(True)
 
 
+@onlyOnce
+def patch_twisted_failure():
+    try:
+        from twisted import __version__ as twisted_version
+        from twisted.python.versions import Version
+
+        current_version = Version('twisted', *map(int, twisted_version.split('.')[:3]))
+        if current_version <= Version('twisted', 24, 7, 0):
+            return
+
+        from twisted.spread.pb import CopiedFailure
+
+        original_setCopyableState = CopiedFailure.setCopyableState
+
+        def patched_setCopyableState(self, state):
+            if 'parents' not in state:
+                state['parents'] = []
+            return original_setCopyableState(self, state)
+
+        CopiedFailure.setCopyableState = patched_setCopyableState
+
+    except ImportError:
+        pass
+
+
 def patch_all(for_tests=False):
     if for_tests:
         patch_testcase_timeout()
         patch_config_for_unit_tests()
     patch_servicechecks()
     patch_decorators()
+    patch_twisted_failure()
