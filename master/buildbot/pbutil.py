@@ -16,6 +16,10 @@
 
 """Base classes handy for use with PB clients."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from twisted.internet import protocol
 from twisted.python import log
 from twisted.spread import pb
@@ -149,17 +153,15 @@ class ReconnectingPBClientFactory(PBClientFactory, protocol.ReconnectingClientFa
         log.err(why)
 
 
-def decode(data, encoding='utf-8', errors='strict'):
+def decode(data: Any, encoding: str = 'utf-8', errors: str = 'strict') -> Any:
     """We need to convert a dictionary where keys and values
     are bytes, to unicode strings.  This happens when a
     Python 2 worker sends a dictionary back to a Python 3 master.
     """
-    data_type = type(data)
-
-    if data_type == bytes:
+    if isinstance(data, bytes):
         return bytes2unicode(data, encoding, errors)
-    if data_type in (dict, list, tuple):
-        if data_type == dict:
-            data = data.items()
-        return data_type(map(decode, data))
+    if isinstance(data, dict):
+        return type(data)(map(decode, data.items()))
+    if isinstance(data, (list, tuple)):
+        return type(data)(map(decode, data))
     return data

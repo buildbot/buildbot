@@ -349,7 +349,7 @@ class Build(properties.PropertiesMixin):
                     self.VIRTUAL_BUILDER_PROJECT_PROP, self.builder.config.project
                 )
                 tags = self.getProperty(self.VIRTUAL_BUILDERTAGS_PROP, self.builder.config.tags)
-                if type(tags) == type([]) and '_virtual_' not in tags:
+                if isinstance(tags, list) and '_virtual_' not in tags:
                     tags.append('_virtual_')
 
                 projectid = yield self.builder.find_project_id(project)
