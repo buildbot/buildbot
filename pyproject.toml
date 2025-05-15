@@ -9,18 +9,12 @@ target-version = "py38"
         "E741", # ambiguous variable name
         "E501", # line too long (we rely on ruff format for that)
 
-        "PLR0904", # too-many-public-methods
-        "PLR0911", # too-many-return-statements
         "PLR0911", # too-many-return-statements
         "PLR0912", # too-many-branches
         "PLR0913", # too-many-arguments
-        "PLR0914", # too-many-locals
         "PLR0915", # too-many-statements
-        "PLC0415", # import-outside-toplevel
         "PLW0603", # global-statement
-        "PLW1501", # bad-open-mode
         "PLR1711", # useless-return
-        "PLW1514", # unspecified-encoding
         "PLR5501", # collapsible-else-if
 
         # maybe we should fix these?
