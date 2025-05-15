@@ -57,8 +57,6 @@ jobs:
 
   build-tarballs:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-id: ${{ steps.artifact-upload-step.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
