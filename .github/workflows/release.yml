@@ -42,11 +42,11 @@ jobs:
           cache: 'pip'
           cache-dependency-path: |
             requirements-pip.txt
+            requirements-ci-pyinstaller.txt
             requirements-ci.txt
             worker/setup.py
       - run: python -m pip install -r requirements-pip.txt
-      - run: python -m pip install -r requirements-ci.txt
-      - run: pipx install pyinstaller==6.13.0
+      - run: python -m pip install -r requirements-ci-pyinstaller.txt
       - run: pyinstaller pyinstaller/buildbot-worker.spec
       - run: mv "dist/buildbot-worker${{ matrix.ext }}" "dist/${{ env.WORKER_BIN_NAME }}"
       - name: upload worker bin
@@ -57,8 +57,6 @@ jobs:
 
   build-tarballs:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-id: ${{ steps.artifact-upload-step.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
