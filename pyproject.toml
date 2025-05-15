@@ -31,7 +31,6 @@ target-version = "py38"
 
         # Might be nice to have in future, but requires significant refactoring for now.
         "RUF012", # mutable-class-default
-        "RUF017", # quadratic-list-summation (only used in one case, where didn't like the outcome: https://github.com/buildbot/buildbot/pull/8081)
 
         # See: https://github.com/buildbot/buildbot/pull/8418#issuecomment-2869007629
         # quoted types in cast should be considered on a case by case basis

@@ -1,3 +1,5 @@
+import itertools
+
 from twisted.internet import defer
 
 from buildbot.schedulers.forcesched import ChoiceStringParameter
@@ -29,7 +31,7 @@ class NestedExample(NestedParameter):
             choices=[],
         )
         self.params = {self.PIZZA: pizzaInput, self.INGREDIENTS: ingredientsInput}
-        self.allIngredients = set(sum([ingr for ingr in Api.pizzaIngredients.values()], []))
+        self.allIngredients = set(itertools.chain(*Api.pizzaIngredients.values()))
         fields = self.params.values()
         super().__init__(self.type, label='', fields=fields, **kw)
 
