@@ -45,7 +45,6 @@ from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
 
 from buildbot_worker import util
-from buildbot_worker.compat import bytes2NativeString
 from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.exceptions import AbandonChain
@@ -81,7 +80,7 @@ def win32_batch_quote(cmd_list: list[bytes], unicode_encoding: str = 'utf-8') ->
     # Windows batch file. This is not quite the same as quoting it for the
     # shell, as cmd.exe doesn't support the %% escape in interactive mode.
     def escape_arg(arg_bytes: bytes) -> str:
-        arg = bytes2NativeString(arg_bytes, unicode_encoding)
+        arg = bytes2unicode(arg_bytes, unicode_encoding)
         arg = quoteArguments([arg])
         # escape shell special characters
         arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
@@ -701,7 +700,7 @@ class RunProcess:
         # echo off hides this cheat from the log files.
         tf.write("@echo off\n")
         if isinstance(self.command, (str, bytes)):
-            tf.write(bytes2NativeString(self.command, self.unicode_encoding))
+            tf.write(bytes2unicode(self.command, self.unicode_encoding))
         else:
             tf.write(win32_batch_quote(self.command, self.unicode_encoding))
         tf.close()
