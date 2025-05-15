@@ -20,7 +20,6 @@ between Python 2 and Python 3.
 
 from __future__ import annotations
 
-from io import StringIO as NativeStringIO
 from typing import TYPE_CHECKING
 from typing import overload
 
@@ -29,35 +28,6 @@ if TYPE_CHECKING:
     from typing import TypeVar
 
     _T = TypeVar('_T')
-
-
-@overload
-def bytes2NativeString(x: bytes, encoding: str = 'utf-8') -> str: ...
-
-
-@overload
-def bytes2NativeString(x: _T, encoding: str = 'utf-8') -> _T: ...
-
-
-def bytes2NativeString(x: _T, encoding: str = 'utf-8') -> str | _T:
-    """
-    Convert C{bytes} to a native C{str}.
-
-    On Python 3 and higher, str and bytes
-    are not equivalent.  In this case, decode
-    the bytes, and return a native string.
-
-    On Python 2 and lower, str and bytes
-    are equivalent.  In this case, just
-    just return the native string.
-
-    @param x: a string of type C{bytes}
-    @param encoding: an optional codec, default: 'utf-8'
-    @return: a string of type C{str}
-    """
-    if isinstance(x, bytes) and str != bytes:
-        return x.decode(encoding)
-    return x
 
 
 @overload
@@ -107,4 +77,4 @@ def bytes2unicode(x: Any | None, encoding: str = 'utf-8', errors: str = 'strict'
     return str(x, encoding, errors)
 
 
-__all__ = ["NativeStringIO", "bytes2NativeString", "bytes2unicode", "unicode2bytes"]
+__all__ = ["bytes2unicode", "unicode2bytes"]
