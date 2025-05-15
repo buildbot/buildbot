@@ -5,7 +5,6 @@ target-version = "py38"
 [tool.ruff.lint]
     select = ["W", "E", "F", "I", "PL", "UP", "T100", "B", "RUF", "FA", "TC"]
     ignore = [
-        "E712", # comparison to False should be 'if cond is False:' or 'if not cond:'
         "E721", # do not compare types, use 'isinstance()'
         "E731", # do not assign a lambda expression, use a def
         "E741", # ambiguous variable name
