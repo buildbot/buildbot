@@ -38,7 +38,7 @@ def getoutput(cmd):
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             waited = 0
             while True:  # wait loop
-                if p.poll() != None:
+                if p.poll() != None:  # noqa: E711 Comparison to `None` should be `cond is not None`
                     break  # process ended.
                 if waited > timeout:
                     print(
@@ -50,7 +50,8 @@ def getoutput(cmd):
                 waited += 1
                 time.sleep(1)
 
-            if p.returncode != None:  # process has endend
+            # process has ended
+            if p.returncode != None:  # noqa: E711 Comparison to `None` should be `cond is not None`
                 stdout = p.stdout.read()
                 if p.returncode == 0:
                     break  # ok: exit retry loop

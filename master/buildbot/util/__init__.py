@@ -169,7 +169,7 @@ class ComparableMixin:
         return hash(tuple(map(str, alist)))
 
     def _cmp_common(self, them):
-        if type(self) != type(them):
+        if type(self) is not type(them):
             return (False, None, None)
 
         if self.__class__ != them.__class__:
