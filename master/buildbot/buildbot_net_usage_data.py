@@ -28,6 +28,7 @@ import json
 import os
 import platform
 import socket
+from typing import TYPE_CHECKING
 from typing import Any
 from urllib import error as urllib_error
 from urllib import request as urllib_request
@@ -38,6 +39,9 @@ from twisted.python import log
 from buildbot.process.buildstep import _BuildStepFactory
 from buildbot.util import unicode2bytes
 from buildbot.www.config import get_environment_versions
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
 
 # This can't change! or we will need to make sure we are compatible with all
 # released version of buildbot >=0.9.0
@@ -115,7 +119,7 @@ def countPlugins(plugins_uses: dict[str, int], lst: dict[str, Any] | list[Any]) 
         plugins_uses[name] += 1
 
 
-def basicData(master: Any) -> dict[str, Any]:
+def basicData(master: BuildMaster) -> dict[str, Any]:
     plugins_uses: dict[str, int] = {}
     countPlugins(plugins_uses, master.config.workers)
     countPlugins(plugins_uses, master.config.builders)
@@ -129,14 +133,14 @@ def basicData(master: Any) -> dict[str, Any]:
     # to get as much as possible an unique id
     # we hash it to not leak private information about the installation such as hostnames and domain
     # names
+    assert master.name is not None
     hashInput = (
         master.name  # master name contains hostname + master basepath
         + socket.getfqdn()  # we add the fqdn to account for people
         # call their buildbot host 'buildbot'
         # and install it in /var/lib/buildbot
     )
-    hashInput = unicode2bytes(hashInput)
-    installid = hashlib.sha1(hashInput).hexdigest()
+    installid = hashlib.sha1(unicode2bytes(hashInput)).hexdigest()
     return {
         'installid': installid,
         'versions': dict(get_environment_versions()),
@@ -158,7 +162,7 @@ def basicData(master: Any) -> dict[str, Any]:
     }
 
 
-def fullData(master: Any) -> dict[str, list[list[str]]]:
+def fullData(master: BuildMaster) -> dict[str, list[list[str]]]:
     """
     Send the actual configuration of the builders, how the steps are agenced.
     Note that full data will never send actual detail of what command is run, name of servers,
@@ -174,7 +178,7 @@ def fullData(master: Any) -> dict[str, list[list[str]]]:
     return {'builders': builders}
 
 
-def computeUsageData(master: Any) -> dict[str, Any] | None:
+def computeUsageData(master: BuildMaster) -> dict[str, Any] | None:
     if master.config.buildbotNetUsageData is None:
         return None
     data = basicData(master)
@@ -231,7 +235,7 @@ def _sendBuildbotNetUsageData(data: dict[str, Any]) -> None:
     log.msg("buildbotNetUsageData: buildbot.net said:", res)
 
 
-def sendBuildbotNetUsageData(master: Any) -> None:
+def sendBuildbotNetUsageData(master: BuildMaster) -> None:
     if master.config.buildbotNetUsageData is None:
         return
     data = computeUsageData(master)
