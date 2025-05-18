@@ -141,6 +141,10 @@ def basicData(master: BuildMaster) -> dict[str, Any]:
         # and install it in /var/lib/buildbot
     )
     installid = hashlib.sha1(unicode2bytes(hashInput)).hexdigest()
+    assert master.db.configured_db_config is not None
+    db_config = master.db.configured_db_config
+    assert isinstance(db_config.db_url, str)
+    db_dialect = db_config.db_url.split("://")[0]
     return {
         'installid': installid,
         'versions': dict(get_environment_versions()),
@@ -156,7 +160,7 @@ def basicData(master: BuildMaster) -> dict[str, Any]:
             'distro': get_distro(),
         },
         'plugins': plugins_uses,
-        'db': master.config.db.db_url.split("://")[0],
+        'db': db_dialect,
         'mq': master.config.mq['type'],
         'www_plugins': list(master.config.www['plugins'].keys()),
     }

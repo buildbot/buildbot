@@ -1,0 +1,1 @@
+Fixes error on startup in NetUsageData when ``db_url`` config is a renderable (:issue:`8451`, introduced in v4.3.0)
