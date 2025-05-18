@@ -30,6 +30,7 @@ from buildbot.buildbot_net_usage_data import linux_distribution
 from buildbot.config import BuilderConfig
 from buildbot.master import BuildMaster
 from buildbot.plugins import steps
+from buildbot.process import properties
 from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.util.integration import DictLoader
@@ -90,6 +91,26 @@ class Tests(unittest.TestCase):
     def test_full(self):
         c = self.getBaseConfig()
         c['buildbotNetUsageData'] = 'full'
+        master = self.getMaster(c)
+        data = computeUsageData(master)
+        self.assertEqual(
+            sorted(data.keys()),
+            sorted([
+                'versions',
+                'db',
+                'installid',
+                'platform',
+                'mq',
+                'plugins',
+                'builders',
+                'www_plugins',
+            ]),
+        )
+
+    def test_full_renderable_db_url(self):
+        c = self.getBaseConfig()
+        c['buildbotNetUsageData'] = 'full'
+        c['db'] = {'db_url': properties.Interpolate('abcd')}
         master = self.getMaster(c)
         data = computeUsageData(master)
         self.assertEqual(

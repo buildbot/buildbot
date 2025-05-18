@@ -591,6 +591,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_dbconfig(self.filename, {'db': {'db_url': 'abcd'}})
         self.assertResults(db=config.master.DBConfig(db_url='abcd'))
 
+    def test_load_db_dict_renderable_url(self):
+        self.cfg.load_dbconfig(self.filename, {'db': {'db_url': properties.Interpolate('abcd')}})
+        self.assertResults(db=config.master.DBConfig(db_url='abcd'))
+
     def test_load_db_unk_keys(self):
         with capture_config_errors() as errors:
             self.cfg.load_dbconfig(self.filename, {'db': {'db_url': 'abcd', 'bar': 'bar'}})
