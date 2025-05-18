@@ -33,6 +33,7 @@ from typing import Any
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
+from sqlalchemy.engine.url import make_url
 from twisted.internet import threads
 from twisted.python import log
 
@@ -144,7 +145,8 @@ def basicData(master: BuildMaster) -> dict[str, Any]:
     assert master.db.configured_db_config is not None
     db_config = master.db.configured_db_config
     assert isinstance(db_config.db_url, str)
-    db_dialect = db_config.db_url.split("://")[0]
+    db_url = make_url(db_config.db_url)
+
     return {
         'installid': installid,
         'versions': dict(get_environment_versions()),
@@ -160,7 +162,7 @@ def basicData(master: BuildMaster) -> dict[str, Any]:
             'distro': get_distro(),
         },
         'plugins': plugins_uses,
-        'db': db_dialect,
+        'db': db_url.drivername,
         'mq': master.config.mq['type'],
         'www_plugins': list(master.config.www['plugins'].keys()),
     }
