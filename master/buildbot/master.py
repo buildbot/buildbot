@@ -99,9 +99,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # set up child services
         self._services_d = self.create_child_services()
 
-        # db configured values
-        self.configured_db_url = None
-
         # configuration / reconfiguration handling
         self.config = MasterConfig()
         self.config_version = 0  # increased by one on each reconfig

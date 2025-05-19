@@ -12,9 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import os
 import platform
+from typing import Any
 from unittest.case import SkipTest
 from urllib import request as urllib_request
 
@@ -30,6 +32,7 @@ from buildbot.buildbot_net_usage_data import linux_distribution
 from buildbot.config import BuilderConfig
 from buildbot.master import BuildMaster
 from buildbot.plugins import steps
+from buildbot.process import properties
 from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.util.integration import DictLoader
@@ -39,7 +42,7 @@ from buildbot.worker.base import Worker
 
 
 class Tests(unittest.TestCase):
-    def getMaster(self, config_dict):
+    async def getMaster(self, config_dict: dict[str, Any]) -> BuildMaster:
         """
         Create a started ``BuildMaster`` with the given configuration.
         """
@@ -47,6 +50,7 @@ class Tests(unittest.TestCase):
         basedir.createDirectory()
         master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
         master.config = master.config_loader.loadConfig()
+        await master.db.setup(check_version=False, verbose=False)
         return master
 
     def getBaseConfig(self):
@@ -64,13 +68,13 @@ class Tests(unittest.TestCase):
             'multiMaster': True,
         }
 
-    def test_basic(self):
+    async def test_basic(self):
         self.patch(config.master, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
             ConfigWarning,
             message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic.",
         ):
-            master = self.getMaster(self.getBaseConfig())
+            master = await self.getMaster(self.getBaseConfig())
         data = computeUsageData(master)
         self.assertEqual(
             sorted(data.keys()),
@@ -87,10 +91,10 @@ class Tests(unittest.TestCase):
             ]),
         )
 
-    def test_full(self):
+    async def test_full(self):
         c = self.getBaseConfig()
         c['buildbotNetUsageData'] = 'full'
-        master = self.getMaster(c)
+        master = await self.getMaster(c)
         data = computeUsageData(master)
         self.assertEqual(
             sorted(data.keys()),
@@ -106,14 +110,34 @@ class Tests(unittest.TestCase):
             ]),
         )
 
-    def test_custom(self):
+    async def test_full_renderable_db_url(self):
+        c = self.getBaseConfig()
+        c['buildbotNetUsageData'] = 'full'
+        c['db'] = {'db_url': properties.Interpolate('sqlite:///state.sqlite')}
+        master = await self.getMaster(c)
+        data = computeUsageData(master)
+        self.assertEqual(
+            sorted(data.keys()),
+            sorted([
+                'versions',
+                'db',
+                'installid',
+                'platform',
+                'mq',
+                'plugins',
+                'builders',
+                'www_plugins',
+            ]),
+        )
+
+    async def test_custom(self):
         c = self.getBaseConfig()
 
         def myCompute(data):
             return {"db": data['db']}
 
         c['buildbotNetUsageData'] = myCompute
-        master = self.getMaster(c)
+        master = await self.getMaster(c)
         data = computeUsageData(master)
         self.assertEqual(sorted(data.keys()), sorted(['db']))
 
