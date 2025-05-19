@@ -33,7 +33,9 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from buildbot.data.sourcestamps import SourceStampData
     from buildbot.db.buildsets import BuildSetModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @defer.inlineCallbacks
@@ -41,7 +43,20 @@ def _db2data(model: BuildSetModel | None, master):
     if not model:
         return None
 
-    buildset = {
+    # gather the actual sourcestamps, in parallel
+    sourcestamps: list[SourceStampData | None] = []
+
+    @defer.inlineCallbacks
+    def getSs(ssid) -> InlineCallbacksType[None]:
+        ss: SourceStampData | None = yield master.data.get(('sourcestamps', str(ssid)))
+        # NOTE: Should check for None?
+        sourcestamps.append(ss)
+
+    yield defer.DeferredList(
+        [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
+    )
+
+    return {
         "bsid": model.bsid,
         "external_idstring": model.external_idstring,
         "reason": model.reason,
@@ -52,22 +67,8 @@ def _db2data(model: BuildSetModel | None, master):
         "parent_buildid": model.parent_buildid,
         "parent_relationship": model.parent_relationship,
         "rebuilt_buildid": model.rebuilt_buildid,
+        "sourcestamps": sourcestamps,
     }
-
-    # gather the actual sourcestamps, in parallel
-    sourcestamps = []
-
-    @defer.inlineCallbacks
-    def getSs(ssid):
-        ss = yield master.data.get(('sourcestamps', str(ssid)))
-        sourcestamps.append(ss)
-
-    yield defer.DeferredList(
-        [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
-    )
-
-    buildset['sourcestamps'] = sourcestamps  # type: ignore[assignment]
-    return buildset
 
 
 buildset_field_mapping = {
