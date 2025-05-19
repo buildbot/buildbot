@@ -77,7 +77,7 @@ async def doCleanupDatabase(config, master_cfg) -> None:
 
 
 @in_reactor
-async def cleanupDatabase(config):  # pragma: no cover
+def cleanupDatabase(config):  # pragma: no cover
     # we separate the actual implementation to protect unit tests
     # from @in_reactor which stops the reactor
     return defer.Deferred.fromCoroutine(_cleanupDatabase(config))
