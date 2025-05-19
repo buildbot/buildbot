@@ -2,6 +2,6 @@ pip==24.0; python_version < "3.8"  # pyup: ignore
 pip==24.3.1; python_version >= "3.8"
 setuptools==68.0.0; python_version < "3.8"  # pyup: ignore
 setuptools==75.3.0; python_version == "3.8"  # pyup: ignore
-setuptools==75.6.0; python_version >= "3.9"
+setuptools==78.1.1; python_version >= "3.9"
 wheel==0.42.0; python_version < "3.8"  # pyup: ignore
 wheel==0.45.1; python_version >= "3.8"
