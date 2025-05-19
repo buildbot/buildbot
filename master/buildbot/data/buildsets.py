@@ -50,7 +50,7 @@ class BuildSetData(TypedDict):
     parent_buildid: int | None
     parent_relationship: str | None
     rebuilt_buildid: int | None
-    sourcestamps: list[SourceStampData | None]
+    sourcestamps: list[SourceStampData]
 
 
 @defer.inlineCallbacks
@@ -59,13 +59,13 @@ def _db2data(model: BuildSetModel | None, master) -> InlineCallbacksType[BuildSe
         return None
 
     # gather the actual sourcestamps, in parallel
-    sourcestamps: list[SourceStampData | None] = []
+    sourcestamps: list[SourceStampData] = []
 
     @defer.inlineCallbacks
     def getSs(ssid) -> InlineCallbacksType[None]:
         ss: SourceStampData | None = yield master.data.get(('sourcestamps', str(ssid)))
-        # NOTE: Should check for None?
-        sourcestamps.append(ss)
+        if ss is not None:
+            sourcestamps.append(ss)
 
     yield defer.DeferredList(
         [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
