@@ -18,6 +18,7 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
 
 from twisted.internet import defer
 from twisted.python import log
@@ -38,8 +39,22 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
+class BuildSetData(TypedDict):
+    bsid: int
+    external_idstring: str | None
+    reason: str | None
+    submitted_at: int
+    complete: bool
+    complete_at: int | None
+    results: int | None
+    parent_buildid: int | None
+    parent_relationship: str | None
+    rebuilt_buildid: int | None
+    sourcestamps: list[SourceStampData | None]
+
+
 @defer.inlineCallbacks
-def _db2data(model: BuildSetModel | None, master):
+def _db2data(model: BuildSetModel | None, master) -> InlineCallbacksType[BuildSetData | None]:
     if not model:
         return None
 
@@ -92,7 +107,7 @@ class BuildsetEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[BuildSetData | None]:
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
         res = yield _db2data(res, self.master)
         return res
@@ -106,7 +121,7 @@ class BuildsetsEndpoint(base.Endpoint):
     rootLinkName = 'buildsets'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[BuildSetData]]:
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = buildset_field_mapping
         buildsets = yield self.master.db.buildsets.getBuildsets(
