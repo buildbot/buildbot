@@ -19,6 +19,8 @@ import copy
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
+from typing import Literal
+from typing import TypedDict
 
 from twisted.internet import defer
 from twisted.python import log
@@ -32,14 +34,41 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from buildbot.data.sourcestamps import SourceStampData
     from buildbot.db.changes import ChangeModel
+    from buildbot.util.twisted import InlineCallbacksType
+
+
+class ChangeData(TypedDict):
+    changeid: int
+    author: str
+    committer: str | None
+    comments: str
+    branch: str | None
+    revision: str | None
+    revlink: str | None
+    when_timestamp: int
+    category: str | None
+    parent_changeids: list[int]
+    repository: str
+    codebase: str
+    project: str
+
+    files: list[str]
+    sourcestamp: SourceStampData
+    properties: dict[str, tuple[Any, Literal["Change"]]]
 
 
 class FixerMixin:
     @defer.inlineCallbacks
-    def _fixChange(self, model: ChangeModel):
+    def _fixChange(self, model: ChangeModel) -> InlineCallbacksType[ChangeData]:
         # TODO: make these mods in the DB API
-        data = {
+        sskey = ('sourcestamps', str(model.sourcestampid))
+        assert hasattr(self, "master"), "FixerMixin requires a master attribute"
+        assert isinstance(self, base.Endpoint)
+        sourcestamp = yield self.master.data.get(sskey)
+
+        return {
             'changeid': model.changeid,
             'author': model.author,
             'committer': model.committer,
@@ -54,14 +83,9 @@ class FixerMixin:
             'codebase': model.codebase,
             'project': model.project,
             'files': model.files,
+            'sourcestamp': sourcestamp,
+            'properties': model.properties,
         }
-
-        sskey = ('sourcestamps', str(model.sourcestampid))
-        assert hasattr(self, "master"), "FixerMixin requires a master attribute"
-        data['sourcestamp'] = yield self.master.data.get(sskey)
-        data['properties'] = model.properties
-
-        return data
 
     fieldMapping = {
         'author': 'changes.author',
