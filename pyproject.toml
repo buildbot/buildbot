@@ -241,7 +241,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.plugins",
       "buildbot.process.botmaster",
       "buildbot.process.builder",
-      "buildbot.process.buildrequest",
       "buildbot.process.buildrequestdistributor",
       "buildbot.process.cache",
       "buildbot.process.debug",
