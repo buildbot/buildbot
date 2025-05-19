@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
 
 from twisted.internet import defer
 
@@ -32,9 +33,27 @@ if TYPE_CHECKING:
 
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.buildrequests import BuildRequestModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(dbmodel: BuildRequestModel, properties: dict | None):
+class BuildRequestData(TypedDict):
+    buildrequestid: int
+    buildsetid: int
+    builderid: int
+    priority: int
+    claimed: bool
+    claimed_at: datetime.datetime | None
+    claimed_by_masterid: int | None
+    complete: bool
+    results: int | None
+    submitted_at: datetime.datetime
+    complete_at: datetime.datetime | None
+    waited_for: bool
+
+    properties: dict | None
+
+
+def _db2data(dbmodel: BuildRequestModel, properties: dict | None) -> BuildRequestData:
     return {
         'buildrequestid': dbmodel.buildrequestid,
         'buildsetid': dbmodel.buildsetid,
@@ -102,7 +121,7 @@ class BuildRequestEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec: ResultSpec, kwargs):
+    def get(self, resultSpec: ResultSpec, kwargs) -> InlineCallbacksType[BuildRequestData | None]:
         buildrequest = yield self.master.db.buildrequests.getBuildRequest(kwargs['buildrequestid'])
         if not buildrequest:
             return None
@@ -143,7 +162,7 @@ class BuildRequestsEndpoint(base.Endpoint):
     rootLinkName = 'buildrequests'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[BuildRequestData]]:
         builderid = kwargs.get("builderid", None)
         complete = resultSpec.popBooleanFilter('complete')
         claimed_by_masterid = resultSpec.popBooleanFilter('claimed_by_masterid')

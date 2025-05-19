@@ -31,6 +31,7 @@ from buildbot.util import safeTranslate
 
 if TYPE_CHECKING:
     from buildbot.process.build import Build
+    from buildbot.process.builder import CollapseRequestFn
 
 
 RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
@@ -51,7 +52,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         locks: list | None = None,
         env: dict | None = None,
         properties: dict | None = None,
-        collapseRequests: bool | Callable | None = None,
+        collapseRequests: bool | CollapseRequestFn | None = None,
         description: str | None = None,
         description_format: str | None = None,
         canStartBuild: Callable | None = None,

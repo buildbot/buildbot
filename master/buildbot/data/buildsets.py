@@ -18,6 +18,7 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
 
 from twisted.internet import defer
 from twisted.python import log
@@ -33,15 +34,44 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from buildbot.data.sourcestamps import SourceStampData
     from buildbot.db.buildsets import BuildSetModel
+    from buildbot.util.twisted import InlineCallbacksType
+
+
+class BuildSetData(TypedDict):
+    bsid: int
+    external_idstring: str | None
+    reason: str | None
+    submitted_at: int
+    complete: bool
+    complete_at: int | None
+    results: int | None
+    parent_buildid: int | None
+    parent_relationship: str | None
+    rebuilt_buildid: int | None
+    sourcestamps: list[SourceStampData]
 
 
 @defer.inlineCallbacks
-def _db2data(model: BuildSetModel | None, master):
+def _db2data(model: BuildSetModel | None, master) -> InlineCallbacksType[BuildSetData | None]:
     if not model:
         return None
 
-    buildset = {
+    # gather the actual sourcestamps, in parallel
+    sourcestamps: list[SourceStampData] = []
+
+    @defer.inlineCallbacks
+    def getSs(ssid) -> InlineCallbacksType[None]:
+        ss: SourceStampData | None = yield master.data.get(('sourcestamps', str(ssid)))
+        if ss is not None:
+            sourcestamps.append(ss)
+
+    yield defer.DeferredList(
+        [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
+    )
+
+    return {
         "bsid": model.bsid,
         "external_idstring": model.external_idstring,
         "reason": model.reason,
@@ -52,22 +82,8 @@ def _db2data(model: BuildSetModel | None, master):
         "parent_buildid": model.parent_buildid,
         "parent_relationship": model.parent_relationship,
         "rebuilt_buildid": model.rebuilt_buildid,
+        "sourcestamps": sourcestamps,
     }
-
-    # gather the actual sourcestamps, in parallel
-    sourcestamps = []
-
-    @defer.inlineCallbacks
-    def getSs(ssid):
-        ss = yield master.data.get(('sourcestamps', str(ssid)))
-        sourcestamps.append(ss)
-
-    yield defer.DeferredList(
-        [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
-    )
-
-    buildset['sourcestamps'] = sourcestamps
-    return buildset
 
 
 buildset_field_mapping = {
@@ -91,7 +107,7 @@ class BuildsetEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[BuildSetData | None]:
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
         res = yield _db2data(res, self.master)
         return res
@@ -105,7 +121,7 @@ class BuildsetsEndpoint(base.Endpoint):
     rootLinkName = 'buildsets'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[BuildSetData]]:
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = buildset_field_mapping
         buildsets = yield self.master.db.buildsets.getBuildsets(

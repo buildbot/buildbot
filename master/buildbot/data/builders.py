@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import TypedDict
 
 from twisted.internet import defer
 
@@ -24,9 +25,21 @@ from buildbot.data import types
 
 if TYPE_CHECKING:
     from buildbot.db.builders import BuilderModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(builder: BuilderModel):
+class BuilderData(TypedDict):
+    builderid: int
+    name: str
+    masterids: list[int]
+    description: str | None
+    description_format: str | None
+    description_html: str | None
+    projectid: int | None
+    tags: list[str]
+
+
+def _db2data(builder: BuilderModel) -> BuilderData:
     return {
         "builderid": builder.id,
         "name": builder.name,
@@ -48,7 +61,7 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[BuilderData | None]:
         builderid = yield self.getBuilderId(kwargs)
         if builderid is None:
             return None
@@ -73,7 +86,7 @@ class BuildersEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[BuilderData]]:
         bdicts = yield self.master.db.builders.getBuilders(
             masterid=kwargs.get('masterid', None),
             projectid=kwargs.get('projectid', None),

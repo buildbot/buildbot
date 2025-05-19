@@ -19,6 +19,7 @@ import warnings
 import weakref
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Callable
 
 from twisted.application import service
 from twisted.internet import defer
@@ -39,10 +40,18 @@ from buildbot.util import service as util_service
 from buildbot.util.render_description import render_description
 
 if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
     from buildbot.config.builder import BuilderConfig
     from buildbot.config.master import MasterConfig
+    from buildbot.data.buildrequests import BuildRequestData
     from buildbot.data.workers import Worker
     from buildbot.master import BuildMaster
+
+    CollapseRequestFn = Callable[
+        [BuildMaster, "Builder", BuildRequestData, BuildRequestData],
+        "bool | Deferred[bool]",
+    ]
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -502,24 +511,33 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
     # a few utility functions to make the maybeStartBuild a bit shorter and
     # easier to read
 
-    def getCollapseRequestsFn(self):
+    def getCollapseRequestsFn(
+        self,
+    ) -> CollapseRequestFn | None:
         """Helper function to determine which collapseRequests function to use
         from L{_collapseRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
-        collapseRequests_fn = self.config.collapseRequests
+        assert self.config is not None
+        collapseRequests_fn: CollapseRequestFn | bool | None = self.config.collapseRequests
         if collapseRequests_fn is None:
+            assert self.master is not None
             collapseRequests_fn = self.master.config.collapseRequests
         if collapseRequests_fn is None:
             collapseRequests_fn = True
 
         # then translate False and True properly
         if collapseRequests_fn is False:
-            collapseRequests_fn = None
+            return None
         elif collapseRequests_fn is True:
-            collapseRequests_fn = self._defaultCollapseRequestFn
+            return self._defaultCollapseRequestFn
 
         return collapseRequests_fn
 
     @staticmethod
-    def _defaultCollapseRequestFn(master, builder, brdict1, brdict2):
+    def _defaultCollapseRequestFn(
+        master: BuildMaster,
+        builder: Builder,
+        brdict1: BuildRequestData,
+        brdict2: BuildRequestData,
+    ) -> defer.Deferred[bool]:
         return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
