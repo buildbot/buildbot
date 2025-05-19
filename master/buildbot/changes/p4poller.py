@@ -374,11 +374,11 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             if not m:
                 raise P4PollerError(f"Unexpected 'p4 describe -s' result: {result!r}")
             who = self.resolvewho_callable(m.group('who'))
-            when = datetime.datetime.strptime(m.group('when'), self.datefmt)
+            when_dt = datetime.datetime.strptime(m.group('when'), self.datefmt)
             if self.server_tz:
                 # Convert from the server's timezone to the local timezone.
-                when = when.replace(tzinfo=self.server_tz)
-            when = util.datetime2epoch(when)
+                when_dt = when_dt.replace(tzinfo=self.server_tz)
+            when = util.datetime2epoch(when_dt)
 
             comment_lines = []
             lines.pop(0)  # describe header

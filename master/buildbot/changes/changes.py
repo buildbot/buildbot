@@ -70,11 +70,7 @@ class Change:
         change.codebase = chdict.codebase
         change.project = chdict.project
         change.number = chdict.changeid
-
-        when = chdict.when_timestamp
-        if when:
-            when = datetime2epoch(when)
-        change.when = when
+        change.when = datetime2epoch(chdict.when_timestamp)
 
         change.files = sorted(chdict.files)
 

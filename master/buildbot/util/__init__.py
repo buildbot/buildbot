@@ -328,7 +328,15 @@ def epoch2datetime(epoch):
     return None
 
 
-def datetime2epoch(dt):
+@overload
+def datetime2epoch(dt: datetime.datetime) -> int: ...
+
+
+@overload
+def datetime2epoch(dt: None) -> None: ...
+
+
+def datetime2epoch(dt: datetime.datetime | None) -> int | None:
     """Convert a non-naive datetime object to a UNIX epoch timestamp"""
     if dt is not None:
         return calendar.timegm(dt.utctimetuple())

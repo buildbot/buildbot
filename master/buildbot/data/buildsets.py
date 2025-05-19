@@ -66,7 +66,7 @@ def _db2data(model: BuildSetModel | None, master):
         [getSs(id) for id in model.sourcestamps], fireOnOneErrback=True, consumeErrors=True
     )
 
-    buildset['sourcestamps'] = sourcestamps
+    buildset['sourcestamps'] = sourcestamps  # type: ignore[assignment]
     return buildset
 
 
