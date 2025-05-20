@@ -207,6 +207,9 @@ class WorkerForBuilderBase(service.Service):
     def remote_startBuild(self) -> None:
         raise NotImplementedError
 
+    def remote_interruptCommand(self, command_id: str, why: str) -> None:
+        raise NotImplementedError
+
 
 class BotBase(service.MultiService):
     """I represent the worker-side bot."""

@@ -145,9 +145,8 @@ class Connection(base.Connection):
 
     def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred:
         workerforbuilder = self.worker.bot.builders[builderName]
-        # FIXME: BotBase should have a remote_interruptCommand definition
-        return defer.maybeDeferred(  # type: ignore[call-overload]
-            workerforbuilder.remote_interruptCommand,  # type: ignore[attr-defined]
+        return defer.maybeDeferred(
+            workerforbuilder.remote_interruptCommand,
             commandId,
             why,
         )
