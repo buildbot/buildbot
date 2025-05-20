@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
+from typing import cast
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,6 +29,7 @@ from buildbot.worker.protocols import base
 
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
+    from twisted.spread.pb import RemoteReference
 
     from buildbot_worker.null import LocalWorker
 
@@ -124,13 +126,11 @@ class Connection(base.Connection):
         commandName: str,
         args: dict[str, Any],
     ) -> Deferred:
-        remoteCommand = RemoteCommandProxy(remoteCommand)  # type: ignore[assignment]
         args = self.createArgsProxies(args)
         workerforbuilder = self.worker.bot.builders[builderName]
-        # FIXME: BotBase should have a remote_startCommand definition
-        return defer.maybeDeferred(  # type: ignore[call-overload]
-            workerforbuilder.remote_startCommand,  # type: ignore[attr-defined]
-            remoteCommand,
+        return defer.maybeDeferred(
+            workerforbuilder.remote_startCommand,
+            cast("RemoteReference", RemoteCommandProxy(remoteCommand)),
             commandId,
             commandName,
             args,

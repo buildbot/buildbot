@@ -195,6 +195,15 @@ class ProtocolCommandBase:
 class WorkerForBuilderBase(service.Service):
     ProtocolCommand: type[ProtocolCommandBase] = ProtocolCommandBase
 
+    def remote_startCommand(
+        self,
+        command_ref: RemoteReference,
+        command_id: str,
+        command: str,
+        args: dict[str, list[str] | str],
+    ) -> None:
+        raise NotImplementedError
+
 
 class BotBase(service.MultiService):
     """I represent the worker-side bot."""
