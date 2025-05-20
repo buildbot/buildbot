@@ -932,7 +932,7 @@ class CommandMixin:
     @defer.inlineCallbacks
     def _runRemoteCommand(
         self,
-        cmd: str | list[str],
+        cmd: str,
         abandonOnFailure: bool,
         args: dict[str, Any],
         makeResult: Callable[[remotecommand.RemoteCommand], Any] | None = None,

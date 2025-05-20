@@ -60,7 +60,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def __init__(
         self,
-        remote_command: str | list[str],
+        remote_command: str,
         args: dict[str, Any],
         ignore_updates: bool = False,
         collectStdout: bool = False,
@@ -88,7 +88,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self._startTime: float | None = None
         self._remoteElapsed: float | None = None
         self.remote_failure_reason = None
-        self.remote_command: str | list[str] = remote_command
+        self.remote_command = remote_command
         self.args: dict[str, Any] = args
         self.ignore_updates: bool = ignore_updates
         self.decodeRC: dict[int | None, int] = decodeRC
@@ -192,8 +192,6 @@ class RemoteCommand(base.RemoteCommandImpl):
         assert self.conn is not None
         assert self.builder_name is not None
         assert self.commandID is not None
-        # FIXME: wrong typing, remote_command CANNOT be a list[str]
-        assert isinstance(self.remote_command, str)
         d = self.conn.remoteStartCommand(
             self,
             self.builder_name,
