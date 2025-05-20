@@ -29,9 +29,8 @@ class Listener(base.UpdateRegistrationListener):
     name = "pbListener"
 
     def __init__(self, master):
-        super().__init__()
+        super().__init__(master=master)
         self.ConnectionClass = Connection
-        self.master = master
 
     def get_manager(self):
         return self.master.pbmanager

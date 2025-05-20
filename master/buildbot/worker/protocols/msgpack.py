@@ -34,9 +34,8 @@ class Listener(base.UpdateRegistrationListener):
     name = "MsgPackListener"
 
     def __init__(self, master):
-        super().__init__()
+        super().__init__(master=master)
         self.ConnectionClass = Connection
-        self.master = master
 
     def get_manager(self):
         return self.master.msgmanager

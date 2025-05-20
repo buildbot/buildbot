@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
     from twisted.spread.pb import RemoteReference
 
+    from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
     from buildbot.worker.protocols.manager.base import BaseManager
     from buildbot.worker.protocols.manager.base import Registration
@@ -42,8 +43,10 @@ class Listener:
 
 
 class UpdateRegistrationListener(Listener):
-    def __init__(self) -> None:
+    def __init__(self, master: BuildMaster) -> None:
         super().__init__()
+        self.master = master
+
         # username : (password, portstr, manager registration)
         self._registrations: dict[str, tuple[str, str, Registration]] = {}
 
@@ -91,11 +94,11 @@ class UpdateRegistrationListener(Listener):
         workerName: str,
     ) -> InlineCallbacksType[_Connection]:
         self.before_connection_setup(mind, workerName)
-        worker = self.master.workers.getWorkerByName(workerName)  # type: ignore[attr-defined]
+        worker = self.master.workers.getWorkerByName(workerName)
         conn = self.ConnectionClass(self.master, worker, mind)  # type: ignore[attr-defined]
 
         # inform the manager, logging any problems in the deferred
-        accepted = yield self.master.workers.newConnection(conn, workerName)  # type: ignore[attr-defined]
+        accepted = yield self.master.workers.newConnection(conn, workerName)
 
         # return the Connection as the perspective
         if accepted:
