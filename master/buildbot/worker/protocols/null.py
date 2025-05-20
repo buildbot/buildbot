@@ -42,7 +42,6 @@ class ProxyMixin:
     def __init__(self, impl: object) -> None:
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
-        self._disconnect_listeners = []  # type: ignore[var-annotated]
 
     def callRemote(self, message: str, *args: Any, **kw: Any) -> Deferred[Any]:
         method = getattr(self.impl, f"remote_{message}", None)
