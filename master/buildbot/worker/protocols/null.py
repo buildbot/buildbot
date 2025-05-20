@@ -140,10 +140,8 @@ class Connection(base.Connection):
         return defer.maybeDeferred(self.worker.stopService)
 
     def remoteStartBuild(self, builderName: str) -> Deferred[None]:
-        # FIXME: BotBase should have a remote_startBuild definition
-        return defer.succeed(
-            self.worker.bot.builders[builderName].remote_startBuild(),  # type: ignore[attr-defined]
-        )
+        self.worker.bot.builders[builderName].remote_startBuild()
+        return defer.succeed(None)
 
     def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred:
         workerforbuilder = self.worker.bot.builders[builderName]

@@ -204,6 +204,9 @@ class WorkerForBuilderBase(service.Service):
     ) -> None:
         raise NotImplementedError
 
+    def remote_startBuild(self) -> None:
+        raise NotImplementedError
+
 
 class BotBase(service.MultiService):
     """I represent the worker-side bot."""
