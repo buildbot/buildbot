@@ -190,8 +190,16 @@ class RemoteCommand(base.RemoteCommandImpl):
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
         assert self.conn is not None
+        assert self.builder_name is not None
+        assert self.commandID is not None
+        # FIXME: wrong typing, remote_command CANNOT be a list[str]
+        assert isinstance(self.remote_command, str)
         d = self.conn.remoteStartCommand(
-            self, self.builder_name, self.commandID, self.remote_command, self.args
+            self,
+            self.builder_name,
+            self.commandID,
+            self.remote_command,
+            self.args,
         )
         return d
 
@@ -243,6 +251,8 @@ class RemoteCommand(base.RemoteCommandImpl):
         # when the interrupt command has been delivered.
 
         try:
+            assert self.builder_name is not None
+            assert self.commandID is not None
             await self.conn.remoteInterruptCommand(self.builder_name, self.commandID, str(why))
             # the worker may not have remote_interruptCommand
         except Exception as e:

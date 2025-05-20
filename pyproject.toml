@@ -832,7 +832,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.worker.manager",
       "buildbot.worker.marathon",
       "buildbot.worker.openstack",
-      "buildbot.worker.protocols.base",
       "buildbot.worker.protocols.manager.base",
       "buildbot.worker.protocols.manager.msgpack",
       "buildbot.worker.protocols.manager.pb",
