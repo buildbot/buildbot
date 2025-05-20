@@ -111,9 +111,8 @@ class Connection(base.Connection):
         self,
         builders: list[tuple[str, str]],
     ) -> Deferred[list[str]]:
-        # FIXME: BotBase should have a remote_setBuilderList definition
-        return defer.maybeDeferred(  # type: ignore[call-overload]
-            self.worker.bot.remote_setBuilderList,  # type: ignore[attr-defined]
+        return defer.maybeDeferred(
+            self.worker.bot.remote_setBuilderList,
             builders,
         )
 

@@ -307,6 +307,9 @@ class BotBase(service.MultiService):
         # if this timeout is too short.
         cast("IReactorTime", reactor).callLater(0.2, cast("IReactorCore", reactor).stop)
 
+    def remote_setBuilderList(self, builder_info: list[tuple[str, str]]) -> Deferred[list[str]]:
+        raise NotImplementedError
+
 
 class WorkerBase(service.MultiService):
     name: str | None  # type: ignore[assignment]
