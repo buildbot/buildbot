@@ -13,6 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import cast
 
 from twisted.internet import defer
 from twisted.python import log
@@ -21,18 +27,25 @@ from buildbot.util.eventual import fireEventually
 from buildbot.warnings import warn_deprecated
 from buildbot.worker.protocols import base
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+    from twisted.spread.pb import RemoteReference
+
+    from buildbot_worker.null import LocalWorker
+
 
 class Listener(base.Listener):
     pass
 
 
 class ProxyMixin:
-    def __init__(self, impl):
+    ImplClass: type
+
+    def __init__(self, impl: object) -> None:
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
-        self._disconnect_listeners = []
 
-    def callRemote(self, message, *args, **kw):
+    def callRemote(self, message: str, *args: Any, **kw: Any) -> Deferred[Any]:
         method = getattr(self.impl, f"remote_{message}", None)
         if method is None:
             raise AttributeError(f"No such method: remote_{message}")
@@ -44,10 +57,10 @@ class ProxyMixin:
         # break callback recursion for large transfers by using fireEventually
         return fireEventually(state)
 
-    def notifyOnDisconnect(self, cb):
+    def notifyOnDisconnect(self, cb: Callable) -> None:
         pass
 
-    def dontNotifyOnDisconnect(self, cb):
+    def dontNotifyOnDisconnect(self, cb: Callable) -> None:
         pass
 
 
@@ -66,9 +79,12 @@ class FileWriterProxy(ProxyMixin):
 
 
 class Connection(base.Connection):
-    proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
+    proxies: dict[type, type[ProxyMixin]] = {
+        base.FileWriterImpl: FileWriterProxy,
+        base.FileReaderImpl: FileReaderProxy,
+    }
 
-    def __init__(self, master_or_worker, worker=None):
+    def __init__(self, master_or_worker: LocalWorker, worker: LocalWorker | None = None) -> None:
         # All the existing code passes just the name to the Connection, however we'll need to
         # support an older versions of buildbot-worker using two parameter signature for some time.
         if worker is None:
@@ -80,38 +96,60 @@ class Connection(base.Connection):
                 + 'than buildbot is not supported',
             )
 
+        assert worker.workername is not None
         super().__init__(worker.workername)
         self.worker = worker
 
-    def loseConnection(self):
+    def loseConnection(self) -> None:
         self.notifyDisconnected()
 
-    def remotePrint(self, message):
+    def remotePrint(self, message: str) -> Deferred[None]:
         return defer.maybeDeferred(self.worker.bot.remote_print, message)
 
-    def remoteGetWorkerInfo(self):
+    def remoteGetWorkerInfo(self) -> Deferred[dict[str, Any]]:
         return defer.maybeDeferred(self.worker.bot.remote_getWorkerInfo)
 
-    def remoteSetBuilderList(self, builders):
-        return defer.maybeDeferred(self.worker.bot.remote_setBuilderList, builders)
+    def remoteSetBuilderList(
+        self,
+        builders: list[tuple[str, str]],
+    ) -> Deferred[list[str]]:
+        return defer.maybeDeferred(
+            self.worker.bot.remote_setBuilderList,
+            builders,
+        )
 
-    def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
-        remoteCommand = RemoteCommandProxy(remoteCommand)
+    def remoteStartCommand(
+        self,
+        remoteCommand: base.RemoteCommandImpl,
+        builderName: str,
+        commandId: str,
+        commandName: str,
+        args: dict[str, Any],
+    ) -> Deferred:
         args = self.createArgsProxies(args)
         workerforbuilder = self.worker.bot.builders[builderName]
         return defer.maybeDeferred(
-            workerforbuilder.remote_startCommand, remoteCommand, commandId, commandName, args
+            workerforbuilder.remote_startCommand,
+            cast("RemoteReference", RemoteCommandProxy(remoteCommand)),
+            commandId,
+            commandName,
+            args,
         )
 
-    def remoteShutdown(self):
+    def remoteShutdown(self) -> Deferred[None]:
         return defer.maybeDeferred(self.worker.stopService)
 
-    def remoteStartBuild(self, builderName):
-        return defer.succeed(self.worker.bot.builders[builderName].remote_startBuild())
+    def remoteStartBuild(self, builderName: str) -> Deferred[None]:
+        self.worker.bot.builders[builderName].remote_startBuild()
+        return defer.succeed(None)
 
-    def remoteInterruptCommand(self, builderName, commandId, why):
+    def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred:
         workerforbuilder = self.worker.bot.builders[builderName]
-        return defer.maybeDeferred(workerforbuilder.remote_interruptCommand, commandId, why)
+        return defer.maybeDeferred(
+            workerforbuilder.remote_interruptCommand,
+            commandId,
+            why,
+        )
 
-    def get_peer(self):
+    def get_peer(self) -> str:
         return "local"

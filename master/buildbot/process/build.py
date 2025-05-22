@@ -538,6 +538,7 @@ class Build(properties.PropertiesMixin):
 
         # tell the remote that it's starting a build, too
         try:
+            assert self.builder.name is not None
             yield self.conn.remoteStartBuild(self.builder.name)
         except Exception:
             yield self.buildPreparationFailure(Failure(), "start_build")

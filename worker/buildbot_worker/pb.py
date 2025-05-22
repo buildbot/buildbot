@@ -415,8 +415,8 @@ class BotPbLike(BotBase):
     def remote_setBuilderList(
         self,
         wanted: list[tuple[str, str]],
-    ) -> InlineCallbacksType[dict[str, WorkerForBuilderPbLike]]:
-        retval = {}
+    ) -> InlineCallbacksType[list[str]]:
+        retval: dict[str, WorkerForBuilderBase] = {}
         wanted_names = {name for (name, builddir) in wanted}
         wanted_dirs = {builddir for (name, builddir) in wanted}
         wanted_dirs.add('info')
@@ -475,7 +475,7 @@ class BotPbLike(BotBase):
                             "it now"
                         )
 
-        return retval
+        return retval  # type: ignore[return-value]
 
 
 class BotPb(BotPbLike, pb.Referenceable):

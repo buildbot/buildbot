@@ -195,6 +195,21 @@ class ProtocolCommandBase:
 class WorkerForBuilderBase(service.Service):
     ProtocolCommand: type[ProtocolCommandBase] = ProtocolCommandBase
 
+    def remote_startCommand(
+        self,
+        command_ref: RemoteReference,
+        command_id: str,
+        command: str,
+        args: dict[str, list[str] | str],
+    ) -> None:
+        raise NotImplementedError
+
+    def remote_startBuild(self) -> None:
+        raise NotImplementedError
+
+    def remote_interruptCommand(self, command_id: str, why: str) -> None:
+        raise NotImplementedError
+
 
 class BotBase(service.MultiService):
     """I represent the worker-side bot."""
@@ -306,6 +321,9 @@ class BotBase(service.MultiService):
         # resilient to workers dropping their connections, so there is no harm
         # if this timeout is too short.
         cast("IReactorTime", reactor).callLater(0.2, cast("IReactorCore", reactor).stop)
+
+    def remote_setBuilderList(self, builder_info: list[tuple[str, str]]) -> Deferred[list[str]]:
+        raise NotImplementedError
 
 
 class WorkerBase(service.MultiService):

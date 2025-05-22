@@ -13,11 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import stat
 from pathlib import PurePath
 from pathlib import PurePosixPath
 from pathlib import PureWindowsPath
+from typing import TYPE_CHECKING
 from typing import Any
+from typing import Iterable
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,44 +32,60 @@ from buildbot.process import remotecommand
 from buildbot.util import deferwaiter
 from buildbot.util import path_expand_user
 from buildbot.worker.protocols import base
+from buildbot.worker.protocols.manager.msgpack import BuildbotWebSocketServerProtocol
+
+if TYPE_CHECKING:
+    from pathlib import PurePath
+
+    from twisted.internet.defer import Deferred
+
+    from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import Worker
+    from buildbot.worker.protocols.base import RemoteCommandImpl
+    from buildbot.worker.protocols.manager.msgpack import BuildbotWebSocketServerProtocol
+    from buildbot.worker.protocols.manager.msgpack import MsgManager
 
 
 class Listener(base.UpdateRegistrationListener):
     name = "MsgPackListener"
 
-    def __init__(self, master):
-        super().__init__()
+    def __init__(self, master: BuildMaster) -> None:
+        super().__init__(master=master)
         self.ConnectionClass = Connection
-        self.master = master
 
-    def get_manager(self):
+    def get_manager(self) -> MsgManager:
         return self.master.msgmanager
 
-    def before_connection_setup(self, protocol, workerName):
+    def before_connection_setup(
+        self,
+        protocol: BuildbotWebSocketServerProtocol,  # type: ignore[override]
+        workerName: str,
+    ) -> None:
         log.msg(f"worker '{workerName}' attaching")
 
 
 class BasicRemoteCommand:
     # only has basic functions needed for remoteSetBuilderList in class Connection
     # when waiting for update messages
-    def __init__(self, worker_name, expected_keys, error_msg):
+    def __init__(self, worker_name: str, expected_keys: Iterable[str], error_msg: str) -> None:
         self.worker_name = worker_name
-        self.update_results = {}
+        self.update_results: dict[Any, Any] = {}
         self.expected_keys = expected_keys
         self.error_msg = error_msg
-        self.d = defer.Deferred()
+        self.d: Deferred[None] = defer.Deferred()
 
-    def wait_until_complete(self):
+    def wait_until_complete(self) -> Deferred[None]:
         return self.d
 
-    def remote_update_msgpack(self, args):
+    def remote_update_msgpack(self, args: list[tuple[Any, Any]]) -> None:
         # args is a list of tuples
         # first element of the tuple is a key, second element is a value
         for key, value in args:
             if key not in self.update_results:
                 self.update_results[key] = value
 
-    def remote_complete(self, args):
+    def remote_complete(self, args: None) -> None:
         if 'rc' not in self.update_results:
             self.d.errback(
                 Exception(
@@ -106,11 +126,17 @@ class Connection(base.Connection):
     keepalive_interval = 3600
     info: Any = None
 
-    def __init__(self, master, worker, protocol):
+    def __init__(
+        self,
+        master: BuildMaster,
+        worker: Worker,
+        protocol: BuildbotWebSocketServerProtocol,
+    ) -> None:
+        assert worker.workername is not None
         super().__init__(worker.workername)
         self.master = master
         self.worker = worker
-        self.protocol = protocol
+        self.protocol: BuildbotWebSocketServerProtocol | None = protocol
         self._keepalive_waiter = deferwaiter.DeferWaiter()
         self._keepalive_action_handler = deferwaiter.RepeatedActionHandler(
             master.reactor, self._keepalive_waiter, self.keepalive_interval, self._do_keepalive
@@ -120,48 +146,52 @@ class Connection(base.Connection):
     # methods called by the BuildbotWebSocketServerProtocol
 
     @defer.inlineCallbacks
-    def attached(self, protocol):
+    def attached(self, protocol: BuildbotWebSocketServerProtocol) -> InlineCallbacksType[None]:
         self.startKeepaliveTimer()
         self.notifyOnDisconnect(self._stop_keepalive_timer)
         yield self.worker.attached(self)
 
-    def detached(self, protocol):
+    def detached(self, protocol: BuildbotWebSocketServerProtocol) -> None:
         self.stopKeepaliveTimer()
         self.protocol = None
         self.notifyDisconnected()
 
     # disconnection handling
     @defer.inlineCallbacks
-    def _stop_keepalive_timer(self):
+    def _stop_keepalive_timer(self) -> InlineCallbacksType[None]:
         self.stopKeepaliveTimer()
         yield self._keepalive_waiter.wait()
 
-    def loseConnection(self):
+    def loseConnection(self) -> None:
         self.stopKeepaliveTimer()
+        assert self.protocol is not None
         self.protocol.transport.abortConnection()
 
     # keepalive handling
 
-    def _do_keepalive(self):
+    def _do_keepalive(self) -> Deferred[None]:
         return self.remoteKeepalive()
 
-    def stopKeepaliveTimer(self):
+    def stopKeepaliveTimer(self) -> None:
         self._keepalive_action_handler.stop()
 
-    def startKeepaliveTimer(self):
+    def startKeepaliveTimer(self) -> None:
         assert self.keepalive_interval
         self._keepalive_action_handler.start()
 
     # methods to send messages to the worker
 
-    def remoteKeepalive(self):
+    def remoteKeepalive(self) -> Deferred[None]:
+        assert self.protocol is not None
         return self.protocol.get_message_result({'op': 'keepalive'})
 
-    def remotePrint(self, message):
+    def remotePrint(self, message: str) -> Deferred[None]:
+        assert self.protocol is not None
         return self.protocol.get_message_result({'op': 'print', 'message': message})
 
     @defer.inlineCallbacks
-    def remoteGetWorkerInfo(self):
+    def remoteGetWorkerInfo(self) -> InlineCallbacksType[Any]:
+        assert self.protocol is not None
         info = yield self.protocol.get_message_result({'op': 'get_worker_info'})
         self.info = decode(info)
 
@@ -177,12 +207,13 @@ class Connection(base.Connection):
             self.path_cls = PurePosixPath
         return self.info
 
-    def _set_worker_settings(self):
+    def _set_worker_settings(self) -> Deferred:
         # the lookahead here (`(?=.)`) ensures that `\r` doesn't match at the end
         # of the buffer
         # we also convert cursor control sequence to newlines
         # and ugly \b+ (use of backspace to implement progress bar)
         newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
+        assert self.protocol is not None
         return self.protocol.get_message_result({
             'op': 'set_worker_settings',
             'args': {
@@ -193,14 +224,22 @@ class Connection(base.Connection):
             },
         })
 
-    def create_remote_command(self, worker_name, expected_keys, error_msg):
+    def create_remote_command(
+        self,
+        worker_name: str,
+        expected_keys: list[str],
+        error_msg: str,
+    ) -> tuple[BasicRemoteCommand, str]:
         command_id = remotecommand.RemoteCommand.generate_new_command_id()
         command = BasicRemoteCommand(worker_name, expected_keys, error_msg)
+        assert self.protocol is not None
         self.protocol.command_id_to_command_map[command_id] = command
         return (command, command_id)
 
     @defer.inlineCallbacks
-    def remoteSetBuilderList(self, builders):
+    def remoteSetBuilderList(
+        self, builders: list[tuple[str, str]]
+    ) -> InlineCallbacksType[list[str]]:
         assert self.path_cls is not None
 
         yield self._set_worker_settings()
@@ -212,12 +251,14 @@ class Connection(base.Connection):
         wanted_dirs = {builddir for _, builddir in builders}
         wanted_dirs.add('info')
         dirs_to_mkdir = set(wanted_dirs)
+        assert self.worker.workername is not None
         command, command_id = self.create_remote_command(
             self.worker.workername,
             ['files'],
             'Worker could not send a list of builder directories.',
         )
 
+        assert self.protocol is not None
         yield self.protocol.get_message_result({
             'op': 'start_command',
             'command_id': command_id,
@@ -266,6 +307,7 @@ class Connection(base.Connection):
             command, command_id = self.create_remote_command(
                 self.worker.workername, [], "Worker could not remove directories."
             )
+            assert self.protocol is not None
             yield self.protocol.get_message_result({
                 'op': 'start_command',
                 'command_id': command_id,
@@ -292,7 +334,14 @@ class Connection(base.Connection):
         return builder_names
 
     @defer.inlineCallbacks
-    def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
+    def remoteStartCommand(
+        self,
+        remoteCommand: RemoteCommandImpl,
+        builderName: str,
+        commandId: str | int,
+        commandName: str,
+        args: dict[str, Any],
+    ) -> InlineCallbacksType[None]:
         if commandName == "mkdir":
             if isinstance(args['dir'], list):
                 builder_basedir = self._get_builder_basedir(builderName)
@@ -382,6 +431,7 @@ class Connection(base.Connection):
             else:
                 args["want_stderr"] = False
 
+        assert self.protocol is not None
         self.protocol.command_id_to_command_map[commandId] = remoteCommand
         if 'reader' in args:
             self.protocol.command_id_to_reader_map[commandId] = args['reader']
@@ -398,14 +448,18 @@ class Connection(base.Connection):
         })
 
     @defer.inlineCallbacks
-    def remoteShutdown(self):
+    def remoteShutdown(self) -> InlineCallbacksType[None]:
+        assert self.protocol is not None
         yield self.protocol.get_message_result({'op': 'shutdown'})
 
-    def remoteStartBuild(self, builderName):
-        pass
+    def remoteStartBuild(self, builderName: str) -> Deferred[None]:
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def remoteInterruptCommand(self, builderName, commandId, why):
+    def remoteInterruptCommand(
+        self, builderName: str, commandId: str | int, why: str
+    ) -> InlineCallbacksType[None]:
+        assert self.protocol is not None
         yield self.protocol.get_message_result({
             'op': 'interrupt_command',
             'builder_name': builderName,
@@ -415,14 +469,15 @@ class Connection(base.Connection):
 
     # perspective methods called by the worker
 
-    def perspective_keepalive(self):
+    def perspective_keepalive(self) -> None:
         self.worker.messageReceivedFromWorker()
 
-    def perspective_shutdown(self):
+    def perspective_shutdown(self) -> None:
         self.worker.messageReceivedFromWorker()
         self.worker.shutdownRequested()
 
-    def get_peer(self):
+    def get_peer(self) -> str:
+        assert self.protocol is not None
         p = self.protocol.transport.getPeer()
         return f"{p.host}:{p.port}"
 

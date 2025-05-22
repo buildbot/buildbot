@@ -41,7 +41,7 @@ The worker-side Bot object has the following remote methods:
     called after the initial connection is established, with a new
     list, to add or remove builders.
 
-    This method returns a dictionary of :class:`WorkerForBuilder` objects - see below.
+    This method returns a list of builder names.
 
 :meth:`~buildbot_worker.pb.BotPb.remote_print`
     Adds a message to the worker logfile.
