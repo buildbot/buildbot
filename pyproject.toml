@@ -725,7 +725,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.worker.test_protocols_manager_msgmanager",
       "buildbot.test.unit.worker.test_protocols_manager_pbmanager",
       "buildbot.test.unit.worker.test_protocols_msgpack",
-      "buildbot.test.unit.worker.test_protocols_pb",
       "buildbot.test.unit.worker.test_upcloud",
       "buildbot.test.unit.www.test_avatar",
       "buildbot.test.unit.www.test_config",
