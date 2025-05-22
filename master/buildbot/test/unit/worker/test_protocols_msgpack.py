@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import stat
 from pathlib import PurePath
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from parameterized import parameterized
@@ -29,27 +33,32 @@ from buildbot.test.util import protocols as util_protocols
 from buildbot.worker.protocols import base
 from buildbot.worker.protocols import msgpack
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestListener(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
 
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         listener = msgpack.Listener(self.master)
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
     @defer.inlineCallbacks
-    def test_update_registration_simple(self):
+    def test_update_registration_simple(self) -> InlineCallbacksType[None]:
         listener = msgpack.Listener(self.master)
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.msgmanager._registrations, [('tcp:1234', 'example', 'pass')])
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg))
 
     @defer.inlineCallbacks
-    def test_update_registration_pass_changed(self):
+    def test_update_registration_pass_changed(self) -> InlineCallbacksType[None]:
         listener = msgpack.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
@@ -57,7 +66,7 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.master.msgmanager._unregistrations, [('tcp:1234', 'example')])
 
     @defer.inlineCallbacks
-    def test_update_registration_port_changed(self):
+    def test_update_registration_port_changed(self) -> InlineCallbacksType[None]:
         listener = msgpack.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
@@ -65,9 +74,9 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.master.msgmanager._unregistrations, [('tcp:1234', 'example')])
 
     @defer.inlineCallbacks
-    def test_create_connection(self):
+    def test_create_connection(self) -> InlineCallbacksType[None]:
         listener = msgpack.Listener(self.master)
-        listener.before_connection_setup = mock.Mock()
+        listener.before_connection_setup = mock.Mock()  # type: ignore[method-assign]
         worker = mock.Mock()
         worker.workername = 'test'
         protocol = mock.Mock()
@@ -84,7 +93,7 @@ class TestConnectionApi(
     util_protocols.ConnectionInterfaceTest, TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.conn = msgpack.Connection(self.master, mock.Mock(), mock.Mock())
@@ -92,7 +101,7 @@ class TestConnectionApi(
 
 class TestConnection(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.protocol = mock.Mock()
@@ -100,13 +109,13 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.worker.workername = 'test_worker'
         self.conn = msgpack.Connection(self.master, self.worker, self.protocol)
 
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         self.assertEqual(self.conn.protocol, self.protocol)
         self.assertEqual(self.conn.master, self.master)
         self.assertEqual(self.conn.worker, self.worker)
 
     @defer.inlineCallbacks
-    def test_attached(self):
+    def test_attached(self) -> InlineCallbacksType[None]:
         self.conn.attached(self.protocol)
         self.worker.attached.assert_called_with(self.conn)
 
@@ -117,7 +126,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         yield self.conn.waitShutdown()
 
     @defer.inlineCallbacks
-    def test_detached(self):
+    def test_detached(self) -> InlineCallbacksType[None]:
         self.conn.attached(self.protocol)
         self.conn.detached(self.protocol)
 
@@ -125,18 +134,18 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.assertEqual(self.conn.protocol, None)
         yield self.conn.waitShutdown()
 
-    def test_lose_connection(self):
+    def test_lose_connection(self) -> None:
         self.conn.loseConnection()
 
         self.assertEqual(self.conn.keepalive_timer, None)
         self.protocol.transport.abortConnection.assert_called()
 
-    def test_do_keepalive(self):
+    def test_do_keepalive(self) -> None:
         self.conn._do_keepalive()
         self.protocol.get_message_result.assert_called_once_with({'op': 'keepalive'})
 
     @defer.inlineCallbacks
-    def test_start_stop_keepalive_timer(self):
+    def test_start_stop_keepalive_timer(self) -> InlineCallbacksType[None]:
         self.conn.startKeepaliveTimer()
 
         self.protocol.get_message_result.assert_not_called()
@@ -166,28 +175,32 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         yield self.conn.waitShutdown()
 
     @defer.inlineCallbacks
-    def test_remote_keepalive(self):
+    def test_remote_keepalive(self) -> InlineCallbacksType[None]:
         yield self.conn.remoteKeepalive()
         self.protocol.get_message_result.assert_called_once_with({'op': 'keepalive'})
 
     @defer.inlineCallbacks
-    def test_remote_print(self):
+    def test_remote_print(self) -> InlineCallbacksType[None]:
         yield self.conn.remotePrint(message='test')
         self.protocol.get_message_result.assert_called_once_with({'op': 'print', 'message': 'test'})
 
     @defer.inlineCallbacks
-    def test_remote_get_worker_info(self):
+    def test_remote_get_worker_info(self) -> InlineCallbacksType[None]:
         self.protocol.get_message_result.return_value = defer.succeed({'system': 'posix'})
         result = yield self.conn.remoteGetWorkerInfo()
 
         self.protocol.get_message_result.assert_called_once_with({'op': 'get_worker_info'})
         self.assertEqual(result, {'system': 'posix'})
 
-    def set_up_set_builder_list(self, builders, delete_leftover_dirs=True):
+    def set_up_set_builder_list(
+        self,
+        builders: list[tuple[str, str]],
+        delete_leftover_dirs: bool = True,
+    ) -> Deferred[list[str]]:
         self.protocol.command_id_to_command_map = {}
 
-        def get_message_result(*args):
-            d = defer.Deferred()
+        def get_message_result(*args: Any) -> Deferred[Any]:
+            d: Deferred[Any] = defer.Deferred()
             self.d_get_message_result = d
             return d
 
@@ -199,7 +212,12 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.conn.remoteSetBuilderList(builders)
         return d
 
-    def check_message_send_response(self, command_name, args, update_msg):
+    def check_message_send_response(
+        self,
+        command_name: str,
+        args: dict[str, list[str] | str],
+        update_msg: list[tuple[str, Any]],
+    ) -> None:
         command_id = remotecommand.RemoteCommand.get_last_generated_command_id()
         self.protocol.get_message_result.assert_called_once_with({
             'op': 'start_command',
@@ -214,7 +232,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         remote_command.remote_update_msgpack(update_msg)
         remote_command.remote_complete(None)
 
-    def check_message_set_worker_settings(self):
+    def check_message_set_worker_settings(self) -> None:
         newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
         self.protocol.get_message_result.assert_called_once_with({
             'op': 'set_worker_settings',
@@ -229,7 +247,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.d_get_message_result.callback(None)
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_rmdir(self):
+    def test_remote_set_builder_list_no_rmdir(self) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -258,7 +276,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_do_rmdir(self):
+    def test_remote_set_builder_list_do_rmdir(self) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -300,7 +318,9 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_rmdir_leave_leftover_dirs(self):
+    def test_remote_set_builder_list_no_rmdir_leave_leftover_dirs(
+        self,
+    ) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list(
             [('builder1', 'test_dir1'), ('builder2', 'test_dir2')], delete_leftover_dirs=False
         )
@@ -322,7 +342,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_mkdir_from_files(self):
+    def test_remote_set_builder_list_no_mkdir_from_files(self) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -341,7 +361,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_no_mkdir(self):
+    def test_remote_set_builder_list_no_mkdir(self) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -356,7 +376,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_key_is_missing(self):
+    def test_remote_set_builder_list_key_is_missing(self) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -370,7 +390,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_remote_set_builder_list_key_rc_not_zero(self):
+    def test_remote_set_builder_list_key_rc_not_zero(self) -> InlineCallbacksType[None]:
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
@@ -389,13 +409,18 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         (None, None, None),
     ])
     @defer.inlineCallbacks
-    def test_remote_start_command_args_update(self, arg_name, arg_value, expected_value):
+    def test_remote_start_command_args_update(
+        self,
+        arg_name: str | None,
+        arg_value: int | None,
+        expected_value: bool | None,
+    ) -> InlineCallbacksType[None]:
         self.protocol.get_message_result.return_value = defer.succeed(None)
 
         rc_instance = base.RemoteCommandImpl()
         result_command_id_to_command_map = {1: rc_instance}
         self.protocol.command_id_to_command_map = {}
-        args = {'args': 'args'}
+        args: dict[str, Any] = {'args': 'args'}
 
         if arg_name is not None:
             args[arg_name] = arg_value
@@ -415,14 +440,14 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         })
 
     @defer.inlineCallbacks
-    def test_remote_shutdown(self):
+    def test_remote_shutdown(self) -> InlineCallbacksType[None]:
         self.protocol.get_message_result.return_value = defer.succeed(None)
         yield self.conn.remoteShutdown()
 
         self.protocol.get_message_result.assert_called_once_with({'op': 'shutdown'})
 
     @defer.inlineCallbacks
-    def test_remote_interrupt_command(self):
+    def test_remote_interrupt_command(self) -> InlineCallbacksType[None]:
         self.protocol.get_message_result.return_value = defer.succeed(None)
         yield self.conn.remoteInterruptCommand('builder', 1, 'test')
 
@@ -433,12 +458,12 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             'why': 'test',
         })
 
-    def test_perspective_keepalive(self):
+    def test_perspective_keepalive(self) -> None:
         self.conn.perspective_keepalive()
-        self.conn.worker.messageReceivedFromWorker.assert_called_once_with()
+        self.conn.worker.messageReceivedFromWorker.assert_called_once_with()  # type: ignore[attr-defined]
 
-    def test_perspective_shutdown(self):
+    def test_perspective_shutdown(self) -> None:
         self.conn.perspective_shutdown()
 
-        self.conn.worker.shutdownRequested.assert_called_once_with()
-        self.conn.worker.messageReceivedFromWorker.assert_called_once_with()
+        self.conn.worker.shutdownRequested.assert_called_once_with()  # type: ignore[attr-defined]
+        self.conn.worker.messageReceivedFromWorker.assert_called_once_with()  # type: ignore[attr-defined]
