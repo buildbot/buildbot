@@ -14,32 +14,41 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.worker.protocols import base
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
+    from buildbot.test.fake.worker import FakeWorker
+    from buildbot.worker.base import AbstractWorker
+
 
 class FakeTrivialConnection(base.Connection):
     info: dict[str, Any] = {}
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Fake")
 
-    def loseConnection(self):
+    def loseConnection(self) -> None:
         self.notifyDisconnected()
 
-    def remoteSetBuilderList(self, builders):
-        return defer.succeed(None)
+    def remoteSetBuilderList(self, builders: list[tuple[str, str]]) -> Deferred[list[str]]:
+        return defer.succeed(None)  # type: ignore[arg-type]
 
 
 class FakeConnection(base.Connection):
-    def __init__(self, worker):
+    def __init__(self, worker: AbstractWorker | FakeWorker) -> None:
+        assert isinstance(worker.workername, str), type(worker.workername)
         super().__init__(worker.workername)
         self._connected = True
-        self.remoteCalls = []
-        self.builders = {}  # { name : isBusy }
+        self.remoteCalls: list[tuple[Any, ...]] = []
+        # TODO: looks fishy, need to check usage
+        self.builders: dict[tuple[str, str], bool] = {}  # { name : isBusy }
 
         # users of the fake can add to this as desired
         self.info = {
@@ -49,23 +58,30 @@ class FakeConnection(base.Connection):
             'system': 'nt',
         }
 
-    def loseConnection(self):
+    def loseConnection(self) -> None:
         self.notifyDisconnected()
 
-    def remotePrint(self, message):
+    def remotePrint(self, message: str) -> Deferred[None]:
         self.remoteCalls.append(('remotePrint', message))
         return defer.succeed(None)
 
-    def remoteGetWorkerInfo(self):
+    def remoteGetWorkerInfo(self) -> Deferred[Any]:
         self.remoteCalls.append(('remoteGetWorkerInfo',))
         return defer.succeed(self.info)
 
-    def remoteSetBuilderList(self, builders):
+    def remoteSetBuilderList(self, builders: list[tuple[str, str]]) -> Deferred[list[str]]:
         self.remoteCalls.append(('remoteSetBuilderList', builders[:]))
         self.builders = dict((b, False) for b in builders)
-        return defer.succeed(None)
+        return defer.succeed(None)  # type: ignore[arg-type]
 
-    def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
+    def remoteStartCommand(
+        self,
+        remoteCommand: base.RemoteCommandImpl,
+        builderName: str,
+        commandId: str,
+        commandName: str,
+        args: dict[str, Any],
+    ) -> Deferred:
         self.remoteCalls.append((
             'remoteStartCommand',
             remoteCommand,
@@ -76,19 +92,19 @@ class FakeConnection(base.Connection):
         ))
         return defer.succeed(None)
 
-    def remoteShutdown(self):
+    def remoteShutdown(self) -> Deferred[None]:
         self.remoteCalls.append(('remoteShutdown',))
         return defer.succeed(None)
 
-    def remoteStartBuild(self, builderName):
+    def remoteStartBuild(self, builderName: str) -> Deferred[None]:
         self.remoteCalls.append(('remoteStartBuild', builderName))
         return defer.succeed(None)
 
-    def remoteInterruptCommand(self, builderName, commandId, why):
+    def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred:
         self.remoteCalls.append(('remoteInterruptCommand', builderName, commandId, why))
         return defer.succeed(None)
 
-    def get_peer(self):
+    def get_peer(self) -> str:
         if self._connected:
             return "fake_peer"
-        return None
+        return None  # type: ignore[return-value]
