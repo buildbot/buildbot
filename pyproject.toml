@@ -721,7 +721,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.worker.test_manager",
       "buildbot.test.unit.worker.test_marathon",
       "buildbot.test.unit.worker.test_openstack",
-      "buildbot.test.unit.worker.test_protocols_manager_msgmanager",
       "buildbot.test.unit.worker.test_upcloud",
       "buildbot.test.unit.www.test_avatar",
       "buildbot.test.unit.www.test_config",

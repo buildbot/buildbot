@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 import msgpack
@@ -28,20 +32,25 @@ from buildbot.worker.protocols.manager.msgpack import RemoteWorkerError
 from buildbot.worker.protocols.manager.msgpack import decode_http_authorization_header
 from buildbot.worker.protocols.manager.msgpack import encode_http_authorization_header
 
+if TYPE_CHECKING:
+    from unittest.mock import Mock
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestHttpAuthorization(unittest.TestCase):
-    def test_encode(self):
+    def test_encode(self) -> None:
         result = encode_http_authorization_header(b'name', b'pass')
         self.assertEqual(result, 'Basic bmFtZTpwYXNz')
 
         result = encode_http_authorization_header(b'name2', b'pass2')
         self.assertEqual(result, 'Basic bmFtZTI6cGFzczI=')
 
-    def test_encode_username_contains_colon(self):
+    def test_encode_username_contains_colon(self) -> None:
         with self.assertRaises(ValueError):
             encode_http_authorization_header(b'na:me', b'pass')
 
-    def test_decode(self):
+    def test_decode(self) -> None:
         result = decode_http_authorization_header(
             encode_http_authorization_header(b'name', b'pass')
         )
@@ -53,18 +62,18 @@ class TestHttpAuthorization(unittest.TestCase):
         )
         self.assertEqual(result, ('name', 'pa:ss'))
 
-    def test_contains_no__basic(self):
+    def test_contains_no__basic(self) -> None:
         with self.assertRaises(ValueError):
             decode_http_authorization_header('Test bmFtZTpwYXNzOjI=')
 
         with self.assertRaises(ValueError):
             decode_http_authorization_header('TestTest bmFtZTpwYXNzOjI=')
 
-    def test_contains_forbidden_character(self):
+    def test_contains_forbidden_character(self) -> None:
         with self.assertRaises(ValueError):
             decode_http_authorization_header('Basic test%test')
 
-    def test_credentials_do_not_contain_colon(self):
+    def test_credentials_do_not_contain_colon(self) -> None:
         value = 'Basic ' + base64.b64encode(b'TestTestTest').decode()
         with self.assertRaises(ValueError):
             decode_http_authorization_header(value)
@@ -75,13 +84,18 @@ class TestException(Exception):
 
 
 class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.protocol = BuildbotWebSocketServerProtocol()
         self.protocol.sendMessage = mock.Mock()
         self.seq_number = 1
 
     @defer.inlineCallbacks
-    def send_msg_check_response(self, protocol, msg, expected):
+    def send_msg_check_response(
+        self,
+        protocol: BuildbotWebSocketServerProtocol,
+        msg: dict[str, Any],
+        expected: dict[str, Any],
+    ) -> InlineCallbacksType[None]:
         msg = msg.copy()
         msg['seq_number'] = self.seq_number
 
@@ -95,7 +109,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         result = msgpack.unpackb(args_tuple[0], raw=False)
         self.assertEqual(result, expected)
 
-    def send_msg_get_result(self, msg):
+    def send_msg_get_result(self, msg: dict[str, Any]) -> Any:
         msg = msg.copy()
         msg['seq_number'] = self.seq_number
         self.seq_number += 1
@@ -106,7 +120,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         return msgpack.unpackb(args_tuple[0], raw=False)['result']
 
     @defer.inlineCallbacks
-    def connect_authenticated_worker(self):
+    def connect_authenticated_worker(self) -> InlineCallbacksType[None]:
         # worker has to be authenticated before opening the connection
         pfactory = mock.Mock()
         pfactory.connection = mock.Mock()
@@ -120,7 +134,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.protocol.onConnect(request)
         yield self.protocol.onOpen()
 
-    def setup_mock_users(self, users):
+    def setup_mock_users(self, users: dict[str, tuple[str, Mock]]) -> None:
         self.protocol.factory = mock.Mock()
         self.protocol.factory.buildbot_dispatcher = mock.Mock()
         self.protocol.factory.buildbot_dispatcher.users = users
@@ -145,7 +159,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_write_op', {'seq_number': 1}),
         ('update_upload_directory_write_seq_number', {'op': 'update_upload_directory_write'}),
     ])
-    def test_msg_missing_arg(self, name, msg):
+    def test_msg_missing_arg(self, name: str, msg: dict[str, Any]) -> None:
         with mock.patch('twisted.python.log.msg') as mock_log:
             self.protocol.onMessage(msgpack.packb(msg), True)
             mock_log.assert_any_call(f'Invalid message from worker: {msg}')
@@ -168,9 +182,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('upload_directory_write', {'op': 'update_upload_directory_write', 'args': 'args'}),
     ])
     @defer.inlineCallbacks
-    def test_missing_command_id(self, command, msg):
+    def test_missing_command_id(
+        self, command: str, msg: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        expected = {
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'message did not contain obligatory "command_id" key\'',
             'is_exception': True,
@@ -182,10 +198,19 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('complete', {'op': 'complete', 'args': 'args', 'command_id': 2}, {1: 'remoteCommand'}),
     ])
     @defer.inlineCallbacks
-    def test_unknown_command_id(self, command, msg, command_id_to_command_map):
+    def test_unknown_command_id(
+        self,
+        command: str,
+        msg: dict[str, Any],
+        command_id_to_command_map: dict[int, str],
+    ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        self.protocol.command_id_to_command_map = command_id_to_command_map
-        expected = {'op': 'response', 'result': '\'unknown "command_id"\'', 'is_exception': True}
+        self.protocol.command_id_to_command_map = command_id_to_command_map  # type: ignore[assignment]
+        expected: dict[str, Any] = {
+            'op': 'response',
+            'result': '\'unknown "command_id"\'',
+            'is_exception': True,
+        }
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
@@ -213,10 +238,16 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ),
     ])
     @defer.inlineCallbacks
-    def test_unknown_command_id_writers(self, command, msg):
+    def test_unknown_command_id_writers(
+        self, command: str, msg: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        self.protocol.command_id_to_writer_map = {1: 'writer'}
-        expected = {'op': 'response', 'result': '\'unknown "command_id"\'', 'is_exception': True}
+        self.protocol.command_id_to_writer_map = {1: 'writer'}  # type: ignore[dict-item]
+        expected: dict[str, Any] = {
+            'op': 'response',
+            'result': '\'unknown "command_id"\'',
+            'is_exception': True,
+        }
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
@@ -226,9 +257,9 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_write', {'op': 'update_upload_directory_write', 'command_id': 1}),
     ])
     @defer.inlineCallbacks
-    def test_missing_args(self, command, msg):
+    def test_missing_args(self, command: str, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        expected = {
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'message did not contain obligatory "args" key\'',
             'is_exception': True,
@@ -240,14 +271,20 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_read_file_close', {'op': 'update_read_file_close', 'command_id': 2}),
     ])
     @defer.inlineCallbacks
-    def test_unknown_command_id_readers(self, command, msg):
+    def test_unknown_command_id_readers(
+        self, command: str, msg: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        self.protocol.command_id_to_reader_map = {1: 'reader'}
-        expected = {'op': 'response', 'result': '\'unknown "command_id"\'', 'is_exception': True}
+        self.protocol.command_id_to_reader_map = {1: 'reader'}  # type: ignore[dict-item]
+        expected: dict[str, Any] = {
+            'op': 'response',
+            'result': '\'unknown "command_id"\'',
+            'is_exception': True,
+        }
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @defer.inlineCallbacks
-    def test_missing_authorization_header(self):
+    def test_missing_authorization_header(self) -> InlineCallbacksType[None]:
         request = mock.Mock()
         request.headers = {"authorization": ''}
         request.peer = ''
@@ -256,7 +293,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
             yield self.protocol.onConnect(request)
 
     @defer.inlineCallbacks
-    def test_auth_password_does_not_match(self):
+    def test_auth_password_does_not_match(self) -> InlineCallbacksType[None]:
         pfactory = mock.Mock()
         pfactory.connection = mock.Mock()
 
@@ -272,7 +309,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
             yield self.protocol.onConnect(request)
 
     @defer.inlineCallbacks
-    def test_auth_username_unknown(self):
+    def test_auth_username_unknown(self) -> InlineCallbacksType[None]:
         pfactory = mock.Mock()
         pfactory.connection = mock.Mock()
 
@@ -289,45 +326,45 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
             yield self.protocol.onConnect(request)
 
     @defer.inlineCallbacks
-    def test_update_success(self):
+    def test_update_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_command_map = {command_id: command}
+        self.protocol.command_id_to_command_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update', 'args': 'args', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'update', 'args': 'args', 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_update_msgpack.assert_called_once_with(msg['args'])
 
     @defer.inlineCallbacks
-    def test_complete_success(self):
+    def test_complete_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_command_map = {command_id: command}
+        self.protocol.command_id_to_command_map = {command_id: command}  # type: ignore[dict-item]
         self.protocol.command_id_to_reader_map = {}
         self.protocol.command_id_to_writer_map = {}
 
-        msg = {'op': 'complete', 'args': 'args', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'complete', 'args': 'args', 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_complete.assert_called_once()
 
     @defer.inlineCallbacks
-    def test_complete_check_dict_removal(self):
+    def test_complete_check_dict_removal(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_command_map = {command_id: command, 2: 'test_command'}
-        self.protocol.command_id_to_reader_map = {command_id: 'test_reader', 2: 'test_reader2'}
-        self.protocol.command_id_to_writer_map = {command_id: 'test_writer', 2: 'test_writer2'}
+        self.protocol.command_id_to_command_map = {command_id: command, 2: 'test_command'}  # type: ignore[dict-item]
+        self.protocol.command_id_to_reader_map = {command_id: 'test_reader', 2: 'test_reader2'}  # type: ignore[dict-item]
+        self.protocol.command_id_to_writer_map = {command_id: 'test_writer', 2: 'test_writer2'}  # type: ignore[dict-item]
 
-        msg = {'op': 'complete', 'args': 'args', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'complete', 'args': 'args', 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_complete.assert_called_once()
         self.assertEqual(self.protocol.command_id_to_command_map, {2: 'test_command'})
@@ -335,23 +372,31 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.assertEqual(self.protocol.command_id_to_writer_map, {2: 'test_writer2'})
 
     @defer.inlineCallbacks
-    def test_update_upload_file_write_success(self):
+    def test_update_upload_file_write_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}
+        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update_upload_file_write', 'args': 'args', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {
+            'op': 'update_upload_file_write',
+            'args': 'args',
+            'command_id': command_id,
+        }
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_write.assert_called_once()
 
     @defer.inlineCallbacks
-    def test_update_upload_file_utime_missing_access_time(self):
+    def test_update_upload_file_utime_missing_access_time(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        msg = {'op': 'update_upload_file_utime', 'modified_time': 2, 'command_id': 2}
-        expected = {
+        msg: dict[str, Any] = {
+            'op': 'update_upload_file_utime',
+            'modified_time': 2,
+            'command_id': 2,
+        }
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'message did not contain obligatory "access_time" key\'',
             'is_exception': True,
@@ -359,10 +404,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @defer.inlineCallbacks
-    def test_update_upload_file_utime_missing_modified_time(self):
+    def test_update_upload_file_utime_missing_modified_time(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        msg = {'op': 'update_upload_file_utime', 'access_time': 1, 'command_id': 2}
-        expected = {
+        msg: dict[str, Any] = {'op': 'update_upload_file_utime', 'access_time': 1, 'command_id': 2}
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'message did not contain obligatory "modified_time" key\'',
             'is_exception': True,
@@ -370,41 +415,41 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @defer.inlineCallbacks
-    def test_update_upload_file_utime_success(self):
+    def test_update_upload_file_utime_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}
+        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {
+        msg: dict[str, Any] = {
             'op': 'update_upload_file_utime',
             'access_time': 1,
             'modified_time': 2,
             'command_id': command_id,
         }
-        expected = {'op': 'response', 'result': None}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_utime.assert_called_once_with('access_time', 'modified_time')
 
     @defer.inlineCallbacks
-    def test_update_upload_file_close_success(self):
+    def test_update_upload_file_close_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}
+        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update_upload_file_close', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'update_upload_file_close', 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_close.assert_called_once()
 
     @defer.inlineCallbacks
-    def test_update_read_file_missing_length(self):
+    def test_update_read_file_missing_length(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        msg = {'op': 'update_read_file', 'command_id': 1}
-        expected = {
+        msg: dict[str, Any] = {'op': 'update_read_file', 'command_id': 1}
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'message did not contain obligatory "length" key\'',
             'is_exception': True,
@@ -412,68 +457,72 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @defer.inlineCallbacks
-    def test_update_read_file_success(self):
+    def test_update_read_file_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_reader_map = {command_id: command}
+        self.protocol.command_id_to_reader_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update_read_file', 'length': 1, 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'update_read_file', 'length': 1, 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_read.assert_called_once_with(msg['length'])
 
     @defer.inlineCallbacks
-    def test_update_read_file_close_success(self):
+    def test_update_read_file_close_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_reader_map = {command_id: command}
+        self.protocol.command_id_to_reader_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update_read_file_close', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'update_read_file_close', 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_close.assert_called_once()
 
     @defer.inlineCallbacks
-    def test_update_upload_directory_unpack_success(self):
+    def test_update_upload_directory_unpack_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}
+        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update_upload_directory_unpack', 'command_id': command_id}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {'op': 'update_upload_directory_unpack', 'command_id': command_id}
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_unpack.assert_called_once()
 
     @defer.inlineCallbacks
-    def test_update_upload_directory_write_success(self):
+    def test_update_upload_directory_write_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         command_id = 1
 
         command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}
+        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
 
-        msg = {'op': 'update_upload_directory_write', 'command_id': command_id, 'args': 'args'}
-        expected = {'op': 'response', 'result': None}
+        msg: dict[str, Any] = {
+            'op': 'update_upload_directory_write',
+            'command_id': command_id,
+            'args': 'args',
+        }
+        expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_write.assert_called_once_with(msg['args'])
 
-    def test_onMessage_not_isBinary(self):
+    def test_onMessage_not_isBinary(self) -> None:
         # if isBinary is False, sendMessage should not be called
-        msg = {}
+        msg: dict[str, Any] = {}
         self.protocol.onMessage(msgpack.packb(msg), False)
         self.seq_number += 1
         self.protocol.sendMessage.assert_not_called()
 
     @defer.inlineCallbacks
-    def test_onMessage_worker_not_authenticated(self):
-        msg = {'op': 'update', 'command_id': 1, 'args': 'test'}
-        expected = {
+    def test_onMessage_worker_not_authenticated(self) -> InlineCallbacksType[None]:
+        msg: dict[str, Any] = {'op': 'update', 'command_id': 1, 'args': 'test'}
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': 'Worker not authenticated.',
             'is_exception': True,
@@ -481,10 +530,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @defer.inlineCallbacks
-    def test_onMessage_command_does_not_exist(self):
+    def test_onMessage_command_does_not_exist(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        msg = {'op': 'test'}
-        expected = {
+        msg: dict[str, Any] = {'op': 'test'}
+        expected: dict[str, Any] = {
             'op': 'response',
             'result': 'Command test does not exist.',
             'is_exception': True,
@@ -492,7 +541,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @defer.inlineCallbacks
-    def test_get_message_result_success(self):
+    def test_get_message_result_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         msg = {'op': 'getWorkerInfo'}
         d = self.protocol.get_message_result(msg)
@@ -509,7 +558,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.assertEqual(res, 'test_result')
 
     @defer.inlineCallbacks
-    def test_get_message_result_failed(self):
+    def test_get_message_result_failed(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         msg = {'op': 'getWorkerInfo'}
         d = self.protocol.get_message_result(msg)
@@ -530,13 +579,13 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
             yield d
 
     @defer.inlineCallbacks
-    def test_get_message_result_no_worker_connection(self):
+    def test_get_message_result_no_worker_connection(self) -> InlineCallbacksType[None]:
         # master can not send any messages if connection is not established
         with self.assertRaises(ConnectioLostError):
             yield self.protocol.get_message_result({'op': 'getWorkerInfo'})
 
     @defer.inlineCallbacks
-    def test_onClose_connection_lost_error(self):
+    def test_onClose_connection_lost_error(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
         # master sends messages for worker and waits for their response
         msg = {'op': 'getWorkerInfo'}
@@ -558,6 +607,8 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         with self.assertRaises(ConnectioLostError):
             yield d2
 
+        assert self.protocol.connection is not None
+        assert isinstance(self.protocol.connection.detached, mock.Mock)
         self.protocol.connection.detached.assert_called()
         # contents of dict_def are deleted to stop waiting for the responses of all commands
         self.assertEqual(len(self.protocol.seq_num_to_waiters_map), 0)
