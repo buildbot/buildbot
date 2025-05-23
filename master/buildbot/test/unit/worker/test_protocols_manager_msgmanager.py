@@ -26,6 +26,9 @@ from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.worker.protocols.base import FileReaderImpl
+from buildbot.worker.protocols.base import FileWriterImpl
+from buildbot.worker.protocols.base import RemoteCommandImpl
 from buildbot.worker.protocols.manager.msgpack import BuildbotWebSocketServerProtocol
 from buildbot.worker.protocols.manager.msgpack import ConnectioLostError
 from buildbot.worker.protocols.manager.msgpack import RemoteWorkerError
@@ -194,18 +197,26 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         yield self.send_msg_check_response(self.protocol, msg, expected)
 
     @parameterized.expand([
-        ('update', {'op': 'update', 'args': 'args', 'command_id': 2}, {1: 'remoteCommand'}),
-        ('complete', {'op': 'complete', 'args': 'args', 'command_id': 2}, {1: 'remoteCommand'}),
+        (
+            'update',
+            {'op': 'update', 'args': 'args', 'command_id': 2},
+            {'1': mock.Mock(spec=RemoteCommandImpl)},
+        ),
+        (
+            'complete',
+            {'op': 'complete', 'args': 'args', 'command_id': 2},
+            {'1': mock.Mock(spec=RemoteCommandImpl)},
+        ),
     ])
     @defer.inlineCallbacks
     def test_unknown_command_id(
         self,
         command: str,
         msg: dict[str, Any],
-        command_id_to_command_map: dict[int, str],
+        command_id_to_command_map: dict[str, RemoteCommandImpl],
     ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        self.protocol.command_id_to_command_map = command_id_to_command_map  # type: ignore[assignment]
+        self.protocol.command_id_to_command_map = command_id_to_command_map
         expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'unknown "command_id"\'',
@@ -242,7 +253,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self, command: str, msg: dict[str, Any]
     ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        self.protocol.command_id_to_writer_map = {1: 'writer'}  # type: ignore[dict-item]
+        self.protocol.command_id_to_writer_map = {"1": mock.Mock(spec=RemoteCommandImpl)}
         expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'unknown "command_id"\'',
@@ -275,7 +286,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self, command: str, msg: dict[str, Any]
     ) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        self.protocol.command_id_to_reader_map = {1: 'reader'}  # type: ignore[dict-item]
+        self.protocol.command_id_to_reader_map = {"1": mock.Mock(spec=FileReaderImpl)}
         expected: dict[str, Any] = {
             'op': 'response',
             'result': '\'unknown "command_id"\'',
@@ -328,10 +339,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = ""
 
-        command = mock.Mock()
-        self.protocol.command_id_to_command_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=RemoteCommandImpl)
+        self.protocol.command_id_to_command_map = {command_id: command}
 
         msg: dict[str, Any] = {'op': 'update', 'args': 'args', 'command_id': command_id}
         expected: dict[str, Any] = {'op': 'response', 'result': None}
@@ -341,10 +352,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_complete_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_command_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=RemoteCommandImpl)
+        self.protocol.command_id_to_command_map = {command_id: command}
         self.protocol.command_id_to_reader_map = {}
         self.protocol.command_id_to_writer_map = {}
 
@@ -356,28 +367,37 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_complete_check_dict_removal(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
+        command = mock.Mock(spec=RemoteCommandImpl)
 
-        command = mock.Mock()
-        self.protocol.command_id_to_command_map = {command_id: command, 2: 'test_command'}  # type: ignore[dict-item]
-        self.protocol.command_id_to_reader_map = {command_id: 'test_reader', 2: 'test_reader2'}  # type: ignore[dict-item]
-        self.protocol.command_id_to_writer_map = {command_id: 'test_writer', 2: 'test_writer2'}  # type: ignore[dict-item]
+        mock_command = mock.Mock(spec=RemoteCommandImpl)
+        self.protocol.command_id_to_command_map = {command_id: command, "2": mock_command}
+        mock_reader = mock.Mock(spec=FileReaderImpl)
+        self.protocol.command_id_to_reader_map = {
+            command_id: mock.Mock(spec=FileReaderImpl),
+            "2": mock_reader,
+        }
+        mock_writer = mock.Mock(spec=FileWriterImpl)
+        self.protocol.command_id_to_writer_map = {
+            command_id: mock.Mock(spec=FileWriterImpl),
+            "2": mock_writer,
+        }
 
         msg: dict[str, Any] = {'op': 'complete', 'args': 'args', 'command_id': command_id}
         expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_complete.assert_called_once()
-        self.assertEqual(self.protocol.command_id_to_command_map, {2: 'test_command'})
-        self.assertEqual(self.protocol.command_id_to_reader_map, {2: 'test_reader2'})
-        self.assertEqual(self.protocol.command_id_to_writer_map, {2: 'test_writer2'})
+        self.assertEqual(self.protocol.command_id_to_command_map, {"2": mock_command})
+        self.assertEqual(self.protocol.command_id_to_reader_map, {"2": mock_reader})
+        self.assertEqual(self.protocol.command_id_to_writer_map, {"2": mock_writer})
 
     @defer.inlineCallbacks
     def test_update_upload_file_write_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileWriterImpl)
+        self.protocol.command_id_to_writer_map = {command_id: command}
 
         msg: dict[str, Any] = {
             'op': 'update_upload_file_write',
@@ -417,10 +437,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_upload_file_utime_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileWriterImpl)
+        self.protocol.command_id_to_writer_map = {command_id: command}
 
         msg: dict[str, Any] = {
             'op': 'update_upload_file_utime',
@@ -435,10 +455,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_upload_file_close_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileWriterImpl)
+        self.protocol.command_id_to_writer_map = {command_id: command}
 
         msg: dict[str, Any] = {'op': 'update_upload_file_close', 'command_id': command_id}
         expected: dict[str, Any] = {'op': 'response', 'result': None}
@@ -459,10 +479,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_read_file_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_reader_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileReaderImpl)
+        self.protocol.command_id_to_reader_map = {command_id: command}
 
         msg: dict[str, Any] = {'op': 'update_read_file', 'length': 1, 'command_id': command_id}
         expected: dict[str, Any] = {'op': 'response', 'result': None}
@@ -472,10 +492,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_read_file_close_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_reader_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileReaderImpl)
+        self.protocol.command_id_to_reader_map = {command_id: command}
 
         msg: dict[str, Any] = {'op': 'update_read_file_close', 'command_id': command_id}
         expected: dict[str, Any] = {'op': 'response', 'result': None}
@@ -485,10 +505,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_upload_directory_unpack_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileWriterImpl)
+        self.protocol.command_id_to_writer_map = {command_id: command}
 
         msg: dict[str, Any] = {'op': 'update_upload_directory_unpack', 'command_id': command_id}
         expected: dict[str, Any] = {'op': 'response', 'result': None}
@@ -498,10 +518,10 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def test_update_upload_directory_write_success(self) -> InlineCallbacksType[None]:
         yield self.connect_authenticated_worker()
-        command_id = 1
+        command_id = "1"
 
-        command = mock.Mock()
-        self.protocol.command_id_to_writer_map = {command_id: command}  # type: ignore[dict-item]
+        command = mock.Mock(spec=FileWriterImpl)
+        self.protocol.command_id_to_writer_map = {command_id: command}
 
         msg: dict[str, Any] = {
             'op': 'update_upload_directory_write',
