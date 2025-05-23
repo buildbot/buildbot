@@ -44,8 +44,8 @@ if TYPE_CHECKING:
 class Dispatcher(BaseDispatcher):
     credentialInterfaces = [credentials.IUsernamePassword, credentials.IUsernameHashedPassword]
 
-    def __init__(self, config_portstr: str | int, portstr: str) -> None:
-        super().__init__(portstr)
+    def __init__(self, config_port: str | int) -> None:
+        super().__init__(config_port=config_port)
         # there's lots of stuff to set up for a PB connection!
         self.portal = portal.Portal(self)
         self.portal.registerChecker(self)

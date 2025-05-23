@@ -54,7 +54,7 @@ class BaseManager(service.AsyncMultiService, Generic[_Dispatcher]):
     @defer.inlineCallbacks
     def register(
         self,
-        config_portstr: str | int,
+        config_port: str | int,
         username: str,
         password: str,
         pfactory: Callable[[object, str], Deferred[Connection]],
@@ -64,17 +64,12 @@ class BaseManager(service.AsyncMultiService, Generic[_Dispatcher]):
         was authenticated and a valid high level connection can be established on a PORTSTR.
         Returns a Registration object which can be used to unregister later.
         """
-        portstr = config_portstr
-
-        # do some basic normalization of portstrs
-        if isinstance(portstr, int) or ':' not in portstr:
-            portstr = f"tcp:{portstr}".format(portstr)
+        portstr = str(config_port)
 
         reg = Registration(self, portstr, username)
 
         if portstr not in self.dispatchers:
-            # FIXME: BaseDispatcher.__init__
-            disp = self.dispatchers[portstr] = self.dispatcher_class(config_portstr, portstr)  # type: ignore[call-arg,arg-type]
+            disp = self.dispatchers[portstr] = self.dispatcher_class(config_port)
             yield disp.setServiceParent(self)
         else:
             disp = self.dispatchers[portstr]
@@ -128,8 +123,12 @@ class BaseDispatcher(service.AsyncService):
 
     serverFactory: ServerFactory
 
-    def __init__(self, portstr: str) -> None:
-        self.portstr = portstr
+    def __init__(self, config_port: str | int) -> None:
+        # do some basic normalization of portstrs
+        if isinstance(config_port, int) or ':' not in config_port:
+            config_port = f"tcp:{config_port}"
+
+        self.portstr = config_port
         self.users: dict[str, tuple[str, Callable[[object, str], Deferred[Connection]]]] = {}
         self.port: IListeningPort | None = None
 

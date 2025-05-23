@@ -47,8 +47,8 @@ class FakeMaster:
 
 
 class TestDispatcher(BaseDispatcher):
-    def __init__(self, config_portstr: str, portstr: str) -> None:
-        super().__init__(portstr)
+    def __init__(self, config_port: str | int) -> None:
+        super().__init__(config_port=config_port)
         self.start_listening_count = 0
         self.stop_listening_count = 0
 

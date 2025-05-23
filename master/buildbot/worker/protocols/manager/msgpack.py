@@ -415,12 +415,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 class Dispatcher(BaseDispatcher):
     DUMMY_PORT = 1
 
-    def __init__(self, config_portstr: int, portstr: str) -> None:
-        super().__init__(portstr)
+    def __init__(self, config_port: str | int) -> None:
+        super().__init__(config_port=config_port)
         try:
-            port = int(config_portstr)
+            port = int(config_port)
         except ValueError as e:
-            raise ValueError(f'portstr unsupported: {config_portstr}') from e
+            raise ValueError(f'portstr unsupported: {config_port}') from e
 
         # Autobahn does not support zero port meaning to pick whatever port number is free, so
         # we work around this by setting the port to nonzero value and resetting the value once
