@@ -35,6 +35,8 @@ from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 
 if TYPE_CHECKING:
+    from twisted.cred.credentials import IUsernamePassword
+
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -42,7 +44,7 @@ if TYPE_CHECKING:
 class Dispatcher(BaseDispatcher):
     credentialInterfaces = [credentials.IUsernamePassword, credentials.IUsernameHashedPassword]
 
-    def __init__(self, config_portstr, portstr):
+    def __init__(self, config_portstr: str | int, portstr: str) -> None:
         super().__init__(portstr)
         # there's lots of stuff to set up for a PB connection!
         self.portal = portal.Portal(self)
@@ -78,7 +80,7 @@ class Dispatcher(BaseDispatcher):
     # ICredentialsChecker
 
     @defer.inlineCallbacks
-    def requestAvatarId(self, creds):
+    def requestAvatarId(self, creds: IUsernamePassword) -> InlineCallbacksType[bytes | tuple[()]]:
         p = Properties()
         p.master = self.master
         username = bytes2unicode(creds.username)
@@ -100,8 +102,8 @@ class Dispatcher(BaseDispatcher):
             eventually(self.master.initLock.release)
 
 
-class PBManager(BaseManager):
-    def __init__(self):
+class PBManager(BaseManager[Dispatcher]):
+    def __init__(self) -> None:
         super().__init__('pbmanager')
 
     dispatcher_class = Dispatcher
