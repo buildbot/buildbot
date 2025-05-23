@@ -181,6 +181,9 @@ class RemoteCommandImpl:
     def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
         raise NotImplementedError
 
+    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> None:
+        raise NotImplementedError
+
     def remote_complete(self, failure: Any | None = None) -> None:
         raise NotImplementedError
 
