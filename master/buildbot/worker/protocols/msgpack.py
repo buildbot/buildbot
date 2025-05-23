@@ -337,7 +337,7 @@ class Connection(base.Connection):
         self,
         remoteCommand: RemoteCommandImpl,
         builderName: str,
-        commandId: str | int,
+        commandId: str,
         commandName: str,
         args: dict[str, Any],
     ) -> InlineCallbacksType[None]:
@@ -431,12 +431,12 @@ class Connection(base.Connection):
                 args["want_stderr"] = False
 
         assert self.protocol is not None
-        self.protocol.command_id_to_command_map[commandId] = remoteCommand  # type: ignore[index]
+        self.protocol.command_id_to_command_map[commandId] = remoteCommand
         if 'reader' in args:
-            self.protocol.command_id_to_reader_map[commandId] = args['reader']  # type: ignore[index]
+            self.protocol.command_id_to_reader_map[commandId] = args['reader']
             del args['reader']
         if 'writer' in args:
-            self.protocol.command_id_to_writer_map[commandId] = args['writer']  # type: ignore[index]
+            self.protocol.command_id_to_writer_map[commandId] = args['writer']
             del args['writer']
         yield self.protocol.get_message_result({
             'op': 'start_command',
