@@ -32,7 +32,6 @@ from buildbot.process import remotecommand
 from buildbot.util import deferwaiter
 from buildbot.util import path_expand_user
 from buildbot.worker.protocols import base
-from buildbot.worker.protocols.manager.msgpack import BuildbotWebSocketServerProtocol
 
 if TYPE_CHECKING:
     from pathlib import PurePath
@@ -432,12 +431,12 @@ class Connection(base.Connection):
                 args["want_stderr"] = False
 
         assert self.protocol is not None
-        self.protocol.command_id_to_command_map[commandId] = remoteCommand
+        self.protocol.command_id_to_command_map[commandId] = remoteCommand  # type: ignore[index]
         if 'reader' in args:
-            self.protocol.command_id_to_reader_map[commandId] = args['reader']
+            self.protocol.command_id_to_reader_map[commandId] = args['reader']  # type: ignore[index]
             del args['reader']
         if 'writer' in args:
-            self.protocol.command_id_to_writer_map[commandId] = args['writer']
+            self.protocol.command_id_to_writer_map[commandId] = args['writer']  # type: ignore[index]
             del args['writer']
         yield self.protocol.get_message_result({
             'op': 'start_command',
