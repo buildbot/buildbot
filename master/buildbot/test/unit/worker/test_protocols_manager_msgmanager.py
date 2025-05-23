@@ -430,7 +430,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         }
         expected: dict[str, Any] = {'op': 'response', 'result': None}
         yield self.send_msg_check_response(self.protocol, msg, expected)
-        command.remote_utime.assert_called_once_with('access_time', 'modified_time')
+        command.remote_utime.assert_called_once_with((1, 2))
 
     @defer.inlineCallbacks
     def test_update_upload_file_close_success(self) -> InlineCallbacksType[None]:

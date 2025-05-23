@@ -198,7 +198,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_utime('access_time', 'modified_time')  # type: ignore[call-arg,arg-type]
+            yield file_writer.remote_utime((msg['access_time'], msg['modified_time']))
         except Exception as e:
             is_exception = True
             result = str(e)
