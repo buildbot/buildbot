@@ -42,7 +42,6 @@ if TYPE_CHECKING:
     from buildbot.worker.protocols.base import FileReaderImpl
     from buildbot.worker.protocols.base import FileWriterImpl
     from buildbot.worker.protocols.base import RemoteCommandImpl
-    from buildbot.worker.protocols.msgpack import BasicRemoteCommand
 
 
 class ConnectioLostError(Exception):
@@ -92,8 +91,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         if self.debug:
             log.msg("WebSocket connection open.")
         self.seq_number = 0
-        # FIXME: RemoteCommandImpl should inherit from RemoteCommandImpl
-        self.command_id_to_command_map: dict[str, RemoteCommandImpl | BasicRemoteCommand] = {}
+        self.command_id_to_command_map: dict[str, RemoteCommandImpl] = {}
         self.command_id_to_reader_map: dict[str, FileReaderImpl] = {}
         self.command_id_to_writer_map: dict[str, FileWriterImpl] = {}
         yield self.initialize()
@@ -129,8 +127,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         finally:
             eventually(dispatcher.master.initLock.release)
 
-    @defer.inlineCallbacks
-    def call_update(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
+    def call_update(self, msg: dict[str, Any]) -> Deferred[None]:
         result = None
         is_exception = False
         try:
@@ -140,15 +137,15 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_update_msgpack(msg['args'])  # type: ignore[union-attr]
+            command.remote_update_msgpack(msg['args'])
         except Exception as e:
             is_exception = True
             result = str(e)
 
         self.send_response_msg(msg, result, is_exception)
+        return defer.succeed(None)
 
-    @defer.inlineCallbacks
-    def call_complete(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
+    def call_complete(self, msg: dict[str, Any]) -> Deferred[None]:
         result = None
         is_exception = False
         try:
@@ -157,7 +154,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if msg['command_id'] not in self.command_id_to_command_map:
                 raise KeyError('unknown "command_id"')
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_complete(msg['args'])
+            command.remote_complete(msg['args'])
 
             if msg['command_id'] in self.command_id_to_command_map:
                 del self.command_id_to_command_map[msg['command_id']]
@@ -169,6 +166,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def call_update_upload_file_write(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:

@@ -32,6 +32,7 @@ from buildbot.process import remotecommand
 from buildbot.util import deferwaiter
 from buildbot.util import path_expand_user
 from buildbot.worker.protocols import base
+from buildbot.worker.protocols.base import RemoteCommandImpl
 
 if TYPE_CHECKING:
     from pathlib import PurePath
@@ -41,7 +42,6 @@ if TYPE_CHECKING:
     from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
     from buildbot.worker.base import Worker
-    from buildbot.worker.protocols.base import RemoteCommandImpl
     from buildbot.worker.protocols.manager.msgpack import BuildbotWebSocketServerProtocol
     from buildbot.worker.protocols.manager.msgpack import MsgManager
 
@@ -64,7 +64,7 @@ class Listener(base.UpdateRegistrationListener):
         log.msg(f"worker '{workerName}' attaching")
 
 
-class BasicRemoteCommand:
+class BasicRemoteCommand(RemoteCommandImpl):
     # only has basic functions needed for remoteSetBuilderList in class Connection
     # when waiting for update messages
     def __init__(self, worker_name: str, expected_keys: Iterable[str], error_msg: str) -> None:
@@ -84,7 +84,7 @@ class BasicRemoteCommand:
             if key not in self.update_results:
                 self.update_results[key] = value
 
-    def remote_complete(self, args: None) -> None:
+    def remote_complete(self, failure: Any | None = None) -> None:
         if 'rc' not in self.update_results:
             self.d.errback(
                 Exception(
