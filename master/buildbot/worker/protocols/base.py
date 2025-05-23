@@ -28,7 +28,6 @@ from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
-    from twisted.spread.pb import RemoteReference
 
     from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
@@ -84,13 +83,13 @@ class UpdateRegistrationListener(Listener):
     def get_manager(self) -> BaseManager:
         raise NotImplementedError
 
-    def before_connection_setup(self, protocol: RemoteReference, workerName: str) -> None:
+    def before_connection_setup(self, protocol: object, workerName: str) -> None:
         raise NotImplementedError
 
     @defer.inlineCallbacks
     def _create_connection(
         self,
-        mind: RemoteReference,
+        mind: object,
         workerName: str,
     ) -> InlineCallbacksType[_Connection]:
         self.before_connection_setup(mind, workerName)

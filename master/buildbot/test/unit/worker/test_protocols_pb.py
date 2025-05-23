@@ -23,6 +23,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.internet.address import IPv4Address
 from twisted.spread import pb as twisted_pb
+from twisted.spread.pb import RemoteReference
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
@@ -80,7 +81,8 @@ class TestListener(TestReactorMixin, unittest.TestCase):
         listener = pb.Listener(self.master)
         worker = mock.Mock()
         worker.workername = 'test'
-        mind = mock.Mock()
+        mind = mock.Mock(spec=RemoteReference)
+        mind.broker = mock.Mock()
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.workers.register(worker)
