@@ -67,7 +67,7 @@ class Dispatcher(BaseDispatcher):
 
         persp = None
         if avatarIdStr and avatarIdStr in self.users:
-            _, afactory = self.users.get(avatarIdStr)  # type: ignore[misc]
+            _, afactory = self.users[avatarIdStr]
             persp = yield afactory(mind, avatarIdStr)
 
         if not persp:
