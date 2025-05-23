@@ -14,9 +14,8 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from typing import Callable
-from typing import Generator
 
 from twisted.cred import checkers
 from twisted.cred import credentials
@@ -35,13 +34,18 @@ from buildbot.util.eventual import eventually
 from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 
+if TYPE_CHECKING:
+    from twisted.cred.credentials import IUsernamePassword
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @implementer(portal.IRealm, checkers.ICredentialsChecker)
 class Dispatcher(BaseDispatcher):
     credentialInterfaces = [credentials.IUsernamePassword, credentials.IUsernameHashedPassword]
 
-    def __init__(self, config_portstr, portstr):
-        super().__init__(portstr)
+    def __init__(self, config_port: str | int) -> None:
+        super().__init__(config_port=config_port)
         # there's lots of stuff to set up for a PB connection!
         self.portal = portal.Portal(self)
         self.portal.registerChecker(self)
@@ -53,7 +57,7 @@ class Dispatcher(BaseDispatcher):
     @defer.inlineCallbacks
     def requestAvatar(
         self, avatarId: bytes | tuple[()], mind: object, *interfaces: type[Interface]
-    ) -> Generator[defer.Deferred[Any], None, tuple[type[Interface], object, Callable]]:
+    ) -> InlineCallbacksType[tuple[type[Interface], object, Callable[[], None]]]:
         assert interfaces[0] == pb.IPerspective
 
         if isinstance(avatarId, tuple) and not avatarId:
@@ -63,7 +67,7 @@ class Dispatcher(BaseDispatcher):
 
         persp = None
         if avatarIdStr and avatarIdStr in self.users:
-            _, afactory = self.users.get(avatarIdStr)
+            _, afactory = self.users[avatarIdStr]
             persp = yield afactory(mind, avatarIdStr)
 
         if not persp:
@@ -76,7 +80,7 @@ class Dispatcher(BaseDispatcher):
     # ICredentialsChecker
 
     @defer.inlineCallbacks
-    def requestAvatarId(self, creds):
+    def requestAvatarId(self, creds: IUsernamePassword) -> InlineCallbacksType[bytes | tuple[()]]:
         p = Properties()
         p.master = self.master
         username = bytes2unicode(creds.username)
@@ -98,8 +102,8 @@ class Dispatcher(BaseDispatcher):
             eventually(self.master.initLock.release)
 
 
-class PBManager(BaseManager):
-    def __init__(self):
+class PBManager(BaseManager[Dispatcher]):
+    def __init__(self) -> None:
         super().__init__('pbmanager')
 
     dispatcher_class = Dispatcher

@@ -16,6 +16,9 @@
 Test clean shutdown functionality of the master
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.cred import credentials
@@ -23,40 +26,46 @@ from twisted.internet import defer
 from twisted.spread import pb
 from twisted.trial import unittest
 
+from buildbot.worker.protocols.base import Connection
 from buildbot.worker.protocols.manager.pb import PBManager
+
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class FakeMaster:
     initLock = defer.DeferredLock()
 
-    def addService(self, svc):
+    def addService(self, svc: PBManager) -> None:
         pass
 
     @property
-    def master(self):
+    def master(self) -> FakeMaster:
         return self
 
 
 class TestPBManager(unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.pbm = PBManager()
         yield self.pbm.setServiceParent(FakeMaster())
 
         self.pbm.startService()
         self.addCleanup(self.pbm.stopService)
 
-        self.connections = []
+        self.connections: list[str] = []
 
-    def perspectiveFactory(self, mind, username):
-        persp = mock.Mock()
+    def perspectiveFactory(self, mind: object, username: str) -> Deferred[Connection]:
+        persp = mock.Mock(spec=Connection)
         persp.is_my_persp = True
         persp.attached = lambda mind: defer.succeed(None)
         self.connections.append(username)
         return defer.succeed(persp)
 
     @defer.inlineCallbacks
-    def test_register_unregister(self):
+    def test_register_unregister(self) -> InlineCallbacksType[None]:
         portstr = "tcp:0:interface=127.0.0.1"
         reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
@@ -81,7 +90,7 @@ class TestPBManager(unittest.TestCase):
         yield reg.unregister()
 
     @defer.inlineCallbacks
-    def test_register_no_user(self):
+    def test_register_no_user(self) -> InlineCallbacksType[None]:
         portstr = "tcp:0:interface=127.0.0.1"
         reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
@@ -105,7 +114,7 @@ class TestPBManager(unittest.TestCase):
         yield reg.unregister()
 
     @defer.inlineCallbacks
-    def test_requestAvatarId_noinitLock(self):
+    def test_requestAvatarId_noinitLock(self) -> InlineCallbacksType[None]:
         portstr = "tcp:0:interface=127.0.0.1"
         reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
@@ -117,7 +126,7 @@ class TestPBManager(unittest.TestCase):
         yield reg.unregister()
 
     @defer.inlineCallbacks
-    def test_requestAvatarId_initLock(self):
+    def test_requestAvatarId_initLock(self) -> InlineCallbacksType[None]:
         portstr = "tcp:0:interface=127.0.0.1"
         reg = yield self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 

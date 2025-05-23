@@ -418,14 +418,14 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.return_value = defer.succeed(None)
 
         rc_instance = base.RemoteCommandImpl()
-        result_command_id_to_command_map = {1: rc_instance}
+        result_command_id_to_command_map = {"1": rc_instance}
         self.protocol.command_id_to_command_map = {}
         args: dict[str, Any] = {'args': 'args'}
 
         if arg_name is not None:
             args[arg_name] = arg_value
 
-        yield self.conn.remoteStartCommand(rc_instance, 'builder', 1, 'command', args)
+        yield self.conn.remoteStartCommand(rc_instance, 'builder', "1", 'command', args)
         expected_args = args.copy()
         if arg_name is not None:
             expected_args[arg_name] = expected_value
@@ -434,7 +434,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.protocol.get_message_result.assert_called_with({
             'op': 'start_command',
             'builder_name': 'builder',
-            'command_id': 1,
+            'command_id': "1",
             'command_name': 'command',
             'args': expected_args,
         })
