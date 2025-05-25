@@ -67,31 +67,7 @@ class our_sdist(sdist):
 
 
 setup_args = {
-    'name': "buildbot-worker",
     'version': version,
-    'description': "Buildbot Worker Daemon",
-    'long_description': "See the 'buildbot' package for details",
-    'author': "Brian Warner",
-    'author_email': "warner-buildbot@lothar.com",
-    'maintainer': "Dustin J. Mitchell",
-    'maintainer_email': "dustin@v.igoro.us",
-    'url': "http://buildbot.net/",
-    'classifiers': [
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: No Input/Output (Daemon)',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Testing',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
-    ],
     'packages': [
         "buildbot_worker",
         "buildbot_worker.util",
