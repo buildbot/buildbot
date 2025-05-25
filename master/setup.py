@@ -605,12 +605,6 @@ setup_args = {
     ),
 }
 
-# set zip_safe to false to force Windows installs to always unpack eggs
-# into directories, which seems to work better --
-# see http://buildbot.net/trac/ticket/907
-if sys.platform == "win32":
-    setup_args['zip_safe'] = False
-
 twisted_ver = ">= 24.7.0"
 
 bundle_version = version.split("-")[0]
