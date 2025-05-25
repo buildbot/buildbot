@@ -1,5 +1,5 @@
 master/.git_archival.txt                export-subst
-pkg/buildbot_pkg.py                     export-subst
+pkg/.git_archival.txt                   export-subst
 worker/.git_archival.txt                export-subst
 www/*/.git_archival.txt                 export-subst
 
