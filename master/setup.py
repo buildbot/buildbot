@@ -605,14 +605,12 @@ setup_args = {
     ),
 }
 
-twisted_ver = ">= 24.7.0"
-
 bundle_version = version.split("-")[0]
 
 # dependencies
 setup_args['install_requires'] = [
     'setuptools >= 8.0',
-    'Twisted ' + twisted_ver,
+    'Twisted >= 24.7.0',
     'treq >= 20.9',
     'Jinja2 >= 2.1',
     'msgpack >= 0.6.0',
@@ -660,7 +658,7 @@ setup_args['extras_require'] = {
         f"buildbot-grid-view=={bundle_version}",
     ],
     'tls': [
-        'Twisted[tls] ' + twisted_ver,
+        'Twisted[tls]',
         # There are bugs with extras inside extras:
         # <https://github.com/pypa/pip/issues/3516>
         # so we explicitly include Twisted[tls] dependencies.
