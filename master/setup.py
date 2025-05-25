@@ -634,11 +634,9 @@ setup_args['install_requires'] = [
     'PyJWT',
     'pyyaml',
     'unidiff >= 0.7.5',
+    # buildbot_windows_service needs pywin32
+    'pywin32; platform_system=="Windows"',
 ]
-
-# buildbot_windows_service needs pywin32
-if sys.platform == "win32":
-    setup_args['install_requires'].append('pywin32')
 
 # Unit test dependencies.
 test_deps = [
@@ -652,14 +650,11 @@ test_deps = [
     'moto',
     "Markdown>=3.0.0",
     'parameterized',
+    # LZ4 fails to build on Windows:
+    # https://github.com/steeve/python-lz4/issues/27
+    # lz4 required for log compression tests.
+    'lz4; platform_system!="Windows"',
 ]
-if sys.platform != 'win32':
-    test_deps += [
-        # LZ4 fails to build on Windows:
-        # https://github.com/steeve/python-lz4/issues/27
-        # lz4 required for log compression tests.
-        'lz4',
-    ]
 
 setup_args['extras_require'] = {
     'test': ["ruff", *test_deps],
