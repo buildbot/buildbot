@@ -156,16 +156,9 @@ test_deps = [
     'psutil',
 ]
 
-setup_args['tests_require'] = test_deps
-
 setup_args['extras_require'] = {
     'test': test_deps,
 }
-
-if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-    setup_args['setup_requires'] = [
-        'setuptools_trial',
-    ]
 
 if os.getenv('NO_INSTALL_REQS'):
     setup_args['install_requires'] = None

@@ -705,10 +705,8 @@ if sys.platform != 'win32':
         'lz4',
     ]
 
-setup_args['tests_require'] = test_deps
-
 setup_args['extras_require'] = {
-    'test': ["setuptools_trial", "ruff", *test_deps],
+    'test': ["ruff", *test_deps],
     'bundle': [
         f"buildbot-www=={bundle_version}",
         f"buildbot-worker=={bundle_version}",
@@ -745,11 +743,6 @@ setup_args['extras_require'] = {
         'evalidate >= 2.0.0',
     ],
 }
-
-if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-    setup_args['setup_requires'] = [
-        'setuptools_trial',
-    ]
 
 if os.getenv('NO_INSTALL_REQS'):
     setup_args['install_requires'] = None

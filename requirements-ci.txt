@@ -63,7 +63,6 @@ responses==0.25.3
 ruff==0.11.8
 s3transfer==0.10.4
 service-identity==24.2.0
-setuptools-trial==0.6.0
 six==1.16.0
 SQLAlchemy==2.0.36
 treq==24.9.1
