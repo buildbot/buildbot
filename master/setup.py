@@ -112,30 +112,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
 
 setup_args = {
-    'name': "buildbot",
     'version': version,
-    'description': "The Continuous Integration Framework",
-    'long_description': long_description,
-    'author': "Brian Warner",
-    'author_email': "warner-buildbot@lothar.com",
-    'maintainer': "Dustin J. Mitchell",
-    'maintainer_email': "dustin@v.igoro.us",
-    'url': "http://buildbot.net/",
-    'classifiers': [
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: No Input/Output (Daemon)',
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Testing',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
-    ],
     'packages': [
         "buildbot",
         "buildbot.configurators",
@@ -200,25 +177,6 @@ setup_args = {
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot", [])],
-    'package_data': {
-        "": ["VERSION"],
-        "buildbot.reporters.templates": ["*.txt"],
-        "buildbot.db.migrations": [
-            "alembic.ini",
-            "README",
-        ],
-        "buildbot.db.migrations.versions": ["*.py"],
-        "buildbot.scripts": [
-            "sample.cfg",
-            "buildbot_tac.tmpl",
-        ],
-        "buildbot.spec": ["*.raml"],
-        "buildbot.spec.types": ["*.raml"],
-        "buildbot.test.unit.test_templates_dir": ["*.html"],
-        "buildbot.test.unit.test_templates_dir.plugin": ["*.*"],
-        "buildbot.test.integration.pki": ["*.*"],
-        "buildbot.test.integration.pki.ca": ["*.*"],
-    },
     'cmdclass': {'install_data': install_data_twisted, 'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([
@@ -653,8 +611,6 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-setup_args['python_requires'] = ">=3.9"
-
 twisted_ver = ">= 24.7.0"
 
 bundle_version = version.split("-")[0]
@@ -750,7 +706,3 @@ if os.getenv('NO_INSTALL_REQS'):
 
 if __name__ == '__main__':
     setup(**setup_args)
-
-# Local Variables:
-# fill-column: 71
-# End:
