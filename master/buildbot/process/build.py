@@ -928,8 +928,7 @@ class Build(properties.PropertiesMixin):
             return
 
         if self._locks_released and self._build_finished:
-            # FIXME: should be self.builder.master
-            self.builder.botmaster.maybeStartBuildsForAllBuilders()  # type: ignore[attr-defined]
+            self.master.botmaster.maybeStartBuildsForAllBuilders()
 
     def getSummaryStatistic(
         self,
