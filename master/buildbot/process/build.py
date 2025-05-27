@@ -164,10 +164,8 @@ class Build(properties.PropertiesMixin):
     def getProperties(self) -> IProperties:
         return self.properties
 
-    def setLocks(self, lockList: list[BaseLockId]) -> None:
-        # FIXME: should take Iterable and create a list
-        # to avoid keeping same ref as caller and caller potentially mutating it
-        self.locks = lockList
+    def setLocks(self, lockList: Iterable[BaseLockId]) -> None:
+        self.locks = list(lockList)
 
     @defer.inlineCallbacks
     def _setup_locks(self) -> InlineCallbacksType[None]:
