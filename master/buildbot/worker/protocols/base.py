@@ -178,13 +178,13 @@ class Connection:
 
 # RemoteCommand base implementation and base proxy
 class RemoteCommandImpl:
-    def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
+    def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> Deferred[int]:
         raise NotImplementedError
 
-    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> None:
+    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> Deferred[None]:
         raise NotImplementedError
 
-    def remote_complete(self, failure: Any | None = None) -> None:
+    def remote_complete(self, failure: Any | None = None) -> Deferred[None]:
         raise NotImplementedError
 
 

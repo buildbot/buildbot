@@ -207,11 +207,11 @@ class Expect:
 
             if name == command.stdioLogName:
                 if 'header' in streams:
-                    command.remote_update([({"header": streams['header']}, 0)])
+                    yield command.remote_update([({"header": streams['header']}, 0)])
                 if 'stdout' in streams:
-                    command.remote_update([({"stdout": streams['stdout']}, 0)])
+                    yield command.remote_update([({"stdout": streams['stdout']}, 0)])
                 if 'stderr' in streams:
-                    command.remote_update([({"stderr": streams['stderr']}, 0)])
+                    yield command.remote_update([({"stderr": streams['stderr']}, 0)])
             else:
                 if 'header' in streams or 'stderr' in streams:
                     raise RuntimeError('Non stdio streams only support stdout')
@@ -1086,7 +1086,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
             raise e
 
         if not exp.connection_broken:
-            command.remote_complete()
+            yield command.remote_complete()
 
     def _patched_create_process(
         self,

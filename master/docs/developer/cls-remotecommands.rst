@@ -79,6 +79,8 @@ RemoteCommand
     .. py:method:: remote_update(updates)
 
         :param updates: new information from the worker
+        :type updates: list[tuple[dict[str | bytes, Any], int]]
+        :returns: Deferred[int]
 
         Handles updates from the worker on the running command. See :ref:`master-worker-updates`
         for the content of the updates. This class splits the updates out, and handles the
@@ -87,6 +89,7 @@ RemoteCommand
     .. py:method:: remote_complete(failure=None)
 
         :param failure: the failure that caused the step to complete, or None for success
+        :returns: Deferred[None]
 
         Called by the worker to indicate that the command is complete. Normal completion (even with
         a nonzero ``rc``) will finish with no failure; if ``failure`` is set, then the step should
