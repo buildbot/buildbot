@@ -163,7 +163,7 @@ class Connection:
         commandId: str,
         commandName: str,
         args: dict[str, Any],
-    ) -> Deferred:
+    ) -> Deferred[None]:
         raise NotImplementedError
 
     def remoteShutdown(self) -> Deferred[None]:
@@ -172,7 +172,7 @@ class Connection:
     def remoteStartBuild(self, builderName: str) -> Deferred[None]:
         raise NotImplementedError
 
-    def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred:
+    def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred[None]:
         raise NotImplementedError
 
 

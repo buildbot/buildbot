@@ -77,7 +77,7 @@ to know about protocol calls or handle protocol specific exceptions.
         :type commandName: string
         :param args: arguments for that command
         :type args: List
-        :returns: Deferred
+        :returns: Deferred[None]
 
         Start command on the worker.
 
@@ -102,7 +102,7 @@ to know about protocol calls or handle protocol specific exceptions.
         :type commandId: string
         :param why: reason to interrupt
         :type why: string
-        :returns: Deferred
+        :returns: Deferred[None]
 
         Interrupt the command executed on builderName with given commandId on worker, and print reason "why" to worker logs.
 
